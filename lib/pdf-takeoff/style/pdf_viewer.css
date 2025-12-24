@@ -1,0 +1,11 @@
+/* Custom overrides for PDF.js viewer - main CSS imported directly in component */
+
+/* Override z-index for our annotation layer to sit above text */
+.annotationLayer {
+  z-index: 3;
+}
+
+/* Ensure takeoff annotation layer sits above text */
+.takeoff-annotation-layer {
+  z-index: 5;
+}

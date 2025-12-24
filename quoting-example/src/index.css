@@ -1,0 +1,226 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* Custom Theme from tweakcn.com */
+:root {
+  --background: #fafafa;
+  --foreground: #16181d;
+  --card: #ffffff;
+  --card-foreground: #16181d;
+  --popover: #ffffff;
+  --popover-foreground: #16181d;
+  --primary: #e0891f;
+  --primary-foreground: #ffffff;
+  --secondary: #ededed;
+  --secondary-foreground: #16181d;
+  --muted: #ededed;
+  --muted-foreground: #737373;
+  --accent: #e6e6e6;
+  --accent-foreground: #e0891f;
+  --destructive: #ef4343;
+  --destructive-foreground: #ffffff;
+  --border: #d9d9d9;
+  --input: #e6e6e6;
+  --ring: #e0891f;
+  --chart-1: #e0891f;
+  --chart-2: #22c3a8;
+  --chart-3: #7c67e4;
+  --chart-4: #d9ac26;
+  --chart-5: #dd3cdd;
+  --sidebar: #f2f2f2;
+  --sidebar-foreground: #16181d;
+  --sidebar-primary: #e0891f;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e6e6e6;
+  --sidebar-accent-foreground: #e0891f;
+  --sidebar-border: #cccccc;
+  --sidebar-ring: #e0891f;
+  --radius: 0.3rem;
+
+  /* Semantic status colors */
+  --success: #22c55e;
+  --success-foreground: #ffffff;
+  --warning: #f59e0b;
+  --warning-foreground: #ffffff;
+  --info: #3b82f6;
+  --info-foreground: #ffffff;
+
+  /* Status indicator colors */
+  --status-saving: #fbbf24;
+  --status-saved: #4ade80;
+  --status-unsaved: #94a3b8;
+  --status-sent: #3b82f6;
+  --status-accepted: #22c55e;
+
+  /* Change tracking colors */
+  --change-added: #22c55e;
+  --change-added-bg: rgba(34, 197, 94, 0.1);
+  --change-removed: #ef4444;
+  --change-removed-bg: rgba(239, 68, 68, 0.1);
+  --change-modified: #f59e0b;
+  --change-modified-bg: rgba(245, 158, 11, 0.1);
+
+  /* Overlay */
+  --overlay: rgba(0, 0, 0, 0.5);
+}
+
+.dark {
+  --background: #16181d;
+  --foreground: #e6e6e6;
+  --card: #121317;
+  --card-foreground: #e6e6e6;
+  --popover: #121317;
+  --popover-foreground: #e6e6e6;
+  --primary: #e0891f;
+  --primary-foreground: #16181d;
+  --secondary: #21242c;
+  --secondary-foreground: #e6e6e6;
+  --muted: #21242c;
+  --muted-foreground: #999999;
+  --accent: #2c313a;
+  --accent-foreground: #e0891f;
+  --destructive: #ef4343;
+  --destructive-foreground: #e6e6e6;
+  --border: #404040;
+  --input: #272c34;
+  --ring: #e0891f;
+  --chart-1: #e0891f;
+  --chart-2: #22c3a8;
+  --chart-3: #7c67e4;
+  --chart-4: #d9ac26;
+  --chart-5: #dd3cdd;
+  --sidebar: #1a1d23;
+  --sidebar-foreground: #e6e6e6;
+  --sidebar-primary: #e0891f;
+  --sidebar-primary-foreground: #16181d;
+  --sidebar-accent: #2c313a;
+  --sidebar-accent-foreground: #e0891f;
+  --sidebar-border: #404040;
+  --sidebar-ring: #e0891f;
+
+  /* Semantic status colors */
+  --success: #4ade80;
+  --success-foreground: #16181d;
+  --warning: #fbbf24;
+  --warning-foreground: #16181d;
+  --info: #60a5fa;
+  --info-foreground: #16181d;
+
+  /* Status indicator colors */
+  --status-saving: #fbbf24;
+  --status-saved: #4ade80;
+  --status-unsaved: #64748b;
+  --status-sent: #60a5fa;
+  --status-accepted: #4ade80;
+
+  /* Change tracking colors */
+  --change-added: #4ade80;
+  --change-added-bg: rgba(74, 222, 128, 0.15);
+  --change-removed: #f87171;
+  --change-removed-bg: rgba(248, 113, 113, 0.15);
+  --change-modified: #fbbf24;
+  --change-modified-bg: rgba(251, 191, 36, 0.15);
+
+  /* Overlay */
+  --overlay: rgba(0, 0, 0, 0.7);
+}
+
+@theme inline {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Merriweather", serif;
+  --font-mono: "JetBrains Mono", monospace;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Semantic colors */
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+
+  /* Status indicator colors */
+  --color-status-saving: var(--status-saving);
+  --color-status-saved: var(--status-saved);
+  --color-status-unsaved: var(--status-unsaved);
+  --color-status-sent: var(--status-sent);
+  --color-status-accepted: var(--status-accepted);
+
+  /* Change tracking colors */
+  --color-change-added: var(--change-added);
+  --color-change-added-bg: var(--change-added-bg);
+  --color-change-removed: var(--change-removed);
+  --color-change-removed-bg: var(--change-removed-bg);
+  --color-change-modified: var(--change-modified);
+  --color-change-modified-bg: var(--change-modified-bg);
+
+  /* Overlay */
+  --color-overlay: var(--overlay);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply font-sans;
+    background-color: var(--background);
+    color: var(--foreground);
+  }
+  html,
+  body {
+    @apply m-0 p-0 w-full min-h-screen;
+  }
+  #root {
+    @apply m-0 p-0 w-full min-h-screen lg:h-screen lg:overflow-hidden;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}

@@ -1,0 +1,29 @@
+import { FileText } from "lucide-react";
+import type React from "react";
+
+interface EmptyStateProps {
+  icon?: React.ReactNode;
+  title: string;
+  description: string;
+  action?: React.ReactNode;
+}
+
+export function EmptyState({
+  icon,
+  title,
+  description,
+  action,
+}: EmptyStateProps) {
+  return (
+    <div className="flex flex-1 flex-col items-center justify-center rounded-lg border border-dashed bg-muted/30 p-8 text-center">
+      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+        {icon || <FileText className="h-6 w-6 text-muted-foreground" />}
+      </div>
+      <h3 className="mt-4 font-semibold text-lg">{title}</h3>
+      <p className="mt-2 max-w-sm text-muted-foreground text-sm">
+        {description}
+      </p>
+      {action && <div className="mt-6">{action}</div>}
+    </div>
+  );
+}

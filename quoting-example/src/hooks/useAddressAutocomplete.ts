@@ -55,7 +55,9 @@ export function useAddressAutocomplete(
     AutocompleteSuggestion.fetchAutocompleteSuggestions(request)
       .then((res) => {
         const mapped = res.suggestions
-          .filter((s) => s.placePrediction?.placeId && s.placePrediction?.text?.text)
+          .filter(
+            (s) => s.placePrediction?.placeId && s.placePrediction?.text?.text
+          )
           .map((s) => ({
             placeId: s.placePrediction!.placeId,
             text: s.placePrediction!.text.text,

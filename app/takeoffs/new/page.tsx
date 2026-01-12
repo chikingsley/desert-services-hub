@@ -3,6 +3,7 @@
 import { Upload } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
+import { toast } from "sonner";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,7 +15,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { setTakeoffData } from "@/lib/takeoff-store";
+import { Spinner } from "@/components/ui/spinner";
 
 function getDropzoneClasses(isDragging: boolean, hasFile: boolean) {
   if (isDragging) {
@@ -31,6 +32,7 @@ export default function NewTakeoffPage() {
   const [file, setFile] = useState<File | null>(null);
   const [name, setName] = useState("");
   const [isDragging, setIsDragging] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
@@ -57,26 +59,66 @@ export default function NewTakeoffPage() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!file) {
+    if (!file || isUploading) {
       return;
     }
 
-    // TODO: Upload file to Supabase storage and create takeoff record
-    // For now, we'll use in-memory store and navigate to the editor
-    const tempId = crypto.randomUUID();
+    setIsUploading(true);
 
-    // Store file in memory for the editor
-    const reader = new FileReader();
-    reader.onload = () => {
-      setTakeoffData(tempId, {
-        file: reader.result as string,
-        name,
+    try {
+      // 1. Create takeoff record first to get the ID
+      const createRes = await fetch("/api/takeoffs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, status: "draft" }),
       });
-      router.push(`/takeoffs/${tempId}`);
-    };
-    reader.readAsDataURL(file);
+
+      if (!createRes.ok) {
+        throw new Error("Failed to create takeoff");
+      }
+
+      const takeoff = await createRes.json();
+
+      // 2. Upload PDF to MinIO AIStor
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("takeoffId", takeoff.id);
+      formData.append("filename", "original.pdf");
+
+      const uploadRes = await fetch("/api/upload/pdf", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!uploadRes.ok) {
+        const error = await uploadRes.json();
+        throw new Error(error.error || "Failed to upload PDF");
+      }
+
+      const uploadData = await uploadRes.json();
+
+      // 3. Update takeoff with PDF reference (not the presigned URL, which expires)
+      // We store the object path so the viewer can fetch fresh presigned URLs
+      await fetch(`/api/takeoffs/${takeoff.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...takeoff,
+          pdf_url: `minio://${uploadData.filename}`,
+        }),
+      });
+
+      toast.success("Takeoff created successfully");
+      router.push(`/takeoffs/${takeoff.id}`);
+    } catch (error) {
+      console.error("Failed to create takeoff:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to create takeoff"
+      );
+      setIsUploading(false);
+    }
   };
 
   return (
@@ -102,6 +144,7 @@ export default function NewTakeoffPage() {
               <div className="space-y-2">
                 <Label htmlFor="name">Takeoff Name</Label>
                 <Input
+                  disabled={isUploading}
                   id="name"
                   onChange={(e) => setName(e.target.value)}
                   placeholder="e.g., 123 Main St - Site Plan"
@@ -113,7 +156,7 @@ export default function NewTakeoffPage() {
                 <Label htmlFor="pdf-input">PDF File</Label>
                 {/* biome-ignore lint/a11y/noNoninteractiveElementInteractions: Label with htmlFor is accessible */}
                 <label
-                  className={`relative flex min-h-[200px] cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-6 transition-colors ${getDropzoneClasses(isDragging, !!file)}`}
+                  className={`relative flex min-h-[200px] cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-6 transition-colors ${getDropzoneClasses(isDragging, !!file)} ${isUploading ? "pointer-events-none opacity-50" : ""}`}
                   htmlFor="pdf-input"
                   onDragLeave={() => setIsDragging(false)}
                   onDragOver={(e) => {
@@ -125,6 +168,7 @@ export default function NewTakeoffPage() {
                   <input
                     accept="application/pdf"
                     className="sr-only"
+                    disabled={isUploading}
                     id="pdf-input"
                     onChange={handleFileChange}
                     type="file"
@@ -151,14 +195,22 @@ export default function NewTakeoffPage() {
 
           <div className="flex justify-end gap-3">
             <Button
+              disabled={isUploading}
               onClick={() => router.back()}
               type="button"
               variant="outline"
             >
               Cancel
             </Button>
-            <Button disabled={!(file && name)} type="submit">
-              Start Takeoff
+            <Button disabled={!(file && name) || isUploading} type="submit">
+              {isUploading ? (
+                <>
+                  <Spinner className="mr-2 size-4" />
+                  Uploading...
+                </>
+              ) : (
+                "Start Takeoff"
+              )}
             </Button>
           </div>
         </form>

@@ -4,61 +4,68 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Desert Services Hub is an estimation workflow platform for construction/landscaping services. It handles takeoffs (measurements from PDFs), quoting, contracts, and project management. Currently, only the **Quotes** module is implemented.
+Desert Services Hub is an estimation workflow platform for construction/landscaping services. It handles takeoffs (measurements from PDFs), quoting, contracts, and project management. Currently, the **Quotes** and **Takeoffs** modules are implemented.
 
 ## Commands
 
 ```bash
 # Development
-npm run dev          # Start Next.js dev server
+bun run dev          # Start Next.js dev server
 
 # Build & Production
-npm run build        # Build for production
-npm run start        # Start production server
+bun run build        # Build for production
+bun run start        # Start production server
 
 # Linting & Formatting (Ultracite/Biome)
 bun x ultracite fix    # Auto-fix formatting and lint issues
 bun x ultracite check  # Check for issues without fixing
-npm run lint           # Run ESLint (legacy, prefer ultracite)
 ```
 
 ## Tech Stack
 
 - **Framework**: Next.js 16 with App Router (React 19, Server Components)
-- **Database**: Supabase (PostgreSQL)
+- **Database**: SQLite via better-sqlite3 (`lib/db/index.ts`)
 - **Styling**: Tailwind CSS v4 with tw-animate-css
 - **UI Components**: shadcn/ui (new-york style) with Radix primitives
 - **Icons**: lucide-react
-- **Forms**: react-hook-form + zod
+- **PDF**: pdfjs-dist v5 for viewing, pdf-lib for export
 - **Linting/Formatting**: Ultracite (Biome preset)
 
 ## Architecture
 
 ### Directory Structure
-```
+
+```text
 app/                    # Next.js App Router pages
   layout.tsx           # Root layout with sidebar
   page.tsx             # Dashboard
   quotes/              # Quotes module
-    page.tsx           # List quotes (Server Component)
-    new/page.tsx       # Create quote form
-    [id]/page.tsx      # Edit quote (QuoteEditor)
+    page.tsx           # List quotes
+    new/page.tsx       # Create quote
+    [id]/page.tsx      # Edit quote
+  takeoffs/            # Takeoffs module (PDF measurement)
+    page.tsx           # List takeoffs
+    new/page.tsx       # Upload new PDF
+    [id]/page.tsx      # Takeoff editor
+  catalog/             # Service catalog management
+  api/                 # API routes (SQLite-backed)
 
 components/
   ui/                  # shadcn/ui primitives
   quotes/              # Quote-specific components
+  takeoffs/            # Takeoff-specific components
+  catalog/             # Catalog components
   app-sidebar.tsx      # Main navigation sidebar
   page-header.tsx      # Page header with breadcrumbs
 
 lib/
+  db/index.ts          # SQLite database connection and schema
   types.ts             # TypeScript interfaces for domain models
   utils.ts             # Utilities: cn(), formatCurrency(), formatDate()
-  supabase/
-    client.ts          # Browser Supabase client
-    server.ts          # Server-side Supabase client (uses cookies)
+  pdf-takeoff/         # PDF annotation library
+  takeoffs.ts          # Takeoff API client functions
 
 hooks/                 # Custom React hooks
-scripts/               # SQL migrations for Supabase
 ```
 
 ### Data Model
@@ -72,21 +79,26 @@ The quote system uses a versioned structure:
 - **CatalogItem** → reusable pricing templates
 
 Key relationships:
+
 - Quote has many QuoteVersions (one marked `is_current`)
 - QuoteVersion has many QuoteSections and QuoteLineItems
 - Line items can belong to a section or be "unsectioned"
 
-### Supabase Integration
+### Database (SQLite)
 
-- Server Components use `lib/supabase/server.ts` (async, reads cookies)
-- Client Components use `lib/supabase/client.ts` (browser client)
-- Environment variables: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- All data stored in `desert-services.db` at project root
+- Schema defined in `lib/db/index.ts`
+- API routes in `app/api/` use the db directly
+- Client components use fetch to API routes
 
 ## Code Standards (Ultracite)
 
 This project uses Ultracite, a zero-config Biome preset. Run `bun x ultracite fix` before committing.
 
+**IMPORTANT: Never add lint suppression comments** (`// biome-ignore`, `// eslint-disable`, `// @ts-ignore`, `// @ts-expect-error`, etc.) without explicitly asking the user first. If a lint rule is flagging code, either fix the underlying issue or ask the user how they want to handle it. Do not silently suppress warnings.
+
 Key rules:
+
 - Use `for...of` over `.forEach()` and indexed loops
 - Use `const` by default, `let` only when needed, never `var`
 - Use optional chaining (`?.`) and nullish coalescing (`??`)
@@ -98,4 +110,5 @@ Key rules:
 ## Path Aliases
 
 Configured in `tsconfig.json`:
+
 - `@/*` → project root (e.g., `@/components/ui/button`)

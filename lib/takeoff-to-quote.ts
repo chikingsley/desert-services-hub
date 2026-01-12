@@ -2,93 +2,76 @@
 import type { TakeoffAnnotation } from "@/lib/pdf-takeoff";
 import type { QuoteLineItem } from "@/lib/types";
 
-// Catalog mapping from takeoff preset items to catalog pricing
-// Based on Desert Services catalog from quoting-example
-export const TAKEOFF_CATALOG_MAP: Record<
-  string,
-  {
-    catalogCode: string;
-    name: string;
-    description: string;
-    unitPrice: number;
-    unit: string;
-    unitCost: number;
-    sectionName: string;
+// Bundle item within a takeoff bundle
+export interface TakeoffBundleItem {
+  id: string;
+  itemId: string;
+  code: string;
+  name: string;
+  unit: string;
+  price: number;
+  isRequired: boolean;
+  quantityMultiplier: number;
+}
+
+// Takeoff catalog item interface - matches the API response
+export interface TakeoffCatalogItem {
+  id: string;
+  code: string;
+  label: string;
+  description: string | null;
+  unit: string;
+  unitPrice: number;
+  unitCost: number;
+  color: string;
+  type: "count" | "linear" | "area";
+  isBundle?: boolean;
+  bundleItems?: TakeoffBundleItem[];
+  categoryId: string | null;
+  categoryName: string;
+  subcategoryId: string | null;
+  subcategoryName: string | null;
+  notes: string | null;
+  defaultQty: number;
+}
+
+// Cache for takeoff items
+let takeoffItemsCache: TakeoffCatalogItem[] | null = null;
+
+// Fetch takeoff-enabled items from the database
+export async function fetchTakeoffItems(): Promise<TakeoffCatalogItem[]> {
+  if (takeoffItemsCache) {
+    return takeoffItemsCache;
   }
-> = {
-  temp_fence: {
-    catalogCode: "TF-001",
-    name: "Temporary Fencing Install/Remove",
-    description: "Pounded or stands, gate included",
-    unitPrice: 1.35,
-    unit: "LF",
-    unitCost: 0.95,
-    sectionName: "Temporary Fencing",
-  },
-  filter_sock: {
-    catalogCode: "CM-003",
-    name: 'Compost Filter Sock (9")',
-    description: "ADEQ Approved erosion control",
-    unitPrice: 2.45,
-    unit: "LF",
-    unitCost: 1.75,
-    sectionName: "SWPPP Control Measures",
-  },
-  silt_fence: {
-    catalogCode: "CM-004",
-    name: "Wire-Backed Silt Fence",
-    description: "Steel T-Posts via Tommy Slice Method",
-    unitPrice: 4.9,
-    unit: "LF",
-    unitCost: 3.5,
-    sectionName: "SWPPP Control Measures",
-  },
-  curb_inlet: {
-    catalogCode: "CM-006",
-    name: "Curb Inlet Protection",
-    description: "Sediment Barrier for Curb Drains",
-    unitPrice: 375,
-    unit: "EA",
-    unitCost: 275,
-    sectionName: "SWPPP Control Measures",
-  },
-  drop_inlet: {
-    catalogCode: "CM-005",
-    name: "Drop Inlet Protection",
-    description: "Sediment Barrier for Drop Inlets",
-    unitPrice: 145,
-    unit: "EA",
-    unitCost: 105,
-    sectionName: "SWPPP Control Measures",
-  },
-  rumble_grate: {
-    catalogCode: "CM-002",
-    name: "Rumble Grates Rental",
-    description: "Monthly rental per entrance",
-    unitPrice: 550,
-    unit: "Month",
-    unitCost: 400,
-    sectionName: "SWPPP Control Measures",
-  },
-  rock_entrance: {
-    catalogCode: "CM-001",
-    name: "Rock Entrance w/ Fabric",
-    description: "Includes Filter Fabric per SWPPP",
-    unitPrice: 2475,
-    unit: "EA",
-    unitCost: 1800,
-    sectionName: "SWPPP Control Measures",
-  },
-  area: {
-    catalogCode: "AREA-001",
-    name: "Site Area",
-    description: "Total measured area",
-    unitPrice: 0,
-    unit: "SF",
-    unitCost: 0,
-    sectionName: "Site Measurements",
-  },
-};
+
+  try {
+    const res = await fetch("/api/catalog/takeoff-items");
+    if (!res.ok) {
+      throw new Error("Failed to fetch takeoff items");
+    }
+    takeoffItemsCache = await res.json();
+    return takeoffItemsCache || [];
+  } catch (error) {
+    console.error("Error fetching takeoff items:", error);
+    return [];
+  }
+}
+
+// Clear the cache when needed (e.g., after catalog changes)
+export function clearTakeoffItemsCache(): void {
+  takeoffItemsCache = null;
+}
+
+// Build a lookup map from item IDs to catalog data
+export function buildCatalogMap(
+  items: TakeoffCatalogItem[]
+): Map<string, TakeoffCatalogItem> {
+  const map = new Map<string, TakeoffCatalogItem>();
+  for (const item of items) {
+    map.set(item.id, item);
+  }
+  return map;
+}
 
 // Calculate polyline length in PDF points
 function calculatePolylineLength(
@@ -138,52 +121,111 @@ export interface TakeoffSummaryItem {
   unitPrice: number;
   unitCost: number;
   sectionName: string;
+  isFromBundle?: boolean;
+  bundleName?: string;
+  isRequired?: boolean;
 }
 
 // Aggregate annotations by item type and calculate quantities
+// catalogItems: pre-fetched takeoff items from the database (now bundles)
+// This function expands bundles into individual line items
 export function aggregateTakeoffAnnotations(
   annotations: TakeoffAnnotation[],
-  pixelsPerFoot: number
+  pixelsPerFoot: number,
+  catalogItems?: TakeoffCatalogItem[]
 ): TakeoffSummaryItem[] {
   const safeAnnotations = Array.isArray(annotations) ? annotations : [];
   const summaryMap = new Map<string, TakeoffSummaryItem>();
 
+  // Build lookup map from catalog items (bundles)
+  const catalogMap = catalogItems
+    ? buildCatalogMap(catalogItems)
+    : new Map<string, TakeoffCatalogItem>();
+
+  // First pass: calculate total quantity per bundle/item
+  const bundleQuantities = new Map<string, number>();
+
   for (const ann of safeAnnotations) {
-    const catalogItem = TAKEOFF_CATALOG_MAP[ann.itemId];
+    const catalogItem = catalogMap.get(ann.itemId);
     if (!catalogItem) {
       continue;
     }
 
     let quantity = 0;
-    let unit = catalogItem.unit;
 
     if (ann.type === "count") {
       quantity = 1;
     } else if (ann.type === "polyline" && ann.points) {
       const lengthPoints = calculatePolylineLength(ann.points);
       quantity = lengthPoints / pixelsPerFoot;
-      unit = "LF";
     } else if (ann.type === "polygon" && ann.points) {
       const areaPoints = calculatePolygonArea(ann.points);
       quantity = areaPoints / (pixelsPerFoot * pixelsPerFoot);
-      unit = "SF";
     }
 
-    const existing = summaryMap.get(ann.itemId);
-    if (existing) {
-      existing.quantity += quantity;
+    const existing = bundleQuantities.get(ann.itemId) || 0;
+    bundleQuantities.set(ann.itemId, existing + quantity);
+  }
+
+  // Second pass: expand bundles into individual items
+  for (const [bundleId, totalQuantity] of bundleQuantities) {
+    const catalogItem = catalogMap.get(bundleId);
+    if (!catalogItem) {
+      continue;
+    }
+
+    // Check if this is a bundle with required items
+    const requiredBundleItems =
+      catalogItem.isBundle && catalogItem.bundleItems
+        ? catalogItem.bundleItems.filter((b) => b.isRequired)
+        : [];
+
+    if (requiredBundleItems.length > 0) {
+      // Expand bundle into individual required items
+      for (const bundleItem of requiredBundleItems) {
+        // Calculate quantity with multiplier
+        const itemQuantity = totalQuantity * bundleItem.quantityMultiplier;
+
+        // Create unique key for this item
+        const itemKey = `${bundleId}-${bundleItem.itemId}`;
+
+        const existing = summaryMap.get(itemKey);
+        if (existing) {
+          existing.quantity += itemQuantity;
+        } else {
+          summaryMap.set(itemKey, {
+            itemId: bundleItem.itemId,
+            label: bundleItem.name,
+            quantity: itemQuantity,
+            unit: bundleItem.unit,
+            catalogCode: bundleItem.code,
+            name: bundleItem.name,
+            description: "",
+            unitPrice: bundleItem.price,
+            unitCost: bundleItem.price * 0.7, // Estimated cost margin
+            sectionName: catalogItem.label, // Use bundle name as section
+            isFromBundle: true,
+            bundleName: catalogItem.label,
+            isRequired: bundleItem.isRequired,
+          });
+        }
+      }
     } else {
-      summaryMap.set(ann.itemId, {
-        itemId: ann.itemId,
-        label: ann.label,
-        quantity,
-        unit,
-        catalogCode: catalogItem.catalogCode,
-        name: catalogItem.name,
-        description: catalogItem.description,
+      // Non-bundle item OR bundle with no required items - use catalog item directly
+      const sectionName =
+        catalogItem.subcategoryName || catalogItem.categoryName;
+
+      summaryMap.set(bundleId, {
+        itemId: bundleId,
+        label: catalogItem.label,
+        quantity: totalQuantity,
+        unit: catalogItem.unit,
+        catalogCode: catalogItem.code,
+        name: catalogItem.label,
+        description: catalogItem.description || "",
         unitPrice: catalogItem.unitPrice,
         unitCost: catalogItem.unitCost,
-        sectionName: catalogItem.sectionName,
+        sectionName,
       });
     }
   }

@@ -14,7 +14,7 @@ import {
   viewportPositionToScaled,
 } from "@/lib/pdf-takeoff";
 
-import "pdfjs-dist/web/pdf_viewer.css";
+// Note: pdfjs-dist CSS is loaded via CDN in layout/head to avoid SVG reference issues
 import "@/lib/pdf-takeoff/style/PdfHighlighter.css";
 import "@/lib/pdf-takeoff/style/pdf_viewer.css";
 
@@ -74,13 +74,17 @@ export function TakeoffViewer({
 
   const getViewer = useCallback(() => {
     return highlighterUtilsRef.current?.getViewer() ?? null;
-  }, [viewerReady]);
+  }, []);
 
   // Force re-render on zoom changes
   useEffect(() => {
-    if (!viewerReady) return;
+    if (!viewerReady) {
+      return;
+    }
     const viewer = getViewer();
-    if (!viewer) return;
+    if (!viewer) {
+      return;
+    }
 
     const handleUpdate = () => forceUpdate((n) => n + 1);
 
@@ -96,9 +100,13 @@ export function TakeoffViewer({
 
   // Track page changes
   useEffect(() => {
-    if (!(viewerReady && onPageChange)) return;
+    if (!(viewerReady && onPageChange)) {
+      return;
+    }
     const viewer = getViewer();
-    if (!viewer) return;
+    if (!viewer) {
+      return;
+    }
 
     // Report initial page
     onPageChange(viewer.currentPageNumber || 1, viewer.pagesCount || 1);
@@ -118,11 +126,15 @@ export function TakeoffViewer({
   const findPageFromPoint = useCallback(
     (clientX: number, clientY: number) => {
       const viewer = getViewer();
-      if (!viewer) return null;
+      if (!viewer) {
+        return null;
+      }
 
       for (let i = 0; i < viewer.pagesCount; i++) {
         const pageView = viewer.getPageView(i);
-        if (!pageView?.div) continue;
+        if (!pageView?.div) {
+          continue;
+        }
 
         const rect = pageView.div.getBoundingClientRect();
         if (
@@ -142,13 +154,19 @@ export function TakeoffViewer({
   // Handle click on PDF for placing annotations
   const handlePdfClick = useCallback(
     (e: React.MouseEvent) => {
-      if (!activeTool) return;
+      if (!activeTool) {
+        return;
+      }
 
       const pageInfo = findPageFromPoint(e.clientX, e.clientY);
-      if (!pageInfo) return;
+      if (!pageInfo) {
+        return;
+      }
 
       const viewer = getViewer();
-      if (!viewer) return;
+      if (!viewer) {
+        return;
+      }
 
       const clickX = e.clientX - pageInfo.rect.left;
       const clickY = e.clientY - pageInfo.rect.top;
@@ -215,7 +233,9 @@ export function TakeoffViewer({
 
   // Handle double-click to finish polyline/polygon
   const handlePdfDoubleClick = useCallback(() => {
-    if (!activeTool || activeTool === "count") return;
+    if (!activeTool || activeTool === "count") {
+      return;
+    }
 
     if (activeTool === "polyline" && drawingPoints.length >= 2) {
       const annotation: TakeoffAnnotation = {
@@ -286,13 +306,15 @@ export function TakeoffViewer({
   }, [drawingPoints, handlePdfDoubleClick, onToolClear]);
 
   // Handle drag start
-  const handleDragStart = useCallback(
+  const _handleDragStart = useCallback(
     (
       e: React.MouseEvent,
       annId: string,
       type: "count" | "polyline" | "polygon"
     ) => {
-      if (activeTool) return; // Don't drag while tool is active
+      if (activeTool) {
+        return; // Don't drag while tool is active
+      }
       e.preventDefault();
       e.stopPropagation();
       setDragging({ id: annId, startX: e.clientX, startY: e.clientY, type });
@@ -302,14 +324,20 @@ export function TakeoffViewer({
 
   // Handle drag move and end
   useEffect(() => {
-    if (!dragging) return;
+    if (!dragging) {
+      return;
+    }
 
     const handleMouseMove = (e: MouseEvent) => {
       const viewer = getViewer();
-      if (!viewer) return;
+      if (!viewer) {
+        return;
+      }
 
       const ann = annotations.find((a) => a.id === dragging.id);
-      if (!ann) return;
+      if (!ann) {
+        return;
+      }
 
       const deltaX = e.clientX - dragging.startX;
       const deltaY = e.clientY - dragging.startY;
@@ -318,7 +346,9 @@ export function TakeoffViewer({
         const pageView = viewer.getPageView(
           ann.position.boundingRect.pageNumber - 1
         );
-        if (!pageView) return;
+        if (!pageView) {
+          return;
+        }
 
         const viewport = pageView.viewport;
         const scaledDeltaX =
@@ -342,7 +372,9 @@ export function TakeoffViewer({
         ann.points.length > 0
       ) {
         const pageView = viewer.getPageView(ann.points[0].pageNumber - 1);
-        if (!pageView) return;
+        if (!pageView) {
+          return;
+        }
 
         const viewport = pageView.viewport;
         const newPoints = ann.points.map((p) => ({
@@ -371,14 +403,18 @@ export function TakeoffViewer({
 
   // Inject annotations into PDF page layers
   useEffect(() => {
-    if (!viewerReady) return;
+    if (!viewerReady) {
+      return;
+    }
     const viewer = getViewer();
-    if (!viewer) return;
+    if (!viewer) {
+      return;
+    }
 
     // Clean up previous annotation elements
-    document
-      .querySelectorAll(".takeoff-annotation-layer")
-      .forEach((el) => el.remove());
+    for (const el of document.querySelectorAll(".takeoff-annotation-layer")) {
+      el.remove();
+    }
 
     // Group annotations by page
     const annotationsByPage: Record<number, TakeoffAnnotation[]> = {};
@@ -389,7 +425,9 @@ export function TakeoffViewer({
           ? ann.position.boundingRect.pageNumber
           : ann.points[0]?.pageNumber;
       if (pageNum) {
-        if (!annotationsByPage[pageNum]) annotationsByPage[pageNum] = [];
+        if (!annotationsByPage[pageNum]) {
+          annotationsByPage[pageNum] = [];
+        }
         annotationsByPage[pageNum].push(ann);
       }
     }
@@ -400,7 +438,9 @@ export function TakeoffViewer({
     )) {
       const pageNum = Number(pageNumStr);
       const pageView = viewer.getPageView(pageNum - 1);
-      if (!pageView?.div) continue;
+      if (!pageView?.div) {
+        continue;
+      }
 
       const viewport = pageView.viewport;
 
@@ -537,11 +577,15 @@ export function TakeoffViewer({
       const annotationEl = target.closest(
         "[data-annotation-id]"
       ) as HTMLElement;
-      if (!annotationEl) return;
+      if (!annotationEl) {
+        return;
+      }
 
       const annId = annotationEl.dataset.annotationId;
       const ann = annotations.find((a) => a.id === annId);
-      if (!ann || activeTool) return;
+      if (!ann || activeTool) {
+        return;
+      }
 
       e.preventDefault();
       e.stopPropagation();
@@ -558,14 +602,20 @@ export function TakeoffViewer({
       const annotationEl = target.closest(
         "[data-annotation-id]"
       ) as HTMLElement;
-      if (!annotationEl) return;
+      if (!annotationEl) {
+        return;
+      }
 
       e.preventDefault();
       const annId = annotationEl.dataset.annotationId;
-      if (annId) onAnnotationDelete?.(annId);
+      if (annId) {
+        onAnnotationDelete?.(annId);
+      }
     };
 
-    document.querySelectorAll(".takeoff-annotation-layer").forEach((layer) => {
+    for (const layer of document.querySelectorAll(
+      ".takeoff-annotation-layer"
+    )) {
       layer.addEventListener(
         "mousedown",
         handleAnnotationMouseDown as EventListener
@@ -574,38 +624,46 @@ export function TakeoffViewer({
         "contextmenu",
         handleAnnotationContextMenu as EventListener
       );
-    });
+    }
 
     return () => {
-      document
-        .querySelectorAll(".takeoff-annotation-layer")
-        .forEach((layer) => {
-          layer.removeEventListener(
-            "mousedown",
-            handleAnnotationMouseDown as EventListener
-          );
-          layer.removeEventListener(
-            "contextmenu",
-            handleAnnotationContextMenu as EventListener
-          );
-        });
+      for (const layer of document.querySelectorAll(
+        ".takeoff-annotation-layer"
+      )) {
+        layer.removeEventListener(
+          "mousedown",
+          handleAnnotationMouseDown as EventListener
+        );
+        layer.removeEventListener(
+          "contextmenu",
+          handleAnnotationContextMenu as EventListener
+        );
+      }
     };
   }, [viewerReady, annotations, activeTool, getViewer, onAnnotationDelete]);
 
   // Render current drawing preview
   const renderDrawingPreview = () => {
-    if (drawingPoints.length === 0) return null;
+    if (drawingPoints.length === 0) {
+      return null;
+    }
 
     const viewer = getViewer();
-    if (!(viewer && currentPageNumber)) return null;
+    if (!(viewer && currentPageNumber)) {
+      return null;
+    }
 
     const pageView = viewer.getPageView(currentPageNumber - 1);
-    if (!pageView?.div) return null;
+    if (!pageView?.div) {
+      return null;
+    }
 
     const pageRect = pageView.div.getBoundingClientRect();
     const viewport = pageView.viewport;
 
-    const viewportPoints = drawingPoints.map((p) => ({
+    const viewportPoints = drawingPoints.map((p, i) => ({
+      // Include index to guarantee uniqueness even for duplicate coordinates
+      id: `${i}-${p.x1.toFixed(4)}-${p.y1.toFixed(4)}`,
       x: (viewport.width * p.x1) / p.width,
       y: (viewport.height * p.y1) / p.height,
     }));
@@ -615,10 +673,11 @@ export function TakeoffViewer({
         .map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`)
         .join(" ");
 
-      const lastPoint = viewportPoints[viewportPoints.length - 1];
+      const lastPoint = viewportPoints.at(-1);
 
       return (
         <svg
+          aria-hidden="true"
           style={{
             position: "fixed",
             left: pageRect.left,
@@ -629,6 +688,7 @@ export function TakeoffViewer({
             zIndex: 20,
           }}
         >
+          <title>Polyline drawing preview</title>
           {/* Placed segments */}
           <path
             d={pathD}
@@ -652,8 +712,8 @@ export function TakeoffViewer({
             />
           )}
           {/* Points */}
-          {viewportPoints.map((p, i) => (
-            <circle cx={p.x} cy={p.y} fill={activeColor} key={i} r={4} />
+          {viewportPoints.map((p) => (
+            <circle cx={p.x} cy={p.y} fill={activeColor} key={p.id} r={4} />
           ))}
           {/* Cursor point */}
           {cursorPosition && (
@@ -675,11 +735,12 @@ export function TakeoffViewer({
         ? [...viewportPoints, cursorPosition]
         : viewportPoints;
       const pointsStr = allPoints.map((p) => `${p.x},${p.y}`).join(" ");
-      const lastPoint = viewportPoints[viewportPoints.length - 1];
+      const lastPoint = viewportPoints.at(-1);
       const firstPoint = viewportPoints[0];
 
       return (
         <svg
+          aria-hidden="true"
           style={{
             position: "fixed",
             left: pageRect.left,
@@ -690,6 +751,7 @@ export function TakeoffViewer({
             zIndex: 20,
           }}
         >
+          <title>Polygon drawing preview</title>
           {/* Filled preview including cursor */}
           <polygon
             fill={activeColor}
@@ -724,8 +786,8 @@ export function TakeoffViewer({
             />
           )}
           {/* Points */}
-          {viewportPoints.map((p, i) => (
-            <circle cx={p.x} cy={p.y} fill={activeColor} key={i} r={4} />
+          {viewportPoints.map((p) => (
+            <circle cx={p.x} cy={p.y} fill={activeColor} key={p.id} r={4} />
           ))}
           {/* Cursor point */}
           {cursorPosition && (
@@ -746,10 +808,12 @@ export function TakeoffViewer({
 
   return (
     <div
+      aria-label="PDF takeoff canvas"
       className="takeoff-viewer relative h-full w-full"
       onClick={handlePdfClick}
       onDoubleClick={handlePdfDoubleClick}
       onMouseMove={handleMouseMove}
+      role="application"
       style={{ cursor: activeTool ? "crosshair" : "default" }}
     >
       <PdfLoader

@@ -1,6 +1,6 @@
 import type { LTWHP } from "../types";
 
-const getBoundingRect = (clientRects: Array<LTWHP>): LTWHP => {
+const getBoundingRect = (clientRects: LTWHP[]): LTWHP => {
   const rects = Array.from(clientRects).map((rect) => {
     const { left, top, width, height, pageNumber } = rect;
 
@@ -15,12 +15,12 @@ const getBoundingRect = (clientRects: Array<LTWHP>): LTWHP => {
 
   let firstPageNumber = Number.MAX_SAFE_INTEGER;
 
-  rects.forEach((rect) => {
+  for (const rect of rects) {
     firstPageNumber = Math.min(
       firstPageNumber,
       rect.pageNumber ?? firstPageNumber
     );
-  });
+  }
 
   const rectsWithSizeOnFirstPage = rects.filter(
     (rect) =>

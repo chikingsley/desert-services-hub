@@ -1,6 +1,6 @@
 import type { LTWHP } from "../types.js";
 
-const sort = (rects: Array<LTWHP>) =>
+const sort = (rects: LTWHP[]) =>
   rects.sort((A, B) => {
     const top = (A.pageNumber || 0) * A.top - (B.pageNumber || 0) * B.top;
 
@@ -45,7 +45,7 @@ const extendWidth = (A: LTWHP, B: LTWHP) => {
   A.width = Math.max(B.width - A.left + B.left, A.width);
 };
 
-const optimizeClientRects = (clientRects: Array<LTWHP>): Array<LTWHP> => {
+const optimizeClientRects = (clientRects: LTWHP[]): LTWHP[] => {
   const rects = sort(clientRects);
 
   const toRemove = new Set();
@@ -59,14 +59,14 @@ const optimizeClientRects = (clientRects: Array<LTWHP>): Array<LTWHP> => {
   let passCount = 0;
 
   while (passCount <= 2) {
-    firstPass.forEach((A) => {
-      firstPass.forEach((B) => {
+    for (const A of firstPass) {
+      for (const B of firstPass) {
         if (A === B || toRemove.has(A) || toRemove.has(B)) {
-          return;
+          continue;
         }
 
         if (!sameLine(A, B)) {
-          return;
+          continue;
         }
 
         if (overlaps(A, B)) {
@@ -81,8 +81,8 @@ const optimizeClientRects = (clientRects: Array<LTWHP>): Array<LTWHP> => {
 
           toRemove.add(B);
         }
-      });
-    });
+      }
+    }
     passCount += 1;
   }
 

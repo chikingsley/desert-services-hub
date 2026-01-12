@@ -1,80 +1,69 @@
-import { Plus } from "lucide-react";
-import Link from "next/link";
 import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
+import { QuotesEmptyActions } from "@/components/quotes/quotes-empty-actions";
+import { QuotesHeaderActions } from "@/components/quotes/quotes-header-actions";
 import { QuotesTable } from "@/components/quotes/quotes-table";
-import { Button } from "@/components/ui/button";
-import { createClient } from "@/lib/supabase/server";
+import { db } from "@/lib/db";
+import type { QuoteRow } from "@/lib/types";
 
-export default async function QuotesPage() {
-  const supabase = await createClient();
+interface QuoteWithVersionsJson extends QuoteRow {
+  versions: string;
+  takeoff_id: string | null;
+}
 
-  const { data: quotes, error } = await supabase
-    .from("quotes")
-    .select(`
-      *,
-      quote_versions (
-        id,
-        version_number,
-        total,
-        is_current,
-        created_at
-      )
-    `)
-    .order("created_at", { ascending: false });
+export const dynamic = "force-dynamic";
 
-  if (error) {
-    console.error(
-      "Error fetching quotes:",
-      error.message,
-      error.code,
-      error.details
+export default function QuotesPage() {
+  // Fetch quotes with versions from SQLite
+  const quotes = db
+    .prepare(
+      `SELECT q.*,
+        (SELECT json_group_array(json_object(
+          'id', v.id,
+          'version_number', v.version_number,
+          'total', v.total,
+          'is_current', v.is_current,
+          'created_at', v.created_at
+        )) FROM quote_versions v WHERE v.quote_id = q.id) as versions
+      FROM quotes q
+      ORDER BY q.created_at DESC`
+    )
+    .all() as QuoteWithVersionsJson[];
+
+  const quotesWithCurrentVersion = quotes.map((quote) => {
+    const versions = JSON.parse(quote.versions || "[]");
+    const currentVersion = versions.find(
+      (v: { is_current: number }) => v.is_current === 1
     );
-  }
-
-  const quotesWithCurrentVersion =
-    quotes?.map((quote) => {
-      const currentVersion = quote.quote_versions?.find(
-        (v: { is_current: boolean }) => v.is_current
-      );
-      return {
-        ...quote,
-        current_version: currentVersion || null,
-      };
-    }) || [];
+    return {
+      ...quote,
+      is_locked: quote.is_locked === 1,
+      current_version: currentVersion || null,
+    };
+  });
 
   return (
     <div className="flex flex-1 flex-col">
       <PageHeader
-        actions={
-          <Button asChild>
-            <Link href="/quotes/new">
-              <Plus className="mr-2 h-4 w-4" />
-              New Quote
-            </Link>
-          </Button>
-        }
+        actions={<QuotesHeaderActions />}
         breadcrumbs={[{ label: "Quotes" }]}
         title="Quotes"
       />
 
-      <div className="flex-1 p-6">
-        {quotesWithCurrentVersion.length === 0 ? (
-          <EmptyState
-            action={
-              <Button asChild>
-                <Link href="/quotes/new">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Create Quote
-                </Link>
-              </Button>
-            }
-            description="Create your first quote to get started with estimates."
-            title="No quotes yet"
-          />
-        ) : (
-          <QuotesTable quotes={quotesWithCurrentVersion} />
-        )}
+      <div className="flex-1 p-6 lg:p-8">
+        <div className="page-transition">
+          {quotesWithCurrentVersion.length === 0 ? (
+            <EmptyState
+              action={<QuotesEmptyActions />}
+              description="Upload a PDF plan to measure and create quotes from takeoffs, or start a manual quote from scratch."
+              title="No quotes yet"
+            />
+          ) : (
+            <div className="rounded-xl border border-border bg-card shadow-sm">
+              <QuotesTable quotes={quotesWithCurrentVersion} />
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

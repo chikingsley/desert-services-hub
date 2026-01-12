@@ -5,7 +5,7 @@ import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 
 export default function TakeoffsPage() {
-  // TODO: Fetch takeoffs from Supabase once table is created
+  // TODO: Fetch takeoffs from SQLite via /api/takeoffs and display in table
 
   return (
     <div className="flex flex-1 flex-col">

@@ -1,145 +1,155 @@
-import {
+// Components
+export {
   AreaHighlight,
   type AreaHighlightProps,
   type AreaHighlightStyle,
-} from "./components/AreaHighlight";
-import { CountCanvas, type CountCanvasProps } from "./components/CountCanvas";
-import {
+} from "./components/area-highlight";
+export { CountCanvas, type CountCanvasProps } from "./components/count-canvas";
+export {
   CountMarkerHighlight,
   type CountMarkerHighlightProps,
-} from "./components/CountMarkerHighlight";
-import {
+} from "./components/count-marker-highlight";
+export {
   DrawingCanvas,
   type DrawingCanvasProps,
-} from "./components/DrawingCanvas";
-import {
+} from "./components/drawing-canvas";
+export {
   DrawingHighlight,
   type DrawingHighlightProps,
-} from "./components/DrawingHighlight";
-import {
+} from "./components/drawing-highlight";
+export {
   FreetextHighlight,
   type FreetextHighlightProps,
   type FreetextStyle,
-} from "./components/FreetextHighlight";
-import {
+} from "./components/freetext-highlight";
+export {
   ImageHighlight,
   type ImageHighlightProps,
-} from "./components/ImageHighlight";
-import {
+} from "./components/image-highlight";
+export {
   MonitoredHighlightContainer,
   type MonitoredHighlightContainerProps,
-} from "./components/MonitoredHighlightContainer";
-import {
+} from "./components/monitored-highlight-container";
+export {
   PdfHighlighter,
   type PdfHighlighterProps,
-} from "./components/PdfHighlighter";
-import { PdfLoader, type PdfLoaderProps } from "./components/PdfLoader";
-import {
+} from "./components/pdf-highlighter";
+export { PdfLoader, type PdfLoaderProps } from "./components/pdf-loader";
+export {
   PolygonCanvas,
   type PolygonCanvasProps,
-} from "./components/PolygonCanvas";
-import {
+} from "./components/polygon-canvas";
+export {
   PolygonHighlight,
   type PolygonHighlightProps,
-} from "./components/PolygonHighlight";
-import {
+} from "./components/polygon-highlight";
+export {
   PolylineCanvas,
   type PolylineCanvasProps,
-} from "./components/PolylineCanvas";
-import {
+} from "./components/polyline-canvas";
+export {
   PolylineHighlight,
   type PolylineHighlightProps,
-} from "./components/PolylineHighlight";
-import { ShapeCanvas, type ShapeCanvasProps } from "./components/ShapeCanvas";
-import {
+} from "./components/polyline-highlight";
+export { ShapeCanvas, type ShapeCanvasProps } from "./components/shape-canvas";
+export {
   ShapeHighlight,
   type ShapeHighlightProps,
   type ShapeStyle,
-} from "./components/ShapeHighlight";
-import {
+} from "./components/shape-highlight";
+export {
   SignaturePad,
   type SignaturePadProps,
-} from "./components/SignaturePad";
-import {
+} from "./components/signature-pad";
+export {
   TextHighlight,
   type TextHighlightProps,
   type TextHighlightStyle,
-} from "./components/TextHighlight";
-import {
+} from "./components/text-highlight";
+
+// Config
+export {
+  DEFAULT_SCALE_PRESETS,
+  DEFAULT_TAKEOFF_CONFIG,
+  getDefaultUnit,
+  type MeasurementType,
+  measurementTypeToToolType,
+  type ScalePresetConfig,
+  type TakeoffConfig,
+  type TakeoffItemConfig,
+} from "./config";
+
+// Contexts
+export {
   type HighlightContainerUtils,
   useHighlightContainerContext,
-} from "./contexts/HighlightContext";
-import {
+} from "./contexts/highlight-context";
+export {
   type PdfHighlighterUtils,
   usePdfHighlighterContext,
-} from "./contexts/PdfHighlighterContext";
-import {
+} from "./contexts/pdf-highlighter-context";
+
+// Library utilities
+export {
   scaledPositionToViewport,
   viewportPositionToScaled,
 } from "./lib/coordinates";
-import {
+export {
+  downloadAsCsv,
+  downloadAsJson,
+  downloadFile,
+  exportToCsv,
+  exportToJson,
+  importFromJson,
+  type TakeoffExportData,
+} from "./lib/export-data";
+export {
   type ExportableHighlight,
   type ExportPdfOptions,
   exportPdf,
 } from "./lib/export-pdf";
-
 export {
-  AreaHighlight,
-  CountCanvas,
-  CountMarkerHighlight,
-  DrawingCanvas,
-  DrawingHighlight,
-  exportPdf,
-  FreetextHighlight,
-  ImageHighlight,
-  MonitoredHighlightContainer,
-  PdfHighlighter,
-  PdfLoader,
-  PolygonCanvas,
-  PolygonHighlight,
-  PolylineCanvas,
-  PolylineHighlight,
-  scaledPositionToViewport,
-  ShapeCanvas,
-  ShapeHighlight,
-  SignaturePad,
-  TextHighlight,
-  useHighlightContainerContext,
-  usePdfHighlighterContext,
-  viewportPositionToScaled,
-};
+  calculatePolygonArea,
+  calculatePolygonPerimeter,
+  calculatePolylineLength,
+  formatMeasurement,
+  getAnnotationMeasurement,
+  type MeasurementSummary,
+  pdfPointsSquaredToSquareFeet,
+  pdfPointsToFeet,
+  summarizeByItem,
+} from "./lib/measurements";
 
+// Takeoff types
 export type {
-  AreaHighlightProps,
-  AreaHighlightStyle,
-  CountCanvasProps,
-  CountMarkerHighlightProps,
-  DrawingCanvasProps,
-  DrawingHighlightProps,
-  ExportableHighlight,
-  ExportPdfOptions,
-  FreetextHighlightProps,
-  FreetextStyle,
-  HighlightContainerUtils,
-  ImageHighlightProps,
-  MonitoredHighlightContainerProps,
-  PdfHighlighterProps,
-  PdfHighlighterUtils,
-  PdfLoaderProps,
-  PolygonCanvasProps,
-  PolygonHighlightProps,
-  PolylineCanvasProps,
-  PolylineHighlightProps,
-  ShapeCanvasProps,
-  ShapeHighlightProps,
-  ShapeStyle,
-  SignaturePadProps,
-  TextHighlightProps,
-  TextHighlightStyle,
-};
+  CountMarker,
+  PolygonAnnotation,
+  PolylineAnnotation,
+  ScaleCalibration,
+  TakeoffAnnotation,
+  TakeoffToolType,
+  ViewportPoint,
+} from "./takeoff-types";
 
-export * from "./config";
-export * from "./lib/export-data";
-export * from "./lib/measurements";
-export * from "./takeoff-types";
-export * from "./types";
+// Core types
+export type {
+  Content,
+  DrawingPoint,
+  DrawingStroke,
+  GhostHighlight,
+  Highlight,
+  HighlightBindings,
+  HighlightType,
+  LTWH,
+  LTWHP,
+  Page,
+  PdfScaleValue,
+  PdfSelection,
+  Scaled,
+  ScaledPosition,
+  ShapeData,
+  ShapeType,
+  Tip,
+  ViewportHighlight,
+  ViewportPosition,
+} from "./types";

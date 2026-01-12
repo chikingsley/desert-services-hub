@@ -1,7 +1,81 @@
 {
   "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
   "extends": ["ultracite/core", "ultracite/react"],
+  "linter": {
+    "rules": {
+      "nursery": {
+        // Experimental: Sort Tailwind CSS classes for consistency
+        "useSortedClasses": {
+          "level": "warn",
+          "fix": "safe",
+          "options": {
+            "functions": ["cn", "cva", "clsx"]
+          }
+        }
+      }
+    }
+  },
   "files": {
-    "includes": ["**/*", "!styles/globals.css", "!components/ui/**/*"]
-  }
+    "includes": [
+      "**/*",
+      "!styles/globals.css",
+      "!components/ui/**/*",
+      "!quoting-example/**/*"
+    ]
+  },
+  "overrides": [
+    {
+      // Allow barrel file for pdf-takeoff library entry point
+      "includes": ["lib/pdf-takeoff/index.ts"],
+      "linter": {
+        "rules": {
+          "performance": {
+            "noBarrelFile": "off"
+          }
+        }
+      }
+    },
+    {
+      // PDF takeoff components are specialized drawing/annotation tools
+      // where standard a11y interaction rules don't apply
+      // Images use blob URLs/data URLs that can't use Next.js Image optimization
+      "includes": ["lib/pdf-takeoff/components/**/*"],
+      "linter": {
+        "rules": {
+          "a11y": {
+            "noStaticElementInteractions": "off",
+            "noNoninteractiveElementInteractions": "off",
+            "useKeyWithClickEvents": "off",
+            "useKeyWithMouseEvents": "off",
+            "noLabelWithoutControl": "off",
+            "useSemanticElements": "off",
+            "noSvgWithoutTitle": "off"
+          },
+          "performance": {
+            "noImgElement": "off"
+          },
+          "correctness": {
+            "useImageSize": "off",
+            "useExhaustiveDependencies": "off"
+          }
+        }
+      }
+    },
+    {
+      // Collapsible sections with nested action buttons require role="button" pattern
+      "includes": [
+        "components/catalog/catalog-category-card.tsx",
+        "components/takeoffs/takeoff-viewer.tsx"
+      ],
+      "linter": {
+        "rules": {
+          "a11y": {
+            "useSemanticElements": "off",
+            "noNoninteractiveElementInteractions": "off",
+            "useKeyWithClickEvents": "off"
+          }
+        }
+      }
+    }
+  ]
 }

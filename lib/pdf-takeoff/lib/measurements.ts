@@ -10,7 +10,9 @@ import type { Scaled } from "../types";
  * Calculate the length of a polyline in PDF points.
  */
 export function calculatePolylineLength(points: Scaled[]): number {
-  if (points.length < 2) return 0;
+  if (points.length < 2) {
+    return 0;
+  }
 
   let totalLength = 0;
   for (let i = 1; i < points.length; i++) {
@@ -28,7 +30,9 @@ export function calculatePolylineLength(points: Scaled[]): number {
  * Calculate the area of a polygon in PDF points squared using the Shoelace formula.
  */
 export function calculatePolygonArea(points: Scaled[]): number {
-  if (points.length < 3) return 0;
+  if (points.length < 3) {
+    return 0;
+  }
 
   let area = 0;
   for (let i = 0; i < points.length; i++) {
@@ -43,7 +47,9 @@ export function calculatePolygonArea(points: Scaled[]): number {
  * Calculate the perimeter of a polygon in PDF points.
  */
 export function calculatePolygonPerimeter(points: Scaled[]): number {
-  if (points.length < 3) return 0;
+  if (points.length < 3) {
+    return 0;
+  }
 
   // Close the polygon by adding the first point at the end
   const closedPoints = [...points, points[0]];
@@ -117,6 +123,13 @@ export function getAnnotationMeasurement(
         formatted: formatMeasurement(areaSqFeet, "SF"),
       };
     }
+
+    default: {
+      const _exhaustive: never = annotation;
+      throw new Error(
+        `Unknown annotation type: ${(_exhaustive as TakeoffAnnotation).type}`
+      );
+    }
   }
 }
 
@@ -147,7 +160,9 @@ export function summarizeByItem(
 
   for (const config of itemConfigs) {
     const itemAnnotations = annotations.filter((a) => a.itemId === config.id);
-    if (itemAnnotations.length === 0) continue;
+    if (itemAnnotations.length === 0) {
+      continue;
+    }
 
     let totalValue = 0;
     let unit = "EA";

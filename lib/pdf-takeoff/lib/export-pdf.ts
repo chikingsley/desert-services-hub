@@ -7,6 +7,11 @@ import {
 } from "pdf-lib";
 import type { Scaled, ScaledPosition, ShapeData } from "../types";
 
+// Regex patterns at module level for performance
+const RGBA_REGEX = /rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/;
+const NEWLINE_REGEX = /\n/;
+const WHITESPACE_REGEX = /\s+/;
+
 /**
  * Options for the PDF export function.
  *
@@ -71,14 +76,12 @@ function parseColor(color: string): {
   a: number;
 } {
   // Handle rgba(r, g, b, a) and rgb(r, g, b)
-  const rgbaMatch = color.match(
-    /rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/
-  );
+  const rgbaMatch = color.match(RGBA_REGEX);
   if (rgbaMatch) {
     return {
-      r: Number.parseInt(rgbaMatch[1]) / 255,
-      g: Number.parseInt(rgbaMatch[2]) / 255,
-      b: Number.parseInt(rgbaMatch[3]) / 255,
+      r: Number.parseInt(rgbaMatch[1], 10) / 255,
+      g: Number.parseInt(rgbaMatch[2], 10) / 255,
+      b: Number.parseInt(rgbaMatch[3], 10) / 255,
       a: rgbaMatch[4] ? Number.parseFloat(rgbaMatch[4]) : 1,
     };
   }
@@ -158,12 +161,14 @@ function wrapText(
   fontSize: number,
   maxWidth: number
 ): string[] {
-  if (!text || maxWidth <= 0) return [];
+  if (!text || maxWidth <= 0) {
+    return [];
+  }
 
   const lines: string[] = [];
 
   // Split by newlines first to preserve intentional line breaks
-  const paragraphs = text.split(/\n/);
+  const paragraphs = text.split(NEWLINE_REGEX);
 
   for (const paragraph of paragraphs) {
     if (!paragraph.trim()) {
@@ -171,7 +176,7 @@ function wrapText(
       continue;
     }
 
-    const words = paragraph.split(/\s+/);
+    const words = paragraph.split(WHITESPACE_REGEX);
     let currentLine = "";
 
     for (const word of words) {
@@ -218,7 +223,9 @@ function wrapText(
         }
       }
     }
-    if (currentLine) lines.push(currentLine);
+    if (currentLine) {
+      lines.push(currentLine);
+    }
   }
 
   return lines;
@@ -233,8 +240,10 @@ function groupByPage(
   const map = new Map<number, ExportableHighlight[]>();
   for (const h of highlights) {
     const pageNum = h.position.boundingRect.pageNumber;
-    if (!map.has(pageNum)) map.set(pageNum, []);
-    map.get(pageNum)!.push(h);
+    if (!map.has(pageNum)) {
+      map.set(pageNum, []);
+    }
+    map.get(pageNum)?.push(h);
   }
   return map;
 }
@@ -243,11 +252,11 @@ function groupByPage(
  * Render a text highlight (multiple rectangles for multi-line selections).
  * Supports highlight (background), underline, and strikethrough styles.
  */
-async function renderTextHighlight(
+function renderTextHighlight(
   page: PDFPage,
   highlight: ExportableHighlight,
   options: ExportPdfOptions
-): Promise<void> {
+): void {
   // Per-highlight color override or fallback to default
   const colorStr =
     highlight.highlightColor ||
@@ -305,11 +314,11 @@ async function renderTextHighlight(
 /**
  * Render an area highlight (single rectangle).
  */
-async function renderAreaHighlight(
+function renderAreaHighlight(
   page: PDFPage,
   highlight: ExportableHighlight,
   options: ExportPdfOptions
-): Promise<void> {
+): void {
   // Per-highlight color override or fallback to default
   const colorStr =
     highlight.highlightColor ||
@@ -335,12 +344,12 @@ async function renderAreaHighlight(
  * Render a freetext highlight (background rectangle + text).
  * Text is wrapped to fit within the box.
  */
-async function renderFreetextHighlight(
+function renderFreetextHighlight(
   page: PDFPage,
   highlight: ExportableHighlight,
   options: ExportPdfOptions,
   font: PDFFont
-): Promise<void> {
+): void {
   const text = highlight.content?.text || "";
   const textColor = parseColor(
     highlight.color || options.defaultFreetextColor || "#333333"
@@ -357,7 +366,7 @@ async function renderFreetextHighlight(
   const pdfHeight = page.getHeight();
   const yRatio = pdfHeight / highlight.position.boundingRect.height;
   const storedFontSize =
-    Number.parseInt(highlight.fontSize || "") ||
+    Number.parseInt(highlight.fontSize || "", 10) ||
     options.defaultFreetextFontSize ||
     14;
   const fontSize = storedFontSize * yRatio;
@@ -396,7 +405,9 @@ async function renderFreetextHighlight(
 
     for (const line of lines) {
       // Stop if we've run out of vertical space
-      if (currentY < y + padding) break;
+      if (currentY < y + padding) {
+        break;
+      }
 
       // Skip empty lines but still move down
       if (line.trim()) {
@@ -473,7 +484,9 @@ async function renderImageHighlight(
   highlight: ExportableHighlight
 ): Promise<void> {
   const imageDataUrl = highlight.content?.image;
-  if (!imageDataUrl) return;
+  if (!imageDataUrl) {
+    return;
+  }
 
   try {
     const { bytes, type } = dataUrlToBytes(imageDataUrl);
@@ -518,10 +531,10 @@ async function renderImageHighlight(
 /**
  * Render a shape highlight (rectangle, circle, or arrow).
  */
-async function renderShapeHighlight(
+function renderShapeHighlight(
   page: PDFPage,
   highlight: ExportableHighlight
-): Promise<void> {
+): void {
   // Get shape data from content or top-level properties
   const shapeType =
     highlight.content?.shape?.shapeType || highlight.shapeType || "rectangle";
@@ -610,6 +623,12 @@ async function renderShapeHighlight(
       });
       break;
     }
+
+    default: {
+      // Unknown shape type - skip rendering
+      const _exhaustiveCheck: never = shapeType as never;
+      console.warn(`Unknown shape type: ${_exhaustiveCheck}`);
+    }
   }
 }
 
@@ -671,7 +690,9 @@ export async function exportPdf(
 
   for (const [pageNum, pageHighlights] of byPage) {
     const page = pages[pageNum - 1]; // 1-indexed to 0-indexed
-    if (!page) continue;
+    if (!page) {
+      continue;
+    }
 
     for (const highlight of pageHighlights) {
       switch (highlight.type) {

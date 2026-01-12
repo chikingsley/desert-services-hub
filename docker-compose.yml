@@ -1,0 +1,42 @@
+services:
+  # MinIO AIStor Object Storage (Commercial/Enterprise)
+  # Requires license key from https://subnet.min.io
+  aistor:
+    image: quay.io/minio/aistor/minio:latest
+    container_name: desert-aistor
+    command: server /data --console-address ":9001" --license /minio.license
+    ports:
+      - "9000:9000"  # S3 API
+      - "9001:9001"  # Web Console
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+    volumes:
+      - aistor_data:/data
+      - ./.minio/minio.license:/minio.license:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    restart: unless-stopped
+
+volumes:
+  aistor_data:
+    driver: local
+
+# =============================================================================
+# MinIO AIStor Setup
+# =============================================================================
+#
+# Prerequisites:
+#   - Get license from https://subnet.min.io/health?download-license
+#   - Save to .minio/minio.license
+#
+# Start AIStor:  docker compose up -d aistor
+# Console:       http://localhost:9001
+# S3 API:        http://localhost:9000
+# Credentials:   minioadmin / minioadmin (or set in .env)
+#
+# Buckets are created automatically when Next.js starts (instrumentation.ts)
+# =============================================================================

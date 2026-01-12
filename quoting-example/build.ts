@@ -125,7 +125,7 @@ const entrypoints = [...new Bun.Glob("**.html").scanSync("src")]
   .map((a) => path.resolve("src", a))
   .filter((dir) => !dir.includes("node_modules"));
 console.log(
-  `📄 Found ${entrypoints.length} HTML ${entrypoints.length === 1 ? "file" : "files"} to process\n`,
+  `📄 Found ${entrypoints.length} HTML ${entrypoints.length === 1 ? "file" : "files"} to process\n`
 );
 
 const result = await Bun.build({
@@ -137,7 +137,9 @@ const result = await Bun.build({
   sourcemap: "linked",
   define: {
     "process.env.NODE_ENV": JSON.stringify("production"),
-    "process.env.GOOGLE_MAPS_API_KEY": JSON.stringify(process.env.GOOGLE_MAPS_API_KEY || ""),
+    "process.env.GOOGLE_MAPS_API_KEY": JSON.stringify(
+      process.env.GOOGLE_MAPS_API_KEY || ""
+    ),
   },
   ...cliConfig,
 });

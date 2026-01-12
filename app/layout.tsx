@@ -1,13 +1,22 @@
-import { Analytics } from "@vercel/analytics/next";
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { DM_Sans, Sora } from "next/font/google";
 import type React from "react";
+import { Toaster } from "sonner";
 import "../styles/globals.css";
 import { AppSidebar } from "@/components/app-sidebar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 
-const _geist = Geist({ subsets: ["latin"] });
-const _geistMono = Geist_Mono({ subsets: ["latin"] });
+const dmSans = DM_Sans({
+  subsets: ["latin"],
+  variable: "--font-sans",
+  display: "swap",
+});
+
+const sora = Sora({
+  subsets: ["latin"],
+  variable: "--font-display",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "Desert Services Hub",
@@ -26,8 +35,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#0a0a0a" },
+    { media: "(prefers-color-scheme: light)", color: "#f8f5f2" },
+    { media: "(prefers-color-scheme: dark)", color: "#1a1625" },
   ],
 };
 
@@ -37,13 +46,22 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html className={`${dmSans.variable} ${sora.variable}`} lang="en">
+      <head>
+        {/* PDF.js viewer CSS - loaded from CDN to avoid SVG reference bundling issues */}
+        <link
+          href="https://unpkg.com/pdfjs-dist@5.4.530/web/pdf_viewer.css"
+          rel="stylesheet"
+        />
+      </head>
       <body className="font-sans antialiased">
         <SidebarProvider>
           <AppSidebar />
-          <SidebarInset>{children}</SidebarInset>
+          <SidebarInset className="texture-noise bg-desert-gradient">
+            {children}
+          </SidebarInset>
         </SidebarProvider>
-        <Analytics />
+        <Toaster richColors />
       </body>
     </html>
   );

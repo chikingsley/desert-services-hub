@@ -70,7 +70,7 @@ function createReducer<T>(maxHistory: number) {
         if (state.past.length === 0) {
           return state;
         }
-        const previous = state.past[state.past.length - 1];
+        const previous = state.past.at(-1) as T;
         const newPast = state.past.slice(0, -1);
         return {
           past: newPast,

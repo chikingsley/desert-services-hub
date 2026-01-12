@@ -1,5 +1,5 @@
-import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
+import { db } from "@/lib/db";
 
 export async function GET(
   _request: Request,
@@ -7,7 +7,9 @@ export async function GET(
 ) {
   const { id } = await params;
 
-  const takeoff = db.prepare("SELECT * FROM takeoffs WHERE id = ?").get(id) as Record<string, unknown> | undefined;
+  const takeoff = db.prepare("SELECT * FROM takeoffs WHERE id = ?").get(id) as
+    | Record<string, unknown>
+    | undefined;
 
   if (!takeoff) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -16,8 +18,8 @@ export async function GET(
   // Parse JSON fields
   return NextResponse.json({
     ...takeoff,
-    annotations: JSON.parse(takeoff.annotations as string || "[]"),
-    page_scales: JSON.parse(takeoff.page_scales as string || "{}"),
+    annotations: JSON.parse((takeoff.annotations as string) || "[]"),
+    page_scales: JSON.parse((takeoff.page_scales as string) || "{}"),
   });
 }
 
@@ -55,14 +57,18 @@ export async function PUT(
   updates.push("updated_at = datetime('now')");
   values.push(id);
 
-  db.prepare(`UPDATE takeoffs SET ${updates.join(", ")} WHERE id = ?`).run(...values);
+  db.prepare(`UPDATE takeoffs SET ${updates.join(", ")} WHERE id = ?`).run(
+    ...values
+  );
 
-  const takeoff = db.prepare("SELECT * FROM takeoffs WHERE id = ?").get(id) as Record<string, unknown>;
+  const takeoff = db
+    .prepare("SELECT * FROM takeoffs WHERE id = ?")
+    .get(id) as Record<string, unknown>;
 
   return NextResponse.json({
     ...takeoff,
-    annotations: JSON.parse(takeoff.annotations as string || "[]"),
-    page_scales: JSON.parse(takeoff.page_scales as string || "{}"),
+    annotations: JSON.parse((takeoff.annotations as string) || "[]"),
+    page_scales: JSON.parse((takeoff.page_scales as string) || "{}"),
   });
 }
 

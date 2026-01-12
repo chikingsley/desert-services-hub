@@ -1,8 +1,8 @@
 import type { GhostHighlight, Highlight } from "../types";
 
-type GroupedHighlights = {
+interface GroupedHighlights {
   [pageNumber: number]: Array<Highlight | GhostHighlight>;
-};
+}
 
 const groupHighlightsByPage = (
   highlights: Array<Highlight | GhostHighlight | null>
@@ -16,7 +16,7 @@ const groupHighlightsByPage = (
       ...highlight.position.rects.map((rect) => rect.pageNumber || 0),
     ];
 
-    pageNumbers.forEach((pageNumber) => {
+    for (const pageNumber of pageNumbers) {
       acc[pageNumber] ||= [];
       const pageSpecificHighlight = {
         ...highlight,
@@ -28,7 +28,7 @@ const groupHighlightsByPage = (
         },
       };
       acc[pageNumber].push(pageSpecificHighlight);
-    });
+    }
 
     return acc;
   }, {});

@@ -91,6 +91,10 @@ export function measurementTypeToToolType(
       return "polyline";
     case "area":
       return "polygon";
+    default: {
+      const _exhaustive: never = type;
+      throw new Error(`Unknown measurement type: ${_exhaustive}`);
+    }
   }
 }
 
@@ -105,5 +109,9 @@ export function getDefaultUnit(type: MeasurementType): string {
       return "LF";
     case "area":
       return "SF";
+    default: {
+      const _exhaustive: never = type;
+      throw new Error(`Unknown measurement type: ${_exhaustive}`);
+    }
   }
 }

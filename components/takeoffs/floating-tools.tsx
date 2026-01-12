@@ -3,7 +3,7 @@
 import { Circle, GripVertical, Ruler, Square, Trash2 } from "lucide-react";
 import { useState } from "react";
 import type { PresetItem } from "@/app/takeoffs/[id]/page";
-import { PRESET_ITEMS, SCALE_PRESETS } from "@/app/takeoffs/[id]/page";
+import { SCALE_PRESETS } from "@/app/takeoffs/[id]/page";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/tooltip";
 
 interface FloatingToolsProps {
+  items: PresetItem[];
   selectedItem: PresetItem | null;
   onSelectItem: (item: PresetItem | null) => void;
   counts: Array<{
@@ -63,6 +64,7 @@ function getTooltipText(type: string) {
 }
 
 export function FloatingTools({
+  items,
   selectedItem,
   onSelectItem,
   counts,
@@ -149,7 +151,7 @@ export function FloatingTools({
       <div className="p-2">
         <TooltipProvider>
           <div className="flex flex-col gap-0.5">
-            {PRESET_ITEMS.map((item) => {
+            {items.map((item) => {
               const Icon = getIconForType(item.type);
               const isSelected = selectedItem?.id === item.id;
               const countData = counts.find((c) => c.id === item.id);

@@ -6,7 +6,7 @@ import type { Root } from "react-dom/client";
  *
  * @category Type
  */
-export type LTWH = {
+export interface LTWH {
   /** The x coordinate of the top-left of the rectangle. */
   left: number;
   /** The y coordinate of the top-left of the rectangle. */
@@ -15,7 +15,7 @@ export type LTWH = {
   width: number;
   /** Height of the rectangle, relative to top left of the viewport. */
   height: number;
-};
+}
 
 /** @category Type */
 export type LTWHP = LTWH & {
@@ -31,7 +31,7 @@ export type LTWHP = LTWH & {
  * @category Type
  * @author Artem Tyurin <artem.tyurin@gmail.com>
  */
-export type Scaled = {
+export interface Scaled {
   x1: number;
   y1: number;
 
@@ -43,54 +43,54 @@ export type Scaled = {
 
   /** 1-Indexed page number */
   pageNumber: number;
-};
+}
 
 /**
  * Position of a Highlight relative to the viewport.
  *
  * @category Type
  */
-export type ViewportPosition = {
+export interface ViewportPosition {
   /** Bounding rectangle for the entire highlight. */
   boundingRect: LTWHP;
   /** For text highlights, the rectangular highlights for each block of text. */
-  rects: Array<LTWHP>;
-};
+  rects: LTWHP[];
+}
 
 /**
  * Position of a Highlight with normalised coordinates.
  *
  * @category Type
  */
-export type ScaledPosition = {
+export interface ScaledPosition {
   /** Bounding rectangle for the entire highlight. */
   boundingRect: Scaled;
   /** For text highlights, the rectangular highlights for each block of text. */
-  rects: Array<Scaled>;
+  rects: Scaled[];
   /** Rarely applicable property of whether coordinates should be in PDF coordinate space.  */
   usePdfCoordinates?: boolean;
-};
+}
 
 /**
  * A point in a drawing stroke.
  *
  * @category Type
  */
-export type DrawingPoint = {
+export interface DrawingPoint {
   x: number;
   y: number;
-};
+}
 
 /**
  * A stroke in a drawing, with its own color and width.
  *
  * @category Type
  */
-export type DrawingStroke = {
+export interface DrawingStroke {
   points: DrawingPoint[];
   color: string;
   width: number;
-};
+}
 
 /**
  * Shape types for shape annotations.
@@ -104,7 +104,7 @@ export type ShapeType = "rectangle" | "circle" | "arrow";
  *
  * @category Type
  */
-export type ShapeData = {
+export interface ShapeData {
   shapeType: ShapeType;
   strokeColor: string;
   strokeWidth: number;
@@ -112,21 +112,21 @@ export type ShapeData = {
   startPoint?: { x: number; y: number };
   /** For arrows: end point as percentage of bounding box (0-1) */
   endPoint?: { x: number; y: number };
-};
+}
 
 /**
  * The content of a highlight
  *
  * @category Type
  */
-export type Content = {
+export interface Content {
   text?: string;
   image?: string;
   /** For drawing highlights, store the stroke data for later editing */
   strokes?: DrawingStroke[];
   /** For shape highlights, store the shape data */
   shape?: ShapeData;
-};
+}
 
 /**
  * What type the highlight is. This is the ideal way to determine whether to
@@ -202,32 +202,32 @@ export type PdfSelection = GhostHighlight & {
  *
  * @category Type
  */
-export type Page = {
+export interface Page {
   node: HTMLElement;
   /** 1-Index page number */
   number: number;
-};
+}
 
 /**
  * All the DOM refs for a group of highlights on one page
  *
  * @category Type
  */
-export type HighlightBindings = {
+export interface HighlightBindings {
   reactRoot: Root;
   container: Element;
   textLayer: HTMLElement;
-};
+}
 
 /**
  * A popup that can be viewed inside a PdfHighlighter.
  *
  * @category Type
  */
-export type Tip = {
+export interface Tip {
   position: ViewportPosition;
   content: ReactNode;
-};
+}
 
 /**
  * The accepted scale values by the PDF.js viewer.

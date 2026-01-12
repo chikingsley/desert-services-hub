@@ -71,20 +71,26 @@ const server = Bun.serve({
     if (path === "/api/quotes" && req.method === "GET") {
       const search = url.searchParams.get("search") || undefined;
       const statusParam = url.searchParams.get("status");
-      const status = (["draft", "sent", "accepted", "declined"].includes(statusParam || "")
-        ? statusParam
-        : undefined) as QuoteStatus | undefined;
+      const status = (
+        ["draft", "sent", "accepted", "declined"].includes(statusParam || "")
+          ? statusParam
+          : undefined
+      ) as QuoteStatus | undefined;
       const company = url.searchParams.get("company") || undefined;
       const limit = Number(url.searchParams.get("limit")) || 25;
       const offset = Number(url.searchParams.get("offset")) || 0;
       const orderByParam = url.searchParams.get("orderBy");
-      const orderBy = (["date", "estimate_number", "company_name", "total"].includes(orderByParam || "")
-        ? orderByParam
-        : "date") as QuoteListOptions["orderBy"];
+      const orderBy = (
+        ["date", "estimate_number", "company_name", "total"].includes(
+          orderByParam || ""
+        )
+          ? orderByParam
+          : "date"
+      ) as QuoteListOptions["orderBy"];
       const orderDirParam = url.searchParams.get("orderDir");
-      const orderDir = (["asc", "desc"].includes(orderDirParam || "")
-        ? orderDirParam
-        : "desc") as QuoteListOptions["orderDir"];
+      const orderDir = (
+        ["asc", "desc"].includes(orderDirParam || "") ? orderDirParam : "desc"
+      ) as QuoteListOptions["orderDir"];
 
       const result = listQuotes(quotesDb, {
         search,
@@ -174,7 +180,10 @@ const server = Bun.serve({
 						ORDER BY name
 						LIMIT ?
 					`);
-          notionContractors = stmt.all(`%${search}%`, limit) as NotionContractor[];
+          notionContractors = stmt.all(
+            `%${search}%`,
+            limit
+          ) as NotionContractor[];
         } else {
           const stmt = notionDb.prepare(`
 						SELECT id, name, billing_email as email, billing_phone as phone
@@ -199,7 +208,10 @@ const server = Bun.serve({
 						ORDER BY name
 						LIMIT ?
 					`);
-          localContractors = stmt.all(`%${search}%`, limit) as LocalContractor[];
+          localContractors = stmt.all(
+            `%${search}%`,
+            limit
+          ) as LocalContractor[];
         } else {
           const stmt = quotesDb.prepare(`
 						SELECT id, name, email, phone, address

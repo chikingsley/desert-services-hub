@@ -23,7 +23,7 @@ const getClientRects = (
   range: Range,
   pages: Page[],
   shouldOptimize = true
-): Array<LTWHP> => {
+): LTWHP[] => {
   const clientRects = Array.from(range.getClientRects());
 
   const rects: LTWHP[] = [];

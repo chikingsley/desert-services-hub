@@ -4,7 +4,6 @@ import { CalendarIcon, Plus } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -24,6 +23,7 @@ interface InlineQuoteEditorProps {
   initialQuote?: EditorQuote;
   onSave?: (quote: EditorQuote) => Promise<void>;
   onSaveStatusChange?: (status: "saved" | "saving" | "unsaved") => void;
+  onQuoteChange?: (quote: EditorQuote) => void;
   onSaveRef?: (ref: { save: () => Promise<void> } | null) => void;
   quoteId?: string | null;
 }
@@ -33,6 +33,7 @@ export function InlineQuoteEditor({
   initialQuote,
   onSave,
   onSaveStatusChange,
+  onQuoteChange,
   onSaveRef,
 }: InlineQuoteEditorProps) {
   const {
@@ -98,6 +99,10 @@ export function InlineQuoteEditor({
   useEffect(() => {
     onSaveStatusChange?.(saveStatus);
   }, [saveStatus, onSaveStatusChange]);
+
+  useEffect(() => {
+    onQuoteChange?.(quote);
+  }, [quote, onQuoteChange]);
 
   // Expose save function to parent
   const handleManualSave = useCallback(async () => {
@@ -345,379 +350,369 @@ export function InlineQuoteEditor({
 
   return (
     <div className="flex flex-1 flex-col gap-6 overflow-y-auto p-6 pb-28 lg:p-8 lg:pb-8">
-      <Card className="page-transition overflow-hidden border-border/50 shadow-sm">
-        <CardHeader className="border-border/30 border-b bg-card pb-4">
-          <CardTitle className="font-display text-xl tracking-tight">
-            Quote Editor
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6 p-6">
-          {/* Header Info */}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <div className="grid gap-2">
-              <Label
-                className="font-medium text-muted-foreground text-xs uppercase tracking-wide"
-                htmlFor="estimator"
-              >
-                Estimator
-              </Label>
-              <Input
-                className="h-10 rounded-lg border-border/50 bg-background transition-colors focus:border-primary"
-                id="estimator"
-                onChange={(e) =>
-                  updateQuote((p) => ({ ...p, estimator: e.target.value }))
-                }
-                placeholder="Estimator name"
-                value={quote.estimator}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label
-                className="font-medium text-muted-foreground text-xs uppercase tracking-wide"
-                htmlFor="date"
-              >
-                Date
-              </Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    className="h-10 w-full justify-between rounded-lg border-border/50 bg-background font-normal transition-colors hover:border-primary"
-                    variant="outline"
-                  >
-                    <span>
-                      {new Date(quote.date).toLocaleDateString("en-US", {
-                        month: "2-digit",
-                        day: "2-digit",
-                        year: "numeric",
-                      })}
-                    </span>
-                    <CalendarIcon className="h-4 w-4 text-muted-foreground" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    defaultMonth={new Date(quote.date)}
-                    mode="single"
-                    onSelect={(date) => {
-                      if (date) {
-                        updateQuote((p) => ({
-                          ...p,
-                          date: date.toISOString(),
-                        }));
-                      }
-                    }}
-                    selected={new Date(quote.date)}
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-            <div className="grid gap-2">
-              <Label
-                className="font-medium text-muted-foreground text-xs uppercase tracking-wide"
-                htmlFor="estimateNumber"
-              >
-                Estimate #
-              </Label>
-              <Input
-                className="h-10 rounded-lg border-border/50 bg-background font-mono transition-colors focus:border-primary"
-                id="estimateNumber"
-                onChange={(e) =>
-                  updateQuote((p) => ({ ...p, estimateNumber: e.target.value }))
-                }
-                value={quote.estimateNumber}
-              />
-            </div>
+      <div className="space-y-6">
+        {/* Header Info */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-2">
+            <Label
+              className="font-medium text-muted-foreground text-xs uppercase tracking-wide"
+              htmlFor="estimator"
+            >
+              Estimator
+            </Label>
+            <Input
+              className="h-10 rounded-lg border-border/50 bg-background transition-colors focus:border-primary"
+              id="estimator"
+              onChange={(e) =>
+                updateQuote((p) => ({ ...p, estimator: e.target.value }))
+              }
+              placeholder="Estimator name"
+              value={quote.estimator}
+            />
           </div>
-
-          {/* Bill To and Job Info */}
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            {/* Bill To */}
-            <div className="rounded-xl border border-border/50 bg-muted/20 p-5">
-              <h3 className="mb-4 flex items-center gap-2 font-display font-semibold text-sm">
-                <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-primary/10 text-primary text-xs">
-                  1
-                </span>
-                Bill To
-              </h3>
-              <div className="space-y-4">
-                <div className="grid gap-2">
-                  <Label
-                    className="font-medium text-muted-foreground text-xs uppercase tracking-wide"
-                    htmlFor="companyName"
-                  >
-                    Company Name
-                  </Label>
-                  <Input
-                    className="h-10 rounded-lg border-border/50 bg-background transition-colors focus:border-primary"
-                    id="companyName"
-                    onChange={(e) =>
-                      updateQuote((p) => ({
-                        ...p,
-                        billTo: { ...p.billTo, companyName: e.target.value },
-                      }))
-                    }
-                    placeholder="Company name"
-                    value={quote.billTo.companyName}
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label
-                    className="font-medium text-muted-foreground text-xs uppercase tracking-wide"
-                    htmlFor="companyAddress"
-                  >
-                    Company Address
-                  </Label>
-                  <Input
-                    className="h-10 rounded-lg border-border/50 bg-background transition-colors focus:border-primary"
-                    id="companyAddress"
-                    onChange={(e) =>
-                      updateQuote((p) => ({
-                        ...p,
-                        billTo: { ...p.billTo, address: e.target.value },
-                      }))
-                    }
-                    placeholder="Enter company address..."
-                    value={quote.billTo.address}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Job Info */}
-            <div className="rounded-xl border border-border/50 bg-muted/20 p-5">
-              <h3 className="mb-4 flex items-center gap-2 font-display font-semibold text-sm">
-                <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-primary/10 text-primary text-xs">
-                  2
-                </span>
-                Job Information
-              </h3>
-              <div className="space-y-4">
-                <div className="grid gap-2">
-                  <Label
-                    className="font-medium text-muted-foreground text-xs uppercase tracking-wide"
-                    htmlFor="jobName"
-                  >
-                    Job Name
-                  </Label>
-                  <Input
-                    className="h-10 rounded-lg border-border/50 bg-background transition-colors focus:border-primary"
-                    id="jobName"
-                    onChange={(e) =>
-                      updateQuote((p) => ({
-                        ...p,
-                        jobInfo: { ...p.jobInfo, siteName: e.target.value },
-                      }))
-                    }
-                    placeholder="Job name"
-                    value={quote.jobInfo.siteName}
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label
-                    className="font-medium text-muted-foreground text-xs uppercase tracking-wide"
-                    htmlFor="jobAddress"
-                  >
-                    Job Address
-                  </Label>
-                  <Input
-                    className="h-10 rounded-lg border-border/50 bg-background transition-colors focus:border-primary"
-                    id="jobAddress"
-                    onChange={(e) =>
-                      updateQuote((p) => ({
-                        ...p,
-                        jobInfo: { ...p.jobInfo, address: e.target.value },
-                      }))
-                    }
-                    placeholder="Enter job address..."
-                    value={quote.jobInfo.address}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Line Items */}
-          <div>
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="flex items-center gap-2 font-display font-semibold">
-                <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-primary/10 text-primary text-xs">
-                  3
-                </span>
-                Line Items
-              </h3>
-              <Button
-                className="rounded-lg"
-                onClick={addLineItem}
-                size="sm"
-                variant="secondary"
-              >
-                <Plus className="mr-1 h-4 w-4" />
-                Blank Item
-              </Button>
-            </div>
-
-            {/* Catalog Picker */}
-            <div className="mb-4 rounded-xl border border-border/50 bg-muted/20 p-4">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:gap-4">
-                <div className="grid flex-1 gap-2">
-                  <Label
-                    className="font-medium text-muted-foreground text-xs uppercase tracking-wide"
-                    htmlFor="catalogPicker"
-                  >
-                    Add from Catalog
-                  </Label>
-                  <CatalogCombobox
-                    catalog={catalog}
-                    onSelect={addFromCatalog}
-                  />
-                </div>
-                <div className="grid w-full gap-2 sm:w-48">
-                  <Label
-                    className="font-medium text-muted-foreground text-xs uppercase tracking-wide"
-                    htmlFor="sectionPicker"
-                  >
-                    Add Section
-                  </Label>
-                  <SectionCombobox
-                    catalog={catalog}
-                    onSelect={addCategoryItems}
-                  />
-                </div>
-              </div>
-
-              {/* Current Sections */}
-              {quote.sections.length > 0 && (
-                <div className="mt-4 flex flex-wrap items-center gap-2 border-border/30 border-t pt-4">
-                  <span className="font-medium text-muted-foreground text-xs uppercase tracking-wide">
-                    Sections:
+          <div className="grid gap-2">
+            <Label
+              className="font-medium text-muted-foreground text-xs uppercase tracking-wide"
+              htmlFor="date"
+            >
+              Date
+            </Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  className="h-10 w-full justify-between rounded-lg border-border/50 bg-background font-normal transition-colors hover:border-primary"
+                  variant="outline"
+                >
+                  <span>
+                    {new Date(quote.date).toLocaleDateString("en-US", {
+                      month: "2-digit",
+                      day: "2-digit",
+                      year: "numeric",
+                    })}
                   </span>
-                  {quote.sections.map((section) => (
-                    <div
-                      className="flex items-center gap-1.5 rounded-lg bg-primary/10 px-3 py-1.5 text-primary"
-                      key={section.id}
+                  <CalendarIcon className="h-4 w-4 text-muted-foreground" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0">
+                <Calendar
+                  defaultMonth={new Date(quote.date)}
+                  mode="single"
+                  onSelect={(date) => {
+                    if (date) {
+                      updateQuote((p) => ({
+                        ...p,
+                        date: date.toISOString(),
+                      }));
+                    }
+                  }}
+                  selected={new Date(quote.date)}
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+          <div className="grid gap-2">
+            <Label
+              className="font-medium text-muted-foreground text-xs uppercase tracking-wide"
+              htmlFor="estimateNumber"
+            >
+              Estimate #
+            </Label>
+            <Input
+              className="h-10 rounded-lg border-border/50 bg-background font-mono transition-colors focus:border-primary"
+              id="estimateNumber"
+              onChange={(e) =>
+                updateQuote((p) => ({ ...p, estimateNumber: e.target.value }))
+              }
+              value={quote.estimateNumber}
+            />
+          </div>
+        </div>
+
+        {/* Bill To and Job Info */}
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          {/* Bill To */}
+          <div className="rounded-xl border border-border/50 bg-muted/20 p-5">
+            <h3 className="mb-4 flex items-center gap-2 font-display font-semibold text-sm">
+              <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-primary/10 text-primary text-xs">
+                1
+              </span>
+              Bill To
+            </h3>
+            <div className="space-y-4">
+              <div className="grid gap-2">
+                <Label
+                  className="font-medium text-muted-foreground text-xs uppercase tracking-wide"
+                  htmlFor="companyName"
+                >
+                  Company Name
+                </Label>
+                <Input
+                  className="h-10 rounded-lg border-border/50 bg-background transition-colors focus:border-primary"
+                  id="companyName"
+                  onChange={(e) =>
+                    updateQuote((p) => ({
+                      ...p,
+                      billTo: { ...p.billTo, companyName: e.target.value },
+                    }))
+                  }
+                  placeholder="Company name"
+                  value={quote.billTo.companyName}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label
+                  className="font-medium text-muted-foreground text-xs uppercase tracking-wide"
+                  htmlFor="companyAddress"
+                >
+                  Company Address
+                </Label>
+                <Input
+                  className="h-10 rounded-lg border-border/50 bg-background transition-colors focus:border-primary"
+                  id="companyAddress"
+                  onChange={(e) =>
+                    updateQuote((p) => ({
+                      ...p,
+                      billTo: { ...p.billTo, address: e.target.value },
+                    }))
+                  }
+                  placeholder="Enter company address..."
+                  value={quote.billTo.address}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Job Info */}
+          <div className="rounded-xl border border-border/50 bg-muted/20 p-5">
+            <h3 className="mb-4 flex items-center gap-2 font-display font-semibold text-sm">
+              <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-primary/10 text-primary text-xs">
+                2
+              </span>
+              Job Information
+            </h3>
+            <div className="space-y-4">
+              <div className="grid gap-2">
+                <Label
+                  className="font-medium text-muted-foreground text-xs uppercase tracking-wide"
+                  htmlFor="jobName"
+                >
+                  Job Name
+                </Label>
+                <Input
+                  className="h-10 rounded-lg border-border/50 bg-background transition-colors focus:border-primary"
+                  id="jobName"
+                  onChange={(e) =>
+                    updateQuote((p) => ({
+                      ...p,
+                      jobInfo: { ...p.jobInfo, siteName: e.target.value },
+                    }))
+                  }
+                  placeholder="Job name"
+                  value={quote.jobInfo.siteName}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label
+                  className="font-medium text-muted-foreground text-xs uppercase tracking-wide"
+                  htmlFor="jobAddress"
+                >
+                  Job Address
+                </Label>
+                <Input
+                  className="h-10 rounded-lg border-border/50 bg-background transition-colors focus:border-primary"
+                  id="jobAddress"
+                  onChange={(e) =>
+                    updateQuote((p) => ({
+                      ...p,
+                      jobInfo: { ...p.jobInfo, address: e.target.value },
+                    }))
+                  }
+                  placeholder="Enter job address..."
+                  value={quote.jobInfo.address}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Line Items */}
+        <div>
+          <div className="mb-4 flex items-center justify-between">
+            <h3 className="flex items-center gap-2 font-display font-semibold">
+              <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-primary/10 text-primary text-xs">
+                3
+              </span>
+              Line Items
+            </h3>
+            <Button
+              className="rounded-lg"
+              onClick={addLineItem}
+              size="sm"
+              variant="secondary"
+            >
+              <Plus className="mr-1 h-4 w-4" />
+              Blank Item
+            </Button>
+          </div>
+
+          {/* Catalog Picker */}
+          <div className="mb-4 rounded-xl border border-border/50 bg-muted/20 p-4">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:gap-4">
+              <div className="grid flex-1 gap-2">
+                <Label
+                  className="font-medium text-muted-foreground text-xs uppercase tracking-wide"
+                  htmlFor="catalogPicker"
+                >
+                  Add from Catalog
+                </Label>
+                <CatalogCombobox catalog={catalog} onSelect={addFromCatalog} />
+              </div>
+              <div className="grid w-full gap-2 sm:w-48">
+                <Label
+                  className="font-medium text-muted-foreground text-xs uppercase tracking-wide"
+                  htmlFor="sectionPicker"
+                >
+                  Add Section
+                </Label>
+                <SectionCombobox
+                  catalog={catalog}
+                  onSelect={addCategoryItems}
+                />
+              </div>
+            </div>
+
+            {/* Current Sections */}
+            {quote.sections.length > 0 && (
+              <div className="mt-4 flex flex-wrap items-center gap-2 border-border/30 border-t pt-4">
+                <span className="font-medium text-muted-foreground text-xs uppercase tracking-wide">
+                  Sections:
+                </span>
+                {quote.sections.map((section) => (
+                  <div
+                    className="flex items-center gap-1.5 rounded-lg bg-primary/10 px-3 py-1.5 text-primary"
+                    key={section.id}
+                  >
+                    <span className="font-medium text-xs">
+                      {section.title || section.name}
+                    </span>
+                    <Button
+                      className="h-4 w-4 rounded-full p-0 text-primary/60 hover:bg-primary/20 hover:text-primary"
+                      onClick={() => removeSection(section.id)}
+                      size="sm"
+                      variant="ghost"
                     >
-                      <span className="font-medium text-xs">
-                        {section.title || section.name}
-                      </span>
+                      X
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Line Items Table */}
+          <div className="space-y-2">
+            {/* Table Header */}
+            <div className="mb-2 hidden items-center px-1 font-medium text-muted-foreground text-xs uppercase tracking-wide md:flex">
+              <div className="w-9 shrink-0" />
+              <div className="ml-2 min-w-0 flex-[2]">Item</div>
+              <div className="ml-2 w-9 shrink-0" />
+              <div className="ml-2 min-w-0 flex-[3]">Description</div>
+              <div className="ml-2 w-20 text-left">Qty</div>
+              <div className="ml-2 w-16 shrink-0 text-center">U/M</div>
+              <div className="ml-2 w-24 text-left">Cost</div>
+              <div className="ml-2 w-28 shrink-0 text-right">Total</div>
+            </div>
+
+            {/* Unsectioned items */}
+            {unsectioned.map((item) => (
+              <div key={item.id}>{renderLineItem(item, undefined)}</div>
+            ))}
+
+            {/* Sectioned items */}
+            {sectionGroups.map(({ section, items }) => {
+              const sectionTotal = items
+                .filter((item) => !item.isStruck)
+                .reduce((sum, item) => sum + item.total, 0);
+
+              return items.length > 0 ? (
+                <div
+                  className="mt-4 rounded-xl transition-all duration-300"
+                  id={`section-${section.id}`}
+                  key={section.id}
+                >
+                  <div className="flex items-center justify-between gap-4 rounded-t-xl border border-border/50 border-b-0 bg-primary/5 px-4 py-2">
+                    <Input
+                      className="h-7 flex-1 border-0 bg-transparent px-0 font-display font-semibold text-primary text-sm shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                      onChange={(e) =>
+                        updateSectionTitle(section.id, e.target.value)
+                      }
+                      placeholder={section.name}
+                      value={section.title || section.name}
+                    />
+                    <div className="flex shrink-0 items-center gap-1">
                       <Button
-                        className="h-4 w-4 rounded-full p-0 text-primary/60 hover:bg-primary/20 hover:text-primary"
+                        className="h-6 px-2 text-primary/60 text-xs hover:bg-primary/10 hover:text-primary"
+                        onClick={() => handleDuplicateSection(section.id)}
+                        size="sm"
+                        title="Duplicate this section"
+                        variant="ghost"
+                      >
+                        Duplicate
+                      </Button>
+                      <Button
+                        className="h-6 w-6 rounded-full p-0 text-primary/60 hover:bg-destructive/10 hover:text-destructive"
                         onClick={() => removeSection(section.id)}
                         size="sm"
+                        title="Remove section"
                         variant="ghost"
                       >
                         X
                       </Button>
                     </div>
-                  ))}
+                  </div>
+                  <div className="rounded-b-xl border border-border/50 border-t-0 bg-card/50">
+                    {items.map((item) => (
+                      <div
+                        className="border-border/30 border-b px-2 py-1 last:border-b-0"
+                        key={item.id}
+                      >
+                        {renderLineItem(item, section.catalogCategoryId)}
+                      </div>
+                    ))}
+                    <div className="flex items-center justify-end border-border/30 border-t bg-primary/5 px-4 py-2">
+                      <span className="mr-4 font-medium text-muted-foreground text-sm">
+                        Subtotal:
+                      </span>
+                      <span className="font-mono font-semibold text-primary">
+                        {formatCurrency(sectionTotal)}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-              )}
-            </div>
+              ) : null;
+            })}
 
-            {/* Line Items Table */}
-            <div className="space-y-2">
-              {/* Table Header */}
-              <div className="mb-2 hidden items-center px-1 font-medium text-muted-foreground text-xs uppercase tracking-wide md:flex">
-                <div className="w-9 shrink-0" />
-                <div className="ml-2 min-w-0 flex-[2]">Item</div>
-                <div className="ml-2 w-9 shrink-0" />
-                <div className="ml-2 min-w-0 flex-[3]">Description</div>
-                <div className="ml-2 w-20 text-left">Qty</div>
-                <div className="ml-2 w-16 shrink-0 text-center">U/M</div>
-                <div className="ml-2 w-24 text-left">Cost</div>
-                <div className="ml-2 w-28 shrink-0 text-right">Total</div>
+            {quote.lineItems.length === 0 && (
+              <div className="flex flex-col items-center justify-center rounded-xl border border-border/50 border-dashed bg-muted/10 py-12 text-center">
+                <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                  <Plus className="h-6 w-6" />
+                </div>
+                <p className="text-muted-foreground text-sm">
+                  No items yet. Use the catalog picker above to add items.
+                </p>
               </div>
-
-              {/* Unsectioned items */}
-              {unsectioned.map((item) => (
-                <div key={item.id}>{renderLineItem(item, undefined)}</div>
-              ))}
-
-              {/* Sectioned items */}
-              {sectionGroups.map(({ section, items }) => {
-                const sectionTotal = items
-                  .filter((item) => !item.isStruck)
-                  .reduce((sum, item) => sum + item.total, 0);
-
-                return items.length > 0 ? (
-                  <div
-                    className="mt-4 rounded-xl transition-all duration-300"
-                    id={`section-${section.id}`}
-                    key={section.id}
-                  >
-                    <div className="flex items-center justify-between gap-4 rounded-t-xl border border-border/50 border-b-0 bg-primary/5 px-4 py-2">
-                      <Input
-                        className="h-7 flex-1 border-0 bg-transparent px-0 font-display font-semibold text-primary text-sm shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
-                        onChange={(e) =>
-                          updateSectionTitle(section.id, e.target.value)
-                        }
-                        placeholder={section.name}
-                        value={section.title || section.name}
-                      />
-                      <div className="flex shrink-0 items-center gap-1">
-                        <Button
-                          className="h-6 px-2 text-primary/60 text-xs hover:bg-primary/10 hover:text-primary"
-                          onClick={() => handleDuplicateSection(section.id)}
-                          size="sm"
-                          title="Duplicate this section"
-                          variant="ghost"
-                        >
-                          Duplicate
-                        </Button>
-                        <Button
-                          className="h-6 w-6 rounded-full p-0 text-primary/60 hover:bg-destructive/10 hover:text-destructive"
-                          onClick={() => removeSection(section.id)}
-                          size="sm"
-                          title="Remove section"
-                          variant="ghost"
-                        >
-                          X
-                        </Button>
-                      </div>
-                    </div>
-                    <div className="rounded-b-xl border border-border/50 border-t-0 bg-card/50">
-                      {items.map((item) => (
-                        <div
-                          className="border-border/30 border-b px-2 py-1 last:border-b-0"
-                          key={item.id}
-                        >
-                          {renderLineItem(item, section.catalogCategoryId)}
-                        </div>
-                      ))}
-                      <div className="flex items-center justify-end border-border/30 border-t bg-primary/5 px-4 py-2">
-                        <span className="mr-4 font-medium text-muted-foreground text-sm">
-                          Subtotal:
-                        </span>
-                        <span className="font-mono font-semibold text-primary">
-                          {formatCurrency(sectionTotal)}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ) : null;
-              })}
-
-              {quote.lineItems.length === 0 && (
-                <div className="flex flex-col items-center justify-center rounded-xl border border-border/50 border-dashed bg-muted/10 py-12 text-center">
-                  <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                    <Plus className="h-6 w-6" />
-                  </div>
-                  <p className="text-muted-foreground text-sm">
-                    No items yet. Use the catalog picker above to add items.
-                  </p>
-                </div>
-              )}
-            </div>
+            )}
           </div>
+        </div>
 
-          {/* Total */}
-          <div className="flex items-center justify-between rounded-xl border border-primary/20 bg-linear-to-r from-primary/5 to-primary/10 p-5">
-            <span className="font-display font-semibold text-lg">Total</span>
-            <span className="font-bold font-display text-2xl text-primary">
-              {formatCurrency(quote.total)}
-            </span>
-          </div>
-        </CardContent>
-      </Card>
+        {/* Total */}
+        <div className="flex items-center justify-between rounded-xl border border-primary/20 bg-linear-to-r from-primary/5 to-primary/10 p-5">
+          <span className="font-display font-semibold text-lg">Total</span>
+          <span className="font-bold font-display text-2xl text-primary">
+            {formatCurrency(quote.total)}
+          </span>
+        </div>
+      </div>
     </div>
   );
 }

@@ -1,6 +1,5 @@
 // PDF generation for Desert Services estimates
-// Adapted from ds-workbench/services/quoting/pdf.ts for Next.js
-// Using pdfmake 0.3.x Node.js API
+// Server-side using pdfmake 0.3.x Node.js API
 
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -10,10 +9,9 @@ import type {
   TableCell,
   TDocumentDefinitions,
 } from "pdfmake/interfaces";
-import type { PDFLineItem, PDFQuote, PDFQuoteSection } from "./types";
+import type { EditorLineItem, EditorQuote, EditorSection } from "@/lib/types";
 
 // Initialize pdfmake 0.3.x for Node.js
-// Use Times New Roman (standard PDF font - no embedding needed)
 pdfmake.setFonts({
   Times: {
     normal: "Times-Roman",
@@ -65,37 +63,25 @@ const noBordersLayout = {
 };
 
 interface GroupedItems {
-  section: PDFQuoteSection | null;
-  items: PDFLineItem[];
+  section: EditorSection | null;
+  items: EditorLineItem[];
 }
 
 function groupItemsBySection(
-  items: PDFLineItem[],
-  sections: PDFQuoteSection[]
+  items: EditorLineItem[],
+  sections: EditorSection[]
 ): GroupedItems[] {
   const groups: GroupedItems[] = [];
 
-  // Collect unsectioned items first
-  const unsectioned: PDFLineItem[] = [];
-  for (const item of items) {
-    if (item.sectionId === undefined) {
-      unsectioned.push(item);
-    }
-  }
-
+  // Unsectioned items first
+  const unsectioned = items.filter((item) => !item.sectionId);
   if (unsectioned.length > 0) {
     groups.push({ section: null, items: unsectioned });
   }
 
-  // Group items by section
+  // Group by section
   for (const section of sections) {
-    const sectionItems: PDFLineItem[] = [];
-    for (const item of items) {
-      if (item.sectionId === section.id) {
-        sectionItems.push(item);
-      }
-    }
-
+    const sectionItems = items.filter((item) => item.sectionId === section.id);
     if (sectionItems.length > 0) {
       groups.push({ section, items: sectionItems });
     }
@@ -104,29 +90,18 @@ function groupItemsBySection(
   return groups;
 }
 
-// Calculate subtotal for a group of items
-function calculateGroupSubtotal(items: PDFLineItem[]): number {
-  let total = 0;
-  for (const item of items) {
-    total += item.total;
-  }
-  return total;
-}
-
-// Build the table header row
 function buildTableHeader(): TableCell[] {
   return [
     { text: "#", style: "tableHeader", alignment: "center" },
     { text: "Item", style: "tableHeader" },
     { text: "Description", style: "tableHeader" },
     { text: "Qty", style: "tableHeader", alignment: "center" },
-    { text: "U/M", style: "tableHeader", alignment: "center" },
+    { text: "U/M", style: "tableHeader", alignment: "center", noWrap: true },
     { text: "Cost", style: "tableHeader", alignment: "left" },
-    { text: "Total", style: "tableHeader", alignment: "right" },
+    { text: "Total", style: "tableHeader", alignment: "left" },
   ];
 }
 
-// Build section header row
 function buildSectionRow(sectionName: string): TableCell[] {
   return [
     {
@@ -143,41 +118,22 @@ function buildSectionRow(sectionName: string): TableCell[] {
   ];
 }
 
-// Build line item row
-function buildItemRow(rowNumber: number, item: PDFLineItem): TableCell[] {
+function buildItemRow(rowNumber: number, item: EditorLineItem): TableCell[] {
   return [
     { text: String(rowNumber), style: "tableCell", alignment: "center" },
     { text: item.item, style: "tableCell" },
     { text: item.description, style: "tableCell" },
     { text: String(item.qty), style: "tableCell", alignment: "center" },
-    { text: item.uom, style: "tableCell", alignment: "center" },
+    { text: item.uom, style: "tableCell", alignment: "center", noWrap: true },
     { text: formatCurrency(item.cost), style: "tableCell", alignment: "left" },
     {
       text: formatCurrency(item.total),
       style: "tableCell",
-      alignment: "right",
+      alignment: "left",
     },
   ];
 }
 
-// Build subtotal row
-function buildSubtotalRow(subtotal: number): TableCell[] {
-  return [
-    { text: "", colSpan: 5 },
-    {},
-    {},
-    {},
-    {},
-    { text: "Subtotal:", style: "subtotalCell", alignment: "right" },
-    {
-      text: formatCurrency(subtotal),
-      style: "subtotalCell",
-      alignment: "right",
-    },
-  ];
-}
-
-// Build the complete table body from grouped items
 function buildTableBody(groupedItems: GroupedItems[]): TableCell[][] {
   const tableBody: TableCell[][] = [buildTableHeader()];
   let rowNumber = 0;
@@ -191,21 +147,18 @@ function buildTableBody(groupedItems: GroupedItems[]): TableCell[][] {
       rowNumber += 1;
       tableBody.push(buildItemRow(rowNumber, item));
     }
-
-    if (group.section?.showSubtotal) {
-      const subtotal = calculateGroupSubtotal(group.items);
-      tableBody.push(buildSubtotalRow(subtotal));
-    }
   }
 
   return tableBody;
 }
 
 function buildDocDefinition(
-  quote: PDFQuote,
+  quote: EditorQuote,
   logoBase64: string
 ): TDocumentDefinitions {
-  const groupedItems = groupItemsBySection(quote.lineItems, quote.sections);
+  // Filter out struck items - they shouldn't appear on the PDF
+  const visibleItems = quote.lineItems.filter((item) => !item.isStruck);
+  const groupedItems = groupItemsBySection(visibleItems, quote.sections);
   const tableBody = buildTableBody(groupedItems);
 
   return {
@@ -259,7 +212,7 @@ function buildDocDefinition(
                           ],
                           [
                             {
-                              text: quote.estimator,
+                              text: quote.estimator || "Desert Services",
                               fontSize: 9,
                               alignment: "center",
                             },
@@ -285,7 +238,7 @@ function buildDocDefinition(
           },
           layout: noBordersLayout,
         },
-        // 2-box layout: Bill To + Job Info with gap
+        // Bill To + Job Info boxes
         {
           margin: [0, 5, 0, 0],
           table: {
@@ -302,7 +255,7 @@ function buildDocDefinition(
                 },
                 { text: "", border: [false, false, false, false] },
                 {
-                  text: "Job Info:",
+                  text: "Job Information:",
                   bold: true,
                   fontSize: 9,
                   fillColor: "#f0f0f0",
@@ -312,25 +265,35 @@ function buildDocDefinition(
               ],
               [
                 {
-                  text: [
-                    { text: `${quote.billTo.companyName}\n`, bold: true },
+                  stack: [
                     {
-                      text: `${quote.billTo.address ?? ""}\n${quote.billTo.address2 ?? ""}`,
+                      text: quote.billTo.companyName,
+                      fontSize: 9,
+                      lineHeight: 1.3,
+                    },
+                    {
+                      text: quote.billTo.address,
+                      fontSize: 9,
+                      lineHeight: 1.3,
                     },
                   ],
-                  fontSize: 9,
                   margin: [4, 4, 4, 4],
                   border: [true, true, true, true],
                 },
                 { text: "", border: [false, false, false, false] },
                 {
-                  text: [
-                    { text: `${quote.project.name}\n`, bold: true },
+                  stack: [
                     {
-                      text: `${quote.siteAddress.line1}\n${quote.siteAddress.line2 ?? ""}`,
+                      text: quote.jobInfo.siteName,
+                      fontSize: 9,
+                      lineHeight: 1.3,
+                    },
+                    {
+                      text: quote.jobInfo.address,
+                      fontSize: 9,
+                      lineHeight: 1.3,
                     },
                   ],
-                  fontSize: 9,
                   margin: [4, 4, 4, 4],
                   border: [true, true, true, true],
                 },
@@ -358,10 +321,7 @@ function buildDocDefinition(
                         {
                           stack: [
                             {
-                              text: [
-                                "Pricing based on specified quantities, and this is an ESTIMATE ONLY. Actual quantities will be billed. ",
-                                { text: "Valid for 180 days.", bold: true },
-                              ],
+                              text: "Pricing based on specified quantities, and this is an ESTIMATE ONLY. Actual quantities will be billed.",
                               fontSize: 9,
                               lineHeight: 1.2,
                             },
@@ -486,7 +446,7 @@ function buildDocDefinition(
                       fontSize: 9,
                     },
                     {
-                      text: `Email: ${quote.estimatorEmail}`,
+                      text: `Email: ${quote.estimatorEmail || "info@desertservices.net"}`,
                       alignment: "center",
                       color: "#fff",
                       fontSize: 9,
@@ -515,7 +475,7 @@ function buildDocDefinition(
         table: {
           headerRows: 1,
           dontBreakRows: true,
-          widths: [18, "auto", "*", "auto", "auto", "auto", "auto"],
+          widths: ["auto", "*", "*", "auto", "auto", "auto", "auto"],
           body: tableBody,
         },
         layout: {
@@ -547,9 +507,8 @@ function buildDocDefinition(
 
 /**
  * Generate PDF as Buffer (for API response)
- * Uses pdfmake 0.3.x Node.js API - getBuffer() returns Promise
  */
-export async function generatePDF(quote: PDFQuote): Promise<Buffer> {
+export async function generatePDF(quote: EditorQuote): Promise<Buffer> {
   const logoBase64 = getLogoBase64();
   const docDefinition = buildDocDefinition(quote, logoBase64);
   const doc = pdfmake.createPdf(docDefinition);
@@ -572,7 +531,7 @@ function slugify(text: string): string {
 /**
  * Generate PDF filename from quote data
  */
-export function getPDFFilename(quote: PDFQuote): string {
+export function getPDFFilename(quote: EditorQuote): string {
   const companySlug = slugify(quote.billTo.companyName);
   return `Estimate-${quote.estimateNumber}-${companySlug}.pdf`;
 }

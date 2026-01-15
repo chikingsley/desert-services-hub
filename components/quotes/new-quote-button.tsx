@@ -22,7 +22,9 @@ export function NewQuoteButton({
   const [isCreating, setIsCreating] = useState(false);
 
   const handleClick = async () => {
-    if (isCreating) return;
+    if (isCreating) {
+      return;
+    }
     setIsCreating(true);
 
     try {
@@ -32,7 +34,9 @@ export function NewQuoteButton({
         body: JSON.stringify({ job_name: "Untitled Quote", status: "draft" }),
       });
 
-      if (!res.ok) throw new Error("Failed to create quote");
+      if (!res.ok) {
+        throw new Error("Failed to create quote");
+      }
 
       const data = await res.json();
       router.push(`/quotes/${data.id}`);

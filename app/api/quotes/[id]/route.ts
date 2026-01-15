@@ -90,6 +90,34 @@ export async function GET(
   }
 }
 
+// DELETE /api/quotes/[id] - Delete a quote
+export async function DELETE(
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+
+    // Check if quote exists
+    const quote = db.prepare("SELECT id FROM quotes WHERE id = ?").get(id);
+
+    if (!quote) {
+      return NextResponse.json({ error: "Quote not found" }, { status: 404 });
+    }
+
+    // Delete quote (cascade will handle versions, sections, line items)
+    db.prepare("DELETE FROM quotes WHERE id = ?").run(id);
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Failed to delete quote:", error);
+    return NextResponse.json(
+      { error: "Failed to delete quote" },
+      { status: 500 }
+    );
+  }
+}
+
 // PUT /api/quotes/[id] - Update a quote
 export async function PUT(
   request: Request,

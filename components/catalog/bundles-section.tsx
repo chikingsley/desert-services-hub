@@ -9,6 +9,16 @@ import {
   Trash2,
 } from "lucide-react";
 import { useCallback, useState } from "react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -114,6 +124,7 @@ export function BundlesSection({
 
   // Item picker state
   const [itemSearchQuery, setItemSearchQuery] = useState("");
+  const [bundleToDeleteId, setBundleToDeleteId] = useState<string | null>(null);
 
   const toggleBundle = (bundleId: string) => {
     setExpandedBundles((prev) => {
@@ -128,7 +139,9 @@ export function BundlesSection({
   };
 
   const handleCreateBundle = async () => {
-    if (!newBundleName.trim()) return;
+    if (!newBundleName.trim()) {
+      return;
+    }
 
     try {
       const res = await fetch("/api/catalog/bundles", {
@@ -143,7 +156,9 @@ export function BundlesSection({
         }),
       });
 
-      if (!res.ok) throw new Error("Failed to create bundle");
+      if (!res.ok) {
+        throw new Error("Failed to create bundle");
+      }
 
       const newBundle = await res.json();
       onBundlesChange([...bundles, newBundle]);
@@ -161,24 +176,36 @@ export function BundlesSection({
     }
   };
 
-  const handleDeleteBundle = async (bundleId: string) => {
-    if (!confirm("Are you sure you want to delete this bundle?")) return;
+  const handleDeleteBundle = (bundleId: string) => {
+    setBundleToDeleteId(bundleId);
+  };
+
+  const confirmDeleteBundle = async () => {
+    if (!bundleToDeleteId) {
+      return;
+    }
 
     try {
-      const res = await fetch(`/api/catalog/bundles/${bundleId}`, {
+      const res = await fetch(`/api/catalog/bundles/${bundleToDeleteId}`, {
         method: "DELETE",
       });
 
-      if (!res.ok) throw new Error("Failed to delete bundle");
+      if (!res.ok) {
+        throw new Error("Failed to delete bundle");
+      }
 
-      onBundlesChange(bundles.filter((b) => b.id !== bundleId));
+      onBundlesChange(bundles.filter((b) => b.id !== bundleToDeleteId));
     } catch (error) {
       console.error("Error deleting bundle:", error);
+    } finally {
+      setBundleToDeleteId(null);
     }
   };
 
   const handleAddItemToBundle = async (itemId: string) => {
-    if (!selectedBundle) return;
+    if (!selectedBundle) {
+      return;
+    }
 
     try {
       const res = await fetch(
@@ -190,7 +217,9 @@ export function BundlesSection({
         }
       );
 
-      if (!res.ok) throw new Error("Failed to add item");
+      if (!res.ok) {
+        throw new Error("Failed to add item");
+      }
 
       const newItem = await res.json();
 
@@ -216,7 +245,9 @@ export function BundlesSection({
         { method: "DELETE" }
       );
 
-      if (!res.ok) throw new Error("Failed to remove item");
+      if (!res.ok) {
+        throw new Error("Failed to remove item");
+      }
 
       onBundlesChange(
         bundles.map((b) =>
@@ -242,7 +273,9 @@ export function BundlesSection({
         body: JSON.stringify({ itemId, isRequired }),
       });
 
-      if (!res.ok) throw new Error("Failed to update item");
+      if (!res.ok) {
+        throw new Error("Failed to update item");
+      }
 
       onBundlesChange(
         bundles.map((b) =>
@@ -274,7 +307,9 @@ export function BundlesSection({
   }, [categories]);
 
   const filteredItems = getAllItems().filter((item) => {
-    if (!itemSearchQuery) return true;
+    if (!itemSearchQuery) {
+      return true;
+    }
     const query = itemSearchQuery.toLowerCase();
     return (
       item.name.toLowerCase().includes(query) ||
@@ -288,6 +323,8 @@ export function BundlesSection({
         (item) => !selectedBundle.items.some((bi) => bi.itemId === item.id)
       )
     : filteredItems;
+
+  const bundleToDelete = bundles.find((b) => b.id === bundleToDeleteId) || null;
 
   return (
     <div className="mt-8">
@@ -611,6 +648,32 @@ export function BundlesSection({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog
+        onOpenChange={(open: boolean) => {
+          if (!open) {
+            setBundleToDeleteId(null);
+          }
+        }}
+        open={Boolean(bundleToDeleteId)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete bundle</AlertDialogTitle>
+            <AlertDialogDescription>
+              {bundleToDelete
+                ? `Remove "${bundleToDelete.name}" and its items? This can’t be undone.`
+                : "Remove this bundle and its items? This can’t be undone."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDeleteBundle}>
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -11,6 +11,12 @@ const testQuote = {
     companyName: "ABC General Contractors",
     address: "1234 Commerce Blvd, Suite 500",
     address2: "Phoenix, AZ 85001",
+    email: "contact@abcgeneral.com",
+    phone: "(602) 555-0100",
+  },
+  jobInfo: {
+    siteName: "Sunset Ridge Phase 2",
+    address: "7890 N Scottsdale Rd, Scottsdale, AZ 85250",
   },
   project: { name: "Sunset Ridge Development Phase 2" },
   siteAddress: {

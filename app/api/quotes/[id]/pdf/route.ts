@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { generatePDF, getPDFFilename } from "@/lib/pdf/generate";
-import { transformEditorQuoteToPDFQuote } from "@/lib/pdf/transform";
 import type {
   EditorLineItem,
   EditorQuote,
@@ -99,17 +98,14 @@ export async function GET(
       total,
     };
 
-    // Transform to PDF format
-    const pdfQuote = transformEditorQuoteToPDFQuote(editorQuote);
-
     // Generate PDF
-    const pdfBuffer = await generatePDF(pdfQuote);
+    const pdfBuffer = await generatePDF(editorQuote);
 
     // Generate filename
-    const filename = getPDFFilename(pdfQuote);
+    const filename = getPDFFilename(editorQuote);
 
     // Return PDF as downloadable response
-    return new NextResponse(pdfBuffer, {
+    return new NextResponse(new Uint8Array(pdfBuffer), {
       headers: {
         "Content-Type": "application/pdf",
         "Content-Disposition": `attachment; filename="${filename}"`,

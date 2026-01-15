@@ -1,38 +1,30 @@
 // Client-side PDF generation for Desert Services estimates
 // Uses pdfmake browser build for live preview in iframe
 
-import { createPdf, vfs } from "pdfmake/build/pdfmake";
-import { vfs as pdfFonts } from "pdfmake/build/vfs_fonts";
+import pdfMake from "pdfmake/build/pdfmake";
+import pdfFonts from "pdfmake/build/vfs_fonts";
 import type {
   Content,
   TableCell,
   TDocumentDefinitions,
 } from "pdfmake/interfaces";
-import type { PDFLineItem, PDFQuote, PDFQuoteSection } from "./types";
+import type { EditorLineItem, EditorQuote, EditorSection } from "@/lib/types";
 
-// Initialize pdfmake with virtual file system fonts
-// Copy font data from vfs_fonts into pdfmake's vfs
-for (const [key, value] of Object.entries(pdfFonts)) {
-  vfs[key] = value;
-}
+// Initialize pdfmake with fonts
+// Handle different pdfFonts structures (some versions use .vfs, some use .pdfMake.vfs, some have fonts directly)
+const vfs =
+  (pdfFonts as unknown as { pdfMake?: { vfs?: unknown } }).pdfMake?.vfs ??
+  (pdfFonts as unknown as { vfs?: unknown }).vfs ??
+  pdfFonts;
+pdfMake.vfs = vfs as typeof pdfMake.vfs;
 
-// Cache logo base64 to avoid repeated fetches
-let logoCache: string | null = null;
-
+// Convert image to base64 for pdfMake
 async function getLogoBase64(): Promise<string> {
-  if (logoCache) {
-    return logoCache;
-  }
-
   const response = await fetch("/logo.png");
   const blob = await response.blob();
-
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onloadend = () => {
-      logoCache = reader.result as string;
-      resolve(logoCache);
-    };
+    reader.onloadend = () => resolve(reader.result as string);
     reader.onerror = reject;
     reader.readAsDataURL(blob);
   });
@@ -71,37 +63,25 @@ const noBordersLayout = {
 };
 
 interface GroupedItems {
-  section: PDFQuoteSection | null;
-  items: PDFLineItem[];
+  section: EditorSection | null;
+  items: EditorLineItem[];
 }
 
 function groupItemsBySection(
-  items: PDFLineItem[],
-  sections: PDFQuoteSection[]
+  items: EditorLineItem[],
+  sections: EditorSection[]
 ): GroupedItems[] {
   const groups: GroupedItems[] = [];
 
-  // Collect unsectioned items first
-  const unsectioned: PDFLineItem[] = [];
-  for (const item of items) {
-    if (item.sectionId === undefined) {
-      unsectioned.push(item);
-    }
-  }
-
+  // Unsectioned items first
+  const unsectioned = items.filter((item) => !item.sectionId);
   if (unsectioned.length > 0) {
     groups.push({ section: null, items: unsectioned });
   }
 
-  // Group items by section
+  // Group by section
   for (const section of sections) {
-    const sectionItems: PDFLineItem[] = [];
-    for (const item of items) {
-      if (item.sectionId === section.id) {
-        sectionItems.push(item);
-      }
-    }
-
+    const sectionItems = items.filter((item) => item.sectionId === section.id);
     if (sectionItems.length > 0) {
       groups.push({ section, items: sectionItems });
     }
@@ -110,29 +90,18 @@ function groupItemsBySection(
   return groups;
 }
 
-// Calculate subtotal for a group of items
-function calculateGroupSubtotal(items: PDFLineItem[]): number {
-  let total = 0;
-  for (const item of items) {
-    total += item.total;
-  }
-  return total;
-}
-
-// Build the table header row
 function buildTableHeader(): TableCell[] {
   return [
     { text: "#", style: "tableHeader", alignment: "center" },
     { text: "Item", style: "tableHeader" },
     { text: "Description", style: "tableHeader" },
     { text: "Qty", style: "tableHeader", alignment: "center" },
-    { text: "U/M", style: "tableHeader", alignment: "center" },
+    { text: "U/M", style: "tableHeader", alignment: "center", noWrap: true },
     { text: "Cost", style: "tableHeader", alignment: "left" },
-    { text: "Total", style: "tableHeader", alignment: "right" },
+    { text: "Total", style: "tableHeader", alignment: "left" },
   ];
 }
 
-// Build section header row
 function buildSectionRow(sectionName: string): TableCell[] {
   return [
     {
@@ -149,41 +118,22 @@ function buildSectionRow(sectionName: string): TableCell[] {
   ];
 }
 
-// Build line item row
-function buildItemRow(rowNumber: number, item: PDFLineItem): TableCell[] {
+function buildItemRow(rowNumber: number, item: EditorLineItem): TableCell[] {
   return [
     { text: String(rowNumber), style: "tableCell", alignment: "center" },
     { text: item.item, style: "tableCell" },
     { text: item.description, style: "tableCell" },
     { text: String(item.qty), style: "tableCell", alignment: "center" },
-    { text: item.uom, style: "tableCell", alignment: "center" },
+    { text: item.uom, style: "tableCell", alignment: "center", noWrap: true },
     { text: formatCurrency(item.cost), style: "tableCell", alignment: "left" },
     {
       text: formatCurrency(item.total),
       style: "tableCell",
-      alignment: "right",
+      alignment: "left",
     },
   ];
 }
 
-// Build subtotal row
-function buildSubtotalRow(subtotal: number): TableCell[] {
-  return [
-    { text: "", colSpan: 5 },
-    {},
-    {},
-    {},
-    {},
-    { text: "Subtotal:", style: "subtotalCell", alignment: "right" },
-    {
-      text: formatCurrency(subtotal),
-      style: "subtotalCell",
-      alignment: "right",
-    },
-  ];
-}
-
-// Build the complete table body from grouped items
 function buildTableBody(groupedItems: GroupedItems[]): TableCell[][] {
   const tableBody: TableCell[][] = [buildTableHeader()];
   let rowNumber = 0;
@@ -197,32 +147,26 @@ function buildTableBody(groupedItems: GroupedItems[]): TableCell[][] {
       rowNumber += 1;
       tableBody.push(buildItemRow(rowNumber, item));
     }
-
-    if (group.section?.showSubtotal) {
-      const subtotal = calculateGroupSubtotal(group.items);
-      tableBody.push(buildSubtotalRow(subtotal));
-    }
   }
 
   return tableBody;
 }
 
 function buildDocDefinition(
-  quote: PDFQuote,
+  quote: EditorQuote,
   logoBase64: string
 ): TDocumentDefinitions {
-  const groupedItems = groupItemsBySection(quote.lineItems, quote.sections);
+  // Filter out struck items - they shouldn't appear on the PDF
+  const visibleItems = quote.lineItems.filter((item) => !item.isStruck);
+  const groupedItems = groupItemsBySection(visibleItems, quote.sections);
   const tableBody = buildTableBody(groupedItems);
 
   return {
     pageSize: "LETTER",
-    pageMargins: [40, 195, 40, 195],
-    defaultStyle: {
-      font: "Roboto",
-    },
+    pageMargins: [40, 175, 40, 195],
 
     header: (): Content => ({
-      margin: [40, 50, 40, 0],
+      margin: [40, 15, 40, 0],
       stack: [
         {
           table: {
@@ -265,7 +209,7 @@ function buildDocDefinition(
                           ],
                           [
                             {
-                              text: quote.estimator,
+                              text: quote.estimator || "Desert Services",
                               fontSize: 9,
                               alignment: "center",
                             },
@@ -291,7 +235,7 @@ function buildDocDefinition(
           },
           layout: noBordersLayout,
         },
-        // 2-box layout: Bill To + Job Info with gap
+        // Bill To + Job Info boxes
         {
           margin: [0, 5, 0, 0],
           table: {
@@ -308,7 +252,7 @@ function buildDocDefinition(
                 },
                 { text: "", border: [false, false, false, false] },
                 {
-                  text: "Job Info:",
+                  text: "Job Information:",
                   bold: true,
                   fontSize: 9,
                   fillColor: "#f0f0f0",
@@ -318,25 +262,35 @@ function buildDocDefinition(
               ],
               [
                 {
-                  text: [
-                    { text: `${quote.billTo.companyName}\n`, bold: true },
+                  stack: [
                     {
-                      text: `${quote.billTo.address ?? ""}\n${quote.billTo.address2 ?? ""}`,
+                      text: quote.billTo.companyName,
+                      fontSize: 9,
+                      lineHeight: 1.3,
+                    },
+                    {
+                      text: quote.billTo.address,
+                      fontSize: 9,
+                      lineHeight: 1.3,
                     },
                   ],
-                  fontSize: 9,
                   margin: [4, 4, 4, 4],
                   border: [true, true, true, true],
                 },
                 { text: "", border: [false, false, false, false] },
                 {
-                  text: [
-                    { text: `${quote.project.name}\n`, bold: true },
+                  stack: [
                     {
-                      text: `${quote.siteAddress.line1}\n${quote.siteAddress.line2 ?? ""}`,
+                      text: quote.jobInfo.siteName,
+                      fontSize: 9,
+                      lineHeight: 1.3,
+                    },
+                    {
+                      text: quote.jobInfo.address,
+                      fontSize: 9,
+                      lineHeight: 1.3,
                     },
                   ],
-                  fontSize: 9,
                   margin: [4, 4, 4, 4],
                   border: [true, true, true, true],
                 },
@@ -364,10 +318,7 @@ function buildDocDefinition(
                         {
                           stack: [
                             {
-                              text: [
-                                "Pricing based on specified quantities, and this is an ESTIMATE ONLY. Actual quantities will be billed. ",
-                                { text: "Valid for 180 days.", bold: true },
-                              ],
+                              text: "Pricing based on specified quantities, and this is an ESTIMATE ONLY. Actual quantities will be billed.",
                               fontSize: 9,
                               lineHeight: 1.2,
                             },
@@ -492,7 +443,7 @@ function buildDocDefinition(
                       fontSize: 9,
                     },
                     {
-                      text: `Email: ${quote.estimatorEmail}`,
+                      text: `Email: ${quote.estimatorEmail || "info@desertservices.net"}`,
                       alignment: "center",
                       color: "#fff",
                       fontSize: 9,
@@ -521,7 +472,7 @@ function buildDocDefinition(
         table: {
           headerRows: 1,
           dontBreakRows: true,
-          widths: [18, "auto", "*", "auto", "auto", "auto", "auto"],
+          widths: ["auto", "*", "*", "auto", "auto", "auto", "auto"],
           body: tableBody,
         },
         layout: {
@@ -554,15 +505,22 @@ function buildDocDefinition(
 /**
  * Generate PDF as Blob (for client-side preview in iframe)
  */
-export async function generatePDFBlob(quote: PDFQuote): Promise<Blob> {
+export async function generatePDFBlob(quote: EditorQuote): Promise<Blob> {
   const logoBase64 = await getLogoBase64();
   const docDefinition = buildDocDefinition(quote, logoBase64);
 
   return new Promise((resolve, reject) => {
     try {
-      createPdf(docDefinition).getBlob((blob) => {
-        resolve(blob);
-      });
+      const pdfDoc = pdfMake.createPdf(docDefinition);
+      const maybePromise: any = pdfDoc.getBlob(
+        (blob: Blob) => {
+          resolve(blob);
+        }
+      );
+
+      if (maybePromise && typeof (maybePromise as Promise<Blob>).then === "function") {
+        (maybePromise as Promise<Blob>).then(resolve).catch(reject);
+      }
     } catch (error) {
       reject(error);
     }
@@ -572,8 +530,8 @@ export async function generatePDFBlob(quote: PDFQuote): Promise<Blob> {
 /**
  * Open PDF in new tab
  */
-export async function openPDF(quote: PDFQuote): Promise<void> {
+export async function openPDF(quote: EditorQuote): Promise<void> {
   const logoBase64 = await getLogoBase64();
   const docDefinition = buildDocDefinition(quote, logoBase64);
-  createPdf(docDefinition).open();
+  await pdfMake.createPdf(docDefinition).open();
 }

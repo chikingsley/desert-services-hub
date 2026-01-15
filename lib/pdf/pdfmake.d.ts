@@ -61,6 +61,11 @@ declare module "pdfmake/build/pdfmake" {
   interface BrowserPdfMake {
     vfs: Record<string, string>;
     fonts: Record<string, unknown>;
+    addVirtualFileSystem?(vfs: Record<string, string>): void;
+    addFontContainer?(fontContainer: {
+      vfs: Record<string, string>;
+      fonts?: Record<string, unknown>;
+    }): void;
     createPdf(
       docDefinition: TDocumentDefinitions,
       tableLayouts?: Record<string, unknown>,

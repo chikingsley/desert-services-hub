@@ -11,7 +11,9 @@ export function QuotesEmptyActions() {
   const [isCreating, setIsCreating] = useState(false);
 
   const handleNewQuote = async () => {
-    if (isCreating) return;
+    if (isCreating) {
+      return;
+    }
     setIsCreating(true);
 
     try {
@@ -21,7 +23,9 @@ export function QuotesEmptyActions() {
         body: JSON.stringify({ job_name: "Untitled Quote", status: "draft" }),
       });
 
-      if (!res.ok) throw new Error("Failed to create quote");
+      if (!res.ok) {
+        throw new Error("Failed to create quote");
+      }
 
       const data = await res.json();
       router.push(`/quotes/${data.id}`);

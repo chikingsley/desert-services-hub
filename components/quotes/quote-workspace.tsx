@@ -23,6 +23,7 @@ import { useSidebar } from "@/components/ui/sidebar";
 import { Spinner } from "@/components/ui/spinner";
 import { generatePDFBlob } from "@/lib/pdf/generate-client";
 import type { Catalog, EditorQuote } from "@/lib/types";
+import { useSettings } from "../../hooks/use-settings";
 import { InlineQuoteEditor } from "./inline-quote-editor";
 
 type SaveStatus = "saved" | "saving" | "unsaved";
@@ -72,6 +73,77 @@ interface QuoteWorkspaceProps {
   linkedTakeoff: { id: string; name: string } | null;
 }
 
+// Convert API response to EditorQuote format
+interface ApiQuoteResponse {
+  id: string;
+  base_number: string;
+  job_name: string;
+  job_address: string | null;
+  client_name: string | null;
+  client_email: string | null;
+  client_phone: string | null;
+  updated_at: string;
+  current_version?: {
+    id: string;
+    total: number;
+    sections: Array<{ id: string; name: string; sort_order: number }>;
+    line_items: Array<{
+      id: string;
+      section_id: string | null;
+      description: string;
+      quantity: number;
+      unit: string;
+      unit_price: number;
+      is_excluded: number;
+      notes: string | null;
+      sort_order: number;
+    }>;
+  };
+}
+
+function apiToEditorQuote(
+  api: ApiQuoteResponse,
+  current: EditorQuote
+): EditorQuote {
+  const version = api.current_version;
+  if (!version) {
+    return current;
+  }
+
+  return {
+    estimateNumber: api.base_number,
+    date: current.date,
+    estimator: current.estimator,
+    estimatorEmail: current.estimatorEmail,
+    billTo: {
+      companyName: api.client_name ?? "",
+      address: current.billTo.address,
+      email: api.client_email ?? "",
+      phone: api.client_phone ?? "",
+    },
+    jobInfo: {
+      siteName: api.job_name,
+      address: api.job_address ?? "",
+    },
+    sections: version.sections.map((s) => ({
+      id: s.id,
+      name: s.name,
+    })),
+    lineItems: version.line_items.map((item) => ({
+      id: item.id,
+      item: item.description,
+      description: item.notes ?? "",
+      qty: item.quantity,
+      uom: item.unit,
+      cost: item.unit_price,
+      total: item.quantity * item.unit_price,
+      sectionId: item.section_id ?? undefined,
+      isStruck: item.is_excluded === 1,
+    })),
+    total: version.total,
+  };
+}
+
 export function QuoteWorkspace({
   initialQuote,
   quoteId,
@@ -103,6 +175,14 @@ export function QuoteWorkspace({
   );
   const [isManualSaving, setIsManualSaving] = useState(false);
 
+  // External update detection
+  const lastKnownUpdateRef = useRef<string | null>(null);
+  const [resetRef, setResetRef] = useState<{
+    reset: (quote: EditorQuote) => void;
+  } | null>(null);
+
+  const { autoHideSidebar } = useSettings();
+
   const handleManualSave = async () => {
     if (!saveRef) {
       return;
@@ -125,14 +205,14 @@ export function QuoteWorkspace({
 
   // Handle sidebar state changes when preview opens/closes
   useEffect(() => {
-    if (isPreviewOpen) {
-      // Close sidebar when preview is open
+    if (isPreviewOpen && autoHideSidebar) {
+      // Auto-collapse sidebar when preview opens (if setting is enabled)
       if (isMobile) {
         setOpenMobile(false);
       } else {
         setOpen(false);
       }
-    } else if (sidebarSnapshotRef.current) {
+    } else if (!isPreviewOpen && sidebarSnapshotRef.current) {
       // Restore sidebar state when preview closes
       if (isMobile) {
         setOpenMobile(sidebarSnapshotRef.current.openMobile);
@@ -141,7 +221,7 @@ export function QuoteWorkspace({
       }
       sidebarSnapshotRef.current = null;
     }
-  }, [isPreviewOpen, isMobile, setOpen, setOpenMobile]);
+  }, [isPreviewOpen, autoHideSidebar, isMobile, setOpen, setOpenMobile]);
 
   // Fetch catalog from API
   useEffect(() => {
@@ -187,6 +267,64 @@ export function QuoteWorkspace({
     };
   }, [previewQuote]);
 
+  // Initialize last known timestamp on mount
+  useEffect(() => {
+    const initTimestamp = async () => {
+      const res = await fetch(`/api/quotes/${quoteId}`);
+      if (res.ok) {
+        const data: ApiQuoteResponse = await res.json();
+        lastKnownUpdateRef.current = data.updated_at;
+      }
+    };
+    initTimestamp().catch(() => {
+      // Ignore initialization errors
+    });
+  }, [quoteId]);
+
+  // Check for external updates when tab gains focus
+  useEffect(() => {
+    const checkForUpdates = async () => {
+      // Skip if we have unsaved changes
+      const hasUnsavedChanges =
+        saveStatus === "unsaved" || saveStatus === "saving";
+      if (hasUnsavedChanges) {
+        return;
+      }
+
+      const res = await fetch(`/api/quotes/${quoteId}`);
+      if (!res.ok) {
+        return;
+      }
+
+      const data: ApiQuoteResponse = await res.json();
+      const hasExternalChange =
+        lastKnownUpdateRef.current &&
+        data.updated_at !== lastKnownUpdateRef.current;
+
+      if (hasExternalChange) {
+        // Auto-refresh the editor with external changes
+        const newQuote = apiToEditorQuote(data, previewQuote);
+        setPreviewQuote(newQuote);
+        resetRef?.reset(newQuote);
+      }
+
+      lastKnownUpdateRef.current = data.updated_at;
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        checkForUpdates().catch(() => {
+          // Silently fail - non-critical background check
+        });
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [quoteId, saveStatus, previewQuote, resetRef]);
+
   const handleSave = useCallback(
     async (quote: EditorQuote) => {
       // Convert editor format to API format
@@ -223,9 +361,15 @@ export function QuoteWorkspace({
         body: JSON.stringify(payload),
       });
 
+      const data = await res.json();
+
       if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.error || "Failed to update quote");
+        throw new Error(data.error || "Failed to update quote");
+      }
+
+      // Update last known timestamp so we don't detect our own save as external
+      if (data.updated_at) {
+        lastKnownUpdateRef.current = data.updated_at;
       }
     },
     [quoteId]
@@ -363,6 +507,7 @@ export function QuoteWorkspace({
               catalog={catalog}
               initialQuote={initialQuote}
               onQuoteChange={setPreviewQuote}
+              onResetRef={setResetRef}
               onSave={handleSave}
               onSaveRef={setSaveRef}
               onSaveStatusChange={setSaveStatus}

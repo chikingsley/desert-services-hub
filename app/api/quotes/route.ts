@@ -152,13 +152,17 @@ export async function POST(request: Request) {
           lineItemId,
           versionId,
           item.section_id ? (sectionIdMap.get(item.section_id) ?? null) : null,
-          item.description || item.item || "",
+          item.item || item.description || "",
           item.quantity ?? item.qty ?? 1,
           item.unit || item.uom || "EA",
           item.unit_cost ?? cost * 0.7,
           item.unit_price ?? cost,
           item.is_excluded || item.isStruck ? 1 : 0,
-          item.notes || item.description || null,
+          item.notes ||
+            (item.item && item.description && item.item !== item.description
+              ? item.description
+              : null) ||
+            null,
           i
         );
       }

@@ -25,6 +25,7 @@ interface InlineQuoteEditorProps {
   onSaveStatusChange?: (status: "saved" | "saving" | "unsaved") => void;
   onQuoteChange?: (quote: EditorQuote) => void;
   onSaveRef?: (ref: { save: () => Promise<void> } | null) => void;
+  onResetRef?: (ref: { reset: (quote: EditorQuote) => void } | null) => void;
   quoteId?: string | null;
 }
 
@@ -35,6 +36,7 @@ export function InlineQuoteEditor({
   onSaveStatusChange,
   onQuoteChange,
   onSaveRef,
+  onResetRef,
 }: InlineQuoteEditorProps) {
   const {
     quote,
@@ -48,6 +50,7 @@ export function InlineQuoteEditor({
     removeSection,
     updateSectionTitle,
     duplicateSection,
+    loadQuote,
   } = useQuoteEditor({ initialQuote, catalog });
 
   // Track which section to scroll to after it renders
@@ -123,6 +126,12 @@ export function InlineQuoteEditor({
     onSaveRef?.({ save: handleManualSave });
     return () => onSaveRef?.(null);
   }, [onSaveRef, handleManualSave]);
+
+  // Expose reset function to parent
+  useEffect(() => {
+    onResetRef?.({ reset: loadQuote });
+    return () => onResetRef?.(null);
+  }, [onResetRef, loadQuote]);
 
   // Auto-save (debounced) - only save if quote has meaningful content
   useEffect(() => {

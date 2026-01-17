@@ -512,13 +512,14 @@ export async function generatePDFBlob(quote: EditorQuote): Promise<Blob> {
   return new Promise((resolve, reject) => {
     try {
       const pdfDoc = pdfMake.createPdf(docDefinition);
-      const maybePromise: any = pdfDoc.getBlob(
-        (blob: Blob) => {
-          resolve(blob);
-        }
-      );
+      const maybePromise: any = pdfDoc.getBlob((blob: Blob) => {
+        resolve(blob);
+      });
 
-      if (maybePromise && typeof (maybePromise as Promise<Blob>).then === "function") {
+      if (
+        maybePromise &&
+        typeof (maybePromise as Promise<Blob>).then === "function"
+      ) {
         (maybePromise as Promise<Blob>).then(resolve).catch(reject);
       }
     } catch (error) {

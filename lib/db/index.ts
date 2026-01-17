@@ -195,6 +195,40 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_bundle_items_item ON catalog_bundle_items(item_id)
 `);
 
+// Monday.com Cache for performance
+db.exec(`
+  CREATE TABLE IF NOT EXISTS monday_cache (
+    id TEXT PRIMARY KEY,
+    board_id TEXT NOT NULL,
+    board_title TEXT NOT NULL,
+    name TEXT NOT NULL,
+    group_id TEXT,
+    group_title TEXT,
+    column_values TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    synced_at TEXT NOT NULL DEFAULT (datetime('now'))
+  )
+`);
+
+db.exec(`
+  CREATE INDEX IF NOT EXISTS idx_monday_cache_board ON monday_cache(board_id)
+`);
+
+// Virtual table for fuzzy search
+try {
+  db.exec(`
+    CREATE VIRTUAL TABLE IF NOT EXISTS monday_search_vectors USING fts5(
+      item_id UNINDEXED,
+      board_id UNINDEXED,
+      name,
+      content
+    )
+  `);
+} catch (e) {
+  console.warn("FTS5 table creation failed, fuzzy search might be limited:", e);
+}
+
 // Ensure base_number is unique to prevent race condition duplicates
 db.exec(`
   CREATE UNIQUE INDEX IF NOT EXISTS idx_quotes_base_number ON quotes(base_number)

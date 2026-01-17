@@ -41,7 +41,7 @@ const manageItems = [{ title: "Catalog", href: "/catalog", icon: Package }];
 
 const utilityItems = [
   { title: "Search", href: "/search", icon: Search, disabled: true },
-  { title: "Settings", href: "/settings", icon: Settings, disabled: true },
+  { title: "Settings", href: "/settings", icon: Settings },
 ];
 
 // Desert sun logo component

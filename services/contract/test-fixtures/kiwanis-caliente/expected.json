@@ -1,0 +1,197 @@
+{
+  "meta": {
+    "fixture": "kiwanis-caliente",
+    "description": "Caliente Construction - COT Parks JOC Kiwanis Park North Playground SWPPP/Dust Control",
+    "estimateNumber": "05162505",
+    "contractNumber": "250027-PA01",
+    "verifiedDate": "2025-12-22",
+    "notes": "Totals match exactly. City of Tempe project, 0% retention, Paid when Paid terms."
+  },
+
+  "estimate": {
+    "projectName": "KIWANIS PARK NORTH IMPROV",
+    "contractorName": "Caliente Construction",
+    "totalAmount": 10547.5,
+    "hasLineItemPricing": true,
+    "items": [
+      {
+        "description": "SWPPP Narrative Design Manual",
+        "quantity": 0,
+        "unit": "Each",
+        "unitPrice": 1350,
+        "total": 0,
+        "included": false
+      },
+      {
+        "description": "9\" Compost Filter Sock",
+        "quantity": 750,
+        "unit": "LF",
+        "unitPrice": 2.45,
+        "total": 1837.5,
+        "included": true
+      },
+      {
+        "description": "Rock Entrance",
+        "quantity": 1,
+        "unit": "Each",
+        "unitPrice": 2475,
+        "total": 2475,
+        "included": true
+      },
+      {
+        "description": "Inlet Protection",
+        "quantity": 0,
+        "unit": "Each",
+        "unitPrice": 145,
+        "total": 0,
+        "included": false
+      },
+      {
+        "description": "Concrete Rolloff",
+        "quantity": 0,
+        "unit": "Each",
+        "unitPrice": 725,
+        "total": 0,
+        "included": false
+      },
+      {
+        "description": "SWPPP Sign",
+        "quantity": 0,
+        "unit": "Each",
+        "unitPrice": 275,
+        "total": 0,
+        "included": false
+      },
+      {
+        "description": "Spill Kit",
+        "quantity": 0,
+        "unit": "Each",
+        "unitPrice": 345,
+        "total": 0,
+        "included": false
+      },
+      {
+        "description": "Dust Control Sign",
+        "quantity": 0,
+        "unit": "Each",
+        "unitPrice": 575,
+        "total": 0,
+        "included": false
+      },
+      {
+        "description": "Textura/Procore/GCPay fees",
+        "quantity": 0,
+        "unit": "Each",
+        "unitPrice": 100,
+        "total": 0,
+        "included": false
+      },
+      {
+        "description": "CCIP/OCIP/Insurance portal fees",
+        "quantity": 0,
+        "unit": "Each",
+        "unitPrice": 250,
+        "total": 0,
+        "included": false
+      },
+      {
+        "description": "SWPPP Inspections",
+        "quantity": 21,
+        "unit": "Each",
+        "unitPrice": 195,
+        "total": 4095,
+        "included": true,
+        "notes": "9 month project, every 14 days"
+      },
+      {
+        "description": "Dust Control Permit",
+        "quantity": 1,
+        "unit": "Each",
+        "unitPrice": 1630,
+        "total": 1630,
+        "included": true,
+        "notes": "$500 filing + $1,130 acreage fee"
+      },
+      {
+        "description": "Mobilization Charges",
+        "quantity": 2,
+        "unit": "Each",
+        "unitPrice": 255,
+        "total": 510,
+        "included": true
+      }
+    ],
+    "alternates": [],
+    "exclusions": [
+      "Maintenance and removal not included unless listed",
+      "Additional rain event inspections at $195 each",
+      "Additional trips billed at same price"
+    ]
+  },
+
+  "contract": {
+    "docType": "SUBCONTRACT",
+    "contractor": {
+      "name": "Caliente Construction, Inc.",
+      "address": "485 W Vaughn St.",
+      "city": "Tempe",
+      "state": "AZ",
+      "zip": "85283",
+      "representative": "LeAnn Close",
+      "title": "Project Manager",
+      "phone": "602-818-2430",
+      "email": "lclose@calienteconstruction.com"
+    },
+    "subcontractor": {
+      "name": "Desert Services",
+      "address": "PO Box 236",
+      "city": "Scottsdale",
+      "state": "Arizona",
+      "zip": "85252",
+      "phone": "480-513-8986",
+      "representative": "Jared Aiken",
+      "email": "jared@desertservices.net"
+    },
+    "owner": {
+      "name": "City of Tempe",
+      "representative": "Engineering/Transportation - CIP Construction"
+    },
+    "project": {
+      "name": "COT Parks JOC Kiwanis Park North Playground Imps",
+      "number": "6305491T",
+      "address": "51 W Baseline Rd",
+      "city": "Tempe",
+      "state": "AZ",
+      "zip": "85283",
+      "description": "SWPPP/Dust Control"
+    },
+    "amounts": {
+      "originalAmount": 10547.5,
+      "retainage": 0,
+      "bonding": {
+        "required": false
+      }
+    },
+    "dates": {
+      "effectiveDate": "2025-10-27"
+    },
+    "contractNumber": "250027-PA01",
+    "exhibits": []
+  },
+
+  "reconciliation": {
+    "expectedStatus": "MATCH",
+    "totals": {
+      "estimate": 10547.5,
+      "contract": 10547.5,
+      "difference": 0,
+      "match": true
+    },
+    "lineItems": {
+      "removed": [],
+      "added": [],
+      "mathWorks": true
+    },
+    "notes": "Estimate and contract totals match exactly at $10,547.50"
+  }
+}

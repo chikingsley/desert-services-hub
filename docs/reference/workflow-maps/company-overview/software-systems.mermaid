@@ -1,0 +1,53 @@
+flowchart LR
+    subgraph Systems["EXECUTION SYSTEMS"]
+        subgraph CROSys["CRO Software System"]
+            CRO["**CRO Software**<br/><i>Digital Platform</i>"]
+            Kerin["**Kerin Reissig**<br/><i>Billing Coordinator</i>"]
+        end
+
+        subgraph ExcelSys["Dawn's Excel System"]
+            Excel["**Dawn's Excel File**<br/><i>Service Coordination</i>"]
+            Dawn["**Dawn Wagner**<br/><i>Billing Coordinator</i>"]
+        end
+
+        subgraph SWPPPSys["SWPPP System"]
+            SWPPP["**SWPPP Excel File**<br/><i>Compliance Tracking</i>"]
+            Kendra["**Kendra Ash**<br/><i>VP of Contract Administration</i>"]
+        end
+    end
+    
+    %% Service Directors
+    CRO -.-> Stephen["**Stephen Judd**<br/><i>Director of Portable Toilets</i>"]
+    Stephen --> STS["Portable Toilets & Sanitation"]
+    
+    CRO -.-> Wendey["**Wendy Byers**<br/><i>Director of Roll-off Containers</i>"]
+    Wendey --> WBS["Roll-Off Dumpster Rentals"]
+    
+    Excel -.-> Daniel["**Daniel Vanegas**<br/><i>Director of Water Truck Services</i>"]
+    Daniel --> DVS["Water Trucks"]
+    Daniel --> DCS["Construction Site Cleaning Services"]
+    Daniel --> DMS["Misc Services<br/><i>Flow Testing, Perk Testing<br/>Fill Swimming Pools<br/>Fill Construction Water Tanks<br/>Fill-in for SWPPP</i>"]
+    
+    Excel -.-> Kelley["**Kelley Kline**<br/><i>Director of Street Sweeping</i>"]
+    Kelley --> KKS["Street Sweeping Services"]
+    
+    SWPPP -.-> Jayson["**Jayson Roh**<br/><i>VP Operations</i>"]
+    Jayson --> JR1["Stormwater Management<br/>& Compliance"]
+    Jayson --> JR2["Temporary Fencing<br/>& Barricades"]
+    
+    %% Styling
+    classDef croStyle fill:#dbeafe,stroke:#1e40af,stroke-width:3px,font-weight:bold,color:#1e3a8a
+    classDef excelStyle fill:#fef3c7,stroke:#d97706,stroke-width:3px,font-weight:bold,color:#92400e
+    classDef swpppStyle fill:#dcfce7,stroke:#15803d,stroke-width:3px,font-weight:bold,color:#14532d
+    classDef billingBox fill:#fce7f3,stroke:#9f1239,stroke-width:2px,font-weight:bold
+    classDef directorBox fill:#fef2f2,stroke:#b91c1c,stroke-width:2px,font-weight:bold
+    classDef serviceBox fill:#f0fdf4,stroke:#16a34a,stroke-width:2px
+    classDef vpBox fill:#fefce8,stroke:#ca8a04,stroke-width:2px,font-weight:bold
+    
+    class CRO croStyle
+    class Excel excelStyle
+    class SWPPP swpppStyle
+    class Kerin,Dawn,Kendra billingBox
+    class Stephen,Wendey,Daniel,Kelley directorBox
+    class Jayson vpBox
+    class STS,WBS,DVS,DCS,DMS,KKS,JR1,JR2 serviceBox

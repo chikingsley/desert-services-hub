@@ -1,0 +1,92 @@
+flowchart TB
+    subgraph RECEIVE["<b>1. CONTRACT RECEIVED</b>"]
+        direction TB
+        Trigger(["Contract arrives via email"])
+        Trigger --> WhoReceives{Who received it?}
+        WhoReceives --> Kendra["Kendra"]
+        WhoReceives --> Jared["Jared"]
+        WhoReceives --> Jayson["Jayson"]
+        WhoReceives --> Sales["Sales Team"]
+        WhoReceives --> Rick["Rick"]
+        Kendra --> Forward["Forward to Chi<br/>(Project Coordinator)"]
+        Jared --> Forward
+        Jayson --> Forward
+        Sales --> Forward
+        Rick --> Forward
+    end
+
+    subgraph RECONCILE["<b>2. RECONCILIATION</b><br/>(~30 minutes)"]
+        direction TB
+        Forward --> OpenDocs["Open contract PDF<br/>+ estimate in QuickBooks"]
+        OpenDocs --> CheckTotals{"Totals match?"}
+
+        CheckTotals -->|"Yes (difference = $0)"| SkipToScope["Skip to scope review"]
+        CheckTotals -->|"No"| LineByLine["Review line by line:<br/>- Items in estimate not in contract<br/>- Items in contract not in estimate<br/>- Price differences"]
+
+        LineByLine --> UpdateQB["Update QuickBooks estimate<br/>to reflect contract changes"]
+        UpdateQB --> VerifyMath{"Math checks out?<br/>(Est - Removed + Added) = Contract"}
+        VerifyMath -->|"No"| Clarify["Contact GC for clarification"]
+        Clarify --> LineByLine
+        VerifyMath -->|"Yes"| SaveVersion["Save new estimate version<br/>Export as PDF"]
+
+        SaveVersion --> SkipToScope
+        SkipToScope --> ScopeReview["Review scope for red flags:<br/>- Items we're expected to do but not priced<br/>- 'If required' items without costs<br/>- Unclear scope language<br/>- Work outside typical scope"]
+
+        ScopeReview --> UpdateJobName["Update job name in Monday<br/>(syncs to SharePoint folder)"]
+    end
+
+    subgraph ISSUES["<b>3. HANDLE MISMATCHES</b>"]
+        direction TB
+        UpdateJobName --> IssuesFound{Issues found?}
+        IssuesFound -->|"Yes"| DraftEmail["Draft email to customer:<br/>- Markups/changes needed<br/>- Items needing clarification"]
+        DraftEmail --> SendEmail["Send email to GC"]
+        SendEmail --> WaitResponse["Wait for response"]
+        WaitResponse --> FollowUp{Response received?}
+        FollowUp -->|"Day 1: No"| Email1["Follow-up email #1"]
+        Email1 --> FollowUp
+        FollowUp -->|"Day 3: No"| Email2["Follow-up email #2"]
+        Email2 --> FollowUp
+        FollowUp -->|"Day 4+: No"| CallGC["Call GC directly"]
+        CallGC --> FollowUp
+        FollowUp -->|"Yes"| ReviewResponse["Review response<br/>Update estimate if needed"]
+        ReviewResponse --> IssuesFound
+        IssuesFound -->|"No"| ReadyToSign["Contract ready for signature"]
+    end
+
+    subgraph APPROVE["<b>4. APPROVAL & ENTRY</b>"]
+        direction TB
+        ReadyToSign --> SendToKendra["Send to Kendra for signature"]
+        SendToKendra --> KendraSigns["Kendra signs contract"]
+        KendraSigns --> QBEntry["QuickBooks Entry"]
+
+        QBEntry --> CustomerExists{Customer exists<br/>in QuickBooks?}
+        CustomerExists -->|"No"| CreateCustomer["Create customer"]
+        CreateCustomer --> CreateProject["Create project under customer"]
+        CustomerExists -->|"Yes"| CreateProject
+
+        CreateProject --> AttachDocs["Attach to project:<br/>- Final estimate PDF<br/>- Schedule of values (if applicable)"]
+    end
+
+    subgraph HANDOFF["<b>5. HANDOFF TO INITIATION</b>"]
+        direction TB
+        AttachDocs --> EmailGroup["Email contracts group:<br/>- Final estimate<br/>- Contract summary<br/>- Responsibility breakdown"]
+        EmailGroup --> Initiation(["Proceeds to<br/>PROJECT INITIATION"])
+    end
+
+    %% Styling
+    style Trigger fill:#bbdefb,stroke:#1565c0,stroke-width:3px,color:#000
+    style Forward fill:#c8e6c9,stroke:#2e7d32,stroke-width:2px,color:#000
+    style CheckTotals fill:#fff3e0,stroke:#e65100,stroke-width:2px,color:#000
+    style IssuesFound fill:#fff3e0,stroke:#e65100,stroke-width:2px,color:#000
+    style CustomerExists fill:#fff3e0,stroke:#e65100,stroke-width:2px,color:#000
+    style VerifyMath fill:#fff3e0,stroke:#e65100,stroke-width:2px,color:#000
+    style FollowUp fill:#fff3e0,stroke:#e65100,stroke-width:2px,color:#000
+    style ReadyToSign fill:#c8e6c9,stroke:#2e7d32,stroke-width:3px,color:#000
+    style KendraSigns fill:#c8e6c9,stroke:#2e7d32,stroke-width:2px,color:#000
+    style Initiation fill:#bbdefb,stroke:#1565c0,stroke-width:3px,color:#000
+
+    style RECEIVE fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
+    style RECONCILE fill:#fff8e1,stroke:#f9a825,stroke-width:2px
+    style ISSUES fill:#ffebee,stroke:#c62828,stroke-width:2px
+    style APPROVE fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+    style HANDOFF fill:#e3f2fd,stroke:#1565c0,stroke-width:2px

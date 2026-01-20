@@ -1,0 +1,147 @@
+flowchart LR
+    %% ============================================
+    %% INTAKE - Shows both entry points
+    %% ============================================
+    subgraph INTAKE["━━━━━━━ INTAKE (Multiple Entry Points) ━━━━━━━"]
+        direction LR
+
+        SalesEntry(["Work comes to<br/>SALES/ESTIMATING"])
+        OpsEntry(["Work comes to<br/>OPERATIONS"])
+
+        SalesEntry --> ToEstimating["→ All go to<br/>Estimating"]
+
+        OpsEntry --> CheckSvc{Service?}
+        CheckSvc -->|SWPPP| FwdToEst["Forward to<br/>Estimating"]
+        CheckSvc -->|Other| StayOps["→ Stay in Ops<br/>(Informal)"]
+
+        FwdToEst --> ToEstimating
+    end
+
+    %% ============================================
+    %% FORMAL PATH: SALES & ESTIMATING
+    %% ============================================
+    subgraph FORMAL["━━━━━━━ FORMAL PATH - SALES & ESTIMATING ━━━━━━━"]
+        direction LR
+
+        ToEstimating --> AddMon["Add to<br/>MondayCRM"]
+        AddMon --> Takeoff["Complete<br/>Estimate"]
+        Takeoff --> SendEst["Send to GC"]
+        SendEst --> Track["Track &<br/>Follow-up"]
+        Track --> Won{Won?}
+        Won -->|No| Lost(["Lost"])
+        Won -->|Yes| NotifyChi["Notify Chi<br/>(Proj Coord)"]
+    end
+
+    %% ============================================
+    %% CHI - PROJECT COORDINATOR
+    %% ============================================
+    subgraph CHI["━━━━━━━ CHI - PROJECT COORDINATOR (Formal Path Only) ━━━━━━━"]
+        direction LR
+
+        NotifyChi --> CreateProj["Create Project<br/>in Monday"]
+        CreateProj --> GatherInfo["Info Gathering<br/>(Intake Checklist)"]
+        GatherInfo --> GetSigned["Get Signed<br/>Estimate"]
+        GetSigned --> WaitContract["Wait for<br/>Contract"]
+        WaitContract --> Reconcile["Reconcile<br/>Contract vs Est"]
+        Reconcile --> Match{Match?}
+        Match -->|No| Resolve["Resolve<br/>Issues"]
+        Resolve --> Match
+        Match -->|Yes| KendraSig["Get Kendra<br/>Signature"]
+        KendraSig --> Package["Package<br/>Handoff Docs"]
+        Package --> HandoffChi["→ Handoff to<br/>Delivery Mgr"]
+    end
+
+    %% ============================================
+    %% INFORMAL PATH: OPERATIONS DIRECT
+    %% ============================================
+    subgraph INFORMAL["━━━━━━━ INFORMAL PATH - OPERATIONS DIRECT (Non-SWPPP Only) ━━━━━━━"]
+        direction LR
+
+        StayOps --> OpsIntake["Ops Collects<br/>Basic Info"]
+        OpsIntake --> SiteCheck{Site visit<br/>needed?}
+        SiteCheck -->|Yes| Visit["Site Visit"]
+        SiteCheck -->|No| Photos["Get Photos"]
+        Visit --> QuickEst["Quick<br/>Estimate"]
+        Photos --> QuickEst
+
+        QuickEst --> GetJared["Get Approval<br/>from Jared/Dawn"]
+        GetJared --> EmailConf["Email<br/>Confirmation"]
+        EmailConf --> CollectInfo["Collect:<br/>PO, dates,<br/>contacts"]
+        CollectInfo --> HandoffOps["→ Schedule &<br/>Execute Work"]
+    end
+
+    %% ============================================
+    %% DELIVERY MANAGERS
+    %% ============================================
+    subgraph DELIVERY["━━━━━━━ DELIVERY MANAGERS (All Paths Converge Here) ━━━━━━━"]
+        direction LR
+
+        %% Entry from both paths
+        HandoffChi --> RouteService{Route by<br/>Service?}
+        HandoffOps --> DirectSched["Add to<br/>Schedule"]
+
+        %% Routing by service line
+        RouteService -->|SWPPP/Fence| Jayson["Jayson"]
+        RouteService -->|PJ/Roll-offs| Stephen["Stephen"]
+        RouteService -->|Water Truck| Dawn["Dawn"]
+        RouteService -->|Sweeping| Kelly["Kelly"]
+
+        Jayson --> RecvHandoff["Receive<br/>Handoff Package"]
+        Stephen --> RecvHandoff
+        Dawn --> RecvHandoff
+        Kelly --> RecvHandoff
+
+        RecvHandoff --> AddToSched["Add to<br/>Schedule/System"]
+        DirectSched --> AddToSched
+
+        AddToSched --> AssignCrew["Assign<br/>Crew/Driver"]
+        AssignCrew --> Execute["Execute<br/>Work"]
+        Execute --> Document["Document<br/>Completion"]
+        Document --> HandoffBill["→ To Billing"]
+    end
+
+    %% ============================================
+    %% BILLING
+    %% ============================================
+    subgraph BILLING["━━━━━━━ BILLING TEAM (Kendra) ━━━━━━━"]
+        direction LR
+
+        HandoffBill --> CreateInv["Create<br/>Invoice"]
+        CreateInv --> SendInv["Send to<br/>Customer"]
+        SendInv --> TrackPay["Track<br/>Payment"]
+        TrackPay --> Complete(["Complete"])
+    end
+
+    %% ============================================
+    %% STYLING
+    %% ============================================
+
+    %% Swimlane backgrounds
+    style INTAKE fill:#fafafa,stroke:#424242,stroke-width:3px
+    style FORMAL fill:#fff8e1,stroke:#f9a825,stroke-width:3px
+    style CHI fill:#e3f2fd,stroke:#1565c0,stroke-width:3px
+    style INFORMAL fill:#e8f5e9,stroke:#2e7d32,stroke-width:3px
+    style DELIVERY fill:#f3e5f5,stroke:#7b1fa2,stroke-width:3px
+    style BILLING fill:#fce4ec,stroke:#c2185b,stroke-width:3px
+
+    %% Entry points
+    style SalesEntry fill:#fff9c4,stroke:#f9a825,stroke-width:3px,color:#000
+    style OpsEntry fill:#dcedc8,stroke:#2e7d32,stroke-width:3px,color:#000
+
+    %% Decisions
+    style CheckSvc fill:#fff3e0,stroke:#e65100,stroke-width:3px,color:#000
+    style Won fill:#fff3e0,stroke:#e65100,stroke-width:3px,color:#000
+    style Match fill:#fff3e0,stroke:#e65100,stroke-width:3px,color:#000
+    style SiteCheck fill:#fff3e0,stroke:#e65100,stroke-width:3px,color:#000
+    style RouteService fill:#ce93d8,stroke:#7b1fa2,stroke-width:3px,color:#000
+
+    %% Key transitions
+    style ToEstimating fill:#fff59d,stroke:#f9a825,stroke-width:3px,color:#000
+    style FwdToEst fill:#e1bee7,stroke:#7b1fa2,stroke-width:3px,color:#000
+    style StayOps fill:#aed581,stroke:#2e7d32,stroke-width:3px,color:#000
+    style HandoffChi fill:#c8e6c9,stroke:#2e7d32,stroke-width:3px,color:#000
+    style HandoffOps fill:#c8e6c9,stroke:#2e7d32,stroke-width:3px,color:#000
+
+    %% End states
+    style Complete fill:#bbdefb,stroke:#1565c0,stroke-width:3px,color:#000
+    style Lost fill:#ffcdd2,stroke:#c62828,stroke-width:2px,color:#000

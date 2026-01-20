@@ -1,0 +1,34 @@
+flowchart TB
+    subgraph RFP["<b>ESTIMATING PROCESS</b>"]
+        direction TB
+        Start(["━━━━━━━━━━<br/><b>RFP from GC</b><br/>💻 Outlook<br/>━━━━━━━━━━"])
+        Start --> Folder["<b>Add to Triage Folder</b><br/>💻 Outlook"]
+        Folder --> Monday["<b>Add to MondayCRM</b><br/>💻 MondayCRM<br/>(2-7 minutes)<br/>━━━━━━━━━━<br/>• Scan triage folder periodically<br/>• Prioritize by due date<br/>• Select next deal to enter<br/>• Create deal & set status OPEN<br/>• Add contact/person info<br/>• Enter due date<br/>• Set bid status & service line<br/>• <i>Optional: Attach PDFs</i><br/><i>(SWPPP, stormwater, erosion plans)</i><br/><br/>⚠️ BOTTLENECK:<br/>Limited estimator time"]
+        Monday --> Takeoff["<b>Complete Estimate Takeoff</b><br/>💻 Revu Bluebeam, QuickBooks<br/>━━━━━━━━━━<br/>• Draw fencing in drawings<br/>• Count inlets for protections<br/>• Check spill kit needs<br/>• Check concrete washout<br/>• Check narrative requirement<br/>• Check rock entrance needs<br/><i>Can add PDFs here if skipped earlier</i>"]
+        Takeoff --> Export["<b>Export PDF</b><br/>💻 QuickBooks"]
+        Export --> EmailCheck{Sales person<br/>CC'ed on<br/>RFP email?...}
+        EmailCheck -->|Yes| EmailPlus["<b>Send Estimate + Cut Sheets</b><br/>💻 Outlook<br/>━━━━━━━━━━<br/>• Include estimate<br/>• Include cut sheets of<br/>other services not purchased"]
+        EmailCheck -->|No| EmailBasic["<b>Send Estimate</b><br/>💻 Outlook"]
+        EmailPlus --> StatusChange
+        EmailBasic --> StatusChange["<b>Update Status</b><br/>💻 MondayCRM<br/>━━━━━━━━━━<br/>OPEN → SENT"]
+        StatusChange --> Followup["<b>Follow-up on Sent Deals</b><br/>💻 MondayCRM<br/>━━━━━━━━━━<br/>⚠️ BOTTLENECK:<br/>~3,000 deals in SENT status<br/>Limited follow-up capacity"]
+        Followup --> Outcome{Deal<br/>Outcome?...}
+        Outcome -->|Won| Won["<b>Status: WON</b><br/>💻 MondayCRM"]
+        Outcome -->|Lost| Lost["<b>Status: LOST</b><br/>💻 MondayCRM"]
+        Outcome -->|Pending| Followup
+    end
+
+    %% Styling for RFP Process
+    style Start fill:#bbdefb,stroke:#1565c0,stroke-width:3px,color:#000
+    style Folder fill:#bbdefb,stroke:#1565c0,stroke-width:3px,color:#000
+    style Monday fill:#660e0e,stroke:#c62828,stroke-width:4px,color:#ffcdd2
+    style Takeoff fill:#bbdefb,stroke:#1565c0,stroke-width:3px,color:#000
+    style Export fill:#bbdefb,stroke:#1565c0,stroke-width:3px,color:#000
+    style EmailCheck fill:#bbdefb,stroke:#1565c0,stroke-width:3px,color:#000
+    style EmailPlus fill:#bbdefb,stroke:#1565c0,stroke-width:3px,color:#000
+    style EmailBasic fill:#bbdefb,stroke:#1565c0,stroke-width:3px,color:#000
+    style StatusChange fill:#bbdefb,stroke:#1565c0,stroke-width:3px,color:#000
+    style Followup fill:#660e0e,stroke:#e65100,stroke-width:4px,color:#ffcdd2
+    style Outcome fill:#ffcc80,stroke:#e65100,stroke-width:3px,color:#000
+    style Won fill:#ffcc80,stroke:#e65100,stroke-width:3px,color:#000
+    style Lost fill:#ffcc80,stroke:#e65100,stroke-width:3px,color:#000

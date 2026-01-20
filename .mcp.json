@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "desert-email": {
+      "command": "bun",
+      "args": ["./services/email/mcp-server.ts"]
+    },
+    "desert-mondaycrm": {
+      "command": "bun",
+      "args": ["./services/monday/mcp-server.ts"]
+    },
+    "desert-quoting": {
+      "command": "bun",
+      "args": ["./services/quoting/mcp-server.ts"]
+    }
+  }
+}

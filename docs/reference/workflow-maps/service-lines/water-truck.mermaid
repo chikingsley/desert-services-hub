@@ -1,0 +1,70 @@
+graph TD
+    A1[Work Intake Source 1: Customer directly contacts Daniel via email call or text]
+    A2[Work Intake Source 2: Answering service takes message emails Daniel]
+    A3[Work Intake Source 3: Site services managers contact Daniel]
+    A4[Work Intake Source 4: Contract win]
+    
+    A1 --> B
+    A2 --> B
+    A3 --> B
+    A4 --> B
+    
+    B[1. Daniel contacts customer]
+    
+    B --> C{2. Site walk or pictures?}
+    
+    C -->|Site walk needed| D[3a. Daniel schedules and performs site walk]
+    C -->|Pictures sufficient| E[3b. Customer provides pictures]
+    
+    D --> F
+    E --> F
+    
+    F[4. Daniel estimates: hours, trucks, labor]
+    
+    F --> G[5. Daniel goes to Jared or Dawn for formal estimate]
+    
+    G --> H{6. Do we have capacity?}
+    
+    H -->|Yes| I[7a. Internal: Desert Services performs work]
+    H -->|No| J[7b. External: Precision Cleaning subcontract 20% markup]
+    
+    I --> K
+    J --> K
+    
+    K[8. Email confirmation required]
+    
+    K --> L[9. Collect: PO number, time, dates, location, duration, pictures, GC name, job site address, site contact, water source]
+    
+    L --> M{10. Contract job or Call-in job?}
+    
+    M -->|Contract job| N[11a. Add to *WT SW Master Excel* and *WT schedule October 2025*]
+    M -->|Call-in job| O[11b. Text message to group chat: GC name, job site name, address, site contact]
+    
+    N --> P[12a. Driver assigned at this point]
+    O --> Q[12b. Assign route driver]
+    
+    P --> R
+    Q --> R
+    
+    R[13. Print weekly schedule and hand out to all drivers]
+    
+    R --> S[14. Drivers complete DOT forms before leaving]
+    
+    S --> T[15. Drivers contact superintendent on site]
+    
+    T --> U[16. Work executed]
+    
+    U --> V[17. Drivers text or email timesheet and job details to Daniel]
+    
+    V --> W[18. Daniel documents in Notes app on phone]
+    
+    W --> X[19. Daniel sends work completes to Dawn]
+    
+    X --> Y[20. Dawn bills]
+    
+    Z[ISSUES: 2-5 day lag between step 18 and 19, All work completes in phone Notes app, Manual text-based call-in scheduling]
+    
+    style W fill:#ffc9c9,stroke:#ff6b6b
+    style X fill:#ffc9c9,stroke:#ff6b6b
+    style O fill:#ffc9c9,stroke:#ff6b6b
+    style Z fill:#ffe0e0,stroke:#ff6b6b

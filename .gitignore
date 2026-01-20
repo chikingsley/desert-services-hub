@@ -1,14 +1,19 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
+# OS files
+.DS_Store
+Thumbs.db
+
 # dependencies
-/node_modules
+node_modules/
 
 # next.js
-/.next/
-/out/
+.next/
+out/
 
 # production
-/build
+build/
+dist/
 
 # debug
 npm-debug.log*
@@ -17,7 +22,9 @@ yarn-error.log*
 .pnpm-debug.log*
 
 # env files
-.env*
+.env
+.env.*
+!.env.example
 
 # vercel
 .vercel
@@ -28,4 +35,22 @@ next-env.d.ts
 
 # database
 *.db
+*.db-shm
+*.db-wal
 data/*.db
+
+# IDE
+.idea/
+*.swp
+*.swo
+
+# test artifacts
+coverage/
+
+# cache
+.cache/
+*.log
+
+# temp files
+*.tmp
+*.temp

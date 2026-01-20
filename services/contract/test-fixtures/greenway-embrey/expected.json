@@ -1,0 +1,235 @@
+{
+  "meta": {
+    "fixture": "greenway-embrey",
+    "description": "Embrey Builders - Greenway Pkwy PHX SWPPP & Garage Cleaning contract",
+    "estimateNumber": "02062501-R1",
+    "contractNumber": "EB2117-9001",
+    "verifiedDate": "2025-12-22",
+    "notes": "Totals match exactly. Contract signed via DocuSign Dec 2025."
+  },
+
+  "estimate": {
+    "projectName": "EMBREY - 12TH & GREENWAY",
+    "contractorName": "Embrey Builders, LLC",
+    "totalAmount": 46021,
+    "hasLineItemPricing": true,
+    "items": [
+      {
+        "description": "SWPPP Narrative Design Manual",
+        "quantity": 1,
+        "unit": "Each",
+        "unitPrice": 1350,
+        "total": 1350,
+        "included": true
+      },
+      {
+        "description": "9\" Compost Filter Sock",
+        "quantity": 3000,
+        "unit": "LF",
+        "unitPrice": 2.45,
+        "total": 7350,
+        "included": true
+      },
+      {
+        "description": "Drop Inlet Protection",
+        "quantity": 0,
+        "unit": "Each",
+        "unitPrice": 145,
+        "total": 0,
+        "included": false
+      },
+      {
+        "description": "Curb Inlet Protection",
+        "quantity": 3,
+        "unit": "Each",
+        "unitPrice": 375,
+        "total": 1125,
+        "included": true
+      },
+      {
+        "description": "Concrete Rolloff",
+        "quantity": 0,
+        "unit": "Each",
+        "unitPrice": 725,
+        "total": 0,
+        "included": false
+      },
+      {
+        "description": "SWPPP Sign",
+        "quantity": 1,
+        "unit": "Each",
+        "unitPrice": 275,
+        "total": 275,
+        "included": true
+      },
+      {
+        "description": "Spill Kit",
+        "quantity": 0,
+        "unit": "Each",
+        "unitPrice": 345,
+        "total": 0,
+        "included": false
+      },
+      {
+        "description": "Dust Control Sign",
+        "quantity": 1,
+        "unit": "Each",
+        "unitPrice": 575,
+        "total": 575,
+        "included": true
+      },
+      {
+        "description": "Fire Access Signs",
+        "quantity": 0,
+        "unit": "Each",
+        "unitPrice": 675,
+        "total": 0,
+        "included": false
+      },
+      {
+        "description": "Textura Setup Charge",
+        "quantity": 0,
+        "unit": "Each",
+        "unitPrice": 100,
+        "total": 0,
+        "included": false
+      },
+      {
+        "description": "CCIP/OCIP/Insurance portal fees",
+        "quantity": 0,
+        "unit": "Each",
+        "unitPrice": 250,
+        "total": 0,
+        "included": false
+      },
+      {
+        "description": "SWPPP Inspections",
+        "quantity": 52,
+        "unit": "Each",
+        "unitPrice": 195,
+        "total": 10140,
+        "included": true,
+        "notes": "24 month project duration estimated"
+      },
+      {
+        "description": "Mobilization Charges",
+        "quantity": 10,
+        "unit": "Each",
+        "unitPrice": 255,
+        "total": 2550,
+        "included": true
+      },
+      {
+        "description": "Garage Final Clean",
+        "quantity": 1,
+        "unit": "LS",
+        "total": 12656,
+        "included": true,
+        "notes": "Sweep/blow, machine sweeper, water wagon, power washer. 2 mobilizations."
+      },
+      {
+        "description": "Allowance (Rain Events)",
+        "quantity": 1,
+        "unit": "LS",
+        "total": 10000,
+        "included": true,
+        "notes": "$10k allowance for rain event inspections"
+      }
+    ],
+    "alternates": [],
+    "exclusions": [
+      "Maintenance and removal not included unless listed",
+      "Additional trips billed at same price",
+      "Rain event inspections beyond allowance at $195 each"
+    ]
+  },
+
+  "contract": {
+    "docType": "SUBCONTRACT",
+    "contractor": {
+      "name": "Embrey Builders, LLC",
+      "address": "7600 Broadway, Suite 300",
+      "city": "San Antonio",
+      "state": "Texas",
+      "zip": "78209",
+      "phone": "210-824-6044",
+      "representative": "Yancey Hayes",
+      "email": "yancey.hayes@embrey.com"
+    },
+    "subcontractor": {
+      "name": "Desert Services, LLC",
+      "address": "800 N. Mary St.",
+      "city": "Tempe",
+      "state": "AZ",
+      "zip": "85281",
+      "phone": "480.513.8986",
+      "representative": "Kendra Ash",
+      "email": "kendra@desertservices.net"
+    },
+    "owner": {
+      "name": "Greenway Pkwy PHX Project Owner, LLC"
+    },
+    "project": {
+      "name": "Greenway Pkwy PHX",
+      "address": "1010 E. Greenway Parkway",
+      "city": "Phoenix",
+      "state": "AZ",
+      "zip": "85022",
+      "description": "Erosion Control"
+    },
+    "amounts": {
+      "originalAmount": 46021,
+      "retainage": 10,
+      "bonding": {
+        "required": false
+      }
+    },
+    "dates": {
+      "effectiveDate": "2025-12-02"
+    },
+    "exhibits": [
+      { "letter": "A", "title": "Scope of Work" },
+      { "letter": "B", "title": "Plan Log" },
+      { "letter": "C", "title": "Construction Schedule" },
+      { "letter": "D", "title": "Schedule of Values" },
+      { "letter": "E", "title": "Insurance Requirements" },
+      { "letter": "F", "title": "Payment Management System Overview" },
+      { "letter": "G", "title": "Insurance Monitoring Service Overview" },
+      { "letter": "H", "title": "Project Safety Requirements" },
+      {
+        "letter": "I",
+        "title": "Conditional Waiver & Release on Progress Payment"
+      },
+      {
+        "letter": "J",
+        "title": "Unconditional Waiver & Release on Progress Payment"
+      },
+      {
+        "letter": "K",
+        "title": "Conditional Waiver & Release on Final Payment"
+      },
+      {
+        "letter": "L",
+        "title": "Unconditional Waiver & Release on Final Payment"
+      },
+      { "letter": "M", "title": "Supplier List" }
+    ],
+    "contractNumber": "EB2117-9001"
+  },
+
+  "reconciliation": {
+    "expectedStatus": "MATCH",
+    "totals": {
+      "estimate": 46021,
+      "contract": 46021,
+      "difference": 0,
+      "match": true
+    },
+    "lineItems": {
+      "removed": [],
+      "added": [],
+      "mathWorks": true
+    },
+    "notes": "Estimate and contract totals match exactly at $46,021"
+  }
+}

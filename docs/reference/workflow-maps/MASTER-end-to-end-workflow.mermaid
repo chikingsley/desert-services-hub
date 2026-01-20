@@ -1,0 +1,83 @@
+flowchart LR
+    subgraph INTAKE["<b>INTAKE</b><br/>(Sales/Ops)"]
+        direction LR
+        Start1(["RFP from GC<br/>via Email"])
+        Start2(["Customer Call/Email<br/>to Operations"])
+
+        Start1 --> Gate{Project Type?}
+        Start2 --> Gate
+    end
+
+    %% FORMAL PATH - Sales/Estimating Team
+    subgraph FORMAL["<b>FORMAL PATH - Contract Projects</b><br/>(Sales Team → Chi → Delivery Managers)"]
+        direction LR
+
+        Gate -->|RFP/Contract<br/>Large projects| Est["<b>1. ESTIMATING</b><br/>━━━━━━━━━━<br/>• Add to MondayCRM<br/>• Complete takeoff<br/>• Send estimate<br/>• Follow-up<br/>━━━━━━━━━━<br/>See: 1-estimating.mermaid"]
+
+        Est --> Win{Won?}
+        Win -->|Yes| Contract["<b>2. CONTRACT REVIEW</b><br/>━━━━━━━━━━<br/>• Reconcile with estimate<br/>• Resolve discrepancies<br/>• Get signature<br/>━━━━━━━━━━<br/>See: 2-contract-review.mermaid"]
+        Win -->|No| EndLost(["End"])
+
+        Contract --> Kickoff["<b>3. PROJECT KICKOFF</b><br/>━━━━━━━━━━<br/>• Info gathering (intake checklist)<br/>• Get signed estimate<br/>• Create project in systems<br/>• Package handoff docs<br/>━━━━━━━━━━<br/>See: 3-project-kickoff.mermaid"]
+
+        Kickoff --> HandoffFormal["<b>4. HANDOFF TO DELIVERY</b><br/>━━━━━━━━━━<br/>Route to service manager:<br/>• Jayson (SWPPP/Fence)<br/>• Stephen (PJs/Roll-offs)<br/>• Dawn (Water Trucks)<br/>• Kelly (Sweeping)"]
+    end
+
+    %% INFORMAL PATH - Operations Direct
+    subgraph INFORMAL["<b>INFORMAL PATH - Call-in / Quick Jobs</b><br/>(Operations Direct → Delivery)"]
+        direction LR
+
+        Gate -->|Call-in<br/>Quick jobs| Quick["<b>1. QUICK ESTIMATE</b><br/>━━━━━━━━━━<br/>Operations staff handles:<br/>• Daniel (Water Trucks)<br/>• Stephen (PJs/Roll-offs)<br/>• Site visit or photos<br/>• Quick scope assessment<br/>━━━━━━━━━━<br/>~40% of WT work<br/>Varies by service"]
+
+        Quick --> GetApproval["<b>2. GET APPROVAL</b><br/>━━━━━━━━━━<br/>• Ops contacts Jared/Dawn<br/>for formal estimate<br/>• Email confirmation<br/>• Collect PO, dates, contacts<br/>━━━━━━━━━━<br/>NO signed contract needed"]
+
+        GetApproval --> HandoffInformal["<b>3. DIRECT TO DELIVERY</b><br/>━━━━━━━━━━<br/>Same ops person delivers:<br/>• Add to schedule/system<br/>• Assign crew/driver<br/>• Execute work<br/>━━━━━━━━━━<br/>Faster turnaround"]
+    end
+
+    %% DELIVERY BY SERVICE
+    subgraph DELIVERY["<b>DELIVERY</b><br/>(Service-Specific Execution)"]
+        direction LR
+
+        HandoffFormal --> ServiceSwitch{Service Line?}
+        HandoffInformal --> ServiceSwitch
+
+        ServiceSwitch -->|SWPPP/Fence| SWPPP["<b>SWPPP INSTALL</b><br/>━━━━━━━━━━<br/>See detailed map:<br/>swppp-install.mermaid"]
+        ServiceSwitch -->|Water Truck| WT["<b>WATER TRUCK</b><br/>━━━━━━━━━━<br/>See detailed map:<br/>water-truck.mermaid"]
+        ServiceSwitch -->|Porta-Johns| PJ["<b>PORTA-JOHNS</b><br/>━━━━━━━━━━<br/>See detailed map:<br/>porta-john.mermaid"]
+        ServiceSwitch -->|Roll-offs| RO["<b>ROLL-OFFS</b><br/>━━━━━━━━━━<br/>See detailed map:<br/>rolloff.mermaid"]
+        ServiceSwitch -->|Sweeping| SW["<b>SWEEPING</b><br/>━━━━━━━━━━<br/>See detailed map:<br/>street-sweeping.mermaid"]
+
+        SWPPP --> Billing
+        WT --> Billing
+        PJ --> Billing
+        RO --> Billing
+        SW --> Billing
+
+        Billing["<b>BILLING</b><br/>━━━━━━━━━━<br/>Kendra/Billing Team<br/>Invoice creation"]
+        Billing --> Complete(["Project Complete"])
+    end
+
+    %% Styling for sections
+    style INTAKE fill:#e3f2fd,stroke:#1565c0,stroke-width:3px
+    style FORMAL fill:#fff8e1,stroke:#f9a825,stroke-width:3px
+    style INFORMAL fill:#e8f5e9,stroke:#2e7d32,stroke-width:3px
+    style DELIVERY fill:#f3e5f5,stroke:#7b1fa2,stroke-width:3px
+
+    %% Styling for key nodes
+    style Start1 fill:#bbdefb,stroke:#1565c0,stroke-width:3px,color:#000
+    style Start2 fill:#c8e6c9,stroke:#2e7d32,stroke-width:3px,color:#000
+    style Gate fill:#ffcc80,stroke:#e65100,stroke-width:3px,color:#000
+    style Win fill:#ffcc80,stroke:#e65100,stroke-width:3px,color:#000
+    style ServiceSwitch fill:#ce93d8,stroke:#7b1fa2,stroke-width:3px,color:#000
+
+    style Est fill:#fff9c4,stroke:#f9a825,stroke-width:2px,color:#000
+    style Contract fill:#fff9c4,stroke:#f9a825,stroke-width:2px,color:#000
+    style Kickoff fill:#fff9c4,stroke:#f9a825,stroke-width:2px,color:#000
+    style HandoffFormal fill:#fff9c4,stroke:#f9a825,stroke-width:2px,color:#000
+
+    style Quick fill:#dcedc8,stroke:#2e7d32,stroke-width:2px,color:#000
+    style GetApproval fill:#dcedc8,stroke:#2e7d32,stroke-width:2px,color:#000
+    style HandoffInformal fill:#dcedc8,stroke:#2e7d32,stroke-width:2px,color:#000
+
+    style Complete fill:#bbdefb,stroke:#1565c0,stroke-width:3px,color:#000
+    style EndLost fill:#ffcdd2,stroke:#c62828,stroke-width:2px,color:#000

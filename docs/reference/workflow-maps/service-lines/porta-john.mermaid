@@ -1,0 +1,92 @@
+flowchart TB
+    subgraph PJ["<b>PORTABLE TOILET (PJ) PROCESS</b>"]
+        direction TB
+
+        %% INTAKE SOURCES
+        Start1(["━━━━━━━━━━<br/><b>Work Intake Source 1:</b><br/>Customer Call<br/>━━━━━━━━━━"])
+        Start2(["━━━━━━━━━━<br/><b>Work Intake Source 2:</b><br/>Customer Email<br/>━━━━━━━━━━"])
+
+        Start1 --> Collect
+        Start2 --> Collect
+
+        %% INFORMATION COLLECTION
+        Collect["<b>1. Stephen Collects Required Info</b><br/>💻 Phone/Email<br/>━━━━━━━━━━<br/><b>Account/Billing:</b><br/>• Name of account/company<br/>• Billing address<br/>• PO number<br/>• Billing contact<br/><br/><b>Site Information:</b><br/>• Site location<br/>• Name of site/project<br/>• How many PJs needed<br/>• Onsite contact info<br/><br/><b>Specific Restrictions:</b><br/>• PPE requirements<br/>• Gate access<br/>• Badge requirements<br/>• Safety videos<br/><br/><b>Specific Requests:</b><br/>• Hand sanitizer<br/>• Service frequency per week<br/>• Specific days per week<br/>• Placement onsite<br/>• Start date<br/>• Estimated end date"]
+
+        %% DATA ENTRY
+        Collect --> Entry["<b>2. Enter Order into CRO</b><br/>💻 CRO Software<br/>━━━━━━━━━━<br/>• Enter all customer information<br/>• Set up service schedule<br/>• Define placement requirements<br/><br/>⚠️ ISSUE:<br/>No email confirmation<br/>collected at this stage"]
+
+        %% ROUTE ASSIGNMENT
+        Entry --> Assign["<b>3. Assign to Route</b><br/>💻 CRO Software<br/>━━━━━━━━━━<br/>• Create initial route assignment<br/>• Add to existing routes<br/><br/>⚠️ SYSTEM LIMITATION:<br/>Cannot optimize during<br/>initial route creation"]
+
+        %% ROUTE OPTIMIZATION
+        Assign --> Optimize["<b>4. Optimize Route</b><br/>💻 CRO Software<br/>━━━━━━━━━━<br/>• Run route optimization<br/>• Adjust for efficiency<br/>• Balance driver workload<br/><br/>⚠️ MAJOR BOTTLENECK:<br/>'Hardest part of the job'<br/>Can ONLY optimize AFTER<br/>assignment (not during)<br/>Requires constant re-optimization"]
+
+        %% CONTINUOUS OPTIMIZATION
+        Optimize --> ReOptimize{Needs<br/>adjustment?...}
+        ReOptimize -->|Yes - Frequently| Optimize
+        ReOptimize -->|Ready| Schedule
+
+        %% SCHEDULING
+        Schedule["<b>5. Finalize Schedule</b><br/>💻 CRO Software<br/>━━━━━━━━━━<br/>• Set service dates<br/>• Assign drivers<br/>• Prepare dispatch info"]
+
+        %% DELIVERY
+        Schedule --> Delivery["<b>6. Initial Delivery</b><br/>👷 Service Crew<br/>━━━━━━━━━━<br/>• Deliver PJ units to site<br/>• Place according to customer specs<br/>• Note restrictions (PPE, gate, etc.)<br/><br/>⚠️ CRITICAL ISSUE:<br/>No asset tagging/labeling<br/>No numbered identification<br/>Cannot track specific units"]
+
+        %% ONGOING SERVICE
+        Delivery --> Service["<b>7. Ongoing Service Visits</b><br/>👷 Service Crew<br/>💻 CRO Software<br/>━━━━━━━━━━<br/>• Follow scheduled frequency<br/>• Service units as assigned<br/>• Handle customer requests<br/><br/>⚠️ MAJOR ISSUE:<br/>'Most of the time we come<br/>onsite the PJs are moved'<br/>Difficult to find exact PJ<br/>No policy on moving toilets"]
+
+        %% MOVED UNITS
+        Service --> Moved{PJ units<br/>moved by<br/>customer?...}
+        Moved -->|Yes - Usually| FindUnits["<b>Locate Moved Units</b><br/>👷 Service Crew<br/>━━━━━━━━━━<br/>• Search site for units<br/>• Contact site contact<br/>• Spend extra time locating<br/><br/>⚠️ INEFFICIENCY:<br/>No tracking system<br/>No documentation of moves<br/>Time-consuming searches"]
+        Moved -->|No - Rare| ServiceComplete
+
+        FindUnits --> ServiceComplete["<b>Complete Service</b><br/>👷 Service Crew<br/>━━━━━━━━━━<br/>• Service all units<br/>• Restock supplies<br/>• Note any issues"]
+
+        %% MISSING UNITS
+        ServiceComplete --> Missing{PJ<br/>missing?...}
+        Missing -->|Yes| Charge["<b>Charge Customer</b><br/>💻 Billing System<br/>━━━━━━━━━━<br/>• Customer allegedly charged<br/><br/>⚠️ UNKNOWN:<br/>Cost of new unit unknown<br/>Tracking worth investigating"]
+        Missing -->|No| Continue
+
+        Charge --> Continue{Continue<br/>service?...}
+
+        %% CONTINUATION OR END
+        Continue -->|Yes| RouteCheck{Route needs<br/>re-optimization?...}
+        RouteCheck -->|Yes - Often| Optimize
+        RouteCheck -->|No| Service
+
+        Continue -->|Contract ended| End["<b>Remove Units</b><br/>👷 Service Crew<br/>━━━━━━━━━━<br/>• Pick up all PJ units<br/>• Close out in CRO<br/>• Final billing"]
+
+        End --> Final(["━━━━━━━━━━<br/><b>Job Complete</b><br/>━━━━━━━━━━"])
+
+    end
+
+    %% ISSUES BOX
+    Issues["<b>SYSTEMIC ISSUES IDENTIFIED:</b><br/>━━━━━━━━━━<br/>1. CRO not used to full potential<br/>2. CRO being misused - unknown causes<br/>3. Firefighting problems vs. solving root causes<br/>4. Need comprehensive training session<br/>5. No asset tracking/tagging system<br/>6. No policy on moving toilets<br/>7. Route optimization workflow constraints<br/>8. No email confirmation at intake"]
+
+    %% Styling - Blue for normal steps
+    style Start1 fill:#bbdefb,stroke:#1565c0,stroke-width:3px,color:#000
+    style Start2 fill:#bbdefb,stroke:#1565c0,stroke-width:3px,color:#000
+    style Collect fill:#bbdefb,stroke:#1565c0,stroke-width:3px,color:#000
+    style Schedule fill:#bbdefb,stroke:#1565c0,stroke-width:3px,color:#000
+    style ServiceComplete fill:#bbdefb,stroke:#1565c0,stroke-width:3px,color:#000
+    style End fill:#bbdefb,stroke:#1565c0,stroke-width:3px,color:#000
+    style Final fill:#bbdefb,stroke:#1565c0,stroke-width:3px,color:#000
+
+    %% Styling - Red/Dark red for major issues
+    style Entry fill:#660e0e,stroke:#c62828,stroke-width:4px,color:#ffcdd2
+    style Assign fill:#660e0e,stroke:#c62828,stroke-width:4px,color:#ffcdd2
+    style Optimize fill:#8b0000,stroke:#c62828,stroke-width:5px,color:#ffcdd2
+    style Delivery fill:#660e0e,stroke:#c62828,stroke-width:4px,color:#ffcdd2
+    style Service fill:#660e0e,stroke:#c62828,stroke-width:4px,color:#ffcdd2
+    style FindUnits fill:#8b0000,stroke:#c62828,stroke-width:5px,color:#ffcdd2
+    style Charge fill:#660e0e,stroke:#c62828,stroke-width:4px,color:#ffcdd2
+
+    %% Styling - Orange for decisions
+    style ReOptimize fill:#ffcc80,stroke:#e65100,stroke-width:3px,color:#000
+    style Moved fill:#ffcc80,stroke:#e65100,stroke-width:3px,color:#000
+    style Missing fill:#ffcc80,stroke:#e65100,stroke-width:3px,color:#000
+    style Continue fill:#ffcc80,stroke:#e65100,stroke-width:3px,color:#000
+    style RouteCheck fill:#ffcc80,stroke:#e65100,stroke-width:3px,color:#000
+
+    %% Styling - Issues box
+    style Issues fill:#ffe0e0,stroke:#ff6b6b,stroke-width:3px,color:#000

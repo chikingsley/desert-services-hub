@@ -1,0 +1,47 @@
+flowchart TB
+    subgraph INFORMAL["INFORMAL ESTIMATING PROCESS"]
+        direction TB
+
+        Start(["Request Comes In"])
+
+        Start --> Who{Who receives it?}
+
+        Who --> Billing["Billing (Kerin)"]
+        Who --> Sales["Sales"]
+
+        Billing --> QB["Create estimate in QuickBooks<br/>(uses template)"]
+        QB --> QBExport["Export PDF"]
+        QBExport --> SendBilling["Send estimate via email"]
+
+        Sales --> Outlook["Create estimate in Outlook<br/>(no template, no PDF)"]
+        Outlook --> SendSales["Send estimate via email"]
+
+        SendBilling --> Wait["Wait for response"]
+        SendSales --> Wait
+
+        Wait --> Response{Customer response?}
+
+        Response --> |"Yes, approved"| Go["Go to Delivery"]
+        Response --> |"No response"| Followup["Follow up"]
+        Response --> |"No, rejected"| End(["End"])
+
+        Followup --> Wait
+
+        Go --> Delivery(["Handoff to Delivery"])
+    end
+
+    style Start fill:#ffffff,stroke:#000000,stroke-width:2px
+    style End fill:#ffffff,stroke:#000000,stroke-width:2px
+    style Delivery fill:#ffffff,stroke:#000000,stroke-width:2px
+    style Who fill:#ffffff,stroke:#000000,stroke-width:2px
+    style Response fill:#ffffff,stroke:#000000,stroke-width:2px
+    style Billing fill:#ffffff,stroke:#000000,stroke-width:2px
+    style Sales fill:#ffffff,stroke:#000000,stroke-width:2px
+    style QB fill:#ffffff,stroke:#000000,stroke-width:2px
+    style QBExport fill:#ffffff,stroke:#000000,stroke-width:2px
+    style Outlook fill:#ffffff,stroke:#000000,stroke-width:2px
+    style SendBilling fill:#ffffff,stroke:#000000,stroke-width:2px
+    style SendSales fill:#ffffff,stroke:#000000,stroke-width:2px
+    style Wait fill:#ffffff,stroke:#000000,stroke-width:2px
+    style Followup fill:#ffffff,stroke:#000000,stroke-width:2px
+    style Go fill:#ffffff,stroke:#000000,stroke-width:2px

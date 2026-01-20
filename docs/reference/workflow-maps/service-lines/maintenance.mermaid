@@ -1,0 +1,49 @@
+flowchart TB
+    subgraph MAINT["<b>MAINTENANCE PROCESS (REACTIVE)</b>"]
+        direction TB
+        Checklist(["━━━━━━━━━━<br/><b>Daily Truck Checklist</b><br/>📄 Paper Form<br/>━━━━━━━━━━<br/><i>Morning routine by workers</i>"])
+        FieldBreak(["━━━━━━━━━━<br/><b>Field Breakdown</b><br/>━━━━━━━━━━<br/><i>Unplanned issue</i>"])
+
+        Checklist --> IssueCheck{Issues<br/>found?...}
+        IssueCheck -->|No| InService[Truck in Service]
+        IssueCheck -->|Yes| BringIn["<b>Bring to Maintenance Area</b><br/>━━━━━━━━━━<br/>• Worker reports issue<br/>• Truck pulled from service"]
+
+        FieldBreak --> FieldFix["<b>Field Repair</b><br/>━━━━━━━━━━<br/>• Maintenance team deployed<br/>• On-site assessment"]
+
+        BringIn --> Assess
+        FieldFix --> Assess["<b>Assess & Diagnose</b><br/>📄 Paper File System<br/>━━━━━━━━━━<br/>• Review truck file<br/>• Determine parts needed<br/><br/>⚠️ BOTTLENECK:<br/>6 mechanics for 75-90 vehicles<br/>(Need 8-9 mechanics)"]
+
+        Assess --> PartsCheck{Parts<br/>available?...}
+        PartsCheck -->|Yes| Repair["<b>Complete Repair</b><br/>━━━━━━━━━━<br/>• Fix issue<br/>• Update paper file<br/>• Test vehicle"]
+        PartsCheck -->|No| OrderParts["<b>Order Parts</b><br/>━━━━━━━━━━<br/>• Vehicle out of service<br/>• Wait for delivery"]
+
+        OrderParts --> PartsArrive["<b>Parts Arrive</b>"]
+        PartsArrive --> Repair
+
+        Repair --> BackService["<b>Return to Service</b><br/>📄 Paper File Updated"]
+
+        PreventMaint["<b>Preventative Maintenance</b><br/>📄 Paper File System<br/>━━━━━━━━━━<br/><i>Random/when time allows</i><br/>━━━━━━━━━━<br/>🔴 ISSUE:<br/>Not scheduled proactively<br/>Things fall through cracks<br/>━━━━━━━━━━"]
+        PreventMaint --> SelectTruck["<b>Select Truck</b><br/>━━━━━━━━━━<br/>• No formal prioritization<br/>• Based on mechanic availability"]
+        SelectTruck --> PreventWork["<b>Perform PM Tasks</b><br/>━━━━━━━━━━<br/>• Oil changes<br/>• Inspections<br/>• Scheduled maintenance<br/>• Update paper file"]
+        PreventWork --> BackService
+
+        BackService --> SoftwareNote["━━━━━━━━━━━━━━━━━━━━━━<br/><b>SOFTWARE EVALUATION</b><br/>━━━━━━━━━━━━━━━━━━━━━━<br/>🔍 Evaluating fleet management systems:<br/>• <b>Fleetio</b> (Primary consideration)<br/>• Simply Fleet (Secondary option)<br/>━━━━━━━━━━━━━━━━━━━━━━"]
+    end
+
+    %% Styling for Maintenance Process
+    style Checklist fill:#c8e6c9,stroke:#2e7d32,stroke-width:3px,color:#000
+    style FieldBreak fill:#ffccbc,stroke:#d84315,stroke-width:3px,color:#000
+    style IssueCheck fill:#c8e6c9,stroke:#2e7d32,stroke-width:3px,color:#000
+    style InService fill:#c8e6c9,stroke:#2e7d32,stroke-width:3px,color:#000
+    style BringIn fill:#c8e6c9,stroke:#2e7d32,stroke-width:3px,color:#000
+    style FieldFix fill:#ffccbc,stroke:#d84315,stroke-width:3px,color:#000
+    style Assess fill:#660e0e,stroke:#c62828,stroke-width:4px,color:#ffcdd2
+    style PartsCheck fill:#fff9c4,stroke:#f57f17,stroke-width:3px,color:#000
+    style Repair fill:#c8e6c9,stroke:#2e7d32,stroke-width:3px,color:#000
+    style OrderParts fill:#fff9c4,stroke:#f57f17,stroke-width:3px,color:#000
+    style PartsArrive fill:#fff9c4,stroke:#f57f17,stroke-width:3px,color:#000
+    style BackService fill:#c8e6c9,stroke:#2e7d32,stroke-width:3px,color:#000
+    style PreventMaint fill:#660e0e,stroke:#c62828,stroke-width:4px,color:#ffcdd2
+    style SelectTruck fill:#fff9c4,stroke:#f57f17,stroke-width:3px,color:#000
+    style PreventWork fill:#c8e6c9,stroke:#2e7d32,stroke-width:3px,color:#000
+    style SoftwareNote fill:#e1f5fe,stroke:#0277bd,stroke-width:3px,color:#000

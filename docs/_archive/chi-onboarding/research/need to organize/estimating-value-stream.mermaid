@@ -1,0 +1,36 @@
+flowchart LR
+    subgraph WASTE_AUTO["NVA - AUTOMATE"]
+        A[1. Receive RFP]
+        B[2. Enter CRM]
+    end
+    
+    subgraph VALUE["VA - MAXIMIZE"]
+        C[3. Complete Estimate]
+    end
+    
+    subgraph NECESSARY["NNVA - MINIMIZE"]
+        D[4. Submit Bid]
+    end
+    
+    subgraph WASTE_REASSIGN["NVA - MOVE TO BILLING"]
+        E[5. Open QuickBooks]
+        F[6. Check/Create Customer]
+        G[7. Create Project]
+        H[8. Attach Estimate]
+    end
+
+    A --> B --> C --> D --> E --> F --> G --> H
+
+    style A fill:#ef4444,color:#fff
+    style B fill:#ef4444,color:#fff
+    style C fill:#22c55e,color:#fff,stroke:#166534,stroke-width:3px
+    style D fill:#eab308,color:#000
+    style E fill:#ef4444,color:#fff
+    style F fill:#ef4444,color:#fff
+    style G fill:#ef4444,color:#fff
+    style H fill:#ef4444,color:#fff
+    
+    style WASTE_AUTO fill:#fee2e2,stroke:#dc2626
+    style VALUE fill:#dcfce7,stroke:#16a34a,stroke-width:3px
+    style NECESSARY fill:#fef9c3,stroke:#ca8a04
+    style WASTE_REASSIGN fill:#fee2e2,stroke:#dc2626

@@ -1,4 +1,15 @@
 {
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "desert-email",
+    "desert-mondaycrm",
+    "desert-quoting"
+  ],
+  "permissions": {
+    "allow": [
+      "Bash(ls:*)"
+    ]
+  },
   "hooks": {
     "PostToolUse": [
       {

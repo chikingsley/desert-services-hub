@@ -1,0 +1,286 @@
+{
+  "name": "Dust Permit Lifecycle Automation",
+  "nodes": [
+    {
+      "id": "branch1_webhook",
+      "name": "branch1_webhook",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "dust-permit-intake",
+        "responseMode": "onReceived"
+      },
+      "position": [100, 200],
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1
+    },
+    {
+      "id": "branch1_code",
+      "name": "branch1_code",
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body;\nreturn [{\n  json: {\n    clientName: body.clientName || \"Client\",\n    clientEmail: body.clientEmail,\n    projectName: body.projectName,\n    permitNumber: body.permitNumber,\n    expiryDate: body.expiryDate\n  }\n}];"
+      },
+      "position": [350, 200],
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2
+    },
+    {
+      "id": "branch1_notion",
+      "name": "branch1_notion",
+      "parameters": {
+        "databaseId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "49cd5e58-2c32-4fcb-ba35-e7b978b71e5a"
+        },
+        "operation": "create",
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Permit Number|rich_text",
+              "value": "={{ $json.permitNumber }}"
+            },
+            {
+              "key": "Expiry Date|date",
+              "value": "={{ $json.expiryDate }}"
+            },
+            {
+              "key": "Client Email|email",
+              "value": "={{ $json.clientEmail }}"
+            }
+          ]
+        },
+        "resource": "databasePage",
+        "title": "={{ $json.projectName }} - {{ $json.permitNumber }}"
+      },
+      "position": [600, 200],
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2
+    },
+    {
+      "id": "branch1_email",
+      "name": "branch1_email",
+      "parameters": {
+        "body": "={{ JSON.stringify({ to: $json['Client Email'], template: 'dust-permit-issued', vars: { projectName: $json.projectName, permitNumber: $json.permitNumber } }) }}",
+        "method": "POST",
+        "url": "http://localhost:3001/send"
+      },
+      "position": [850, 200],
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2
+    },
+    {
+      "id": "branch2_outlook",
+      "name": "branch2_outlook",
+      "parameters": {
+        "event": "messageReceived",
+        "filters": {
+          "custom": "contains(subject, 'Permit')",
+          "sender": "maricopa.gov"
+        },
+        "output": "simple"
+      },
+      "position": [100, 450],
+      "type": "n8n-nodes-base.microsoftOutlookTrigger",
+      "typeVersion": 1
+    },
+    {
+      "id": "branch2_code",
+      "name": "branch2_code",
+      "parameters": {
+        "jsCode": "const msg = $input.first().json;\nconst body = msg.bodyPreview || \"\";\nconst permitMatch = body.match(/D[0-9]{7}/);\nreturn [{\n  json: {\n    permitId: permitMatch ? permitMatch[0] : null,\n    hasAttachments: msg.hasAttachments\n  }\n}];"
+      },
+      "position": [350, 450],
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2
+    },
+    {
+      "id": "branch2_notion_match",
+      "name": "branch2_notion_match",
+      "parameters": {
+        "databaseId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "49cd5e58-2c32-4fcb-ba35-e7b978b71e5a"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "condition": "equals",
+              "key": "Permit Number|rich_text",
+              "value": "={{ $json.permitId }}"
+            }
+          ]
+        },
+        "limit": 1,
+        "operation": "getAll",
+        "resource": "databasePage"
+      },
+      "position": [600, 450],
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2
+    },
+    {
+      "id": "branch2_email_forward",
+      "name": "branch2_email_forward",
+      "parameters": {
+        "body": "={{ JSON.stringify({ to: $json['Client Email'], template: 'dust-permit-issued', vars: { projectName: $json.projectName, permitNumber: $json.permitNumber } }) }}",
+        "method": "POST",
+        "url": "http://localhost:3001/send"
+      },
+      "position": [850, 450],
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2
+    },
+    {
+      "id": "branch3_schedule",
+      "name": "branch3_schedule",
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 24
+            }
+          ]
+        }
+      },
+      "position": [100, 700],
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2
+    },
+    {
+      "id": "branch3_notion_query",
+      "name": "branch3_notion_query",
+      "parameters": {
+        "databaseId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "49cd5e58-2c32-4fcb-ba35-e7b978b71e5a"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "condition": "equals",
+              "key": "Status|select",
+              "value": "Active"
+            },
+            {
+              "condition": "is_not_empty",
+              "key": "Expiry Date|date"
+            }
+          ]
+        },
+        "operation": "getAll",
+        "resource": "databasePage"
+      },
+      "position": [350, 700],
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2
+    },
+    {
+      "id": "branch3_email_reminder",
+      "name": "branch3_email_reminder",
+      "parameters": {
+        "body": "={{ JSON.stringify({ to: $json['Client Email'], template: 'dust-permit-reminder', vars: { projectName: $json.Name, permitNumber: $json['Permit Number'], expiryDate: $json['Expiry Date'] } }) }}",
+        "method": "POST",
+        "url": "http://localhost:3001/send"
+      },
+      "position": [600, 700],
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2
+    }
+  ],
+  "connections": {
+    "branch1_webhook": {
+      "main": [
+        [
+          {
+            "node": "branch1_code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "branch1_code": {
+      "main": [
+        [
+          {
+            "node": "branch1_notion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "branch1_notion": {
+      "main": [
+        [
+          {
+            "node": "branch1_email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "branch2_outlook": {
+      "main": [
+        [
+          {
+            "node": "branch2_code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "branch2_code": {
+      "main": [
+        [
+          {
+            "node": "branch2_notion_match",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "branch2_notion_match": {
+      "main": [
+        [
+          {
+            "node": "branch2_email_forward",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "branch3_schedule": {
+      "main": [
+        [
+          {
+            "node": "branch3_notion_query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "branch3_notion_query": {
+      "main": [
+        [
+          {
+            "node": "branch3_email_reminder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

@@ -1,0 +1,132 @@
+flowchart TB
+    subgraph SWPPP["<b>SWPPP DOCUMENTATION PROCESS</b>"]
+        direction TB
+
+        Start(["━━━━━━━━━━<br/><b>START</b><br/>(Post-Contract)<br/>━━━━━━━━━━"])
+
+        Start --> PreComm["<b>Precommunication</b><br/>📧 Email to GC<br/>━━━━━━━━━━<br/><b>Ask Customer:</b><br/>• What services do you need?<br/>• Do you have NOI or NDC?<br/>• Do you have Dust Permit?<br/>• Do you have SWPPP Plan?<br/>• Fire signs needed?"]
+
+        PreComm --> ServiceCheck{"<b>What did customer<br/>REQUEST from us?</b>"}
+
+        ServiceCheck -->|Narrative Requested| NarrativeNeeds["<b>NARRATIVE PATH</b><br/>━━━━━━━━━━<br/>We need to collect:<br/>• NOI (or NDC)<br/>• Dust Permit<br/>• SWPPP Plan"]
+
+        ServiceCheck -->|Plan Only Requested| PlanOnlyPath["<b>PLAN ONLY PATH</b><br/>━━━━━━━━━━<br/>Jared creates plan<br/>No other docs needed"]
+
+        ServiceCheck -->|Signs Only Requested| SignsOnlyPath["<b>SIGNS ONLY PATH</b><br/>━━━━━━━━━━<br/>Need info based on sign type"]
+
+        %% NARRATIVE PATH - PARALLEL COLLECTION
+        NarrativeNeeds --> NOICheck{"Does GC<br/>have NOI?"}
+        NarrativeNeeds --> DustCheck{"Does GC have<br/>Dust Permit?"}
+        NarrativeNeeds --> PlanCheck{"Does GC have<br/>SWPPP Plan?"}
+
+        %% NOI PATH
+        NOICheck -->|YES| NOIGet["<b>Request NOI Copy</b><br/>📄 From GC"]
+        
+        NOICheck -->|NO - Have NDC| NDCEnd["<b>NDC PATH COMPLETE</b><br/>━━━━━━━━━━<br/>No narrative needed<br/>No book needed<br/>No SWPPP sign needed"]
+        
+        NOICheck -->|NO - Neither| NOIPull["<b>GC MUST PULL NOI</b><br/>🚫 BLOCKER<br/>━━━━━━━━━━<br/>Follow up with GC"]
+
+        NOIPull --> NOIGet
+        NOIGet --> NOIReady["✓ NOI Ready"]
+
+        %% DUST PERMIT PATH
+        DustCheck -->|YES| DustRequest["<b>Request Dust Permit</b><br/>📄 From GC"]
+        
+        DustCheck -->|NO| DustPull["<b>Jared Pulls Permit</b><br/>👤 Jared<br/>💰 Billable"]
+
+        DustRequest --> DustReady["✓ Dust Permit Ready"]
+        DustPull --> DustReady
+
+        %% SWPPP PLAN PATH
+        PlanCheck -->|YES| PlanRequest["<b>Request Plan from GC</b><br/>📄 From GC"]
+        
+        PlanCheck -->|NO| PlanCreate["<b>Jared Creates Plan</b><br/>👤 Jared<br/>💰 Billable"]
+
+        PlanRequest --> PlanReady["✓ Plan Ready"]
+        PlanCreate --> PlanReady
+
+        %% CONVERGENCE - ALL DOCS READY
+        NOIReady --> DocsReady{"All docs<br/>collected?"}
+        DustReady --> DocsReady
+        PlanReady --> DocsReady
+
+        DocsReady -->|NOI ✓<br/>Dust ✓<br/>Plan ✓| Narrative["<b>Narrative Creation</b><br/>👤 Eva + Jayson<br/>⏱️ 1.5-2 hours<br/>━━━━━━━━━━<br/><b>Eva Tasks:</b><br/>• Word template<br/>• Add project details<br/>• Add acreage (NOI)<br/>• Add location (Dust)<br/>• Pull soils (USDA)<br/>• Pull species (AZ G&F)<br/>• Update 2025 permit refs<br/><br/><b>Jayson Reviews:</b><br/>• Verify all details match"]
+
+        %% PLAN ONLY PATH
+        PlanOnlyPath --> PlanCreate
+
+        %% SIGNS PATH
+        SignsOnlyPath --> SignDecision{"Which<br/>signs?"}
+
+        SignDecision --> SignSWPPP["<b>Order SWPPP Sign</b><br/>👤 Karen (via Jayson)<br/>━━━━━━━━━━<br/><b>Need from customer:</b><br/>• NOI info<br/>• 2025 permit #"]
+
+        SignDecision --> SignDust["<b>Order Dust Sign</b><br/>👤 Karen (via Jayson)<br/>━━━━━━━━━━<br/><b>Need from customer:</b><br/>• Dust permit info"]
+
+        SignDecision --> SignFire["<b>Order Fire Signs</b><br/>👤 Karen (via Jayson)<br/>━━━━━━━━━━<br/><b>Need from customer:</b><br/>• Customer specs<br/>• Jurisdiction requirements"]
+
+        SignSWPPP --> SignsOrdered["<b>Signs Ordered</b><br/>📧 Email to Vendor<br/>━━━━━━━━━━<br/>Wait for delivery"]
+        SignDust --> SignsOrdered
+        SignFire --> SignsOrdered
+
+        SignsOrdered --> SignsArrive["<b>Signs Arrive</b><br/>📦 At Office<br/>━━━━━━━━━━<br/>✓ Ready for Delivery"]
+
+        SignsArrive --> SignsReady["<b>Signs Ready</b><br/>✓ Waiting for deployment"]
+
+        %% BOOK ASSEMBLY
+        Narrative --> BookCheck{"Book<br/>Assembly<br/>Ready?"}
+        PlanReady --> BookCheck
+
+        BookCheck -->|Narrative ✓<br/>Plan ✓| BookAssemble["<b>Book Assembly</b><br/>👤 Jayson<br/>📚 Physical Book<br/>━━━━━━━━━━<br/><b>Book Contents:</b><br/>1. Narrative (Eva)<br/>2. Gen Construction Permit (2025)<br/>3. NOI<br/>4. Dust Permit<br/>5. SWPPP Plan<br/>6. Soils Report<br/>7. Species Report<br/>8. Section M: BMPs<br/><br/><i>Special: MT Builders = PDF scan</i>"]
+
+        BookAssemble --> BookDone["<b>Book Complete</b><br/>✓ Ready for Delivery<br/>━━━━━━━━━━<br/>• Update Excel tracker<br/>• Move to complete folder<br/>• Hold for delivery"]
+
+        %% FINAL STATE
+        BookDone --> AllReady
+        SignsReady --> AllReady
+
+        AllReady["<b>ALL DOCUMENTS READY</b><br/>━━━━━━━━━━<br/>✓ SWPPP Book<br/>✓ Signs (all types)<br/>━━━━━━━━━━<br/><i>Ready for field delivery</i>"]
+
+    end
+
+    %% Styling
+    style Start fill:#bbdefb,stroke:#1565c0,stroke-width:3px,color:#000
+    style PreComm fill:#bbdefb,stroke:#1565c0,stroke-width:3px,color:#000
+
+    style ServiceCheck fill:#fff3e0,stroke:#e65100,stroke-width:4px,color:#000,font-weight:bold
+
+    style NarrativeNeeds fill:#e1f5fe,stroke:#01579b,stroke-width:3px,color:#000
+    style PlanOnlyPath fill:#e1f5fe,stroke:#01579b,stroke-width:3px,color:#000
+    style SignsOnlyPath fill:#e1f5fe,stroke:#01579b,stroke-width:3px,color:#000
+
+    style NOICheck fill:#fff9c4,stroke:#f57f17,stroke-width:3px,color:#000
+    style NOIGet fill:#c8e6c9,stroke:#2e7d32,stroke-width:3px,color:#000
+    style NDCEnd fill:#e0e0e0,stroke:#757575,stroke-width:3px,color:#000
+    style NOIPull fill:#ef5350,stroke:#b71c1c,stroke-width:3px,color:#fff
+    style NOIReady fill:#c8e6c9,stroke:#2e7d32,stroke-width:3px,color:#000
+
+    style DustCheck fill:#fff9c4,stroke:#f57f17,stroke-width:3px,color:#000
+    style DustRequest fill:#c8e6c9,stroke:#2e7d32,stroke-width:3px,color:#000
+    style DustPull fill:#bbdefb,stroke:#1565c0,stroke-width:3px,color:#000
+    style DustReady fill:#c8e6c9,stroke:#2e7d32,stroke-width:3px,color:#000
+
+    style PlanCheck fill:#fff9c4,stroke:#f57f17,stroke-width:3px,color:#000
+    style PlanRequest fill:#c8e6c9,stroke:#2e7d32,stroke-width:3px,color:#000
+    style PlanCreate fill:#bbdefb,stroke:#1565c0,stroke-width:3px,color:#000
+    style PlanReady fill:#c8e6c9,stroke:#2e7d32,stroke-width:3px,color:#000
+
+    style DocsReady fill:#fff9c4,stroke:#f57f17,stroke-width:3px,color:#000
+    style Narrative fill:#bbdefb,stroke:#1565c0,stroke-width:3px,color:#000
+
+    style SignDecision fill:#fff9c4,stroke:#f57f17,stroke-width:3px,color:#000
+    style SignSWPPP fill:#bbdefb,stroke:#1565c0,stroke-width:3px,color:#000
+    style SignDust fill:#bbdefb,stroke:#1565c0,stroke-width:3px,color:#000
+    style SignFire fill:#bbdefb,stroke:#1565c0,stroke-width:3px,color:#000
+    style SignsOrdered fill:#bbdefb,stroke:#1565c0,stroke-width:3px,color:#000
+    style SignsArrive fill:#c8e6c9,stroke:#2e7d32,stroke-width:3px,color:#000
+    style SignsReady fill:#c8e6c9,stroke:#2e7d32,stroke-width:3px,color:#000
+
+    style BookCheck fill:#fff9c4,stroke:#f57f17,stroke-width:3px,color:#000
+    style BookAssemble fill:#bbdefb,stroke:#1565c0,stroke-width:3px,color:#000
+    style BookDone fill:#c8e6c9,stroke:#2e7d32,stroke-width:3px,color:#000
+
+    style AllReady fill:#4caf50,stroke:#1b5e20,stroke-width:4px,color:#fff,font-weight:bold

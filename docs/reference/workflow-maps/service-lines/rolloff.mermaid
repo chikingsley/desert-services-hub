@@ -1,0 +1,94 @@
+flowchart TB
+    subgraph ROLLOFF["<b>ROLL-OFF DUMPSTER PROCESS</b><br/><i>Former Director: Wendy Byers (retired Dec 2024)</i>"]
+        direction TB
+
+        %% WORK INTAKE SOURCES
+        subgraph INTAKE["<b>1. WORK INTAKE</b>"]
+            direction TB
+            Source1(["\n<b>Existing Customers</b>\n(90% of business)\nCall/text Wendy directly\n"])
+            Source2(["\n<b>BlueBook Bidding</b>\nBBBid.TheBlueBook.com\nWendy bids + direct email\n"])
+            Source3(["\n<b>Answering Service</b>\nDirect line routes here\n⚠️ Problematic\n"])
+            Source4(["\n<b>Sales Referrals</b>\n(Minimal)\n⚠️ Missing info\n"])
+        end
+
+        %% BIDDING PROCESS (BlueBook)
+        Source2 --> Bidding["<b>BlueBook Bidding Process</b>\n━━━━━━━━━━\n1. Jobs post on BlueBook\n2. Wendy reviews opportunities\n3. Bid through platform\n4. Extract email → direct contact\n5. Send commercial pricing sheet\n6. Reference specific job\n7. Follow up\n\n💡 Direct email gets better response"]
+
+        %% INFORMATION COLLECTION
+        Source1 --> Collect
+        Source3 --> Collect
+        Source4 --> Collect
+        Bidding --> Collect
+
+        Collect["<b>2. Collect Required Info</b>\n💻 Phone/Text (rarely email)\n━━━━━━━━━━\n• Size: 10/20/30/40 yard\n• Location/address\n• Type: Exchange/Termination/Delivery\n• Placement (new deliveries)\n• PM phone number\n• PO number or job name\n\n⚠️ Answering service often\nprovides wrong phone numbers"]
+
+        %% PRICING
+        Collect --> Pricing["<b>3. Determine Pricing</b>\n💻 Commercial Pricing Sheet\n━━━━━━━━━━\n<b>Standard:</b> Metro Phoenix rates\n<b>Distance fees:</b>\n• Carefree/Surprise/Casa Grande: +$100\n• Other distant areas: +$125\n\n⚠️ TRIBAL KNOWLEDGE:\nDistance formula in Wendy's head\nNeeds documentation for successor"]
+
+        %% DATA ENTRY
+        Pricing --> Entry["<b>4. Enter into CRO</b>\n💻 CRO Software\n━━━━━━━━━━\n• Customer information\n• PM contact\n• PO number/job name\n• Service type\n• Schedule (or recurring)\n\n✓ Billing pulls directly from here"]
+
+        %% SCHEDULING
+        Entry --> Schedule["<b>5. Assign to Driver</b>\n💻 CRO Calendar\n━━━━━━━━━━\n• Assign by territory\n• Target: 6 runs/day per driver\n• Balance workload\n• Minimize overtime (done by 1-2pm)\n\n📊 Current: Up to 9 runs in\nhigh-demand periods"]
+
+        %% DRIVER EXECUTION
+        Schedule --> Execute["<b>6. Driver Executes</b>\n👷 Driver + CRO Mobile\n━━━━━━━━━━\n• View scheduled runs\n• Complete service\n• Update status in CRO\n• Input can numbers\n\n⚠️ MAJOR ISSUE:\nCRO allows wrong can numbers\n(Box Tracker would reject)\nDriver with dyslexia struggles"]
+
+        %% CAN NUMBER ISSUE
+        Execute --> CanCheck{Can number\ncorrect?}
+        CanCheck -->|Yes| ServiceDone["<b>Service Complete</b>\n✓ CRO updated\n✓ Ready for billing"]
+        CanCheck -->|No - Often| CanError["<b>Can Number Error</b>\n⚠️ Wrong number entered\n━━━━━━━━━━\n• Duplicate cans at sites\n• Lost cans\n• Wendy must locate & fix\n• Time-consuming cleanup"]
+        CanError --> ServiceDone
+
+        %% BILLING
+        ServiceDone --> Billing["<b>7. Billing</b>\n💻 Kerin pulls from CRO\n━━━━━━━━━━\n• Automatic - no interaction needed\n• Wendy not in QuickBooks\n• Kerin handles all invoicing"]
+
+        %% OVERAGE TRACKING
+        Billing --> OverageCheck{Can over\n21 days?}
+        OverageCheck -->|No| Complete
+        OverageCheck -->|Yes| Overage["<b>Overage Management</b>\n📞 Weekly calls by Wendy\n━━━━━━━━━━\n• $20/day after 21 days\n• Proactive customer calls\n• 'Those are our assets'\n\n⚠️ Industry moving to 14 days\nSales reports losing business\non overage fees"]
+
+        Overage --> Complete(["<b>Job Complete</b>"])
+
+        %% RECURRING
+        Entry --> Recurring{Recurring\nservice?}
+        Recurring -->|Yes| AutoSchedule["<b>Auto-Schedule in CRO</b>\n'Every Monday, Every Friday'\nAutomatically generates pickups"]
+        AutoSchedule --> Schedule
+        Recurring -->|No| Schedule
+    end
+
+    Issues["<b>KNOWN ISSUES</b><br/>━━━━━━━━━━<br/>• Answering service terrible (wrong numbers, incomplete info)<br/>• CRO allows wrong can numbers (no validation like Box Tracker)<br/>• Tribal knowledge not documented (distance pricing, relationships)<br/>• Capacity constraints (running out of cans)<br/>• Succession gap (Wendy retired Dec 2024)"]
+
+    Succession["<b>KNOWLEDGE TO VERIFY</b><br/>(Was it captured when Wendy left?)<br/>━━━━━━━━━━<br/>• Distance fee matrix by area<br/>• BlueBook bidding best practices<br/>• Customer relationship notes<br/>• Weekly overage call routine<br/>• Route planning principles<br/>• CRO workarounds"]
+
+    %% Styling - Blue for normal steps
+    style Source1 fill:#c8e6c9,stroke:#2e7d32,stroke-width:3px,color:#000
+    style Source2 fill:#bbdefb,stroke:#1565c0,stroke-width:3px,color:#000
+    style Source3 fill:#ffcdd2,stroke:#c62828,stroke-width:3px,color:#000
+    style Source4 fill:#fff3e0,stroke:#e65100,stroke-width:2px,color:#000
+    style Bidding fill:#e3f2fd,stroke:#1565c0,stroke-width:2px,color:#000
+    style Collect fill:#bbdefb,stroke:#1565c0,stroke-width:2px,color:#000
+    style Entry fill:#bbdefb,stroke:#1565c0,stroke-width:2px,color:#000
+    style Schedule fill:#bbdefb,stroke:#1565c0,stroke-width:2px,color:#000
+    style ServiceDone fill:#c8e6c9,stroke:#2e7d32,stroke-width:2px,color:#000
+    style Billing fill:#c8e6c9,stroke:#2e7d32,stroke-width:2px,color:#000
+    style Complete fill:#c8e6c9,stroke:#2e7d32,stroke-width:3px,color:#000
+    style AutoSchedule fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#000
+
+    %% Red for issues
+    style Pricing fill:#fff3e0,stroke:#e65100,stroke-width:3px,color:#000
+    style Execute fill:#ffcdd2,stroke:#c62828,stroke-width:3px,color:#000
+    style CanError fill:#8b0000,stroke:#c62828,stroke-width:4px,color:#ffcdd2
+    style Overage fill:#fff3e0,stroke:#e65100,stroke-width:2px,color:#000
+
+    %% Orange for decisions
+    style CanCheck fill:#ffcc80,stroke:#e65100,stroke-width:2px,color:#000
+    style OverageCheck fill:#ffcc80,stroke:#e65100,stroke-width:2px,color:#000
+    style Recurring fill:#ffcc80,stroke:#e65100,stroke-width:2px,color:#000
+
+    %% Issues boxes
+    style Issues fill:#ffebee,stroke:#c62828,stroke-width:2px,color:#000
+    style Succession fill:#fff8e1,stroke:#f9a825,stroke-width:3px,color:#000
+
+    style INTAKE fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
+    style ROLLOFF fill:#fafafa,stroke:#424242,stroke-width:2px

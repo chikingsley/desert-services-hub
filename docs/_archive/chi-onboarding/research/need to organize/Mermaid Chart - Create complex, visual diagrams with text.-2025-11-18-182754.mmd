@@ -1,0 +1,81 @@
+flowchart TD
+    %% --- STYLING ---
+    classDef est fill:#e3f2fd,stroke:#1565c0,stroke-width:2px,color:black;
+    classDef ops fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:black;
+    classDef sale fill:#fff3e0,stroke:#e65100,stroke-width:2px,color:black;
+    classDef auto fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,stroke-dasharray: 5 5,color:black;
+
+    %% --- BOARD 1: ESTIMATING (The Cash Register) ---
+    subgraph B1 ["BOARD 1: ESTIMATING PIPELINE"]
+        direction TB
+        E1(Status: NEW REQUEST):::est --> E2(Status: IN PROGRESS):::est
+        E2 --> E3(Status: SUBMITTED):::est
+        
+        %% The Automation Loop
+        subgraph AUTO ["Automation Zone"]
+            E3 --> E4{Client Replied?}:::auto
+            E4 -- No (Day 3/7) --> E5(Auto-Email Sequence):::auto
+            E5 --> E4
+        end
+
+        E4 -- Yes / Decision --> E6{Outcome?}
+        
+        %% Revision logic (Simple loop back)
+        E6 -- Needs Changes --> E2
+        
+        E6 -- AWARDED --> E7(Status: WON):::est
+        E6 -- REJECTED --> E8(Status: LOST):::est
+    end
+
+    %% --- BOARD 2: OPERATIONS (The Execution) ---
+    subgraph B2 ["BOARD 2: PROJECT DELIVERY"]
+        direction TB
+        %% Triggered only by WIN
+        P1(Stage: RECONCILIATION):::ops
+        P2(Stage: OPS HANDOFF):::ops
+        P3(Stage: ACTIVE DELIVERY):::ops
+        P4(Stage: BILLING & CLOSE):::ops
+
+        %% Detail on Reconciliation
+        P1 -- "Check: Contract vs Estimate" --> P1
+        P1 -- "Check: PO & Contacts" --> P2
+    end
+
+    %% --- BOARD 3: SALES (The Relationship) ---
+    subgraph B3 ["BOARD 3: SALES & ACCOUNTS"]
+        direction TB
+        
+        %% SPLIT LOGIC
+        subgraph S_ACTIVE ["Group: Active Job Upsells"]
+            SA1(Status: SCHEDULING VISIT):::sale
+            SA2(Status: SITE VISIT COMPLETE):::sale
+            SA3{Upsell Found?}
+        end
+
+        subgraph S_NURTURE ["Group: Lost / Nurture"]
+            SL1(Status: QUEUED FOR OUTREACH):::sale
+            SL2(Status: CONTACT ATTEMPTED):::sale
+            SL3{New Opportunity?}
+        end
+    end
+
+    %% --- CONNECTIONS BETWEEN BOARDS ---
+    
+    %% 1. Winning triggers Ops AND Active Sales
+    E7 ==> P1
+    E7 -.-> SA1
+    
+    %% 2. Losing triggers Nurture Sales
+    E8 -.-> SL1
+
+    %% 3. Sales Finding Work triggers New Estimate (The Infinite Loop)
+    SA3 -- YES (Change Order) --> E1
+    SL3 -- YES (New Bid) --> E1
+    
+    %% 4. Ops Completion
+    P3 --> SA2
+    P4 --> SL1
+
+    %% 5. Negative Sales Outcomes
+    SA3 -- No --> SA1
+    SL3 -- No --> SL2

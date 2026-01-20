@@ -1,0 +1,20 @@
+{
+  "name": "@ds/file-automation",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "bc": "bun src/download/index.ts",
+    "bc:sync-bids": "bun scripts/bc-bids-sync.ts",
+    "docusign": "bun automations/docusign/index.ts"
+  },
+  "dependencies": {
+    "@browserbasehq/stagehand": "^3.0.7",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.3.10",
+    "@types/bun": "latest",
+    "ultracite": "6.4.2"
+  }
+}

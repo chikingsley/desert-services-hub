@@ -1,0 +1,449 @@
+# File Upload
+
+The [File Upload object](#object-properties) tracks the lifecycle of a file uploaded to Notion in the API.
+> 📘 Getting started
+> View [Working with files and media](https://developers.notion.com/notionapi/docs/working-with-files-and-media) for a comprehensive, end-to-end guide to uploading and attaching files.
+
+Once a file upload has a `status` of `"uploaded"`, pass its ID in a [file object](https://developers.notion.com/notionapi/reference/file-object#files-uploaded-in-the-api-type-file_upload) with a `type` of `file_upload` to the API to attach it to blocks, pages, and databases in a Notion workspace.
+
+## Object properties
+
+The response of File Upload APIs like [Retrieve a file upload](https://developers.notion.com/notionapi/reference/retrieve-a-file-upload) contains `FileUpload` objects with the following fields:
+
+| Field | Type | Description |
+| :---- | :--- | :---------- |
+| `object` | `"file_upload"` | |
+| `id` | UUID | ID of the FileUpload. |
+| `created_time` | String | ISO 8601 timestamp when the FileUpload was created. |
+| `last_edited_time` | String | ISO 8601 timestamp when the FileUpload was last modified. |
+| `expiry_time` | String | Nullable. ISO 8601 timestamp when the FileUpload will expire, if the API integration that created it doesn't complete the upload and attach to at least one block or other object in a workspace. |
+| `status` | One of: `"pending"`, `"uploaded"`, `"expired"`, `"failed"` | Enum status of the file upload. `pending` status means awaiting upload or completion of an upload. `uploaded` status means file contents have been sent. If the `expiry_time` is `null`, that means the file upload has already been attached to a block or other object. `expired` and `failed` file uploads can no longer be used. `failed` is only used for FileUploads with `mode=external_url` when the import was unsuccessful. |
+| `filename` | String | Nullable. Name of the file, provided during the [Create a file upload](https://developers.notion.com/notionapi/reference/create-a-file-upload) step, or, for `single_part` uploads, can be determined from the provided filename in the form data passed to the [Send a file upload](https://developers.notion.com/notionapi/reference/send-a-file-upload) step. A file extension is automatically added based on the `content_type` if the filename doesn't already have one. |
+| `content_type` | String | Nullable. The MIME content type of the uploaded file. Must be provided explicitly or inferred from a `filename` that includes an extension. For `single_part` uploads, the content type can remain `null` until the [Send a file upload](https://developers.notion.com/notionapi/reference/send-a-file-upload) step and inferred from the `file` parameter's content type. |
+| `content_length` | Integer | Nullable. The total size of the file, in bytes. For pending `multi_part` uploads, this field is a running total based on the file segments uploaded so far and recalculated at the end during the [Complete a file upload](https://developers.notion.com/notionapi/reference/complete-a-file-upload) step. |
+| `upload_url` | String | Field only included for `pending` file uploads. This is the URL to use for [sending file contents](https://developers.notion.com/notionapi/reference/send-a-file-upload). |
+| `complete_url` | String | Field only included for `pending` file uploads created with a `mode` of `multi_part`. This is the URL to use to [complete a multi-part file upload](https://developers.notion.com/notionapi/reference/complete-a-file-upload). |
+| `file_import_result` | String | Field only included for a `failed` or `uploaded` file upload created with a `mode` of `external_url`. Provides details on the success or failure of importing a file into Notion using an external URL. |
+
+## Working with files and media
+
+Learn how to add or retrieve files and media from Notion pages.
+
+Files, images, and other media bring your Notion workspace to life — from company logos and product photos to contract PDFs and design assets. With the Notion API, you can programmatically upload, attach, and reuse these files wherever they’re needed.
+
+In this guide, you’ll learn how to:
+
+- Upload a new file using the **Direct Upload** method (single-part)
+- Retrieve existing files already uploaded to your workspace
+
+We’ll also walk through the different upload methods and supported file types, so you can choose the best path for your integration.
+
+## Upload methods at a glance
+
+The Notion API supports three ways to add files to your workspace:
+
+|Upload method|Description|Best for|
+|:---|:---|:---|
+|[**Direct Upload**](https://developers.notion.com/notionapi/docs/uploading-small-files)|Upload a file (≤ 20MB) via a `multipart/form-data` request|The simplest method for most files|
+|[**Direct Upload (multi-part)**](https://developers.notion.com/notionapi/docs/sending-larger-files)|Upload large files (> 20MB) in chunks across multiple requests|Larger media assets and uploads over time|
+|[**Indirect Import**](https://developers.notion.com/notionapi/docs/importing-external-files)|Import a file from a publicly accessible URL|Migration workflows and hosted content|
+
+## Supported block types
+
+Uploaded files can be attached to:
+
+- Media blocks: `file`, `image`, `pdf`, `audio`, `video`
+- Page properties: `files` properties in databases
+- Page-level visuals: page `icon` and `cover`
+
+💡\*\* Need support for another block or content type\*\*? [Let us know](https://notiondevs.notion.site/1f8a4445d271805da593dd86bd86872b?pvs=105).
+
+## Supported file types
+
+Before uploading, make sure your file type is supported. Here’s what the API accepts:
+
+| Category     | Extensions                                                                                                        | MIME types                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| ------------ | ----------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Audio**    | .aac, .adts, .mid, .midi, .mp3, .mpga, .m4a, .m4b, .mp4, .oga, .ogg, .wav, .wma                                   | audio/aac, audio/midi, audio/mpeg, audio/mp4, audio/ogg, audio/wav, audio/x-ms-wma                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| **Document** | .pdf, .txt, .json, .doc, .dot, .docx, .dotx, .xls, .xlt, .xla, .xlsx, .xltx, .ppt, .pot, .pps, .ppa, .pptx, .potx | application/pdf, text/plain, application/json, application/msword, application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/vnd.openxmlformats-officedocument.wordprocessingml.template, application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.openxmlformats-officedocument.spreadsheetml.template, application/vnd.ms-powerpoint, application/vnd.openxmlformats-officedocument.presentationml.presentation, application/vnd.openxmlformats-officedocument.presentationml.template |
+| **Image**    | .gif, .heic, .jpeg, .jpg, .png, .svg, .tif, .tiff, .webp, .ico                                                    | image/gif, image/heic, image/jpeg, image/png, image/svg+xml, image/tiff, image/webp, image/vnd.microsoft.icon                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| **Video**    | .amv, .asf, .wmv, .avi, .f4v, .flv, .gifv, .m4v, .mp4, .mkv, .webm, .mov, .qt, .mpeg                              | video/x-amv, video/x-ms-asf, video/x-msvideo, video/x-f4v, video/x-flv, video/mp4, application/mp4, video/webm, video/quicktime, video/mpeg                                                                                                                                                                                                                                                                                                                                                                                                                             |
+> ⚠️ Ensure your file type matches the context
+> For example:
+> - You can’t use a video in an image block
+> - Page icons can’t be PDFs
+> - Text files can’t be embedded in video blocks
+
+### File size limits
+
+- **Free**workspaces are limited to**5 MiB (binary megabytes) per file**
+- **Paid**workspaces are limited to**5 GiB per file**
+
+  - Files larger than 20 MiB must be split into parts and [uploaded using multi-part mode](https://developers.notion.com/notionapi/docs/sending-larger-files) in the API.
+
+These are the same [size limits that apply](https://www.notion.com/pricing) to uploads in the Notion app UI.
+
+Use the [Retrieve a user](https://developers.notion.com/notionapi/reference/get-user) or [List all users](https://developers.notion.com/notionapi/reference/get-users) API to get the file size limit for a [bot user](https://developers.notion.com/notionapi/reference/user#bots). Public integrations that can be added to both free or paid workspaces can retrieve or cache each bot's file size limit. This can help avoid HTTP 400 validation errors for attempting to [send](https://developers.notion.com/notionapi/reference/send-a-file-upload) files above the size limit.
+
+```typescript Bot user API response shape
+type APIUserObject = {
+  object: "user",
+  type: "bot",
+  // ... other fields omitted
+
+  bot: {
+    // ... other fields omitted
+
+    // Limits and restrictions that apply to the bot's workspace.
+    workspace_limits: {
+      // The maximum allowable size of a file upload, in bytes.
+      max_file_upload_size_in_bytes: number,
+    },
+  }
+}
+
+```text
+
+For example, in a free workspace where bots are limited to FileUploads of 5 MiB, the response looks like:
+
+```json Example user API object response
+{
+  "object": "user",
+  "id": "be51669b-1932-4a11-8d35-38fbc2e1e4fd",
+  "type": "bot",
+  "bot": {
+    "owner": {
+      "type": "workspace"
+    },
+    "workspace_name": "Cat's Notion",
+    "workspace_limits": {
+      "max_file_upload_size_in_bytes": 5242880
+    }
+  }
+}
+
+```text
+
+### Other limitations
+
+The rest of the pages in this guide, as well as the API reference for the File Upload API, include additional validations and restrictions to keep in mind as you build your integration and send files.
+
+One final limit to note here is both the [Create a file upload](https://developers.notion.com/notionapi/reference/create-a-file-upload) and [Send a file upload](https://developers.notion.com/notionapi/reference/send-a-file-upload) APIs allow a maximum length of a `filename` (including the extension) of 900 bytes. However, we recommend using shorter names for performance and easier file management and lookup using the [List file uploads](https://developers.notion.com/notionapi/reference/list-file-uploads) API.
+
+## Create a file upload
+
+Use this API to initiate the process of [uploading a file](doc:working-with-files-and-media) to your Notion workspace.
+
+For a successful request, the response is a [File Upload](https://developers.notion.com/notionapi/reference/file-upload) object with a `status` of `"pending"`.
+
+The maximum allowed length of `filename` string is 900 bytes, including any file extension included in the file name or inferred based on the `content_type`. However, we recommend using shorter names for performance and easier file management and lookup using the [List file uploads](https://developers.notion.com/notionapi/reference/list-file-uploads) API.
+
+## OpenAPI definition
+
+```json
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Notion API",
+    "version": "1"
+  },
+  "servers": [
+    {
+      "url": "[api.notion.com"](https://api.notion.com")
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "sec0": {
+        "type": "oauth2",
+        "flows": {}
+      }
+    }
+  },
+  "security": [
+    {
+      "sec0": []
+    }
+  ],
+  "paths": {
+    "/v1/file_uploads": {
+      "post": {
+        "summary": "Create a file upload",
+        "description": "Use this API to initiate the process of [uploading a file](https://developers.notion.com/notionapi/docs/working-with-files-and-media) to your Notion workspace.",
+        "operationId": "create-a-file-upload",
+        "parameters": [
+          {
+            "name": "Notion-Version",
+            "in": "header",
+            "description": "The [API version](/reference/versioning) to use for this request. The latest version is `<<latestNotionVersion>>`.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "mode": {
+                    "type": "string",
+                    "description": "How the file is being sent. Use `multi_part` for files larger than 20MB. Use `external_url` for files that are temporarily hosted publicly elsewhere. Default is `single_part`.",
+                    "default": "single_part",
+                    "enum": [
+                      "single_part",
+                      "multi_part",
+                      "external_url"
+                    ]
+                  },
+                  "filename": {
+                    "type": "string",
+                    "description": "Name of the file to be created. Required when `mode` is `multi_part` or `external_url`. Otherwise optional, and used to override the filename. Must include an extension, or have one inferred from the `content_type` parameter."
+                  },
+                  "content_type": {
+                    "type": "string",
+                    "description": "MIME type of the file to be created. Recommended when sending the file in multiple parts. Must match the content type of the file that's sent, and the extension of the `filename` parameter if any."
+                  },
+                  "number_of_parts": {
+                    "type": "integer",
+                    "description": "When `mode` is `multi_part`, the number of parts you are uploading. Must be between 1 and 1,000. This must match the number of parts as well as the final `part_number` you send.",
+                    "format": "int32"
+                  },
+                  "external_url": {
+                    "type": "string",
+                    "description": "When `mode` is `external_url`, provide the HTTPS URL of a publicly accessible file to import into your workspace."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "200",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": "{\n\t\"id\": \"b52b8ed6-e029-4707-a671-832549c09de3\",\n\t\"object\": \"file_upload\",\n\t\"created_time\": \"2025-03-15T20:53:00.000Z\",\n\t\"last_edited_time\": \"2025-03-15T20:53:00.000Z\",\n  \"expiry_time\": \"2025-03-15T21:53:00.000Z\",\n\t\"upload_url\": \"<<baseUrl>>/v1/file_uploads/b52b8ed6-e029-4707-a671-832549c09de3/send`,\n\t\"archived\": false,\n  \"status\": \"pending\",\n\t\"filename\": \"test.txt\",\n\t\"content_type\": \"text/plain\",\n\t\"content_length\": 1024,\n}"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "403",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": "{\n\t\"object\": \"error\",\n\t\"status\": 403,\n \t\"code\": \"restricted_resource\",\n\t\"message\": \"Insufficient permissions for this endpoint.\"\n}"
+                  }
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "example": "error"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "example": 403,
+                      "default": 0
+                    },
+                    "code": {
+                      "type": "string",
+                      "example": "restricted_resource"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Insufficient permissions for this endpoint."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false,
+        "security": []
+      }
+    }
+  },
+  "x-readme": {
+    "headers": [],
+    "explorer-enabled": false,
+    "proxy-enabled": true
+  },
+  "x-readme-fauxas": true,
+  "_id": "606ecc2cd9e93b0044cf6e47:67eace18749e710e21666006"
+}
+
+```text
+
+## Uploading larger files
+
+Learn how to send files larger than 20 MB in multiple parts.
+
+API bots in paid workspaces can use File Uploads in multi-part mode to upload files up to 5 GB. To do so, follow the steps below.
+
+## Step 1: Split the file into parts
+
+To send files larger than 20 MB, split them up into segments of 5-20 MB each. On Linux systems, one tool to do this is the [`split` command](https://phoenixnap.com/kb/linux-split). In other toolchains, there are libraries such as [`split-file` for TypeScript](https://github.com/tomvlk/node-split-file)  to generate file parts.
+
+```shell
+# Split `largefile.txt` into 10MB chunks, named as follows:
+
+# split_part_aa, split_part_ab, etc.
+
+split -b 10M ./largefile.txt split_part
+
+```text
+
+```typescript
+import * as splitFile from "split-file";
+
+const filename = "movie.MOV";
+const inputFile = `${__dirname}/${filename}`;
+
+// Returns an array of file paths in the current
+// directory with a format of:
+// [
+//   "movie.MOV.sf-part1",
+//   "movie.MOV.sf-part2",
+//   ...
+// ]
+const outputFilenames = await splitFile.splitFileBySize(
+  inputFile,
+  1024 *1024* 10, // 10 MB
+);
+
+```text
+> 📘 Convention for sizes of file parts
+> When sending parts of a file to the Notion API, each file must be ≥ 5 and ≤ 20 (binary) megabytes in size, with the exception of the final part (the one with the highest part number), which can be less than 5 MB. The `split` command respects this convention, but the tools in your tech stack might vary.
+> -*To stay within the range, we recommend using a part size of 10 MB__.
+
+## Step 2: Start a file upload
+
+This is similar to [Step 1 of uploading small files](https://developers.notion.com/notionapi/reference/uploading-small-files#step-1), but with a few additional required parameters.
+
+Pass a `mode` of `"multi_part"` to the [Create a file upload](https://developers.notion.com/notionapi/reference/create-a-file-upload) API, along with the `number_of_parts`, and a `filename` with a valid extension or a separate MIME `content_type` parameter that can be used to detect an extension.
+
+```curl cURL
+curl --request POST \
+  - -url '[api.notion.com/v1](https://api.notion.com/v1/file_uploads') \
+  - H 'Authorization: Bearer ntn_____' \
+  - H 'Content-Type: application/json' \
+  - H  'Notion-Version: <<latestNotionVersion>>' \
+  - -data '{
+    "mode": "multi_part",
+    "number_of_parts": 5,
+    "filename": "image.png"
+  }'
+
+```text
+
+## Step 3: Send all file parts
+
+Send each file part by using the [Send File Upload API](https://developers.notion.com/reference/send-a-file-upload) using the File Upload ID, or the `upload_url` in the response of the [Create a file upload](https://developers.notion.com/notionapi/reference/create-a-file-upload) step.
+
+This is similar to [Step 2 of uploading small files](https://developers.notion.com/notionapi/reference/uploading-small-files#step-2). However, alongside the `file`, the form data in your request must include a field `part_number` that identifies which part you’re sending.
+
+Your system can send file parts in parallel (up to standard Notion API [rate limits](https://developers.notion.com/notionapi/reference/request-limits)). Parts can be uploaded in any order, as long as the entire sequence from {1, …, `number_of_parts`} is successfully sent before calling the [Complete a file upload](https://developers.notion.com/notionapi/reference/complete-a-file-upload) API.
+
+## Step 4: Complete the file upload
+
+Call the [Complete a file upload](https://developers.notion.com/notionapi/reference/complete-a-file-upload) API with the ID of the File Upload after all parts are sent.
+
+## Step 5: Attach the file upload
+
+After completing the File Upload, its status becomes `uploaded` and it can be attached to blocks and other objects the same way as file uploads created with a `mode` of `single_part` (the default setting).
+
+Using its ID, attach the File Upload (for example, to a block, page, or database) within one hour of creating it to avoid expiry.
+> 📘 Error handling
+> The [Send](https://developers.notion.com/notionapi/reference/send-a-file-upload) API validates the total file size against the [workspace's limit](https://developers.notion.com/notionapi/docs/working-with-files-and-media#supported-file-types) at the time of uploading each part. However, because parts can be sent at the same time, the [Complete](https://developers.notion.com/notionapi/reference/complete-a-file-upload) step re-validates the combined file size and can also return an HTTP 400 with a code of `validation_error`.
+> We recommend checking the file's size before creating the File Upload when possible. Otherwise, make sure your integration can handle excessive file size errors returned from both the Send and Complete APIs.
+> To manually test your integration, command-line tools like `head`, `dd`, and `split` can help generate file contents of a certain size and split them into 10 MB parts.
+
+## Importing external files
+
+Learn how to migrate files from an external URL to Notion.
+
+## Step 1: Start a file upload
+
+To initiate the process of transferring a temporarily-hosted public file into your Notion workspace, use the [Create a file upload](https://developers.notion.com/notionapi/reference/create-a-file-upload) with a `mode` of `"external_url"`, a `filename`, and the `external_url` itself:
+
+```curl cURL
+curl --request POST \
+  - -url '[api.notion.com/v1](https://api.notion.com/v1/file_uploads') \
+  - H 'Authorization: Bearer ntn_____' \
+  - H 'Content-Type: application/json' \
+  - H  'Notion-Version: <<latestNotionVersion>>' \
+  - -data '{
+    "mode": "external_url",
+    "external_url": "[example.com/image.png%22,](https://example.com/image.png",)
+    "filename": "image.png"
+  }'
+
+```text
+
+At this step, Notion will return a `validation_error` (HTTP 400) if any of the following are true:
+
+- The URL is not SSL-enabled, or not publicly accessible
+- The URL doesn’t expose the `Content-Type` header for Notion to verify as part of a quick `HEAD` HTTPS request
+- The `Content-Length` header (size) of the file at the external URL exceeds your workspace’s per-file size limit
+- You don’t provide a valid filename and a supported MIME content type or extension
+
+## Step 2: Wait for the import to complete
+
+After Step 1, Notion begins processing the file import asynchronously. To wait for the upload to finish, your integration can do one of the following:
+
+1. __Polling__. Set up your integration to wait a sequence of intervals (e.g. 5, 15, 30, and 45 seconds, or an exponential backoff sequence) after creating the File Upload and poll the [Retrieve a file upload](https://developers.notion.com/notionapi/reference/retrieve-a-file-upload) until the `status` changes from `pending` to `uploaded` (or `failed`).
+2. __Listen to webhooks__. Notion will send one of the following types of [integration webhook](https://developers.notion.com/notionapi/reference/webhooks) events:
+   1. `file_upload.complete`
+      1. The import is complete, and your integration can proceed to using the FileUpload ID in Step 3.
+   2. `file_upload.upload_failed`
+      1. The import failed. This is typically due to:
+         1. File size is too large for your workspace (per-file limit exceeded).
+         2. The external service temporarily hosting the file you’re importing is experiencing an outage, timing out, or requires authentication or additional headers at the time Notion’s systems retrieve your file.
+         3. The file storage service Notion uses is experiencing an outage (rare).
+      2. Check the `data[file_import_result]` object for error codes and messages to help troubleshoot.
+      3. Try again later or with a smaller file. You won’t be able to attach the failed File Upload to any blocks.
+   3. For both success and failure, the `entity` of the webhook payload will contain a `type` of `"file_upload"` and an `id` containing the ID of the FileUpload from Step 1.
+![Screenshot of webhook settings in the Notion creator profile integration settings page.](https://files.readme.io/0413bdbb8e6e8351c9d7fd9c4e855c79f258a643e4a3f51d4468e31810faba5b-image.png)
+
+The outcome of the file import is recorded on the [File Upload](https://developers.notion.com/notionapi/reference/file-upload) object. If the import fails, the status changes to `failed`. If it succeeds, the status changes to `uploaded`.
+
+For example, in response to a `file_upload.upload_failed` webhook, your system can read the `data.file_import_result.error` from the webhook response, or use the [Retrieve a file upload](https://developers.notion.com/notionapi/reference/retrieve-a-file-upload) API and check the `file_import_result.error` to debug the import failure:
+
+```typescript
+// GET /v1/file_uploads/:file_upload_id
+// --- RETURNS -->
+{
+  "object": "file_upload",
+  // ...
+  "status": "failed",
+  "file_import_result": {
+    "type": "error",
+    "error": {
+      "type": "validation_error",
+      "code": "file_upload_invalid_size",
+      "message": "The file size is not within the allowed limit of 5 MiB. Please try again with a new file upload.",
+      "parameter": null,
+      "status_code": null
+    },
+  }
+}
+
+```text
+
+The `file_import_result` object contains details on the `success` or `error`. In this example, the problem is a file size validation issue that wasn’t caught during Step 1—potentially because the external host did not provide a `Content-Length` header for Notion to validate with a `HEAD` request. The same file size limits of 5 MiB for a free workspace and 5 GiB for a paid workspace apply to external URL mode.
+
+A file upload with a status of `failed` cannot be reused, and a new one must be created.
+
+## Step 3: Attach the file upload
+
+Using its ID, attach the File Upload (for example, to a block, page, or database) within one hour of creating it to avoid expiry.

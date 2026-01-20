@@ -1,0 +1,109 @@
+flowchart TB
+    subgraph COMPLETE["<b>1. WORK COMPLETE NOTIFICATION</b>"]
+        direction TB
+        Trigger(["Delivery notifies: Work complete"])
+        Trigger --> Source{Service type?}
+        Source --> SWPPP["SWPPP/Temp Fence<br/>(Jayson)"]
+        Source --> PJRolloff["PJs/Roll-offs<br/>(Stephen)"]
+        Source --> WT["Water Trucks<br/>(Dawn)"]
+        Source --> Sweeping["Sweeping<br/>(Kelly)"]
+
+        SWPPP --> ChiNotified["Chi notified<br/>(email or Monday.com)"]
+        PJRolloff --> ChiNotified
+        WT --> ChiNotified
+        Sweeping --> ChiNotified
+
+        ChiNotified --> UpdateStatus["Update Monday.com:<br/>Status: WORK COMPLETE"]
+    end
+
+    subgraph VERIFY["<b>2. CLOSEOUT VERIFICATION</b>"]
+        direction TB
+        UpdateStatus --> CheckDocs{All documentation<br/>received?}
+
+        CheckDocs --> DocChecklist["<b>CLOSEOUT CHECKLIST</b><br/>□ Final inspection report<br/>□ Photos (before/after if req'd)<br/>□ Measurements/quantities<br/>□ Customer sign-off (if req'd)<br/>□ Deficiency resolutions<br/>□ Equipment return confirmed"]
+
+        DocChecklist --> DocsComplete{Docs<br/>complete?}
+        DocsComplete -->|"No"| ChaseDelivery["Follow up with delivery:<br/>- What's missing?<br/>- When can you provide?"]
+        ChaseDelivery --> DocsComplete
+        DocsComplete -->|"Yes"| MatchEstimate["Compare actual work<br/>to signed estimate"]
+    end
+
+    subgraph RECONCILE["<b>3. BILLING RECONCILIATION</b>"]
+        direction TB
+        MatchEstimate --> ActualMatch{Actual = <br/>Estimate?}
+
+        ActualMatch -->|"Yes"| ReadyToBill["Ready for billing<br/>(no changes)"]
+
+        ActualMatch -->|"No, less"| Underrun["Underrun:<br/>- Document reason<br/>- Customer notified?<br/>- Adjust billing amount"]
+
+        ActualMatch -->|"No, more"| Overrun["Overrun:<br/>Was there a change order?"]
+        Overrun --> HadCO{Change order<br/>signed?}
+        HadCO -->|"Yes"| ReadyToBill
+        HadCO -->|"No"| ReviewOverrun["REVIEW:<br/>- Why wasn't CO done?<br/>- Can we bill for it?<br/>- Log as issue"]
+
+        Underrun --> ReadyToBill
+        ReviewOverrun --> Decision{Bill for<br/>extra work?}
+        Decision -->|"Yes, create CO now"| CreateCO["Create change order estimate<br/>Get signature (retroactive)"]
+        CreateCO --> COSigned{CO signed?}
+        COSigned -->|"Yes"| ReadyToBill
+        COSigned -->|"No"| WriteOff["Write off extra work<br/>Log reason"]
+        Decision -->|"No, write off"| WriteOff
+        WriteOff --> ReadyToBill
+    end
+
+    subgraph HANDOFF_BILLING["<b>4. HANDOFF TO BILLING</b>"]
+        direction TB
+        ReadyToBill --> CreateBillingPackage["Create billing package:<br/>- Signed estimate<br/>- Change orders (if any)<br/>- Final quantities<br/>- Supporting docs<br/>- Invoice instructions"]
+
+        CreateBillingPackage --> SpecialBilling{Special billing<br/>method?}
+        SpecialBilling -->|"Textura"| TexturaNotes["Include:<br/>- Textura project #<br/>- SOV line items"]
+        SpecialBilling -->|"GC Pay"| GCPayNotes["Include:<br/>- GC Pay project #<br/>- Billing period"]
+        SpecialBilling -->|"Standard"| StandardBilling["Standard invoice"]
+
+        TexturaNotes --> SendToKendra["Send to Kendra<br/>(email or shared location)"]
+        GCPayNotes --> SendToKendra
+        StandardBilling --> SendToKendra
+
+        SendToKendra --> KendraConfirm{Kendra<br/>confirms receipt?}
+        KendraConfirm -->|"No"| FollowUpKendra["Follow up until confirmed"]
+        FollowUpKendra --> KendraConfirm
+        KendraConfirm -->|"Yes"| BillingOwns["BILLING OWNS FROM HERE"]
+    end
+
+    subgraph ARCHIVE["<b>5. PROJECT ARCHIVE</b>"]
+        direction TB
+        BillingOwns --> FileDocs["File all documents:<br/>- SharePoint project folder<br/>- Signed estimate<br/>- Contract<br/>- Inspection reports<br/>- Photos<br/>- Closeout checklist"]
+
+        FileDocs --> LogMetrics["Log closeout metrics:<br/>- Days from complete to billing handoff<br/>- Change orders (planned vs surprise)<br/>- Missing docs that were chased<br/>- Issues encountered"]
+
+        LogMetrics --> FinalStatus["Update Monday.com:<br/>Status: CLOSED / BILLED"]
+
+        FinalStatus --> SalesNotify{Ongoing account<br/>management?}
+        SalesNotify -->|"Yes"| NotifySales["Notify Sales:<br/>- Project closed<br/>- Next site visit scheduled?<br/>- Any upsell opportunities noted"]
+        SalesNotify -->|"No"| Complete
+
+        NotifySales --> Complete(["Project closeout<br/>COMPLETE"])
+    end
+
+    subgraph ISSUES["<b>ISSUES TO LOG</b><br/>(For Root Cause Analysis)"]
+        direction TB
+        Issue1["Documentation missing or late"]
+        Issue2["Change orders not captured"]
+        Issue3["Billing discrepancies"]
+        Issue4["Customer complaints"]
+        Issue5["Equipment not returned"]
+    end
+
+    %% Styling
+    style Trigger fill:#bbdefb,stroke:#1565c0,stroke-width:3px,color:#000
+    style ChiNotified fill:#c8e6c9,stroke:#2e7d32,stroke-width:2px,color:#000
+    style ReadyToBill fill:#c8e6c9,stroke:#2e7d32,stroke-width:2px,color:#000
+    style BillingOwns fill:#fff3e0,stroke:#e65100,stroke-width:3px,color:#000
+    style Complete fill:#bbdefb,stroke:#1565c0,stroke-width:3px,color:#000
+
+    style COMPLETE fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
+    style VERIFY fill:#fff8e1,stroke:#f9a825,stroke-width:2px
+    style RECONCILE fill:#ffebee,stroke:#c62828,stroke-width:2px
+    style HANDOFF_BILLING fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+    style ARCHIVE fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
+    style ISSUES fill:#fce4ec,stroke:#ad1457,stroke-width:2px

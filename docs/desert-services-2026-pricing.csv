@@ -1,0 +1,75 @@
+Service,Item,Description,Variance,Cost,Unit,Prior_Pricing,Change_Pct
+SWPPP,SWPPP Narrative,"SWPPP Narrative Design Manual - Required per EPA Specifications (each). Narratives without BMP installations are $1,550.",-,1350,Each,1350,0
+SWPPP,SWPPP Plan,Price to prepare a SWPPP plan. +$375 to expedite.,-,2500,Each,2500,0
+SWPPP,Compost Filter Sock,"Installation of 9"" Compost Filter Sock, EPA approved equivalent to silt fence as specified.","Uneven terrain, unique installations, location, etc.",2.75,Linear Foot,2.45,0.12
+SWPPP,Silt Fence Install,"Installation of wire backed silt fence on job site. Installed using steel t-posts via Tommy Slice Method, safety caps included.",Soil condition,5.5,Linear Foot,4.9,0.12
+SWPPP,Curb Inlet Protection,"Ertek fabric installation and materials, price per 7ft section.","Quantity, length",195,Each,185,0.05
+SWPPP,Drop Inlet Protection,Drop inlet installation and materials.,"Quantity, length",152,Each,145,0.05
+SWPPP,Track-out Installation,Rock entrance track-out installation and materials. Includes XX tons of stone.,"Quantity, length",2625,Each,2475,0.06
+SWPPP,Track-out Refresh,Refresh of previously installed rock entrance.,"Quantity, length",2090,Each,1975,0.06
+SWPPP,Track-out Grates,Price per month to rent a set of track-out grates (aka rumble grates).,Quantity,350,Month,550,-0.36
+SWPPP,SWPPP Sign,"Cost for preparation, delivery, and installation of SWPPP sign.",Size,295,Each,275,0.07
+SWPPP,Dust Sign,"Cost for preparation, delivery, and installation of dust sign.",Size,595,Each,575,0.03
+SWPPP,Fire Access Sign,"Cost for preparation, delivery, and installation of Fire Access sign.",Size,695,Each,675,0.03
+SWPPP,Spill Kit,"Spill kit materials, includes delivery.",Quantity,360,Each,345,0.04
+SWPPP,SWPPP Inspection: 14-day,SWPPP Inspections: Performed every 14 days (+1/2 in rain),Location,205,Each,195,0.05
+SWPPP,SWPPP Inspection: 28-day,SWPPP Inspections: Performed every 28 days (+1/4 in rain),Location,235,Each,225,0.04
+SWPPP,Mobilization,Per trip mobilization fee.,Location,265,Each,255,0.04
+SWPPP,Dust Permit Filing Fee,"Filing fee rates: <10 acres = $500, 10-50 acres = $750, 50+ acres = $1000. Permit cost is on top of filing fee.",Acreage,Based on Acreage,Each,Based on Acreage,-
+Temp. Fence,Installation,Price is the same for pounded or on stands (add $15.00 per stand for two sand bags @ $7.50 each).,Location,1.75,Linear Foot,1.35,0.30
+Temp. Fence,Rental,Temporary fence rental per month.,Height of fence,0.3,Linear Foot,0.35,-0.14
+Temp. Fence,Privacy Screen,Price per linear foot for materials and installation of basic privacy screen. Addl cost for custom screen.,"Custom prints, colors, etc.",2.9,Linear Foot,2.75,0.05
+Temp. Fence,Sandbags,"Price per sandbag, delivered and installed.",Quantity,7.5,Each,7.5,0
+Temp. Fence,Mobilization,Per trip mobilization fee.,Location,285,Each,275,0.04
+Roll-off Containers,40-Yard,"Delivery-Empty/Return of 40 cubic yard container for waste disposal. 4 tons included, then overage fees. Non-activity fee after 21 days. Plus 10% fuel surcharge.",Location,470,Each,450,0.04
+Roll-off Containers,30-Yard,"Delivery-Empty/Return of 30 cubic yard container for waste disposal. 3 tons included, then overage fees. Non-activity fee after 21 days. Plus 10% fuel surcharge.",Location,440,Each,420,0.05
+Roll-off Containers,20-Yard,"Delivery-Empty/Return of 20 cubic yard container for waste disposal. 2 tons included, then overage fees. Non-activity fee after 21 days. Plus 10% fuel surcharge.",Location,400,Each,390,0.03
+Roll-off Containers,15-Yard,"Delivery-Empty/Return of 15 cubic yard container for waste disposal. 2 tons included, then overage fees. Non-activity fee after 21 days. Plus 10% fuel surcharge.",Location,370,Each,350,0.06
+Roll-off Containers,10-Yard,"Delivery-Empty/Return of 10 cubic yard container for waste disposal. 2 tons included, then overage fees. Non-activity fee after 21 days. Plus 10% fuel surcharge.",Location,360,Each,350,0.03
+Roll-off Containers,CCWO,"Concrete wash-out container. Delivery-Empty/Return of 15 cubic yard container. Additional move charges and contaminated water pump off charges may apply. Plus 10% fuel surcharge.",Location,770,Each,725,0.06
+Roll-off Containers,Tonnage Overage Fee,Price per ton for weight above tonnage included.,-,65,Each,75,-0.13
+Roll-off Containers,Relocate / Wait Time Fee,Price to relocate or for excessive wait time.,-,155,Each,150,0.03
+Roll-off Containers,Inactivity Fee (after 21 days),Price per day after 21 days due to inactivity.,-,20,Each,20,0
+Portable Toilets,Standard PJ - 1x Weekly,"Once weekly service. Includes interior cleaning, trash removal, and restocking. Plus 10% fuel surcharge.",Location,127,Month,110,0.15
+Portable Toilets,Standard PJ - 2x Weekly,"Twice weekly service. Includes interior cleaning, trash removal, and restocking. Plus 10% fuel surcharge.",Location,167,Month,140,0.19
+Portable Toilets,Standard PJ - 3x Weekly,"Three times weekly service. Includes interior cleaning, trash removal, and restocking. Plus 10% fuel surcharge.",Location,197,Month,195,0.01
+Portable Toilets,Handwash Station - 1x Weekly,"Once weekly services. Includes cleaning, restocking, and refilling with fresh water. Plus 10% fuel surcharge.",Location,200,Month,200,0
+Portable Toilets,Handwash Station - 2x Weekly,"Twice weekly services. Includes cleaning, restocking, and refilling with fresh water. Plus 10% fuel surcharge.",Location,250,Month,245,0.02
+Portable Toilets,Handwash Station - 3x Weekly,"Three times weekly services. Includes cleaning, restocking, and refilling with fresh water. Plus 10% fuel surcharge.",Location,290,Month,290,0
+Portable Toilets,ADA PJ - 1x Weekly,"Once weekly service. Includes interior cleaning, trash removal, and restocking. Plus 10% fuel surcharge.",Location,200,Month,200,0
+Portable Toilets,ADA PJ - 2x Weekly,"Twice weekly service. Includes interior cleaning, trash removal, and restocking. Plus 10% fuel surcharge.",Location,250,Month,245,0.02
+Portable Toilets,ADA PJ - 3x Weekly,"Three times weekly service. Includes interior cleaning, trash removal, and restocking. Plus 10% fuel surcharge.",Location,290,Month,290,0
+Portable Toilets,Hand Sanitizer,Price per bottle installed.,Quantity,25,Each,25,0
+Portable Toilets,Relocation Fee,Price to relocate a unit on a job-site.,Location,25,Each,25,0
+Portable Toilets,Delivery / Pickup Fee,"Price per unit, charged only for install, but covers pickup. Plus 10% fuel surcharge.",Location,50,Month,50,0
+Street Sweeping,Street Sweeper w/ Operator,Street sweeping and debris removal services. Two (2) hour minimum. Plus 10% fuel surcharge.,"Location, duration",137,Hour,120,0.14
+Water Truck (Dust Control),Water Truck w/ Operator,"Water truck services for dust control. Available for daily, weekly, or full-time needs. Also available for soil stabilization, lot or street washes, and other similar use cases (rates vary). Two (2) hour minimum. Plus 10% fuel surcharge.","Location, duration, materials",127,Hour,110,0.15
+Water Truck (Dust Control),Soil Stabilization (Gorilla Glue),"Covers vehicle, driver, and materials. Plus 10% fuel surcharge.","Location, duration, materials",2350,Acre,2250,0.04
+Site Cleaning,General Labor,"Site cleaning services for interior or exterior. Also available for specialized needs (rates vary, e.g. floor scrubbing, pressure washing, etc.). Four (4) hour minimum, unless regularly scheduled.","Location, duration, materials",45,Hour,45,0
+Site Cleaning,High Pressure Washing Truck,"Site cleaning services for interior or exterior. Also available for specialized needs (rates vary, e.g. floor scrubbing, pressure washing, etc.). Four (4) hour minimum, unless regularly scheduled. Plus 10% fuel surcharge.","Location, duration, materials",130,Hour,125,0.04
+Misc.,Margin on Equipment Rental,Gross margin to be applied to the cost of equipment rental costs. Margin calculation = Cost / (0.80),-,0.2,Total,0.2,0
+Misc.,Fuel Surcharge,Fuel surcharge to be applied on top of cost of various services.,-,0.1,Total,0.1,0
+Dust Control Permit (Maricopa),Dust Control Permit – 500+ Acres,"Filing and coordination of a dust control permit for sites disturbing 500 Acres or more (County Fee: $16,490; Admin Fee: $2,000)",Acreage,18490,Each,,
+Dust Control Permit (Maricopa),Dust Control Permit – 100 to 500 Acres,"Filing and coordination of a dust control permit for sites disturbing 100 to 500 Acres (County Fee: $10,310; Admin Fee: $1,250)",Acreage,11560,Each,,
+Dust Control Permit (Maricopa),Dust Control Permit – 50 to 100 Acres,"Filing and coordination of a dust control permit for sites disturbing 50 to 100 Acres (County Fee: $6,870; Admin Fee: $1,000)",Acreage,7870,Each,,
+Dust Control Permit (Maricopa),Dust Control Permit – 10 to 50 Acres,"Filing and coordination of a dust control permit for sites disturbing 10 to 50 Acres (County Fee: $4,120; Admin Fee: $750)",Acreage,4870,Each,,
+Dust Control Permit (Maricopa),Dust Control Permit – 1 to 10 Acres,"Filing and coordination of a dust control permit for sites disturbing 1 to 10 Acres (County Fee: $1,130; Admin Fee: $500)",Acreage,1630,Each,,
+Dust Control Permit (Maricopa),Dust Control Permit – .1 to <1 Acre,"Filing and coordination of a dust control permit for sites disturbing .1 to <1 Acre (County Fee: $570; Admin Fee: $500)",Acreage,1070,Each,,
+Dust Control Permit (Pima),Land Stripping/Earthmoving – >1 to 2 Acres,"Filing and coordination of a land stripping/earthmoving permit for sites disturbing more than 1 to 2 acres (County Fee: $100; Admin Fee: $250)",Acreage,350,Each,,
+Dust Control Permit (Pima),Land Stripping/Earthmoving – >2 to 10 Acres,"Filing and coordination of a land stripping/earthmoving permit for sites disturbing more than 2 to 10 acres (County Fee: $500; Admin Fee: $500)",Acreage,1000,Each,,
+Dust Control Permit (Pima),Land Stripping/Earthmoving – >10 to 40 Acres,"Filing and coordination of a land stripping/earthmoving permit for sites disturbing more than 10 to 40 acres (County Fee: $1,500; Admin Fee: $750)",Acreage,2250,Each,,
+Dust Control Permit (Pima),Land Stripping/Earthmoving – >40 Acres,"Filing and coordination of a land stripping/earthmoving permit for sites disturbing more than 40 acres (County Fee: $3,000; Admin Fee: $1,000)",Acreage,4000,Each,,
+Dust Control Permit (Pima),Trenching – >300 to 500 Ft.,"Filing and coordination of a trenching permit for excavations over 300 to 500 linear feet (County Fee: $75; Admin Fee: $250)",Linear Feet,325,Each,,
+Dust Control Permit (Pima),Trenching – 501 to 1500 Ft.,"Filing and coordination of a trenching permit for excavations 501 to 1500 linear feet (County Fee: $200; Admin Fee: $250)",Linear Feet,450,Each,,
+Dust Control Permit (Pima),Trenching – 1501 to 5000 Ft.,"Filing and coordination of a trenching permit for excavations 1501 to 5000 linear feet (County Fee: $400; Admin Fee: $250)",Linear Feet,650,Each,,
+Dust Control Permit (Pima),Trenching – 5001+ Ft.,"Filing and coordination of a trenching permit for excavations over 5000 linear feet (County Fee: $800; Admin Fee: $500)",Linear Feet,1300,Each,,
+Dust Control Permit (Pima),Road Construction – >50 to 1000 Ft.,"Filing and coordination of a road construction permit for roads over 50 to 1000 linear feet (County Fee: $50; Admin Fee: $250)",Linear Feet,300,Each,,
+Dust Control Permit (Pima),Road Construction – 1001 to 3000 Ft.,"Filing and coordination of a road construction permit for roads 1001 to 3000 linear feet (County Fee: $250; Admin Fee: $250)",Linear Feet,500,Each,,
+Dust Control Permit (Pima),Road Construction – 3001 to 6000 Ft.,"Filing and coordination of a road construction permit for roads 3001 to 6000 linear feet (County Fee: $500; Admin Fee: $500)",Linear Feet,1000,Each,,
+Dust Control Permit (Pima),Road Construction – 6001+ Ft.,"Filing and coordination of a road construction permit for roads over 6000 linear feet (County Fee: $1,000; Admin Fee: $500)",Linear Feet,1500,Each,,
+Dust Control Permit (Pima),Blasting Permit,"Filing and coordination of a blasting permit (County Fee: $25; Admin Fee: $250)",-,275,Each,,
+Dust Control Permit (Pima),Multiple Activity – 1 to 10 Acres,"Filing and coordination of a multiple activity permit for sites 1 to 10 acres (County Fee: $625; Admin Fee: $500)",Acreage,1125,Each,,
+Dust Control Permit (Pima),Multiple Activity – >10 to 40 Acres,"Filing and coordination of a multiple activity permit for sites over 10 to 40 acres (County Fee: $2,000; Admin Fee: $750)",Acreage,2750,Each,,
+Dust Control Permit (Pima),Multiple Activity – >40 Acres,"Filing and coordination of a multiple activity permit for sites over 40 acres (County Fee: $4,000; Admin Fee: $1,000)",Acreage,5000,Each,,
+Dust Control Permit (Pima),Demolition Permit (Asbestos NESHAP),"Filing and coordination of an asbestos NESHAP demolition permit (County Fee: $420; Admin Fee: $250)",-,670,Each,,
+Dust Control Permit (Pima),Renovation Permit (Asbestos NESHAP),"Filing and coordination of an asbestos NESHAP renovation permit (County Fee: $420; Admin Fee: $250)",-,670,Each,,

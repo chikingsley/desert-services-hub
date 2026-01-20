@@ -1,0 +1,106 @@
+flowchart TB
+    subgraph INTAKE["<b>1. WORK INTAKE</b>"]
+        direction TB
+        Source1(["Sales calls/texts"])
+        Source2(["Direct customer calls"])
+
+        Source1 --> Kelly["<b>Kelly takes call/text</b><br/>All day, every day<br/>No email"]
+        Source2 --> Kelly
+
+        Kelly --> Collect["<b>Collects info:</b><br/>• Address / cross streets<br/>• Site contact (texts info if new)<br/>• PO number<br/>• Job number<br/>• Who called / company"]
+
+        Collect --> Notebook["<b>Enters into notebook</b><br/>Handwritten schedule"]
+    end
+
+    subgraph NOTEBOOK["<b>KELLY'S NOTEBOOK STRUCTURE</b>"]
+        direction TB
+        NotebookFormat["<b>Columns (left to right):</b><br/>✓ Done/not done<br/>│ Day requested (THURS, FRI, ASAP)<br/>│ Address / cross streets<br/>│ Who called / company<br/>│ PO number / job number"]
+    end
+
+    subgraph PLANNING["<b>2. DAILY PLANNING</b>"]
+        direction TB
+        Notebook --> Plan["<b>Plan first jobs by 6pm</b><br/>Day before<br/>━━━━━━━━━━<br/>• 8 drivers<br/>• Max 10-12 stops each<br/>• Won't plan past 1st-2nd job<br/>• Things change throughout day"]
+    end
+
+    subgraph MORNING["<b>3. MORNING DISPATCH</b>"]
+        direction TB
+        Plan --> SendFirst["<b>Send first jobs to drivers</b><br/>Text or call"]
+
+        SendFirst --> DriverPrep["<b>Driver prep:</b><br/>• Pre-trip inspection (separate form)<br/>• Start paper timesheet"]
+
+        DriverPrep --> GoToJob["Driver goes to first job"]
+    end
+
+    subgraph EXECUTION["<b>4. THROUGHOUT THE DAY</b>"]
+        direction TB
+        GoToJob --> DoWork["<b>Driver does the job</b><br/>(street sweeping)"]
+
+        DoWork --> DriverDocs["<b>Driver documentation:</b><br/>• Write customer ticket (small paper)<br/>• Write route on timesheet<br/>• Get signed if person on site<br/>(~91% compliance, not consistent)"]
+
+        DriverDocs --> NotifyKelly["<b>Driver texts/calls Kelly:</b><br/>'Done with this job'"]
+
+        NotifyKelly --> KellyMarks["<b>Kelly marks ✓ in notebook</b>"]
+
+        KellyMarks --> NextJob{More jobs<br/>today?}
+        NextJob -->|Yes| KellyAssigns["<b>Kelly tells driver next stop</b><br/>'Calling shots on the fly'<br/>No plan more than 2 hours ahead"]
+        KellyAssigns --> GoToJob
+
+        NextJob -->|No| EndDay["Driver returns"]
+    end
+
+    subgraph ENDDAY["<b>5. END OF SHIFT</b>"]
+        direction TB
+        EndDay --> TurnIn["<b>Drivers turn in:</b><br/>• Paper timesheet<br/>• Customer tickets<br/>To office coordinator (Eva)"]
+    end
+
+    subgraph PAYROLL["<b>6. PAYROLL FLOW (Mon-Tue)</b>"]
+        direction TB
+        TurnIn --> Eva["<b>Eva (Office Coordinator):</b><br/>• Adds timesheets to Excel<br/>• Puts in SharePoint<br/>• Does totals"]
+
+        Eva --> Don["<b>Don (Controller):</b><br/>Enters into CPS<br/>(Consolidated Personnel Services)"]
+
+        Don --> Approve["<b>CEO or Controller approves</b><br/>for payment"]
+    end
+
+    subgraph KELLYSCHEDULE["<b>7. KELLY SENDS SCHEDULE (Wed)</b>"]
+        direction TB
+        Approve --> Reminder["<b>Dawn reminds Kelly</b><br/>'Need work completes'<br/>━━━━━━━━━━<br/>⚠️ Always needs reminder"]
+
+        Reminder --> KellyPhoto["<b>Kelly takes photo of notebook</b><br/>Texts to Dawn"]
+    end
+
+    subgraph BILLING["<b>8. BILLING FLOW (Dawn)</b>"]
+        direction TB
+        KellyPhoto --> DawnGets["<b>Dawn receives:</b><br/>• Scanned timesheets<br/>• Customer tickets<br/>• Kelly's schedule photos"]
+
+        DawnGets --> Crossword["<b>'CROSSWORD PUZZLE'</b><br/>Compare all three:<br/>• Timesheets<br/>• Tickets<br/>• Kelly's schedule<br/>━━━━━━━━━━<br/>⚠️ Handwriting hard to decipher<br/>⚠️ 1-2 week billing delay"]
+
+        Crossword --> EnterHits["<b>Enter hits into SW+WT Excel</b><br/>(unhighlighted = unbilled)"]
+
+        EnterHits --> Bill["<b>Bill customer</b><br/>Mark green in Excel"]
+    end
+
+    Issues["<b>KNOWN ISSUES</b><br/>━━━━━━━━━━<br/>• Handwriting difficult to decipher<br/>• Kelly needs reminders to send schedule<br/>• Drivers get lost - no maps integration<br/>• 2-5 day lag before Dawn gets data<br/>• 1-2 week billing delay<br/>• No real-time visibility into what's done<br/>• New drivers need babysitting (2-4 weeks)<br/>• Ticket signing inconsistent (~91%)"]
+
+    %% Styling
+    style Source1 fill:#bbdefb,stroke:#1565c0,stroke-width:2px,color:#000
+    style Source2 fill:#bbdefb,stroke:#1565c0,stroke-width:2px,color:#000
+    style Kelly fill:#c8e6c9,stroke:#2e7d32,stroke-width:2px,color:#000
+    style Notebook fill:#fff3e0,stroke:#e65100,stroke-width:3px,color:#000
+    style KellyMarks fill:#c8e6c9,stroke:#2e7d32,stroke-width:2px,color:#000
+    style KellyPhoto fill:#fff3e0,stroke:#e65100,stroke-width:3px,color:#000
+    style Bill fill:#c8e6c9,stroke:#2e7d32,stroke-width:2px,color:#000
+
+    style INTAKE fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
+    style NOTEBOOK fill:#fff8e1,stroke:#f9a825,stroke-width:2px
+    style PLANNING fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
+    style MORNING fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
+    style EXECUTION fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+    style ENDDAY fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
+    style PAYROLL fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    style KELLYSCHEDULE fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    style BILLING fill:#ffebee,stroke:#c62828,stroke-width:2px
+
+    style Crossword fill:#8b0000,stroke:#c62828,stroke-width:4px,color:#ffcdd2
+    style Reminder fill:#660e0e,stroke:#c62828,stroke-width:3px,color:#ffcdd2
+    style Issues fill:#fce4ec,stroke:#ad1457,stroke-width:2px,color:#000

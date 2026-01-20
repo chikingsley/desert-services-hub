@@ -1,0 +1,59 @@
+flowchart TB
+    CEO["Tim Haitaian<br/>CEO"]
+    
+    %% CEO direct reports - Level 1
+    CEO --> FM["Fleet Manager<br/>OPEN"]
+    CEO --> DWTS["Daniel Vanegas<br/>Director of Water Truck Services"]
+    CEO --> DROC["Wendy Byers<br/>Director of Roll-off Containers"]
+    CEO --> DOSS["Kelley Kline<br/>Director of Street Sweeping"]
+    CEO --> DPT["Stephen Judd<br/>Director of Portable Toilets"]
+    CEO --> VPO["Jayson Roh<br/>VP Operations"]
+    CEO --> CC["Don Schade<br/>Corp. Controller"]
+    CEO --> DOS["Director of Sales<br/>OPEN"]
+    CEO --> HR["HR Manager<br/>OPEN"]
+    CEO --> COS["Natalie Richardson<br/>Chief of Staff"]
+    CEO --> AA["Eva Mendoza<br/>Admin. Assistant"]
+    
+    %% Level 2 - Assistant Directors and Key Staff
+    FM --> AFM["Noah Haines<br/>Asst. Fleet Manager"]
+    DWTS --> DWTS_AD["Asst. Director<br/>OPEN"]
+    DROC --> DROC_AD["Asst. Director<br/>OPEN"]
+    DOSS --> DOSS_AD["Asst. Director<br/>OPEN"]
+    DPT --> AS["Albert Soliz<br/>Asst. Director"]
+    
+    VPO --> VPO_AD["Asst. Director<br/>OPEN"]
+    VPO --> HG["Herve Gruner, Sr.<br/>SWPPP Inspector"]
+    VPO --> LC["Logan Campbell<br/>SWPPP Inspector"]
+    VPO --> JN["James Neal<br/>SWPPP Inspector"]
+    VPO --> JP["Joel Puzel<br/>SWPPP Superintendent"]
+    
+    CC --> KA["Kendra Ash<br/>VP of Contract Administration"]
+    CC --> KR["Kerin Reissig<br/>Billing Coordinator"]
+    CC --> DW["Dawn Wagner<br/>Billing Coordinator"]
+    CC --> AC["Accounting Clerk<br/>OPEN"]
+    
+    DOS --> JG["Jeff Gardener<br/>Chief Estimator"]
+    DOS --> JA["Jared Aiken<br/>Estimator"]
+    DOS --> LS["Lacie Slevin<br/>Site Services Manager"]
+    DOS --> BS["Brandon Slevin<br/>Site Services Manager"]
+    DOS --> MR["Michael Ricks<br/>Site Services Manager"]
+    DOS --> MH["Michael Hammons<br/>Site Services Manager"]
+    DOS --> CE["Chi Emijofor<br/>Project Coordinator"]
+    DOS --> DOS_OPEN["2 Addl. SSMs<br/>OPEN"]
+    
+    %% Level 3 - Direct Reports at the bottom
+    AFM --> FM_DR["4 Direct Reports"]
+    DWTS_AD --> DWTS_DR["9 Direct Reports"]
+    DROC_AD --> DROC_DR["8 Direct Reports"]
+    DOSS_AD --> DOSS_DR["9 Direct Reports"]
+    AS --> DPT_DR["9 Direct Reports"]
+    VPO_AD --> VPO_DR["8 Direct Reports"]
+    
+    %% Styling
+    classDef openPosition fill:#d97634,stroke:#333,stroke-width:2px,color:#fff
+    classDef existingPosition fill:#1a5f7a,stroke:#333,stroke-width:2px,color:#fff
+    classDef ceoStyle fill:#1a5f7a,stroke:#333,stroke-width:3px,color:#fff
+    
+    class CEO ceoStyle
+    class DWTS_AD,DROC_AD,DOSS_AD,VPO_AD,DOS,AC,DOS_OPEN,FM,HR openPosition
+    class DWTS,DROC,DOSS,DPT,VPO,CC,COS,AA,AFM,AS,HG,LC,JN,JP,KA,KR,DW,JG,JA,LS,BS,MR,MH,CE existingPosition

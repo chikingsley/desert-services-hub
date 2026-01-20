@@ -1,0 +1,106 @@
+flowchart TB
+    subgraph WIN["<b>1. WIN NOTIFICATION</b>"]
+        direction TB
+        Trigger(["Win notification received"])
+        Trigger --> Source{Source?}
+        Source --> Rick["Rick (follow-up)"]
+        Source --> Contract["Contract arrived"]
+        Source --> CustomerCall["Customer called"]
+        Source --> DrivingBy["Driving past site"]
+
+        Rick --> ChiNotified["Chi notified same day"]
+        Contract --> ChiNotified
+        CustomerCall --> ChiNotified
+        DrivingBy --> ChiNotified
+
+        ChiNotified --> CreateProject["Create project in Monday.com<br/>Status: WON - INFO GATHERING"]
+    end
+
+    subgraph GATHER["<b>2. INFORMATION GATHERING</b><br/>(Intake Checklist)"]
+        direction TB
+        CreateProject --> Tier1["<b>TIER 1 (24 hours)</b><br/>- Customer/GC name<br/>- Project name, address<br/>- PM contact (name, phone, email)<br/>- Site super contact<br/>- Target start date<br/>- Services requested"]
+
+        Tier1 --> HasSWPPP{SWPPP<br/>in scope?}
+        HasSWPPP -->|"Yes"| Tier2["<b>TIER 2 (48 hours)</b><br/>- NOI / ADEQ number<br/>- Dust permit status<br/>- Acreage<br/>- SWPPP plans<br/>- Site drawing"]
+        HasSWPPP -->|"No"| Tier3
+
+        Tier2 --> Tier3["<b>TIER 3 (before delivery)</b><br/>- Billing method (Textura, GC Pay, etc.)<br/>- Retention %<br/>- PO number<br/>- Site access (gates, badges, PPE)<br/>- Water source (if WT)"]
+
+        Tier3 --> ServiceSpecific["<b>SERVICE-SPECIFIC</b><br/>See intake-checklist.md"]
+    end
+
+    subgraph ESTIMATE["<b>3. SIGNED ESTIMATE</b><br/>(HARD GATE)"]
+        direction TB
+        ServiceSpecific --> PrepareEstimate["Prepare/finalize estimate"]
+        PrepareEstimate --> SendForSignature["Send estimate to customer<br/>for signature"]
+        SendForSignature --> WaitSignature{Signature<br/>received?}
+        WaitSignature -->|"No"| FollowUpSig["Follow up:<br/>Day 1: Email<br/>Day 3: Email<br/>Day 4+: Call"]
+        FollowUpSig --> WaitSignature
+        WaitSignature -->|"Yes"| SignedEstimate["SIGNED ESTIMATE<br/>received"]
+
+        SignedEstimate --> AttachDocs["Attach to project:<br/>- Monday.com item<br/>- SharePoint folder<br/>- QuickBooks (via API)"]
+
+        style SignedEstimate fill:#c8e6c9,stroke:#2e7d32,stroke-width:3px,color:#000
+    end
+
+    subgraph RECONCILE["<b>4. CONTRACT RECONCILIATION</b><br/>(If contract differs from estimate)"]
+        direction TB
+        AttachDocs --> ContractReceived{Contract<br/>received?}
+        ContractReceived -->|"Not yet"| WaitContract["Wait for contract<br/>(signed estimate protects us)"]
+        WaitContract --> ContractReceived
+        ContractReceived -->|"Yes"| CompareToEst["Compare contract to<br/>signed estimate"]
+
+        CompareToEst --> Match{Match?}
+        Match -->|"Yes"| SkipReconcile["Proceed to handoff"]
+        Match -->|"No"| Reconcile["Reconciliation process:<br/>- Flag differences<br/>- Email customer<br/>- Get clarification<br/>- Update if needed"]
+        Reconcile --> NewEstimate{Changes<br/>required?}
+        NewEstimate -->|"Yes"| Revision["Create Revision 1<br/>Get new signature"]
+        Revision --> SignedEstimate
+        NewEstimate -->|"No"| SkipReconcile
+
+        SkipReconcile --> KendraSign["Send to Kendra for<br/>contract signature"]
+        KendraSign --> ContractSigned["Contract signed"]
+    end
+
+    subgraph HANDOFF["<b>5. HANDOFF TO DELIVERY</b>"]
+        direction TB
+        ContractSigned --> CreatePackage["Create handoff package:<br/>- Signed estimate<br/>- Contract<br/>- PM/Super contacts<br/>- Start date<br/>- Services breakdown<br/>- NOI, dust permit (if SWPPP)<br/>- Site access details<br/>- SharePoint folder link"]
+
+        CreatePackage --> DetermineDelivery{Which delivery<br/>manager?}
+        DetermineDelivery --> Jayson["Jayson<br/>(SWPPP, Temp Fence)"]
+        DetermineDelivery --> Stephen["Stephen<br/>(PJs, Roll-offs)"]
+        DetermineDelivery --> Dawn["Dawn<br/>(Water Trucks)"]
+        DetermineDelivery --> Kelly["Kelly<br/>(Sweeping)"]
+
+        Jayson --> SendHandoff["Send handoff email<br/>to delivery manager"]
+        Stephen --> SendHandoff
+        Dawn --> SendHandoff
+        Kelly --> SendHandoff
+
+        SendHandoff --> ConfirmReceipt{Delivery<br/>confirmed receipt?}
+        ConfirmReceipt -->|"No"| FollowUpDelivery["Follow up until confirmed"]
+        FollowUpDelivery --> ConfirmReceipt
+        ConfirmReceipt -->|"Yes"| LetGo["CHI LETS GO<br/>Delivery owns from here"]
+    end
+
+    subgraph TRACK["<b>6. TRACKING</b>"]
+        direction TB
+        LetGo --> UpdateStatus["Update Monday.com:<br/>Status: HANDED OFF"]
+        UpdateStatus --> LogMetrics["Log metrics:<br/>- Days from win to handoff<br/>- Missing info that was chased<br/>- Issues encountered"]
+        LogMetrics --> Complete(["Project initiation<br/>COMPLETE"])
+    end
+
+    %% Styling
+    style Trigger fill:#bbdefb,stroke:#1565c0,stroke-width:3px,color:#000
+    style ChiNotified fill:#c8e6c9,stroke:#2e7d32,stroke-width:2px,color:#000
+    style SignedEstimate fill:#c8e6c9,stroke:#2e7d32,stroke-width:3px,color:#000
+    style ContractSigned fill:#c8e6c9,stroke:#2e7d32,stroke-width:2px,color:#000
+    style LetGo fill:#fff3e0,stroke:#e65100,stroke-width:3px,color:#000
+    style Complete fill:#bbdefb,stroke:#1565c0,stroke-width:3px,color:#000
+
+    style WIN fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
+    style GATHER fill:#fff8e1,stroke:#f9a825,stroke-width:2px
+    style ESTIMATE fill:#e8f5e9,stroke:#2e7d32,stroke-width:3px
+    style RECONCILE fill:#fff8e1,stroke:#f9a825,stroke-width:2px
+    style HANDOFF fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+    style TRACK fill:#e3f2fd,stroke:#1565c0,stroke-width:2px

@@ -1,4 +1,4 @@
-import { BOARD_IDS } from "../../ds-workbench/services/monday/types";
+import { BOARD_IDS } from "../services/monday/types";
 import { db } from "../lib/db";
 
 /**

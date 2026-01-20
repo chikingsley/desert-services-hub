@@ -1,0 +1,86 @@
+flowchart TB
+    %% ============================================
+    %% INTAKE ROUTING LOGIC
+    %% ============================================
+
+    Start(["Work Comes In<br/>(Email/Call)"]) --> WhoReceived{Who Received It?}
+
+    %% ============================================
+    %% BRANCH 1: SALES/ESTIMATING RECEIVED
+    %% ============================================
+    WhoReceived -->|Sales/Estimating Team<br/>Rick, Jared, etc.| SalesReceived["Received by Sales"]
+
+    SalesReceived --> SalesRoute["<b>→ FORMAL ESTIMATING PATH</b><br/>━━━━━━━━━━<br/>All services handled same way:<br/>• SWPPP<br/>• PJs<br/>• Roll-offs<br/>• Water Trucks<br/>• Sweeping"]
+
+    SalesRoute --> FormalEst["<b>FORMAL ESTIMATING</b><br/>━━━━━━━━━━<br/>1. Add to MondayCRM<br/>2. Complete estimate<br/>3. Send to GC<br/>4. Track until won/lost"]
+
+    %% ============================================
+    %% BRANCH 2: OPERATIONS RECEIVED
+    %% ============================================
+    WhoReceived -->|Operations Team<br/>Daniel, Stephen, etc.| OpsReceived["Received by Operations"]
+
+    OpsReceived --> ServiceCheck{What Service?}
+
+    %% SWPPP - Always forward to estimating
+    ServiceCheck -->|SWPPP| ForwardToSales["<b>FORWARD TO ESTIMATING</b><br/>━━━━━━━━━━<br/>SWPPP always requires<br/>formal estimating process"]
+
+    ForwardToSales --> FormalEst
+
+    %% Other services - Operations handles directly
+    ServiceCheck -->|PJs<br/>Roll-offs<br/>Water Trucks<br/>Sweeping| OpsHandle["<b>→ INFORMAL PATH</b><br/>━━━━━━━━━━<br/>Operations handles directly"]
+
+    OpsHandle --> QuickEst["<b>QUICK ESTIMATE</b><br/>━━━━━━━━━━<br/>By service manager:<br/>• Daniel (Water Trucks)<br/>• Stephen (PJs/Roll-offs)<br/>━━━━━━━━━━<br/>1. Collect basic info<br/>2. Site visit or photos<br/>3. Quick scope"]
+
+    QuickEst --> GetApproval["<b>GET APPROVAL</b><br/>━━━━━━━━━━<br/>Contact Jared/Dawn for<br/>formal estimate pricing<br/>━━━━━━━━━━<br/>Email confirmation<br/>PO, dates, contacts"]
+
+    GetApproval --> DirectDeliv["<b>DIRECT TO DELIVERY</b><br/>━━━━━━━━━━<br/>Same ops person:<br/>• Schedules work<br/>• Assigns crew<br/>• Executes"]
+
+    %% ============================================
+    %% CONVERGENCE - Both paths lead to delivery
+    %% ============================================
+
+    FormalEst --> FormalWin{Won?}
+    FormalWin -->|No| Lost(["Lost - End"])
+    FormalWin -->|Yes| FormalFlow["<b>FORMAL WORKFLOW</b><br/>━━━━━━━━━━<br/>1. Contract Review (Chi)<br/>2. Info Gathering (Chi)<br/>3. Handoff to Delivery Mgr"]
+
+    FormalFlow --> DeliveryMgr["<b>DELIVERY MANAGER</b><br/>━━━━━━━━━━<br/>Route by service:<br/>• Jayson (SWPPP/Fence)<br/>• Stephen (PJs/Roll-offs)<br/>• Dawn (Water Trucks)<br/>• Kelly (Sweeping)"]
+
+    DirectDeliv --> DeliveryMgr
+
+    DeliveryMgr --> Execute["Work Execution"]
+    Execute --> Billing["Billing"]
+    Billing --> Complete(["Complete"])
+
+    %% ============================================
+    %% STYLING
+    %% ============================================
+
+    style Start fill:#bbdefb,stroke:#1565c0,stroke-width:3px,color:#000
+    style Complete fill:#bbdefb,stroke:#1565c0,stroke-width:3px,color:#000
+    style Lost fill:#ffcdd2,stroke:#c62828,stroke-width:2px,color:#000
+
+    %% Decision diamonds
+    style WhoReceived fill:#fff3e0,stroke:#e65100,stroke-width:3px,color:#000
+    style ServiceCheck fill:#fff3e0,stroke:#e65100,stroke-width:3px,color:#000
+    style FormalWin fill:#fff3e0,stroke:#e65100,stroke-width:3px,color:#000
+
+    %% Sales path (yellow)
+    style SalesReceived fill:#fff9c4,stroke:#f9a825,stroke-width:2px,color:#000
+    style SalesRoute fill:#fff59d,stroke:#f9a825,stroke-width:3px,color:#000
+    style FormalEst fill:#fff9c4,stroke:#f9a825,stroke-width:2px,color:#000
+    style FormalFlow fill:#fff9c4,stroke:#f9a825,stroke-width:2px,color:#000
+
+    %% Operations path (green)
+    style OpsReceived fill:#dcedc8,stroke:#2e7d32,stroke-width:2px,color:#000
+    style OpsHandle fill:#aed581,stroke:#2e7d32,stroke-width:3px,color:#000
+    style QuickEst fill:#dcedc8,stroke:#2e7d32,stroke-width:2px,color:#000
+    style GetApproval fill:#dcedc8,stroke:#2e7d32,stroke-width:2px,color:#000
+    style DirectDeliv fill:#dcedc8,stroke:#2e7d32,stroke-width:2px,color:#000
+
+    %% SWPPP forward (purple)
+    style ForwardToSales fill:#e1bee7,stroke:#7b1fa2,stroke-width:3px,color:#000
+
+    %% Delivery
+    style DeliveryMgr fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style Execute fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style Billing fill:#fce4ec,stroke:#c2185b,stroke-width:2px,color:#000

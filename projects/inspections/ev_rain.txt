@@ -1,0 +1,388 @@
+Multi-Interval Precipitation Totals
+
+                         FLOOD CONTROL DISTRICT of MARICOPA COUNTY
+                     Precipitation Report for ALL FCDMC Rain Stations
+                       6 and 24 Hours Ending 12/31/25 at 1418
+            *** Data is Preliminary and Unedited, ---- Denotes Missing Data ***
+
+     Gage                          In or Nearest      Gage    Elev.  Rainfall    Rainfall      MSP Forecast       General
+     Name                           City / Town        ID     (ft)   Past 6 hr  Past 24 hr         Zone           Location
+--------------------------------   ---------------   ------  ------  ---------  ----------  ------------------   --------------------------------------------
+4th of July Wash                   Agua Caliente      41200   1120      0.00       0.00     None                  21 mi. W of Old US80 on Agua Caliente Road                   
+Columbus Wash                      Agua Caliente      40800    705      0.00       0.00     None                  8 mi. N of Agua Caliente                                     
+Copper Wash                        Agua Caliente      41000   1080      0.00       0.00     None                  15 miles north of Agua Caliente                              
+Gila Bend Mountains                Agua Caliente      41500   1560      0.00       0.00     Palo Verde            16 mi NW of Painted Rock Dam off Agua Caliente Rd.           
+Mt. Oatman                         Agua Caliente      40700   1740      0.00       0.00     None                  8 mi. WSW of Painted Rock Dam
+Centennial Divide                  Aguila             29700   2465      0.00       0.00     Upper Centennial      7 miles west of the US89/US93 Junction                       
+Centennial Wash near Aguila        Aguila             29000   2275      0.00       0.00     Upper Centennial      5 mi. NNE of the US 60 / SR 71 junction                      
+Centennial Wash                    Aguila             29200   2420      0.00       0.00     Upper Centennial      On US 60, 19 mi. W of Wickenburg
+Dead Horse Wash                    Aguila             43700   2140      0.00       0.00     None                  Near Aguila Rd., 14 miles SE of Aguila
+Aguila VFD                         Aguila             28300   2170      0.00       0.00     Upper Centennial      1/4 mi. SE of Eagle Eye Rd. & US 60
+Outlaw Hill                        Aguila             28500   2670      0.00       0.00     Upper Centennial      South of US 60, 14 miles east of Aguila                      
+Ritter Dam                         Aguila             30000   2345      0.00       0.00     Upper Centennial      9 miles NE of Aguila  
+Smith Peak                         Aguila             29500   5120      0.00       0.00     Upper Centennial      Harcuvar Mtns., 13 mi. NW of Aguila                          
+Upper Grass Wash                   Aguila             27700   2290      0.00       0.00     Upper Centennial      7 miles SE of Aguila      
+Upper Tiger Wash                   Aguila             26300   2175      0.00       0.00     None                  11 mi. S. of Aguila off Eagle Eye Road                       
+Wood Tank                          Aguila             30300   2420      0.00       0.00     Upper Centennial      8 miles NNE of Aguila  
+Apache Junction FRS                Apache Junction    81300   1810      0.00       0.00     Superstition          1/3 mi. NW of Lost Dutchman Blvd. and Idaho Rd.              
+Apache Trail                       Apache Junction    36500   1735      0.00       0.00     Superstition          Royal Palm Rd. & 4th Ave., Apache Junction
+Bulldog Canyon                     Apache Junction    38800   2065      0.00       0.00     Superstition          2 mi. NW of the alignments of Baseline & Tomahawk            
+Carney Springs                     Apache Junction    37300   2215      0.00       0.00     Superstition          6.2 mi. NE of Peralta Rd. @ US 60
+Kings Ranch                        Apache Junction    39000   2140      0.00       0.00     Superstition          7 mi. ESE of Apache Junction                                 
+McDowell Rd. @ Meridian Rd.        Apache Junction    33500   1910      0.00       0.00     Superstition          1/4 mile E of Meridian Rd. and McDowell Road
+Peralta Road                       Apache Junction    37100   1985      0.00       0.00     Superstition          3.4 mi. NE of Peralta Rd. @ US 60
+Reavis Trailhead                   Apache Junction    63700   3595      0.00       0.00     None                  E. of SR 88 near Apache Lake, end of FR 212, Superstition Mtns.
+Tortilla Well                      Apache Junction    63600   3165      0.00       0.00     None                  5.9 mi. ESE of Tortilla Flat, Superstition Mtns.
+Trailhead 88                       Apache Jucntion    36600   1285      0.00       0.00     None                  On SR 88, 7 miles NE of Apache Junction
+US 60 @ Gold Canyon                Apache Junction    36900   1745      0.00       0.00     Superstition          US 60 @ Superstition Mountain Dr.
+Weekes Wash @ Baseline Rd.         Apache Junction    39200   1630      0.00       0.00     Superstition          Baseline at Royal Palm Road
+Wolverine Pass                     Apache Junction    38300   2050      0.00       0.00     Superstition          1/4 mi. N of the alignments of Baseline & Tomahawk
+Centennial Railroad                Arlington          24700    850      0.00       0.00     Palo Verde            8 mi. NW of Old US 80 at the Gila River                      
+Centennial Trib. @ Dobbins         Arlington          22800   1020      0.00       0.00     Palo Verde            7.5 mi. WSW of Palo Verde Nuclear Plant
+Cruff Wash                         Arlington          23700    970      0.00       0.00     Palo Verde            6 mi. west of Agua Caliente Road and Old US 80               
+G&F Woolsey Peak                   Arlington          23200   1985      0.00       0.00     None                  8 miles SW of Gillespie Dam
+Gillespie Dam                      Arlington          27200    760      0.00       0.00     None                  Gila River at Old US 80                                      
+Hassayampa Landfill                Arlington          44800    905      0.00       0.00     Palo Verde            2 mi. NW of Hassayampa                                       
+Webb Mountain                      Arlington          24500   1035      0.00       0.00     None                  4 mi. west of Agua Caliente Road and Old US 80               
+Agua Fria R. @ Buckeye Rd.         Avondale           85000    970      0.00       0.00     West Valley           Buckeye Rd. Bridge over Agua Fria River, nr Avondale         
+Colter Channel @ El Mirage Rd.     Avondale           85500   1030      0.00       0.00     West Valley           1/4 mi. N of Camelback and El Mirage Rd.                     
+Sunset Point                       Black Canyon City  16500   3395      0.00       0.00     None                  Sunset Point Rest Area, 10 mi. N of Black Canyon City        
+Belmont Mountains                  Buckeye            46300   1860      0.00       0.00     None                  4.8 mi. SW of the Aguila/Wickenburg Roads intersection
+Buckeye FRS #1                     Buckeye            44000   1090      0.00       0.00     West Valley           West end of Buckeye FRS #1, I-10 @ Hassayampa River          
+Buckeye FRS #2                     Buckeye            44500   1115      ----       ----     West Valley           5 mi. N of Buckeye nr the algnmnts. of Yuma and Miller       
+Buckeye FRS #3                     Buckeye            44800   1150      0.00       0.00     West Valley           1/4 mi. NE of I-10 and Watson Rd.                            
+Buckeye Rd. @ SR 85                Buckeye            18500    865      0.00       0.00     West Valley           Buckeye Rd. at State Route 85                                
+Camelback Rd. @ Turner Rd.         Buckeye            44600   1410      0.00       0.00     West Valley           Camelback Rd. alignment 2 mi. E of Sun Valley Pkwy.
+Four Mile Wash                     Buckeye            26500   1210      0.00       0.00     None                  Near the alignments of 371st Ave. and Glendale Ave.          
+I-10 @ 355th Ave.                  Buckeye            18200   1095      0.00       0.00     None                  3 miles NW of the Hassayampa River crossing of I-10          
+Jackrabbit Wash                    Buckeye            45000   1725      0.00       0.00     None                  16 mi. NNE of Tonopah, 20 mi. SSW of Wickenburg              
+Rainbow Wash                       Buckeye            42800    905      0.00       0.00     Rainbow Valley        9 miles south of Buckeye on SR 85
+Sun Valley Pkwy. @ Northern Ave.   Buckeye            48300   1395      0.00       0.00     West Valley           Sun Valley Pkwy. at Northern Ave. alignment
+Wagner Wash @ Sun Valley Pkwy.     Buckeye            44700   1440      0.00       0.00     West Valley           Sun Valley Pkwy. at Bell Rd. alignment
+White Tank FRS #3                  Buckeye            87300   1215      0.00       0.00     West Valley           4 mi. N of I-10 on Jackrabbit Trail alignment                
+White Tank FRS #4                  Buckeye            87800   1065      0.00       0.00     West Valley           1/4 mi. NE of Tuthill Rd. and Van Buren St.                  
+White Tank Outlet @ Indian School  Buckeye            87400   1160      0.00       0.00     West Valley           Indian School Rd. @ 195th Ave.
+White Tank Peak                    Buckeye            1800    4010      0.00       0.00     West Valley           Top of White Tank Mtns., 13 mi. N of Buckeye                 
+Verrado West                       Buckeye            48700   1470      0.00       0.00     West Valley           1.25 mi. W of Verrado Way and Lost Creek Dr.
+Santa Cruz @ SR 84                 Casa Grande        63800   1350      0.00       0.00     None                  3 mi. West of SR 93 (Casa Grande) on SR 84                   
+Cave Creek                         Cave Creek         19000   1995      0.00       0.00     New River/Cave Creek  1 mile west of Cave Creek Town Hall
+Cave Cr.@ Spur Cross Rd.           Cave Creek         20700   2280      0.00       0.00     New River/Cave Creek  3.5 mi. North of the Town of Cave Creek                      
+Galloway Wash @ Galloway Rd.       Cave Creek         20600   2295      0.00       0.00     New River/Cave Creek  Galloway Rd. 1/4 mi. N of Cave Creek Rd.
+Horseshoe Lake                     Cave Creek         82500   2070      0.00       0.00     None                  Horseshoe Lake - SW corner near boat ramp                    
+Humboldt Mountain                  Cave Creek         1200    5205      0.00       0.00     New River/Cave Creek  13 mi. NE of the Town of Cave Creek                          
+Rackensack Canyon                  Cave Creek         76500   4550      0.00       0.00     North Scottsdale      8 miles NE of the Town of Cave Creek
+Middle Camp Creek                  Cave Creek         76600   3725      0.00       0.00     None                  3.3 mi. N of Camp Cr. @ Bartlett Lake Rd.
+New River Mesa                     Cave Creek         22000   3960      0.00       0.00     New River/Cave Creek  11 miles N of the Town of Cave Creek
+Seven Springs                      Cave Creek         21500   4615      0.00       0.00     New River/Cave Creek  15 mi. NNE of the Town of Cave Creek                         
+Seven Springs Wash                 Cave Creek         21800   3530      0.00       0.00     New River/Cave Creek  11 miles NE of Cave Creek                                    
+Willow Springs Wash                Cave Creek         21100   2800      0.00       0.00     New River/Cave Creek  4.2 mi. NE of Cave Creek
+Chandler Blvd. @ Arizona Ave.      Chandler           32000   1210      0.00       0.00     Southeast Valley      1/4 mi. W of Chandler Blvd. and Arizona Ave.
+Chandler Airport                   Chandler           32500   1225      0.00       0.00     Southeast Valley      1/4 mi. S of Queen Creek Rd. and McQueen Rd.
+EMF @ Arizona Ave.                 Chandler           35200   1210      0.00       0.00     None                  On the SR 587 bridge 3 mi. South of Riggs Rd.                
+Gila R. @ Maricopa Rd.             Chandler           41700   1135      0.00       0.00     None                  Gila River at Maricopa Road bridge                           
+Bucks Well                         Congress           55000   3290      0.00       0.00     None                  3.5 miles W of Congress in Yavapai County
+Burton Tank                        Congress           53200   2870      0.00       0.00     None                  3 miles SSW of Congress in Yavapai County                    
+Congress                           Congress           49700   3040      0.00       0.00     None                  Junction of US 89 and SR 71                                  
+Joshua Tree                        Congress           30500   2840      0.00       0.00     Upper Centennial      4.5 miles NW of the SR71 / US93 junction                     
+Mid-Martinez Creek                 Congress           49200   2760      0.00       0.00     None                  4.4 mi SSE of the US 89 / SR 71 junction                     
+Arizona Hunt Club                  Cordes Junction    17300   3805      0.00       0.00     None                  5 mi. NNW of Cordes Junction                                 
+Horner Mtn. Ranch                  Cordes Junction    17000   4490      0.00       0.00     None                  11 mi. ENE of Cordes Junction                                
+Horseshoe Ranch                    Cordes Junction    16700   3805      0.00       0.00     None                  10 mi. SE of Cordes Junction                                 
+Horsethief Basin                   Crown King         16000   6705      0.00       0.00     None                  At HB Recreation Area, 6 mi. SE of Crown King                
+Minnehaha                          Crown King         54000   5610      0.00       0.00     None                  8 mi. East of Wagoner, Yavapai County                        
+Towers Mountain                    Crown King         1700    7630      0.00       0.00     None                  3 mi. NW of Crown King, Yavapai County                       
+Dewey                              Dewey              17800   4740      0.00       0.00     None                  5 mi. E of Dewey off Orme Ranch Rd.                          
+I-17 @ SR 169                      Dewey              17500   4445      0.00       0.00     None                  I-17 at SR 169 (Cherry Rd.)                                  
+Agua Fria R. @ Grand Ave.          El Mirage          14700   1115      0.00       0.00     West Valley           Grand Ave. bridge at Agua Fria River                         
+Dysart Drain @ Luke AFB            El Mirage          85800   1090      0.00       0.00     West Valley           1/4 mi. West of Northern Ave. & Litchfield Rd.               
+Magma FRS                          Florence           42300   1625      0.00       0.00     None                  7 mi. NNW of Florence                                        
+Elephant Butte                     Florence Junction  63400   2730      0.00       0.00     None                  5.2 mi. NNE of Queen Valley, Pinal Co.
+Florence Junction                  Florence Junction  38500   1840      0.00       0.00     Superstition          1.5 mi. NW of Florence Junction                              
+Magma East                         Florence Junction  42200   1740      0.00       0.00     None                  2.1 mi. NNE of AZ Farms Rd. & SR 79
+Whitlow Ranch Dam                  Florence Junction  63300   2200      0.00       0.00     None                  5 miles NE of Florence Junction                              
+Cloudburst Wash                    Fountain Hills     77800   2580      0.00       0.00     North Scottsdale      2 mi. NW of Sun Ridge Golf Course, Fountain Hills            
+Fountain Hills Fire Dept.          Fountain Hills     76700   1665      0.00       0.00     North Scottsdale      1/2 mi. S of Palisades Blvd. and Fountain Hills Blvd.        
+Golden Eagle Blvd.                 Fountain Hills     78500   2180      0.00       0.00     North Scottsdale      NW 1/4 of T3N-R6E-Section 5 at Chaparral Water Tank           
+Hesperus Dam                       Fountain Hills     79000   1895      0.00       0.00     North Scottsdale      1/4 mi. N of Richwood Ave. & Golden Eagle Blvd.              
+Hesperus Wash                      Fountain Hills     79300   2280      0.00       0.00     North Scottsdale      NW1/4 of T4N-R6E-Section 31 near Dixie Mine                  
+McDowell Mountain Rd.              Fountain Hills     76000   1620      0.00       0.00     North Scottsdale      Off McDowell Mtn. Rd., 2 mi. N of Fountain Hills
+North Heights Dam                  Fountain Hills     78200   1825      0.00       0.00     North Scottsdale      400 yds. SW of Sierra Madre Dr. and Golden Eagle Blvd.       
+Saguaro Lake                       Fountain Hills     63500   1550      0.00       0.00     Lwr. Salt River Lakes MCSO yard, NW corner of the lake                             
+Stone Ridge Dam                    Fountain Hills     77300   1710      0.00       0.00     North Scottsdale      1/4 mi. W of Cholla Dr. & Fountain Hills Blvd.               
+Sun Ridge Canyon Dam               Fountain Hills     77500   1890      0.00       0.00     North Scottsdale      200 yards W of Lago Blvd. and Palisades Blvd.                
+Bender Wash                        Gila Bend          40500   1200      0.00       0.00     Gila Bend             1/4 mile N of I-8, 10 mi. East of Gila Bend                  
+Gila Bend Landfill                 Gila Bend          42500    750      0.00       0.00     None                  3 mi. North of the intersection of US 80 and I-8             
+Maricopa Mountains                 Gila Bend          43000   1210      0.00       0.00     None                  11 miles ENE of Gila Bend
+Sand Tank Wash @ I-8               Gila Bend          40000    765      0.00       0.00     Gila Bend             On I-8 bridge south of Gila Bend
+Sand Tank Wash                     Gila Bend          40300   1160      0.00       0.00     Gila Bend             9 mi. SSE of Gila Bend
+Sauceda Wash                       Gila Bend          71000    860      0.00       0.00     Gila Bend             6 mi. SSW of Gila Bend
+Crossroads Park                    Gilbert            33000   1270      0.00       0.00     Southeast Valley      1/2 mi. NW of Ray Rd. and Greenfield Rd.
+EMF @ Hunt Hwy.                    Gilbert            35100   1295      0.00       0.00     Southeast Valley      1/4 mi. E of Val Vista Dr. & Hunt Hwy.
+EMF @ Queencreek Rd.               Gilbert            34800   1315      0.00       0.00     Southeast Valley      1/3 mi. West of Queen Creek Rd. and Higley Rd.
+Freestone Basin                    Gilbert            32800   1245      0.00       0.00     Southeast Valley      1/2 mi. SSE of Guadalupe Rd. and Lindsay Rd.
+Gladden                            Gladden            28800   2200      0.00       0.00     Upper Centennial      US 60 at Gladden, 34 miles W of Wickenburg
+Harquahala Mountain                Gladden            1500    5680      0.00       0.00     None                  Top of Harquahala Mtn., 36 mi. WSW of Wickenberg
+ACDC @ 67th Ave.                   Glendale           13800   1220      0.00       0.00     North Phoenix         67th Ave. Bridge at Arizona Canal, Glendale
+City of Glendale                   Glendale           6500    1150      0.00       0.00     South Phoenix         Grand Avenue at 63rd Avenue                                  
+New River @ Glendale Ave.          Glendale           61500   1060      0.00       0.00     South Phoenix         1/2 mi. E of 99th Ave. on Glendale Ave. bridge               
+Bullard Wash @ Indian School Rd.   Goodyear           89500   1025      0.00       0.00     West Valley           Indian School Rd. @ Wigwam Blvd.           
+Bullard Wash @ Van Buren St.       Goodyear           89200    980      0.00       0.00     West Valley           Van Buren St. 0.4 mi. W of Bullard Ave.
+Camelback Rd. @ Citrus Rd.         Goodyear           87500   1115      0.00       0.00     West Valley           SW corner of Camelback & Citrus Roads
+Estrella Fan                       Goodyear           84200   1455      0.00       0.00     Rainbow Valley        Alignments of El Mirage Rd. and Germann Rd.                  
+Gila @ Estrella Pkwy.              Goodyear           83800    905      0.00       0.00     West Valley           Gila River at Estrella Parkway                               
+Gila R. @ 116th Ave.               Goodyear           70700    940      0.00       0.00     West Valley           1/4 mile NNW of 115th Ave. and Baseline Rd.                  
+Tuthill @ Ray Rd.                  Goodyear           83500    950      0.00       0.00     Rainbow Valley        1/2 mi. East of Tuthill Rd. and Ray Rd.                      
+Upper Waterman Wash                Goodyear           84500   1600      0.00       0.00     None                  10 mi. WNW of Mobile                                         
+Waterman Wash @ Rainbow Valley Rd. Goodyear           83300   1020      0.00       0.00     Rainbow Valley        Rainbow Valley Rd. at Queen Creek Rd.                        
+Waterman Wash                      Goodyear           84000   1310      0.00       0.00     Rainbow Valley        El Mirage Rd. and Riggs Rd. alignments                       
+Baseline Rd. @ 547th Ave.          Harquahala         24300   1235      0.00       0.00     Palo Verde            SW corner of Baseline and 547th Ave.                         
+Buckeye Rd. @ 547th Ave.           Harquahala         24000   1205      0.00       0.00     Palo Verde            Buckeye Road at 547th Avenue                                 
+Centennial Levee                   Harquahala         25700   1260      0.00       0.00     None                  2 mi S. of I-10 in Harquahala Valley                         
+Eagle Eye Rd. @ CAP                Harquahala         23500   1400      0.00       0.00     None                  On Eagle Eye Rd. 1.5 miles south of Salome Hwy.
+Harquahala FRS                     Harquahala         26000   1420      0.00       0.00     None                  10 mi. WNW of Tonopah in Harquahala Valley                   
+Middle Harquahala FRS              Harquahala         25800   1410      0.00       0.00     None                  On Harquahala FRS 6.3 mi. WNW of Burnt Mtn.
+Saddleback FRS                     Harquahala         25200   1180      0.00       0.00     Palo Verde            7 mi. WSW of Tonopah in Harquahala Valley                    
+Tiger Wash                         Harquahala         27000   1875      0.00       0.00     None                  10 mi. N of the Eagle Eye Rd / Salome Hwy intersection       
+Tiger Wash Fan                     Harquahala         26800   1605      0.00       0.00     None                  1 mi. W of Eagle Eye Rd. and 4 mi. N of Salome Highway       
+Hassayampa R. @ Wagoner Rd.        Kirkland Junction  54300   3760      0.00       0.00     None                  6 mi. ESE of Kirkland Junction                               
+Alma School Rd. @ 6th St.          Mesa               31600   1240      0.00       0.00     Southeast Valley      0.3 mi. N of University Dr. & Alma School Rd.
+Broadway Rd. @ Brooks Rd.          Mesa               30700   1220      0.00       0.00     Southeast Valley      1/2 mi. WNW of Broadway Rd. & Alma School Rd.
+Carriage Lane Park                 Mesa               31700   1190      0.00       0.00     Southeast Valley      1/2 mi. South of Price Rd. and Guadalupe Rd.                 
+Chaparral Park                     Mesa               30600   1280      0.00       0.00     Southeast Valley      0.4 mi. S of Gilbert Rd. & McKellips Rd.
+Dobson Ranch Park                  Mesa               91100   1200      0.00       0.00     Southeast Valley      1/2 mi S on Dobson Rd @ Baseline Rd
+El Dorado @ Birchwood              Mesa               91200   1205      0.00       0.00     Southeast Valley      1/4 mi N of Broadway Rd @ El Dorado Rd
+Elliot Rd. @ Loop 202              Mesa               35000   1390      0.00       0.00     Southeast Valley      SE corner of Elliot Rd. and Loop 202
+Emerald Park                       Mesa               90600   1231      0.00       0.00     Southeast Valley      0.1 mi S of Harris Dr @ Hilton Ave.
+EMF @ Broadway Rd.                 Mesa               34300   1340      0.00       0.00     Southeast Valley      1/2 mi. SSE of Broadway Rd. and Higley Rd.
+EMF below Powerline Floodway       Mesa               33700   1320      0.00       0.00     Southeast Valley      1/4 mi. SE of Ray Rd. and Power Rd. 
+Falcon Field                       Mesa               34000   1370      0.00       0.00     Southeast Valley      1/4 mi. NE of McKellips Rd. & Greenfield Rd.                 
+Fitch Park                         Mesa               31000   1245      0.00       0.00     Southeast Valley      1/2 mi. N of University Dr. and Center St.                   
+Granite Reef Diversion             Mesa               75000   1330      0.00       0.00     Superstition          Bush Highway at Granite Reef Dam
+Greenfield Rd. @ Adobe Rd.         Mesa               34200   1335      0.00       0.00     Southeast Valley      0.4 mi. S of Brown Rd. & Greenfield Rd.
+Guadalupe Channel                  Mesa               35700   1360      0.00       0.00     Southeast Valley      1/4 mi. E of Power Rd. and Guadalupe Rd.                     
+Harris Dr. @ 8th St.               Mesa               90700   1259      0.00       0.00     Southeast Valley      Harris Dr. @ 8th St.                     
+Hermosa Vista Park                 Mesa               31400   1310      0.00       0.00     Southeast Valley      1/4 mi. N of McKellips Rd. & Lindsay Rd.
+Horne Rd. @ 8th Ave.               Mesa               30900   1225      0.00       0.00     Southeast Valley      0.3 mi. N of Southern Ave. on Horne Rd.
+Horne Rd. @ McLellan Rd.           Mesa               31300   1260      0.00       0.00     Southeast Valley      100 yds. N of Horne Rd. & McLellan Rd.
+Jefferson Park                     Mesa               34900   1400      0.00       0.00     Southeast Valley      1/4 mi. E of Power Rd. & Broadway Rd.
+Kleinman Park                      Mesa               30800   1220      0.00       0.00     Southeast Valley      1/2 mi. SE of Broadway Rd. and Alma School Rd.               
+Main St. @ Hawes Rd.               Mesa               34700   1590      0.00       0.00     Southeast Valley      0.2 mi. WNW of Main St. & Hawes Rd.
+Main St. @ Miller St.              Mesa               90800   1238      0.00       0.00     Southeast Valley      Main St. @ Miller St.
+McDowell Rd. @ Hawes Rd.           Mesa               33200   1750      0.00       0.00     Superstition          150 yds. NW of McDowell Rd. and Hawes Rd.
+Mesa Tower                         Mesa               32300   1215      0.00       0.00     Southeast Valley      1/4 mi. NW of McQueen Rd. and Baseline Rd.                   
+Mountain View Park                 Mesa               31200   1280      0.00       0.00     Southeast Valley      1/2 mi. N of University Dr. and Lindsay Rd.                  
+Powerline Floodway                 Mesa               37500   1385      0.00       0.00     Southeast Valley      Ellsworth Rd. @ Ray Rd. alignment                  
+Price Drain @ Loop 202             Mesa               31500   1195      0.00       0.00     Southeast Valley      Loop 202 at Loop 101                                         
+Recker Rd. @ McLellan Rd.          Mesa               34400   1450      0.00       0.00     Southeast Valley      0.1 mi. N of Recker Rd. & McLellan Rd.
+Reid Park                          Mesa               31100   1240      0.00       0.00     Southeast Valley      0.4 mi. W of Broadway Rd. & Gilbert Rd.
+Salt R. @ Val Vista Dr.            Mesa               39500   1260      0.00       0.00     Southeast Valley      Val Vista Dr. at Salt River
+Signal Butte FRS                   Mesa               79500   1710      0.00       0.00     Superstition          1/4 mi. NE of Signal Butte Rd. & Brown Rd.                 
+Siphon Draw @ Signal Butte Rd.     Mesa               37600   1465      0.00       0.00     Southeast Valley      0.1 mi. N of Signal Butte Rd. & Elliot Rd.
+Spookhill FRS @ Brown Rd.          Mesa               81500   1595      0.00       0.00     Superstition          Brown Rd. at the Hawes Rd. alignment
+Spookhill FRS @ McKellips Rd.      Mesa               79800   1590      0.00       0.00     Superstition          McKellips Road at Loop 202
+Spookhill FRS                      Mesa               74700   1580      0.00       0.00     Superstition          1/2 mi. N. of McDowell Rd. and Bush Highway                  
+Thunder Mountain                   Mesa               81000   2550      0.00       0.00     Superstition          1/2 mi. W. of Ellsworth Rd. and Indian School Rd.            
+University Dr. @ 62nd St. Basin    Mesa               34600   1405      0.00       0.00     Southeast Valley      0.2 mi. W of University Dr. & 64th St.
+US 60 @ Ellsworth Rd.              Mesa               35800   1470      0.00       0.00     Southeast Valley      0.2 mi. N of US 60 & Ellsworth Rd.
+Usery Mountain Park                Mesa               80200   1880      0.00       0.00     Superstition          1/3 mi. East of McDowell Rd. and Crismon Rd.                 
+Usery Park WS                      Mesa               80700   2115      0.00       0.00     Superstition          1/4 mi. WNW of the Crismon Rd. and Thomas Rd. alignments     
+Val Vista Dr. @ Pueblo Ave.        Mesa               32600   1270      0.00       0.00     Southeast Valley      0.5 mi. S of Broadway Rd. & Val Vista Dr.
+Vineyard FRS                       Mesa               37000   1580      0.00       0.00     Superstition          Alignments of Tomahawk Rd. and Williams Field Rd.            
+Ellsworth Channel DPC              Mesa               90100   1381      0.00       0.00     Southeast Valley      0.1 mi NW of S Ellsworth Rd @ E Pecos Rd
+Skyline Park                       Mesa               90200   1548      0.00       0.00     East Valley           Crimson Rd @ Coralbell Ave
+SEWRP                              Mesa               90300   1354      0.00       0.00     East Valley           0.4 mi. NW of Baseline Rd @ Kiowa Ave
+Holmes Park                        Mesa               90400   1284      0.00       0.00     East Valley           0.2 mi W of Holmes Ave. @ Greenfield Rd.
+Harmony Park                       Mesa               90500   1249      0.00       0.00     East Valley           0.3 mi WSW of Harmony Ave @ 32nd St.
+Broadway Rec Center                Mesa               90900   1235      0.00       0.00     East Valley           Broadway Rd @ Lewis
+Rancho Del Mar Park                Mesa               91000   1209      0.00       0.00     East Valley           1/4 mil NNW of Gualupe Rd @ Cherry
+Grand @ McClellan                  Mesa               91300   1216      0.00       0.00     East Valley           Grand @ McLellan
+Mobile                             Mobile             84700   1340      0.00       0.00     Rainbow Valley        2 miles SE of Mobile                                         
+Circle City                        Morristown         73500   1890      0.00       0.00     Northwest Valley      Along US 60/93, 14 mi. SE of Wickenburg                      
+Daggs Wash                         Morristown         48500   1680      0.00       0.00     None                  9.5 miles SW of Circle City	
+Morristown                         Morristown         45200   1980      0.00       0.00     Northwest Valley      US 60/93 at Morristown, 10 mi. SE of Wickenburg              
+Upper Trilby Wash                  Morristown         73800   3230      0.00       0.00     None                  On Trilby Wash, 2.2 miles N of Castle Hot Springs Road       
+San Domingo Wash                   Morristown         45300   2270      0.00       0.00     None                  4.1 mi. NNW of Morristown
+Cline Creek                        New River          66000   2170      0.00       0.00     New River/Cave Creek  4 miles SE of New River                                      
+Cooks Mesa                         New River          63000   4570      0.00       0.00     New River/Cave Creek  10 mi. E of Black Canyon City in the New River Mtns.         
+Fig Springs                        New River          65500   2390      0.00       0.00     New River/Cave Creek  3.5 miles east of New River                                  
+New River Fire                     New River          62700   2485      0.00       0.00     New River/Cave Creek  4 miles SE of New River                                      
+Skunk Cr. near New River           New River          66200   2185      0.00       0.00     New River/Cave Creek  Skunk Cr. At Fig Springs Rd., 3.5 mi. E of New River         
+Sunup Ranch                        New River          62300   1910      0.00       0.00     New River/Cave Creek  1 mi. SSW of New River                                       
+Upper Cline Creek                  New River          65300   2520      0.00       0.00     New River/Cave Creek  8 miles east of New River                                    
+Gila R. @ Olberg                   Olberg             42000   1305      0.00       0.00     None                  Gila River at Olberg Bridge, 3 mi. ENE of Sacaton            
+ACDC @ 36th St.                    Paradise Valley    10000   1250      0.00       0.00     South Phoenix         1/2 mi. North of 36th St. and Camelback Rd.                  
+Berneil Wash                       Paradise Valley    59200   1325      0.00       0.00     South Scottsdale      Just east of Doubletree and Invergordon                      
+Paradise Valley Country Club       Paradise Valley    9300    1360      0.00       0.00     South Scottsdale      1/2 mi. North of Lincoln Dr. and Tatum Blvd.                 
+Columbia Hill                      Peoria             15800   2370      0.00       0.00     None                  5 mi. NNW of Castle Hot Springs                              
+El Mirage Drain                    Peoria             14500   1265      0.00       0.00     Northwest Valley      1/2 mile S of Pinnacle Peak and El Mirage Roads
+Garfias Mountain                   Peoria             15500   2635      0.00       0.00     None                  6 mi. WSW of Castle Hot Springs                              
+Grand Ave. @ Peoria Ave.           Peoria             7500    1140      0.00       0.00     West Valley           Intersection of Grand Ave. and Peoria Ave.                   
+Lake Pleasant                      Peoria             15000   1820      0.00       0.00     None                  On New Waddell Dam at Lake Pleasant                          
+Lake Pleasant North                Peoria             15300   1750      0.00       0.00     None                  On Deer Island, north end of Lake Pleasant                   
+Morgan City Wash                   Peoria             15400   2560      0.00       0.00     None                  6.5 mi. N of SR74, northwest of Lake Pleasant
+New River @ Bell Rd.               Peoria             61700   1205      0.00       0.00     West Valley           Bell Rd. at 83rd Ave.                                        
+New River @ Loop 303               Peoria             62200   1495      0.00       0.00     Northwest Valley      Loop 303 1.3 mi. E of Lake Pleasant Pkwy.
+New River Dam                      Peoria             62000   1485      0.00       0.00     Northwest Valley      1/2 mi. NE of Jomax Rd. and 83rd Ave.                        
+Picacho Wash                       Peoria             74200   1975      0.00       0.00     Northwest Valley      SR 74 at Cotton Lane alignment
+Twin Buttes Wash                   Peoria             73200   1360      0.00       0.00     Northwest Valley      1/4 mi. SE of Vistancia Blvd. & El Mirage Rd.
+Vistancia Peak                     Peoria             73400   1780      0.00       0.00     Northwest Valley      5.3 miles SW of Lake Pleasant
+10th St. Wash Basin #1             Phoenix            11000   1320      0.00       0.00     North Phoenix         1/4 mi. SW of Peoria Ave. and Cave Creek Rd.
+ACDC @ 14th St.                    Phoenix            10500   1230      0.00       0.00     North Phoenix         1/2 mi. North of Glendale Ave. and 14th St.                  
+ACDC @ 43rd Ave.                   Phoenix            11300   1225      0.00       0.00     North Phoenix         1/4 mi. NW of Peoria Ave. and 43rd Ave.                      
+ACDC @ Cave Creek                  Phoenix            12000   1230      0.00       0.00     North Phoenix         Mountain View Rd. near 23rd Ave.                             
+Adobe Dam                          Phoenix            65000   1405      0.00       0.00     North Phoenix         1/4 mi. South of Deer Valley Rd. & 43rd Ave.                 
+Ahwatukee                          Phoenix            70200   1280      0.00       0.00     South Phoenix         1/4 mi. SSW of Warner Rd. and 44th St.     
+Buckeye Rd. @ 75th Ave.            Phoenix            6200    1025      0.00       0.00     West Valley           1/4 mi. N. of Buckeye Rd. and 75th Ave.
+CAP Reach11 Dike #2                Phoenix            58600   1540      0.00       0.00     North Phoenix         0.4 mi. NW of Bell Rd. & 64th St.
+Camelback Mountain East            Phoenix            57000   1535      0.00       0.00     South Phoenix         1/2 mi. NW of Chaparral Rd. & Invergordon Rd.
+Camelback Rd. @ 24th Ave.          Phoenix            6800    1140      0.00       0.00     South Phoenix         24th Ave. north of Camelback Road
+Cave Buttes Dam                    Phoenix            19500   1650      0.00       0.00     North Phoenix         1/4 mi. North of the Happy Valley Rd. & 16th St. alignments  
+Cave Creek @ Cactus Rd.            Phoenix            11800   1280      0.00       0.00     North Phoenix         1/4 mi. ENE of I-17 and Cactus Rd.                           
+Cave Creek Landfill                Phoenix            20200   1885      0.00       0.00     North Phoenix         1/2 mi. E of Carefree Hwy. and the 40th St. alignment        
+Cave Cr. near Union Hills Dr.      Phoenix            8000    1410      0.00       0.00     North Phoenix         On Cave Creek 1/4 mi. N of Union Hills Dr.
+Cesar Chavez Park                  Phoenix            66500   1060      0.00       0.00     South Phoenix         South end of park, 35th Ave. and Baseline Rd.                
+Deer Valley Airport                Phoenix            14200   1480      0.00       0.00     North Phoenix         1/2 mi. N of Deer Valley Rd. and 7th Ave.                    
+Desert Mtn. School                 Phoenix            18700   1810      0.00       0.00     New River/Cave Creek  1/4 mi. SE of Cloud Rd. and 7th Ave.
+Desert Hills Wash                  Phoenix            19300   1860      0.00       0.00     New River/Cave Creek  Joy Ranch Road at 16th Street                    
+Dobbins Rd. @ 19th Ave.            Phoenix            68900   1140      0.00       0.00     South Phoenix         1/4 mi. NW of Dobbins Rd. & 19th Ave.
+Dreamy Draw Dam                    Phoenix            9800    1405      0.00       0.00     North Phoenix         1/4 mi. SSW of the 24th St. and Dunlap Ave. alignments       
+Durango Complex                    Phoenix            3300    1050      0.00       0.00     South Phoenix         27th Ave. and Durango St.                                    
+East Fork Cave Cr. Basin #1        Phoenix            7800    1495      0.00       0.00     North Phoenix         1/4 mi. E of Beardsley Rd. and Cave Creek Rd.                
+East Fork Cave Cr. Basin #3        Phoenix            8700    1430      0.00       0.00     North Phoenix         1/2 mi. SW of Union Hills Dr. and Cave Creek Rd.             
+East Fork Cave Cr. Basin #4        Phoenix            8200    1465      0.00       0.00     North Phoenix         1/4 mi. S of Union Hills Dr. and 32nd St.                    
+East Fork Cave Cr. near 7th Ave.   Phoenix            8500    1340      0.00       0.00     North Phoenix         Near 7th Ave., 1/2 mile south of Greenway Rd.                
+Gateway Community College          Phoenix            3000    1130      0.00       0.00     South Phoenix         Near 40th Street and Van Buren                
+Grand Ave. @ 27th Ave.             Phoenix            3800    1100      0.00       0.00     South Phoenix         0.1 mi. NE of 27th Ave. & Thomas Rd.
+Greenway Rd. @ 32nd Ave.           Phoenix            12500   1295      0.00       0.00     North Phoenix         1/4 mi. East of Greenway Rd. and 32nd Ave.                   
+Guadalupe FRS                      Phoenix            68200   1285      0.00       0.00     South Phoenix         1/4 mi. SSW of Baseline Rd. and I-10                         
+IBW @ Shea Blvd.                   Phoenix            59500   1360      0.00       0.00     North Phoenix         Shea Blvd. At 52nd Street                                    
+IBW @ Sweetwater Ave.              Phoenix            58300   1395      0.00       0.00     North Phoenix         1/2 mi. E of 32nd St. and Sweetwater Ave.                    
+Jefferson St. @ 4th Ave.           Phoenix            3500    1080      0.00       0.00     South Phoenix         County Building, 4th Ave. and Jefferson St.                  
+Laveen Basin                       Phoenix            67800   1015      0.00       0.00     South Phoenix         Southern Ave. at 43rd Ave.
+Maryland Ave. @ 27th Ave.          Phoenix            6700    1170      0.00       0.00     South Phoenix         Near I-17, 1/2 mi. North of Bethany Home Rd.                 
+Maryvale Municipal Golf Course     Phoenix            6000    1110      0.00       0.00     South Phoenix         1/4 mi. N of Indian School Rd. and 59th Ave.                 
+Missouri Ave. @ 16th St.           Phoenix            7000    1160      0.00       0.00     South Phoenix         1/2 mi. North of Camelback Rd. and 16th St.                  
+New River Landfill                 Phoenix            62500   1800      0.00       0.00     New River/Cave Creek  4 mi. ENE of New Waddell Dam
+Old Crosscut Canal @ McDowell Rd.  Phoenix            4700    1175      0.00       0.00     South Phoenix         McDowell Rd. at Hohokam Expressway
+Papago Park                        Phoenix            4500    1210      0.00       0.00     South Phoenix         1/4 mi. N of McDowell Rd. and 52nd St.
+Paradise Lane @ 47th Ave.          Phoenix            13700   1270      0.00       0.00     North Phoenix         100 yds. E of 47th Ave. & Paradise Lane
+Pecos Basin                        Phoenix            70000   1185      0.00       0.00     South Phoenix         1/4 mi. SW of I-10 and Loop 202
+Perry Park                         Phoenix            4200    1155      0.00       0.00     South Phoenix         1/8 mi. S of Thomas Rd. and 32nd St.
+Phoenix Basin #3                   Phoenix            11500   1365      0.00       0.00     North Phoenix         Near Peoria Ave. and 7th Ave.
+Phoenix Basin #7                   Phoenix            13300   1415      0.00       0.00     North Phoenix         1/8 mile SW of Thunderbird and 7th Street
+Phoenix Dam #99                    Phoenix            12700   1455      0.00       0.00     North Phoenix         32nd Street and State Route 51
+Phoenix Dam 2B                     Phoenix            9900    1380      0.00       0.00     North Phoenix         SE of Thunderbird Rd. and 7th St.
+Phoenix West Park                  Phoenix            13500   1315      0.00       0.00     North Phoenix         Peoria Ave. at 7th Ave.
+Phoenix Zoo Dam #3                 Phoenix            4300    1245      0.00       0.00     South Phoenix         1/2 mi. NE of Galvin Pkwy. and Van Buren St.
+Prickly Pear Wash                  Phoenix            8100    1740      0.00       0.00     North Phoenix         0.8 mi. SW of Jomax Rd. & Tatum Blvd.
+Roeser Rd. @ 2nd St.               Phoenix            66700   1080      0.00       0.00     South Phoenix         1/2 mi. SSE of Broadway Rd. and Central Ave.
+Roeser Rd. @ 23rd Ave.             Phoenix            66800   1060      0.00       0.00     South Phoenix         23rd Ave. at Roeser Rd.
+Salt R. @ 40th St.                 Phoenix            67000   1120      0.00       0.00     South Phoenix         South side of Salt River near 40th St.
+Salt R. @ 67th Ave.                Phoenix            5500     980      0.00       0.00     South Phoenix         67th Avenue and Roeser St. N of Salt River
+Skunk Tank Wash                    Phoenix            64700   1865      0.00       0.00     New River/Cave Creek  0.2 miles S of 7th Ave. and Desert Hills Dr.
+Skunk Creek @ I-17                 Phoenix            65800   1475      0.00       0.00     North Phoenix         I-17 at Jomax Rd. alignment
+Skunk Cr. @ Carefree Hwy.          Phoenix            65700   1685      0.00       0.00     New River/Cave Creek  0.7 miles E of I-17 on Carefree Highway
+Sonoran Wash                       Phoenix            65900   1580      0.00       0.00     North Phoenix         1.75 mi. east of Loop 303 @ I-17
+South Mountain Fan                 Phoenix            70500   1270      0.00       0.00     South Phoenix         Alignments of Ray Rd. and 35th Ave. in S. Mtn. Park          
+South Mountain Park                Phoenix            68500   2255      0.00       0.00     South Phoenix         Alignments of Elliot Rd. and 24th St.                        
+South Mtn. Park HQ                 Phoenix            69000   1410      0.00       0.00     South Phoenix         In S. Mtn. Park, alignments of Elliot Rd. and 7th Ave.       
+Sweat Canyon                       Phoenix            62400   2075      0.00       0.00     North Phoenix         3 mi. W of New River
+Tatum Basin Inflow                 Phoenix            58000   1405      0.00       0.00     North Phoenix         Near Shea Blvd and 40th St.                                  
+Thomas Rd. @ 16th St.              Phoenix            4000    1120      0.00       0.00     South Phoenix         16 th St. at Thomas Rd.                                      
+Thomas Rd. @ 48th St.              Phoenix            5000    1205      0.00       0.00     South Phoenix         Thomas Rd. and 48th St.                                      
+Mt. Union                          Prescott           1000    7495      0.00       0.00     None                  Top of Mt. Union, 10 mi. SSE of Prescott                     
+Queen Cr. @ Rittenhouse Rd.        Queen Creek        37700   1450      0.00       0.00     Southeast Valley      1/3 mi. SE of Signal Butte Rd. & Chandler Hgts Rd.           
+Queen Cr. @ CAP                    Queen Creek        38000   1565      0.00       0.00     None                  Queen Creek at Central Arizona Project                       
+Queen Creek Rd.                    Queen Creek        36000   1410      0.00       0.00     Southeast Valley      1/4 mi. NE of Queen Creek Rd. and Ellsworth Rd.              
+Queen Creek Water Tank             Queen Creek        36200   1530      0.00       0.00     Southeast Valley      0.6 mi. S of Hunt Hwy. & Hawes Rd.
+Sonoqui Wash near Hawes Rd.        Queen Creek        36300   1380      0.00       0.00     Southeast Valley      0.3 mi. N of Hawes Rd. & Riggs Rd.
+Rittenhouse FRS                    Queen Creek        37200   1590      0.00       0.00     Superstition          Alignments of Goldfield Rd. and Germann Rd.                  
+Narrows Damsite                    Salome             28000   1660      0.00       0.00     None                  5 mi. SE of Salome off Salome Highway                        
+Salt River Landfill                SRPMIC             39700   1290      0.00       0.00     None                  1/4 mi. N of Gilbert Road at Beeline Highway                 
+Asher Hills                        Scottsdale         75500   1660      0.00       0.00     North Scottsdale      Off Asher Dr. in McDowell Mtn. Park                          
+Aztec Park                         Scottsdale         59700   1465      0.00       0.00     South Scottsdale      Near Thunderbird at Frank Lloyd Wright Blvd.                 
+Bartlett Lake                      Scottsdale         82700   1780      0.00       0.00     None                  Bartlett Lake Sheriff Sub-station                            
+Camp Creek                         Scottsdale         77000   3720      0.00       0.00     New River/Cave Creek  4 miles SE of Seven Springs Campground                       
+Camp Cr. @ Bartlett Lake Rd.       Scottsdale         77100   2670      0.00       0.00     North Scottsdale      2.6 mi. E of Cave Creek Rd. & Bartlett Lake Rd.
+Camp Creek Overlook                Scottsdale         76800   2350      0.00       0.00     None                  2.4 mi. NE of Lone Mtn. Rd. & 144th St.
+Carefree Ranch                     Scottsdale         21000   2960      0.00       0.00     North Scottsdale      3.5 mi. NE of Skyranch Airport                               
+El Dorado Park                     Scottsdale         56600   1220      0.00       0.00     South Scottsdale      0.3 mi. N of McDowell Rd. on Miller Rd.
+Fraesfield Mountain                Scottsdale         76200   2690      0.00       0.00     North Scottsdale      Alignments of Dixaleta Dr. and 128th St.            
+Granite Reef Wash                  Scottsdale         57500   1195      0.00       0.00     South Scottsdale      McDowell Rd. 200 yards east of Granite Reef Rd.            
+IBW @ Indian Bend Rd.              Scottsdale         56300   1280      0.00       0.00     South Scottsdale      On Indian Bend Wash just S. of Indian Bend Rd.               
+IBW @ Indian School Rd.            Scottsdale         56500   1240      0.00       0.00     South Scottsdale      Indian School Rd. at Hayden Road                             
+IBW @ Interceptor Channel          Scottsdale         56800   1280      0.00       0.00     South Scottsdale      1/4 mi. SW of Pima Rd. & Indian Bend Rd.                     
+IBW @ McKellips Rd.                Scottsdale         55700   1190      0.00       0.00     South Scottsdale      On Indian Bend Wash 1/4 mi. South of McKellips               
+Jomax Rd. @ 70th St.               Scottsdale         60800   2010      0.00       0.00     North Scottsdale      1/4 mi. W of Jomax Rd. & Scottsdale Rd.
+Lake Marguarite                    Scottsdale         59000   1325      0.00       0.00     South Scottsdale      1/4 mi. West of Doubletree and Hayden                        
+Lost Dog Wash                      Scottsdale         58800   1640      0.00       0.00     North Scottsdale      1/2 mi. NNW of Shea Blvd. and 128th St.                      
+McDowell Mtn. Park                 Scottsdale         75800   2120      0.00       0.00     North Scottsdale      In McDowell Mtn. Park, 4 mi. WSW of Rio Verde                
+Middle Rawhide Wash                Scottsdale         60900   2685      0.00       0.00     North Scottsdale      2.25 mi. east of Westland Rd. & Pima Rd.
+Old Paint Wash                     Scottsdale         76900   2820      0.00       0.00     North Scottsdale      1.25 mi. WNW of Carefree Hwy. & 136th St.
+Osborn Rd. @ 64th St.              Scottsdale         56000   1255      0.00       0.00     South Scottsdale      200 yards East of Osborn Rd. @ 64th St.                      
+Pima Rd. @ Union Hills Dr.         Scottsdale         60300   1625      0.00       0.00     North Scottsdale      1/4 mile West of Pima Rd. & Union Hills                      
+Pinnacle Peak Powerline            Scottsdale         60700   2465      0.00       0.00     North Scottsdale      1.7 mi. ENE of Pima Rd. & Dynamite Blvd.
+Pinnacle Peak Vista                Scottsdale         60500   1810      0.00       0.00     North Scottsdale      1/2 mile SSE of Deer Valley Rd. and Pima Rd.                 
+Ranch Gate Road                    Scottsdale         76300   2680      0.00       0.00     North Scottsdale      Ranch Gate Road @ 118th St.
+Rawhide Wash                       Scottsdale         61000   2225      0.00       0.00     North Scottsdale      1/3 mile west of Pima Rd. on Dynamite Blvd.                  
+Rawhide Wash @ Pinnacle Peak Rd.   Scottsdale         60600   1855      0.00       0.00     North Scottsdale      300 yds. E of Scottsdale Rd. on Pinnacle Peak Rd.
+Reata Pass Dam                     Scottsdale         61200   2600      0.00       0.00     North Scottsdale      1/2 mi. South of Dynamite Blvd. and 112th St.                
+Reata Pass Wash                    Scottsdale         60000   2175      0.00       0.00     North Scottsdale      1.6 miles east of Pima Rd. on Pinnacle Peak Road             
+Stagecoach Wash                    Scottsdale         20000   2555      0.00       0.00     North Scottsdale      On Pima Road about 1/2 mile south of Cave Creek Road         
+Thompson Peak                      Scottsdale         2500    3485      0.00       0.00     North Scottsdale      On Thompson Peak, 120th St. and Bell Rd. alignments          
+Thunderbird Academy                Scottsdale         57700   1430      0.00       0.00     South Scottsdale      1/4 mi. E of Thunderbird Rd. and Scottsdale Rd.            
+Greene Wash @ SR 84                Stanfield          64000   1310      0.00       0.00     None                  10 mi. West of SR 93 (Casa Grande) on SR 84                  
+Vekol Wash                         Stanfield          74500   1720      0.00       0.00     None                  Near I-8 bridge, between Gila Bend and Casa Grande             
+Sun City West                      Sun City West      87000   1240      0.00       0.00     Northwest Valley      1/4 mi. SE of the Beardsley Rd. & Litchfield Rd. alignments  
+Sycamore Cr. - Upper               Sunflower          82200   5825      ----       ----     None                  8 miles N of Sunflower
+Iron Dike                          Sunflower          83000   4510      0.00       0.00     None                  Off SR 87 near Sunflower
+Mt. Ord                            Sunflower          2000    7140      0.00       0.00     None                  Top of Mt. Ord, 4 mi. E of Sunflower                         
+CAP @ 163rd Ave.                   Surprise           73300   1540      0.00       0.00     Northwest Valley      163rd Ave. at Central AZ Project Canal
+Dysart Rd. @ Bell Rd.              Surprise           86700   1190      0.00       0.00     West Valley           Dysart Rd. at Bell Rd., Surprise                             
+Ford Canyon Wash                   Surprise           86200   1470      0.00       0.00     West Valley           Alignments of Cactus Road and Tuthill Road                   
+McMicken Dam @ Bell Rd.            Surprise           71500   1350      0.00       0.00     West Valley           Bell Rd. @ Perryville Rd. alignment
+McMicken Dam                       Surprise           71700   1350      0.00       0.00     Northwest Valley      1/4 mi SE of Deer Valley Rd and Cotton Lane                  
+McMicken Dam South                 Surprise           86500   1360      0.00       0.00     West Valley           1/2 mi. N of the alignments of Peoria and 195th Ave.         
+McMicken Floodway                  Surprise           71300   1335      0.00       0.00     Northwest Valley      1/2 mi. N of Grand Ave. and Deer Valley Rd.                  
+NW Regional Landfill               Surprise           73000   1410      0.00       0.00     Northwest Valley      Near 195th Ave. and Deer Valley Rd.                          
+Patton Road                        Surprise           72000   1620      0.00       0.00     Northwest Valley      7 mi. E of Grand Ave. on Patton Rd.                          
+Sun Valley Parkway North           Surprise           72100   1640      ----       ----     Northwest Valley      Sun Valley Parkway @ 243rd Ave.
+ASU South                          Tempe              67500   1165      0.00       0.00     Southeast Valley      1/4 mi. NNE of Broadway Rd. and Mill Ave.                    
+Salt R. @ Priest Dr.               Tempe              67300   1140      0.00       0.00     Southeast Valley      West side of Salt River bridge at Priest Drive               
+Big Horn Road                      Tonopah            26700   1815      0.00       0.00     None                  6.9 mi. NE of Salome Hwy. @ Eagle Eye Rd.
+Delaney Wash                       Tonopah            25000   1130      0.00       0.00     Palo Verde            3 miles SSW of Tonopah                                       
+Sugarloaf Mountain                 Tonopah            23000   2760      0.00       0.00     None                  16 mi. NW of Tonopah
+Winters Wash                       Tonopah            25500   1125      0.00       0.00     None                  1 mi. N of Indian School Rd. and 403rd Ave.                  
+Alamo Road                         Wenden             29400   2450      0.00       0.00     None                  8 mi. north of Wenden, La Paz Co.
+Centennial Wash @ Wenden           Wenden             27500   1880      ----       ----     None                  5.5 mi. NE of Salome on US 60 Bridge                         
+Antelope Creek                     Wickenburg         55200   2400      0.00       0.00     Wickenburg            6.5 miles NNW of Wickenburg
+Black Hill                         Wickenburg         50500   2420      0.00       0.00     Wickenburg            2.3 miles WSW of the US 93 / US 89 junction                  
+Black Mountain                     Wickenburg         51000   2680      0.00       0.00     Wickenburg            Along US 60, 9 mi. West of US 60 / US 93                     
+Blue Tank Wash                     Wickenburg         52700   2445      0.00       0.00     Wickenburg            Blue Tank Rd. @ Blue Tank Wash
+Box Wash                           Wickenburg         47500   2260      0.00       0.00     None                  9 miles southwest of Wickenburg
+Casandro Dam                       Wickenburg         53000   2165      0.00       0.00     Wickenburg            1.1 miles W of the US60 / US93 intersection                  
+Casandro Wash                      Wickenburg         52000   2240      0.00       0.00     Wickenburg            On US 60 bridge, 2 mi. West of US 60 / US 93                 
+Constellation Road                 Wickenburg         52300   2260      0.00       0.00     Wickenburg            1.4 mi. NE of the US 60 / US 93 junction                     
+Flying E Tank                      Wickenburg         51500   2540      0.00       0.00     Wickenburg            6.3 mi. WSW of the US 93 / US 89 junction at Wickenburg      
+Flying E Wash                      Wickenburg         51700   2305      0.00       0.00     Wickenburg            On US 60 bridge, 3 mi. West of US 60 / US 93                 
+Hartman Wash                       Wickenburg         51200   2460      0.00       0.00     Wickenburg            On US 60 bridge, 6.3 mi. West of US 60 / US 93               
+Hassayampa R. @ Box Canyon         Wickenburg         53500   2245      0.00       0.00     Wickenburg            6 mi. N of Wickenburg on Hassayampa River, Yavapai County    
+Hassayampa R. @ US 60              Wickenburg         45700   2030      0.00       0.00     Wickenburg            Hassayampa River at US 60/93 in Wickenburg                   
+Martinez Creek                     Wickenburg         49500   2410      0.00       0.00     Wickenburg            1 mi. East of the US 93 / US 89 junction                     
+O'Brien Gulch                      Wickenburg         53700   2960      0.00       0.00     None                  11 mi. NE of Wickenburg, Yavapai County                      
+Powder House Wash                  Wickenburg         52500   2130      0.00       0.00     Wickenburg            1/2 mi. NE of US 60 and Constellation Rd., Wickenburg        
+Sols Tank                          Wickenburg         50300   2595      0.00       0.00     Wickenburg            6.3 mi. WNW of the US 93 / US 89 junction                    
+Sols Trib. @ SR 93                 Wickenburg         50000   2580      0.00       0.00     Wickenburg            3.3 miles NW of the US 93 / US 89 junction                   
+Sols Wash @ SR 71                  Wickenburg         47700   2740      0.00       0.00     Wickenburg            1/2 mile SW of the SR 71 / US 93 intersection                
+Sols Wash near Matthie             Wickenburg         50800   2220      0.00       0.00     Wickenburg            Sols Wash at SPRR bridge, 2 mi. N. of Wickenburg Airport     
+Sunnycove FRS                      Wickenburg         46500   2150      0.00       0.00     Wickenburg            1 mi. SW of the US 60 / US 93 intersection in Wickenburg     
+Sunset FRS                         Wickenburg         46000   2140      0.00       0.00     Wickenburg            3/4 mi. WSW of the US 60 / US 93 intersection in Wickenburg  
+Twin Peaks                         Wickenburg         46800   2675      0.00       0.00     None                  6 miles southwest of Wickenburg
+Vulture Mine Road                  Wickenburg         47000   2380      0.00       0.00     Wickenburg            3 mi. SW of Wickenburg                                       
+Wickenburg Airport                 Wickenburg         52800   2385      0.00       0.00     Wickenburg            4.5 mi. West of the US 60 / US 93 junction                   
+Wilhoit                            Wilhoit            54500   5010      0.00       0.00     None                  10 mi. SSW of Prescott, Yavapai County                       
+Douglas Ranch Rd.                  Wittmann           72200   1765      0.00       0.00     Northwest Valley      3.5 mi. N of Patton Rd. and the Hassayampa River
+Wittmann                           Wittmann           72500   1655      0.00       0.00     Northwest Valley      US 60/93 at Witmann, 4 mi. SE of Circle City                 
+Stanton                            Yarnell            49000   3465      0.00       0.00     None                  6.5 mi. East of Congress, Yavapai County                     
+Upper Martinez Cr.                 Yarnell            55500   3270      0.00       0.00     None                  4.5 miles WSW of Yarnell                                     
+Yarnell Hill                       Yarnell            1600    5120      0.00       0.00     None                  1 mile ENE of Yarnell                                        

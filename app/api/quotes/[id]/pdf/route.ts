@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { generatePDF, getPDFFilename } from "@/lib/pdf/generate";
+import { generatePDF, getPDFFilename } from "@/lib/pdf/generate-pdf";
 import type {
   EditorLineItem,
   EditorQuote,

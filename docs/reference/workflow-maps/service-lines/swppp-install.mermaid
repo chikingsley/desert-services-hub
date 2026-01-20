@@ -1,0 +1,105 @@
+graph TD
+    A[1. Estimate Sent to GC] --> B{2. Did we win?}
+    
+    B -->|Yes| C[3. Contract received by Billing Estimating Operations]
+    B -->|No| Z[End]
+    
+    C --> D[4. Contract reviewed by Operations each director reviews for their work]
+    
+    D --> E{5. Which service line?}
+    
+    E -->|SWPPP/Temp Fence| F1[6a. Director adds to Need to Schedule backlog]
+    E -->|Water Truck/Site Cleaning| F2[6b. Director adds to Dawn WT SW Master Excel]
+    E -->|Street Sweeping| F3[6c. Director adds to paper schedule]
+    E -->|Portable Toilets| F4[6d. Director adds to CRO software]
+    E -->|Roll-off Dumpsters| F5[6e. Director adds to CRO software]
+    
+    F1 --> G1{7a. Install needed ASAP?}
+    G1 -->|No| H1[8a. Billing reviews contract and true up with estimate]
+    H1 --> I1{9a. Match?}
+    I1 -->|Yes| J1[11a. Director confirms schedule]
+    I1 -->|No| K1[10a. Clarify and Negotiate]
+    K1 --> I1
+    G1 -->|Yes| L1[8b. Email confirmation from Superintendent]
+    L1 --> M1[9b. Director confirms scope materials quantities]
+    M1 --> J1
+    M1 -.->|Later| N1[Billing reviews contract after work started]
+    
+    J1 --> O1[12. Director adds to Confirmed Schedule sheet]
+    O1 --> P1[13. Daniel Vargas checks Work Description Field nightly]
+    P1 --> Q1{14. Trackout install?}
+    Q1 -->|Yes| R1[15. Daniel calls Tanner Cook to schedule rock delivery]
+    R1 --> S1{16. Can Tanner deliver?}
+    S1 -->|Yes| T1[17a. Rock delivery scheduled]
+    S1 -->|No| U1[17b. Coordinate alternate delivery]
+    U1 --> J1
+    T1 --> V1
+    Q1 -->|No| V1
+    V1[18. Director calls to confirm day before install]
+    V1 --> W1[19. Night before Director emails and prints paper]
+    W1 --> X1[20. Crew leads pickup paper and call jobsite]
+    X1 --> Y1{21. Ready?}
+    Y1 -->|Yes| AA1{22. Trackout install?}
+    Y1 -->|No| AB1[23. Mark on paper push to next day]
+    AB1 -.-> V1
+    AA1 -->|Yes| AC1[24. Crew brings tractor]
+    AC1 --> AD1{25. Operator?}
+    AD1 --> AE1[26. Dalton Davis]
+    AD1 --> AF1[27. Daniel Vargas]
+    AE1 --> AG1
+    AF1 --> AG1
+    AA1 -->|No| AG1
+    AG1[28. Work performed on-site]
+    AG1 --> AH1[29. Crew lead marks what installed and how much]
+    AH1 --> AI1[30. Hand paper to Director end of day]
+    AI1 --> AJ1[31. Director enters completed into Excel]
+    AJ1 --> AK1[32. Billing creates invoice]
+    
+    F2 --> G2[7b. Daniel estimates and gets formal estimate from Jared or Dawn]
+    G2 --> H2[8c. Email confirmation with PO number time dates location]
+    H2 --> I2{9c. Contract or Call-in?}
+    I2 -->|Contract 60pct| J2[10b. Added to Dawn WT SW Master Excel schedule]
+    I2 -->|Call-in 40pct| K2[10c. Text message to group chat]
+    J2 --> L2[11b. Work executed drivers contact superintendent]
+    K2 --> L2
+    L2 --> M2[12b. Drivers send timesheets to Daniel]
+    M2 --> N2[13b. Daniel documents in phone Notes app]
+    N2 --> O2[14b. Daniel sends to Dawn 2-5 day lag]
+    O2 --> P2[15b. Kendra bills]
+    
+    F3 --> G3[7c. Director contacts drivers with paper schedule]
+    G3 --> H3[8d. Work executed]
+    H3 --> I3[9d. Director marks completed on paper]
+    I3 --> J3[10d. Takes photo of paper schedule]
+    J3 --> K3[11c. Sends photo to Dawn]
+    K3 --> L3[12c. Dawn adds to Excel]
+    L3 --> M3[13c. Billing creates invoice]
+    
+    F4 --> G4[7d. Work assigned in CRO to driver]
+    G4 --> H4[8e. Work executed]
+    H4 --> I4[9e. Completed in CRO app]
+    I4 --> J4[10e. Billed directly from CRO]
+    
+    F5 --> G5[7e. Work assigned in CRO to driver]
+    G5 --> H5[8f. Work executed]
+    H5 --> I5[9f. Completed in CRO app]
+    I5 --> J5[10f. Billed directly from CRO]
+    
+    style M1 fill:#fff3bf,stroke:#ffd43b
+    style N1 fill:#fff3bf,stroke:#ffd43b
+    style AJ1 fill:#fff3bf,stroke:#ffd43b
+    style P1 fill:#e7f5ff,stroke:#339af0
+    style R1 fill:#e7f5ff,stroke:#339af0
+    style T1 fill:#e7f5ff,stroke:#339af0
+    style AE1 fill:#d0ebff,stroke:#1971c2
+    style AF1 fill:#d0ebff,stroke:#1971c2
+    style N2 fill:#ffc9c9,stroke:#ff6b6b
+    style O2 fill:#ffc9c9,stroke:#ff6b6b
+    style K3 fill:#ffc9c9,stroke:#ff6b6b
+    style L3 fill:#ffc9c9,stroke:#ff6b6b
+    style F4 fill:#d3f9d8,stroke:#51cf66
+    style F5 fill:#d3f9d8,stroke:#51cf66
+    style I4 fill:#d3f9d8,stroke:#51cf66
+    style I5 fill:#d3f9d8,stroke:#51cf66
+    style J4 fill:#d3f9d8,stroke:#51cf66
+    style J5 fill:#d3f9d8,stroke:#51cf66

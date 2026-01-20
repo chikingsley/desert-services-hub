@@ -1,6 +1,9 @@
 {
   "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
-  "extends": ["ultracite/core", "ultracite/react"],
+  "extends": [
+    "ultracite/core",
+    "ultracite/react"
+  ],
   "linter": {
     "rules": {
       "nursery": {
@@ -9,7 +12,11 @@
           "level": "warn",
           "fix": "safe",
           "options": {
-            "functions": ["cn", "cva", "clsx"]
+            "functions": [
+              "cn",
+              "cva",
+              "clsx"
+            ]
           }
         }
       }
@@ -20,13 +27,19 @@
       "**/*",
       "!styles/globals.css",
       "!components/ui/**/*",
-      "!quoting-example/**/*"
+      "!quoting-example/**/*",
+      "!projects/inspections/pima_precip.html",
+      "!mcp/monday",
+      "!**/browser-profile-*",
+      "!**/data"
     ]
   },
   "overrides": [
     {
       // Allow barrel file for pdf-takeoff library entry point
-      "includes": ["lib/pdf-takeoff/index.ts"],
+      "includes": [
+        "lib/pdf-takeoff/index.ts"
+      ],
       "linter": {
         "rules": {
           "performance": {
@@ -39,7 +52,9 @@
       // PDF takeoff components are specialized drawing/annotation tools
       // where standard a11y interaction rules don't apply
       // Images use blob URLs/data URLs that can't use Next.js Image optimization
-      "includes": ["lib/pdf-takeoff/components/**/*"],
+      "includes": [
+        "lib/pdf-takeoff/components/**/*"
+      ],
       "linter": {
         "rules": {
           "a11y": {

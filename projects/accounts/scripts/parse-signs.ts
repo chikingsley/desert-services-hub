@@ -6,7 +6,7 @@
  */
 
 import { readdirSync, statSync, writeFileSync } from "fs";
-import { join, extname } from "path";
+import { join } from "path";
 
 const outputPath = process.argv[2] || "projects/accounts/data/raw/signs.csv";
 const downloadsPath = "/Users/chiejimofor/Downloads";
@@ -19,12 +19,17 @@ type SignRecord = {
   file_path: string;
 };
 
-function parseSignFilename(filename: string): { contractor: string; project: string } | null {
+function parseSignFilename(
+  filename: string
+): { contractor: string; project: string } | null {
   // Remove .pdf extension
   const name = filename.replace(/\.pdf$/i, "");
 
   // Remove duplicate suffixes like " (2)", " 2"
-  const cleaned = name.replace(/\s*\(\d+\)$/, "").replace(/\s+\d+$/, "").trim();
+  const cleaned = name
+    .replace(/\s*\(\d+\)$/, "")
+    .replace(/\s+\d+$/, "")
+    .trim();
 
   // Split on " - " (space-dash-space)
   const parts = cleaned.split(" - ");
@@ -83,7 +88,13 @@ for (const entry of entries) {
 }
 
 // Write CSV
-const headers = ["source", "contractor_name", "project_reference", "file_name", "file_path"];
+const headers = [
+  "source",
+  "contractor_name",
+  "project_reference",
+  "file_name",
+  "file_path",
+];
 
 function escapeCSV(val: string): string {
   if (val.includes(",") || val.includes('"') || val.includes("\n")) {
@@ -94,8 +105,8 @@ function escapeCSV(val: string): string {
 
 const csvLines = [
   headers.join(","),
-  ...records.map(r =>
-    headers.map(h => escapeCSV(r[h as keyof SignRecord] || "")).join(",")
+  ...records.map((r) =>
+    headers.map((h) => escapeCSV(r[h as keyof SignRecord] || "")).join(",")
   ),
 ];
 

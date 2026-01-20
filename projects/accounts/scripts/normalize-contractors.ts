@@ -17,7 +17,10 @@ function normalize(name: string): string {
   let n = name.toLowerCase().trim();
 
   // Remove common suffixes
-  n = n.replace(/,?\s*(inc\.?|llc\.?|corp\.?|co\.?|company|corporation|l\.l\.c\.?|incorporated)\.?$/gi, "");
+  n = n.replace(
+    /,?\s*(inc\.?|llc\.?|corp\.?|co\.?|company|corporation|l\.l\.c\.?|incorporated)\.?$/gi,
+    ""
+  );
 
   // Remove "construction", "builders", "contracting" etc (but keep as variant)
   // Actually, let's keep these for now to avoid over-normalizing
@@ -32,15 +35,17 @@ function normalize(name: string): string {
 }
 
 // Parse a CSV file and extract contractor names
-function extractContractors(filePath: string): { source: string; raw: string; normalized: string }[] {
+function extractContractors(
+  filePath: string
+): { source: string; raw: string; normalized: string }[] {
   const content = readFileSync(filePath, "utf-8");
   const lines = content.split("\n");
 
   if (lines.length < 2) return [];
 
   const headers = parseCSVLine(lines[0]);
-  const contractorIdx = headers.findIndex(h =>
-    h === "contractor_name" || h === "name" || h === "customer"
+  const contractorIdx = headers.findIndex(
+    (h) => h === "contractor_name" || h === "name" || h === "customer"
   );
 
   if (contractorIdx === -1) return [];
@@ -96,9 +101,10 @@ function parseCSVLine(line: string): string[] {
 console.log("=== CONTRACTOR NAME NORMALIZATION ===\n");
 
 // Collect all contractors from all CSVs
-const allContractors: { source: string; raw: string; normalized: string }[] = [];
+const allContractors: { source: string; raw: string; normalized: string }[] =
+  [];
 
-const csvFiles = readdirSync(RAW_DIR).filter(f => f.endsWith(".csv"));
+const csvFiles = readdirSync(RAW_DIR).filter((f) => f.endsWith(".csv"));
 console.log(`Found ${csvFiles.length} CSV files\n`);
 
 for (const file of csvFiles) {
@@ -111,7 +117,10 @@ for (const file of csvFiles) {
 console.log(`\nTotal contractor records: ${allContractors.length}`);
 
 // Group by normalized name
-const byNormalized = new Map<string, { raw: Set<string>; sources: Set<string>; count: number }>();
+const byNormalized = new Map<
+  string,
+  { raw: Set<string>; sources: Set<string>; count: number }
+>();
 
 for (const c of allContractors) {
   if (!c.normalized) continue;
@@ -133,7 +142,12 @@ for (const c of allContractors) {
 console.log(`Unique normalized names: ${byNormalized.size}`);
 
 // Find names with multiple spellings (interesting cases)
-const multipleSpellings: { normalized: string; variants: string[]; sources: string[]; count: number }[] = [];
+const multipleSpellings: {
+  normalized: string;
+  variants: string[];
+  sources: string[];
+  count: number;
+}[] = [];
 
 for (const [normalized, data] of byNormalized) {
   if (data.raw.size > 1) {
@@ -152,13 +166,24 @@ console.log(`\nNames with multiple spellings: ${multipleSpellings.length}`);
 console.log("\n=== TOP 20 NAMES WITH VARIANT SPELLINGS ===\n");
 
 for (const item of multipleSpellings.slice(0, 20)) {
-  console.log(`"${item.normalized}" (${item.count} records across ${item.sources.length} sources)`);
-  console.log(`  Variants: ${item.variants.slice(0, 5).join(" | ")}${item.variants.length > 5 ? ` ... +${item.variants.length - 5} more` : ""}`);
+  console.log(
+    `"${item.normalized}" (${item.count} records across ${item.sources.length} sources)`
+  );
+  console.log(
+    `  Variants: ${item.variants.slice(0, 5).join(" | ")}${item.variants.length > 5 ? ` ... +${item.variants.length - 5} more` : ""}`
+  );
   console.log("");
 }
 
 // Write canonical accounts CSV
-const canonicalAccounts: { id: number; normalized_name: string; display_name: string; variant_count: number; source_count: number; record_count: number }[] = [];
+const canonicalAccounts: {
+  id: number;
+  normalized_name: string;
+  display_name: string;
+  variant_count: number;
+  source_count: number;
+  record_count: number;
+}[] = [];
 
 let id = 1;
 for (const [normalized, data] of byNormalized) {
@@ -192,26 +217,41 @@ for (const [normalized, data] of byNormalized) {
 canonicalAccounts.sort((a, b) => b.record_count - a.record_count);
 
 // Reassign IDs after sort
-canonicalAccounts.forEach((a, i) => a.id = i + 1);
+canonicalAccounts.forEach((a, i) => (a.id = i + 1));
 
 // Write CSV
-const headers = ["id", "normalized_name", "display_name", "variant_count", "source_count", "record_count"];
+const headers = [
+  "id",
+  "normalized_name",
+  "display_name",
+  "variant_count",
+  "source_count",
+  "record_count",
+];
 const csvLines = [
   headers.join(","),
-  ...canonicalAccounts.map(a =>
-    headers.map(h => {
-      const val = String(a[h as keyof typeof a] || "");
-      return val.includes(",") || val.includes('"') ? `"${val.replace(/"/g, '""')}"` : val;
-    }).join(",")
+  ...canonicalAccounts.map((a) =>
+    headers
+      .map((h) => {
+        const val = String(a[h as keyof typeof a] || "");
+        return val.includes(",") || val.includes('"')
+          ? `"${val.replace(/"/g, '""')}"`
+          : val;
+      })
+      .join(",")
   ),
 ];
 
 writeFileSync(join(OUTPUT_DIR, "accounts.csv"), csvLines.join("\n"));
-console.log(`\nWrote ${canonicalAccounts.length} canonical accounts to ${OUTPUT_DIR}/accounts.csv`);
+console.log(
+  `\nWrote ${canonicalAccounts.length} canonical accounts to ${OUTPUT_DIR}/accounts.csv`
+);
 
 // Summary stats
 console.log("\n=== SUMMARY ===");
 console.log(`Total records processed: ${allContractors.length}`);
 console.log(`Unique contractors (normalized): ${byNormalized.size}`);
 console.log(`With multiple spellings: ${multipleSpellings.length}`);
-console.log(`Top contractor by records: "${canonicalAccounts[0]?.display_name}" (${canonicalAccounts[0]?.record_count} records)`);
+console.log(
+  `Top contractor by records: "${canonicalAccounts[0]?.display_name}" (${canonicalAccounts[0]?.record_count} records)`
+);

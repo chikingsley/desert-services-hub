@@ -1,18 +1,21 @@
 #!/usr/bin/env bun
+
 /**
  * Parse CP Invoices / Credit Memos sheets (special format with header on row 3)
  * Usage: bun run parse-cp-invoices.ts <excel_path> <sheet_name> <output_csv>
  */
 
-import * as XLSX from "xlsx";
 import { writeFileSync } from "fs";
+import * as XLSX from "xlsx";
 
 const excelPath = process.argv[2];
 const sheetName = process.argv[3];
 const outputPath = process.argv[4];
 
-if (!excelPath || !sheetName || !outputPath) {
-  console.error("Usage: bun run parse-cp-invoices.ts <excel_path> <sheet_name> <output_csv>");
+if (!(excelPath && sheetName && outputPath)) {
+  console.error(
+    "Usage: bun run parse-cp-invoices.ts <excel_path> <sheet_name> <output_csv>"
+  );
   process.exit(1);
 }
 
@@ -101,7 +104,17 @@ for (let i = headerRowIndex + 1; i < data.length; i++) {
 }
 
 // Write CSV
-const headers = ["source", "source_table", "contractor_name", "invoice_number", "amount", "date", "payment_num", "status", "notes"];
+const headers = [
+  "source",
+  "source_table",
+  "contractor_name",
+  "invoice_number",
+  "amount",
+  "date",
+  "payment_num",
+  "status",
+  "notes",
+];
 
 function escapeCSV(val: string): string {
   if (val.includes(",") || val.includes('"') || val.includes("\n")) {
@@ -112,7 +125,9 @@ function escapeCSV(val: string): string {
 
 const csvLines = [
   headers.join(","),
-  ...records.map(r => headers.map(h => escapeCSV(r[h as keyof CPRecord] || "")).join(",")),
+  ...records.map((r) =>
+    headers.map((h) => escapeCSV(r[h as keyof CPRecord] || "")).join(",")
+  ),
 ];
 
 writeFileSync(outputPath, csvLines.join("\n"));

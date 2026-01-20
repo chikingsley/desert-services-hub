@@ -1,11 +1,10 @@
 // PDF generation for Desert Services estimates
-// Uses pdfmake for server-side PDF generation
+// Uses pdfmake Node.js API for server-side PDF generation
 
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { PDFDocument } from "pdf-lib";
-import pdfMake from "pdfmake/build/pdfmake";
-import pdfFonts from "pdfmake/build/vfs_fonts";
+import pdfmake from "pdfmake";
 import type {
   Content,
   TableCell,
@@ -14,12 +13,16 @@ import type {
 import { findItem } from "./catalog";
 import type { LineItem, Quote, QuoteSection } from "./types";
 
-// Initialize pdfmake fonts
-const vfs =
-  (pdfFonts as unknown as { pdfMake?: { vfs?: unknown } }).pdfMake?.vfs ??
-  (pdfFonts as unknown as { vfs?: unknown }).vfs ??
-  pdfFonts;
-pdfMake.vfs = vfs as typeof pdfMake.vfs;
+// Initialize pdfmake Node.js API with standard PDF fonts
+// Using Times (Times New Roman) family
+pdfmake.setFonts({
+  Roboto: {
+    normal: "Times-Roman",
+    bold: "Times-Bold",
+    italics: "Times-Italic",
+    bolditalics: "Times-BoldItalic",
+  },
+});
 
 // Get logo as base64
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -68,13 +71,16 @@ const noPaddingLayout = {
   paddingBottom: () => 0,
 };
 
-type GroupedItems = { section: QuoteSection | null; items: LineItem[] };
+interface GroupedItems {
+  section: QuoteSection | null;
+  items: LineItem[];
+}
 
 // Fixed widths for consistent column alignment across section tables
 const TABLE_WIDTHS = ["auto", 95, "*", 35, 45, 50, 60];
 
 // Back page service categories with catalog code mappings
-type BackPageService = {
+interface BackPageService {
   title: string;
   items: Array<{
     label: string;
@@ -83,7 +89,7 @@ type BackPageService = {
     priceSuffix?: string; // "/hr", "/mo", etc.
   }>;
   note?: string;
-};
+}
 
 const BACK_PAGE_SERVICES: BackPageService[] = [
   {
@@ -619,10 +625,10 @@ function buildSimpleLineItems(lineItems: LineItem[]): Content[] {
   return [table];
 }
 
-export type GeneratePDFOptions = {
+export interface GeneratePDFOptions {
   includeBackPage?: boolean;
   style?: "simple" | "sectioned"; // simple = flat line items, sectioned = grouped with subtotals (default)
-};
+}
 
 function buildDocDefinition(
   quote: Quote,
@@ -971,7 +977,7 @@ export async function generateBackPagePDF(): Promise<Buffer> {
   };
 
   return new Promise((resolve, _reject) => {
-    const pdfDoc = pdfMake.createPdf(docDefinition);
+    const pdfDoc = pdfmake.createPdf(docDefinition);
     pdfDoc.getBuffer((buffer: Buffer) => {
       resolve(buffer);
     });
@@ -1002,7 +1008,7 @@ async function generateEstimatePDF(
   const docDefinition = buildDocDefinition(quote, logoBase64, options);
 
   return new Promise((resolve, _reject) => {
-    const pdfDoc = pdfMake.createPdf(docDefinition);
+    const pdfDoc = pdfmake.createPdf(docDefinition);
     pdfDoc.getBuffer((buffer: Buffer) => {
       resolve(buffer);
     });

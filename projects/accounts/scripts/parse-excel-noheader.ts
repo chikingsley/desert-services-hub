@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+
 /**
  * Parse Excel sheets that have NO header row (data starts at row 1)
  * Usage: bun run parse-excel-noheader.ts <excel_path> <sheet_name> <output_csv> <column_mapping_json>
@@ -7,16 +8,18 @@
  * {"0":"inspector","1":"contractor_name","2":"project_name","7":"building_number","8":"street_name","9":"city","10":"state","11":"zip","14":"contact_phone","15":"contact_name","16":"contact_email","17":"azcon_number"}
  */
 
-import * as XLSX from "xlsx";
 import { writeFileSync } from "fs";
+import * as XLSX from "xlsx";
 
 const excelPath = process.argv[2];
 const sheetName = process.argv[3];
 const outputPath = process.argv[4];
 const columnMappingJson = process.argv[5];
 
-if (!excelPath || !sheetName || !outputPath || !columnMappingJson) {
-  console.error("Usage: bun run parse-excel-noheader.ts <excel_path> <sheet_name> <output_csv> <column_mapping_json>");
+if (!(excelPath && sheetName && outputPath && columnMappingJson)) {
+  console.error(
+    "Usage: bun run parse-excel-noheader.ts <excel_path> <sheet_name> <output_csv> <column_mapping_json>"
+  );
   process.exit(1);
 }
 
@@ -52,7 +55,9 @@ console.log(`Parsing ${sheetName} from ${excelPath} (no header mode)`);
 const wb = XLSX.readFile(excelPath);
 
 if (!wb.SheetNames.includes(sheetName)) {
-  console.error(`Sheet "${sheetName}" not found. Available: ${wb.SheetNames.join(", ")}`);
+  console.error(
+    `Sheet "${sheetName}" not found. Available: ${wb.SheetNames.join(", ")}`
+  );
   process.exit(1);
 }
 
@@ -88,7 +93,7 @@ for (const row of data) {
 
   // Apply column mapping
   for (const [colIndex, fieldName] of Object.entries(columnMapping)) {
-    const idx = parseInt(colIndex);
+    const idx = Number.parseInt(colIndex);
     const val = cleanValue(row[idx]);
 
     if (fieldName === "building_number" || fieldName === "street_name") {
@@ -110,9 +115,22 @@ for (const row of data) {
 
 // Write CSV
 const headers = [
-  "source", "source_table", "contractor_name", "project_name", "job_id",
-  "azcon_number", "swppp_number", "contact_name", "contact_phone", "contact_email",
-  "address", "city", "state", "zip", "inspector", "raw_json",
+  "source",
+  "source_table",
+  "contractor_name",
+  "project_name",
+  "job_id",
+  "azcon_number",
+  "swppp_number",
+  "contact_name",
+  "contact_phone",
+  "contact_email",
+  "address",
+  "city",
+  "state",
+  "zip",
+  "inspector",
+  "raw_json",
 ];
 
 function escapeCSV(val: string): string {
@@ -124,7 +142,9 @@ function escapeCSV(val: string): string {
 
 const csvLines = [
   headers.join(","),
-  ...records.map(r => headers.map(h => escapeCSV(r[h as keyof ExcelRecord] || "")).join(",")),
+  ...records.map((r) =>
+    headers.map((h) => escapeCSV(r[h as keyof ExcelRecord] || "")).join(",")
+  ),
 ];
 
 writeFileSync(outputPath, csvLines.join("\n"));

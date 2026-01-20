@@ -6,9 +6,7 @@
     "desert-quoting"
   ],
   "permissions": {
-    "allow": [
-      "Bash(ls:*)"
-    ]
+    "allow": ["Bash(ls:*)"]
   },
   "hooks": {
     "PostToolUse": [

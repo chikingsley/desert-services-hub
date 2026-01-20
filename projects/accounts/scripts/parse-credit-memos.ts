@@ -1,14 +1,17 @@
 #!/usr/bin/env bun
+
 /**
  * Parse Credit Memos sheet
  * Usage: bun run parse-credit-memos.ts <output_csv>
  */
 
-import * as XLSX from "xlsx";
 import { writeFileSync } from "fs";
+import * as XLSX from "xlsx";
 
-const excelPath = "/Users/chiejimofor/Downloads/Customer Rental Master 3-7-18.xlsx";
-const outputPath = process.argv[2] || "projects/accounts/data/raw/excel_credit_memos.csv";
+const excelPath =
+  "/Users/chiejimofor/Downloads/Customer Rental Master 3-7-18.xlsx";
+const outputPath =
+  process.argv[2] || "projects/accounts/data/raw/excel_credit_memos.csv";
 
 type CMRecord = {
   source: string;
@@ -52,7 +55,14 @@ for (let i = 3; i < data.length; i++) {
   });
 }
 
-const headers = ["source", "source_table", "contractor_name", "credit_memo_number", "amount", "date"];
+const headers = [
+  "source",
+  "source_table",
+  "contractor_name",
+  "credit_memo_number",
+  "amount",
+  "date",
+];
 
 function escapeCSV(val: string): string {
   if (val.includes(",") || val.includes('"') || val.includes("\n")) {
@@ -63,7 +73,9 @@ function escapeCSV(val: string): string {
 
 const csvLines = [
   headers.join(","),
-  ...records.map(r => headers.map(h => escapeCSV(r[h as keyof CMRecord] || "")).join(",")),
+  ...records.map((r) =>
+    headers.map((h) => escapeCSV(r[h as keyof CMRecord] || "")).join(",")
+  ),
 ];
 
 writeFileSync(outputPath, csvLines.join("\n"));

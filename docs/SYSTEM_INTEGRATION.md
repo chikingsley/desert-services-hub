@@ -10,7 +10,7 @@ The system is split into two main components:
 
 ## Component: Desert Services Hub
 *   **Location**: `desert-services-hub/`
-*   **Stack**: Next.js 16 (App Router), React 19, Tailwind, SQLite (`better-sqlite3`).
+*   **Stack**: Next.js 16 (App Router), React 19, Tailwind, SQLite (`bun:sqlite`).
 *   **Role**:
     *   **Source of Truth**: Manages the production database (`data/desert-services.db`).
     *   **API Provider**: Exposes REST endpoints (e.g., `/api/quotes`) for external tools.

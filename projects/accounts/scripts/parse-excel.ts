@@ -1,18 +1,21 @@
 #!/usr/bin/env bun
+
 /**
  * Parse Excel sheets and extract contractor/project data
  * Usage: bun run parse-excel.ts <excel_path> <sheet_name> <output_csv>
  */
 
-import * as XLSX from "xlsx";
 import { writeFileSync } from "fs";
+import * as XLSX from "xlsx";
 
 const excelPath = process.argv[2];
 const sheetName = process.argv[3];
 const outputPath = process.argv[4];
 
-if (!excelPath || !sheetName || !outputPath) {
-  console.error("Usage: bun run parse-excel.ts <excel_path> <sheet_name> <output_csv>");
+if (!(excelPath && sheetName && outputPath)) {
+  console.error(
+    "Usage: bun run parse-excel.ts <excel_path> <sheet_name> <output_csv>"
+  );
   process.exit(1);
 }
 
@@ -39,7 +42,10 @@ function cleanValue(val: unknown): string {
   return String(val).trim();
 }
 
-function mapRow(row: Record<string, unknown>, sourceTable: string): ExcelRecord | null {
+function mapRow(
+  row: Record<string, unknown>,
+  sourceTable: string
+): ExcelRecord | null {
   const record: ExcelRecord = {
     source: "excel",
     source_table: sourceTable,
@@ -139,7 +145,9 @@ console.log(`Parsing ${sheetName} from ${excelPath}`);
 const wb = XLSX.readFile(excelPath);
 
 if (!wb.SheetNames.includes(sheetName)) {
-  console.error(`Sheet "${sheetName}" not found. Available: ${wb.SheetNames.join(", ")}`);
+  console.error(
+    `Sheet "${sheetName}" not found. Available: ${wb.SheetNames.join(", ")}`
+  );
   process.exit(1);
 }
 
@@ -184,7 +192,9 @@ function escapeCSV(val: string): string {
 
 const csvLines = [
   headers.join(","),
-  ...records.map((r) => headers.map((h) => escapeCSV(r[h as keyof ExcelRecord] || "")).join(",")),
+  ...records.map((r) =>
+    headers.map((h) => escapeCSV(r[h as keyof ExcelRecord] || "")).join(",")
+  ),
 ];
 
 writeFileSync(outputPath, csvLines.join("\n"));

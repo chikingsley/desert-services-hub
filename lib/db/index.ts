@@ -1,9 +1,18 @@
 import { Database } from "bun:sqlite";
-import { join } from "node:path";
+import { existsSync, mkdirSync } from "node:fs";
+import { dirname, join } from "node:path";
 
 // Initialize SQLite database using Bun's native driver
-// Database file is co-located with this module
-const dbPath = join(import.meta.dir, "app.db");
+// Use DATABASE_PATH env var for Docker, otherwise co-locate with this module
+const defaultPath = join(import.meta.dir, "app.db");
+const dbPath = process.env.DATABASE_PATH || defaultPath;
+
+// Ensure the directory exists
+const dbDir = dirname(dbPath);
+if (!existsSync(dbDir)) {
+  mkdirSync(dbDir, { recursive: true });
+}
+
 const db = new Database(dbPath, { create: true });
 
 // Enable WAL mode for better performance

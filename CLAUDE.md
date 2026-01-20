@@ -11,7 +11,7 @@ This is the unified repository for the Desert Services ecosystem, combining the 
 - **Runtime**: Bun 
 - **Framework**: Next.js (App Router)
 - **Styling**: Tailwind CSS
-- **Database**: SQLite (`better-sqlite3` for app, `bun:sqlite` for scripts)
+- **Database**: SQLite via `bun:sqlite` (Bun's built-in driver)
 - **Linting/Formatting**: Biome (via Ultracite)
 
 ## Tooling & Runtime

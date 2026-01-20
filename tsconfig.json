@@ -1,10 +1,6 @@
 {
   "compilerOptions": {
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
+    "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "target": "ESNext",
     "module": "Preserve",
@@ -26,28 +22,23 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "incremental": true,
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ],
+    "baseUrl": ".",
     "paths": {
-      "@/*": [
-        "./*"
-      ]
+      "@/*": ["./*"],
+      "@/components/*": ["./src/frontend/components/*"],
+      "@/pages/*": ["./src/frontend/pages/*"],
+      "@/lib/*": ["./lib/*"],
+      "@/api/*": ["./src/api/*"]
     }
   },
-  "include": [
-    "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
-    ".next/types/**/*.ts",
-    ".next/dev/types/**/*.ts"
-  ],
+  "include": ["**/*.ts", "**/*.tsx"],
   "exclude": [
     "node_modules",
-    "quoting-example",
-    "archive",
-    "projects"
+    "projects",
+    "docs/_archive",
+    "app",
+    "bun-init",
+    "bun-example",
+    "components"
   ]
 }

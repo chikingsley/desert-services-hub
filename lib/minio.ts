@@ -39,14 +39,18 @@ export async function initializeBuckets(): Promise<void> {
 
 /**
  * Upload a file to MinIO
+ * Accepts Buffer or Uint8Array (converts to Buffer at boundary for minio client)
  */
 export async function uploadFile(
   bucket: string,
   objectName: string,
-  buffer: Buffer,
+  data: Buffer | Uint8Array,
   contentType = "application/octet-stream"
 ): Promise<string> {
   await ensureBucket(bucket);
+
+  // minio client requires Buffer - Buffer.from(Uint8Array) creates a view (no copy)
+  const buffer = Buffer.isBuffer(data) ? data : Buffer.from(data);
 
   await minioClient.putObject(bucket, objectName, buffer, buffer.length, {
     "Content-Type": contentType,
@@ -57,54 +61,67 @@ export async function uploadFile(
 
 /**
  * Upload a PDF file for a takeoff
+ * Accepts Buffer or Uint8Array
  */
 export async function uploadTakeoffPdf(
   takeoffId: string,
-  buffer: Buffer,
+  data: Buffer | Uint8Array,
   filename: string
 ): Promise<{ url: string; size: number }> {
   const objectName = `${takeoffId}/${filename}`;
   const url = await uploadFile(
     BUCKETS.TAKEOFFS,
     objectName,
-    buffer,
+    data,
     "application/pdf"
   );
 
-  return { url, size: buffer.length };
+  return { url, size: data.byteLength };
 }
 
 /**
  * Upload a thumbnail image
+ * Accepts Buffer or Uint8Array
  */
 export function uploadThumbnail(
   takeoffId: string,
   annotationId: string,
-  buffer: Buffer
+  data: Buffer | Uint8Array
 ): Promise<string> {
   const objectName = `${takeoffId}/${annotationId}.png`;
-  return uploadFile(BUCKETS.THUMBNAILS, objectName, buffer, "image/png");
+  return uploadFile(BUCKETS.THUMBNAILS, objectName, data, "image/png");
 }
 
 /**
- * Get a file as a buffer
+ * Get a file as Uint8Array
+ * Returns web-standard Uint8Array instead of Node.js Buffer
  */
 export async function getFile(
   bucket: string,
   objectName: string
-): Promise<Buffer> {
+): Promise<Uint8Array> {
   const stream = await minioClient.getObject(bucket, objectName);
-  const chunks: Buffer[] = [];
+  const chunks: Uint8Array[] = [];
 
   return new Promise((resolve, reject) => {
-    stream.on("data", (chunk: Buffer) => chunks.push(chunk));
-    stream.on("end", () => resolve(Buffer.concat(chunks)));
+    stream.on("data", (chunk: Buffer) => chunks.push(new Uint8Array(chunk)));
+    stream.on("end", () => {
+      // Concatenate all chunks into a single Uint8Array
+      const totalLength = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
+      const result = new Uint8Array(totalLength);
+      let offset = 0;
+      for (const chunk of chunks) {
+        result.set(chunk, offset);
+        offset += chunk.length;
+      }
+      resolve(result);
+    });
     stream.on("error", reject);
   });
 }
 
 /**
- * Get a file stream (for large files)
+ * Get a file as Node.js ReadableStream (for legacy compatibility)
  */
 export function getFileStream(
   bucket: string,
@@ -114,12 +131,40 @@ export function getFileStream(
 }
 
 /**
- * Get a takeoff PDF
+ * Get a file as Web ReadableStream (for modern Response API)
+ * Preferred over getFileStream for HTTP responses
+ */
+export async function getFileWebStream(
+  bucket: string,
+  objectName: string
+): Promise<ReadableStream<Uint8Array>> {
+  const nodeStream = await minioClient.getObject(bucket, objectName);
+
+  return new ReadableStream({
+    start(controller) {
+      nodeStream.on("data", (chunk: Buffer) => {
+        controller.enqueue(new Uint8Array(chunk));
+      });
+      nodeStream.on("end", () => {
+        controller.close();
+      });
+      nodeStream.on("error", (err: Error) => {
+        controller.error(err);
+      });
+    },
+    cancel() {
+      nodeStream.destroy();
+    },
+  });
+}
+
+/**
+ * Get a takeoff PDF as Uint8Array
  */
 export function getTakeoffPdf(
   takeoffId: string,
   filename = "original.pdf"
-): Promise<Buffer> {
+): Promise<Uint8Array> {
   return getFile(BUCKETS.TAKEOFFS, `${takeoffId}/${filename}`);
 }
 

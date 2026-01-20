@@ -299,7 +299,7 @@ for (const [canonicalName, data] of canonical) {
 
 interestingMerges.sort((a, b) => b.count - a.count);
 
-console.log(`\n=== TOP 30 MERGED GROUPS ===\n`);
+console.log("\n=== TOP 30 MERGED GROUPS ===\n");
 
 for (const item of interestingMerges.slice(0, 30)) {
   console.log(`"${item.canonical}" (${item.count} records)`);

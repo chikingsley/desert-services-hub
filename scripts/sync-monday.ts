@@ -1,5 +1,5 @@
-import { BOARD_IDS } from "../services/monday/types";
 import { db } from "../lib/db";
+import { BOARD_IDS } from "../services/monday/types";
 
 /**
  * Monday.com Sync Script

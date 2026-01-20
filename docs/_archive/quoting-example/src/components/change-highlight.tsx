@@ -37,7 +37,7 @@ export function ChangeHighlight({
     <div className={`relative rounded ${changeStyles[changeType]}`}>
       {/* Change indicator dot */}
       <div
-        className={`-top-1 -right-1 absolute h-2 w-2 rounded-full ${indicatorStyles[changeType]}`}
+        className={`absolute -top-1 -right-1 h-2 w-2 rounded-full ${indicatorStyles[changeType]}`}
       />
 
       {/* Content */}
@@ -49,7 +49,7 @@ export function ChangeHighlight({
       {changeType === "modified" &&
         showPreviousValue &&
         previousValue !== undefined && (
-          <div className="-bottom-5 absolute left-0 whitespace-nowrap text-[10px] text-muted-foreground">
+          <div className="absolute -bottom-5 left-0 whitespace-nowrap text-[10px] text-muted-foreground">
             was: {formatValue(previousValue)}
           </div>
         )}

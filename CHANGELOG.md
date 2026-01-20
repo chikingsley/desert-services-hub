@@ -71,7 +71,7 @@ All notable changes to Desert Services Hub are documented here.
 ### Technical Details
 
 - Build: Next.js 14+ with App Router
-- Database: SQLite via better-sqlite3
+- Database: SQLite via `bun:sqlite`
 - UI: shadcn/ui + Tailwind CSS
 - Linting: Biome with ultracite presets
 

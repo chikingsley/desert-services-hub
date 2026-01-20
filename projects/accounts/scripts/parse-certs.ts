@@ -5,12 +5,12 @@
  */
 
 import { readdirSync, statSync, writeFileSync } from "fs";
-import { join, basename, dirname } from "path";
+import { join } from "path";
 
 const folderPath = process.argv[2];
 const outputPath = process.argv[3];
 
-if (!folderPath || !outputPath) {
+if (!(folderPath && outputPath)) {
   console.error("Usage: bun run parse-certs.ts <folder_path> <output_csv>");
   process.exit(1);
 }
@@ -25,7 +25,9 @@ type CertRecord = {
   file_path: string;
 };
 
-function parseCertFilename(filename: string): { contractor: string; project: string } | null {
+function parseCertFilename(
+  filename: string
+): { contractor: string; project: string } | null {
   // Remove .pdf extension
   const name = filename.replace(/\.pdf$/i, "");
 
@@ -57,7 +59,8 @@ function parseCertFilename(filename: string): { contractor: string; project: str
 function getFolderType(path: string): string {
   const lowerPath = path.toLowerCase();
   if (lowerPath.includes("/wos/")) return "WOS";
-  if (lowerPath.includes("/non wos/") || lowerPath.includes("/non_wos/")) return "NON_WOS";
+  if (lowerPath.includes("/non wos/") || lowerPath.includes("/non_wos/"))
+    return "NON_WOS";
   if (lowerPath.includes("expired")) return "EXPIRED";
   return "UNKNOWN";
 }
@@ -102,20 +105,30 @@ console.log(`Parsing certificates from: ${folderPath}`);
 const records = walkDir(folderPath);
 
 // Write CSV
-const headers = ["source", "folder_type", "contractor_name", "project_name", "has_wos", "file_year", "file_path"];
+const headers = [
+  "source",
+  "folder_type",
+  "contractor_name",
+  "project_name",
+  "has_wos",
+  "file_year",
+  "file_path",
+];
 const csvLines = [
   headers.join(","),
-  ...records.map(r =>
-    headers.map(h => {
-      const val = r[h as keyof CertRecord];
-      // Escape commas and quotes in values
-      const str = String(val ?? "");
-      if (str.includes(",") || str.includes('"') || str.includes("\n")) {
-        return `"${str.replace(/"/g, '""')}"`;
-      }
-      return str;
-    }).join(",")
-  )
+  ...records.map((r) =>
+    headers
+      .map((h) => {
+        const val = r[h as keyof CertRecord];
+        // Escape commas and quotes in values
+        const str = String(val ?? "");
+        if (str.includes(",") || str.includes('"') || str.includes("\n")) {
+          return `"${str.replace(/"/g, '""')}"`;
+        }
+        return str;
+      })
+      .join(",")
+  ),
 ];
 
 writeFileSync(outputPath, csvLines.join("\n"));

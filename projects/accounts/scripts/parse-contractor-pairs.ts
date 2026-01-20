@@ -1,19 +1,22 @@
 #!/usr/bin/env bun
+
 /**
  * Parse sheets with contractor/project pairs in columns (no headers)
  * Columns: 0=Contractor1, 1=Project1, 2=null, 3=Contractor2, 4=Project2
  * Usage: bun run parse-contractor-pairs.ts <excel_path> <sheet_name> <output_csv>
  */
 
-import * as XLSX from "xlsx";
 import { writeFileSync } from "fs";
+import * as XLSX from "xlsx";
 
 const excelPath = process.argv[2];
 const sheetName = process.argv[3];
 const outputPath = process.argv[4];
 
-if (!excelPath || !sheetName || !outputPath) {
-  console.error("Usage: bun run parse-contractor-pairs.ts <excel_path> <sheet_name> <output_csv>");
+if (!(excelPath && sheetName && outputPath)) {
+  console.error(
+    "Usage: bun run parse-contractor-pairs.ts <excel_path> <sheet_name> <output_csv>"
+  );
   process.exit(1);
 }
 
@@ -78,7 +81,9 @@ function escapeCSV(val: string): string {
 
 const csvLines = [
   headers.join(","),
-  ...records.map(r => headers.map(h => escapeCSV(r[h as keyof PairRecord] || "")).join(",")),
+  ...records.map((r) =>
+    headers.map((h) => escapeCSV(r[h as keyof PairRecord] || "")).join(",")
+  ),
 ];
 
 writeFileSync(outputPath, csvLines.join("\n"));

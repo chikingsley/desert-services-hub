@@ -123,7 +123,11 @@ describe("MinIO/AIStor Storage", () => {
   describe("Presigned URLs", () => {
     test("should generate presigned URL", async () => {
       // Upload fresh for this test
-      await uploadTakeoffPdf(TEST_TAKEOFF_ID, TEST_PDF_CONTENT, "presigned-test.pdf");
+      await uploadTakeoffPdf(
+        TEST_TAKEOFF_ID,
+        TEST_PDF_CONTENT,
+        "presigned-test.pdf"
+      );
 
       const url = await getPresignedUrl(
         BUCKETS.TAKEOFFS,

@@ -91,7 +91,12 @@ function parseEstimateData(text: string, fileName: string): Extractions {
     isClean: false,
   };
 
-  data.isClean = !!(data.estimateNumber && data.date && data.jobName && data.totalAmount);
+  data.isClean = !!(
+    data.estimateNumber &&
+    data.date &&
+    data.jobName &&
+    data.totalAmount
+  );
   return data;
 }
 
@@ -115,7 +120,9 @@ async function processAllEstimates() {
     return;
   }
 
-  console.log(`🔍 Found ${files.length} PDFs in ${estimatesDir}. Starting extraction...`);
+  console.log(
+    `🔍 Found ${files.length} PDFs in ${estimatesDir}. Starting extraction...`
+  );
 
   const results: Extractions[] = [];
   let cleanCount = 0;
@@ -130,15 +137,21 @@ async function processAllEstimates() {
         cleanCount++;
       }
       console.log(
-        `[${data.isClean ? "✔" : "✘"}] ${file.slice(0, 40)}... -> Est: ${data.estimateNumber ?? "???"} | Total: ${data.totalAmount ?? "???"}`,
+        `[${data.isClean ? "✔" : "✘"}] ${file.slice(0, 40)}... -> Est: ${data.estimateNumber ?? "???"} | Total: ${data.totalAmount ?? "???"}`
       );
     } catch (err) {
-      console.error(`Failed to process ${file}:`, err instanceof Error ? err.message : err);
+      console.error(
+        `Failed to process ${file}:`,
+        err instanceof Error ? err.message : err
+      );
     }
   }
 
   printReport(files.length, cleanCount, results);
-  await Bun.write(join(estimatesDir, "extraction_summary.json"), JSON.stringify(results, null, 2));
+  await Bun.write(
+    join(estimatesDir, "extraction_summary.json"),
+    JSON.stringify(results, null, 2)
+  );
   console.log("\n📄 Summary saved to estimates/extraction_summary.json");
 }
 
@@ -165,7 +178,9 @@ function printReport(total: number, clean: number, results: Extractions[]) {
       if (!item.totalAmount) {
         missing.push("Total");
       }
-      console.log(`  - ${item.fileName.slice(0, 50)}... (Missing: ${missing.join(", ")})`);
+      console.log(
+        `  - ${item.fileName.slice(0, 50)}... (Missing: ${missing.join(", ")})`
+      );
     }
   }
 }

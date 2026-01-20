@@ -265,33 +265,29 @@ describe.skipIf(!hasCredentials)("email service integration", () => {
   // ============================================================================
 
   describe("move and archive", () => {
-    it(
-      "moveEmail between folders",
-      async () => {
-        // Arrange: create a draft and a test folder
-        const draft = await client.createDraft({
-          subject: `${TEST_PREFIX}Move Test ${Date.now()}`,
-          body: "This email will be moved",
-          userId: TEST_USER_ID,
-        });
-        createdDraftIds.push(draft.id);
+    it("moveEmail between folders", async () => {
+      // Arrange: create a draft and a test folder
+      const draft = await client.createDraft({
+        subject: `${TEST_PREFIX}Move Test ${Date.now()}`,
+        body: "This email will be moved",
+        userId: TEST_USER_ID,
+      });
+      createdDraftIds.push(draft.id);
 
-        const folder = await client.createFolder(
-          `${TEST_PREFIX}MoveTarget_${Date.now()}`,
-          TEST_USER_ID
-        );
-        createdFolderIds.push(folder.id);
+      const folder = await client.createFolder(
+        `${TEST_PREFIX}MoveTarget_${Date.now()}`,
+        TEST_USER_ID
+      );
+      createdFolderIds.push(folder.id);
 
-        // Act: move email to folder
-        await client.moveEmail(draft.id, folder.id, TEST_USER_ID);
+      // Act: move email to folder
+      await client.moveEmail(draft.id, folder.id, TEST_USER_ID);
 
-        // Note: After move, the message ID changes in Graph API
-        // We verify by checking the folder has content (harder to verify exactly)
-        // For now, just verify no error thrown
-        expect(true).toBe(true);
-      },
-      15_000
-    );
+      // Note: After move, the message ID changes in Graph API
+      // We verify by checking the folder has content (harder to verify exactly)
+      // For now, just verify no error thrown
+      expect(true).toBe(true);
+    }, 15_000);
 
     it("archiveEmail moves to archive folder", async () => {
       // Arrange: create a draft

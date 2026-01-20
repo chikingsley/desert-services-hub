@@ -5,12 +5,12 @@
  */
 
 import { readdirSync, statSync, writeFileSync } from "fs";
-import { join, basename, extname, dirname } from "path";
+import { basename, dirname, extname, join } from "path";
 
 const folderPath = process.argv[2];
 const outputPath = process.argv[3];
 
-if (!folderPath || !outputPath) {
+if (!(folderPath && outputPath)) {
   console.error("Usage: bun run parse-aia.ts <folder_path> <output_csv>");
   process.exit(1);
 }
@@ -27,8 +27,18 @@ type AIARecord = {
 
 // Months for billing period detection
 const MONTHS = [
-  "january", "february", "march", "april", "may", "june",
-  "july", "august", "september", "october", "november", "december"
+  "january",
+  "february",
+  "march",
+  "april",
+  "may",
+  "june",
+  "july",
+  "august",
+  "september",
+  "october",
+  "november",
+  "december",
 ];
 
 function parseBillingPeriod(filename: string): string {
@@ -73,9 +83,10 @@ function parseAIAFolder(basePath: string, contractorName: string): AIARecord[] {
 
       if (stat.isDirectory()) {
         // This is a project folder (or completed jobs folder)
-        const projectName = entry.startsWith("zzz") || entry.toLowerCase().includes("completed")
-          ? null  // Completed jobs container, look inside for actual projects
-          : entry;
+        const projectName =
+          entry.startsWith("zzz") || entry.toLowerCase().includes("completed")
+            ? null // Completed jobs container, look inside for actual projects
+            : entry;
 
         if (projectName) {
           // This is an actual project folder
@@ -99,7 +110,10 @@ function parseAIAFolder(basePath: string, contractorName: string): AIARecord[] {
           const parentDir = dirname(fullPath);
           const parentName = basename(parentDir);
           // Check if parent is the contractor folder
-          if (parentName !== contractorName && !parentName.toLowerCase().includes("zzz")) {
+          if (
+            parentName !== contractorName &&
+            !parentName.toLowerCase().includes("zzz")
+          ) {
             projectName = parentName;
           }
         }
@@ -127,19 +141,29 @@ const contractorName = basename(folderPath);
 const records = parseAIAFolder(folderPath, contractorName);
 
 // Write CSV
-const headers = ["source", "contractor_name", "project_name", "billing_period", "is_completed", "file_type", "file_path"];
+const headers = [
+  "source",
+  "contractor_name",
+  "project_name",
+  "billing_period",
+  "is_completed",
+  "file_type",
+  "file_path",
+];
 const csvLines = [
   headers.join(","),
-  ...records.map(r =>
-    headers.map(h => {
-      const val = r[h as keyof AIARecord];
-      const str = String(val ?? "");
-      if (str.includes(",") || str.includes('"') || str.includes("\n")) {
-        return `"${str.replace(/"/g, '""')}"`;
-      }
-      return str;
-    }).join(",")
-  )
+  ...records.map((r) =>
+    headers
+      .map((h) => {
+        const val = r[h as keyof AIARecord];
+        const str = String(val ?? "");
+        if (str.includes(",") || str.includes('"') || str.includes("\n")) {
+          return `"${str.replace(/"/g, '""')}"`;
+        }
+        return str;
+      })
+      .join(",")
+  ),
 ];
 
 writeFileSync(outputPath, csvLines.join("\n"));

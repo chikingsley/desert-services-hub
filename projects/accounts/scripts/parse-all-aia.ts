@@ -4,10 +4,17 @@
  * Usage: bun run parse-all-aia.ts <aia_jobs_path> <output_dir>
  */
 
-import { readdirSync, statSync, writeFileSync, mkdirSync, existsSync } from "fs";
-import { join, basename, extname, dirname } from "path";
+import {
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  statSync,
+  writeFileSync,
+} from "fs";
+import { dirname, extname, join } from "path";
 
-const aiaBasePath = process.argv[2] || "/Users/chiejimofor/Downloads/aia jobs/AIA JOBS";
+const aiaBasePath =
+  process.argv[2] || "/Users/chiejimofor/Downloads/aia jobs/AIA JOBS";
 const outputDir = process.argv[3] || "projects/accounts/data/raw";
 
 type AIARecord = {
@@ -21,8 +28,18 @@ type AIARecord = {
 };
 
 const MONTHS = [
-  "january", "february", "march", "april", "may", "june",
-  "july", "august", "september", "october", "november", "december"
+  "january",
+  "february",
+  "march",
+  "april",
+  "may",
+  "june",
+  "july",
+  "august",
+  "september",
+  "october",
+  "november",
+  "december",
 ];
 
 function parseBillingPeriod(filename: string): string {
@@ -49,7 +66,10 @@ function isCompletedFolder(path: string): boolean {
   return lower.includes("zzz") || lower.includes("completed");
 }
 
-function parseContractorFolder(basePath: string, contractorName: string): AIARecord[] {
+function parseContractorFolder(
+  basePath: string,
+  contractorName: string
+): AIARecord[] {
   const records: AIARecord[] = [];
 
   function walkDir(dir: string, currentProject: string | null = null) {
@@ -72,11 +92,15 @@ function parseContractorFolder(basePath: string, contractorName: string): AIARec
       }
 
       if (stat.isDirectory()) {
-        const isCompleted = entry.toLowerCase().startsWith("zzz") || entry.toLowerCase().includes("completed");
+        const isCompleted =
+          entry.toLowerCase().startsWith("zzz") ||
+          entry.toLowerCase().includes("completed");
 
         if (isCompleted) {
           // Look inside for actual projects
-          const subEntries = readdirSync(fullPath).filter(e => !e.startsWith("."));
+          const subEntries = readdirSync(fullPath).filter(
+            (e) => !e.startsWith(".")
+          );
           for (const sub of subEntries) {
             const subPath = join(fullPath, sub);
             const subStat = statSync(subPath);
@@ -130,8 +154,9 @@ if (!existsSync(outputDir)) {
   mkdirSync(outputDir, { recursive: true });
 }
 
-const contractors = readdirSync(aiaBasePath)
-  .filter(e => !e.startsWith(".") && statSync(join(aiaBasePath, e)).isDirectory());
+const contractors = readdirSync(aiaBasePath).filter(
+  (e) => !e.startsWith(".") && statSync(join(aiaBasePath, e)).isDirectory()
+);
 
 console.log(`Found ${contractors.length} contractor folders`);
 
@@ -145,12 +170,22 @@ for (const contractor of contractors) {
 }
 
 // Write combined CSV
-const headers = ["source", "contractor_name", "project_name", "billing_period", "is_completed", "file_type", "file_path"];
+const headers = [
+  "source",
+  "contractor_name",
+  "project_name",
+  "billing_period",
+  "is_completed",
+  "file_type",
+  "file_path",
+];
 const csvLines = [
   headers.join(","),
-  ...allRecords.map(r =>
-    headers.map(h => escapeCSV(String(r[h as keyof AIARecord] ?? ""))).join(",")
-  )
+  ...allRecords.map((r) =>
+    headers
+      .map((h) => escapeCSV(String(r[h as keyof AIARecord] ?? "")))
+      .join(",")
+  ),
 ];
 
 const outputPath = join(outputDir, "aia_all.csv");

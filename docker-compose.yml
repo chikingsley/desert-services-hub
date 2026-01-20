@@ -1,5 +1,41 @@
 services:
+  # ==========================================================================
+  # Desert Services Hub - Bun Application
+  # ==========================================================================
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: desert-app
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      # Database path (inside container, backed by volume)
+      DATABASE_PATH: /app/data/desert-services.db
+      # Connect to MinIO (optional - for file storage)
+      MINIO_ENDPOINT: aistor
+      MINIO_PORT: 9000
+      MINIO_USE_SSL: "false"
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin}
+    volumes:
+      # Persist SQLite database outside container
+      - app_data:/app/data
+    depends_on:
+      aistor:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+
+  # ==========================================================================
   # MinIO AIStor Object Storage (Commercial/Enterprise)
+  # ==========================================================================
   # Requires license key from https://subnet.min.io
   aistor:
     image: quay.io/minio/aistor/minio:latest
@@ -22,21 +58,34 @@ services:
     restart: unless-stopped
 
 volumes:
+  app_data:
+    driver: local
   aistor_data:
     driver: local
 
 # =============================================================================
-# MinIO AIStor Setup
+# Usage
 # =============================================================================
 #
-# Prerequisites:
-#   - Get license from https://subnet.min.io/health?download-license
-#   - Save to .minio/minio.license
+# Start everything:      docker compose up -d
+# Start app only:        docker compose up -d app
+# Start storage only:    docker compose up -d aistor
+# View logs:             docker compose logs -f app
+# Rebuild after changes: docker compose build app && docker compose up -d app
 #
-# Start AIStor:  docker compose up -d aistor
-# Console:       http://localhost:9001
-# S3 API:        http://localhost:9000
-# Credentials:   minioadmin / minioadmin (or set in .env)
+# =============================================================================
+# Services
+# =============================================================================
 #
-# Buckets are created automatically when Next.js starts (instrumentation.ts)
+# App (Desert Services Hub):
+#   URL:           http://localhost:3000
+#   Database:      SQLite persisted in app_data volume
+#
+# MinIO AIStor (Object Storage):
+#   Prerequisites: Get license from https://subnet.min.io/health?download-license
+#                  Save to .minio/minio.license
+#   Console:       http://localhost:9001
+#   S3 API:        http://localhost:9000
+#   Credentials:   minioadmin / minioadmin (or set in .env)
+#
 # =============================================================================

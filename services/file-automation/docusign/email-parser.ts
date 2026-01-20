@@ -19,7 +19,7 @@ type DocuSignEmailType =
   | "viewed" // Someone viewed
   | "unknown";
 
-type ParsedDocuSignEmail = {
+interface ParsedDocuSignEmail {
   isDocuSign: boolean;
   type: DocuSignEmailType;
   envelopeId: string | null;
@@ -29,7 +29,7 @@ type ParsedDocuSignEmail = {
   reviewLink: string | null;
   downloadLink: string | null;
   rawLinks: string[];
-};
+}
 
 /**
  * Detect if an email is from DocuSign

@@ -52,7 +52,7 @@ const DOC_TYPES: DocType[] = [
   "OTHER",
 ];
 
-export type TriageResult = {
+export interface TriageResult {
   filePath: string;
   fileName: string;
   docType: DocType;
@@ -61,7 +61,7 @@ export type TriageResult = {
   timeMs: number;
   relevantForDustPermit: boolean;
   relevantForSwpppTakeoff: boolean;
-};
+}
 
 const DUST_PERMIT_TYPES: DocType[] = [
   "NOI_NDC",
@@ -79,11 +79,11 @@ const SWPPP_TAKEOFF_TYPES: DocType[] = [
   "SPECIFICATIONS",
 ];
 
-type FilenamePattern = {
+interface FilenamePattern {
   pattern: RegExp;
   docType: DocType;
   confidence: number;
-};
+}
 
 const FILENAME_PATTERNS: FilenamePattern[] = [
   // High confidence patterns
@@ -130,11 +130,11 @@ const FILENAME_PATTERNS: FilenamePattern[] = [
   { pattern: /plan.*set|drawing/i, docType: "SITE_PLAN", confidence: 0.5 },
 ];
 
-type PdfInfo = {
+interface PdfInfo {
   pageCount: number;
   kbPerPage: number;
   isDrawing: boolean;
-};
+}
 
 async function getPdfInfo(pdfPath: string): Promise<PdfInfo> {
   const file = Bun.file(pdfPath);
@@ -324,13 +324,13 @@ Types: NOI_NDC, SWPPP, GRADING_PLAN, GEOTECH_REPORT, SPECIFICATIONS, UTILITY_PLA
   };
 }
 
-type TriageResultInput = {
+interface TriageResultInput {
   pdfPath: string;
   docType: DocType;
   confidence: number;
   method: "filename" | "gemini";
   startTime: number;
-};
+}
 
 function buildTriageResult(input: TriageResultInput): TriageResult {
   const { pdfPath, docType, confidence, method, startTime } = input;
@@ -348,9 +348,9 @@ function buildTriageResult(input: TriageResultInput): TriageResult {
   };
 }
 
-export type TriageOptions = {
+export interface TriageOptions {
   forceGemini?: boolean;
-};
+}
 
 /**
  * Triage a single document.
@@ -419,7 +419,7 @@ export async function triageDocument(
   }
 }
 
-export type TriageFolderResult = {
+export interface TriageFolderResult {
   results: TriageResult[];
   toExtract: TriageResult[];
   skipped: TriageResult[];
@@ -429,7 +429,7 @@ export type TriageFolderResult = {
     byGemini: number;
     totalTimeMs: number;
   };
-};
+}
 
 /**
  * Triage all documents in a folder

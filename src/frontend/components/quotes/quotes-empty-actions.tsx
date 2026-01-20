@@ -1,6 +1,7 @@
 import { FileText, Ruler } from "lucide-react";
 import { useState } from "react";
-import { Link, useNavigate } from "react-router";
+import { useNavigate } from "react-router";
+import { NewTakeoffDialog } from "@/components/takeoffs/new-takeoff-dialog";
 import { Button } from "@/components/ui/button";
 
 export function QuotesEmptyActions() {
@@ -33,12 +34,12 @@ export function QuotesEmptyActions() {
 
   return (
     <div className="flex items-center gap-2">
-      <Button asChild variant="outline">
-        <Link to="/takeoffs/new">
+      <NewTakeoffDialog>
+        <Button variant="outline">
           <Ruler className="mr-2 h-4 w-4" />
           Start from PDF
-        </Link>
-      </Button>
+        </Button>
+      </NewTakeoffDialog>
       <Button
         className="glow-primary"
         disabled={isCreating}

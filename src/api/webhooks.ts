@@ -31,10 +31,10 @@ export async function handleMondayWebhook(req: Request): Promise<Response> {
     const { type } = event;
 
     // Handle name changes by updating the cache directly
-    if (type === "change_name" && event.value?.name) {
+    if (type === "change_name" && event.value?.name && event.itemId) {
       db.prepare(
-        "UPDATE monday_cache SET name = ?, updated_at = ? WHERE id = ?"
-      ).run(event.value.name, event.pulseId, event.itemId);
+        "UPDATE monday_cache SET name = ?, updated_at = datetime('now') WHERE id = ?"
+      ).run(event.value.name, event.itemId);
     }
 
     return Response.json({ ok: true });

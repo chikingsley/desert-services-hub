@@ -26,7 +26,7 @@ const MIN_TEXT_LENGTH = 100;
 /** Maximum text length to send to Gemini */
 const MAX_TEXT_FOR_EXTRACTION = 4000;
 
-export type PermitData = {
+export interface PermitData {
   // From NOI/NDC
   permitId?: string;
   siteAddress?: string;
@@ -69,7 +69,7 @@ export type PermitData = {
 
   // Metadata
   _sources?: Record<string, string[]>;
-};
+}
 
 const EXCLUDED_CONTACT_DOMAINS = ["desertservices.com"];
 
@@ -312,11 +312,11 @@ function checkForExcludedContact(
   return isExcludedContact(contactEmail);
 }
 
-type MergeContext = {
+interface MergeContext {
   mergedData: PermitData;
   sources: Record<string, string>;
   fileName: string;
-};
+}
 
 function addFieldToMergedData(
   ctx: MergeContext,
@@ -408,13 +408,13 @@ async function triageAllDocs(folderPath: string): Promise<TriageResult[]> {
   return results;
 }
 
-export type ExtractionResult = {
+export interface ExtractionResult {
   data: PermitData;
   sources: Record<string, string>;
   missingFields: string[];
   extractedDocs: string[];
   skippedDocs: string[];
-};
+}
 
 export async function extractAllFromFolder(
   folderPath: string

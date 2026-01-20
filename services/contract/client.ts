@@ -607,7 +607,7 @@ export async function extractContractDetails(
   return result;
 }
 
-type ConsolidatedInfo = {
+interface ConsolidatedInfo {
   contractor?: PartyInfo;
   subcontractor?: PartyInfo;
   owner?: PartyInfo;
@@ -618,7 +618,7 @@ type ConsolidatedInfo = {
   scopeOfWork?: string;
   exhibits?: ExhibitInfo[];
   requirements?: ComprehensiveRequirements;
-};
+}
 
 function sortDocsByPriority(docs: ContractDetails[]): ContractDetails[] {
   const priority: ContractDocType[] = [

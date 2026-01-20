@@ -112,23 +112,26 @@ export async function getBoardColumns(
 // Item Operations
 // ============================================================================
 
-type RawColumnValue = { id: string; text: string };
+interface RawColumnValue {
+  id: string;
+  text: string;
+}
 
-type RawItem = {
+interface RawItem {
   id: string;
   name: string;
   group: { id: string; title: string };
   column_values: RawColumnValue[];
-};
+}
 
-type ItemsPageResponse = {
+interface ItemsPageResponse {
   boards: Array<{
     items_page: {
       cursor: string | null;
       items: RawItem[];
     };
   }>;
-};
+}
 
 function buildItemUrl(boardId: string, itemId: string): string {
   return `https://monday.com/boards/${boardId}/pulses/${itemId}`;
@@ -201,13 +204,13 @@ export async function getItems(
   return allItems;
 }
 
-type SingleItemResponse = {
+interface SingleItemResponse {
   items: Array<
     RawItem & {
       board: { id: string };
     }
   >;
-};
+}
 
 /**
  * Get a single item by ID
@@ -432,44 +435,44 @@ export async function findBestMatches(
 // Rich Column Data (with linked items and mirrors)
 // ============================================================================
 
-export type MondayColumnValue = {
+export interface MondayColumnValue {
   id: string;
   type: string;
   text: string | null;
   value: string | null;
   linkedItemIds?: string[];
   displayValue?: string;
-};
+}
 
 export type MondayItemRich = Omit<MondayItem, "columns"> & {
   columns: Record<string, string | null>;
   columnValues: MondayColumnValue[];
 };
 
-type RawRichColumnValue = {
+interface RawRichColumnValue {
   id: string;
   type: string;
   text: string | null;
   value: string | null;
   linked_item_ids?: string[];
   display_value?: string;
-};
+}
 
-type RawRichItem = {
+interface RawRichItem {
   id: string;
   name: string;
   group: { id: string; title: string };
   column_values: RawRichColumnValue[];
-};
+}
 
-type ItemsPageRichResponse = {
+interface ItemsPageRichResponse {
   boards: Array<{
     items_page: {
       cursor: string | null;
       items: RawRichItem[];
     };
   }>;
-};
+}
 
 const RELATION_COLUMN_TYPES = ["board_relation", "mirror"];
 

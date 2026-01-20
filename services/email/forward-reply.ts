@@ -8,7 +8,7 @@
  * as if you were on the original thread.
  */
 
-export type ParsedForward = {
+export interface ParsedForward {
   originalFrom: { email: string; name?: string } | null;
   originalTo: Array<{ email: string; name?: string }>;
   originalCc: Array<{ email: string; name?: string }>;
@@ -16,9 +16,9 @@ export type ParsedForward = {
   originalDate: string | null;
   originalBody: string;
   forwardedByBody: string; // Any content added by the forwarder before the forward block
-};
+}
 
-export type ReplyFromForwardOptions = {
+export interface ReplyFromForwardOptions {
   /** The forwarded email body (HTML or text) */
   forwardedBody: string;
   /** Your reply content */
@@ -31,9 +31,9 @@ export type ReplyFromForwardOptions = {
   excludeEmails?: string[];
   /** Include original To recipients in CC (default: true) */
   includeOriginalTo?: boolean;
-};
+}
 
-export type ConstructedReply = {
+export interface ConstructedReply {
   to: Array<{ email: string; name?: string }>;
   cc: Array<{ email: string; name?: string }>;
   subject: string;
@@ -44,7 +44,7 @@ export type ConstructedReply = {
   replyBody: string;
   /** The quoted original message (after signature) */
   quotedContent: string;
-};
+}
 
 // Patterns for detecting forwarded message headers (plain text)
 const OUTLOOK_FORWARD_PATTERNS = {
@@ -101,7 +101,9 @@ function parseEmailAddresses(
   const parts = headerValue.split(/[;,]/).map((p) => p.trim());
 
   for (const part of parts) {
-    if (part.length === 0) continue;
+    if (part.length === 0) {
+      continue;
+    }
 
     // Try "Name <email>" format
     const namedMatch = part.match(/^(.+?)\s*<([^>]+)>$/);
@@ -345,7 +347,9 @@ export function parseForwardedEmail(body: string): ParsedForward {
  * Clean up a subject line - remove FW:/Fwd: prefixes and ensure RE: prefix
  */
 function cleanSubject(subject: string | null): string {
-  if (subject === null) return "RE: (no subject)";
+  if (subject === null) {
+    return "RE: (no subject)";
+  }
 
   // Remove forward prefixes
   const cleaned = subject
@@ -360,7 +364,7 @@ function cleanSubject(subject: string | null): string {
 /**
  * Build a quoted block from the original message
  */
-function buildQuotedBlock(parsed: ParsedForward): string {
+function _buildQuotedBlock(parsed: ParsedForward): string {
   const lines: string[] = [];
 
   lines.push("");

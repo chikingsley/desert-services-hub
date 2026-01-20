@@ -1,0 +1,35 @@
+Subject: Muscular Moving Men Contract Intake Summary - Reconciled
+
+Project Name: Muscular Moving Men Storage
+Address: 2601 E Rose Garden Ln, Phoenix, AZ 85050
+Account: LGE Design Build
+Notion Project: [Link needed]
+SharePoint Folder: [Link needed]
+Monday Estimate: [Link needed]
+
+Contract Details:
+Contract Type: Subcontract
+Contract Value: $2,110.00
+Contract Date: [Unsigned - pending]
+Retention: 10%
+Certified Payroll: No
+Billing Platform + Window: Procore, by 20th of month
+Schedule of Values: Missing (required within 7 days of contract receipt per Exhibit A)
+
+Estimate Details:
+Estimate Value: $14,954.50 (original) / $2,110.00 (revised)
+Estimate Version: R1
+Variance (Estimate - Contract): $0.00 (after revision)
+Revised Estimate: docs/Est_09152505-R1_from_DESERT_SERVICES_LLC_LGE.pdf
+
+Contacts:
+Billing Contact: insurance@lgedesignbuild.com (for COI); jimk@lgedesignbuild.com (Jim Kelly - dust compliance)
+
+Active Scope (Summary):
+310 LF Filtrex green filter sock (north perimeter) - $760.00
+SWPPP narrative design manual - $1,350.00
+
+Next Actions:
+Submit SOV within 7 days of contract execution
+Prepare COI naming LGE as additional insured
+Submit dust compliance training ID to Jim Kelly

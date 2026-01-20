@@ -33,23 +33,23 @@ const stripHtml = (html: string): string =>
     .replace(/\s+/g, " ")
     .trim();
 
-type SearchRequest = {
+interface SearchRequest {
   query: string;
   limit?: number;
   includeFullBody?: boolean;
   since?: string;
   until?: string;
-};
+}
 
-type ProcessedEmail = {
+interface ProcessedEmail {
   from: string | null;
   fromName: string | null;
   subject: string;
   body: string;
   receivedDateTime: Date;
-};
+}
 
-type RawEmail = {
+interface RawEmail {
   id: string;
   fromEmail: string | null;
   fromName: string | null;
@@ -57,7 +57,7 @@ type RawEmail = {
   bodyContent: string;
   bodyType: "html" | "text";
   receivedDateTime: Date;
-};
+}
 
 type ExternalEmail = RawEmail & {
   mailbox: string;

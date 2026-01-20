@@ -35,17 +35,25 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import type { QuoteVersion } from "@/lib/types";
 import { formatCurrency, formatDate, getStatusColor } from "@/lib/utils";
 
-interface QuoteWithVersion {
+// Summary version info (subset of full QuoteVersion for list display)
+interface QuoteVersionSummary {
+  id: string;
+  version_number: number;
+  total: number;
+  is_current: number;
+  created_at: string;
+}
+
+export interface QuoteWithVersion {
   id: string;
   base_number: string;
   job_name: string;
   client_name: string | null;
   status: string;
   created_at: string;
-  current_version: QuoteVersion | null;
+  current_version: QuoteVersionSummary | null;
   takeoff_id?: string | null;
   takeoff_name?: string | null;
 }

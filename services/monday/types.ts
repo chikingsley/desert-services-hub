@@ -43,7 +43,7 @@ export type BoardId = (typeof BOARD_IDS)[keyof typeof BOARD_IDS];
 /**
  * Column definition with ID and type for smart handling
  */
-export type ColumnDef = {
+export interface ColumnDef {
   id: string;
   type:
     | "name"
@@ -61,7 +61,7 @@ export type ColumnDef = {
     | "link"
     | "location"
     | "dropdown";
-};
+}
 
 /**
  * ESTIMATING board columns - most commonly searched
@@ -153,33 +153,33 @@ export function getColumnType(
 // Data Types
 // ============================================================================
 
-export type MondayItem = {
+export interface MondayItem {
   id: string;
   name: string;
   groupId: string;
   groupTitle: string;
   url: string;
   columns: Record<string, string>;
-};
+}
 
-export type MondayBoard = {
+export interface MondayBoard {
   id: string;
   name: string;
   groups: Array<{ id: string; title: string }>;
-};
+}
 
-export type MondayGroup = {
+export interface MondayGroup {
   id: string;
   title: string;
-};
+}
 
-export type MondayColumn = {
+export interface MondayColumn {
   id: string;
   title: string;
   type: string;
-};
+}
 
-export type GraphQLResponse<T> = {
+export interface GraphQLResponse<T> {
   data?: T;
   errors?: Array<{ message: string }>;
-};
+}

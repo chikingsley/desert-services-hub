@@ -13,11 +13,14 @@ export interface QuoteRow {
   job_name: string;
   job_address: string | null;
   client_name: string | null;
+  client_address: string | null;
   client_email: string | null;
   client_phone: string | null;
   notes: string | null;
   status: string;
   is_locked: number; // SQLite stores as 0 or 1
+  estimator: string | null;
+  estimator_email: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -66,6 +69,7 @@ export interface CatalogCategoryRow {
   name: string;
   sort_order: number;
   selection_mode: string;
+  supports_takeoff: number; // SQLite stores as 0 or 1
   created_at: string;
   updated_at: string;
 }

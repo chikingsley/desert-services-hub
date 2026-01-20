@@ -11,7 +11,7 @@ import {
   getTakeoffPdfUrl,
 } from "../../lib/minio";
 
-// Bun request type with params
+// Bun extends Request with params from route matching
 type BunRequest = Request & { params: { id: string } };
 
 // GET /api/takeoffs/:id - Get a single takeoff
@@ -39,7 +39,7 @@ export async function updateTakeoff(req: BunRequest): Promise<Response> {
   const body = await req.json();
 
   const updates: string[] = [];
-  const values: unknown[] = [];
+  const values: (string | number | null)[] = [];
 
   if (body.name !== undefined) {
     updates.push("name = ?");

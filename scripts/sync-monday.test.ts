@@ -8,13 +8,19 @@ const GARBAGE_NAME_PATTERNS = ["COPY", "DUPLICATE", "TEMPLATE"];
 const EXCLUDED_GROUPS = ["HISTORIC", "ARCHIVE", "COMPLETED", "HISTORIC DATA"];
 
 function isGarbage(name: string, groupTitle: string): boolean {
-  if (!name || name.trim().length === 0) return true;
+  if (!name || name.trim().length === 0) {
+    return true;
+  }
 
   const upperName = name.toUpperCase();
-  if (GARBAGE_NAME_PATTERNS.some((p) => upperName.includes(p))) return true;
+  if (GARBAGE_NAME_PATTERNS.some((p) => upperName.includes(p))) {
+    return true;
+  }
 
   const upperGroup = groupTitle.toUpperCase();
-  if (EXCLUDED_GROUPS.some((p) => upperGroup.includes(p))) return true;
+  if (EXCLUDED_GROUPS.some((p) => upperGroup.includes(p))) {
+    return true;
+  }
 
   return false;
 }

@@ -50,12 +50,12 @@ export type CredentialKey = keyof typeof CREDENTIALS;
 
 export type N8nPosition = [number, number];
 
-export type N8nCredentialRef = {
+export interface N8nCredentialRef {
   id: string;
   name: string;
-};
+}
 
-export type N8nNode = {
+export interface N8nNode {
   parameters: Record<string, unknown>;
   type: string;
   typeVersion: number;
@@ -67,13 +67,13 @@ export type N8nNode = {
   alwaysOutputData?: boolean;
   onError?: string;
   retryOnFail?: boolean;
-};
+}
 
-export type N8nConnection = {
+export interface N8nConnection {
   node: string;
   type: string;
   index: number;
-};
+}
 
 export type N8nConnections = Record<
   string,
@@ -82,7 +82,7 @@ export type N8nConnections = Record<
   }
 >;
 
-export type N8nWorkflowJson = {
+export interface N8nWorkflowJson {
   name: string;
   nodes: N8nNode[];
   connections: N8nConnections;
@@ -98,7 +98,7 @@ export type N8nWorkflowJson = {
   };
   id?: string;
   tags: string[];
-};
+}
 
 // ============================================================================
 // Builder Options
@@ -106,37 +106,37 @@ export type N8nWorkflowJson = {
 
 export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
-export type ScheduleTriggerOptions = {
+export interface ScheduleTriggerOptions {
   /** Interval in hours */
   hours?: number;
   /** Interval in minutes */
   minutes?: number;
   /** Cron expression */
   cron?: string;
-};
+}
 
-export type WebhookOptions = {
+export interface WebhookOptions {
   method?: HttpMethod;
   path: string;
   /** How to respond: 'immediately' (default) or 'lastNode' (wait for workflow to complete) */
   responseMode?: "onReceived" | "lastNode" | "responseNode";
-};
+}
 
-export type HttpRequestOptions = {
+export interface HttpRequestOptions {
   method?: HttpMethod;
   url: string;
   credential?: CredentialKey;
   headers?: Record<string, string>;
   body?: string | Record<string, unknown>;
   bodyType?: "json" | "form-urlencoded" | "raw";
-};
+}
 
-export type CodeOptions = {
+export interface CodeOptions {
   code: string;
   mode?: "runOnceForAllItems" | "runOnceForEachItem";
-};
+}
 
-export type IfCondition = {
+export interface IfCondition {
   leftValue: string;
   rightValue?: string | number | boolean;
   operator: {
@@ -144,83 +144,83 @@ export type IfCondition = {
     operation: string;
     singleValue?: boolean;
   };
-};
+}
 
-export type IfOptions = {
+export interface IfOptions {
   conditions: IfCondition[];
   combinator?: "and" | "or";
   /** Automatically convert types when comparing (recommended) */
   looseTypeValidation?: boolean;
-};
+}
 
 export type FilterOptions = IfOptions;
 
-export type SplitOutOptions = {
+export interface SplitOutOptions {
   field: string;
   includeFields?: string[];
-};
+}
 
-export type LoopOptions = {
+export interface LoopOptions {
   batchSize?: number;
-};
+}
 
 // ============================================================================
 // Native Node Options
 // ============================================================================
 
-export type MondayGetItemsOptions = {
+export interface MondayGetItemsOptions {
   boardId: string;
   groupId?: string;
   limit?: number;
-};
+}
 
-export type MondayUpdateItemOptions = {
+export interface MondayUpdateItemOptions {
   boardId: string;
   itemId: string;
   columnId: string;
   value: string;
-};
+}
 
-export type MondayCreateItemOptions = {
+export interface MondayCreateItemOptions {
   boardId: string;
   groupId: string;
   name: string;
   /** Column values as JSON string */
   columnValues?: string;
-};
+}
 
-export type MondayGetItemOptions = {
+export interface MondayGetItemOptions {
   itemId: string;
-};
+}
 
-export type MondayGetBoardsOptions = {
+export interface MondayGetBoardsOptions {
   limit?: number;
-};
+}
 
-export type MondayGetGroupsOptions = {
+export interface MondayGetGroupsOptions {
   boardId: string;
-};
+}
 
-export type MondayDeleteItemOptions = {
+export interface MondayDeleteItemOptions {
   itemId: string;
-};
+}
 
-export type MondayGetColumnsOptions = {
+export interface MondayGetColumnsOptions {
   boardId: string;
-};
+}
 
-export type MondayAddUpdateOptions = {
+export interface MondayAddUpdateOptions {
   itemId: string;
   body: string;
-};
+}
 
-export type NotionDatabaseRef = {
+export interface NotionDatabaseRef {
   id: string;
   name?: string;
   url?: string;
-};
+}
 
-export type NotionFilterCondition = {
+export interface NotionFilterCondition {
   key: string;
   condition:
     | "is_empty"
@@ -230,76 +230,76 @@ export type NotionFilterCondition = {
     | "contains"
     | "does_not_contain";
   value?: string;
-};
+}
 
-export type NotionGetAllOptions = {
+export interface NotionGetAllOptions {
   database: NotionDatabaseRef;
   limit?: number;
   returnAll?: boolean;
   filters?: NotionFilterCondition[];
   sortBy?: { key: string; direction: "ascending" | "descending" };
-};
+}
 
-export type NotionCreatePageOptions = {
+export interface NotionCreatePageOptions {
   database: NotionDatabaseRef;
   title: string;
   properties?: Record<string, unknown>;
-};
+}
 
-export type NotionUpdatePageOptions = {
+export interface NotionUpdatePageOptions {
   pageId: string;
   properties: Array<{
     key: string;
     value: unknown;
     type?: "relation" | "text" | "number" | "select" | "url";
   }>;
-};
+}
 
-export type DataTableRef = {
+export interface DataTableRef {
   id: string;
   name?: string;
-};
+}
 
-export type DataTableUpsertOptions = {
+export interface DataTableUpsertOptions {
   table: DataTableRef;
   matchColumn: string;
   matchValue: string;
   columns: Record<string, string>;
-};
+}
 
-export type DataTableGetOptions = {
+export interface DataTableGetOptions {
   table: DataTableRef;
   matchColumn: string;
   matchValue: string;
   limit?: number;
-};
+}
 
-export type MaricopaAssessorOptions = {
+export interface MaricopaAssessorOptions {
   /** Search query (address, APN, etc.) */
   query?: string;
   /** Assessor Parcel Number for direct lookup */
   apn?: string;
   /** API token header value */
   token?: string;
-};
+}
 
 // ============================================================================
 // Notion Additional Options
 // ============================================================================
 
-export type NotionGetPageOptions = {
+export interface NotionGetPageOptions {
   pageId: string;
-};
+}
 
-export type NotionArchivePageOptions = {
+export interface NotionArchivePageOptions {
   pageId: string;
-};
+}
 
 // ============================================================================
 // Outlook Options
 // ============================================================================
 
-export type OutlookSendEmailOptions = {
+export interface OutlookSendEmailOptions {
   to: string;
   subject: string;
   body: string;
@@ -310,63 +310,63 @@ export type OutlookSendEmailOptions = {
   replyTo?: string;
   /** Save to sent folder */
   saveToSentItems?: boolean;
-};
+}
 
-export type OutlookSearchEmailsOptions = {
+export interface OutlookSearchEmailsOptions {
   /** OData filter expression, e.g., "contains(subject, 'invoice')" */
   filter?: string;
   /** Folder to search in */
   folderId?: string;
   limit?: number;
-};
+}
 
-export type OutlookGetFoldersOptions = {
+export interface OutlookGetFoldersOptions {
   limit?: number;
-};
+}
 
 // ============================================================================
 // SharePoint Options
 // ============================================================================
 
-export type SharePointSiteRef = {
+export interface SharePointSiteRef {
   /** Site ID or name */
   id: string;
   name?: string;
-};
+}
 
-export type SharePointListFilesOptions = {
+export interface SharePointListFilesOptions {
   site: SharePointSiteRef;
   /** Folder path or ID */
   folderId?: string;
   limit?: number;
-};
+}
 
-export type SharePointDownloadFileOptions = {
+export interface SharePointDownloadFileOptions {
   site: SharePointSiteRef;
   fileId: string;
-};
+}
 
-export type SharePointUploadFileOptions = {
+export interface SharePointUploadFileOptions {
   site: SharePointSiteRef;
   /** Parent folder ID */
   folderId: string;
   fileName: string;
   /** Binary data field name from previous node */
   binaryPropertyName?: string;
-};
+}
 
-export type SharePointCreateFolderOptions = {
+export interface SharePointCreateFolderOptions {
   site: SharePointSiteRef;
   /** Parent folder ID */
   parentFolderId: string;
   folderName: string;
-};
+}
 
 // ============================================================================
 // Spreadsheet File Options
 // ============================================================================
 
-export type SpreadsheetFileOptions = {
+export interface SpreadsheetFileOptions {
   /** Operation: read from binary or convert to binary */
   operation?: "fromFile" | "toFile";
   /** File format */
@@ -383,13 +383,13 @@ export type SpreadsheetFileOptions = {
   startingRow?: number;
   /** Range to read (e.g., "A1:D10") */
   range?: string;
-};
+}
 
 // ============================================================================
 // Convert to File Options
 // ============================================================================
 
-export type ConvertToFileOptions = {
+export interface ConvertToFileOptions {
   /** Output file format */
   fileFormat?: "csv" | "xlsx" | "html" | "ods" | "rtf";
   /** Binary property name to store the file */
@@ -398,17 +398,17 @@ export type ConvertToFileOptions = {
   fileName?: string;
   /** Sheet name for spreadsheet formats */
   sheetName?: string;
-};
+}
 
 // ============================================================================
 // PDF Options
 // ============================================================================
 
-export type PdfExtractOptions = {
+export interface PdfExtractOptions {
   /** Binary property name containing the PDF */
   binaryPropertyName?: string;
   /** Maximum number of pages to extract (default: all) */
   maxPages?: number;
   /** Join pages with this separator */
   pageSeparator?: string;
-};
+}

@@ -321,10 +321,10 @@ export async function findPageByEmail(options: {
 // Find or Create (Dedupe Helpers)
 // ============================================================================
 
-export type FindOrCreateResult = {
+export interface FindOrCreateResult {
   id: string;
   created: boolean;
-};
+}
 
 /**
  * Find an existing page by title or create a new one.

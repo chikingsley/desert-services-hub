@@ -11,6 +11,9 @@
   },
   "linter": {
     "rules": {
+      "complexity": {
+        "noExcessiveCognitiveComplexity": "off"
+      },
       "nursery": {
         "useSortedClasses": {
           "level": "warn",
@@ -25,16 +28,30 @@
   "files": {
     "includes": [
       "**/*",
-      "!styles/globals.css",
-      "!components/ui/**/*",
-      "!quoting-example/**/*",
-      "!projects/inspections/pima_precip.html",
-      "!mcp/monday",
-      "!**/browser-profile-*",
-      "!**/data"
+      "!projects",
+      "!docs/_archive",
+      "!docs/archive",
+      "!app",
+      "!bun-init",
+      "!bun-example",
+      "!components"
     ]
   },
   "overrides": [
+    {
+      "includes": [
+        "docs/_archive/**",
+        "docs/archive/**",
+        "projects/**",
+        "app/**",
+        "bun-init/**",
+        "bun-example/**",
+        "components/**"
+      ],
+      "linter": {
+        "enabled": false
+      }
+    },
     {
       "includes": ["lib/pdf-takeoff/index.ts"],
       "linter": {
@@ -71,7 +88,9 @@
     {
       "includes": [
         "components/catalog/catalog-category-card.tsx",
-        "components/takeoffs/takeoff-viewer.tsx"
+        "components/takeoffs/takeoff-viewer.tsx",
+        "src/frontend/components/catalog/catalog-category-card.tsx",
+        "src/frontend/components/takeoffs/takeoff-viewer.tsx"
       ],
       "linter": {
         "rules": {
@@ -79,6 +98,16 @@
             "useSemanticElements": "off",
             "noNoninteractiveElementInteractions": "off",
             "useKeyWithClickEvents": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["src/frontend/App.tsx"],
+      "linter": {
+        "rules": {
+          "style": {
+            "useFilenamingConvention": "off"
           }
         }
       }

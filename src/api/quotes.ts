@@ -157,7 +157,10 @@ export async function createQuote(req: Request): Promise<Response> {
           item.unit_cost ?? cost * 0.7,
           item.unit_price ?? cost,
           item.notes ||
-            (item.item && item.description && item.item !== item.description
+            (item.item &&
+            item.description &&
+            item.description.trim() &&
+            item.item !== item.description
               ? item.description
               : null) ||
             null,

@@ -63,11 +63,11 @@ import { BOARD_COLUMNS, BOARD_IDS, getColumnId } from "./types";
 /**
  * Parsed command-line arguments structure.
  */
-type ParsedArgs = {
+interface ParsedArgs {
   command: string;
   positional: string[];
   flags: Record<string, string | string[] | boolean>;
-};
+}
 
 /**
  * Internal type for flags storage during parsing.
@@ -114,7 +114,9 @@ function addRepeatableFlag(
  */
 function parseFlag(args: string[], index: number, flags: FlagsRecord): number {
   const arg = args[index];
-  if (!arg) return index + 1;
+  if (!arg) {
+    return index + 1;
+  }
   const key = arg.slice(2);
   const nextArg = args[index + 1];
   const hasValue = nextArg && !nextArg.startsWith("--");
@@ -265,11 +267,11 @@ export function resolveColumnId(boardRef: string, columnRef: string): string {
  * Filter definition for filtering Monday.com items.
  * Supports filtering by column value, empty/non-empty columns, and group membership.
  */
-export type ItemFilter = {
+export interface ItemFilter {
   type: "contains" | "empty" | "not-empty" | "group";
   column?: string;
   value?: string;
-};
+}
 
 /**
  * Parses CLI flags into filter definitions.

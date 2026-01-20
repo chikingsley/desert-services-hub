@@ -2,36 +2,36 @@
  * Type definitions for SharePoint client
  */
 
-export type SharePointConfig = {
+export interface SharePointConfig {
   azureTenantId: string;
   azureClientId: string;
   azureClientSecret: string;
-};
+}
 
-export type SharePointSite = {
+export interface SharePointSite {
   id: string;
   name: string;
   displayName: string;
   webUrl: string;
   description?: string;
-};
+}
 
-export type SharePointDrive = {
+export interface SharePointDrive {
   id: string;
   name: string;
   driveType: string;
   webUrl: string;
-};
+}
 
-export type SharePointFolder = {
+export interface SharePointFolder {
   childCount: number;
-};
+}
 
-export type SharePointFile = {
+export interface SharePointFile {
   mimeType: string;
-};
+}
 
-export type SharePointItem = {
+export interface SharePointItem {
   id: string;
   name: string;
   webUrl: string;
@@ -40,19 +40,19 @@ export type SharePointItem = {
   lastModifiedDateTime: string;
   folder?: SharePointFolder;
   file?: SharePointFile;
-};
+}
 
-export type SharePointList = {
+export interface SharePointList {
   id: string;
   name: string;
   displayName: string;
   webUrl: string;
   description?: string;
-};
+}
 
-export type SharePointListItem = {
+export interface SharePointListItem {
   id: string;
   fields: Record<string, unknown>;
   createdDateTime: string;
   lastModifiedDateTime: string;
-};
+}

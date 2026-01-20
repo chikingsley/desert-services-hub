@@ -20,7 +20,7 @@ export type EmbeddingTask =
   | "code.passage";
 
 // Search types
-export type JinaSearchOptions = {
+export interface JinaSearchOptions {
   noContent?: boolean;
   engine?: "browser" | "direct";
   site?: string;
@@ -32,17 +32,17 @@ export type JinaSearchOptions = {
   withFavicon?: boolean;
   noCache?: boolean;
   timeout?: number;
-};
+}
 
-export type JinaSearchResult = {
+export interface JinaSearchResult {
   title: string;
   url: string;
   description?: string;
   content?: string;
-};
+}
 
 // Reader types
-export type JinaReadOptions = {
+export interface JinaReadOptions {
   format?: "markdown" | "html" | "text" | "screenshot" | "pageshot";
   engine?: "browser" | "direct" | "cf-browser-rendering";
   targetSelector?: string;
@@ -59,18 +59,18 @@ export type JinaReadOptions = {
   useReaderLM?: boolean;
   proxyUrl?: string;
   proxyCountry?: string;
-};
+}
 
-export type JinaReadResponse = {
+export interface JinaReadResponse {
   title: string;
   content: string;
   url: string;
   links?: Record<string, string>;
   images?: Record<string, string>;
-};
+}
 
 // Embeddings types
-export type JinaEmbeddingsOptions = {
+export interface JinaEmbeddingsOptions {
   model?: EmbeddingModel;
   embeddingType?: EmbeddingType;
   task?: EmbeddingTask;
@@ -78,9 +78,9 @@ export type JinaEmbeddingsOptions = {
   truncate?: boolean;
   lateChunking?: boolean;
   returnMultivector?: boolean;
-};
+}
 
-export type JinaEmbeddingsResponse = {
+export interface JinaEmbeddingsResponse {
   data: Array<{
     index: number;
     embedding: number[];
@@ -88,7 +88,7 @@ export type JinaEmbeddingsResponse = {
   usage: {
     total_tokens: number;
   };
-};
+}
 
 // Reranker types
 export type RerankerModel =
@@ -96,22 +96,22 @@ export type RerankerModel =
   | "jina-reranker-v2-base-multilingual"
   | "jina-colbert-v2";
 
-export type JinaRerankOptions = {
+export interface JinaRerankOptions {
   model?: RerankerModel;
   topN?: number;
   returnDocuments?: boolean;
-};
+}
 
-export type JinaRerankResult = {
+export interface JinaRerankResult {
   index: number;
   relevance_score: number;
   document?: { text: string };
-};
+}
 
-export type JinaRerankResponse = {
+export interface JinaRerankResponse {
   model: string;
   results: JinaRerankResult[];
-};
+}
 
 // Classifier types
 export type ClassifierModel =
@@ -119,20 +119,20 @@ export type ClassifierModel =
   | "jina-embeddings-v4"
   | "jina-embeddings-v3";
 
-export type JinaClassifyOptions = {
+export interface JinaClassifyOptions {
   model?: ClassifierModel;
-};
+}
 
-export type JinaClassifyResult = {
+export interface JinaClassifyResult {
   index: number;
   prediction: string;
   score: number;
   predictions: Array<{ label: string; score: number }>;
-};
+}
 
-export type JinaClassifyResponse = {
+export interface JinaClassifyResponse {
   data: JinaClassifyResult[];
-};
+}
 
 // Segmenter types
 export type Tokenizer =
@@ -143,19 +143,19 @@ export type Tokenizer =
   | "p50k_edit"
   | "gpt2";
 
-export type JinaSegmentOptions = {
+export interface JinaSegmentOptions {
   tokenizer?: Tokenizer;
   returnTokens?: boolean;
   returnChunks?: boolean;
   maxChunkLength?: number;
   head?: number;
   tail?: number;
-};
+}
 
-export type JinaSegmentResponse = {
+export interface JinaSegmentResponse {
   num_tokens: number;
   tokenizer: string;
   num_chunks?: number;
   tokens?: number[];
   chunks?: string[];
-};
+}

@@ -10,7 +10,7 @@
 
 import { enrichCompanyByName } from "./pdl/company";
 
-export type SmartEnrichResult = {
+export interface SmartEnrichResult {
   success: boolean;
   source: "pdl" | "jina" | "none";
   company?: {
@@ -28,7 +28,7 @@ export type SmartEnrichResult = {
   likelihood?: number; // PDL match confidence (1-10)
   timeMs: number;
   error?: string;
-};
+}
 
 /**
  * Smart enrich - tries PDL first, falls back to Jina+Gemini

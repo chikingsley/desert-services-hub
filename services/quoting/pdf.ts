@@ -976,12 +976,8 @@ export async function generateBackPagePDF(): Promise<Buffer> {
     content: buildBackPageContent(logoBase64),
   };
 
-  return new Promise((resolve, _reject) => {
-    const pdfDoc = pdfmake.createPdf(docDefinition);
-    pdfDoc.getBuffer((buffer: Buffer) => {
-      resolve(buffer);
-    });
-  });
+  const doc = pdfmake.createPdf(docDefinition);
+  return await doc.getBuffer();
 }
 
 // Concatenate multiple PDFs into one
@@ -1006,13 +1002,8 @@ async function generateEstimatePDF(
 ): Promise<Buffer> {
   const logoBase64 = await getLogoBase64();
   const docDefinition = buildDocDefinition(quote, logoBase64, options);
-
-  return new Promise((resolve, _reject) => {
-    const pdfDoc = pdfmake.createPdf(docDefinition);
-    pdfDoc.getBuffer((buffer: Buffer) => {
-      resolve(buffer);
-    });
-  });
+  const doc = pdfmake.createPdf(docDefinition);
+  return await doc.getBuffer();
 }
 
 // Generate PDF as Buffer (for saving/sending)

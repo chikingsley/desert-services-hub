@@ -28,14 +28,14 @@ const HTML_TAG_REGEX = /<[^>]*>/g;
 // Types
 // ============================================================================
 
-export type Entity = {
+export interface Entity {
   type: "person" | "company" | "project" | "keyword" | "date" | "reference";
   value: string;
   source: "email" | "attachment";
   confidence: number;
-};
+}
 
-export type ProcessedEmail = {
+export interface ProcessedEmail {
   id: string;
   subject: string;
   from: string;
@@ -43,17 +43,17 @@ export type ProcessedEmail = {
   snippet: string;
   entities: Entity[];
   attachmentCount: number;
-};
+}
 
-export type ProcessedAttachment = {
+export interface ProcessedAttachment {
   emailId: string;
   name: string;
   contentType: string;
   entities: Entity[];
   summary?: string;
-};
+}
 
-export type SearchState = {
+export interface SearchState {
   // What we're looking for
   goal: string;
 
@@ -76,14 +76,14 @@ export type SearchState = {
 
   // Logs for debugging
   log: string[];
-};
+}
 
-export type DeepSearchConfig = {
+export interface DeepSearchConfig {
   maxIterations?: number;
   maxEmailsPerQuery?: number;
   userId: string;
   verbose?: boolean;
-};
+}
 
 // ============================================================================
 // Core Functions
@@ -224,13 +224,13 @@ export function generateQueries(
 // Search Loop Helpers
 // ============================================================================
 
-type ExecuteQueriesParams = {
+interface ExecuteQueriesParams {
   client: GraphEmailClient;
   queries: string[];
   config: DeepSearchConfig;
   state: SearchState;
   iterLog: string;
-};
+}
 
 /**
  * Execute queries and return all results

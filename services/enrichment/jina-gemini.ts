@@ -15,7 +15,7 @@
  */
 
 import { GoogleGenAI } from "@google/genai";
-import { read, searchJson } from "../../lib/jina/client";
+import { read, searchJson } from "../jina/client";
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
@@ -23,7 +23,7 @@ const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 // Types
 // ============================================================================
 
-export type CompanyInfo = {
+export interface CompanyInfo {
   name: string;
   fullName: string | null;
   website: string | null;
@@ -36,9 +36,9 @@ export type CompanyInfo = {
   description: string | null;
   services: string[] | null;
   industry: string | null;
-};
+}
 
-export type EnrichResult = {
+export interface EnrichResult {
   success: boolean;
   query: string;
   company: CompanyInfo | null;
@@ -46,7 +46,7 @@ export type EnrichResult = {
   sources: string[];
   timeMs: number;
   error?: string;
-};
+}
 
 // ============================================================================
 // Gemini Extraction
@@ -118,7 +118,7 @@ Extract the most likely matching company. If there are multiple matches, pick th
   };
 }
 
-type GeminiExtractionResult = {
+interface GeminiExtractionResult {
   name?: string;
   fullName?: string;
   website?: string;
@@ -132,7 +132,7 @@ type GeminiExtractionResult = {
   services?: string[];
   industry?: string;
   confidence?: number;
-};
+}
 
 function mapToCompanyInfo(
   result: GeminiExtractionResult,

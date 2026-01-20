@@ -1260,7 +1260,7 @@ export class N8nWorkflow {
 // API Client
 // ============================================================================
 
-export type N8nApiWorkflow = {
+export interface N8nApiWorkflow {
   id: string;
   name: string;
   active: boolean;
@@ -1269,14 +1269,14 @@ export type N8nApiWorkflow = {
   nodes: N8nNode[];
   connections: N8nConnections;
   settings: { executionOrder: string };
-};
+}
 
-export type N8nNodeOutput = {
+export interface N8nNodeOutput {
   json: Record<string, unknown>;
   binary?: Record<string, unknown>;
-};
+}
 
-export type N8nExecutionData = {
+export interface N8nExecutionData {
   resultData: {
     runData: Record<
       string,
@@ -1287,9 +1287,9 @@ export type N8nExecutionData = {
       }>
     >;
   };
-};
+}
 
-export type N8nExecution = {
+export interface N8nExecution {
   id: string;
   workflowId: string;
   status: "success" | "error" | "waiting" | "running";
@@ -1297,19 +1297,19 @@ export type N8nExecution = {
   stoppedAt: string;
   mode: "manual" | "trigger" | "webhook";
   data?: N8nExecutionData;
-};
+}
 
-export type N8nExecutionListOptions = {
+export interface N8nExecutionListOptions {
   workflowId?: string;
   status?: "success" | "error" | "waiting";
   limit?: number;
   includeData?: boolean;
-};
+}
 
-export type N8nApiOptions = {
+export interface N8nApiOptions {
   baseUrl?: string;
   apiKey?: string;
-};
+}
 
 /**
  * n8n REST API Client

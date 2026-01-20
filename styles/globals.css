@@ -26,7 +26,7 @@
 
   /* Muted desert tones */
   --muted: oklch(0.92 0.015 75);
-  --muted-foreground: oklch(0.50 0.02 45);
+  --muted-foreground: oklch(0.5 0.02 45);
 
   /* Sage accent - desert flora */
   --accent: oklch(0.88 0.04 145);
@@ -42,11 +42,11 @@
   --ring: oklch(0.62 0.18 35);
 
   /* Chart colors - desert palette */
-  --chart-1: oklch(0.62 0.18 35);  /* Terracotta */
+  --chart-1: oklch(0.62 0.18 35); /* Terracotta */
   --chart-2: oklch(0.65 0.12 145); /* Sage */
   --chart-3: oklch(0.55 0.15 260); /* Twilight */
-  --chart-4: oklch(0.72 0.14 75);  /* Sand gold */
-  --chart-5: oklch(0.60 0.16 15);  /* Adobe red */
+  --chart-4: oklch(0.72 0.14 75); /* Sand gold */
+  --chart-5: oklch(0.6 0.16 15); /* Adobe red */
 
   /* Sidebar - warm stone */
   --sidebar: oklch(0.24 0.025 45);
@@ -54,7 +54,7 @@
   --sidebar-primary: oklch(0.72 0.16 40);
   --sidebar-primary-foreground: oklch(0.18 0.02 45);
   --sidebar-accent: oklch(0.32 0.03 45);
-  --sidebar-accent-foreground: oklch(0.90 0.01 75);
+  --sidebar-accent-foreground: oklch(0.9 0.01 75);
   --sidebar-border: oklch(0.35 0.025 45);
   --sidebar-ring: oklch(0.72 0.16 40);
 
@@ -70,11 +70,21 @@
   --shadow-color: 35 25% 15%;
   --shadow-2xs: 0 1px 2px hsl(var(--shadow-color) / 0.04);
   --shadow-xs: 0 1px 3px hsl(var(--shadow-color) / 0.06);
-  --shadow-sm: 0 2px 4px hsl(var(--shadow-color) / 0.06), 0 1px 2px hsl(var(--shadow-color) / 0.04);
-  --shadow: 0 4px 8px hsl(var(--shadow-color) / 0.08), 0 2px 4px hsl(var(--shadow-color) / 0.04);
-  --shadow-md: 0 6px 16px hsl(var(--shadow-color) / 0.10), 0 2px 6px hsl(var(--shadow-color) / 0.05);
-  --shadow-lg: 0 12px 24px hsl(var(--shadow-color) / 0.12), 0 4px 8px hsl(var(--shadow-color) / 0.06);
-  --shadow-xl: 0 20px 40px hsl(var(--shadow-color) / 0.14), 0 8px 16px hsl(var(--shadow-color) / 0.07);
+  --shadow-sm:
+    0 2px 4px hsl(var(--shadow-color) / 0.06),
+    0 1px 2px hsl(var(--shadow-color) / 0.04);
+  --shadow:
+    0 4px 8px hsl(var(--shadow-color) / 0.08),
+    0 2px 4px hsl(var(--shadow-color) / 0.04);
+  --shadow-md:
+    0 6px 16px hsl(var(--shadow-color) / 0.1),
+    0 2px 6px hsl(var(--shadow-color) / 0.05);
+  --shadow-lg:
+    0 12px 24px hsl(var(--shadow-color) / 0.12),
+    0 4px 8px hsl(var(--shadow-color) / 0.06);
+  --shadow-xl:
+    0 20px 40px hsl(var(--shadow-color) / 0.14),
+    0 8px 16px hsl(var(--shadow-color) / 0.07);
   --shadow-2xl: 0 32px 64px hsl(var(--shadow-color) / 0.18);
 }
 
@@ -102,7 +112,7 @@
   --accent: oklch(0.28 0.04 145);
   --accent-foreground: oklch(0.78 0.08 145);
 
-  --destructive: oklch(0.55 0.20 25);
+  --destructive: oklch(0.55 0.2 25);
   --destructive-foreground: oklch(0.95 0 0);
 
   --border: oklch(0.28 0.02 260);
@@ -110,7 +120,7 @@
   --ring: oklch(0.72 0.17 40);
 
   --chart-1: oklch(0.72 0.17 40);
-  --chart-2: oklch(0.68 0.10 145);
+  --chart-2: oklch(0.68 0.1 145);
   --chart-3: oklch(0.62 0.12 280);
   --chart-4: oklch(0.75 0.12 75);
   --chart-5: oklch(0.65 0.14 15);
@@ -266,12 +276,44 @@
   /* Geometric pattern for decorative elements */
   .pattern-geo {
     background-image:
-      linear-gradient(30deg, oklch(0.62 0.18 35 / 0.05) 12%, transparent 12.5%, transparent 87%, oklch(0.62 0.18 35 / 0.05) 87.5%, oklch(0.62 0.18 35 / 0.05)),
-      linear-gradient(150deg, oklch(0.62 0.18 35 / 0.05) 12%, transparent 12.5%, transparent 87%, oklch(0.62 0.18 35 / 0.05) 87.5%, oklch(0.62 0.18 35 / 0.05)),
-      linear-gradient(30deg, oklch(0.62 0.18 35 / 0.05) 12%, transparent 12.5%, transparent 87%, oklch(0.62 0.18 35 / 0.05) 87.5%, oklch(0.62 0.18 35 / 0.05)),
-      linear-gradient(150deg, oklch(0.62 0.18 35 / 0.05) 12%, transparent 12.5%, transparent 87%, oklch(0.62 0.18 35 / 0.05) 87.5%, oklch(0.62 0.18 35 / 0.05));
+      linear-gradient(
+        30deg,
+        oklch(0.62 0.18 35 / 0.05) 12%,
+        transparent 12.5%,
+        transparent 87%,
+        oklch(0.62 0.18 35 / 0.05) 87.5%,
+        oklch(0.62 0.18 35 / 0.05)
+      ),
+      linear-gradient(
+        150deg,
+        oklch(0.62 0.18 35 / 0.05) 12%,
+        transparent 12.5%,
+        transparent 87%,
+        oklch(0.62 0.18 35 / 0.05) 87.5%,
+        oklch(0.62 0.18 35 / 0.05)
+      ),
+      linear-gradient(
+        30deg,
+        oklch(0.62 0.18 35 / 0.05) 12%,
+        transparent 12.5%,
+        transparent 87%,
+        oklch(0.62 0.18 35 / 0.05) 87.5%,
+        oklch(0.62 0.18 35 / 0.05)
+      ),
+      linear-gradient(
+        150deg,
+        oklch(0.62 0.18 35 / 0.05) 12%,
+        transparent 12.5%,
+        transparent 87%,
+        oklch(0.62 0.18 35 / 0.05) 87.5%,
+        oklch(0.62 0.18 35 / 0.05)
+      );
     background-size: 80px 140px;
-    background-position: 0 0, 0 0, 40px 70px, 40px 70px;
+    background-position:
+      0 0,
+      0 0,
+      40px 70px,
+      40px 70px;
   }
 
   /* Smooth page transitions */
@@ -295,12 +337,24 @@
     animation: staggerFade 0.5s cubic-bezier(0.22, 1, 0.36, 1) backwards;
   }
 
-  .stagger-children > *:nth-child(1) { animation-delay: 0ms; }
-  .stagger-children > *:nth-child(2) { animation-delay: 50ms; }
-  .stagger-children > *:nth-child(3) { animation-delay: 100ms; }
-  .stagger-children > *:nth-child(4) { animation-delay: 150ms; }
-  .stagger-children > *:nth-child(5) { animation-delay: 200ms; }
-  .stagger-children > *:nth-child(6) { animation-delay: 250ms; }
+  .stagger-children > *:nth-child(1) {
+    animation-delay: 0ms;
+  }
+  .stagger-children > *:nth-child(2) {
+    animation-delay: 50ms;
+  }
+  .stagger-children > *:nth-child(3) {
+    animation-delay: 100ms;
+  }
+  .stagger-children > *:nth-child(4) {
+    animation-delay: 150ms;
+  }
+  .stagger-children > *:nth-child(5) {
+    animation-delay: 200ms;
+  }
+  .stagger-children > *:nth-child(6) {
+    animation-delay: 250ms;
+  }
 
   @keyframes staggerFade {
     from {
@@ -315,8 +369,9 @@
 
   /* Card hover lift effect */
   .hover-lift {
-    transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1),
-                box-shadow 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+    transition:
+      transform 0.2s cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 0.2s cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   .hover-lift:hover {

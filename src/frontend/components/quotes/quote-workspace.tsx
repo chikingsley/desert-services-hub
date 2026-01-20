@@ -21,8 +21,10 @@ import { useSidebar } from "@/components/ui/sidebar";
 import { Spinner } from "@/components/ui/spinner";
 import { useSettings } from "@/hooks/use-settings";
 import { generatePDFBlob } from "@/lib/pdf/generate-client";
+import type { GeneratePDFOptions } from "@/lib/pdf/pdf-builder";
 import type { EditorQuote } from "@/lib/types";
 import { catalog } from "@/services/quoting/catalog";
+import { FloatingPdfOptions } from "./floating-pdf-options";
 import { InlineQuoteEditor } from "./inline-quote-editor";
 
 type SaveStatus = "saved" | "saving" | "unsaved";
@@ -165,6 +167,13 @@ export function QuoteWorkspace({
   // PDF blob URL for iframe preview
   const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null);
 
+  // PDF generation options
+  const [pdfOptions, setPdfOptions] = useState<GeneratePDFOptions>({
+    style: "sectioned",
+    unbreakableSections: true,
+    includeBackPage: false,
+  });
+
   // Save status lifted from InlineQuoteEditor
   const [saveStatus, setSaveStatus] = useState<"saved" | "saving" | "unsaved">(
     "saved"
@@ -224,11 +233,11 @@ export function QuoteWorkspace({
     }
   }, [isPreviewOpen, autoHideSidebar, isMobile, setOpen, setOpenMobile]);
 
-  // Generate PDF blob when quote changes (for live preview)
+  // Generate PDF blob when quote or options change (for live preview)
   useEffect(() => {
     let currentUrl: string | null = null;
 
-    generatePDFBlob(previewQuote)
+    generatePDFBlob(previewQuote, pdfOptions)
       .then((blob) => {
         currentUrl = URL.createObjectURL(blob);
         setPdfBlobUrl((prev) => {
@@ -247,7 +256,7 @@ export function QuoteWorkspace({
         URL.revokeObjectURL(currentUrl);
       }
     };
-  }, [previewQuote]);
+  }, [previewQuote, pdfOptions]);
 
   // Initialize last known timestamp on mount
   useEffect(() => {
@@ -482,7 +491,11 @@ export function QuoteWorkspace({
 
           {/* PDF Preview Panel */}
           {isPreviewOpen && (
-            <div className="hidden min-w-0 flex-1 flex-col border-border/50 border-l bg-muted lg:flex">
+            <div className="relative hidden min-w-0 flex-1 flex-col border-border/50 border-l bg-muted lg:flex">
+              <FloatingPdfOptions
+                onChange={setPdfOptions}
+                options={pdfOptions}
+              />
               {pdfBlobUrl ? (
                 <iframe
                   className="h-full w-full"

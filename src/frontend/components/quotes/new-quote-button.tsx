@@ -38,7 +38,7 @@ export function NewQuoteButton({
 
       const data = await res.json();
       navigate(`/quotes/${data.id}`);
-    } catch (err) {
+    } catch (_err) {
       setIsCreating(false);
     }
   };

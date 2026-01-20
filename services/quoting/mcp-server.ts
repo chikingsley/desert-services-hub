@@ -11,26 +11,19 @@
  * This server acts as a bridge between Claude Code and the Hub API:
  * - Claude interprets natural language ("add 330 ft fence")
  * - Claude calls MCP tools with structured data
+ * - MCP server validates input with Zod schemas
  * - MCP server calls Hub API (localhost:3000)
  * - Hub updates database and browser refreshes
  *
- * ## Configuration
+ * ## Strict Input Validation
  *
- * - HUB_URL: Base URL for the hub API (default: http://localhost:3000)
+ * All inputs are validated with Zod schemas using CANONICAL field names:
+ * - name: Item name (NOT "item")
+ * - quantity: Amount (NOT "qty")
+ * - unit: Unit of measure (NOT "uom")
+ * - unitPrice: Price (NOT "cost")
  *
- * ## Available Tools
- *
- * - **preview_quote**: Open quote in browser for editing/preview
- * - **list_quotes**: List quotes with optional filters
- * - **get_quote**: Get full quote details
- * - **add_line_item**: Add item to quote
- * - **update_line_item**: Modify existing item
- * - **remove_line_item**: Delete item from quote
- * - **download_pdf**: Generate and save PDF
- *
- * @example
- * // Start the server (typically via Claude Code's MCP configuration)
- * bun services/quoting/mcp-server.ts
+ * Invalid inputs get clear error messages telling agents exactly what's wrong.
  *
  * @module services/quoting/mcp-server
  */
@@ -40,6 +33,18 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
+import { zodToJsonSchema } from "zod-to-json-schema";
+import {
+  AddLineItemInputSchema,
+  CreateQuoteInputSchema,
+  DownloadPDFInputSchema,
+  GetQuoteInputSchema,
+  ListQuotesInputSchema,
+  PreviewQuoteInputSchema,
+  RemoveLineItemInputSchema,
+  UpdateLineItemInputSchema,
+  validateMCPInput,
+} from "../../lib/schemas";
 
 // ============================================================================
 // Configuration
@@ -103,7 +108,7 @@ export type HubQuote = {
 // ============================================================================
 
 const server = new Server(
-  { name: "desert-quoting", version: "1.0.0" },
+  { name: "desert-quoting", version: "2.0.0" },
   { capabilities: { tools: {} } }
 );
 
@@ -153,14 +158,11 @@ export function calculateTotal(lineItems: HubLineItem[]): number {
 }
 
 async function openInBrowser(url: string): Promise<void> {
-  // Use Bun's shell to open URL in default browser
-  // This is safe because we control the URL
   const proc = Bun.spawn(["open", url]);
   await proc.exited;
 }
 
 export async function resolveQuoteId(idOrBase: string): Promise<string> {
-  // UUIDs are typically 36 characters with hyphens
   if (idOrBase.length === 36 && idOrBase.includes("-")) {
     return idOrBase;
   }
@@ -176,14 +178,12 @@ export async function resolveQuoteId(idOrBase: string): Promise<string> {
 }
 
 async function openFile(path: string): Promise<void> {
-  // Use Bun's shell to open file in default application
-  // This is safe because we control the path
   const proc = Bun.spawn(["open", path]);
   await proc.exited;
 }
 
 // ============================================================================
-// Tool Implementations
+// Tool Implementations with Zod Validation
 // ============================================================================
 
 export const tools: Record<
@@ -192,18 +192,14 @@ export const tools: Record<
 > = {
   preview_quote: {
     description: "Open a quote in the browser for editing and PDF preview",
-    schema: {
-      type: "object",
-      properties: {
-        quote_id: {
-          type: "string",
-          description: "The quote ID to preview",
-        },
-      },
-      required: ["quote_id"],
-    },
+    schema: zodToJsonSchema(PreviewQuoteInputSchema),
     handler: async (args) => {
-      const quoteId = await resolveQuoteId(args.quote_id as string);
+      const validation = validateMCPInput(PreviewQuoteInputSchema, args);
+      if (!validation.success) {
+        return error(validation.error);
+      }
+
+      const quoteId = await resolveQuoteId(validation.data.quoteId);
       const url = `${HUB_URL}/quotes/${quoteId}`;
 
       await openInBrowser(url);
@@ -214,31 +210,17 @@ export const tools: Record<
 
   list_quotes: {
     description: "List quotes with optional filters",
-    schema: {
-      type: "object",
-      properties: {
-        limit: {
-          type: "number",
-          description: "Maximum number of quotes to return (default: 20)",
-        },
-        status: {
-          type: "string",
-          description: "Filter by status: draft, sent, accepted, declined",
-        },
-        search: {
-          type: "string",
-          description: "Search term to filter by job name or client",
-        },
-      },
-    },
+    schema: zodToJsonSchema(ListQuotesInputSchema),
     handler: async (args) => {
-      const limit = (args.limit as number) ?? 20;
-      const status = args.status as string | undefined;
-      const search = args.search as string | undefined;
+      const validation = validateMCPInput(ListQuotesInputSchema, args);
+      if (!validation.success) {
+        return error(validation.error);
+      }
+
+      const { limit, status, search } = validation.data;
 
       const quotes = await hubFetch<HubQuote[]>("/api/quotes");
 
-      // Apply filters
       let filtered = quotes;
 
       if (status) {
@@ -255,10 +237,8 @@ export const tools: Record<
         );
       }
 
-      // Limit results
       filtered = filtered.slice(0, limit);
 
-      // Format output
       const lines = filtered.map((q) => {
         const total = q.current_version?.total ?? 0;
         return `${q.base_number} | ${q.job_name} | ${q.client_name ?? "No client"} | $${total.toFixed(2)} | ${q.status} | ID: ${q.id}`;
@@ -274,18 +254,14 @@ export const tools: Record<
 
   get_quote: {
     description: "Get full details of a quote including all line items",
-    schema: {
-      type: "object",
-      properties: {
-        quote_id: {
-          type: "string",
-          description: "The quote ID to retrieve",
-        },
-      },
-      required: ["quote_id"],
-    },
+    schema: zodToJsonSchema(GetQuoteInputSchema),
     handler: async (args) => {
-      const quoteId = await resolveQuoteId(args.quote_id as string);
+      const validation = validateMCPInput(GetQuoteInputSchema, args);
+      if (!validation.success) {
+        return error(validation.error);
+      }
+
+      const quoteId = await resolveQuoteId(validation.data.quoteId);
       const quote = await hubFetch<HubQuote>(`/api/quotes/${quoteId}`);
 
       const version = quote.current_version;
@@ -293,7 +269,6 @@ export const tools: Record<
         return error("Quote has no current version");
       }
 
-      // Format sections and items
       const sectionMap = new Map<string, string>();
       for (const section of version.sections) {
         sectionMap.set(section.id, section.name);
@@ -326,89 +301,62 @@ ${itemLines.join("\n")}
 
   create_quote: {
     description: "Create a new quote",
-    schema: {
-      type: "object",
-      properties: {
-        job_name: {
-          type: "string",
-          description:
-            "The name of the job/project (e.g. 'Alta Goldwater', 'Paradise Valley Site'). DO NOT use person names here unless it's a residential project.",
-        },
-        client_name: {
-          type: "string",
-          description:
-            "The name of the client/account (e.g. 'Standard Construction', 'Ryan Companies').",
-        },
-        job_address: {
-          type: "string",
-          description: "Project site address",
-        },
-        client_email: {
-          type: "string",
-          description: "Client contact email",
-        },
-        client_phone: {
-          type: "string",
-          description: "Client contact phone",
-        },
-      },
-      required: ["job_name"],
-    },
+    schema: zodToJsonSchema(CreateQuoteInputSchema),
     handler: async (args) => {
+      const validation = validateMCPInput(CreateQuoteInputSchema, args);
+      if (!validation.success) {
+        return error(validation.error);
+      }
+
+      const input = validation.data;
+
+      // Map to hub API format
       const result = await hubFetch<{ id: string; version_id: string }>(
         "/api/quotes",
         {
           method: "POST",
-          body: JSON.stringify(args),
+          body: JSON.stringify({
+            job_name: input.jobName,
+            client_name: input.clientName,
+            client_address: input.clientAddress,
+            job_address: input.jobAddress,
+            client_email: input.clientEmail,
+            client_phone: input.clientPhone,
+            estimator: input.estimator,
+            estimator_email: input.estimatorEmail,
+          }),
         }
       );
 
       return success(
-        `Successfully created quote: ${args.job_name}\nID: ${result.id}\nYou can now add line items using this ID.`
+        `Successfully created quote: ${input.jobName}\nID: ${result.id}\nYou can now add line items using this ID.`
       );
     },
   },
 
   add_line_item: {
-    description: "Add a new line item to a quote",
-    schema: {
-      type: "object",
-      properties: {
-        quote_id: {
-          type: "string",
-          description: "The quote ID to add the item to",
-        },
-        item: {
-          type: "string",
-          description: "Item name/description (e.g., 'Temp Fence Install')",
-        },
-        description: {
-          type: "string",
-          description: "Additional description or notes",
-        },
-        qty: {
-          type: "number",
-          description: "Quantity",
-        },
-        uom: {
-          type: "string",
-          description: "Unit of measure (e.g., 'LF', 'EA', 'HR')",
-        },
-        cost: {
-          type: "number",
-          description: "Unit price/cost",
-        },
-        section_id: {
-          type: "string",
-          description: "Optional section ID to add the item to",
-        },
-      },
-      required: ["quote_id", "item", "qty", "uom", "cost"],
-    },
-    handler: async (args) => {
-      const quoteId = await resolveQuoteId(args.quote_id as string);
+    description: `Add a new line item to a quote.
 
-      // Fetch current quote
+REQUIRED FIELDS (use exact names):
+- quoteId: The quote ID
+- name: Item name (e.g., 'SWPPP Narrative', 'Fence Install')
+- quantity: Number of items (NOT 'qty')
+- unit: Unit of measure like 'LF', 'EA', 'HR' (NOT 'uom')
+- unitPrice: Price per unit (NOT 'cost')
+
+OPTIONAL:
+- description: Additional notes
+- sectionId: Section to add item to`,
+    schema: zodToJsonSchema(AddLineItemInputSchema),
+    handler: async (args) => {
+      const validation = validateMCPInput(AddLineItemInputSchema, args);
+      if (!validation.success) {
+        return error(validation.error);
+      }
+
+      const input = validation.data;
+      const quoteId = await resolveQuoteId(input.quoteId);
+
       const quote = await hubFetch<HubQuote>(`/api/quotes/${quoteId}`);
       const version = quote.current_version;
 
@@ -416,25 +364,23 @@ ${itemLines.join("\n")}
         return error("Quote has no current version");
       }
 
-      // Create new line item
+      // Create new line item using CANONICAL field names
       const newItem: HubLineItem = {
         id: crypto.randomUUID(),
-        section_id: (args.section_id as string) ?? null,
-        description: args.item as string,
-        quantity: args.qty as number,
-        unit: args.uom as string,
-        unit_cost: (args.cost as number) * 0.7, // Default 30% margin
-        unit_price: args.cost as number,
+        section_id: input.sectionId ?? null,
+        description: input.name, // canonical "name" → hub "description"
+        quantity: input.quantity,
+        unit: input.unit,
+        unit_cost: input.unitPrice * 0.7,
+        unit_price: input.unitPrice,
         is_excluded: 0,
-        notes: (args.description as string) ?? null,
+        notes: input.description ?? null, // canonical "description" → hub "notes"
         sort_order: version.line_items.length,
-      } as HubLineItem;
+      };
 
-      // Add to items array
       const updatedItems = [...version.line_items, newItem];
       const newTotal = calculateTotal(updatedItems);
 
-      // Update via PUT
       await hubFetch(`/api/quotes/${quoteId}`, {
         method: "PUT",
         body: JSON.stringify({
@@ -458,48 +404,37 @@ ${itemLines.join("\n")}
         }),
       });
 
-      const quantity = newItem.quantity ?? 1;
-      const unitPrice = newItem.unit_price ?? 0;
-      const itemTotal = quantity * unitPrice;
+      const itemTotal = newItem.quantity * newItem.unit_price;
       return success(
-        `Added: ${newItem.description} | ${quantity} ${newItem.unit} @ $${unitPrice.toFixed(2)} = $${itemTotal.toFixed(2)}\nNew quote total: $${newTotal.toFixed(2)}`
+        `Added: ${newItem.description} | ${newItem.quantity} ${newItem.unit} @ $${newItem.unit_price.toFixed(2)} = $${itemTotal.toFixed(2)}\nNew quote total: $${newTotal.toFixed(2)}`
       );
     },
   },
 
   update_line_item: {
-    description: "Update an existing line item in a quote",
-    schema: {
-      type: "object",
-      properties: {
-        quote_id: {
-          type: "string",
-          description: "The quote ID",
-        },
-        line_item_index: {
-          type: "number",
-          description: "The line item index (1-based, as shown in get_quote)",
-        },
-        qty: {
-          type: "number",
-          description: "New quantity (optional)",
-        },
-        cost: {
-          type: "number",
-          description: "New unit price (optional)",
-        },
-        description: {
-          type: "string",
-          description: "New description (optional)",
-        },
-      },
-      required: ["quote_id", "line_item_index"],
-    },
-    handler: async (args) => {
-      const quoteId = await resolveQuoteId(args.quote_id as string);
-      const index = (args.line_item_index as number) - 1; // Convert to 0-based
+    description: `Update an existing line item in a quote.
 
-      // Fetch current quote
+REQUIRED FIELDS:
+- quoteId: The quote ID
+- lineItemIndex: 1-based index (as shown in get_quote)
+
+OPTIONAL (only provide what you want to change):
+- name: New item name
+- quantity: New quantity (NOT 'qty')
+- unit: New unit (NOT 'uom')
+- unitPrice: New price (NOT 'cost')
+- description: New notes`,
+    schema: zodToJsonSchema(UpdateLineItemInputSchema),
+    handler: async (args) => {
+      const validation = validateMCPInput(UpdateLineItemInputSchema, args);
+      if (!validation.success) {
+        return error(validation.error);
+      }
+
+      const input = validation.data;
+      const quoteId = await resolveQuoteId(input.quoteId);
+      const index = input.lineItemIndex - 1;
+
       const quote = await hubFetch<HubQuote>(`/api/quotes/${quoteId}`);
       const version = quote.current_version;
 
@@ -513,25 +448,30 @@ ${itemLines.join("\n")}
         );
       }
 
-      // Update the item
       const updatedItems = [...version.line_items];
       const item = { ...updatedItems[index] } as HubLineItem;
 
-      if (args.qty !== undefined) {
-        item.quantity = args.qty as number;
+      // Apply updates using CANONICAL field names
+      if (input.name !== undefined) {
+        item.description = input.name;
       }
-      if (args.cost !== undefined) {
-        item.unit_price = args.cost as number;
-        item.unit_cost = (args.cost as number) * 0.7;
+      if (input.quantity !== undefined) {
+        item.quantity = input.quantity;
       }
-      if (args.description !== undefined) {
-        item.description = args.description as string;
+      if (input.unit !== undefined) {
+        item.unit = input.unit;
+      }
+      if (input.unitPrice !== undefined) {
+        item.unit_price = input.unitPrice;
+        item.unit_cost = input.unitPrice * 0.7;
+      }
+      if (input.description !== undefined) {
+        item.notes = input.description;
       }
 
       updatedItems[index] = item;
       const newTotal = calculateTotal(updatedItems);
 
-      // Update via PUT
       await hubFetch(`/api/quotes/${quoteId}`, {
         method: "PUT",
         body: JSON.stringify({
@@ -555,36 +495,26 @@ ${itemLines.join("\n")}
         }),
       });
 
-      const quantity = item.quantity ?? 1;
-      const unitPrice = item.unit_price ?? 0;
-      const itemTotal = quantity * unitPrice;
+      const itemTotal = item.quantity * item.unit_price;
       return success(
-        `Updated item ${index + 1}: ${item.description} | ${quantity} ${item.unit} @ $${unitPrice.toFixed(2)} = $${itemTotal.toFixed(2)}\nNew quote total: $${newTotal.toFixed(2)}`
+        `Updated item ${index + 1}: ${item.description} | ${item.quantity} ${item.unit} @ $${item.unit_price.toFixed(2)} = $${itemTotal.toFixed(2)}\nNew quote total: $${newTotal.toFixed(2)}`
       );
     },
   },
 
   remove_line_item: {
     description: "Remove a line item from a quote",
-    schema: {
-      type: "object",
-      properties: {
-        quote_id: {
-          type: "string",
-          description: "The quote ID",
-        },
-        line_item_index: {
-          type: "number",
-          description: "The line item index (1-based, as shown in get_quote)",
-        },
-      },
-      required: ["quote_id", "line_item_index"],
-    },
+    schema: zodToJsonSchema(RemoveLineItemInputSchema),
     handler: async (args) => {
-      const quoteId = await resolveQuoteId(args.quote_id as string);
-      const index = (args.line_item_index as number) - 1; // Convert to 0-based
+      const validation = validateMCPInput(RemoveLineItemInputSchema, args);
+      if (!validation.success) {
+        return error(validation.error);
+      }
 
-      // Fetch current quote
+      const input = validation.data;
+      const quoteId = await resolveQuoteId(input.quoteId);
+      const index = input.lineItemIndex - 1;
+
       const quote = await hubFetch<HubQuote>(`/api/quotes/${quoteId}`);
       const version = quote.current_version;
 
@@ -602,7 +532,6 @@ ${itemLines.join("\n")}
       const updatedItems = version.line_items.filter((_, i) => i !== index);
       const newTotal = calculateTotal(updatedItems);
 
-      // Update via PUT
       await hubFetch(`/api/quotes/${quoteId}`, {
         method: "PUT",
         body: JSON.stringify({
@@ -634,47 +563,34 @@ ${itemLines.join("\n")}
 
   download_pdf: {
     description: "Generate and download the quote PDF",
-    schema: {
-      type: "object",
-      properties: {
-        quote_id: {
-          type: "string",
-          description: "The quote ID",
-        },
-        output_path: {
-          type: "string",
-          description: "Optional output path (defaults to ~/Downloads)",
-        },
-      },
-      required: ["quote_id"],
-    },
+    schema: zodToJsonSchema(DownloadPDFInputSchema),
     handler: async (args) => {
-      const quoteId = await resolveQuoteId(args.quote_id as string);
-      const outputPath = args.output_path as string | undefined;
+      const validation = validateMCPInput(DownloadPDFInputSchema, args);
+      if (!validation.success) {
+        return error(validation.error);
+      }
 
-      // Fetch the PDF from hub
+      const input = validation.data;
+      const quoteId = await resolveQuoteId(input.quoteId);
+
       const response = await fetch(`${HUB_URL}/api/quotes/${quoteId}/pdf`);
 
       if (!response.ok) {
         return error(`Failed to generate PDF: ${response.statusText}`);
       }
 
-      // Get filename from header or generate one
       const contentDisposition = response.headers.get("content-disposition");
       const match = contentDisposition
         ? FILENAME_REGEX.exec(contentDisposition)
         : null;
       const filename = match?.[1] ?? "quote.pdf";
 
-      // Determine output path
       const homeDir = process.env.HOME ?? "/tmp";
-      const finalPath = outputPath ?? `${homeDir}/Downloads/${filename}`;
+      const finalPath = input.outputPath ?? `${homeDir}/Downloads/${filename}`;
 
-      // Save the file
       const buffer = await response.arrayBuffer();
       await Bun.write(finalPath, buffer);
 
-      // Open the PDF
       await openFile(finalPath);
 
       return success(`PDF saved and opened: ${finalPath}`);

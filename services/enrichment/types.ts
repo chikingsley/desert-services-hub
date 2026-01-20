@@ -5,13 +5,13 @@
  */
 
 // Avatar types
-export type AvatarResult = {
+export interface AvatarResult {
   url: string;
   source: "gravatar" | "initials" | "clearbit";
-};
+}
 
 // Company logo types
-export type LogoResult = {
+export interface LogoResult {
   url: string;
   exists: boolean;
-};
+}

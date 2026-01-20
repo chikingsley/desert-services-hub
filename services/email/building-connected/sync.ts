@@ -27,7 +27,7 @@ const DESCRIPTION_REGEX = /<div>([^<]{20,500})<\/div>/;
 const LINK_REGEX =
   /<a[^>]*href="(https:\/\/app\.buildingconnected\.com\/goto\/[^"]+)"[^>]*>([^<]*)<\/a>/gi;
 
-type GraphEmail = {
+interface GraphEmail {
   id: string;
   subject?: string;
   receivedDateTime: string;
@@ -35,7 +35,7 @@ type GraphEmail = {
   hasAttachments?: boolean;
   body?: { content?: string; contentType?: string };
   conversationId?: string;
-};
+}
 
 function initDb(): Database {
   const db = new Database(DB_PATH);
@@ -80,7 +80,7 @@ function initDb(): Database {
   return db;
 }
 
-type ExtractedData = {
+interface ExtractedData {
   projectName: string;
   location: string | null;
   leadName: string | null;
@@ -90,7 +90,7 @@ type ExtractedData = {
   description: string | null;
   rfpUrl: string | null;
   allLinks: Array<{ url: string; label: string }>;
-};
+}
 
 function cleanHtmlEntity(text: string): string {
   return text.trim().replace(/&amp;/g, "&");
@@ -279,13 +279,16 @@ function logSyncComplete(db: Database, totalBids: number): void {
   console.log(`Database: ${DB_PATH}`);
 }
 
-type BatchResult = { totalBids: number; limitReached: boolean };
+interface BatchResult {
+  totalBids: number;
+  limitReached: boolean;
+}
 
-type BatchContext = {
+interface BatchContext {
   insertBid: ReturnType<Database["prepare"]>;
   lastSync: string | null;
   syncLimit?: number;
-};
+}
 
 function processBatch(
   emails: GraphEmail[],

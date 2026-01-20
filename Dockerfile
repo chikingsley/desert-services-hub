@@ -38,7 +38,7 @@ COPY --from=deps /app/node_modules ./node_modules
 # Copy source files needed for runtime
 COPY --chown=appuser:appgroup package.json ./
 COPY --chown=appuser:appgroup bunfig.toml ./
-COPY --chown=appuser:appgroup server.ts ./
+COPY --chown=appuser:appgroup src/server.ts ./src/
 COPY --chown=appuser:appgroup tsconfig.json ./
 COPY --chown=appuser:appgroup public ./public
 COPY --chown=appuser:appgroup src ./src
@@ -65,4 +65,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD curl -f http://localhost:3000/api/health || exit 1
 
 # Start the application using Bun
-CMD ["bun", "run", "server.ts"]
+CMD ["bun", "run", "src/server.ts"]

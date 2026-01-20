@@ -1,9 +1,10 @@
 import { readdir } from "node:fs/promises";
 import { join } from "node:path";
+import { getDocument } from "pdfjs-dist/legacy/build/pdf.mjs";
 
 /**
  * Script to extract structured data from estimate PDFs.
- * Uses 'pdftotext' for extraction and Bun APIs for process management.
+ * Uses pdfjs-dist for extraction (project dependency, no system tools needed).
  */
 
 interface Extractions {
@@ -31,19 +32,25 @@ const TOTAL_PATTERN = /Total[\s\t:?]+([\d,]+\.\d{2})/gi;
 const LAST_CURRENCY_PATTERN = /([\d,]+\.\d{2})/g;
 
 async function extractTextFromPdf(filePath: string): Promise<string> {
-  const proc = Bun.spawn(["pdftotext", "-layout", filePath, "-"], {
-    stdout: "pipe",
-    stderr: "pipe",
-  });
+  const data = await Bun.file(filePath).arrayBuffer();
+  const pdf = await getDocument({
+    data,
+    useWorkerFetch: false,
+    isEvalSupported: false,
+    useSystemFonts: true,
+  }).promise;
 
-  const text = await new Response(proc.stdout).text();
-  const error = await new Response(proc.stderr).text();
-
-  if (error && !text) {
-    throw new Error(`PDF to Text error: ${error}`);
+  const textParts: string[] = [];
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    const pageText = content.items
+      .map((item) => ("str" in item ? item.str : ""))
+      .join(" ");
+    textParts.push(pageText);
   }
 
-  return text;
+  return textParts.join("\n");
 }
 
 function parseEstimateNumber(text: string): string | null {

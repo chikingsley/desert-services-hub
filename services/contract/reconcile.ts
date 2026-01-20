@@ -17,26 +17,26 @@ import type {
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const GEMINI_MODEL = "gemini-2.5-pro";
 
-export type EstimateLineItem = {
+export interface EstimateLineItem {
   description: string;
   quantity?: number;
   unit?: string;
   unitPrice?: number;
   total: number;
-};
+}
 
-export type EstimateData = {
+export interface EstimateData {
   projectName: string;
   contractorName: string;
   totalAmount: number;
   lineItems: EstimateLineItem[];
   notes?: string;
-};
+}
 
-export type ReconciliationIssue = {
+export interface ReconciliationIssue {
   severity: "critical" | "warning" | "info";
   message: string;
-};
+}
 
 const VERDICT_ICONS: Record<string, string> = {
   MATCH: "[OK]",
@@ -127,37 +127,37 @@ Be specific in your notes - explain WHY you made each determination.
 ESTIMATE LINE ITEMS:
 `;
 
-type ContractLineItem = {
+interface ContractLineItem {
   description: string;
   amount?: number;
   quantity?: number;
   unit?: string;
   notes?: string;
-};
+}
 
-type ContractItemsResult = {
+interface ContractItemsResult {
   lineItems: ContractLineItem[];
   hasLineItemPricing: boolean;
   totalAmount?: number;
-};
+}
 
-type MatchResult = {
+interface MatchResult {
   estimateDescription: string;
   matchType: string;
   contractDescription: string;
   priceDifference?: number;
   notes: string;
-};
+}
 
-type AdditionalContractItem = {
+interface AdditionalContractItem {
   description: string;
   notes: string;
-};
+}
 
-type MatchingResult = {
+interface MatchingResult {
   matches: MatchResult[];
   additionalContractItems: AdditionalContractItem[];
-};
+}
 
 function getGeminiClient(): GoogleGenAI {
   if (!GEMINI_API_KEY) {
@@ -278,14 +278,14 @@ function buildLineItemComparison(
   return { lineItemComparison, removedItemsTotal };
 }
 
-type ReconciliationIssueParams = {
+interface ReconciliationIssueParams {
   issues: ReconciliationIssue[];
   difference: number;
   unexplainedDifference: number;
   tolerance: number;
   lineItemComparison: LineItemMatch[];
   removedItemsTotal: number;
-};
+}
 
 function addReconciliationIssues(params: ReconciliationIssueParams): void {
   const {
@@ -331,7 +331,7 @@ function addReconciliationIssues(params: ReconciliationIssueParams): void {
   });
 }
 
-type VerdictParams = {
+interface VerdictParams {
   difference: number;
   explainedByRemovals: number;
   unexplainedDifference: number;
@@ -339,7 +339,7 @@ type VerdictParams = {
   lineItemComparison: LineItemMatch[];
   hasLineItemPricing: boolean;
   issues: ReconciliationIssue[];
-};
+}
 
 function determineVerdict(params: VerdictParams): ReconciliationVerdict {
   const {

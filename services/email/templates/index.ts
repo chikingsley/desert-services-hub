@@ -88,12 +88,12 @@ export async function listTemplates(): Promise<string[]> {
 /**
  * Signature configuration
  */
-export type SignatureConfig = {
+export interface SignatureConfig {
   name: string;
   title: string;
   email: string;
   phone?: string;
-};
+}
 
 /**
  * Default signature (Chi's info) - used when no signature is specified

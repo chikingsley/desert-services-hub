@@ -127,9 +127,9 @@ async function jinaPost<T>(
 // Search API (s.jina.ai)
 // ============================================================================
 
-type SearchJsonResult = {
+interface SearchJsonResult {
   data: Array<{ title: string; url: string; content: string }>;
-};
+}
 
 function buildSearchUrl(query: string, options: JinaSearchOptions): string {
   const params = new URLSearchParams({ q: query });
@@ -267,7 +267,9 @@ export function parseSearchResults(rawResponse: string): JinaSearchResult[] {
 // Reader API (r.jina.ai)
 // ============================================================================
 
-type ReadJsonResult = { data: JinaReadResponse };
+interface ReadJsonResult {
+  data: JinaReadResponse;
+}
 
 async function executeRead(
   targetUrl: string,

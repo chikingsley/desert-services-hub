@@ -18,6 +18,9 @@ const db = new Database(dbPath, { create: true });
 // Enable WAL mode for better performance
 db.run("PRAGMA journal_mode = WAL");
 
+// Enable foreign key constraints (required for ON DELETE CASCADE to work)
+db.run("PRAGMA foreign_keys = ON");
+
 // ============================================
 // Takeoffs Table
 // ============================================

@@ -96,6 +96,7 @@ Not Started → In Progress → Waiting on Response → Done
 | [PM Workflow](./planning/pm-workflow.md) | Daily workflow - what to do when email arrives |
 | [Project Management](./planning/project-management.md) | Process design - stages, handoffs, checklists |
 | [User Stories](./planning/user-stories.md) | Detailed requirements |
+| [CLI Tools](./CLI_TOOLS.md) | Developer tools for testing and generation |
 
 ---
 

@@ -28,7 +28,7 @@ export const catalog: Catalog = {
           code: "SWPPP-002",
           name: "SWPPP Narrative",
           description:
-            "Written compliance document detailing site conditions, pollution sources, inspection schedules & BMP maintenance procedures",
+            "Compliance document detailing site conditions, pollution sources, inspection schedules & BMP maintenance procedures",
           price: 1350,
           unit: "Each",
           notes: "Narrative-Only Jobs: $1,550",
@@ -37,7 +37,7 @@ export const catalog: Catalog = {
           code: "SWPPP-003",
           name: "SWPPP Narrative (Standalone)",
           description:
-            "Written compliance document detailing site conditions, pollution sources, inspection schedules & BMP maintenance procedures",
+            "Compliance document detailing site conditions, pollution sources, inspection schedules & BMP maintenance procedures",
           price: 1550,
           unit: "Each",
         },
@@ -113,9 +113,9 @@ export const catalog: Catalog = {
           items: [
             {
               code: "CM-003",
-              name: 'Compost Filter Sock (9")',
+              name: "Compost Filter Sock",
               description:
-                'Installation of 9" Compost Filter Sock (EPA approved alternative to silt fence). Staking included for standard applications.',
+                "9-inch compost filter sock (EPA approved alternative to silt fence). Staking included for standard applications.",
               price: 2.75,
               unit: "LF",
               notes: "Add for Staking if >4:1 slope at $0.50/LF",
@@ -1130,9 +1130,9 @@ export const catalog: Catalog = {
         },
         {
           code: "ADMIN-002",
-          name: "CCIP/OCIP/Portal Fees",
+          name: "CCIP/OCIP/Insurance Portal",
           description:
-            "Administrative fee for wrap-up insurance enrollment & contractor portal compliance documentation",
+            "Administration and documentation for wrap-up insurance enrollment & contractor portal compliance",
           price: 250,
           unit: "Each",
         },
@@ -1194,7 +1194,7 @@ export const takeoffBundles: TakeoffBundle[] = [
     toolType: "linear",
     color: "#a855f7",
     items: [
-      { code: "CM-003", isRequired: true, quantityMultiplier: 1 }, // Compost Filter Sock (9")
+      { code: "CM-003", isRequired: true, quantityMultiplier: 1 }, // Compost Filter Sock
     ],
   },
   {

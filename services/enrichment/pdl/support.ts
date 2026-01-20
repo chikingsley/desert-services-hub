@@ -259,11 +259,11 @@ export async function cleanLocation(
 // School Cleaner (10,000/month free)
 // ============================================================================
 
-type SchoolCleanParams = {
+interface SchoolCleanParams {
   name?: string;
   website?: string;
   profile?: string; // LinkedIn URL
-};
+}
 
 /**
  * Standardize a school/university name

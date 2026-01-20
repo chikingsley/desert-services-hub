@@ -11,7 +11,7 @@ import { $ } from "bun";
 
 const FIXTURES_DIR = `${dirname(import.meta.path)}/test-fixtures`;
 
-export type FixtureExpectedItem = {
+export interface FixtureExpectedItem {
   description: string;
   quantity?: number;
   unit?: string;
@@ -19,9 +19,9 @@ export type FixtureExpectedItem = {
   total?: number;
   included: boolean;
   notes?: string;
-};
+}
 
-export type FixtureExpectedEstimate = {
+export interface FixtureExpectedEstimate {
   projectName: string;
   contractorName: string;
   totalAmount: number;
@@ -29,9 +29,9 @@ export type FixtureExpectedEstimate = {
   items: FixtureExpectedItem[];
   alternates?: { description: string; price: number }[];
   exclusions?: string[];
-};
+}
 
-export type FixtureExpectedContract = {
+export interface FixtureExpectedContract {
   docType: string;
   contractor?: Record<string, unknown>;
   subcontractor?: Record<string, unknown>;
@@ -45,9 +45,9 @@ export type FixtureExpectedContract = {
   dates?: Record<string, unknown>;
   exhibits?: { letter: string; title: string }[];
   contractNumber?: string;
-};
+}
 
-export type FixtureExpectedReconciliation = {
+export interface FixtureExpectedReconciliation {
   expectedStatus: "MATCH" | "EXPLAINABLE" | "NEEDS_REVIEW" | "SCOPE_GAP";
   totals: {
     estimate: number;
@@ -61,9 +61,9 @@ export type FixtureExpectedReconciliation = {
     mathWorks: boolean;
   };
   notes?: string;
-};
+}
 
-export type FixtureExpected = {
+export interface FixtureExpected {
   meta: {
     fixture: string;
     description: string;
@@ -75,21 +75,21 @@ export type FixtureExpected = {
   estimate: FixtureExpectedEstimate;
   contract: FixtureExpectedContract;
   reconciliation: FixtureExpectedReconciliation;
-};
+}
 
-export type TestFixtureFiles = {
+export interface TestFixtureFiles {
   estimate?: string;
   contract?: string;
   sov?: string;
   ref?: string[];
-};
+}
 
-export type TestFixture = {
+export interface TestFixture {
   name: string;
   dir: string;
   files: TestFixtureFiles;
   expected: FixtureExpected;
-};
+}
 
 export async function extractTextWithPdftotext(
   pdfPath: string,
@@ -169,11 +169,11 @@ export async function listFixtures(): Promise<string[]> {
     .filter((d) => existsSync(`${FIXTURES_DIR}/${d}/expected.json`));
 }
 
-export type ComparisonResult = {
+export interface ComparisonResult {
   passed: boolean;
   errors: string[];
   warnings: string[];
-};
+}
 
 export function compareScopeExtraction(
   actual: {
@@ -225,10 +225,10 @@ export function compareScopeExtraction(
   return { passed: errors.length === 0, errors, warnings };
 }
 
-export type ReconciliationComparisonResult = {
+export interface ReconciliationComparisonResult {
   passed: boolean;
   errors: string[];
-};
+}
 
 export function compareReconciliation(
   actual: {

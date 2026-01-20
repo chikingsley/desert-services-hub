@@ -17,18 +17,18 @@ const FOLDER_NAME = "Bid Invites";
 const BATCH_SIZE = 100;
 
 // Top-level regex patterns for performance
-const BID_INVITE_PREFIX_PATTERN = /^(Reminder:\s*)?(Bid Invite:)\s*/i;
-const PROJECT_SUFFIX_PATTERN = /\s+Project$/i;
-const LOCATION_PATTERN = /<b>Location:\s*<\/b><span>([^<]+)<\/span>/;
-const LEAD_PATTERN = /<b>Lead:\s*([^<]+)<\/b>/;
-const CONTACT_PATTERN =
+const _BID_INVITE_PREFIX_PATTERN = /^(Reminder:\s*)?(Bid Invite:)\s*/i;
+const _PROJECT_SUFFIX_PATTERN = /\s+Project$/i;
+const _LOCATION_PATTERN = /<b>Location:\s*<\/b><span>([^<]+)<\/span>/;
+const _LEAD_PATTERN = /<b>Lead:\s*([^<]+)<\/b>/;
+const _CONTACT_PATTERN =
   /(?:Estimating Lead|Project Manager|Estimator|Senior Estimator|Pre-Construction|Preconstruction)[^•]*•\s*([^•]+)•\s*([^<]+)</;
-const COMPANY_PATTERN = /<b>([^<]+)<\/b>\s*has invited you to bid/;
-const DESCRIPTION_PATTERN = /<div>([^<]{20,500})<\/div>/;
-const RFP_LINK_PATTERN =
+const _COMPANY_PATTERN = /<b>([^<]+)<\/b>\s*has invited you to bid/;
+const _DESCRIPTION_PATTERN = /<div>([^<]{20,500})<\/div>/;
+const _RFP_LINK_PATTERN =
   /<a[^>]*href="(https:\/\/app\.buildingconnected\.com\/goto\/[^"]+)"[^>]*>([^<]*)<\/a>/gi;
 
-type GraphEmail = {
+interface GraphEmail {
   id: string;
   subject?: string;
   receivedDateTime: string;
@@ -36,7 +36,7 @@ type GraphEmail = {
   hasAttachments?: boolean;
   body?: { content?: string; contentType?: string };
   conversationId?: string;
-};
+}
 
 function initDb(): Database {
   const db = new Database(DB_PATH);
@@ -81,7 +81,7 @@ function initDb(): Database {
   return db;
 }
 
-type ExtractedData = {
+interface ExtractedData {
   projectName: string;
   location: string | null;
   leadName: string | null;
@@ -91,7 +91,7 @@ type ExtractedData = {
   description: string | null;
   rfpUrl: string | null;
   allLinks: Array<{ url: string; label: string }>;
-};
+}
 
 function extractBcData(html: string, subject: string): ExtractedData {
   // Project name from subject
@@ -141,8 +141,12 @@ function extractBcData(html: string, subject: string): ExtractedData {
   while ((match = linkRegex.exec(html)) !== null) {
     const url = match[1];
     const rawLabel = match[2];
-    if (!(url && rawLabel)) continue;
-    if (seen.has(url)) continue;
+    if (!(url && rawLabel)) {
+      continue;
+    }
+    if (seen.has(url)) {
+      continue;
+    }
     seen.add(url);
 
     const label = rawLabel.trim().replace(/\s+/g, " ").replace(/»/g, "").trim();

@@ -1,6 +1,6 @@
+import { readFileSync, writeFileSync } from "node:fs";
 import { parse } from "csv-parse/sync";
 import { stringify } from "csv-stringify/sync";
-import { readFileSync, writeFileSync } from "fs";
 
 interface SmartRecord {
   id: string;
@@ -121,7 +121,9 @@ function cleanDisplayName(displayName: string): string {
 }
 
 function extractAllVariants(variants: string): string[] {
-  if (!variants) return [];
+  if (!variants) {
+    return [];
+  }
 
   return variants
     .split("|")

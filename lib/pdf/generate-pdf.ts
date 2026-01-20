@@ -12,15 +12,29 @@ import { buildBackPageDocDefinition, buildDocDefinition } from "./pdf-builder";
 export type { GeneratePDFOptions } from "./pdf-builder";
 
 // Initialize pdfmake Node.js API with standard PDF fonts
-// Using Times (Times New Roman) family
-pdfmake.setFonts({
+// Using Roboto (standard pdfmake font) to match client-side
+const fonts = {
   Roboto: {
-    normal: "Times-Roman",
-    bold: "Times-Bold",
-    italics: "Times-Italic",
-    bolditalics: "Times-BoldItalic",
+    normal: join(
+      process.cwd(),
+      "node_modules/pdfmake/fonts/Roboto/Roboto-Regular.ttf"
+    ),
+    bold: join(
+      process.cwd(),
+      "node_modules/pdfmake/fonts/Roboto/Roboto-Medium.ttf"
+    ),
+    italics: join(
+      process.cwd(),
+      "node_modules/pdfmake/fonts/Roboto/Roboto-Italic.ttf"
+    ),
+    bolditalics: join(
+      process.cwd(),
+      "node_modules/pdfmake/fonts/Roboto/Roboto-MediumItalic.ttf"
+    ),
   },
-});
+};
+
+pdfmake.setFonts(fonts);
 
 // Logo path - in public directory for Next.js
 const LOGO_PATH = join(process.cwd(), "public", "logo.png");
@@ -52,14 +66,13 @@ async function concatenatePDFs(
 }
 
 // Generate estimate PDF (without back page)
-async function generateEstimatePDF(
+function generateEstimatePDF(
   quote: EditorQuote,
   logoBase64: string,
   options?: GeneratePDFOptions
 ): Promise<Buffer> {
   const docDefinition = buildDocDefinition(quote, logoBase64, options);
-  const doc = pdfmake.createPdf(docDefinition);
-  return await doc.getBuffer();
+  return pdfmake.createPdf(docDefinition).getBuffer();
 }
 
 /**
@@ -68,8 +81,7 @@ async function generateEstimatePDF(
 export async function generateBackPagePDF(): Promise<Buffer> {
   const logoBase64 = await getLogoBase64();
   const docDefinition = buildBackPageDocDefinition(logoBase64);
-  const doc = pdfmake.createPdf(docDefinition);
-  return await doc.getBuffer();
+  return pdfmake.createPdf(docDefinition).getBuffer();
 }
 
 /**

@@ -864,17 +864,20 @@ export function TakeoffViewer({
         </div>
       )}
 
-      <style jsx>{`
+      {/* Scoped styles for PDF viewer */}
+      <style>
+        {`
         .takeoff-viewer {
           position: relative;
           overflow: hidden;
         }
-        .takeoff-viewer :global(.PdfHighlighter) {
+        .takeoff-viewer .PdfHighlighter {
           height: 100%;
           width: 100%;
           overflow: auto;
         }
-      `}</style>
+        `}
+      </style>
     </div>
   );
 }

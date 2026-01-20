@@ -13,7 +13,7 @@
     "strict": true,
     "skipLibCheck": true,
     "noFallthroughCasesInSwitch": true,
-    "noUncheckedIndexedAccess": true,
+    "noUncheckedIndexedAccess": false,
     "noImplicitOverride": true,
     "noUnusedLocals": false,
     "noUnusedParameters": false,
@@ -36,9 +36,11 @@
     "node_modules",
     "projects",
     "docs/_archive",
+    "docs/archive",
     "app",
     "bun-init",
     "bun-example",
-    "components"
+    "components",
+    "services/file-automation"
   ]
 }

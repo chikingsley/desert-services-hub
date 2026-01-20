@@ -28,7 +28,10 @@ const INTERNAL_CONTRACTS_GROUP_ID = "962f9440-9bde-4178-b538-edc7f8d3ecce";
 // Test Helpers
 // ============================================================================
 
-type TimedResult<T> = { result: T; ms: number };
+interface TimedResult<T> {
+  result: T;
+  ms: number;
+}
 
 async function timed<T>(
   label: string,

@@ -7,7 +7,9 @@ import { db } from "./db";
  * Queries run against SQLite FTS5 in ~1-5ms.
  */
 
-export type SearchResult = {
+const WHITESPACE_REGEX = /\s+/;
+
+export interface SearchResult {
   id: string;
   name: string;
   boardId: string;
@@ -20,17 +22,17 @@ export type SearchResult = {
   updatedAt: string;
   syncedAt: string;
   rank?: number;
-};
+}
 
-export type BoardMeta = {
+export interface BoardMeta {
   boardId: string;
   boardName: string;
   columns: Array<{ id: string; title: string; type: string }>;
   groups: Array<{ id: string; title: string }>;
   syncedAt: string;
-};
+}
 
-type CacheRow = {
+interface CacheRow {
   id: string;
   board_id: string;
   board_title: string;
@@ -41,7 +43,7 @@ type CacheRow = {
   created_at: string;
   updated_at: string;
   synced_at: string;
-};
+}
 
 type FtsRow = CacheRow & { rank: number };
 
@@ -82,7 +84,7 @@ export function search(
   // Escape special FTS characters and add prefix matching
   const ftsQuery = query
     .replace(/['"]/g, "")
-    .split(/\s+/)
+    .split(WHITESPACE_REGEX)
     .filter((w) => w.length > 0)
     .map((word) => `"${word}"*`)
     .join(" ");
@@ -209,7 +211,9 @@ export function getBoardMeta(boardId: string): BoardMeta | null {
       }
     | undefined;
 
-  if (!row) return null;
+  if (!row) {
+    return null;
+  }
 
   return {
     boardId: row.board_id,

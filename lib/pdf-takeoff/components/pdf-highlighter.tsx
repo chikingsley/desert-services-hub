@@ -1,4 +1,3 @@
-import debounce from "lodash.debounce";
 import type { PDFDocumentProxy } from "pdfjs-dist";
 import type {
   EventBus as TEventBus,
@@ -58,12 +57,23 @@ let EventBus: typeof TEventBus,
   PDFLinkService: typeof TPDFLinkService,
   PDFViewer: typeof TPDFViewer;
 
+// Module-level promise to track when PDF.js modules are loaded
+let pdfjsLoadedResolve!: () => void;
+const pdfjsLoaded = new Promise<void>((resolve) => {
+  pdfjsLoadedResolve = resolve;
+});
+
 (async () => {
-  // Due to breaking changes in PDF.js 4.0.189. See issue #17228
-  const pdfjs = await import("pdfjs-dist/web/pdf_viewer.mjs");
-  EventBus = pdfjs.EventBus;
-  PDFLinkService = pdfjs.PDFLinkService;
-  PDFViewer = pdfjs.PDFViewer;
+  // MUST set globalThis.pdfjsLib before importing pdf_viewer (required by pdfjs-dist v4+)
+  const pdfjsLib = await import("pdfjs-dist");
+  (globalThis as Record<string, unknown>).pdfjsLib = pdfjsLib;
+
+  // Now safe to import the viewer
+  const viewer = await import("pdfjs-dist/web/pdf_viewer.mjs");
+  EventBus = viewer.EventBus;
+  PDFLinkService = viewer.PDFLinkService;
+  PDFViewer = viewer.PDFViewer;
+  pdfjsLoadedResolve();
 })();
 
 const SCROLL_MARGIN = 10;
@@ -342,12 +352,9 @@ export const PdfHighlighter = ({
     // Placeholder function, will be replaced
   });
 
-  const eventBusRef = useRef<InstanceType<typeof EventBus>>(new EventBus());
-  const linkServiceRef = useRef<InstanceType<typeof PDFLinkService>>(
-    new PDFLinkService({
-      eventBus: eventBusRef.current,
-      externalLinkTarget: 2,
-    })
+  const eventBusRef = useRef<InstanceType<typeof EventBus> | null>(null);
+  const linkServiceRef = useRef<InstanceType<typeof PDFLinkService> | null>(
+    null
   );
   const resizeObserverRef = useRef<ResizeObserver | null>(null);
   const viewerRef = useRef<InstanceType<typeof PDFViewer> | null>(null);
@@ -358,9 +365,25 @@ export const PdfHighlighter = ({
       return;
     }
 
-    const debouncedDocumentInit = debounce(() => {
-      if (!containerNodeRef.current) {
+    let cancelled = false;
+
+    const initViewer = async () => {
+      // Wait for pdfjs modules to load
+      await pdfjsLoaded;
+
+      if (cancelled || !containerNodeRef.current) {
         return;
+      }
+
+      // Initialize EventBus and LinkService if not already done
+      if (!eventBusRef.current) {
+        eventBusRef.current = new EventBus();
+      }
+      if (!linkServiceRef.current) {
+        linkServiceRef.current = new PDFLinkService({
+          eventBus: eventBusRef.current,
+          externalLinkTarget: 2,
+        });
       }
 
       viewerRef.current =
@@ -377,12 +400,14 @@ export const PdfHighlighter = ({
       linkServiceRef.current.setDocument(pdfDocument);
       linkServiceRef.current.setViewer(viewerRef.current);
       setIsViewerReady(true);
-    }, 100);
+    };
 
-    debouncedDocumentInit();
+    // Debounce the init to avoid rapid re-initialization
+    const timeoutId = setTimeout(initViewer, 100);
 
     return () => {
-      debouncedDocumentInit.cancel();
+      cancelled = true;
+      clearTimeout(timeoutId);
     };
   }, [pdfDocument]);
 
@@ -639,28 +664,30 @@ export const PdfHighlighter = ({
 
   // Initialise viewer event listeners
   useLayoutEffect(() => {
-    if (!containerNodeRef.current) {
+    if (!(containerNodeRef.current && isViewerReady && eventBusRef.current)) {
       return;
     }
+
+    const eventBus = eventBusRef.current;
 
     resizeObserverRef.current = new ResizeObserver(handleScaleValue);
     resizeObserverRef.current.observe(containerNodeRef.current);
 
     const doc = containerNodeRef.current.ownerDocument;
 
-    eventBusRef.current.on("textlayerrendered", renderHighlightLayers);
-    eventBusRef.current.on("pagesinit", handleScaleValue);
+    eventBus.on("textlayerrendered", renderHighlightLayers);
+    eventBus.on("pagesinit", handleScaleValue);
     doc.addEventListener("keydown", handleKeyDown);
 
     renderHighlightLayers();
 
     return () => {
-      eventBusRef.current.off("pagesinit", handleScaleValue);
-      eventBusRef.current.off("textlayerrendered", renderHighlightLayers);
+      eventBus.off("pagesinit", handleScaleValue);
+      eventBus.off("textlayerrendered", renderHighlightLayers);
       doc.removeEventListener("keydown", handleKeyDown);
       resizeObserverRef.current?.disconnect();
     };
-  }, [handleKeyDown, handleScaleValue, renderHighlightLayers]);
+  }, [handleKeyDown, handleScaleValue, renderHighlightLayers, isViewerReady]);
 
   // Utils
   const isEditingOrHighlighting = () => {

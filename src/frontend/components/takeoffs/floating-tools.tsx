@@ -2,8 +2,6 @@
 
 import { Circle, GripVertical, Ruler, Square, Trash2 } from "lucide-react";
 import { useState } from "react";
-import type { PresetItem } from "@/app/takeoffs/[id]/page";
-import { SCALE_PRESETS } from "@/app/takeoffs/[id]/page";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -18,6 +16,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { type PresetItem, SCALE_PRESETS } from "@/pages/takeoff-editor";
 
 interface FloatingToolsProps {
   items: PresetItem[];

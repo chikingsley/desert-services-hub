@@ -4,7 +4,7 @@
  * Types for construction contract document processing
  */
 
-export type PartyInfo = {
+export interface PartyInfo {
   name: string;
   address?: string;
   city?: string;
@@ -15,9 +15,9 @@ export type PartyInfo = {
   rocLicense?: string;
   representative?: string;
   title?: string;
-};
+}
 
-export type ProjectInfo = {
+export interface ProjectInfo {
   name: string;
   address?: string;
   city?: string;
@@ -25,9 +25,9 @@ export type ProjectInfo = {
   zip?: string;
   number?: string;
   description?: string;
-};
+}
 
-export type ContractAmounts = {
+export interface ContractAmounts {
   originalAmount: number;
   retainage?: number;
   retainageAmount?: number;
@@ -36,26 +36,26 @@ export type ContractAmounts = {
     amount?: number;
     type?: string;
   };
-};
+}
 
-export type ContractDates = {
+export interface ContractDates {
   effectiveDate?: string;
   executionDate?: string;
   startDate?: string;
   completionDate?: string;
   duration?: string;
-};
+}
 
-export type InsuranceRequirements = {
+export interface InsuranceRequirements {
   generalLiability?: number;
   autoLiability?: number;
   workersComp?: boolean;
   umbrellaExcess?: number;
   professionalLiability?: number;
   additionalInsured?: boolean;
-};
+}
 
-export type SiteRequirements = {
+export interface SiteRequirements {
   badging?: string;
   backgroundCheck?: string;
   drugTesting?: string;
@@ -64,9 +64,9 @@ export type SiteRequirements = {
   siteAccess?: string;
   parking?: string;
   security?: string;
-};
+}
 
-export type OperationalRequirements = {
+export interface OperationalRequirements {
   dailyReports?: string;
   progressMeetings?: string;
   communication?: string;
@@ -74,32 +74,32 @@ export type OperationalRequirements = {
   rfiProcedure?: string;
   changeOrderProcedure?: string;
   noticeDays?: number;
-};
+}
 
-export type FinancialRequirements = {
+export interface FinancialRequirements {
   paymentTerms?: string;
   invoiceRequirements?: string;
   lienWaivers?: string;
   retainageRelease?: string;
   storedMaterials?: boolean;
-};
+}
 
-export type RiskRequirements = {
+export interface RiskRequirements {
   liquidatedDamages?: string;
   warranty?: string;
   indemnification?: string;
   insuranceCertTiming?: string;
   bondingDetails?: string;
-};
+}
 
-export type ScheduleRequirements = {
+export interface ScheduleRequirements {
   milestoneDates?: string[];
   substantialCompletion?: string;
   punchList?: string;
   finalInspection?: string;
-};
+}
 
-export type ComprehensiveRequirements = {
+export interface ComprehensiveRequirements {
   site?: SiteRequirements;
   operational?: OperationalRequirements;
   financial?: FinancialRequirements;
@@ -108,19 +108,19 @@ export type ComprehensiveRequirements = {
   redFlags?: string[];
   clarificationsNeeded?: string[];
   keyQuotes?: { section: string; quote: string }[];
-};
+}
 
-export type ScopeItem = {
+export interface ScopeItem {
   description: string;
   included: boolean;
-};
+}
 
-export type ExhibitInfo = {
+export interface ExhibitInfo {
   letter: string;
   title: string;
   description?: string;
   fileName?: string;
-};
+}
 
 export type ContractDocType =
   | "SUBCONTRACT"
@@ -136,7 +136,7 @@ export type ContractDocType =
   | "FE_FORM"
   | "OTHER";
 
-export type ContractDetails = {
+export interface ContractDetails {
   docType: ContractDocType;
   confidence: number;
   contractor?: PartyInfo;
@@ -157,9 +157,9 @@ export type ContractDetails = {
   rawText?: string;
   extractionMethod: "jina" | "gemini-vision";
   processingTimeMs: number;
-};
+}
 
-export type ContractPackageSummary = {
+export interface ContractPackageSummary {
   totalDocs: number;
   mainContract?: string;
   exhibitCount: number;
@@ -168,9 +168,9 @@ export type ContractPackageSummary = {
   hasScopeInfo: boolean;
   hasScheduleInfo: boolean;
   hasRequirementsInfo: boolean;
-};
+}
 
-export type ContractPackage = {
+export interface ContractPackage {
   folderPath: string;
   processedAt: string;
   totalTimeMs: number;
@@ -186,21 +186,21 @@ export type ContractPackage = {
   requirements?: ComprehensiveRequirements;
   documents: ContractDetails[];
   summary: ContractPackageSummary;
-};
+}
 
-export type ContractExtractionOptions = {
+export interface ContractExtractionOptions {
   forceVision?: boolean;
   includeRawText?: boolean;
   maxPages?: number;
   skipClassification?: boolean;
-};
+}
 
 export type ContractFolderOptions = ContractExtractionOptions & {
   include?: string[];
   exclude?: string[];
 };
 
-export type LineItemMatch = {
+export interface LineItemMatch {
   estimateItem: {
     description: string;
     total: number;
@@ -212,17 +212,17 @@ export type LineItemMatch = {
   contractAmount?: number;
   priceDifference?: number;
   notes: string;
-};
+}
 
-export type ReconciliationVerdict = {
+export interface ReconciliationVerdict {
   status: "MATCH" | "EXPLAINABLE" | "NEEDS_REVIEW" | "CANNOT_RECONCILE";
   summary: string;
   nextSteps: string[];
-};
+}
 
 export type RedFlagSeverity = "low" | "medium" | "high";
 
-export type ReconciliationResult = {
+export interface ReconciliationResult {
   projectName: string;
   contractorName: string;
   reconciliationDate: string;
@@ -250,4 +250,4 @@ export type ReconciliationResult = {
   };
   verdict: ReconciliationVerdict;
   processingTimeMs: number;
-};
+}

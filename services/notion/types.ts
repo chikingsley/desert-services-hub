@@ -2,40 +2,40 @@
  * Notion Service Types
  */
 
-export type NotionPage = {
+export interface NotionPage {
   id: string;
   properties: Record<string, unknown>;
   icon?: { type: string; external?: { url: string } };
   created_time?: string;
   last_edited_time?: string;
-};
+}
 
-export type NotionDatabase = {
+export interface NotionDatabase {
   id: string;
   title: string;
   properties: Record<string, { name: string; type: string }>;
-};
+}
 
-export type NotionQueryResult<T = NotionPage> = {
+export interface NotionQueryResult<T = NotionPage> {
   results: T[];
   has_more: boolean;
   next_cursor?: string;
-};
+}
 
-export type CreatePageOptions = {
+export interface CreatePageOptions {
   databaseId: string;
   properties: Record<string, unknown>;
   icon?: { type: "external"; external: { url: string } };
-};
+}
 
-export type UpdatePageOptions = {
+export interface UpdatePageOptions {
   pageId: string;
   properties?: Record<string, unknown>;
   icon?: { type: "external"; external: { url: string } };
   archived?: boolean;
-};
+}
 
-export type QueryDatabaseOptions = {
+export interface QueryDatabaseOptions {
   databaseId: string;
   filter?: Record<string, unknown>;
   sorts?: Array<{
@@ -45,10 +45,10 @@ export type QueryDatabaseOptions = {
   }>;
   pageSize?: number;
   startCursor?: string;
-};
+}
 
 // File upload types
-export type FileUploadResult = {
+export interface FileUploadResult {
   id: string;
   upload_url: string;
-};
+}

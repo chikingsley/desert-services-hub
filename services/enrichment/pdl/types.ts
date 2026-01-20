@@ -8,7 +8,7 @@
 // Person Types
 // ============================================================================
 
-export type PDLPersonData = {
+export interface PDLPersonData {
   id?: string;
   full_name?: string;
   first_name?: string;
@@ -46,9 +46,9 @@ export type PDLPersonData = {
     start_date?: string;
     end_date?: string;
   }>;
-};
+}
 
-export type PersonEnrichmentResult = {
+export interface PersonEnrichmentResult {
   success: boolean;
   likelihood?: number;
   person?: {
@@ -68,9 +68,9 @@ export type PersonEnrichmentResult = {
   raw?: PDLPersonData;
   timeMs: number;
   error?: string;
-};
+}
 
-export type PersonSearchResult = {
+export interface PersonSearchResult {
   success: boolean;
   total: number;
   people: Array<{
@@ -85,9 +85,9 @@ export type PersonSearchResult = {
   raw?: PDLPersonData[];
   timeMs: number;
   error?: string;
-};
+}
 
-export type PersonIdentifyResult = {
+export interface PersonIdentifyResult {
   success: boolean;
   matches: Array<{
     id: string | null;
@@ -99,13 +99,13 @@ export type PersonIdentifyResult = {
   }>;
   timeMs: number;
   error?: string;
-};
+}
 
 // ============================================================================
 // Company Types
 // ============================================================================
 
-export type PDLCompanyData = {
+export interface PDLCompanyData {
   id?: string;
   name?: string;
   display_name?: string;
@@ -129,9 +129,9 @@ export type PDLCompanyData = {
     country?: string;
   };
   naics?: Array<{ naics_code: string; naics_description: string }>;
-};
+}
 
-export type CompanyEnrichmentResult = {
+export interface CompanyEnrichmentResult {
   success: boolean;
   likelihood?: number;
   company?: {
@@ -152,9 +152,9 @@ export type CompanyEnrichmentResult = {
   raw?: PDLCompanyData;
   timeMs: number;
   error?: string;
-};
+}
 
-export type CompanySearchResult = {
+export interface CompanySearchResult {
   success: boolean;
   total: number;
   companies: Array<{
@@ -168,9 +168,9 @@ export type CompanySearchResult = {
   raw?: PDLCompanyData[];
   timeMs: number;
   error?: string;
-};
+}
 
-export type CompanyCleanResult = {
+export interface CompanyCleanResult {
   success: boolean;
   company?: {
     name: string;
@@ -184,13 +184,13 @@ export type CompanyCleanResult = {
   fuzzyMatch: boolean;
   timeMs: number;
   error?: string;
-};
+}
 
 // ============================================================================
 // Support API Types
 // ============================================================================
 
-export type JobTitleEnrichResult = {
+export interface JobTitleEnrichResult {
   success: boolean;
   matches: Array<{
     title: string;
@@ -199,9 +199,9 @@ export type JobTitleEnrichResult = {
   skills: string[];
   timeMs: number;
   error?: string;
-};
+}
 
-export type IPEnrichResult = {
+export interface IPEnrichResult {
   success: boolean;
   ip?: {
     address: string;
@@ -210,9 +210,9 @@ export type IPEnrichResult = {
   };
   timeMs: number;
   error?: string;
-};
+}
 
-export type LocationCleanResult = {
+export interface LocationCleanResult {
   success: boolean;
   location?: {
     name: string | null;
@@ -226,9 +226,9 @@ export type LocationCleanResult = {
   };
   timeMs: number;
   error?: string;
-};
+}
 
-export type SchoolCleanResult = {
+export interface SchoolCleanResult {
   success: boolean;
   school?: {
     name: string;
@@ -239,9 +239,9 @@ export type SchoolCleanResult = {
   };
   timeMs: number;
   error?: string;
-};
+}
 
-export type AutocompleteResult = {
+export interface AutocompleteResult {
   success: boolean;
   suggestions: Array<{
     name: string;
@@ -250,4 +250,4 @@ export type AutocompleteResult = {
   }>;
   timeMs: number;
   error?: string;
-};
+}

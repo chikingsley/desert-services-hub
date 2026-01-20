@@ -18,40 +18,40 @@ const DEFAULT_TOP = 50;
 const DEFAULT_ORDER = "lastDeliveredDateTime desc";
 const DEFAULT_MAX_CONVERSATIONS = 100;
 
-type GraphListResponse<T> = {
+interface GraphListResponse<T> {
   value?: T[];
-};
+}
 
-type GraphConversationRaw = {
+interface GraphConversationRaw {
   id?: string;
   topic?: string;
   hasAttachments?: boolean;
   lastDeliveredDateTime?: string;
-};
+}
 
-type GraphThreadRaw = {
+interface GraphThreadRaw {
   id?: string;
   topic?: string;
   hasAttachments?: boolean;
   lastDeliveredDateTime?: string;
-};
+}
 
-type GraphAttachmentRaw = {
+interface GraphAttachmentRaw {
   id?: string;
   name?: string;
   contentType?: string;
   size?: number;
   contentBytes?: string;
-};
+}
 
-type GraphPostRaw = {
+interface GraphPostRaw {
   id?: string;
   from?: { emailAddress?: { name?: string; address?: string } };
   receivedDateTime?: string;
   body?: { content?: string; contentType?: string };
   hasAttachments?: boolean;
   attachments?: GraphAttachmentRaw[];
-};
+}
 
 /**
  * Client for interacting with Microsoft 365 Group conversations via the Graph API.

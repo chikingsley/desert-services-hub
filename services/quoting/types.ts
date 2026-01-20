@@ -1,6 +1,6 @@
 // Core types for quoting service
 
-export type LineItem = {
+export interface LineItem {
   id: string;
   item: string; // catalog code e.g. "SWPPP-001"
   description: string;
@@ -9,15 +9,15 @@ export type LineItem = {
   cost: number;
   total: number;
   sectionId?: string;
-};
+}
 
-export type QuoteSection = {
+export interface QuoteSection {
   id: string;
   name: string;
   showSubtotal?: boolean;
-};
+}
 
-export type Quote = {
+export interface Quote {
   id?: string;
   estimateNumber: string;
   date: string;
@@ -46,12 +46,12 @@ export type Quote = {
   sections: QuoteSection[];
   lineItems: LineItem[];
   total: number;
-};
+}
 
 export type QuoteStatus = "draft" | "sent" | "accepted" | "declined";
 
 // Database row type
-export type QuoteRow = {
+export interface QuoteRow {
   id: string;
   estimate_number: string;
   revision_number: number;
@@ -68,10 +68,10 @@ export type QuoteRow = {
   sections: string | null; // JSON stringified
   created_at: string;
   updated_at: string;
-};
+}
 
 // Catalog types
-export type CatalogItem = {
+export interface CatalogItem {
   code: string;
   name: string;
   description: string;
@@ -79,33 +79,33 @@ export type CatalogItem = {
   unit: string;
   notes?: string;
   defaultQty?: number;
-};
+}
 
-export type CatalogSubcategory = {
+export interface CatalogSubcategory {
   id: string;
   name: string;
   items: CatalogItem[];
-};
+}
 
-export type CatalogCategory = {
+export interface CatalogCategory {
   id: string;
   name: string;
   items?: CatalogItem[];
   subcategories?: CatalogSubcategory[];
-};
+}
 
-export type Catalog = {
+export interface Catalog {
   categories: CatalogCategory[];
-};
+}
 
 // Takeoff bundle types
-export type TakeoffBundleItem = {
+export interface TakeoffBundleItem {
   code: string; // References a CatalogItem code
   isRequired: boolean;
   quantityMultiplier: number;
-};
+}
 
-export type TakeoffBundle = {
+export interface TakeoffBundle {
   id: string;
   name: string;
   description: string;
@@ -113,4 +113,4 @@ export type TakeoffBundle = {
   toolType: "count" | "linear" | "area";
   color: string;
   items: TakeoffBundleItem[];
-};
+}

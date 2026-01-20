@@ -102,11 +102,11 @@ async function queryMonday(graphqlQuery: string) {
   return result.data;
 }
 
-type BoardMetadata = {
+interface BoardMetadata {
   name: string;
   columns: Array<{ id: string; title: string; type: string }>;
   groups: Array<{ id: string; title: string }>;
-};
+}
 
 async function fetchBoardMetadata(boardId: string): Promise<BoardMetadata> {
   const result = await queryMonday(`
@@ -133,7 +133,7 @@ async function fetchBoardMetadata(boardId: string): Promise<BoardMetadata> {
   };
 }
 
-type MondayItem = {
+interface MondayItem {
   id: string;
   name: string;
   group: { id: string; title: string };
@@ -145,7 +145,7 @@ type MondayItem = {
     value: string;
     display_value?: string;
   }>;
-};
+}
 
 async function fetchBoardItems(boardId: string): Promise<MondayItem[]> {
   const allItems: MondayItem[] = [];
@@ -200,13 +200,19 @@ async function fetchBoardItems(boardId: string): Promise<MondayItem[]> {
 }
 
 function isGarbage(name: string, groupTitle: string): boolean {
-  if (!name || name.trim().length === 0) return true;
+  if (!name || name.trim().length === 0) {
+    return true;
+  }
 
   const upperName = name.toUpperCase();
-  if (GARBAGE_NAME_PATTERNS.some((p) => upperName.includes(p))) return true;
+  if (GARBAGE_NAME_PATTERNS.some((p) => upperName.includes(p))) {
+    return true;
+  }
 
   const upperGroup = groupTitle.toUpperCase();
-  if (EXCLUDED_GROUPS.some((p) => upperGroup.includes(p))) return true;
+  if (EXCLUDED_GROUPS.some((p) => upperGroup.includes(p))) {
+    return true;
+  }
 
   return false;
 }

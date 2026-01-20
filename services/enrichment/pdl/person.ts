@@ -55,7 +55,7 @@ function normalizePerson(
 // Person Enrichment
 // ============================================================================
 
-type EnrichmentParams = {
+interface EnrichmentParams {
   email?: string;
   phone?: string;
   profile?: string; // LinkedIn URL
@@ -65,7 +65,7 @@ type EnrichmentParams = {
   lastName?: string;
   minLikelihood?: number;
   sandbox?: boolean; // Use sandbox mode (no credits consumed)
-};
+}
 
 /**
  * Enrich a person by various identifiers
@@ -159,11 +159,11 @@ export function enrichByNameAndCompany(
 // Person Search
 // ============================================================================
 
-type SearchParams = {
+interface SearchParams {
   query: string; // SQL query string
   size?: number; // Max results (default 10)
   sandbox?: boolean;
-};
+}
 
 /**
  * Search for people using SQL syntax
@@ -266,7 +266,7 @@ export async function searchPeopleElastic(params: {
 // Person Identify
 // ============================================================================
 
-type IdentifyParams = {
+interface IdentifyParams {
   name?: string;
   email?: string;
   phone?: string;
@@ -274,7 +274,7 @@ type IdentifyParams = {
   profile?: string;
   location?: string;
   sandbox?: boolean;
-};
+}
 
 /**
  * Identify possible person matches (fuzzy matching)

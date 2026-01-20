@@ -268,13 +268,13 @@ export function formatDateForFilename(date: Date = new Date()): string {
   return date.toISOString().split("T")[0] ?? "";
 }
 
-export type FilenameOptions = {
+export interface FilenameOptions {
   type: keyof typeof DOCUMENT_TYPES;
   date: string;
   identifier?: string;
   modifier?: string;
   extension?: string;
-};
+}
 
 /**
  * Build a standardized filename

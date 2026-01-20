@@ -29,20 +29,20 @@ describe("MCP Tool Handlers", () => {
     global.fetch = mock(async (url: string) => {
       // Return list of quotes for ID resolution
       if (url.endsWith("/api/quotes")) {
-        return new Response(JSON.stringify([mockQuote]));
+        return Response.json([mockQuote]);
       }
       // Return single quote
       if (url.includes("/api/quotes/uuid-test")) {
-        return new Response(JSON.stringify(mockQuote));
+        return Response.json(mockQuote);
       }
-      return new Response(JSON.stringify({ ok: true }));
+      return Response.json({ ok: true });
     }) as any;
   });
 
   describe("list_quotes", () => {
     it("returns formatted quote list with UUIDs", async () => {
       expect(tools.list_quotes).toBeDefined();
-      const response = await tools.list_quotes!.handler({});
+      const response = await tools.list_quotes?.handler({});
       const textContent = response.content[0];
       expect(textContent).toBeDefined();
       expect(textContent?.text).toContain("uuid-test");
@@ -56,25 +56,27 @@ describe("MCP Tool Handlers", () => {
       let capturedPayload: any = null;
 
       global.fetch = mock(async (url: string, init?: RequestInit) => {
-        if (url.endsWith("/api/quotes"))
-          return new Response(JSON.stringify([mockQuote]));
+        if (url.endsWith("/api/quotes")) {
+          return Response.json([mockQuote]);
+        }
         if (url.includes("/api/quotes/uuid-test")) {
           if (init?.method === "PUT") {
             capturedPayload = JSON.parse(init.body as string);
           }
-          return new Response(JSON.stringify(mockQuote));
+          return Response.json(mockQuote);
         }
-        return new Response(JSON.stringify({ ok: true }));
+        return Response.json({ ok: true });
       }) as any;
 
       expect(tools.add_line_item).toBeDefined();
-      await tools.add_line_item!.handler({
-        quote_id: "260115",
-        item: "Steel Fence",
+      // Use CANONICAL field names (Zod-validated)
+      await tools.add_line_item?.handler({
+        quoteId: "260115",
+        name: "Steel Fence",
         description: "Heavy duty",
-        qty: 10,
-        uom: "LF",
-        cost: 45,
+        quantity: 10,
+        unit: "LF",
+        unitPrice: 45,
       });
 
       expect(capturedPayload).not.toBeNull();

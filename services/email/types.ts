@@ -9,7 +9,7 @@
  * Configuration for authenticating with Microsoft Graph API via Azure AD.
  * Used to initialize the GraphEmailClient with app-only or delegated auth.
  */
-export type EmailConfig = {
+export interface EmailConfig {
   /** Azure AD tenant ID (directory ID) where the app is registered */
   azureTenantId: string;
   /** Application (client) ID from Azure AD app registration */
@@ -20,24 +20,24 @@ export type EmailConfig = {
   batchSize?: number;
   /** Number of days back to search for emails (default: 30) */
   daysBack?: number;
-};
+}
 
 /**
  * Represents an email recipient (sender, to, cc, bcc).
  * Used in both incoming and outgoing email operations.
  */
-export type Recipient = {
+export interface Recipient {
   /** Display name of the recipient, null if not available */
   name: string | null;
   /** Email address of the recipient */
   email: string;
-};
+}
 
 /**
  * Full representation of an email message from Microsoft Graph.
  * Contains all metadata and content from a retrieved email.
  */
-export type EmailMessage = {
+export interface EmailMessage {
   /** Unique Microsoft Graph message ID */
   id: string;
   /** Email subject line */
@@ -60,13 +60,13 @@ export type EmailMessage = {
   hasAttachments?: boolean;
   /** ID linking related emails in the same thread */
   conversationId?: string;
-};
+}
 
 /**
  * Simplified email representation optimized for search results and listings.
  * Contains essential fields for displaying email summaries.
  */
-export type EmailResult = {
+export interface EmailResult {
   /** Unique Microsoft Graph message ID */
   id: string;
   /** Email subject line */
@@ -79,24 +79,24 @@ export type EmailResult = {
   receivedDateTime?: string;
   /** Short preview of the email body content */
   preview?: string;
-};
+}
 
 /**
  * Search results grouped by mailbox.
  * Used when searching across multiple mailboxes in an organization.
  */
-export type MailboxResult = {
+export interface MailboxResult {
   /** Email address of the mailbox that was searched */
   mailbox: string;
   /** Emails found in this mailbox matching the search criteria */
   emails: EmailResult[];
-};
+}
 
 /**
  * Attachment metadata and content from a retrieved email.
  * Includes size and content information for download operations.
  */
-export type EmailAttachment = {
+export interface EmailAttachment {
   /** Unique Microsoft Graph attachment ID */
   id: string;
   /** Original filename of the attachment */
@@ -111,7 +111,7 @@ export type EmailAttachment = {
   contentBytes?: string;
   /** Content ID for inline images, referenced as cid:xxx in HTML body */
   contentId?: string;
-};
+}
 
 /**
  * Email attachment with source tracking information.
@@ -138,7 +138,7 @@ export type TrackedEmailAttachment = EmailAttachment & {
  * Attachment data for sending emails.
  * Simplified version without server-assigned fields like id and size.
  */
-export type SendEmailAttachment = {
+export interface SendEmailAttachment {
   /** Filename for the attachment */
   name: string;
   /** MIME type of the attachment (e.g., "application/pdf") */
@@ -149,7 +149,7 @@ export type SendEmailAttachment = {
   contentId?: string;
   /** Whether the attachment should be embedded inline in the email body */
   isInline?: boolean;
-};
+}
 
 /**
  * Search options for email queries using KQL (Keyword Query Language).
@@ -175,7 +175,7 @@ export type SendEmailAttachment = {
  * // Search by attachment filename
  * { query: "attachment:report.pdf" }
  */
-export type EmailSearchOptions = {
+export interface EmailSearchOptions {
   /** KQL query string for searching emails */
   query: string;
   /** Target user's email address - required for app auth, optional for user auth */
@@ -188,13 +188,13 @@ export type EmailSearchOptions = {
   until?: Date;
   /** Specific mail folder to search within */
   folder?: "inbox" | "sentitems" | "drafts" | "deleteditems";
-};
+}
 
 /**
  * Options for composing and sending an email via Microsoft Graph.
  * Supports HTML/text body, multiple recipients, and attachments.
  */
-export type SendEmailOptions = {
+export interface SendEmailOptions {
   /** Primary recipients (To field) */
   to: Array<{ email: string; name?: string }>;
   /** Carbon copy recipients (CC field) */
@@ -218,13 +218,13 @@ export type SendEmailOptions = {
   attachments?: SendEmailAttachment[];
   /** Skip auto-signature (default: false - signature is added automatically) */
   skipSignature?: boolean;
-};
+}
 
 /**
  * A single post (message) within a Microsoft 365 Group conversation thread.
  * Represents one reply or the initial message in a group discussion.
  */
-export type GroupPost = {
+export interface GroupPost {
   /** Unique Microsoft Graph post ID */
   id: string;
   /** Author of the post */
@@ -244,13 +244,13 @@ export type GroupPost = {
   hasAttachments: boolean;
   /** Attachments on this post (populated when requested) */
   attachments?: GroupAttachment[];
-};
+}
 
 /**
  * Attachment on a Microsoft 365 Group post.
  * Similar to email attachments but specific to group conversations.
  */
-export type GroupAttachment = {
+export interface GroupAttachment {
   /** Unique Microsoft Graph attachment ID */
   id: string;
   /** Original filename of the attachment */
@@ -261,13 +261,13 @@ export type GroupAttachment = {
   size: number;
   /** Base64-encoded file content (only present when downloading) */
   contentBytes?: string;
-};
+}
 
 /**
  * A thread within a Microsoft 365 Group conversation.
  * Contains a sequence of related posts (replies) on a single topic.
  */
-export type GroupThread = {
+export interface GroupThread {
   /** Unique Microsoft Graph thread ID */
   id: string;
   /** Subject/topic of the thread */
@@ -278,13 +278,13 @@ export type GroupThread = {
   lastDeliveredDateTime: string;
   /** All posts (messages) in this thread */
   posts: GroupPost[];
-};
+}
 
 /**
  * A conversation in a Microsoft 365 Group.
  * Top-level container for discussion threads on a shared topic.
  */
-export type GroupConversation = {
+export interface GroupConversation {
   /** Unique Microsoft Graph conversation ID */
   id: string;
   /** Subject/topic of the conversation */
@@ -295,4 +295,4 @@ export type GroupConversation = {
   lastDeliveredDateTime: string;
   /** All threads within this conversation */
   threads: GroupThread[];
-};
+}

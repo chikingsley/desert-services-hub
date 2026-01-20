@@ -17,7 +17,7 @@ const HUB_URL = process.env.HUB_URL ?? "http://localhost:3000";
 // Types
 // ============================================================================
 
-type HubLineItem = {
+interface HubLineItem {
   id: string;
   section_id: string | null;
   description: string;
@@ -28,15 +28,15 @@ type HubLineItem = {
   is_excluded: number;
   notes: string | null;
   sort_order: number;
-};
+}
 
-type HubSection = {
+interface HubSection {
   id: string;
   name: string;
   sort_order: number;
-};
+}
 
-type HubQuote = {
+interface HubQuote {
   id: string;
   base_number: string;
   job_name: string;
@@ -52,7 +52,7 @@ type HubQuote = {
     sections: HubSection[];
     line_items: HubLineItem[];
   };
-};
+}
 
 // ============================================================================
 // Helper Functions
@@ -177,7 +177,7 @@ describe("MCP Server Integration", () => {
 
       const firstQuote = quotes[0];
       expect(firstQuote).toBeDefined();
-      const quoteId = firstQuote!.id;
+      const quoteId = firstQuote?.id;
       const quote = await hubFetch<HubQuote>(`/api/quotes/${quoteId}`);
 
       expect(quote.id).toBe(quoteId);

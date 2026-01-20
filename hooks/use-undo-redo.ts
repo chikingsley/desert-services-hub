@@ -80,10 +80,10 @@ function createReducer<T>(maxHistory: number) {
       }
 
       case "REDO": {
-        if (state.future.length === 0) {
+        const next = state.future[0];
+        if (!next) {
           return state;
         }
-        const next = state.future[0];
         const newFuture = state.future.slice(1);
         return {
           past: [...state.past, state.present],

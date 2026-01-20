@@ -16,7 +16,7 @@ import type {
 } from "../../lib/types";
 import { generateBaseNumber } from "../../lib/utils";
 
-// Bun request type with params
+// Bun extends Request with params from route matching
 type BunRequest = Request & { params: { id: string } };
 
 interface QuoteLineItemInput {
@@ -212,7 +212,10 @@ export async function updateQuote(req: BunRequest): Promise<Response> {
             item.unit_cost ?? cost * 0.7,
             item.unit_price ?? cost,
             item.notes ||
-              (item.item && item.description && item.item !== item.description
+              (item.item &&
+              item.description &&
+              item.description.trim() &&
+              item.item !== item.description
                 ? item.description
                 : null) ||
               null,
@@ -316,11 +319,11 @@ export async function getQuotePdf(req: BunRequest): Promise<Response> {
     const editorQuote: EditorQuote = {
       estimateNumber: quote.base_number,
       date: quote.created_at || new Date().toISOString(),
-      estimator: "",
-      estimatorEmail: "",
+      estimator: quote.estimator || "",
+      estimatorEmail: quote.estimator_email || "",
       billTo: {
         companyName: quote.client_name || "",
-        address: "",
+        address: quote.client_address || "",
         email: quote.client_email || "",
         phone: quote.client_phone || "",
       },
@@ -336,7 +339,7 @@ export async function getQuotePdf(req: BunRequest): Promise<Response> {
     const pdfBytes = await generatePDF(editorQuote);
     const filename = getPDFFilename(editorQuote);
 
-    return new Response(pdfBytes, {
+    return new Response(Buffer.from(pdfBytes), {
       headers: {
         "Content-Type": "application/pdf",
         "Content-Disposition": `attachment; filename="${filename}"`,

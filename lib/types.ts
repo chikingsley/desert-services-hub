@@ -37,6 +37,8 @@ export interface QuoteSectionRow {
   id: string;
   version_id: string;
   name: string;
+  title: string | null;
+  show_subtotal: number; // SQLite stores as 0 or 1
   sort_order: number;
   created_at: string;
 }
@@ -149,6 +151,8 @@ export interface QuoteSection {
   id: string;
   version_id: string;
   name: string;
+  title: string | null;
+  show_subtotal: boolean;
   sort_order: number;
   created_at: string;
 }
@@ -299,6 +303,7 @@ export interface EditorSection {
   id: string;
   name: string; // Original catalog category name
   title?: string; // Editable display title (defaults to name)
+  showSubtotal?: boolean; // Whether to show subtotal for this section
   catalogCategoryId?: string; // Links to catalog category for filtering
 }
 

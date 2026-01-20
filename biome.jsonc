@@ -4,6 +4,9 @@
     "ultracite/core",
     "ultracite/react"
   ],
+  "javascript": {
+    "globals": ["Bun"]
+  },
   "linter": {
     "rules": {
       "nursery": {

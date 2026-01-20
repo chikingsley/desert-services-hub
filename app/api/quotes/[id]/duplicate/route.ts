@@ -115,9 +115,16 @@ export async function POST(
     for (const section of originalSections) {
       const newSectionId = crypto.randomUUID();
       db.prepare(
-        `INSERT INTO quote_sections (id, version_id, name, sort_order)
-         VALUES (?, ?, ?, ?)`
-      ).run(newSectionId, newVersionId, section.name, section.sort_order);
+        `INSERT INTO quote_sections (id, version_id, name, title, show_subtotal, sort_order)
+         VALUES (?, ?, ?, ?, ?, ?)`
+      ).run(
+        newSectionId,
+        newVersionId,
+        section.name,
+        section.title,
+        section.show_subtotal,
+        section.sort_order
+      );
       sectionIdMap.set(section.id, newSectionId);
     }
 

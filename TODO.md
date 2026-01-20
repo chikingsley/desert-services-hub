@@ -1,142 +1,254 @@
-# Desert Services - Master TODO
+# Desert Services Hub - Master TODO
 
-* *Last Updated:** 2025-12-23
+**Last Updated:** 2025-01-19
 
-This is the master task list across all Desert Services automation projects.
+This is the master task list for the Desert Services Hub application and related automation projects.
 
-- --
+---
 
-## Critical - Fix Immediately
+## CRITICAL - Fix Immediately
 
-### 1. Duplicate Prevention (Case Sensitivity)
+### 1. Section Titles Not Persisted
 
-- [ ] **$1** - `monday-notion-sharepoint-sync/src/lib/notion.ts`
+- [ ] **Add `title` column to `quote_sections` table** - `lib/db/index.ts`
+  - Editable titles work in UI but are lost on page refresh
+  - Run migration: `ALTER TABLE quote_sections ADD COLUMN title TEXT;`
+  - Update save logic to persist title
 
-  - `findAccountByName()` - Add `.toLowerCase().trim().replace(/\s+/g, ' ')`
-  - `findContactByName()` - Same normalization
-  - `findProjectByName()` - Same normalization
+### 2. Takeoffs List Page is a Stub
 
-- [ ] **Add normalization to n8n-stuff Notion service** - `services/notion/client.ts`
+- [ ] **Implement takeoffs list page** - `app/takeoffs/page.tsx`
+  - Currently just shows placeholder UI (42 lines)
+  - Needs to fetch from `/api/takeoffs` endpoint
+  - Display: Name, Status, Page Count, Created, Actions
 
-  - Update `findOrCreateByTitle()` to normalize before lookup
-  - Update `findOrCreateByEmail()` to normalize email (lowercase, trim)
+### 3. Finalize Button Non-Functional
 
-### 2. Estimate Name Formatting (All-Caps Issue)
+- [ ] **Implement `handleFinalize()`** - `components/quotes/quote-workspace.tsx:395`
+  - Button exists but handler is empty
+  - Should: Lock current version, create new version, update UI
+  - Use existing `is_locked` column in database
 
-- [ ] **Add title-case transformation** - `sync.ts:parseItemName()`
+### 4. Console.log in Production
 
-  ```typescript
-  function toTitleCase(str: string): string {
-    return str.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
-  }
-  ```text
+- [ ] **Remove console.log statements** - `app/api/webhooks/monday/route.ts`
+  - Lines 13, 24: `console.log("Monday webhook challenge received");`
+  - Violates Ultracite standards
 
-- [ ] Apply to project names before sync to Notion
+---
 
-### 3. Broken Monday Board Mirrors
+## HIGH PRIORITY - Quote Builder Gaps (from QUOTE-BUILDER-REDESIGN.md)
 
-- [ ] **$1** - Points to deleted column `board_relation_mkp8qh5n`
+### 5. Missing Undo/Redo UI
 
-  - Fix: Reconfigure to pull from `lookup_mktgnedy`
+- [ ] **Add undo/redo buttons to quote header** - `components/quotes/quote-workspace.tsx`
+  - Hook exists and is fully wired (`use-quote-editor.ts` exports undo, redo, canUndo, canRedo)
+  - Just needs buttons in the header toolbar
+  - Match takeoff editor button style/placement
 
-- [ ] **Contractors → Deals mirror** - Points to deleted column `contact_deal`
+- [ ] **Add keyboard shortcuts** - `components/quotes/quote-workspace.tsx`
+  - Ctrl+Z for undo
+  - Ctrl+Shift+Z or Ctrl+Y for redo
+  - Add event listeners in useEffect
 
-  - Fix: Reconfigure or remove if not needed
+### 6. Upload Modal Not Implemented
 
-- --
+- [ ] **Create takeoff upload modal** - `components/takeoffs/upload-modal.tsx` (new file)
+  - Design doc calls for modal-based upload from quotes list
+  - Current flow goes to separate `/takeoffs/new` page
+  - Modal should open from quotes header, navigate to takeoff editor after upload
 
-## High Priority - This Week
+### 7. Takeoff/Quote Segmented Toggle
 
-### 4. Monday Data Cleanup (Meeting Tomorrow)
+- [ ] **Add segmented control in quote editor** - when quote has linked takeoff
+  - Toggle between [Takeoff] and [Quote] views
+  - Only show when quote has `takeoff_id`
+  - Design doc "Option C from prototype"
+
+### 8. Versioning (Phase 4 - Entire phase pending)
+
+- [ ] **Finalize creates new version** - Lock current, create v(n+1)
+- [ ] **Don't overwrite finalized versions** - Check `is_locked` before save
+- [ ] **Show version number in UI** - Display "v1 (Draft)" or "v2 (Final)"
+- [ ] **Add revision notes field** - Per-version comment explaining changes
+- [ ] **Add database columns** - `lib/db/index.ts`
+  - `quote_line_items.version_added INTEGER DEFAULT 1`
+  - `quote_line_items.version_removed INTEGER`
+
+---
+
+## MEDIUM PRIORITY - Takeoff System Gaps (from QUOTING-APP-DESIGN.md)
+
+### 9. Custom Scale Calibration
+
+- [ ] **Add calibration tool** - `components/takeoffs/floating-tools.tsx`
+  - Current: Only preset scales (1"=5', 1"=10', etc.)
+  - Needed: Draw a known distance, enter real length, calculate pixelsPerFoot
+  - More accurate than presets for non-standard plans
+
+### 10. Takeoff Undo/Redo
+
+- [ ] **Add undo/redo to takeoff editor** - `app/takeoffs/[id]/page.tsx`
+  - Library supports it but app doesn't use it
+  - Critical for fixing mistakes during annotation
+
+### 11. "Update from Takeoff" Action
+
+- [ ] **Add sync button on quote** - `components/quotes/quote-workspace.tsx`
+  - Re-sync measurements from linked takeoff
+  - Update quantities based on current annotations
+
+---
+
+## MEDIUM PRIORITY - Storage/Performance (from STORAGE-AND-OPTIMIZATION.md)
+
+### 12. PDF Compression
+
+- [ ] **Create compression pipeline** - `lib/pdf-compression.ts` (new file)
+  - Use pdf-lib (already installed v1.17.1)
+  - Remove metadata, use object streams
+  - Store both original and optimized versions
+  - Track compression ratio in MinIO tags
+
+### 13. Screenshot Caching
+
+- [ ] **Add LRU cache to screenshot function** - `lib/pdf-takeoff/lib/screenshot.ts:9`
+  - TODO comment: `// @TODO: cache this?`
+  - Cache key: `${takeoffId}-${annotationId}-${positionHash}`
+  - Clear when annotation deleted
+
+### 14. Mouse Event Throttling
+
+- [ ] **Throttle mouse events** - `lib/pdf-takeoff/components/mouse-monitor.tsx:70`
+  - TODO comment: `// TODO: Maybe optimise or throttle?`
+  - Use lodash.throttle (need to install) or lodash.debounce (already installed)
+  - Target: 60fps (16ms throttle)
+
+---
+
+## LOWER PRIORITY - Data Cleanup & Integration
+
+### 15. Monday Data Cleanup
 
 - [ ] Delete 77 junk Contractors (empty, no links)
 - [ ] Delete 74 junk Contacts (empty, no links, "New contact" names)
-- [ ] Merge duplicate Contractors
-
-  - Weitz Co (3 duplicates)
-  - Elder Contracting (2 duplicates)
-  - Permanent Location (3 duplicates)
-
+- [ ] Merge duplicate Contractors (Weitz Co 3x, Elder Contracting 2x, Permanent Location 3x)
 - [ ] Backfill Estimating → Projects links (currently 94% empty)
 - [ ] Backfill Dust Permits → Estimate links (currently 84% empty)
 
-### 5. SLA Implementation
+### 16. Duplicate Prevention
 
-- [ ] Create validation function for estimates before sync
-- [ ] Create "Needs Attention" queue in Notion for invalid items
-- [ ] Add required field checks (see `docs/estimating-sla.md`)
+- [ ] **Add normalization to Notion lookups** - `services/notion/client.ts`
+  - `findOrCreateByTitle()` - lowercase, trim, collapse whitespace
+  - `findOrCreateByEmail()` - lowercase, trim
 
-- --
+### 17. Estimate Name Formatting
 
-## Medium Priority - This Month
+- [ ] **Add title-case transformation** - for project names before sync
+  - Convert ALL-CAPS to Title Case
+  - Apply before syncing to Notion
 
-### 6. Backend Architecture
+### 18. Broken Monday Board Mirrors
 
-- [ ] Evaluate D1/Supabase for normalization layer
+- [ ] **Fix SWPPP Plans → Estimates mirror** - Points to deleted column `board_relation_mkp8qh5n`
+- [ ] **Fix Contractors → Deals mirror** - Points to deleted column `contact_deal`
 
-  - Purpose: Background dedup checking, normalized lookups
-  - Could run hourly to find/flag duplicates
+---
 
-- [ ] Consider SQLite cache for faster lookups before hitting Notion API
+## FUTURE - Q1 2025+
 
-### 7. Revision Tracking System
+### 19. Contracts Workflow
 
-- [ ] Define naming convention: `{PREFIX}: {Project Name}` → `{PREFIX}: {Project Name} R1`
-- [ ] Estimate ID format: `YYMMDD##` → `YYMMDD##-R1`
-- [ ] Create automation: If estimate ID contains `-R1`, update title automatically
-- [ ] Document revision workflow in SLA
+- [ ] Enable contracts module in sidebar - `components/app-sidebar.tsx:31`
+- [ ] Create `/contracts` page
+- [ ] Contract reconciliation checklist (from design doc Appendix C)
+- [ ] AI-assisted contract comparison
 
-### 8. SharePoint Integration
+### 20. Project Initiation Workflow
 
-- [ ] Add "Bid Docs Folder" link field to estimates
-- [ ] Auto-create SharePoint folder on estimate creation
-- [ ] Sync plan files to SharePoint folder
+- [ ] Enable projects module in sidebar - `components/app-sidebar.tsx:35`
+- [ ] Create `/projects` page
+- [ ] Contractor info collection
+- [ ] Pre-project checklist
 
-### 9. Document Consolidation
+### 21. Search Feature
 
-- [ ] Merge `monday-board-audit.md` and `monday-board-issues.md` into one
-- [ ] Update `current-work-status.md` or archive
-- [ ] Create single source-of-truth for board schema
+- [ ] Enable search in sidebar - `components/app-sidebar.tsx:43`
+- [ ] Create `/search` page
+- [ ] Cross-entity search (quotes, takeoffs, catalog)
 
-- --
+### 22. Settings Expansion
 
-## Low Priority - Q1 2025
+- [ ] Expand settings page - `app/settings/page.tsx`
+  - Default category preferences
+  - Unit preferences
+  - Email integration settings
 
-### 10. N8N Migration
+### 23. Quote Templates
 
-- [ ] Move sync worker logic to n8n for GUI-based editing
-- [ ] Set up n8n workflows for
+- [ ] Template management in settings
+- [ ] "New from Template" option in quote creation
 
-  - Monday → Notion sync
-  - Email automations
-  - File sync to SharePoint
+### 24. Email Integration
 
-### 11. Quoting App Integration
+- [ ] Send quotes via email
+- [ ] Use mailto: pattern (like QuickBooks)
+- [ ] Follow-up automation
 
-- [ ] Bidirectional sync: Quotes → Notion Projects
-- [ ] Link quotes to Monday estimates
-- [ ] Auto-generate estimate numbers from Monday
+### 25. Reporting Dashboard
 
-### 12. Data Quality Dashboard
+- [ ] Quote metrics
+- [ ] Win/loss tracking
+- [ ] Revenue pipeline
 
-- [ ] Create Notion dashboard showing
+---
 
-  - Incomplete estimates (missing required fields)
-  - Duplicate accounts/contacts
-  - Orphaned projects (no estimates linked)
-  - Sync errors
+## COMPLETED
 
-- --
+### Quote Builder (Phases 1-3)
 
-## Completed
+- [x] Section deduplication removed (UUID generation) - `use-quote-editor.ts`
+- [x] Editable section titles in UI (but NOT persisted - see Critical #1)
+- [x] Duplicate section button with scroll-to-new
+- [x] Per-section subtotals always displayed
+- [x] Item combobox for catalog selection - `item-combobox.tsx`
+- [x] Pick-one auto-removal removed (just UI hint now)
+- [x] `updateLineItemFromCatalog()` function
+- [x] Sidebar navigation updated (Takeoffs removed as separate item)
+- [x] Source column in quotes table (Takeoff/Manual)
+- [x] Quote header with breadcrumbs
+- [x] Export dropdown (PDF download works)
+- [x] Save status in header
+- [x] Undo/redo hook wired to editor (just no UI buttons)
 
-- [x] Audit Monday boards - `docs/monday-board-audit.md`
+### Storage Layer
+
+- [x] MinIO AIStor storage layer - `lib/minio.ts`
+- [x] PDF upload API - `app/api/upload/pdf/route.ts`
+- [x] Presigned URL generation for PDFs
+- [x] Docker compose with AIStor
+- [x] `pdf_url` column utilized in database
+- [x] Takeoff → Quote bidirectional navigation
+
+### Takeoff System
+
+- [x] PDF upload and display
+- [x] Scale presets (per-page)
+- [x] Count tool (click markers)
+- [x] Polyline tool (linear measurement)
+- [x] Polygon tool (area measurement)
+- [x] Auto-save (2-second debounce)
+- [x] Export measurements to quote
+- [x] Catalog integration for bundles
+
+### General
+
+- [x] Audit Monday boards
 - [x] Document broken mirrors and empty columns
 - [x] Identify junk items for cleanup
-- [x] Research industry best practices for estimating SLA
-- [x] Create architecture analysis
+- [x] Codebase architecture audit
 
-- --
+---
 
 ## Reference
 
@@ -144,13 +256,22 @@ This is the master task list across all Desert Services automation projects.
 
 | Purpose | Location |
 |---------|----------|
-| Notion Service | `services/notion/client.ts` |
-| Monday Service | `services/monday/client.ts` |
-| Sync Worker | `../desert-services-app/workers/monday-notion-sharepoint-sync/` |
-| Quoting App | `../desert-services-app/services/quoting/` |
-| Board Audit | `docs/monday-board-audit.md` |
-| Board Issues | `docs/monday-board-issues.md` |
-| Estimating SLA | `docs/estimating-sla.md` |
+| Database Schema | `lib/db/index.ts` |
+| Quote Editor Hook | `hooks/use-quote-editor.ts` |
+| Quote Workspace | `components/quotes/quote-workspace.tsx` |
+| Takeoff Editor | `app/takeoffs/[id]/page.tsx` |
+| PDF Annotation Lib | `lib/pdf-takeoff/` |
+| MinIO Client | `lib/minio.ts` |
+| Catalog API | `app/api/catalog/` |
+
+### Files with TODO Comments
+
+| File | Line | Comment |
+|------|------|---------|
+| `components/quotes/quote-workspace.tsx` | 395 | `// TODO: Implement version finalization` |
+| `app/takeoffs/page.tsx` | 8 | `// TODO: Fetch takeoffs from SQLite` |
+| `lib/pdf-takeoff/lib/screenshot.ts` | 9 | `// @TODO: cache this?` |
+| `lib/pdf-takeoff/components/mouse-monitor.tsx` | 70 | `// TODO: Maybe optimise or throttle?` |
 
 ### Monday Board IDs
 
@@ -163,13 +284,3 @@ This is the master task list across all Desert Services automation projects.
 | Inspection Reports | 8791849123 |
 | Dust Permits | 9850624269 |
 | SWPPP Plans | 9778304069 |
-
-### Notion Database IDs
-
-| Database | ID |
-|----------|-----|
-| Accounts | 2a7c1835-5bb2-804a-98ad-fcb53dbe8a7d |
-| Contacts | 2a7c1835-5bb2-8034-a07c-d34bc174072d |
-| Dust Permits | 49cd5e58-2c32-4fcb-ba35-e7b978b71e5a |
-| Contracts | 2cec1835-5bb2-80d5-a1b0-fc9e8514e47f |
-| Invoices | ddcc3072-ea35-4790-92be-75f6f4158731 |

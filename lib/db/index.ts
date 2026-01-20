@@ -1,12 +1,18 @@
+import { Database } from "bun:sqlite";
 import { join } from "node:path";
-import Database from "better-sqlite3";
 
-// Initialize SQLite database (server-side only)
-const dbPath = join(process.cwd(), "data", "app.db");
-const db = new Database(dbPath);
+// Initialize SQLite database using Bun's native driver
+// Database file is co-located with this module
+const dbPath = join(import.meta.dir, "app.db");
+const db = new Database(dbPath, { create: true });
 
-// Create tables if they don't exist
-db.exec(`
+// Enable WAL mode for better performance
+db.run("PRAGMA journal_mode = WAL");
+
+// ============================================
+// Takeoffs Table
+// ============================================
+db.run(`
   CREATE TABLE IF NOT EXISTS takeoffs (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
@@ -19,7 +25,10 @@ db.exec(`
   )
 `);
 
-db.exec(`
+// ============================================
+// Quotes Tables
+// ============================================
+db.run(`
   CREATE TABLE IF NOT EXISTS quotes (
     id TEXT PRIMARY KEY,
     base_number TEXT NOT NULL,
@@ -38,16 +47,7 @@ db.exec(`
   )
 `);
 
-// Migration: Add takeoff_id column if it doesn't exist (for existing databases)
-try {
-  db.exec(
-    "ALTER TABLE quotes ADD COLUMN takeoff_id TEXT REFERENCES takeoffs(id) ON DELETE SET NULL"
-  );
-} catch {
-  // Column already exists, ignore
-}
-
-db.exec(`
+db.run(`
   CREATE TABLE IF NOT EXISTS quote_versions (
     id TEXT PRIMARY KEY,
     quote_id TEXT NOT NULL,
@@ -59,18 +59,20 @@ db.exec(`
   )
 `);
 
-db.exec(`
+db.run(`
   CREATE TABLE IF NOT EXISTS quote_sections (
     id TEXT PRIMARY KEY,
     version_id TEXT NOT NULL,
     name TEXT NOT NULL,
+    title TEXT,
+    show_subtotal INTEGER NOT NULL DEFAULT 0,
     sort_order INTEGER NOT NULL DEFAULT 0,
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     FOREIGN KEY (version_id) REFERENCES quote_versions(id) ON DELETE CASCADE
   )
 `);
 
-db.exec(`
+db.run(`
   CREATE TABLE IF NOT EXISTS quote_line_items (
     id TEXT PRIMARY KEY,
     version_id TEXT NOT NULL,
@@ -89,8 +91,10 @@ db.exec(`
   )
 `);
 
-// Catalog tables for service pricing management
-db.exec(`
+// ============================================
+// Catalog Tables
+// ============================================
+db.run(`
   CREATE TABLE IF NOT EXISTS catalog_categories (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
@@ -102,16 +106,7 @@ db.exec(`
   )
 `);
 
-// Migration: Add supports_takeoff column if it doesn't exist
-try {
-  db.exec(
-    "ALTER TABLE catalog_categories ADD COLUMN supports_takeoff INTEGER DEFAULT 0"
-  );
-} catch {
-  // Column already exists
-}
-
-db.exec(`
+db.run(`
   CREATE TABLE IF NOT EXISTS catalog_subcategories (
     id TEXT PRIMARY KEY,
     category_id TEXT NOT NULL,
@@ -125,7 +120,7 @@ db.exec(`
   )
 `);
 
-db.exec(`
+db.run(`
   CREATE TABLE IF NOT EXISTS catalog_items (
     id TEXT PRIMARY KEY,
     category_id TEXT NOT NULL,
@@ -147,17 +142,8 @@ db.exec(`
   )
 `);
 
-// Migration: Add is_takeoff_item column if it doesn't exist
-try {
-  db.exec(
-    "ALTER TABLE catalog_items ADD COLUMN is_takeoff_item INTEGER DEFAULT 0"
-  );
-} catch {
-  // Column already exists
-}
-
-// Takeoff Bundles - groups of catalog items that are measured together
-db.exec(`
+// Takeoff Bundles - groups of catalog items measured together
+db.run(`
   CREATE TABLE IF NOT EXISTS catalog_takeoff_bundles (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
@@ -172,7 +158,7 @@ db.exec(`
   )
 `);
 
-db.exec(`
+db.run(`
   CREATE TABLE IF NOT EXISTS catalog_bundle_items (
     id TEXT PRIMARY KEY,
     bundle_id TEXT NOT NULL,
@@ -187,16 +173,10 @@ db.exec(`
   )
 `);
 
-// Create indexes for bundle tables
-db.exec(`
-  CREATE INDEX IF NOT EXISTS idx_bundle_items_bundle ON catalog_bundle_items(bundle_id)
-`);
-db.exec(`
-  CREATE INDEX IF NOT EXISTS idx_bundle_items_item ON catalog_bundle_items(item_id)
-`);
-
-// Monday.com Cache for performance
-db.exec(`
+// ============================================
+// Monday.com Cache
+// ============================================
+db.run(`
   CREATE TABLE IF NOT EXISTS monday_cache (
     id TEXT PRIMARY KEY,
     board_id TEXT NOT NULL,
@@ -211,13 +191,27 @@ db.exec(`
   )
 `);
 
-db.exec(`
-  CREATE INDEX IF NOT EXISTS idx_monday_cache_board ON monday_cache(board_id)
-`);
+// ============================================
+// Indexes
+// ============================================
+db.run(
+  "CREATE UNIQUE INDEX IF NOT EXISTS idx_quotes_base_number ON quotes(base_number)"
+);
+db.run(
+  "CREATE INDEX IF NOT EXISTS idx_monday_cache_board ON monday_cache(board_id)"
+);
+db.run(
+  "CREATE INDEX IF NOT EXISTS idx_bundle_items_bundle ON catalog_bundle_items(bundle_id)"
+);
+db.run(
+  "CREATE INDEX IF NOT EXISTS idx_bundle_items_item ON catalog_bundle_items(item_id)"
+);
 
-// Virtual table for fuzzy search
+// ============================================
+// FTS5 for fuzzy search (optional - may fail on some systems)
+// ============================================
 try {
-  db.exec(`
+  db.run(`
     CREATE VIRTUAL TABLE IF NOT EXISTS monday_search_vectors USING fts5(
       item_id UNINDEXED,
       board_id UNINDEXED,
@@ -225,13 +219,8 @@ try {
       content
     )
   `);
-} catch (e) {
-  console.warn("FTS5 table creation failed, fuzzy search might be limited:", e);
+} catch {
+  // FTS5 might not be available, fuzzy search will be limited
 }
-
-// Ensure base_number is unique to prevent race condition duplicates
-db.exec(`
-  CREATE UNIQUE INDEX IF NOT EXISTS idx_quotes_base_number ON quotes(base_number)
-`);
 
 export { db };

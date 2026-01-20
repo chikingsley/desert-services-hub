@@ -1,200 +1,112 @@
-import { CatalogContent } from "@/components/catalog/catalog-content";
+"use client";
+
+import { ChevronDown, ChevronRight, Package, Search } from "lucide-react";
+import { useState } from "react";
 import { PageHeader } from "@/components/page-header";
-import { db } from "@/lib/db";
-
-export const dynamic = "force-dynamic";
-
-interface CatalogItem {
-  id: string;
-  category_id: string;
-  subcategory_id: string | null;
-  code: string;
-  name: string;
-  description: string | null;
-  price: number;
-  unit: string;
-  notes: string | null;
-  default_qty: number;
-  is_active: number;
-  is_takeoff_item: number;
-  sort_order: number;
-}
-
-interface Subcategory {
-  id: string;
-  category_id: string;
-  name: string;
-  selection_mode: string;
-  hidden: number;
-  sort_order: number;
-}
-
-interface Category {
-  id: string;
-  name: string;
-  selection_mode: string;
-  supports_takeoff: number;
-  sort_order: number;
-}
-
-interface BundleRow {
-  id: string;
-  name: string;
-  description: string | null;
-  unit: string;
-  tool_type: string;
-  color: string;
-  is_active: number;
-  sort_order: number;
-  created_at: string;
-  updated_at: string;
-}
-
-interface BundleItemRow {
-  id: string;
-  bundle_id: string;
-  item_id: string;
-  item_code: string;
-  item_name: string;
-  item_unit: string;
-  item_price: number;
-  is_required: number;
-  quantity_multiplier: number;
-  sort_order: number;
-}
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
+import {
+  catalog,
+  getAllItems,
+  takeoffBundles,
+} from "@/services/quoting/catalog";
 
 export default function CatalogPage() {
-  // Fetch all categories
-  const categories = db
-    .prepare("SELECT * FROM catalog_categories ORDER BY sort_order")
-    .all() as Category[];
+  const [searchQuery, setSearchQuery] = useState("");
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
+    new Set()
+  );
+  const [expandedSubcategories, setExpandedSubcategories] = useState<
+    Set<string>
+  >(new Set());
 
-  // Fetch all subcategories
-  const subcategories = db
-    .prepare("SELECT * FROM catalog_subcategories ORDER BY sort_order")
-    .all() as Subcategory[];
+  const allItems = getAllItems();
+  const totalCategories = catalog.categories.length;
+  const totalItems = allItems.length;
+  const totalBundles = takeoffBundles.length;
 
-  // Fetch all items
-  const items = db
-    .prepare("SELECT * FROM catalog_items ORDER BY sort_order")
-    .all() as CatalogItem[];
+  const toggleCategory = (id: string) => {
+    setExpandedCategories((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
 
-  // Fetch all bundles with their items
-  const bundleRows = db
-    .prepare(
-      "SELECT * FROM catalog_takeoff_bundles WHERE is_active = 1 ORDER BY sort_order, name"
-    )
-    .all() as BundleRow[];
+  const toggleSubcategory = (id: string) => {
+    setExpandedSubcategories((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
 
-  const bundlesData = bundleRows.map((bundle) => {
-    const bundleItems = db
-      .prepare(
-        `
-        SELECT
-          bi.id,
-          bi.bundle_id,
-          bi.item_id,
-          i.code as item_code,
-          i.name as item_name,
-          i.unit as item_unit,
-          i.price as item_price,
-          bi.is_required,
-          bi.quantity_multiplier,
-          bi.sort_order
-        FROM catalog_bundle_items bi
-        JOIN catalog_items i ON bi.item_id = i.id
-        WHERE bi.bundle_id = ?
-        ORDER BY bi.sort_order
-      `
-      )
-      .all(bundle.id) as BundleItemRow[];
+  // Filter categories based on search
+  const filteredCategories = catalog.categories
+    .map((category) => {
+      const query = searchQuery.toLowerCase();
 
-    return {
-      id: bundle.id,
-      name: bundle.name,
-      description: bundle.description,
-      unit: bundle.unit,
-      toolType: bundle.tool_type as "count" | "linear" | "area",
-      color: bundle.color,
-      isActive: bundle.is_active === 1,
-      sortOrder: bundle.sort_order,
-      items: bundleItems.map((item) => ({
-        id: item.id,
-        itemId: item.item_id,
-        code: item.item_code,
-        name: item.item_name,
-        unit: item.item_unit,
-        price: item.item_price,
-        isRequired: item.is_required === 1,
-        quantityMultiplier: item.quantity_multiplier,
-        sortOrder: item.sort_order,
-      })),
-    };
-  });
+      // Check if any direct items match
+      const matchingItems =
+        category.items?.filter(
+          (item) =>
+            item.name.toLowerCase().includes(query) ||
+            item.code.toLowerCase().includes(query) ||
+            item.description?.toLowerCase().includes(query)
+        ) ?? [];
 
-  // Calculate stats
-  const totalCategories = categories.length;
-  const totalItems = items.length;
-  const activeItems = items.filter((item) => item.is_active === 1).length;
-  const totalBundles = bundlesData.length;
+      // Check subcategories
+      const matchingSubcategories =
+        category.subcategories?.map((sub) => ({
+          ...sub,
+          items: sub.items.filter(
+            (item) =>
+              item.name.toLowerCase().includes(query) ||
+              item.code.toLowerCase().includes(query) ||
+              item.description?.toLowerCase().includes(query)
+          ),
+        })) ?? [];
 
-  // Build nested structure for client component
-  const catalogData = categories.map((category) => {
-    const categorySubcats = subcategories.filter(
-      (sub) => sub.category_id === category.id
-    );
+      const hasMatchingSubcatItems = matchingSubcategories.some(
+        (sub) => sub.items.length > 0
+      );
 
-    const categoryItems = items.filter(
-      (item) => item.category_id === category.id && !item.subcategory_id
-    );
+      const categoryMatches = category.name.toLowerCase().includes(query);
 
-    return {
-      id: category.id,
-      name: category.name,
-      selectionMode: category.selection_mode,
-      supportsTakeoff: category.supports_takeoff === 1,
-      sortOrder: category.sort_order,
-      items: categoryItems.map((item) => ({
-        id: item.id,
-        code: item.code,
-        name: item.name,
-        description: item.description,
-        price: item.price,
-        unit: item.unit,
-        notes: item.notes,
-        defaultQty: item.default_qty,
-        isActive: item.is_active === 1,
-        isTakeoffItem: item.is_takeoff_item === 1,
-        sortOrder: item.sort_order,
-      })),
-      subcategories: categorySubcats.map((subcat) => {
-        const subcatItems = items.filter(
-          (item) => item.subcategory_id === subcat.id
-        );
-
+      if (
+        !searchQuery ||
+        categoryMatches ||
+        matchingItems.length > 0 ||
+        hasMatchingSubcatItems
+      ) {
         return {
-          id: subcat.id,
-          name: subcat.name,
-          selectionMode: subcat.selection_mode,
-          hidden: subcat.hidden === 1,
-          sortOrder: subcat.sort_order,
-          items: subcatItems.map((item) => ({
-            id: item.id,
-            code: item.code,
-            name: item.name,
-            description: item.description,
-            price: item.price,
-            unit: item.unit,
-            notes: item.notes,
-            defaultQty: item.default_qty,
-            isActive: item.is_active === 1,
-            isTakeoffItem: item.is_takeoff_item === 1,
-            sortOrder: item.sort_order,
-          })),
+          ...category,
+          items: searchQuery ? matchingItems : category.items,
+          subcategories: searchQuery
+            ? matchingSubcategories.filter((sub) => sub.items.length > 0)
+            : category.subcategories,
         };
-      }),
-    };
-  });
+      }
+      return null;
+    })
+    .filter(Boolean);
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      minimumFractionDigits: 2,
+    }).format(amount);
+  };
 
   return (
     <div className="flex flex-1 flex-col">
@@ -206,7 +118,7 @@ export default function CatalogPage() {
       <div className="flex-1 p-6 lg:p-8">
         <div className="page-transition">
           {/* Stats Bar */}
-          <div className="mb-8 grid grid-cols-4 gap-4">
+          <div className="mb-8 grid grid-cols-3 gap-4">
             <div className="rounded-xl border border-border/50 bg-card p-4">
               <p className="text-muted-foreground text-sm">Categories</p>
               <p className="font-display font-semibold text-2xl">
@@ -220,12 +132,6 @@ export default function CatalogPage() {
               </p>
             </div>
             <div className="rounded-xl border border-border/50 bg-card p-4">
-              <p className="text-muted-foreground text-sm">Active Items</p>
-              <p className="font-display font-semibold text-2xl text-primary">
-                {activeItems}
-              </p>
-            </div>
-            <div className="rounded-xl border border-border/50 bg-card p-4">
               <p className="text-muted-foreground text-sm">Takeoff Bundles</p>
               <p className="font-display font-semibold text-2xl text-primary">
                 {totalBundles}
@@ -233,11 +139,208 @@ export default function CatalogPage() {
             </div>
           </div>
 
-          {/* Catalog Content */}
-          <CatalogContent
-            initialBundles={bundlesData}
-            initialData={catalogData}
-          />
+          {/* Search */}
+          <div className="relative mb-6">
+            <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              className="pl-10"
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search items by name, code, or description..."
+              value={searchQuery}
+            />
+          </div>
+
+          {/* Takeoff Bundles Section */}
+          <div className="mb-8">
+            <h2 className="mb-4 flex items-center gap-2 font-semibold text-lg">
+              <Package className="h-5 w-5" />
+              Takeoff Bundles
+            </h2>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {takeoffBundles.map((bundle) => (
+                <div
+                  className="rounded-lg border border-border/50 bg-card p-4"
+                  key={bundle.id}
+                >
+                  <div className="mb-2 flex items-center gap-2">
+                    <div
+                      className="h-3 w-3 rounded-full"
+                      style={{ backgroundColor: bundle.color }}
+                    />
+                    <span className="font-medium">{bundle.name}</span>
+                    <Badge className="ml-auto" variant="outline">
+                      {bundle.toolType}
+                    </Badge>
+                  </div>
+                  <p className="mb-2 text-muted-foreground text-sm">
+                    {bundle.description}
+                  </p>
+                  <div className="text-muted-foreground text-xs">
+                    {bundle.items.length} items • Unit: {bundle.unit}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Categories */}
+          <div className="space-y-4">
+            {filteredCategories.map((category) => {
+              if (!category) {
+                return null;
+              }
+              const isExpanded = expandedCategories.has(category.id);
+              const itemCount =
+                (category.items?.length ?? 0) +
+                (category.subcategories?.reduce(
+                  (acc, sub) => acc + sub.items.length,
+                  0
+                ) ?? 0);
+
+              return (
+                <div
+                  className="rounded-lg border border-border/50 bg-card"
+                  key={category.id}
+                >
+                  {/* Category Header */}
+                  <button
+                    className="flex w-full items-center gap-3 p-4 text-left hover:bg-muted/50"
+                    onClick={() => toggleCategory(category.id)}
+                    type="button"
+                  >
+                    {isExpanded ? (
+                      <ChevronDown className="h-5 w-5 text-muted-foreground" />
+                    ) : (
+                      <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                    )}
+                    <span className="font-semibold">{category.name}</span>
+                    <Badge className="ml-auto" variant="secondary">
+                      {itemCount} items
+                    </Badge>
+                  </button>
+
+                  {/* Category Content */}
+                  {isExpanded && (
+                    <div className="border-border/50 border-t px-4 pb-4">
+                      {/* Direct items */}
+                      {category.items && category.items.length > 0 && (
+                        <div className="mt-4">
+                          <table className="w-full">
+                            <thead>
+                              <tr className="border-border/50 border-b text-left text-muted-foreground text-sm">
+                                <th className="pb-2 font-medium">Code</th>
+                                <th className="pb-2 font-medium">Name</th>
+                                <th className="pb-2 font-medium">Price</th>
+                                <th className="pb-2 font-medium">Unit</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {category.items.map((item) => (
+                                <tr
+                                  className="border-border/50 border-b last:border-0"
+                                  key={item.code}
+                                >
+                                  <td className="py-2 font-mono text-sm">
+                                    {item.code}
+                                  </td>
+                                  <td className="py-2">
+                                    <div>{item.name}</div>
+                                    {item.description && (
+                                      <div className="text-muted-foreground text-xs">
+                                        {item.description}
+                                      </div>
+                                    )}
+                                  </td>
+                                  <td className="py-2 font-medium">
+                                    {formatCurrency(item.price)}
+                                  </td>
+                                  <td className="py-2 text-muted-foreground">
+                                    {item.unit}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+
+                      {/* Subcategories */}
+                      {category.subcategories?.map((subcategory) => {
+                        const subExpanded = expandedSubcategories.has(
+                          subcategory.id
+                        );
+                        return (
+                          <div className="mt-4" key={subcategory.id}>
+                            <button
+                              className={cn(
+                                "flex w-full items-center gap-2 rounded-md p-2 text-left hover:bg-muted/50",
+                                subExpanded && "bg-muted/30"
+                              )}
+                              onClick={() => toggleSubcategory(subcategory.id)}
+                              type="button"
+                            >
+                              {subExpanded ? (
+                                <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                              ) : (
+                                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                              )}
+                              <span className="font-medium text-sm">
+                                {subcategory.name}
+                              </span>
+                              <Badge className="ml-auto" variant="outline">
+                                {subcategory.items.length}
+                              </Badge>
+                            </button>
+
+                            {subExpanded && (
+                              <table className="mt-2 w-full">
+                                <thead>
+                                  <tr className="border-border/50 border-b text-left text-muted-foreground text-sm">
+                                    <th className="pb-2 pl-8 font-medium">
+                                      Code
+                                    </th>
+                                    <th className="pb-2 font-medium">Name</th>
+                                    <th className="pb-2 font-medium">Price</th>
+                                    <th className="pb-2 font-medium">Unit</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {subcategory.items.map((item) => (
+                                    <tr
+                                      className="border-border/50 border-b last:border-0"
+                                      key={item.code}
+                                    >
+                                      <td className="py-2 pl-8 font-mono text-sm">
+                                        {item.code}
+                                      </td>
+                                      <td className="py-2">
+                                        <div>{item.name}</div>
+                                        {item.description && (
+                                          <div className="text-muted-foreground text-xs">
+                                            {item.description}
+                                          </div>
+                                        )}
+                                      </td>
+                                      <td className="py-2 font-medium">
+                                        {formatCurrency(item.price)}
+                                      </td>
+                                      <td className="py-2 text-muted-foreground">
+                                        {item.unit}
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
     </div>

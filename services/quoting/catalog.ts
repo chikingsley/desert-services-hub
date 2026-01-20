@@ -1,7 +1,13 @@
 // Service catalog for Desert Services estimates
 // 2026 Pricing - Effective January 1st, 2026
 
-import type { Catalog, CatalogCategory, CatalogItem, LineItem } from "./types";
+import type {
+  Catalog,
+  CatalogCategory,
+  CatalogItem,
+  LineItem,
+  TakeoffBundle,
+} from "./types";
 
 export const catalog: Catalog = {
   categories: [
@@ -47,19 +53,21 @@ export const catalog: Catalog = {
           code: "SWPPP-005",
           name: "SWPPP Inspections",
           description:
-            'Certified site inspection performed every 14 days or within 24 hours of 0.5" rain event. Includes photo documentation & compliance report. Additional rain events or project extensions billed separately.',
+            'Performed every 14 days or within 24 hrs of 0.5" rain event. Includes additional inspections for months with more than 4 weeks. Additional inspections for rain events and/or project extensions are not included & will be billed at $205 each.',
           price: 205,
           unit: "Per Visit",
-          notes: "Includes extra inspections for months with >4 weeks",
+          notes:
+            "Add duration to name when quoting, e.g. (approximately 9 months)",
         },
         {
           code: "SWPPP-006",
           name: "SWPPP Inspection (28-day)",
           description:
-            "Certified site inspection performed every 28 days for inactive or stabilized sites. Includes photo documentation & compliance report.",
+            "Performed every 28 days for inactive or stabilized sites. Additional inspections for rain events and/or project extensions are not included & will be billed at $235 each.",
           price: 235,
           unit: "Per Visit",
-          notes: "Rain events trigger additional inspections",
+          notes:
+            "Add duration to name when quoting, e.g. (approximately 6 months)",
         },
       ],
     },
@@ -632,16 +640,15 @@ export const catalog: Catalog = {
           items: [
             {
               code: "TANK-003",
-              name: "Waste Tank (1x/week)",
-              description: "Weekly waste tank pump-out & freshwater refill",
+              name: "Waste Tank Service (1x/week)",
+              description: "Weekly waste tank pump-out service",
               price: 550,
               unit: "Month",
             },
             {
               code: "TANK-004",
-              name: "Waste Tank (2x/week)",
-              description:
-                "Twice-weekly waste tank pump-out & freshwater refill",
+              name: "Waste Tank Service (2x/week)",
+              description: "Twice-weekly waste tank pump-out service",
               price: 1100,
               unit: "Month",
             },
@@ -653,7 +660,7 @@ export const catalog: Catalog = {
           items: [
             {
               code: "TANK-005",
-              name: "Full Tank System (1x/week)",
+              name: "Full Tank System Service (1x/week)",
               description:
                 "Weekly service for both freshwater & waste tanks with pump-out & refill",
               price: 750,
@@ -661,7 +668,7 @@ export const catalog: Catalog = {
             },
             {
               code: "TANK-006",
-              name: "Full Tank System (2x/week)",
+              name: "Full Tank System Service (2x/week)",
               description:
                 "Twice-weekly service for both freshwater & waste tanks",
               price: 1500,
@@ -710,7 +717,7 @@ export const catalog: Catalog = {
           name: "Container Sizes",
           items: [
             {
-              code: "RO-009",
+              code: "RO-001",
               name: "10 yd Roll-Off",
               description:
                 "10 cubic yard dumpster for small jobs with 2 tons disposal",
@@ -719,7 +726,7 @@ export const catalog: Catalog = {
               notes: "+10% fuel surcharge. Inactivity fee after 21 days",
             },
             {
-              code: "RO-001",
+              code: "RO-002",
               name: "15 yd Roll-Off",
               description:
                 "15 cubic yard dumpster for residential/light commercial with 2 tons disposal",
@@ -728,7 +735,7 @@ export const catalog: Catalog = {
               notes: "+10% fuel surcharge. Inactivity fee after 21 days",
             },
             {
-              code: "RO-002",
+              code: "RO-003",
               name: "20 yd Roll-Off",
               description:
                 "20 cubic yard dumpster for mid-size projects with 2 tons disposal",
@@ -737,7 +744,7 @@ export const catalog: Catalog = {
               notes: "+10% fuel surcharge. Inactivity fee after 21 days",
             },
             {
-              code: "RO-003",
+              code: "RO-004",
               name: "30 yd Roll-Off",
               description:
                 "30 cubic yard dumpster for large projects with 3 tons disposal",
@@ -746,7 +753,7 @@ export const catalog: Catalog = {
               notes: "+10% fuel surcharge. Inactivity fee after 21 days",
             },
             {
-              code: "RO-004",
+              code: "RO-005",
               name: "40 yd Roll-Off",
               description:
                 "40 cubic yard dumpster for major construction with 4 tons disposal",
@@ -945,35 +952,35 @@ export const catalog: Catalog = {
           items: [
             {
               code: "TF-004",
-              name: "Sandbags",
+              name: "Fence Stand Sandbags",
               description: "Per sandbag, delivered and installed",
               price: 7.5,
               unit: "Each",
             },
             {
               code: "TF-006",
-              name: "Panel",
+              name: "Fence Panel",
               description: "Replacement panel",
               price: 125,
               unit: "Each",
             },
             {
               code: "TF-007",
-              name: "Pole",
+              name: "Fence Pole",
               description: "Replacement pole",
               price: 25,
               unit: "Each",
             },
             {
               code: "TF-008",
-              name: "Stand",
+              name: "Fence Stand",
               description: "Replacement stand",
               price: 25,
               unit: "Each",
             },
             {
               code: "TF-009",
-              name: "Bracket",
+              name: "Fence Bracket",
               description: "Replacement bracket",
               price: 5,
               unit: "Each",
@@ -1031,7 +1038,7 @@ export const catalog: Catalog = {
             },
             {
               code: "WE-005",
-              name: "Water Donkey - Hoses",
+              name: "Water Donkey Hoses",
               description:
                 "Lay-flat discharge hose for water donkey connection",
               price: 1.95,
@@ -1061,7 +1068,7 @@ export const catalog: Catalog = {
             },
             {
               code: "WE-009",
-              name: "Water Ramps - Hoses",
+              name: "Water Ramps Hoses",
               description:
                 "Replacement or additional hose for water ramp systems",
               price: 1.25,
@@ -1149,6 +1156,81 @@ export const catalog: Catalog = {
     },
   ],
 };
+
+// Takeoff bundles - predefined item groups for PDF measurement tools
+export const takeoffBundles: TakeoffBundle[] = [
+  {
+    id: "bundle-temp-fencing",
+    name: "Temporary Fencing",
+    description:
+      "Chain-link fence installation - measures linear feet and creates Install, Rental, and optional add-ons",
+    unit: "LF",
+    toolType: "linear",
+    color: "#f97316",
+    items: [
+      { code: "TF-001", isRequired: true, quantityMultiplier: 1 }, // Fence Install
+      { code: "TF-002", isRequired: true, quantityMultiplier: 1 }, // Fence Rental (Monthly)
+      { code: "TF-003", isRequired: false, quantityMultiplier: 1 }, // Privacy Screen
+      { code: "TF-005", isRequired: false, quantityMultiplier: 1 }, // Fencing Trip Charge
+    ],
+  },
+  {
+    id: "bundle-silt-fence",
+    name: "Silt Fence",
+    description: "Wire-backed silt fence installation - measures linear feet",
+    unit: "LF",
+    toolType: "linear",
+    color: "#84cc16",
+    items: [
+      { code: "CM-004", isRequired: true, quantityMultiplier: 1 }, // Wire-Backed Silt Fence
+    ],
+  },
+  {
+    id: "bundle-filter-sock",
+    name: "Compost Filter Sock",
+    description:
+      "9-inch compost filter sock installation - measures linear feet",
+    unit: "LF",
+    toolType: "linear",
+    color: "#a855f7",
+    items: [
+      { code: "CM-003", isRequired: true, quantityMultiplier: 1 }, // Compost Filter Sock (9")
+    ],
+  },
+  {
+    id: "bundle-drop-inlet",
+    name: "Drop Inlet Protection",
+    description: "Storm drain inlet protection - count each inlet",
+    unit: "Each",
+    toolType: "count",
+    color: "#3b82f6",
+    items: [
+      { code: "CM-005", isRequired: true, quantityMultiplier: 1 }, // Drop Inlet Protection
+    ],
+  },
+  {
+    id: "bundle-curb-inlet",
+    name: "Curb Inlet Protection",
+    description: "Curb-style drain inlet protection - count each inlet",
+    unit: "Each",
+    toolType: "count",
+    color: "#06b6d4",
+    items: [
+      { code: "CM-006", isRequired: true, quantityMultiplier: 1 }, // Curb Inlet Protection
+    ],
+  },
+  {
+    id: "bundle-rock-entrance",
+    name: "Rock Entrance",
+    description: "Stabilized construction entrance - count each entrance",
+    unit: "Each",
+    toolType: "count",
+    color: "#78716c",
+    items: [
+      { code: "CM-001", isRequired: true, quantityMultiplier: 1 }, // Rock Entrance
+    ],
+  },
+];
 
 // Get all items from catalog as flat list
 export function getAllItems(): CatalogItem[] {
@@ -1267,4 +1349,48 @@ export function calculateTotal(lineItems: LineItem[]): number {
     total += item.total;
   }
   return total;
+}
+
+// Get takeoff bundles formatted for the takeoff editor
+export function getTakeoffItems() {
+  return takeoffBundles.map((bundle) => {
+    const bundleItems = bundle.items
+      .map((bundleItem) => {
+        const catalogItem = findItem(bundleItem.code);
+        if (!catalogItem) {
+          return null;
+        }
+        return {
+          id: `bi-${bundleItem.code}`,
+          itemId: bundleItem.code,
+          code: bundleItem.code,
+          name: catalogItem.name,
+          unit: catalogItem.unit,
+          price: catalogItem.price,
+          isRequired: bundleItem.isRequired,
+          quantityMultiplier: bundleItem.quantityMultiplier,
+        };
+      })
+      .filter((item) => item !== null);
+
+    return {
+      id: bundle.id,
+      code: `BUNDLE-${bundle.id.slice(0, 8).toUpperCase()}`,
+      label: bundle.name,
+      description: bundle.description,
+      unit: bundle.unit,
+      unitPrice: 0,
+      unitCost: 0,
+      color: bundle.color,
+      type: bundle.toolType,
+      isBundle: true,
+      bundleItems,
+      categoryId: null,
+      categoryName: "Takeoff Bundles",
+      subcategoryId: null,
+      subcategoryName: null,
+      notes: null,
+      defaultQty: 1,
+    };
+  });
 }

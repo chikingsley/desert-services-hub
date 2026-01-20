@@ -54,3 +54,10 @@ coverage/
 # temp files
 *.tmp
 *.temp
+
+# Monday estimates
+services/monday/estimates.token-cache.json
+
+# Project data folders (local only)
+projects/*/data/
+services/monday/estimates/

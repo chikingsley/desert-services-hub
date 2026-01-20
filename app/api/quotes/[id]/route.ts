@@ -3,14 +3,10 @@ import { db } from "@/lib/db";
 import type {
   QuoteLineItemRow,
   QuoteRow,
+  QuoteSection,
   QuoteSectionRow,
   QuoteVersionRow,
 } from "@/lib/types";
-
-interface QuoteSection {
-  id: string;
-  name: string;
-}
 
 interface QuoteLineItemInput {
   section_id?: string;
@@ -181,23 +177,31 @@ export async function PUT(
       // Re-create sections
       const sectionIdMap = new Map<string, string>();
       const sections = body.sections as QuoteSection[] | undefined;
-      if (sections && sections.length > 0) {
-        for (let i = 0; i < sections.length; i++) {
-          const section = sections[i];
+      if (sections) {
+        let sortOrder = 0;
+        for (const section of sections) {
           const sectionId = crypto.randomUUID();
           db.prepare(
-            `INSERT INTO quote_sections (id, version_id, name, sort_order)
-             VALUES (?, ?, ?, ?)`
-          ).run(sectionId, version.id, section.name, i);
+            `INSERT INTO quote_sections (id, version_id, name, title, show_subtotal, sort_order)
+             VALUES (?, ?, ?, ?, ?, ?)`
+          ).run(
+            sectionId,
+            version.id,
+            section.name,
+            section.title ?? null,
+            section.show_subtotal ? 1 : 0,
+            sortOrder
+          );
           sectionIdMap.set(section.id, sectionId);
+          sortOrder += 1;
         }
       }
 
       // Re-create line items
       const lineItems = body.line_items as QuoteLineItemInput[] | undefined;
-      if (lineItems && lineItems.length > 0) {
-        for (let i = 0; i < lineItems.length; i++) {
-          const item = lineItems[i];
+      if (lineItems) {
+        let sortOrder = 0;
+        for (const item of lineItems) {
           const lineItemId = crypto.randomUUID();
           const cost = item.cost ?? 0;
           db.prepare(
@@ -220,8 +224,9 @@ export async function PUT(
                 ? item.description
                 : null) ||
               null,
-            i
+            sortOrder
           );
+          sortOrder += 1;
         }
       }
 

@@ -98,3 +98,19 @@ export type Catalog = {
   categories: CatalogCategory[];
 };
 
+// Takeoff bundle types
+export type TakeoffBundleItem = {
+  code: string; // References a CatalogItem code
+  isRequired: boolean;
+  quantityMultiplier: number;
+};
+
+export type TakeoffBundle = {
+  id: string;
+  name: string;
+  description: string;
+  unit: "LF" | "SF" | "Each";
+  toolType: "count" | "linear" | "area";
+  color: string;
+  items: TakeoffBundleItem[];
+};

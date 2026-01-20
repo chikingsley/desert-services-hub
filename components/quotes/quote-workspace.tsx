@@ -22,7 +22,8 @@ import {
 import { useSidebar } from "@/components/ui/sidebar";
 import { Spinner } from "@/components/ui/spinner";
 import { generatePDFBlob } from "@/lib/pdf/generate-client";
-import type { Catalog, EditorQuote } from "@/lib/types";
+import type { EditorQuote } from "@/lib/types";
+import { catalog } from "@/services/quoting/catalog";
 import { useSettings } from "../../hooks/use-settings";
 import { InlineQuoteEditor } from "./inline-quote-editor";
 
@@ -151,8 +152,6 @@ export function QuoteWorkspace({
   jobName,
   linkedTakeoff,
 }: QuoteWorkspaceProps) {
-  const [catalog, setCatalog] = useState<Catalog | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const { isMobile, open, openMobile, setOpen, setOpenMobile } = useSidebar();
   const sidebarSnapshotRef = useRef<{
     open: boolean;
@@ -222,25 +221,6 @@ export function QuoteWorkspace({
       sidebarSnapshotRef.current = null;
     }
   }, [isPreviewOpen, autoHideSidebar, isMobile, setOpen, setOpenMobile]);
-
-  // Fetch catalog from API
-  useEffect(() => {
-    const fetchCatalog = async () => {
-      try {
-        const res = await fetch("/api/catalog");
-        if (res.ok) {
-          const data = await res.json();
-          setCatalog(data);
-        }
-      } catch (err) {
-        console.error("Failed to fetch catalog:", err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchCatalog();
-  }, []);
 
   // Generate PDF blob when quote changes (for live preview)
   useEffect(() => {
@@ -472,25 +452,6 @@ export function QuoteWorkspace({
       </Button>
     </div>
   );
-
-  if (isLoading || !catalog) {
-    return (
-      <div className="flex h-full flex-col">
-        <PageHeader breadcrumbs={breadcrumbs} title={jobName} />
-        <div className="flex flex-1 items-center justify-center">
-          <div className="flex flex-col items-center gap-4">
-            <div className="relative">
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
-                <div className="h-6 w-6 animate-pulse rounded-lg bg-primary/30" />
-              </div>
-              <div className="absolute -right-1 -bottom-1 h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-            </div>
-            <p className="text-muted-foreground text-sm">Loading catalog...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="flex h-full flex-col overflow-hidden">

@@ -61,3 +61,4 @@ services/monday/estimates.token-cache.json
 # Project data folders (local only)
 projects/*/data/
 services/monday/estimates/
+data/

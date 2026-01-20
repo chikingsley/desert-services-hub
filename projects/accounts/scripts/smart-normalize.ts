@@ -34,81 +34,58 @@ function normalize(name: string): string {
   return n;
 }
 
-// Minimum lengths to avoid over-matching
-const MIN_NAME_LENGTH = 5; // Names shorter than this won't be matched
-const MIN_TOKEN_LENGTH = 4; // Tokens shorter than this are ignored
-
-// Common words that shouldn't be the only matching element
-const COMMON_WORDS = new Set([
-  "core",
-  "first",
-  "west",
-  "east",
-  "north",
-  "south",
-  "american",
-  "united",
-  "general",
-  "national",
-  "custom",
-  "design",
-  "build",
-  "homes",
+// Common prefixes that shouldn't be used for matching on their own
+const COMMON_PREFIXES = new Set([
+  "desert",
   "arizona",
   "phoenix",
+  "southwest",
+  "western",
+  "american",
+  "national",
+  "united",
+  "premier",
+  "valley",
+  "sun",
+  "first",
+  "custom",
+  "modern",
 ]);
 
-// Get tokens (words) from a name
-function getTokens(name: string): Set<string> {
-  return new Set(name.split(/\s+/).filter((t) => t.length >= MIN_TOKEN_LENGTH));
-}
-
 // Check if name A is likely the same entity as name B
+// VERY CONSERVATIVE: only exact substring matching with strict length requirements
 function isSameEntity(a: string, b: string): boolean {
   if (a === b) return true;
 
-  // Skip very short names
-  if (a.length < MIN_NAME_LENGTH || b.length < MIN_NAME_LENGTH) return false;
+  // Skip very short names (less than 5 chars)
+  if (a.length < 5 || b.length < 5) return false;
 
-  // One is substring of the other - but the shorter must be at least 60% of the longer
   const [shorter, longer] = a.length <= b.length ? [a, b] : [b, a];
-  const ratio = shorter.length / longer.length;
 
-  // For substring match: shorter name must be at least 60% of longer,
-  // and shorter name must be at least 5 chars
-  if (longer.includes(shorter) && ratio >= 0.6 && shorter.length >= 5) {
+  // Don't match if the shorter name is just a common prefix
+  if (COMMON_PREFIXES.has(shorter)) return false;
+
+  // Only match if shorter is a substring at the START of longer
+  // This catches: "willmeng" in "willmeng construction"
+  // But NOT: "core" in "hardcore" or "scorecard"
+  if (!longer.startsWith(shorter)) return false;
+
+  // The character after the shorter string should be a space or end of string
+  // This prevents "core" matching "coreconstruction" (no space)
+  // but allows "core" matching "core construction" (has space)
+  if (longer.length > shorter.length) {
+    const nextChar = longer[shorter.length];
+    if (nextChar !== " " && nextChar !== "-") return false;
+  }
+
+  // The shorter must be at least 50% of the longer's length,
+  // and shorter must be at least 6 characters
+  const ratio = shorter.length / longer.length;
+  if (ratio >= 0.5 && shorter.length >= 6) {
     return true;
   }
 
-  // Token overlap is ONLY done if both names share a distinctive (non-common) token
-  const tokensA = getTokens(a);
-  const tokensB = getTokens(b);
-
-  if (tokensA.size === 0 || tokensB.size === 0) return false;
-
-  // Find shared tokens
-  const shared: string[] = [];
-  for (const token of tokensA) {
-    if (tokensB.has(token)) {
-      shared.push(token);
-    }
-  }
-
-  if (shared.length === 0) return false;
-
-  // Check if at least one shared token is NOT a common word
-  const hasDistinctiveToken = shared.some((t) => !COMMON_WORDS.has(t));
-  if (!hasDistinctiveToken) return false;
-
-  // All tokens of shorter name must be in longer name
-  const [smallerTokens, largerTokens] =
-    tokensA.size <= tokensB.size ? [tokensA, tokensB] : [tokensB, tokensA];
-
-  for (const token of smallerTokens) {
-    if (!largerTokens.has(token)) return false;
-  }
-
-  return true;
+  return false;
 }
 
 // Parse a CSV file and extract contractor names

@@ -3,8 +3,55 @@
  */
 
 import type { LoaderFunctionArgs } from "react-router";
-import { useLoaderData, useParams } from "react-router";
-import { PageHeader } from "@/components/page-header";
+import { useLoaderData } from "react-router";
+import { QuoteWorkspace } from "@/components/quotes/quote-workspace";
+import type { EditorLineItem, EditorQuote, EditorSection } from "@/lib/types";
+
+// API response types
+interface ApiLineItem {
+  id: string;
+  description: string;
+  notes: string | null;
+  quantity: number;
+  unit: string;
+  unit_price: number;
+  section_id: string | null;
+  is_excluded: number;
+}
+
+interface ApiSection {
+  id: string;
+  name: string;
+}
+
+interface ApiVersion {
+  id: string;
+  quote_id: string;
+  version_number: number;
+  total: number;
+  is_current: number;
+  created_at: string;
+  sections: ApiSection[];
+  line_items: ApiLineItem[];
+}
+
+interface ApiQuoteResponse {
+  id: string;
+  base_number: string;
+  takeoff_id: string | null;
+  job_name: string;
+  job_address: string | null;
+  client_name: string | null;
+  client_email: string | null;
+  client_phone: string | null;
+  notes: string | null;
+  status: string;
+  is_locked: number;
+  created_at: string;
+  updated_at: string;
+  current_version: ApiVersion;
+  linked_takeoff?: { id: string; name: string } | null;
+}
 
 // Loader function for fetching a single quote
 export async function quoteLoader({ params }: LoaderFunctionArgs) {
@@ -13,22 +60,67 @@ export async function quoteLoader({ params }: LoaderFunctionArgs) {
   return response.json();
 }
 
+// Transform API response to EditorQuote format
+function transformToEditorQuote(api: ApiQuoteResponse): EditorQuote {
+  const version = api.current_version;
+
+  const sections: EditorSection[] = (version.sections || []).map((s) => ({
+    id: s.id,
+    name: s.name,
+  }));
+
+  const lineItems: EditorLineItem[] = (version.line_items || []).map(
+    (item) => ({
+      id: item.id,
+      item: item.description,
+      description: item.notes || "",
+      qty: item.quantity,
+      uom: item.unit,
+      cost: item.unit_price,
+      total: item.quantity * item.unit_price,
+      sectionId: item.section_id || undefined,
+      isStruck: item.is_excluded === 1,
+    })
+  );
+
+  const total = lineItems
+    .filter((item) => !item.isStruck)
+    .reduce((sum, item) => sum + item.total, 0);
+
+  return {
+    estimateNumber: api.base_number,
+    date: api.created_at || new Date().toISOString(),
+    estimator: "",
+    estimatorEmail: "",
+    billTo: {
+      companyName: api.client_name || "",
+      address: "",
+      email: api.client_email || "",
+      phone: api.client_phone || "",
+    },
+    jobInfo: {
+      siteName: api.job_name || "",
+      address: api.job_address || "",
+    },
+    sections,
+    lineItems,
+    total,
+  };
+}
+
 export function QuoteEditorPage() {
-  const quote = useLoaderData() as Record<string, unknown>;
-  const { id } = useParams();
+  const apiQuote = useLoaderData() as ApiQuoteResponse;
+
+  const initialQuote = transformToEditorQuote(apiQuote);
+  const linkedTakeoff = apiQuote.linked_takeoff || null;
 
   return (
-    <div className="flex flex-1 flex-col">
-      <PageHeader
-        description={`Editing quote ${id}`}
-        title={(quote.job_name as string) || "Quote Editor"}
-      />
-      <div className="flex-1 p-6 lg:p-8">
-        <p className="text-muted-foreground">Quote editor UI coming soon.</p>
-        <pre className="mt-4 max-h-96 overflow-auto rounded bg-muted p-4 text-sm">
-          {JSON.stringify(quote, null, 2)}
-        </pre>
-      </div>
-    </div>
+    <QuoteWorkspace
+      initialQuote={initialQuote}
+      jobName={apiQuote.job_name || apiQuote.base_number}
+      linkedTakeoff={linkedTakeoff}
+      quoteId={apiQuote.id}
+      versionId={apiQuote.current_version.id}
+    />
   );
 }

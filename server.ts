@@ -5,7 +5,9 @@
  * Run with: bun run server.ts
  * Or with hot reload: bun --hot server.ts
  */
-import { serve } from "bun";
+
+import { file, serve } from "bun";
+
 // API handlers
 import { healthCheck } from "./src/api/health";
 import { searchMonday } from "./src/api/monday";
@@ -28,6 +30,7 @@ import {
 } from "./src/api/takeoffs-by-id";
 import { checkPdfExists, uploadPdf } from "./src/api/upload";
 import { handleMondayWebhook } from "./src/api/webhooks";
+
 // Frontend - HTML entry point (Bun bundles automatically)
 import homepage from "./src/frontend/index.html";
 
@@ -98,10 +101,8 @@ const server = serve({
     },
 
     // ===========================================
-    // Frontend SPA Routes
+    // Frontend SPA Routes (explicit paths)
     // ===========================================
-    // Serve the React app for all non-API routes
-    // React Router handles client-side routing
     "/": homepage,
     "/quotes": homepage,
     "/quotes/*": homepage,
@@ -109,9 +110,22 @@ const server = serve({
     "/takeoffs/*": homepage,
     "/catalog": homepage,
     "/settings": homepage,
+  },
 
-    // Catch-all for any other routes (SPA fallback)
-    "/*": homepage,
+  // Fallback handler for unmatched routes
+  // Serves static files from public/ or falls back to SPA
+  async fetch(req) {
+    const url = new URL(req.url);
+    const pathname = url.pathname;
+
+    // Try to serve static file from public directory
+    const staticFile = file(`./public${pathname}`);
+    if (await staticFile.exists()) {
+      return new Response(staticFile);
+    }
+
+    // SPA fallback - serve homepage for client-side routing
+    return new Response(homepage);
   },
 
   // Development features

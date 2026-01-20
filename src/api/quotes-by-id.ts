@@ -30,8 +30,6 @@ interface QuoteLineItemInput {
   unit_cost?: number;
   cost?: number;
   unit_price?: number;
-  is_excluded?: boolean;
-  isStruck?: boolean;
   notes?: string;
 }
 
@@ -200,8 +198,8 @@ export async function updateQuote(req: BunRequest): Promise<Response> {
           const lineItemId = crypto.randomUUID();
           const cost = item.cost ?? 0;
           db.prepare(
-            `INSERT INTO quote_line_items (id, version_id, section_id, description, quantity, unit, unit_cost, unit_price, is_excluded, notes, sort_order)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+            `INSERT INTO quote_line_items (id, version_id, section_id, description, quantity, unit, unit_cost, unit_price, notes, sort_order)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
           ).run(
             lineItemId,
             version.id,
@@ -213,7 +211,6 @@ export async function updateQuote(req: BunRequest): Promise<Response> {
             item.unit || item.uom || "EA",
             item.unit_cost ?? cost * 0.7,
             item.unit_price ?? cost,
-            item.is_excluded || item.isStruck ? 1 : 0,
             item.notes ||
               (item.item && item.description && item.item !== item.description
                 ? item.description
@@ -312,12 +309,9 @@ export async function getQuotePdf(req: BunRequest): Promise<Response> {
       cost: item.unit_price,
       total: item.quantity * item.unit_price,
       sectionId: item.section_id || undefined,
-      isStruck: item.is_excluded === 1,
     }));
 
-    const total = lineItems
-      .filter((item) => !item.isStruck)
-      .reduce((sum, item) => sum + item.total, 0);
+    const total = lineItems.reduce((sum, item) => sum + item.total, 0);
 
     const editorQuote: EditorQuote = {
       estimateNumber: quote.base_number,
@@ -447,8 +441,8 @@ export function duplicateQuote(req: BunRequest): Response {
         : null;
 
       db.prepare(
-        `INSERT INTO quote_line_items (id, version_id, section_id, description, quantity, unit, unit_cost, unit_price, is_excluded, notes, sort_order)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        `INSERT INTO quote_line_items (id, version_id, section_id, description, quantity, unit, unit_cost, unit_price, notes, sort_order)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
       ).run(
         newLineItemId,
         newVersionId,
@@ -458,7 +452,6 @@ export function duplicateQuote(req: BunRequest): Response {
         item.unit,
         item.unit_cost,
         item.unit_price,
-        item.is_excluded,
         item.notes,
         item.sort_order
       );

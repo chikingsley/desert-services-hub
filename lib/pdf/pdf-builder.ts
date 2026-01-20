@@ -50,8 +50,8 @@ interface GroupedItems {
   items: EditorLineItem[];
 }
 
-// Fixed widths for consistent column alignment across section tables
-const TABLE_WIDTHS = ["auto", 95, "*", 35, 45, 50, 60];
+// Column widths: # and numeric columns are auto, Item fixed, Description fills remaining
+const TABLE_WIDTHS = ["auto", 95, "*", "auto", "auto", "auto", "auto"];
 
 // ============================================
 // Back Page Service Categories
@@ -635,7 +635,7 @@ export function buildDocDefinition(
   options?: GeneratePDFOptions
 ): TDocumentDefinitions {
   // Filter out struck items - they shouldn't appear on the PDF
-  const visibleItems = quote.lineItems.filter((item) => !item.isStruck);
+  const visibleItems = quote.lineItems;
 
   // Build content based on style option
   const style = options?.style ?? "sectioned";

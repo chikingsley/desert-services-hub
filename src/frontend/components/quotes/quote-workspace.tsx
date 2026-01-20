@@ -98,7 +98,6 @@ interface ApiQuoteResponse {
       quantity: number;
       unit: string;
       unit_price: number;
-      is_excluded: number;
       notes: string | null;
       sort_order: number;
     }>;
@@ -143,7 +142,6 @@ function apiToEditorQuote(
       cost: item.unit_price,
       total: item.quantity * item.unit_price,
       sectionId: item.section_id ?? undefined,
-      isStruck: item.is_excluded === 1,
     })),
     total: version.total,
   };
@@ -337,8 +335,6 @@ export function QuoteWorkspace({
           unit_cost: item.cost * 0.7,
           unit_price: item.cost,
           cost: item.cost,
-          is_excluded: item.isStruck,
-          isStruck: item.isStruck,
           notes: item.description,
         })),
       };
@@ -471,7 +467,7 @@ export function QuoteWorkspace({
           className={`flex h-full flex-col ${isPreviewOpen ? "lg:flex-row" : ""}`}
         >
           {/* Editor Panel */}
-          <div className="flex min-w-0 flex-1 overflow-auto">
+          <div className="flex h-full min-w-0 flex-1">
             <InlineQuoteEditor
               catalog={catalog}
               initialQuote={initialQuote}

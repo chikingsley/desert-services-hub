@@ -10,7 +10,7 @@ import "./index.css";
 // Layout components
 import { AppSidebar } from "@/components/app-sidebar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { CatalogPage } from "@/pages/catalog";
+import { CatalogPage, catalogLoader } from "@/pages/catalog";
 // Pages
 import { DashboardPage } from "@/pages/dashboard";
 import { QuoteEditorPage, quoteLoader } from "@/pages/quote-editor";
@@ -23,7 +23,7 @@ import { TakeoffsPage, takeoffsLoader } from "@/pages/takeoffs";
 // Root layout with sidebar
 function RootLayout() {
   return (
-    <SidebarProvider>
+    <SidebarProvider className="h-svh overflow-hidden">
       <AppSidebar />
       <SidebarInset className="texture-noise bg-desert-gradient">
         <Outlet />
@@ -70,6 +70,7 @@ const router = createBrowserRouter([
       {
         path: "catalog",
         element: <CatalogPage />,
+        loader: catalogLoader,
       },
       {
         path: "settings",

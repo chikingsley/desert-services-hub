@@ -16,7 +16,6 @@ interface ApiLineItem {
   unit: string;
   unit_price: number;
   section_id: string | null;
-  is_excluded: number;
 }
 
 interface ApiSection {
@@ -56,7 +55,9 @@ interface ApiQuoteResponse {
 // Loader function for fetching a single quote
 export async function quoteLoader({ params }: LoaderFunctionArgs) {
   const response = await fetch(`/api/quotes/${params.id}`);
-  if (!response.ok) throw new Error("Failed to load quote");
+  if (!response.ok) {
+    throw new Error("Failed to load quote");
+  }
   return response.json();
 }
 
@@ -79,13 +80,10 @@ function transformToEditorQuote(api: ApiQuoteResponse): EditorQuote {
       cost: item.unit_price,
       total: item.quantity * item.unit_price,
       sectionId: item.section_id || undefined,
-      isStruck: item.is_excluded === 1,
     })
   );
 
-  const total = lineItems
-    .filter((item) => !item.isStruck)
-    .reduce((sum, item) => sum + item.total, 0);
+  const total = lineItems.reduce((sum, item) => sum + item.total, 0);
 
   return {
     estimateNumber: api.base_number,

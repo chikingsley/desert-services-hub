@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/popover";
 import { useQuoteEditor } from "@/hooks/use-quote-editor";
 import type { Catalog, EditorLineItem, EditorQuote } from "@/lib/types";
-import { cn, formatCurrency } from "@/lib/utils";
+import { formatCurrency } from "@/lib/utils";
 import { CatalogCombobox } from "./catalog-combobox";
 import { ItemCombobox } from "./item-combobox";
 import { SectionCombobox } from "./section-combobox";
@@ -175,9 +175,7 @@ export function InlineQuoteEditor({
     (item: EditorLineItem, catalogCategoryId?: string) => (
       <>
         {/* Desktop view */}
-        <div
-          className={`hidden items-center md:flex ${item.isStruck ? "opacity-50" : ""}`}
-        >
+        <div className="hidden items-center md:flex">
           <Button
             className="h-9 w-9 shrink-0 rounded-lg p-0 transition-transform hover:scale-105"
             onClick={() => removeLineItem(item.id)}
@@ -191,31 +189,13 @@ export function InlineQuoteEditor({
               catalog={catalog}
               categoryId={catalogCategoryId}
               currentValue={item.item}
-              isStruck={item.isStruck}
               onSelect={(catalogItem) =>
                 updateLineItemFromCatalog(item.id, catalogItem)
               }
             />
           </div>
-          <Button
-            className={cn(
-              "ml-2 h-9 w-9 shrink-0 rounded-lg p-0 transition-all",
-              item.isStruck && "bg-amber-500 text-white hover:bg-amber-500/80"
-            )}
-            onClick={() => updateLineItem(item.id, "isStruck", !item.isStruck)}
-            size="sm"
-            title={
-              item.isStruck ? "Remove strikethrough" : "Strikethrough item"
-            }
-            variant="secondary"
-          >
-            <span className="line-through">S</span>
-          </Button>
           <Input
-            className={cn(
-              "ml-2 h-9 min-w-0 flex-[3] rounded-lg border-border/50 bg-background text-sm transition-colors focus:border-primary",
-              item.isStruck && "line-through"
-            )}
+            className="ml-2 h-9 min-w-0 flex-[3] rounded-lg border-border/50 bg-background text-sm transition-colors focus:border-primary"
             onChange={(e) =>
               updateLineItem(item.id, "description", e.target.value)
             }
@@ -262,20 +242,6 @@ export function InlineQuoteEditor({
             </span>
             <div className="flex gap-2">
               <Button
-                className={cn(
-                  "h-8 w-8 rounded-lg p-0",
-                  item.isStruck &&
-                    "bg-amber-500 text-white hover:bg-amber-500/80"
-                )}
-                onClick={() =>
-                  updateLineItem(item.id, "isStruck", !item.isStruck)
-                }
-                size="sm"
-                variant="secondary"
-              >
-                <span className="line-through">S</span>
-              </Button>
-              <Button
                 className="h-8 w-8 rounded-lg p-0"
                 onClick={() => removeLineItem(item.id)}
                 size="sm"
@@ -290,7 +256,6 @@ export function InlineQuoteEditor({
             categoryId={catalogCategoryId}
             className="h-10"
             currentValue={item.item}
-            isStruck={item.isStruck}
             onSelect={(catalogItem) =>
               updateLineItemFromCatalog(item.id, catalogItem)
             }
@@ -639,9 +604,10 @@ export function InlineQuoteEditor({
 
             {/* Sectioned items */}
             {sectionGroups.map(({ section, items }) => {
-              const sectionTotal = items
-                .filter((item) => !item.isStruck)
-                .reduce((sum, item) => sum + item.total, 0);
+              const sectionTotal = items.reduce(
+                (sum, item) => sum + item.total,
+                0
+              );
 
               return items.length > 0 ? (
                 <div

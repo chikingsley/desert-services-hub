@@ -19,8 +19,6 @@ interface QuoteLineItemInput {
   unit_cost?: number;
   cost?: number;
   unit_price?: number;
-  is_excluded?: boolean;
-  isStruck?: boolean;
   notes?: string;
 }
 
@@ -147,8 +145,8 @@ export async function createQuote(req: Request): Promise<Response> {
         const lineItemId = crypto.randomUUID();
         const cost = item.cost ?? 0;
         db.prepare(
-          `INSERT INTO quote_line_items (id, version_id, section_id, description, quantity, unit, unit_cost, unit_price, is_excluded, notes, sort_order)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+          `INSERT INTO quote_line_items (id, version_id, section_id, description, quantity, unit, unit_cost, unit_price, notes, sort_order)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
         ).run(
           lineItemId,
           versionId,
@@ -158,7 +156,6 @@ export async function createQuote(req: Request): Promise<Response> {
           item.unit || item.uom || "EA",
           item.unit_cost ?? cost * 0.7,
           item.unit_price ?? cost,
-          item.is_excluded || item.isStruck ? 1 : 0,
           item.notes ||
             (item.item && item.description && item.item !== item.description
               ? item.description

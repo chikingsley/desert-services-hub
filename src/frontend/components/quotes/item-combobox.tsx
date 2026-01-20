@@ -33,7 +33,6 @@ interface ItemComboboxProps {
   onSelect: (item: CatalogItemInfo) => void;
   disabled?: boolean;
   className?: string;
-  isStruck?: boolean;
 }
 
 interface FlattenedItem {
@@ -109,7 +108,6 @@ export function ItemCombobox({
   onSelect,
   disabled,
   className,
-  isStruck,
 }: ItemComboboxProps) {
   const [open, setOpen] = useState(false);
   const [inputValue, setInputValue] = useState("");
@@ -149,7 +147,6 @@ export function ItemCombobox({
           aria-expanded={open}
           className={cn(
             "h-9 w-full justify-between border-border/50 bg-background text-left font-normal text-sm",
-            isStruck && "line-through opacity-50",
             className
           )}
           disabled={disabled}

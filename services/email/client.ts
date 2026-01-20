@@ -1962,13 +1962,7 @@ export class GraphEmailClient {
   async deleteEmail(messageId: string, userId?: string): Promise<void> {
     const client = this.getClient();
     const basePath = this.getBasePath(userId);
-
-    try {
-      await client.api(`${basePath}/messages/${messageId}`).delete();
-    } catch (error) {
-      console.error("Error deleting email:", error);
-      throw error;
-    }
+    await client.api(`${basePath}/messages/${messageId}`).delete();
   }
 
   /**

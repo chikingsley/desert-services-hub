@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { writeFileSync } from "node:fs";
-import { generatePDF, getPDFFilename } from "./generate";
+import { generatePDF, getPDFFilename } from "@/lib/pdf/generate-pdf";
 
 const testQuote = {
   estimateNumber: "251227-01",
@@ -73,7 +73,6 @@ describe("PDF Generation", () => {
     const outPath = "./example-estimate.pdf";
 
     writeFileSync(outPath, buffer);
-    console.log(`PDF saved to ${outPath}`);
 
     expect(buffer.length).toBeGreaterThan(0);
   });

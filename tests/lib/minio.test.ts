@@ -15,7 +15,7 @@ import {
   setFileTags,
   uploadFile,
   uploadTakeoffPdf,
-} from "./minio";
+} from "@/lib/minio";
 
 // Test constants
 const TEST_TAKEOFF_ID = `test-takeoff-${Date.now()}`;
@@ -121,14 +121,13 @@ describe("MinIO/AIStor Storage", () => {
   });
 
   describe("Presigned URLs", () => {
-    beforeAll(async () => {
-      await uploadTakeoffPdf(TEST_TAKEOFF_ID, TEST_PDF_CONTENT, "original.pdf");
-    });
-
     test("should generate presigned URL", async () => {
+      // Upload fresh for this test
+      await uploadTakeoffPdf(TEST_TAKEOFF_ID, TEST_PDF_CONTENT, "presigned-test.pdf");
+
       const url = await getPresignedUrl(
         BUCKETS.TAKEOFFS,
-        `${TEST_TAKEOFF_ID}/original.pdf`,
+        `${TEST_TAKEOFF_ID}/presigned-test.pdf`,
         3600
       );
 
@@ -140,17 +139,24 @@ describe("MinIO/AIStor Storage", () => {
     });
 
     test("should generate takeoff PDF URL", async () => {
-      const url = await getTakeoffPdfUrl(TEST_TAKEOFF_ID, "original.pdf");
+      await uploadTakeoffPdf(TEST_TAKEOFF_ID, TEST_PDF_CONTENT, "url-test.pdf");
+      const url = await getTakeoffPdfUrl(TEST_TAKEOFF_ID, "url-test.pdf");
 
       expect(url).toContain("http");
-      expect(url).toContain("original.pdf");
+      expect(url).toContain("url-test.pdf");
     });
 
-    test("presigned URL should be fetchable", async () => {
-      const url = await getTakeoffPdfUrl(TEST_TAKEOFF_ID, "original.pdf");
+    test("presigned URL should be fetchable and return correct content", async () => {
+      // Upload with unique filename to ensure isolation
+      const uniqueFilename = `fetch-test-${Date.now()}.pdf`;
+      await uploadTakeoffPdf(TEST_TAKEOFF_ID, TEST_PDF_CONTENT, uniqueFilename);
 
+      // Get presigned URL and fetch
+      const url = await getTakeoffPdfUrl(TEST_TAKEOFF_ID, uniqueFilename);
       const response = await fetch(url);
+
       expect(response.ok).toBe(true);
+      expect(response.status).toBe(200);
 
       const arrayBuffer = await response.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);

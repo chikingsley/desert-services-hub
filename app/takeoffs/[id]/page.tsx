@@ -10,9 +10,9 @@ import { FloatingTools } from "@/components/takeoffs/floating-tools";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import type { TakeoffAnnotation, TakeoffToolType } from "@/lib/pdf-takeoff";
-import { getTakeoffData } from "@/lib/stores/takeoff-store";
 import { aggregateTakeoffAnnotations } from "@/lib/takeoff-to-quote";
 import { getTakeoff, saveTakeoffAnnotations } from "@/lib/takeoffs";
+import { getTakeoffItems } from "@/services/quoting/catalog";
 
 type SaveStatus = "saved" | "saving" | "unsaved";
 
@@ -193,8 +193,18 @@ export default function TakeoffEditorPage() {
     "saved"
   );
   const [, setIsFromDatabase] = useState(false);
-  const [catalogItems, setCatalogItems] = useState<TakeoffCatalogItem[]>([]);
-  const [presetItems, setPresetItems] = useState<PresetItem[]>([]);
+  // Load catalog items directly from catalog.ts
+  const catalogItems = useMemo(() => getTakeoffItems() as TakeoffCatalogItem[], []);
+  const presetItems = useMemo(
+    () =>
+      catalogItems.map((item) => ({
+        id: item.id,
+        label: item.label,
+        color: item.color,
+        type: item.type,
+      })),
+    [catalogItems]
+  );
   const [linkedQuote, setLinkedQuote] = useState<{
     id: string;
     base_number: string;
@@ -245,31 +255,6 @@ export default function TakeoffEditorPage() {
     setTotalPages(total);
   }, []);
 
-  // Load catalog items on mount
-  useEffect(() => {
-    async function loadCatalogItems() {
-      try {
-        const res = await fetch("/api/catalog/takeoff-items");
-        if (res.ok) {
-          const items: TakeoffCatalogItem[] = await res.json();
-          setCatalogItems(items);
-          // Convert to preset items format
-          setPresetItems(
-            items.map((item) => ({
-              id: item.id,
-              label: item.label,
-              color: item.color,
-              type: item.type,
-            }))
-          );
-        }
-      } catch (error) {
-        console.error("Error loading catalog items:", error);
-      }
-    }
-    loadCatalogItems();
-  }, []);
-
   // Load takeoff data - from SQLite via API if UUID, otherwise from memory store or test PDF
   useEffect(() => {
     async function loadTakeoff() {
@@ -316,16 +301,9 @@ export default function TakeoffEditorPage() {
         }
       }
 
-      // Try memory store (for newly uploaded PDFs)
-      const data = getTakeoffData(id);
-      if (data) {
-        setPdfFile(data.file);
-        setTakeoffName(data.name);
-      } else {
-        // Fallback to test PDF for easier development
-        setPdfFile("/test-files/west-innovative-drive-swppp.pdf");
-        setTakeoffName("West Innovative Drive SWPPP");
-      }
+      // Fallback to test PDF for development
+      setPdfFile("/test-files/west-innovative-drive-swppp.pdf");
+      setTakeoffName("West Innovative Drive SWPPP");
     }
 
     loadTakeoff();

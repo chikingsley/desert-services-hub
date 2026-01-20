@@ -10,8 +10,7 @@
     "lint": "ultracite check",
     "fix": "ultracite fix",
     "check": "bun run typecheck && bun run lint",
-    "test": "bun test services/",
-    "test:all": "bun test",
+    "test": "bun test tests/ services/",
     "pdf": "bun run services/quoting/test-multipage.ts"
   },
   "dependencies": {

@@ -1,11 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import type { ScalePresetConfig } from "../config";
-import type {
-  CountMarker,
-  PolygonAnnotation,
-  PolylineAnnotation,
-} from "../takeoff-types";
-import type { Scaled } from "../types";
+import type { ScalePresetConfig } from "@/lib/pdf-takeoff/config";
 import {
   calculatePolygonArea,
   calculatePolygonPerimeter,
@@ -15,7 +9,13 @@ import {
   pdfPointsSquaredToSquareFeet,
   pdfPointsToFeet,
   summarizeByItem,
-} from "./measurements";
+} from "@/lib/pdf-takeoff/lib/measurements";
+import type {
+  CountMarker,
+  PolygonAnnotation,
+  PolylineAnnotation,
+} from "@/lib/pdf-takeoff/takeoff-types";
+import type { Scaled } from "@/lib/pdf-takeoff/types";
 
 // Helper to create a Scaled point (only x1/y1 are used in calculations)
 function point(x: number, y: number, pageNumber = 1): Scaled {

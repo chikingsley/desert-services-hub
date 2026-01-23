@@ -1,7 +1,57 @@
+import { spawn } from "node:child_process";
 import { storeExtractedPages } from "../extraction/storage";
 import { extractText } from "../extraction/text-extractor";
 import { markAsProcessed, updateProcessingStatus } from "./dedup";
 import { startWatcher, stopWatcher } from "./watcher";
+
+/**
+ * Run Claude Code to extract contract data.
+ * Uses `claude -p` for non-interactive execution.
+ */
+function runClaudeExtraction(contractId: number): Promise<void> {
+  const prompt = `Extract all contract data from contract ID ${contractId}.
+
+Read the contract text from the database using:
+bun -e "import { getFullText } from './services/contract/extraction/storage'; console.log(getFullText(${contractId}));"
+
+Then extract all 7 domains (contractInfo, billing, contacts, sov, insurance, siteInfo, redFlags) and store them using storeAgentResult from './services/contract/agents/storage'.
+
+Be thorough but concise. Store results immediately.`;
+
+  return new Promise((resolve, reject) => {
+    const claude = spawn(
+      "claude",
+      ["-p", prompt, "--allowedTools", "Bash,Read"],
+      {
+        cwd: process.cwd(),
+        stdio: ["ignore", "pipe", "pipe"],
+      }
+    );
+
+    claude.stdout?.on("data", (data) => {
+      process.stdout.write(data);
+    });
+
+    claude.stderr?.on("data", (data) => {
+      console.error(`[Claude] ${data.toString()}`);
+    });
+
+    claude.on("close", (code) => {
+      if (code === 0) {
+        console.log("[Pipeline] Claude extraction completed");
+        resolve();
+      } else {
+        console.error(`[Pipeline] Claude extraction failed with code ${code}`);
+        reject(new Error(`Claude exited with code ${code}`));
+      }
+    });
+
+    claude.on("error", (err) => {
+      console.error("[Pipeline] Failed to spawn Claude:", err.message);
+      reject(err);
+    });
+  });
+}
 
 // Re-export types for consumers
 export type {
@@ -52,15 +102,25 @@ async function processContract(filePath: string): Promise<void> {
     // Store extracted pages in database
     storeExtractedPages(contractId, result.pages);
 
-    // Mark as completed
-    updateProcessingStatus(filePath, "completed");
-
     console.log(
       `[Pipeline] Extracted ${result.totalPages} pages via ${result.extractionMethod} in ${result.processingTimeMs}ms: ${filePath}`
     );
+
+    // Run Claude extraction automatically
     console.log(
-      `[Pipeline] Contract ${contractId} ready for extraction. Run /contract-extract ${contractId}`
+      `[Pipeline] Starting Claude extraction for contract ${contractId}...`
     );
+    try {
+      await runClaudeExtraction(contractId);
+    } catch {
+      // Log but don't fail - text extraction succeeded
+      console.error(
+        `[Pipeline] Claude extraction failed, can retry with /contract-extract ${contractId}`
+      );
+    }
+
+    // Mark as completed
+    updateProcessingStatus(filePath, "completed");
   } catch (error) {
     // Mark as failed on error
     updateProcessingStatus(filePath, "failed");

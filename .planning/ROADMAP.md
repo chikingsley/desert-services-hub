@@ -14,7 +14,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Pipeline Foundation** - Folder watching and PDF detection trigger
 - [x] **Phase 2: Text Extraction** - OCR PDFs to searchable text via Mistral
-- [ ] **Phase 3: Multi-Agent Extraction** - Parallel agents extract structured contract data with citations
+- [x] **Phase 3: Multi-Agent Extraction** - Parallel agents extract structured contract data with citations
 - [ ] **Phase 4: Estimate Matching** - Fuzzy match contracts to Monday.com estimates
 - [ ] **Phase 5: Task Orchestration** - Create Notion project rows with task-step columns and verification
 
@@ -59,9 +59,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 03-01-PLAN.md - Foundation: Types, Zod schemas for all 7 domains, storage layer, Mistral client
-- [ ] 03-02-PLAN.md - Agent implementations: All 7 extraction functions with domain-specific prompts
-- [ ] 03-03-PLAN.md - Orchestrator and pipeline integration: Parallel execution and end-to-end wiring
+- [x] 03-01-PLAN.md - Foundation: Types, Zod schemas for all 7 domains, storage layer, Mistral client
+- [x] 03-02-PLAN.md - Agent implementations: All 7 extraction functions with domain-specific prompts
+- [x] 03-03-PLAN.md - Orchestrator and pipeline integration: Parallel execution and end-to-end wiring
 
 ### Phase 4: Estimate Matching
 **Goal**: Contracts are linked to their original estimates in Monday.com
@@ -106,8 +106,8 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 |-------|----------------|--------|-----------|
 | 1. Pipeline Foundation | 1/1 | Complete | 2026-01-23 |
 | 2. Text Extraction | 1/1 | Complete | 2026-01-23 |
-| 3. Multi-Agent Extraction | 0/3 | Ready | - |
-| 4. Estimate Matching | 0/2 | Not started | - |
+| 3. Multi-Agent Extraction | 3/3 | Complete | 2026-01-23 |
+| 4. Estimate Matching | 0/2 | Ready | - |
 | 5. Task Orchestration | 0/3 | Not started | - |
 
 ---

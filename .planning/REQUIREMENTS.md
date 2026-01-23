@@ -7,30 +7,30 @@
 
 ### Folder Trigger
 
-- [ ] **TRIG-01**: System watches a folder for new PDF files
-- [ ] **TRIG-02**: New PDF detection triggers processing pipeline
-- [ ] **TRIG-03**: Supports local folder (can add SharePoint later)
+- [x] **TRIG-01**: System watches a folder for new PDF files
+- [x] **TRIG-02**: New PDF detection triggers processing pipeline
+- [x] **TRIG-03**: Supports local folder (can add SharePoint later)
 
 ### OCR & Text Extraction
 
-- [ ] **OCR-01**: PDF is OCR'd using Mistral to extract text
-- [ ] **OCR-02**: Text extraction handles both digital and scanned PDFs
-- [ ] **OCR-03**: Extracted text is stored for multi-agent processing
+- [x] **OCR-01**: PDF is OCR'd using Mistral to extract text
+- [x] **OCR-02**: Text extraction handles both digital and scanned PDFs
+- [x] **OCR-03**: Extracted text is stored for multi-agent processing
 
 ### Multi-Agent Extraction
 
 **All extractions include page number / section citation for human verification.**
 
-- [ ] **EXTR-01**: Contract Info agent extracts: contract type (LOI/Subcontract/Work Order/Amendment), contract date, contract value, project name, project address, start/end dates
-- [ ] **EXTR-02**: Billing agent extracts: retention %, billing platform (Textura/Procore/GCPay/Premier/Email/Other), billing window, billing contact, certified payroll required (yes/no), certified payroll type (Davis-Bacon/HUD/State Prevailing Wage/None)
-- [ ] **EXTR-03**: Contacts agent extracts: PM (name, phone, email), superintendent (name, phone, email)
-- [ ] **EXTR-04**: Schedule of Values agent extracts: SOV included (yes/no), line items exactly as stated, scope summary items
-- [ ] **EXTR-05**: Insurance agent extracts: GL limits, umbrella limits, auto limits, workers comp limits, COI required, additional insured, waiver of subrogation, primary & non-contributory, bonding requirements
-- [ ] **EXTR-06**: Site Info agent extracts: site address, site hours, access instructions, safety requirements
-- [ ] **EXTR-07**: Red Flags agent detects: unusual/concerning terms, maintenance language, T&M language, vague language, missing required info checklist
-- [ ] **EXTR-08**: Agents run in parallel for speed
-- [ ] **EXTR-09**: Each agent produces structured output (validated with Zod)
-- [ ] **EXTR-10**: Each extraction includes page/section citation
+- [x] **EXTR-01**: Contract Info agent extracts: contract type (LOI/Subcontract/Work Order/Amendment), contract date, contract value, project name, project address, start/end dates
+- [x] **EXTR-02**: Billing agent extracts: retention %, billing platform (Textura/Procore/GCPay/Premier/Email/Other), billing window, billing contact, certified payroll required (yes/no), certified payroll type (Davis-Bacon/HUD/State Prevailing Wage/None)
+- [x] **EXTR-03**: Contacts agent extracts: PM (name, phone, email), superintendent (name, phone, email)
+- [x] **EXTR-04**: Schedule of Values agent extracts: SOV included (yes/no), line items exactly as stated, scope summary items
+- [x] **EXTR-05**: Insurance agent extracts: GL limits, umbrella limits, auto limits, workers comp limits, COI required, additional insured, waiver of subrogation, primary & non-contributory, bonding requirements
+- [x] **EXTR-06**: Site Info agent extracts: site address, site hours, access instructions, safety requirements
+- [x] **EXTR-07**: Red Flags agent detects: unusual/concerning terms, maintenance language, T&M language, vague language, missing required info checklist
+- [x] **EXTR-08**: Agents run in parallel for speed
+- [x] **EXTR-09**: Each agent produces structured output (validated with Zod)
+- [x] **EXTR-10**: Each extraction includes page/section citation
 
 ### Monday Matching
 
@@ -105,22 +105,22 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| TRIG-01 | Phase 1 | Pending |
-| TRIG-02 | Phase 1 | Pending |
-| TRIG-03 | Phase 1 | Pending |
-| OCR-01 | Phase 2 | Pending |
-| OCR-02 | Phase 2 | Pending |
-| OCR-03 | Phase 2 | Pending |
-| EXTR-01 | Phase 3 | Pending |
-| EXTR-02 | Phase 3 | Pending |
-| EXTR-03 | Phase 3 | Pending |
-| EXTR-04 | Phase 3 | Pending |
-| EXTR-05 | Phase 3 | Pending |
-| EXTR-06 | Phase 3 | Pending |
-| EXTR-07 | Phase 3 | Pending |
-| EXTR-08 | Phase 3 | Pending |
-| EXTR-09 | Phase 3 | Pending |
-| EXTR-10 | Phase 3 | Pending |
+| TRIG-01 | Phase 1 | Complete |
+| TRIG-02 | Phase 1 | Complete |
+| TRIG-03 | Phase 1 | Complete |
+| OCR-01 | Phase 2 | Complete |
+| OCR-02 | Phase 2 | Complete |
+| OCR-03 | Phase 2 | Complete |
+| EXTR-01 | Phase 3 | Complete |
+| EXTR-02 | Phase 3 | Complete |
+| EXTR-03 | Phase 3 | Complete |
+| EXTR-04 | Phase 3 | Complete |
+| EXTR-05 | Phase 3 | Complete |
+| EXTR-06 | Phase 3 | Complete |
+| EXTR-07 | Phase 3 | Complete |
+| EXTR-08 | Phase 3 | Complete |
+| EXTR-09 | Phase 3 | Complete |
+| EXTR-10 | Phase 3 | Complete |
 | MATCH-01 | Phase 4 | Pending |
 | MATCH-02 | Phase 4 | Pending |
 | MATCH-03 | Phase 4 | Pending |
@@ -143,4 +143,4 @@
 
 ---
 *Requirements defined: 2026-01-22*
-*Last updated: 2026-01-23 after roadmap creation*
+*Last updated: 2026-01-23 after Phase 3 completion*

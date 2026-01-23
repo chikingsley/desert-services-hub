@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-01-22)
 
 **Core value:** When a contract arrives, the right tasks spawn with the right context, and people can just execute.
-**Current focus:** Phase 3 - Entity Extraction
+**Current focus:** Phase 4 - Estimate Matching
 
 ## Current Position
 
-Phase: 3 of 5 (Entity Extraction)
-Plan: 2 of 3 in current phase
-Status: In progress
-Last activity: 2026-01-23 - Completed 03-02-PLAN.md
+Phase: 4 of 5 (Estimate Matching)
+Plan: 0 of 2 in current phase
+Status: Ready for planning
+Last activity: 2026-01-23 - Completed Phase 3 (Multi-Agent Extraction)
 
-Progress: [######----] 60%
+Progress: [########--] 80%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 4
-- Average duration: ~6 min
-- Total execution time: ~4 sessions
+- Total plans completed: 5
+- Average duration: ~5 min
+- Total execution time: ~5 sessions
 
 **By Phase:**
 
@@ -29,10 +29,11 @@ Progress: [######----] 60%
 |-------|-------|--------|
 | 1. Pipeline Foundation | 1/1 | Complete |
 | 2. Text Extraction | 1/1 | Complete |
-| 3. Entity Extraction | 2/3 | In Progress |
+| 3. Multi-Agent Extraction | 3/3 | Complete |
+| 4. Estimate Matching | 0/2 | Ready |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (complete), 02-01 (complete), 03-01 (complete), 03-02 (complete)
+- Last 5 plans: 01-01 (complete), 02-01 (complete), 03-01 (complete), 03-02 (complete), 03-03 (complete)
 - Trend: On track
 
 *Updated after each plan completion*
@@ -49,13 +50,15 @@ Recent decisions affecting current work:
 - [Init]: Notion project rows with task-step columns (not separate task database)
 - [Phase 1]: Use chokidar v5 for file watching (not native fs.watch)
 - [Phase 1]: Filename-based deduplication in SQLite
-- [Phase 2]: 100 chars/page threshold for OCR fallback detection
+- [Phase 2]: Dual extraction (digital + OCR) with best-per-page selection
 - [Phase 2]: Per-page storage with source tracking for citation support
 - [Phase 2]: Data URL approach for Mistral OCR (base64-encoded PDF)
 - [Phase 3]: Zod .describe() annotations guide LLM extraction
 - [Phase 3]: .nullable() over .optional() forces LLM to return all fields
 - [Phase 3]: mistral-large-latest for extraction accuracy, temp 0 for determinism
 - [Phase 3]: Domain-specific system prompts with page break marker instructions
+- [Phase 3]: Promise.allSettled for parallel agents (partial failures don't crash)
+- [Phase 3]: Non-blocking extraction - text extraction is critical path, agent extraction is additive
 
 ### Pending Todos
 
@@ -68,5 +71,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-23
-Stopped at: Completed 03-02-PLAN.md (7 extraction agents)
+Stopped at: Completed Phase 3 (Multi-Agent Extraction) - all 3 plans executed, verified
 Resume file: None

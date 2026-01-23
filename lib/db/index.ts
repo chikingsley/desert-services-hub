@@ -204,6 +204,35 @@ db.run(`
 `);
 
 // ============================================
+// Processed Contracts (Contract Pipeline)
+// ============================================
+db.run(`
+  CREATE TABLE IF NOT EXISTS processed_contracts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    filename TEXT NOT NULL UNIQUE,
+    file_path TEXT NOT NULL,
+    processed_at TEXT NOT NULL DEFAULT (datetime('now')),
+    status TEXT NOT NULL DEFAULT 'pending'
+  )
+`);
+
+// ============================================
+// Contract Pages (Text Extraction)
+// ============================================
+db.run(`
+  CREATE TABLE IF NOT EXISTS contract_pages (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    contract_id INTEGER NOT NULL,
+    page_index INTEGER NOT NULL,
+    text TEXT NOT NULL,
+    source TEXT NOT NULL DEFAULT 'digital',
+    extracted_at TEXT NOT NULL DEFAULT (datetime('now')),
+    FOREIGN KEY (contract_id) REFERENCES processed_contracts(id) ON DELETE CASCADE,
+    UNIQUE(contract_id, page_index)
+  )
+`);
+
+// ============================================
 // Indexes
 // ============================================
 db.run(
@@ -217,6 +246,12 @@ db.run(
 );
 db.run(
   "CREATE INDEX IF NOT EXISTS idx_bundle_items_item ON catalog_bundle_items(item_id)"
+);
+db.run(
+  "CREATE INDEX IF NOT EXISTS idx_processed_contracts_filename ON processed_contracts(filename)"
+);
+db.run(
+  "CREATE INDEX IF NOT EXISTS idx_contract_pages_contract ON contract_pages(contract_id)"
 );
 
 // ============================================

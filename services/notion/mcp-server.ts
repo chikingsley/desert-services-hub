@@ -52,10 +52,10 @@ import {
 // Types
 // ============================================================================
 
-type ToolResponse = {
+interface ToolResponse {
   content: Array<{ type: "text"; text: string }>;
   isError?: boolean;
-};
+}
 
 type ToolHandler = (args: Record<string, unknown>) => Promise<ToolResponse>;
 

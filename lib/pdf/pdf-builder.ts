@@ -454,13 +454,13 @@ function calculateGroupSubtotal(items: EditorLineItem[]): number {
 // Build the table header row
 function buildTableHeader(): TableCell[] {
   return [
-    { text: "#", style: "tableHeader", alignment: "center" },
-    { text: "Item", style: "tableHeader" },
-    { text: "Description", style: "tableHeader" },
-    { text: "Qty", style: "tableHeader", alignment: "center" },
-    { text: "U/M", style: "tableHeader", alignment: "center" },
-    { text: "Cost", style: "tableHeader", alignment: "right" },
-    { text: "Total", style: "tableHeader", alignment: "right" },
+    { text: "#", style: "tableHeader", alignment: "center", noWrap: true },
+    { text: "Item", style: "tableHeader", noWrap: true },
+    { text: "Description", style: "tableHeader", noWrap: true },
+    { text: "Qty", style: "tableHeader", alignment: "center", noWrap: true },
+    { text: "U/M", style: "tableHeader", alignment: "center", noWrap: true },
+    { text: "Cost", style: "tableHeader", alignment: "right", noWrap: true },
+    { text: "Total", style: "tableHeader", alignment: "right", noWrap: true },
   ];
 }
 
@@ -877,6 +877,8 @@ export function buildDocDefinition(
           layout: noBordersLayout,
           margin: [0, 6, 0, 6],
         },
+        // Footer: PO Box on top, Phone/Fax below
+        // Single table with thin gray separator lines
         {
           table: {
             widths: ["*", "*"],
@@ -933,7 +935,13 @@ export function buildDocDefinition(
               ],
             ],
           },
-          layout: noBordersLayout,
+          layout: {
+            hLineWidth: (i: number, _node: { table: { body: unknown[] } }) =>
+              i === 1 ? 0.5 : 0, // Only line between rows
+            vLineWidth: (i: number) => (i === 1 ? 0.5 : 0), // Only line between columns
+            hLineColor: () => "#888",
+            vLineColor: () => "#888",
+          },
         },
         {
           text: `Page ${currentPage} of ${pageCount}`,

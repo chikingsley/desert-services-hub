@@ -122,9 +122,9 @@ describe("listQuotes", () => {
     const ourQuote = quotes.find((q) => q.id === id);
 
     expect(ourQuote).toBeDefined();
-    expect(ourQuote!.job_name).toBe(UNIQUE.JOB_NAME);
-    expect(ourQuote!.client_name).toBe(UNIQUE.CLIENT_NAME);
-    expect(ourQuote!.versions).toHaveLength(1);
+    expect(ourQuote?.job_name).toBe(UNIQUE.JOB_NAME);
+    expect(ourQuote?.client_name).toBe(UNIQUE.CLIENT_NAME);
+    expect(ourQuote?.versions).toHaveLength(1);
   });
 });
 
@@ -286,7 +286,7 @@ describe("getQuote", () => {
     testQuoteIds.push(testId);
   });
 
-  test("returns 404 for non-existent quote", async () => {
+  test("returns 404 for non-existent quote", () => {
     const response = getQuote(makeGetRequest({ id: "nonexistent-12345" }));
     expect(response.status).toBe(404);
   });
@@ -422,7 +422,7 @@ describe("updateQuote", () => {
 // ============================================================================
 
 describe("deleteQuote", () => {
-  test("returns 404 for non-existent quote", async () => {
+  test("returns 404 for non-existent quote", () => {
     const response = deleteQuote(makeGetRequest({ id: "nonexistent-12345" }));
     expect(response.status).toBe(404);
   });
@@ -502,7 +502,7 @@ describe("duplicateQuote", () => {
     testQuoteIds.push(originalId);
   });
 
-  test("returns 404 for non-existent quote", async () => {
+  test("returns 404 for non-existent quote", () => {
     const response = duplicateQuote(
       makeGetRequest({ id: "nonexistent-12345" })
     );

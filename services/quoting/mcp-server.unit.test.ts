@@ -151,7 +151,7 @@ describe("resolveQuoteId", () => {
   });
 
   it("throws error for unknown ID", async () => {
-    expect(resolveQuoteId("unknown")).rejects.toThrow(
+    await expect(resolveQuoteId("unknown")).rejects.toThrow(
       'Quote "unknown" not found'
     );
   });

@@ -39,6 +39,7 @@ import {
   getItems,
   getItemsRich,
   renameItem,
+  searchByColumnValue,
   searchItems,
   updateItem,
 } from "./client";
@@ -48,10 +49,10 @@ import { BOARD_COLUMNS, BOARD_IDS, getColumnId } from "./types";
 // Types
 // ============================================================================
 
-type ToolResponse = {
+interface ToolResponse {
   content: Array<{ type: "text"; text: string }>;
   isError?: boolean;
-};
+}
 
 type ToolHandler = (args: Record<string, unknown>) => Promise<ToolResponse>;
 
@@ -274,6 +275,31 @@ const tools = [
         },
       },
       required: ["boardId", "searchTerm"],
+    },
+  },
+  {
+    name: "search_by_column",
+    description:
+      "Fast search for items by a specific column value. Uses Monday's native column search - much faster than search_items for large boards. Supports column aliases for ESTIMATING board (e.g., ESTIMATE_ID).",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        boardId: { type: "string", description: "Board ID or name" },
+        columnId: {
+          type: "string",
+          description:
+            "Column ID or alias (e.g., 'ESTIMATE_ID' for ESTIMATING board, or raw ID like 'text_mkseybgg')",
+        },
+        value: {
+          type: "string",
+          description: "Value to search for (exact match)",
+        },
+        limit: {
+          type: "number",
+          description: "Max results to return (default: 50)",
+        },
+      },
+      required: ["boardId", "columnId", "value"],
     },
   },
   {
@@ -507,6 +533,51 @@ const handlers: Record<string, ToolHandler> = {
       .join("\n\n");
     return text(
       `${items.length} items matching "${searchTerm}":\n\n${results}`
+    );
+  },
+
+  async search_by_column(args) {
+    const { boardId, columnId, value, limit } = args as {
+      boardId: string;
+      columnId: string;
+      value: string;
+      limit?: number;
+    };
+    const resolvedBoardId = resolveBoardId(boardId);
+    const resolvedColumnId = resolveColumnId(boardId, columnId);
+    const items = await searchByColumnValue(
+      resolvedBoardId,
+      resolvedColumnId,
+      value,
+      { limit }
+    );
+    if (items.length === 0) {
+      return text(
+        `No items found with ${columnId} = "${value}" in board ${boardId}`
+      );
+    }
+    const results = items
+      .map((item) => {
+        const cols = item.columns;
+        const bidValue = cols.deal_value || cols.numbers || null;
+        const bidStatus = cols.deal_stage || null;
+        const estimateId = cols.text_mkseybgg || null;
+
+        return [
+          `- **${item.name}**`,
+          `  ID: ${item.id}`,
+          `  Status: ${item.groupTitle}`,
+          bidStatus ? `  Bid Status: ${bidStatus}` : null,
+          bidValue ? `  Bid Value: $${bidValue}` : null,
+          estimateId ? `  Estimate ID: ${estimateId}` : null,
+          `  URL: ${item.url}`,
+        ]
+          .filter(Boolean)
+          .join("\n");
+      })
+      .join("\n\n");
+    return text(
+      `${items.length} items with ${columnId} = "${value}":\n\n${results}`
     );
   },
 

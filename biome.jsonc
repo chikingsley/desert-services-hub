@@ -7,7 +7,7 @@
     "ultracite/biome/react"
   ],
   "javascript": {
-    "globals": ["Bun"]
+    "globals": ["Bun", "HTMLRewriter"]
   },
   "linter": {
     "rules": {

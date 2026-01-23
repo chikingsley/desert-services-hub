@@ -26,7 +26,7 @@ describe("MCP Tool Handlers", () => {
 
   beforeEach(() => {
     // Reset global fetch mock
-    global.fetch = mock(async (url: string) => {
+    global.fetch = mock((url: string) => {
       // Return list of quotes for ID resolution
       if (url.endsWith("/api/quotes")) {
         return Response.json([mockQuote]);
@@ -36,7 +36,7 @@ describe("MCP Tool Handlers", () => {
         return Response.json(mockQuote);
       }
       return Response.json({ ok: true });
-    }) as any;
+    }) as typeof fetch;
   });
 
   describe("list_quotes", () => {
@@ -55,7 +55,7 @@ describe("MCP Tool Handlers", () => {
     it("sends correct field mapping to Hub API", async () => {
       let capturedPayload: any = null;
 
-      global.fetch = mock(async (url: string, init?: RequestInit) => {
+      global.fetch = mock((url: string, init?: RequestInit) => {
         if (url.endsWith("/api/quotes")) {
           return Response.json([mockQuote]);
         }
@@ -66,7 +66,7 @@ describe("MCP Tool Handlers", () => {
           return Response.json(mockQuote);
         }
         return Response.json({ ok: true });
-      }) as any;
+      }) as typeof fetch;
 
       expect(tools.add_line_item).toBeDefined();
       // Use CANONICAL field names (Zod-validated)

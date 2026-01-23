@@ -89,19 +89,29 @@ export const FlexibleUpdateLineItemSchema = z
 
     // Only include fields that were provided
     const name = data.name ?? data.item;
-    if (name !== undefined) result.name = name;
+    if (name !== undefined) {
+      result.name = name;
+    }
 
     const description = data.description ?? data.notes;
-    if (description !== undefined) result.description = description;
+    if (description !== undefined) {
+      result.description = description;
+    }
 
     const quantity = data.quantity ?? data.qty;
-    if (quantity !== undefined) result.quantity = quantity;
+    if (quantity !== undefined) {
+      result.quantity = quantity;
+    }
 
     const unit = data.unit ?? data.uom;
-    if (unit !== undefined) result.unit = unit;
+    if (unit !== undefined) {
+      result.unit = unit;
+    }
 
     const unitPrice = data.unitPrice ?? data.cost ?? data.price;
-    if (unitPrice !== undefined) result.unitPrice = unitPrice;
+    if (unitPrice !== undefined) {
+      result.unitPrice = unitPrice;
+    }
 
     return result;
   });

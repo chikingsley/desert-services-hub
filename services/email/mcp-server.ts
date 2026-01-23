@@ -164,13 +164,13 @@ function getGroupsClient(): GraphGroupsClient {
  * after the user reviews the test version.
  */
 /** Attachment data for pending emails */
-type PendingAttachment = {
+interface PendingAttachment {
   name: string;
   contentType: string;
   contentBytes: string;
-};
+}
 
-type PendingEmail = {
+interface PendingEmail {
   /** Primary recipients */
   to: Array<{ email: string; name?: string }>;
   /** Carbon copy recipients */
@@ -185,7 +185,7 @@ type PendingEmail = {
   attachments?: PendingAttachment[];
   /** When this pending email expires and is auto-deleted */
   expiresAt: Date;
-};
+}
 
 /**
  * In-memory store for pending test emails awaiting confirmation.
@@ -263,7 +263,7 @@ const tools = [
   {
     name: "search_all_mailboxes",
     description:
-      "Search across ALL mailboxes in the organization. Returns emails grouped by mailbox. Use for org-wide searches.",
+      "Search ALL mailboxes in the organization. Slow - prefer search_mailboxes with specific addresses. Domain: @desertservices.net",
     inputSchema: {
       type: "object" as const,
       properties: {
@@ -290,8 +290,14 @@ const tools = [
   },
   {
     name: "search_mailboxes",
-    description:
-      "Search specific mailboxes in parallel. Faster than search_all_mailboxes when you know which mailboxes to check.",
+    description: `Search specific mailboxes in parallel.
+
+VALID MAILBOXES (use these exact addresses):
+- Estimating: jared@desertservices.net, jeff@desertservices.net, denise@desertservices.net, estimating@desertservices.net
+- Contracts: contracts@desertservices.net
+- Other: chi@desertservices.net, lacie@desertservices.net, jayson@desertservices.net
+
+Domain is @desertservices.net (NOT .us, NOT .com)`,
     inputSchema: {
       type: "object" as const,
       properties: {
@@ -320,7 +326,8 @@ const tools = [
   },
   {
     name: "search_user_mailbox",
-    description: "Search a specific user's mailbox by their email address.",
+    description:
+      "Search a single mailbox. Valid addresses: jared@, jeff@, denise@, estimating@, contracts@, chi@, lacie@, jayson@ (all @desertservices.net)",
     inputSchema: {
       type: "object" as const,
       properties: {
@@ -345,7 +352,8 @@ const tools = [
   },
   {
     name: "search_emails",
-    description: "Flexible email search with optional filters.",
+    description:
+      "Flexible email search. If userId specified, use @desertservices.net domain. Common: jared@, jeff@, contracts@, chi@",
     inputSchema: {
       type: "object" as const,
       properties: {
@@ -611,6 +619,25 @@ const tools = [
     },
   },
   {
+    name: "list_all_folders",
+    description:
+      "List all mail folders recursively including subfolders. Returns a tree structure with nested children.",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        userId: {
+          type: "string",
+          description: "Email address of the mailbox",
+        },
+        maxDepth: {
+          type: "number",
+          description: "Maximum depth to recurse (default: 10)",
+        },
+      },
+      required: ["userId"],
+    },
+  },
+  {
     name: "archive_email",
     description: "Archive an email (move to Archive folder).",
     inputSchema: {
@@ -766,6 +793,42 @@ const tools = [
     },
   },
   {
+    name: "rename_folder",
+    description: "Rename a mail folder.",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        folderId: { type: "string", description: "Folder ID to rename" },
+        newName: { type: "string", description: "New name for the folder" },
+        userId: {
+          type: "string",
+          description: "Mailbox containing the folder",
+        },
+      },
+      required: ["folderId", "newName", "userId"],
+    },
+  },
+  {
+    name: "move_folder",
+    description:
+      "Move a mail folder to a new parent folder. Use list_all_folders to get folder IDs.",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        folderId: { type: "string", description: "Folder ID to move" },
+        destinationId: {
+          type: "string",
+          description: "Destination parent folder ID",
+        },
+        userId: {
+          type: "string",
+          description: "Mailbox containing the folder",
+        },
+      },
+      required: ["folderId", "destinationId", "userId"],
+    },
+  },
+  {
     name: "forward_email",
     description: "Forward an email to one or more recipients.",
     inputSchema: {
@@ -895,10 +958,10 @@ const tools = [
 /**
  * Standard MCP tool response format.
  */
-type ToolResponse = {
+interface ToolResponse {
   content: Array<{ type: "text"; text: string }>;
   isError?: boolean;
-};
+}
 
 /**
  * Handler function type for MCP tools.
@@ -1272,6 +1335,34 @@ const handlers: Record<string, ToolHandler> = {
     return text(`${folders.length} folders:\n${folderList}`);
   },
 
+  async list_all_folders(args) {
+    const { userId, maxDepth } = args as { userId: string; maxDepth?: number };
+    const client = getAppClient();
+    const folders = await client.listFoldersRecursive(userId, maxDepth);
+
+    const formatTree = (items: typeof folders, indent = ""): string => {
+      return items
+        .map((f) => {
+          const line = `${indent}- ${f.displayName} (ID: ${f.id})`;
+          if (f.children && f.children.length > 0) {
+            return `${line}\n${formatTree(f.children, `${indent}  `)}`;
+          }
+          return line;
+        })
+        .join("\n");
+    };
+
+    const countFolders = (items: typeof folders): number => {
+      return items.reduce((sum, f) => {
+        return sum + 1 + (f.children ? countFolders(f.children) : 0);
+      }, 0);
+    };
+
+    const totalCount = countFolders(folders);
+    const tree = formatTree(folders);
+    return text(`${totalCount} folders (including subfolders):\n${tree}`);
+  },
+
   async archive_email(args) {
     const { messageId, userId } = args as {
       messageId: string;
@@ -1388,6 +1479,30 @@ const handlers: Record<string, ToolHandler> = {
     const client = getAppClient();
     await client.deleteFolder(folderId, userId);
     return text("Folder deleted successfully");
+  },
+
+  async rename_folder(args) {
+    const { folderId, newName, userId } = args as {
+      folderId: string;
+      newName: string;
+      userId: string;
+    };
+    const client = getAppClient();
+    const folder = await client.renameFolder(folderId, newName, userId);
+    return text(`Folder renamed to "${folder.displayName}"`);
+  },
+
+  async move_folder(args) {
+    const { folderId, destinationId, userId } = args as {
+      folderId: string;
+      destinationId: string;
+      userId: string;
+    };
+    const client = getAppClient();
+    const folder = await client.moveFolder(folderId, destinationId, userId);
+    return text(
+      `Folder "${folder.displayName}" moved to parent ${folder.parentFolderId}`
+    );
   },
 
   async forward_email(args) {

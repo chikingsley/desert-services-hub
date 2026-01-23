@@ -35,6 +35,13 @@ import type {
 
 export type AuthMode = "app" | "user";
 
+export interface MailFolderWithChildren {
+  id: string;
+  displayName: string;
+  parentFolderId: string | null;
+  children?: MailFolderWithChildren[];
+}
+
 const GRAPH_SCOPES = ["Mail.Read", "Mail.ReadWrite", "Mail.Send", "User.Read"];
 const DEFAULT_BATCH_SIZE = 50;
 const DEFAULT_DAYS_BACK = 30;
@@ -1888,6 +1895,68 @@ export class GraphEmailClient {
   }
 
   /**
+   * Recursively list all mail folders including subfolders.
+   *
+   * @param userId - Email address of the mailbox (required for app auth)
+   * @param maxDepth - Maximum depth to recurse (default: 10, to prevent infinite loops)
+   * @returns Promise resolving to array of folder objects with nested children
+   *
+   * @example
+   * const folders = await client.listFoldersRecursive('user@example.com');
+   * // Returns: [{ id, displayName, parentFolderId, children: [...] }, ...]
+   */
+  async listFoldersRecursive(
+    userId?: string,
+    maxDepth = 10
+  ): Promise<MailFolderWithChildren[]> {
+    const graphClient = this.getClient();
+    const basePath = this.getBasePath(userId);
+
+    const fetchChildFolders = async (
+      parentId: string | null,
+      depth: number
+    ): Promise<MailFolderWithChildren[]> => {
+      if (depth > maxDepth) {
+        return [];
+      }
+
+      const apiPath = parentId
+        ? `${basePath}/mailFolders/${parentId}/childFolders`
+        : `${basePath}/mailFolders`;
+
+      try {
+        const response = await graphClient.api(apiPath).top(100).get();
+
+        if (!response?.value) {
+          return [];
+        }
+
+        const folders: MailFolderWithChildren[] = [];
+
+        for (const folder of response.value) {
+          const children = await fetchChildFolders(
+            folder.id as string,
+            depth + 1
+          );
+          folders.push({
+            id: folder.id as string,
+            displayName: folder.displayName as string,
+            parentFolderId: (folder.parentFolderId as string) ?? null,
+            children: children.length > 0 ? children : undefined,
+          });
+        }
+
+        return folders;
+      } catch (_error) {
+        // If we can't fetch children (e.g., folder doesn't support it), return empty
+        return [];
+      }
+    };
+
+    return await fetchChildFolders(null, 0);
+  }
+
+  /**
    * Archive an email (move to Archive folder).
    *
    * @param messageId - The unique ID of the email message
@@ -2196,6 +2265,76 @@ export class GraphEmailClient {
       await client.api(`${basePath}/mailFolders/${folderId}`).delete();
     } catch (error) {
       console.error("Error deleting folder:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Rename a mail folder.
+   *
+   * @param folderId - The unique ID of the folder to rename
+   * @param newName - The new display name for the folder
+   * @param userId - Email address of the mailbox (required for app auth)
+   * @returns Promise resolving to the updated folder object
+   *
+   * @example
+   * const updated = await client.renameFolder('AAMkAGI2...', 'New Name', 'user@example.com');
+   */
+  async renameFolder(
+    folderId: string,
+    newName: string,
+    userId?: string
+  ): Promise<{ id: string; displayName: string }> {
+    const graphClient = this.getClient();
+    const basePath = this.getBasePath(userId);
+
+    try {
+      const response = await graphClient
+        .api(`${basePath}/mailFolders/${folderId}`)
+        .patch({ displayName: newName });
+
+      return {
+        id: response.id as string,
+        displayName: response.displayName as string,
+      };
+    } catch (error) {
+      console.error("Error renaming folder:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Move a mail folder to a new parent folder.
+   *
+   * @param folderId - The unique ID of the folder to move
+   * @param destinationId - The ID of the destination parent folder
+   * @param userId - Email address of the mailbox (required for app auth)
+   * @returns Promise resolving to the moved folder object
+   *
+   * @example
+   * // Move folder to be a subfolder of another folder
+   * const moved = await client.moveFolder('AAMkAGI2...', 'AAMkBBB...', 'user@example.com');
+   */
+  async moveFolder(
+    folderId: string,
+    destinationId: string,
+    userId?: string
+  ): Promise<{ id: string; displayName: string; parentFolderId: string }> {
+    const graphClient = this.getClient();
+    const basePath = this.getBasePath(userId);
+
+    try {
+      const response = await graphClient
+        .api(`${basePath}/mailFolders/${folderId}/move`)
+        .post({ destinationId });
+
+      return {
+        id: response.id as string,
+        displayName: response.displayName as string,
+        parentFolderId: response.parentFolderId as string,
+      };
+    } catch (error) {
+      console.error("Error moving folder:", error);
       throw error;
     }
   }

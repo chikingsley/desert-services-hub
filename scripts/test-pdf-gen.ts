@@ -53,13 +53,13 @@ const testQuoteData: z.infer<typeof EditorQuoteSchema> = {
   estimatorEmail: "john.doe@desertservices.com",
   billTo: {
     companyName: "Acme Construction",
-    address: "123 Builder Lane, Phoenix, AZ 85001",
+    address: "123 Builder Lane\nPhoenix, AZ 85001",
     email: "accounts@acme.com",
     phone: "555-0199",
   },
   jobInfo: {
     siteName: "Sunrise Valley Lot 4",
-    address: "456 Desert Blvd, Scottsdale, AZ 85255",
+    address: "456 Desert Blvd\nScottsdale, AZ 85255",
   },
   sections: [
     {

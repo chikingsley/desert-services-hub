@@ -57,22 +57,22 @@ const FILENAME_REGEX = /filename="(.+)"/;
 // Types
 // ============================================================================
 
-export type ToolResponse = {
+export interface ToolResponse {
   content: Array<{ type: "text"; text: string }>;
   isError?: boolean;
-};
+}
 
 export type ToolHandler = (
   args: Record<string, unknown>
 ) => Promise<ToolResponse>;
 
-export type HubSection = {
+export interface HubSection {
   id: string;
   name: string;
   sort_order: number;
-};
+}
 
-export type HubLineItem = {
+export interface HubLineItem {
   id: string;
   section_id: string | null;
   description: string;
@@ -83,9 +83,9 @@ export type HubLineItem = {
   is_excluded: number;
   notes: string | null;
   sort_order: number;
-};
+}
 
-export type HubQuote = {
+export interface HubQuote {
   id: string;
   base_number: string;
   job_name: string;
@@ -101,7 +101,7 @@ export type HubQuote = {
     sections: HubSection[];
     line_items: HubLineItem[];
   };
-};
+}
 
 // ============================================================================
 // MCP Server Setup

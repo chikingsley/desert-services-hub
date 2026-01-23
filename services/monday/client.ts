@@ -253,6 +253,64 @@ export async function getItem(itemId: string): Promise<MondayItem | null> {
 
 const DEFAULT_EXCLUDED_GROUPS = ["shell estimates"];
 
+// ============================================================================
+// Column Value Search (Fast)
+// ============================================================================
+
+interface ColumnValueSearchResponse {
+  items_page_by_column_values: {
+    cursor: string | null;
+    items: RawItem[];
+  };
+}
+
+/**
+ * Search items by a specific column value using Monday's native column search.
+ * Much faster than searchItems for large boards since it queries the API directly.
+ *
+ * @param boardId - Board ID to search
+ * @param columnId - Column ID to search (e.g., "text_mkseybgg" for ESTIMATE_ID)
+ * @param value - Value to search for (exact match)
+ * @param options - Optional limit on results
+ */
+export async function searchByColumnValue(
+  boardId: string,
+  columnId: string,
+  value: string,
+  options: { limit?: number } = {}
+): Promise<MondayItem[]> {
+  const limit = options.limit ?? 50;
+
+  const result = await query<ColumnValueSearchResponse>(`
+    query {
+      items_page_by_column_values(
+        board_id: ${boardId}
+        limit: ${limit}
+        columns: [{ column_id: "${columnId}", column_values: ["${value}"] }]
+      ) {
+        cursor
+        items {
+          id
+          name
+          group {
+            id
+            title
+          }
+          column_values {
+            id
+            text
+          }
+        }
+      }
+    }
+  `);
+
+  const itemsPage = result.items_page_by_column_values;
+  const items = itemsPage?.items ?? [];
+
+  return items.map((item) => mapRawItemToMondayItem(item, boardId));
+}
+
 /**
  * Search items by name
  */

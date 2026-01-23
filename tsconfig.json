@@ -41,6 +41,6 @@
     "bun-init",
     "bun-example",
     "components",
-    "services/file-automation"
+    "services/contract/file-automation"
   ]
 }

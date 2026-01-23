@@ -233,6 +233,24 @@ db.run(`
 `);
 
 // ============================================
+// Contract Extractions (Agent Results)
+// ============================================
+db.run(`
+  CREATE TABLE IF NOT EXISTS contract_extractions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    contract_id INTEGER NOT NULL,
+    agent_name TEXT NOT NULL,
+    data TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'success',
+    error_message TEXT,
+    duration_ms INTEGER NOT NULL,
+    extracted_at TEXT NOT NULL DEFAULT (datetime('now')),
+    FOREIGN KEY (contract_id) REFERENCES processed_contracts(id) ON DELETE CASCADE,
+    UNIQUE(contract_id, agent_name)
+  )
+`);
+
+// ============================================
 // Indexes
 // ============================================
 db.run(
@@ -252,6 +270,9 @@ db.run(
 );
 db.run(
   "CREATE INDEX IF NOT EXISTS idx_contract_pages_contract ON contract_pages(contract_id)"
+);
+db.run(
+  "CREATE INDEX IF NOT EXISTS idx_contract_extractions_contract ON contract_extractions(contract_id)"
 );
 
 // ============================================

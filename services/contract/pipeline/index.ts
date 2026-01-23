@@ -1,4 +1,7 @@
-import { storeExtractedPages } from "../extraction/storage";
+import path from "node:path";
+import { createMistralClient } from "../agents/mistral-client";
+import { runAllAgents, summarizeResults } from "../agents/orchestrator";
+import { getFullText, storeExtractedPages } from "../extraction/storage";
 import { extractText } from "../extraction/text-extractor";
 import { markAsProcessed, updateProcessingStatus } from "./dedup";
 import { startWatcher, stopWatcher } from "./watcher";
@@ -38,9 +41,11 @@ process.on("SIGINT", shutdown);
 process.on("SIGTERM", shutdown);
 
 /**
- * Process a contract PDF: extract text and store in database.
+ * Process a contract PDF: extract text, run agents, and store in database.
  */
 async function processContract(filePath: string): Promise<void> {
+  const filename = path.basename(filePath);
+
   try {
     // Mark as processing and get the contract ID
     const contractId = markAsProcessed(filePath, "processing");
@@ -51,12 +56,46 @@ async function processContract(filePath: string): Promise<void> {
     // Store extracted pages in database
     storeExtractedPages(contractId, result.pages);
 
-    // Mark as completed
-    updateProcessingStatus(filePath, "completed");
-
     console.log(
       `[Pipeline] Extracted ${result.totalPages} pages via ${result.extractionMethod} in ${result.processingTimeMs}ms: ${filePath}`
     );
+
+    // Run extraction agents
+    try {
+      const fullText = getFullText(contractId);
+      if (!fullText || fullText.trim().length === 0) {
+        console.warn(
+          `[Pipeline] No text extracted for contract ${contractId}, skipping extraction agents`
+        );
+      } else {
+        const mistral = createMistralClient();
+        const results = await runAllAgents(contractId, fullText, mistral);
+        const summary = summarizeResults(results);
+
+        if (summary.errors.length > 0) {
+          console.warn(
+            `[Pipeline] ${summary.errors.length} agent(s) failed:`,
+            summary.errors.map((e) => `${e.agent}: ${e.error}`).join(", ")
+          );
+        }
+
+        console.log(
+          `[Pipeline] Extraction complete for ${filename}: ${summary.success.length}/7 agents succeeded`
+        );
+      }
+    } catch (extractionError) {
+      // Log but don't crash - text extraction succeeded, that's the main goal
+      const message =
+        extractionError instanceof Error
+          ? extractionError.message
+          : String(extractionError);
+      console.error(
+        `[Pipeline] Agent extraction failed for ${filename}: ${message}`
+      );
+    }
+
+    // Mark as completed
+    updateProcessingStatus(filePath, "completed");
   } catch (error) {
     // Mark as failed on error
     updateProcessingStatus(filePath, "failed");

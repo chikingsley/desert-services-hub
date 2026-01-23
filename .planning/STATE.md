@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-01-22)
 Phase: 4 of 5 (Estimate Matching)
 Plan: 0 of 2 in current phase
 Status: Ready for planning
-Last activity: 2026-01-23 - Completed Phase 3 (Multi-Agent Extraction)
+Last activity: 2026-01-23 - Completed Phase 3 (pivoted to Claude Code extraction)
 
 Progress: [########--] 80%
 
@@ -57,8 +57,9 @@ Recent decisions affecting current work:
 - [Phase 3]: .nullable() over .optional() forces LLM to return all fields
 - [Phase 3]: mistral-large-latest for extraction accuracy, temp 0 for determinism
 - [Phase 3]: Domain-specific system prompts with page break marker instructions
-- [Phase 3]: Promise.allSettled for parallel agents (partial failures don't crash)
-- [Phase 3]: Non-blocking extraction - text extraction is critical path, agent extraction is additive
+- [Phase 3]: Pivoted from Mistral to Claude Code (`claude -p`) due to Zod v4 incompatibility
+- [Phase 3]: Pipeline auto-spawns `claude -p` after text extraction for hands-free processing
+- [Phase 3]: Created /contract-extract skill for manual extraction when needed
 
 ### Pending Todos
 

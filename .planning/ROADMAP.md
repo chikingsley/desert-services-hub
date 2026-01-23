@@ -59,9 +59,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [x] 03-01-PLAN.md - Foundation: Types, Zod schemas for all 7 domains, storage layer, Mistral client
-- [x] 03-02-PLAN.md - Agent implementations: All 7 extraction functions with domain-specific prompts
-- [x] 03-03-PLAN.md - Orchestrator and pipeline integration: Parallel execution and end-to-end wiring
+- [x] 03-01-PLAN.md - Foundation: Types, Zod schemas for all 7 domains, storage layer
+- [x] 03-02-PLAN.md - Agent implementations (pivoted: Claude Code via `claude -p` instead of Mistral)
+- [x] 03-03-PLAN.md - Pipeline integration: Auto-extraction via `claude -p` after text extraction
 
 ### Phase 4: Estimate Matching
 **Goal**: Contracts are linked to their original estimates in Monday.com

@@ -13,7 +13,7 @@ Contract Cascade transforms contract PDFs into actionable Notion tasks with full
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Pipeline Foundation** - Folder watching and PDF detection trigger
-- [ ] **Phase 2: Text Extraction** - OCR PDFs to searchable text via Mistral
+- [x] **Phase 2: Text Extraction** - OCR PDFs to searchable text via Mistral
 - [ ] **Phase 3: Multi-Agent Extraction** - Parallel agents extract structured contract data with citations
 - [ ] **Phase 4: Estimate Matching** - Fuzzy match contracts to Monday.com estimates
 - [ ] **Phase 5: Task Orchestration** - Create Notion project rows with task-step columns and verification
@@ -44,7 +44,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 02-01-PLAN.md - Two-tier text extraction (pdfjs-dist + Mistral OCR) with per-page SQLite storage
+- [x] 02-01-PLAN.md - Two-tier text extraction (pdfjs-dist + Mistral OCR) with per-page SQLite storage
 
 ### Phase 3: Multi-Agent Extraction
 **Goal**: Parallel agents extract all contract data fields with page citations
@@ -56,12 +56,12 @@ Plans:
   3. Agents run in parallel for speed (not sequentially)
   4. All outputs are validated against Zod schemas (no unstructured data)
   5. Red flags (unusual terms, vague language, missing info) are surfaced
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 03-01: Extraction agent framework and parallel orchestration
-- [ ] 03-02: Domain-specific agents (contract info, billing, contacts, SOV, insurance, site info, red flags)
-- [ ] 03-03: Zod schema validation and citation tracking
+- [ ] 03-01-PLAN.md - Foundation: Types, Zod schemas for all 7 domains, storage layer, Mistral client
+- [ ] 03-02-PLAN.md - Agent implementations: All 7 extraction functions with domain-specific prompts
+- [ ] 03-03-PLAN.md - Orchestrator and pipeline integration: Parallel execution and end-to-end wiring
 
 ### Phase 4: Estimate Matching
 **Goal**: Contracts are linked to their original estimates in Monday.com
@@ -105,8 +105,8 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Pipeline Foundation | 1/1 | Complete | 2026-01-23 |
-| 2. Text Extraction | 0/1 | Planned | - |
-| 3. Multi-Agent Extraction | 0/3 | Not started | - |
+| 2. Text Extraction | 1/1 | Complete | 2026-01-23 |
+| 3. Multi-Agent Extraction | 0/3 | Ready | - |
 | 4. Estimate Matching | 0/2 | Not started | - |
 | 5. Task Orchestration | 0/3 | Not started | - |
 

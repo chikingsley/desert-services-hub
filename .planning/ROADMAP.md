@@ -12,7 +12,7 @@ Contract Cascade transforms contract PDFs into actionable Notion tasks with full
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Pipeline Foundation** - Folder watching and PDF detection trigger
+- [x] **Phase 1: Pipeline Foundation** - Folder watching and PDF detection trigger
 - [ ] **Phase 2: Text Extraction** - OCR PDFs to searchable text via Mistral
 - [ ] **Phase 3: Multi-Agent Extraction** - Parallel agents extract structured contract data with citations
 - [ ] **Phase 4: Estimate Matching** - Fuzzy match contracts to Monday.com estimates
@@ -31,7 +31,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: 1 plan
 
 Plans:
-- [ ] 01-01-PLAN.md - Folder watcher with chokidar and SQLite deduplication
+- [x] 01-01-PLAN.md - Folder watcher with chokidar and SQLite deduplication
 
 ### Phase 2: Text Extraction
 **Goal**: Contract PDFs are converted to searchable text for agent processing
@@ -41,10 +41,10 @@ Plans:
   1. Digital PDFs have text extracted accurately
   2. Scanned PDFs are OCR'd using Mistral and text is readable
   3. Extracted text is stored and available for multiple extraction agents
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 02-01: Mistral OCR integration and text storage
+- [ ] 02-01-PLAN.md - Two-tier text extraction (pdfjs-dist + Mistral OCR) with per-page SQLite storage
 
 ### Phase 3: Multi-Agent Extraction
 **Goal**: Parallel agents extract all contract data fields with page citations
@@ -104,8 +104,8 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Pipeline Foundation | 0/1 | Not started | - |
-| 2. Text Extraction | 0/1 | Not started | - |
+| 1. Pipeline Foundation | 1/1 | Complete | 2026-01-23 |
+| 2. Text Extraction | 0/1 | Planned | - |
 | 3. Multi-Agent Extraction | 0/3 | Not started | - |
 | 4. Estimate Matching | 0/2 | Not started | - |
 | 5. Task Orchestration | 0/3 | Not started | - |

@@ -28,10 +28,10 @@ Decimal phases appear between their surrounding integers in numeric order.
   1. Dropping a PDF into the watched folder triggers the processing pipeline
   2. System works with local folder (SharePoint integration deferred)
   3. Duplicate files (same filename) are not reprocessed
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 01-01: Folder watcher and trigger mechanism
+- [ ] 01-01-PLAN.md - Folder watcher with chokidar and SQLite deduplication
 
 ### Phase 2: Text Extraction
 **Goal**: Contract PDFs are converted to searchable text for agent processing

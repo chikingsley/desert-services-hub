@@ -1,8 +1,53 @@
 import { spawn } from "node:child_process";
 import { storeExtractedPages } from "../extraction/storage";
 import { extractText } from "../extraction/text-extractor";
+import { processContractMatch } from "../matching/link";
 import { markAsProcessed, updateProcessingStatus } from "./dedup";
 import { startWatcher, stopWatcher } from "./watcher";
+
+/**
+ * Run estimate matching for a contract.
+ * Matches the contract to Monday ESTIMATING board items.
+ */
+async function runEstimateMatching(contractId: number): Promise<void> {
+  const result = await processContractMatch(contractId);
+
+  switch (result.status) {
+    case "matched":
+      console.log(
+        `[Pipeline] Auto-matched to estimate "${result.estimateName}" ` +
+          `(${Math.round(result.confidence * 100)}% confidence)`
+      );
+      console.log(`[Pipeline] Estimate ID: ${result.estimateId}`);
+      break;
+
+    case "needs_selection":
+      console.log(
+        `[Pipeline] Match needs human selection - ${result.candidateCount} candidates, ` +
+          `top confidence: ${Math.round(result.topConfidence * 100)}%`
+      );
+      console.log(
+        `[Pipeline] Run /contract-match ${contractId} to select manually`
+      );
+      break;
+
+    case "no_match":
+      console.log(`[Pipeline] No matching estimate found: ${result.reason}`);
+      break;
+
+    case "missing_data":
+      console.log(`[Pipeline] Cannot match - ${result.reason}`);
+      break;
+
+    default: {
+      // Exhaustive check - this should never happen
+      const _exhaustive: never = result;
+      console.log(
+        `[Pipeline] Unknown match status: ${JSON.stringify(_exhaustive)}`
+      );
+    }
+  }
+}
 
 /**
  * Run Claude Code to extract contract data.
@@ -116,6 +161,19 @@ async function processContract(filePath: string): Promise<void> {
       // Log but don't fail - text extraction succeeded
       console.error(
         `[Pipeline] Claude extraction failed, can retry with /contract-extract ${contractId}`
+      );
+    }
+
+    // Run estimate matching
+    console.log(
+      `[Pipeline] Starting estimate matching for contract ${contractId}...`
+    );
+    try {
+      await runEstimateMatching(contractId);
+    } catch {
+      // Log but don't fail - extraction succeeded
+      console.error(
+        `[Pipeline] Estimate matching failed, can retry with /contract-match ${contractId}`
       );
     }
 

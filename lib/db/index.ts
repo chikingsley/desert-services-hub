@@ -251,6 +251,24 @@ db.run(`
 `);
 
 // ============================================
+// Contract Matches (Estimate Linking)
+// ============================================
+db.run(`
+  CREATE TABLE IF NOT EXISTS contract_matches (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    contract_id INTEGER NOT NULL,
+    estimate_item_id TEXT NOT NULL,
+    estimate_item_name TEXT NOT NULL,
+    match_type TEXT NOT NULL CHECK(match_type IN ('auto', 'manual')),
+    confidence_score REAL NOT NULL,
+    matched_at TEXT NOT NULL DEFAULT (datetime('now')),
+    matched_by TEXT,
+    FOREIGN KEY (contract_id) REFERENCES processed_contracts(id) ON DELETE CASCADE,
+    UNIQUE(contract_id)
+  )
+`);
+
+// ============================================
 // Indexes
 // ============================================
 db.run(
@@ -273,6 +291,9 @@ db.run(
 );
 db.run(
   "CREATE INDEX IF NOT EXISTS idx_contract_extractions_contract ON contract_extractions(contract_id)"
+);
+db.run(
+  "CREATE INDEX IF NOT EXISTS idx_contract_matches_contract ON contract_matches(contract_id)"
 );
 
 // ============================================

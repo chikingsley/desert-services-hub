@@ -72,11 +72,11 @@ Plans:
   2. High-confidence matches (>0.8) are auto-selected
   3. Low-confidence matches present top 3-5 options for human selection
   4. Contract is linked to matched estimate in Monday
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 04-01: Fuzzy matching integration with Monday.com client
-- [ ] 04-02: Confidence scoring and human fallback UI
+- [ ] 04-01-PLAN.md - Core matching module: types, multi-field scorer, matcher, storage
+- [ ] 04-02-PLAN.md - Pipeline integration and human selection flow
 
 ### Phase 5: Task Orchestration
 **Goal**: Notion project rows are created with task-step columns and human verification
@@ -107,7 +107,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 | 1. Pipeline Foundation | 1/1 | Complete | 2026-01-23 |
 | 2. Text Extraction | 1/1 | Complete | 2026-01-23 |
 | 3. Multi-Agent Extraction | 3/3 | Complete | 2026-01-23 |
-| 4. Estimate Matching | 0/2 | Ready | - |
+| 4. Estimate Matching | 0/2 | Planned | - |
 | 5. Task Orchestration | 0/3 | Not started | - |
 
 ---

@@ -29,21 +29,19 @@ export type MatchProcessResult =
 
 /**
  * Link a contract to an estimate in Monday.com (MATCH-05).
- * Updates the CONTRACT_LINKED status column on the estimate item.
+ * Updates the Bid Status to "Add to Projects" indicating contract received.
  */
 async function linkContractInMonday(
   estimateItemId: string,
   _contractId: number
 ): Promise<void> {
-  // Update the estimate item in Monday to mark it as linked
-  // Using a status column to indicate contract is linked
+  // Update the estimate item in Monday to mark contract received
+  // deal_stage = "Bid Status" column, "Add to Projects" indicates ready to move to Projects board
   await updateItem({
     boardId: BOARD_IDS.ESTIMATING,
     itemId: estimateItemId,
     columnValues: {
-      // Mark contract as linked - uses status column if available
-      // Note: The actual column ID may vary based on board configuration
-      status: { label: "Contract Linked" },
+      deal_stage: { label: "Add to Projects" },
     },
   });
 }

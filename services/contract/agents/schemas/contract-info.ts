@@ -21,6 +21,12 @@ export const ContractInfoSchema = z.object({
       "Total contract value in USD, without currency symbols. Use null if not found."
     ),
   projectName: z.string().describe("Name of the project"),
+  generalContractor: z
+    .string()
+    .nullable()
+    .describe(
+      "Name of the general contractor (GC) who issued this subcontract. This is typically the company name in the 'Contractor' or 'General Contractor' section, not Desert Services. Use null if not found."
+    ),
   projectAddress: z
     .string()
     .nullable()

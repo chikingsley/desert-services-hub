@@ -52,8 +52,12 @@ async function runEstimateMatching(contractId: number): Promise<void> {
 /**
  * Run Claude Code to extract contract data.
  * Uses `claude -p` for non-interactive execution.
+ * Retries up to 3 times on failure (API connection errors are transient).
  */
-function runClaudeExtraction(contractId: number): Promise<void> {
+async function runClaudeExtraction(
+  contractId: number,
+  maxRetries = 3
+): Promise<void> {
   const prompt = `Extract all contract data from contract ID ${contractId}.
 
 Read the contract text from the database using:
@@ -63,39 +67,63 @@ Then extract all 7 domains (contractInfo, billing, contacts, sov, insurance, sit
 
 Be thorough but concise. Store results immediately.`;
 
-  return new Promise((resolve, reject) => {
-    const claude = spawn(
-      "claude",
-      ["-p", prompt, "--allowedTools", "Bash,Read"],
-      {
-        cwd: process.cwd(),
-        stdio: ["ignore", "pipe", "pipe"],
+  const runOnce = (): Promise<void> =>
+    new Promise((resolve, reject) => {
+      const claude = spawn(
+        "claude",
+        ["-p", prompt, "--allowedTools", "Bash,Read"],
+        {
+          cwd: process.cwd(),
+          stdio: ["ignore", "pipe", "pipe"],
+        }
+      );
+
+      claude.stdout?.on("data", (data) => {
+        process.stdout.write(data);
+      });
+
+      claude.stderr?.on("data", (data) => {
+        process.stderr.write(`[Claude] ${data.toString()}`);
+      });
+
+      claude.on("close", (code) => {
+        if (code === 0) {
+          console.log("[Pipeline] Claude extraction completed");
+          resolve();
+        } else {
+          reject(new Error(`Claude exited with code ${code}`));
+        }
+      });
+
+      claude.on("error", (err) => {
+        console.error("[Pipeline] Failed to spawn Claude:", err.message);
+        reject(err);
+      });
+    });
+
+  // Retry loop
+  let lastError: Error | null = null;
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      await runOnce();
+      return; // Success - exit
+    } catch (err) {
+      lastError = err instanceof Error ? err : new Error(String(err));
+      if (attempt < maxRetries) {
+        const delay = attempt * 5000; // 5s, 10s, 15s backoff
+        console.log(
+          `[Pipeline] Claude extraction attempt ${attempt}/${maxRetries} failed, retrying in ${delay / 1000}s...`
+        );
+        await new Promise((r) => setTimeout(r, delay));
       }
-    );
+    }
+  }
 
-    claude.stdout?.on("data", (data) => {
-      process.stdout.write(data);
-    });
-
-    claude.stderr?.on("data", (data) => {
-      console.error(`[Claude] ${data.toString()}`);
-    });
-
-    claude.on("close", (code) => {
-      if (code === 0) {
-        console.log("[Pipeline] Claude extraction completed");
-        resolve();
-      } else {
-        console.error(`[Pipeline] Claude extraction failed with code ${code}`);
-        reject(new Error(`Claude exited with code ${code}`));
-      }
-    });
-
-    claude.on("error", (err) => {
-      console.error("[Pipeline] Failed to spawn Claude:", err.message);
-      reject(err);
-    });
-  });
+  // All retries failed
+  console.error(
+    `[Pipeline] Claude extraction failed after ${maxRetries} attempts`
+  );
+  throw lastError;
 }
 
 // Re-export types for consumers

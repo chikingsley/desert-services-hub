@@ -168,6 +168,13 @@ try {
   /* column already exists */
 }
 
+// Add body_html column for original HTML (preserves links)
+try {
+  db.run("ALTER TABLE emails ADD COLUMN body_html TEXT");
+} catch {
+  /* column already exists */
+}
+
 // ============================================
 // Schema: Attachments
 // ============================================
@@ -180,6 +187,10 @@ db.run(`
     content_type TEXT,
     size INTEGER,
 
+    -- MinIO storage
+    storage_bucket TEXT,
+    storage_path TEXT,
+
     -- OCR/Text extraction
     extracted_text TEXT,
     extraction_status TEXT DEFAULT 'pending',
@@ -191,6 +202,18 @@ db.run(`
     UNIQUE(email_id, attachment_id)
   )
 `);
+
+// Add storage columns to attachments if not exists (for existing DBs)
+try {
+  db.run("ALTER TABLE attachments ADD COLUMN storage_bucket TEXT");
+} catch {
+  /* column already exists */
+}
+try {
+  db.run("ALTER TABLE attachments ADD COLUMN storage_path TEXT");
+} catch {
+  /* column already exists */
+}
 
 // ============================================
 // Indexes
@@ -309,6 +332,7 @@ export interface Email {
   accountId: number | null;
   projectId: number | null;
   bodyFull: string | null;
+  bodyHtml: string | null;
   createdAt: string;
 }
 
@@ -321,6 +345,8 @@ export interface Attachment {
   name: string;
   contentType: string | null;
   size: number | null;
+  storageBucket: string | null;
+  storagePath: string | null;
   extractedText: string | null;
   extractionStatus: ExtractionStatus;
   extractionError: string | null;
@@ -462,16 +488,17 @@ export interface InsertEmailData {
   attachmentNames?: string[];
   bodyPreview?: string | null;
   bodyFull?: string | null;
+  bodyHtml?: string | null;
   webUrl?: string | null;
 }
 
 export function insertEmail(data: InsertEmailData): number {
-  const result = db.run(
+  db.run(
     `INSERT INTO emails (
       message_id, mailbox_id, conversation_id, subject, from_email, from_name,
       to_emails, cc_emails, received_at, has_attachments, attachment_names,
-      body_preview, body_full, web_url
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      body_preview, body_full, body_html, web_url
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(message_id) DO UPDATE SET
       subject = excluded.subject,
       from_email = excluded.from_email,
@@ -481,7 +508,8 @@ export function insertEmail(data: InsertEmailData): number {
       has_attachments = excluded.has_attachments,
       attachment_names = excluded.attachment_names,
       body_preview = excluded.body_preview,
-      body_full = excluded.body_full`,
+      body_full = excluded.body_full,
+      body_html = excluded.body_html`,
     [
       data.messageId,
       data.mailboxId,
@@ -496,11 +524,19 @@ export function insertEmail(data: InsertEmailData): number {
       JSON.stringify(data.attachmentNames ?? []),
       data.bodyPreview ?? null,
       data.bodyFull ?? null,
+      data.bodyHtml ?? null,
       data.webUrl ?? null,
     ]
   );
 
-  return Number(result.lastInsertRowid);
+  // Query for actual id (handles both insert and update cases)
+  const row = db
+    .query<{ id: number }, [string]>(
+      "SELECT id FROM emails WHERE message_id = ?"
+    )
+    .get(data.messageId);
+
+  return row?.id ?? 0;
 }
 
 export function getEmailByMessageId(messageId: string): Email | null {
@@ -558,6 +594,7 @@ function parseEmailRow(row: Record<string, unknown>): Email {
     accountId: row.account_id as number | null,
     projectId: row.project_id as number | null,
     bodyFull: row.body_full as string | null,
+    bodyHtml: row.body_html as string | null,
     createdAt: row.created_at as string,
   };
 }
@@ -1105,6 +1142,8 @@ function parseAttachmentRow(row: Record<string, unknown>): Attachment {
     name: row.name as string,
     contentType: row.content_type as string | null,
     size: row.size as number | null,
+    storageBucket: row.storage_bucket as string | null,
+    storagePath: row.storage_path as string | null,
     extractedText: row.extracted_text as string | null,
     extractionStatus: (row.extraction_status as ExtractionStatus) ?? "pending",
     extractionError: row.extraction_error as string | null,
@@ -1119,22 +1158,28 @@ export interface InsertAttachmentData {
   name: string;
   contentType?: string | null;
   size?: number | null;
+  storageBucket?: string | null;
+  storagePath?: string | null;
 }
 
 export function insertAttachment(data: InsertAttachmentData): number {
   const result = db.run(
-    `INSERT INTO attachments (email_id, attachment_id, name, content_type, size)
-     VALUES (?, ?, ?, ?, ?)
+    `INSERT INTO attachments (email_id, attachment_id, name, content_type, size, storage_bucket, storage_path)
+     VALUES (?, ?, ?, ?, ?, ?, ?)
      ON CONFLICT(email_id, attachment_id) DO UPDATE SET
        name = excluded.name,
        content_type = excluded.content_type,
-       size = excluded.size`,
+       size = excluded.size,
+       storage_bucket = COALESCE(excluded.storage_bucket, attachments.storage_bucket),
+       storage_path = COALESCE(excluded.storage_path, attachments.storage_path)`,
     [
       data.emailId,
       data.attachmentId,
       data.name,
       data.contentType ?? null,
       data.size ?? null,
+      data.storageBucket ?? null,
+      data.storagePath ?? null,
     ]
   );
 

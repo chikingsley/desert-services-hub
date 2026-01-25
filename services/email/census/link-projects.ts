@@ -17,7 +17,6 @@ import {
   getAllProjectNames,
   getEmailsWithoutProjectLink,
   getLinkedConversationSibling,
-  getSenderProjectStats,
   getUnlinkedEmailsWithBody,
   insertEntity,
   linkEmailToProjectWithSignal,
@@ -442,18 +441,10 @@ export function tryMultiSignalLink(
     }
   }
 
-  // Signal 3: Sender history (0.85 confidence if 80%+ same project)
-  // If this sender consistently emails about one project, use that
-  if (email.fromEmail) {
-    const senderStats = getSenderProjectStats(email.fromEmail);
-    if (senderStats && senderStats.percentage >= SENDER_HISTORY_THRESHOLD) {
-      return {
-        projectId: senderStats.projectId,
-        confidence: 0.85,
-        signal: "sender",
-      };
-    }
-  }
+  // Signal 3: Sender history - DISABLED
+  // This was causing bad links (e.g., BuildingConnected linked to one project
+  // when they send bid invites for everything). Too many senders work on
+  // multiple projects for this heuristic to be reliable.
 
   // Signal 4: Reply chain (0.80 confidence)
   // Find other emails with the same base subject

@@ -7,8 +7,13 @@
  */
 
 import { file, serve } from "bun";
+import {
+  getArchiveIndex,
+  getAttachment,
+  getConversation,
+  listArchives,
+} from "./api/archive";
 import { getCatalog, getTakeoffItems } from "./api/catalog";
-// API handlers
 import { healthCheck } from "./api/health";
 import { searchMonday } from "./api/monday";
 import { createQuote, listQuotes } from "./api/quotes";
@@ -106,6 +111,20 @@ const server = serve({
     // Webhooks
     "/api/webhooks/monday": {
       POST: handleMondayWebhook,
+    },
+
+    // Email Archives
+    "/api/archives": {
+      GET: listArchives,
+    },
+    "/api/archives/:archive": {
+      GET: getArchiveIndex,
+    },
+    "/api/archives/:archive/conversations/:folder": {
+      GET: getConversation,
+    },
+    "/api/archives/:archive/conversations/:folder/attachments/:filename": {
+      GET: getAttachment,
     },
 
     // ===========================================

@@ -14,6 +14,8 @@ export const BUCKETS = {
   TAKEOFFS: process.env.MINIO_BUCKET_TAKEOFFS || "takeoffs",
   QUOTES: process.env.MINIO_BUCKET_QUOTES || "quotes",
   THUMBNAILS: process.env.MINIO_BUCKET_THUMBNAILS || "thumbnails",
+  EMAIL_ATTACHMENTS:
+    process.env.MINIO_BUCKET_EMAIL_ATTACHMENTS || "email-attachments",
 } as const;
 
 /**
@@ -34,6 +36,7 @@ export async function initializeBuckets(): Promise<void> {
     ensureBucket(BUCKETS.TAKEOFFS),
     ensureBucket(BUCKETS.QUOTES),
     ensureBucket(BUCKETS.THUMBNAILS),
+    ensureBucket(BUCKETS.EMAIL_ATTACHMENTS),
   ]);
 }
 

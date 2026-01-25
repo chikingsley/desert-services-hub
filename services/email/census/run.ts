@@ -112,12 +112,15 @@ async function runSync(options: {
     since: options.since,
     maxPerMailbox: options.limit,
     onProgress: (p) => {
-      if (p.phase === "fetching") {
-        console.log(`[${p.mailbox}] Fetching emails...`);
-      } else if (p.phase === "storing") {
-        console.log(`[${p.mailbox}] Storing ${p.emailsFetched} emails...`);
+      if (p.phase === "starting") {
+        console.log(`[${p.mailbox}] Starting sync...`);
+      } else if (p.phase === "streaming") {
+        const moreIndicator = p.hasMore ? "..." : " (last page)";
+        console.log(
+          `[${p.mailbox}] Page ${p.pageNumber}: ${p.emailsProcessed} stored${moreIndicator}`
+        );
       } else if (p.phase === "complete") {
-        console.log(`[${p.mailbox}] ✓ ${p.emailsStored} emails stored`);
+        console.log(`[${p.mailbox}] ✓ ${p.emailsProcessed} emails stored`);
       } else if (p.phase === "error") {
         console.log(`[${p.mailbox}] ✗ Error: ${p.error}`);
       }

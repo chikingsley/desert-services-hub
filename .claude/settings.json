@@ -6,6 +6,7 @@
     "desert-quoting"
   ],
   "permissions": {
+    "deny": ["Bash(rm:*)", "Bash(rm -rf:*)"],
     "allow": ["Bash(ls:*)"]
   },
   "hooks": {
@@ -16,6 +17,10 @@
           {
             "type": "command",
             "command": "bun x ultracite fix"
+          },
+          {
+            "type": "command",
+            "command": "node .claude/hooks/catalog-sync-warning.js"
           }
         ]
       }

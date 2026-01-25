@@ -1,28 +1,4 @@
-/**
- * Comprehensive Email Sync
- *
- * Syncs ALL emails from ALL mailboxes with full body content and attachment metadata.
- * Use this for building a complete searchable email archive.
- *
- * Features:
- * - Syncs all company mailboxes in parallel (configurable concurrency)
- * - Stores full email body text (not just preview)
- * - Records attachment metadata for later OCR processing
- * - Supports incremental sync (only new emails since last sync)
- * - Can go back further in time (--since flag or --months flag)
- *
- * Usage:
- *   bun services/email/census/sync-all.ts [options]
- *
- * Options:
- *   --mailbox=<email>  Sync specific mailbox only
- *   --since=<date>     Sync emails since date (ISO format)
- *   --months=<n>       Sync last N months (default: 12)
- *   --limit=<n>        Limit emails per mailbox (default: unlimited)
- *   --concurrency=<n>  Parallel mailbox syncs (default: 3)
- *   --incremental      Only sync new emails since last sync
- *   --extract          Run Mistral OCR on PDF attachments during sync
- */
+import { BUCKETS, uploadFile } from "@/lib/minio";
 import { GraphEmailClient } from "../client";
 import {
   getAllMailboxes,
@@ -184,43 +160,72 @@ async function syncMailboxFull(
         attachmentNames,
         bodyPreview: fullText.substring(0, 500),
         bodyFull: fullText,
+        bodyHtml: email.bodyContent, // Store original HTML for links
       };
 
       const emailId = insertEmail(emailData);
 
-      // Store attachment metadata and optionally extract PDFs
+      // Store attachment metadata, upload PDFs to MinIO, and optionally extract
       for (const att of attachmentMeta) {
+        const isPdf =
+          att.contentType?.toLowerCase() === "application/pdf" ||
+          att.name.toLowerCase().endsWith(".pdf");
+
+        let storageBucket: string | null = null;
+        let storagePath: string | null = null;
+        let pdfBuffer: Buffer | null = null;
+
+        // Download and upload PDF to MinIO
+        if (isPdf) {
+          try {
+            pdfBuffer = await client.downloadAttachment(
+              email.id,
+              att.id,
+              mailboxEmail
+            );
+
+            // Upload to MinIO: email-attachments/{emailId}/{attachmentId}/{filename}
+            const objectPath = `${emailId}/${att.id}/${att.name}`;
+            await uploadFile(
+              BUCKETS.EMAIL_ATTACHMENTS,
+              objectPath,
+              pdfBuffer,
+              "application/pdf"
+            );
+
+            storageBucket = BUCKETS.EMAIL_ATTACHMENTS;
+            storagePath = objectPath;
+          } catch (uploadErr) {
+            console.error(
+              `Failed to upload ${att.name} to MinIO: ${uploadErr}`
+            );
+          }
+        }
+
         const attData: InsertAttachmentData = {
           emailId,
           attachmentId: att.id,
           name: att.name,
           contentType: att.contentType,
           size: att.size,
+          storageBucket,
+          storagePath,
         };
         const attachmentDbId = insertAttachment(attData);
         attachmentCount++;
 
-        // Extract PDF content if extraction is enabled
-        const isPdf = att.contentType?.toLowerCase() === "application/pdf";
-        if (extract && isPdf) {
+        // Extract PDF content if extraction is enabled and we have the buffer
+        if (extract && isPdf && pdfBuffer) {
           try {
-            const attachmentData = await client.downloadAttachment(
-              email.id,
-              att.id,
-              mailboxEmail
+            const extractedText = await extractPdfWithMistral(
+              pdfBuffer,
+              att.name
             );
-            if (attachmentData.contentBytes) {
-              const buffer = Buffer.from(attachmentData.contentBytes, "base64");
-              const extractedText = await extractPdfWithMistral(
-                buffer,
-                att.name
-              );
-              updateAttachmentExtraction(
-                attachmentDbId,
-                "success",
-                extractedText
-              );
-            }
+            updateAttachmentExtraction(
+              attachmentDbId,
+              "success",
+              extractedText
+            );
           } catch (extractError) {
             const errMsg =
               extractError instanceof Error

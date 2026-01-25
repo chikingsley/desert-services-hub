@@ -4,13 +4,11 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "bc": "bun src/download/index.ts",
-    "bc:sync-bids": "bun scripts/bc-bids-sync.ts",
-    "docusign": "bun automations/docusign/index.ts"
+    "docusign": "bun docusign/download.ts",
+    "bc-bids": "bun bc-bids/bc-bids-sync.ts"
   },
   "dependencies": {
-    "@browserbasehq/stagehand": "^3.0.7",
-    "zod": "^3.25.76"
+    "playwright": "^1.50.0"
   },
   "devDependencies": {
     "@biomejs/biome": "2.3.10",

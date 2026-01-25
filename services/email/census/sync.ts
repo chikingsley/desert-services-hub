@@ -45,9 +45,10 @@ interface SyncOptions {
 
 interface SyncProgress {
   mailbox: string;
-  phase: "starting" | "fetching" | "storing" | "complete" | "error";
-  emailsFetched?: number;
-  emailsStored?: number;
+  phase: "starting" | "streaming" | "complete" | "error";
+  emailsProcessed?: number;
+  pageNumber?: number;
+  hasMore?: boolean;
   error?: string;
 }
 
@@ -80,7 +81,10 @@ function createGraphClient(): GraphEmailClient {
 }
 
 /**
- * Syncs emails from a single mailbox to the database.
+ * Syncs emails from a single mailbox to the database using streaming.
+ *
+ * Uses page-by-page streaming to avoid memory issues with large mailboxes.
+ * Each page of emails is stored immediately before fetching the next page.
  */
 async function syncMailbox(
   client: GraphEmailClient,
@@ -101,60 +105,63 @@ async function syncMailbox(
     // Get or create the mailbox record
     const mailbox = getOrCreateMailbox(mailboxEmail);
 
-    reportProgress({ mailbox: mailboxEmail, phase: "fetching" });
-
-    // Fetch emails from Graph API
-    const emails = await client.getAllEmailsPaginated(
-      mailboxEmail,
-      since,
-      maxEmails
-    );
-
-    reportProgress({
-      mailbox: mailboxEmail,
-      phase: "storing",
-      emailsFetched: emails.length,
-    });
-
-    // Store each email in the database
     let storedCount = 0;
-    for (const email of emails) {
-      // Extract attachment names if we have attachments
-      let attachmentNames: string[] = [];
-      if (email.hasAttachments) {
-        try {
-          const attachments = await client.getAttachments(
-            email.id,
-            mailboxEmail
-          );
-          attachmentNames = attachments.map((a) => a.name);
-        } catch {
-          // Skip attachment fetch errors, just continue without names
+
+    // Stream emails page-by-page, storing each page immediately
+    await client.streamEmailsPaginated({
+      userId: mailboxEmail,
+      since,
+      maxEmails,
+      onPage: async (emails, progress) => {
+        // Report streaming progress
+        reportProgress({
+          mailbox: mailboxEmail,
+          phase: "streaming",
+          emailsProcessed: progress.processed,
+          pageNumber: progress.pageNumber,
+          hasMore: progress.hasMore,
+        });
+
+        // Store each email in this page immediately
+        for (const email of emails) {
+          // Extract attachment names if we have attachments
+          let attachmentNames: string[] = [];
+          if (email.hasAttachments) {
+            try {
+              const attachments = await client.getAttachments(
+                email.id,
+                mailboxEmail
+              );
+              attachmentNames = attachments.map((a) => a.name);
+            } catch {
+              // Skip attachment fetch errors, just continue without names
+            }
+          }
+
+          // Convert HTML body to plain text
+          const plainText = await htmlToText(email.bodyContent);
+
+          const emailData: InsertEmailData = {
+            messageId: email.id,
+            mailboxId: mailbox.id,
+            conversationId: email.conversationId ?? null,
+            subject: email.subject,
+            fromEmail: email.fromEmail,
+            fromName: email.fromName,
+            toEmails: email.toRecipients.map((r) => r.email),
+            ccEmails: email.ccRecipients.map((r) => r.email),
+            receivedAt: email.receivedDateTime.toISOString(),
+            hasAttachments: email.hasAttachments ?? false,
+            attachmentNames,
+            bodyPreview: plainText.substring(0, 500),
+            bodyFull: plainText,
+          };
+
+          insertEmail(emailData);
+          storedCount++;
         }
-      }
-
-      // Convert HTML body to plain text
-      const plainText = await htmlToText(email.bodyContent);
-
-      const emailData: InsertEmailData = {
-        messageId: email.id,
-        mailboxId: mailbox.id,
-        conversationId: email.conversationId ?? null,
-        subject: email.subject,
-        fromEmail: email.fromEmail,
-        fromName: email.fromName,
-        toEmails: email.toRecipients.map((r) => r.email),
-        ccEmails: email.ccRecipients.map((r) => r.email),
-        receivedAt: email.receivedDateTime.toISOString(),
-        hasAttachments: email.hasAttachments ?? false,
-        attachmentNames,
-        bodyPreview: plainText.substring(0, 500),
-        bodyFull: plainText, // Store full body for multi-signal linking
-      };
-
-      insertEmail(emailData);
-      storedCount++;
-    }
+      },
+    });
 
     // Update mailbox sync state
     updateMailboxSyncState(mailbox.id, storedCount);
@@ -162,8 +169,7 @@ async function syncMailbox(
     reportProgress({
       mailbox: mailboxEmail,
       phase: "complete",
-      emailsFetched: emails.length,
-      emailsStored: storedCount,
+      emailsProcessed: storedCount,
     });
 
     return {
@@ -281,12 +287,17 @@ if (import.meta.main) {
 
   const options: SyncOptions = {
     onProgress: (p) => {
-      if (p.phase === "fetching") {
-        console.log(`[${p.mailbox}] Fetching emails...`);
-      } else if (p.phase === "storing") {
-        console.log(`[${p.mailbox}] Storing ${p.emailsFetched} emails...`);
+      if (p.phase === "starting") {
+        console.log(`[${p.mailbox}] Starting sync...`);
+      } else if (p.phase === "streaming") {
+        const moreIndicator = p.hasMore ? "..." : " (last page)";
+        console.log(
+          `[${p.mailbox}] Page ${p.pageNumber}: ${p.emailsProcessed} emails stored${moreIndicator}`
+        );
       } else if (p.phase === "complete") {
-        console.log(`[${p.mailbox}] Complete: ${p.emailsStored} emails stored`);
+        console.log(
+          `[${p.mailbox}] Complete: ${p.emailsProcessed} emails stored`
+        );
       } else if (p.phase === "error") {
         console.log(`[${p.mailbox}] Error: ${p.error}`);
       }

@@ -23,10 +23,14 @@ Default to using **Bun** instead of Node.js.
 - Use `bunx <package> <command>` instead of `npx`
 - Bun automatically loads `.env`, so don't use `dotenv`
 
-### Inline Scripts with `bun -e`
-For quick one-off queries, use `bun -e` instead of creating temporary script files:
+### Running Scripts
+Prefer running actual `.ts` files with `bun` for type safety:
 ```bash
-# Query Monday board
+bun services/email/census/extract-attachments.ts --limit=10
+```
+
+For quick one-offs where no script exists, `bun -e` is acceptable:
+```bash
 bun -e "import { searchItems } from './services/monday/client'; console.log(await searchItems('7943937855', 'SearchTerm'))"
 ```
 **Shell gotcha**: avoid `!` in inline scripts (interprets as history expansion). Use `myBool === false` instead of `!myBool`.

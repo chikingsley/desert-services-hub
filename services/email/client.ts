@@ -346,10 +346,107 @@ export class GraphEmailClient {
   }
 
   /**
+   * Stream emails with pagination, processing each page via callback.
+   *
+   * Unlike getAllEmailsPaginated, this method processes emails as they arrive
+   * instead of accumulating them in memory. Ideal for large syncs.
+   *
+   * @param options - Stream configuration
+   * @param options.userId - Email address of the mailbox (required for app auth)
+   * @param options.since - Only return emails received after this date
+   * @param options.maxEmails - Maximum total emails to process (default: unlimited)
+   * @param options.onPage - Callback invoked for each page of emails
+   * @returns Promise resolving to total number of emails processed
+   *
+   * @example
+   * // Stream and process emails as they arrive
+   * let total = 0;
+   * await client.streamEmailsPaginated({
+   *   userId: 'user@example.com',
+   *   since: new Date('2025-01-01'),
+   *   onPage: async (emails, progress) => {
+   *     for (const email of emails) {
+   *       await storeEmail(email);
+   *       total++;
+   *     }
+   *     console.log(`Processed ${progress.processed}/${progress.total ?? '?'}`);
+   *   }
+   * });
+   */
+  async streamEmailsPaginated(options: {
+    userId?: string;
+    since?: Date;
+    maxEmails?: number;
+    onPage: (
+      emails: EmailMessage[],
+      progress: { processed: number; pageNumber: number; hasMore: boolean }
+    ) => Promise<void> | void;
+  }): Promise<number> {
+    const client = this.getClient();
+    const daysBack = this.config.daysBack ?? DEFAULT_DAYS_BACK;
+    const sinceDate =
+      options.since ?? new Date(Date.now() - daysBack * MS_PER_DAY);
+    const dateFilter = `receivedDateTime ge ${sinceDate.toISOString()}`;
+    const messagesPath = this.getMessagesPath(options.userId);
+    const batchSize = this.config.batchSize ?? DEFAULT_BATCH_SIZE;
+    const maxEmails = options.maxEmails ?? Number.MAX_SAFE_INTEGER;
+
+    let processed = 0;
+    let pageNumber = 0;
+
+    try {
+      let response = await client
+        .api(messagesPath)
+        .filter(dateFilter)
+        .orderby("receivedDateTime desc")
+        .top(Math.min(batchSize, maxEmails))
+        .select(
+          "id,subject,receivedDateTime,from,toRecipients,ccRecipients,body,hasAttachments,conversationId"
+        )
+        .get();
+
+      while (response?.value && processed < maxEmails) {
+        pageNumber++;
+        const emails = this.parseMessagesWithAttachments(response.value);
+        const remaining = maxEmails - processed;
+        const pageEmails = emails.slice(0, remaining);
+
+        const nextLink = response["@odata.nextLink"];
+        const hasMore =
+          Boolean(nextLink) && processed + pageEmails.length < maxEmails;
+
+        // Process this page immediately
+        await options.onPage(pageEmails, {
+          processed: processed + pageEmails.length,
+          pageNumber,
+          hasMore,
+        });
+
+        processed += pageEmails.length;
+
+        if (processed >= maxEmails || !nextLink) {
+          break;
+        }
+
+        response = await client.api(nextLink).get();
+      }
+
+      return processed;
+    } catch (error) {
+      console.error(
+        `Error streaming emails for ${options.userId ?? "user"}:`,
+        error
+      );
+      throw error;
+    }
+  }
+
+  /**
    * Get all emails with automatic pagination.
    *
-   * Fetches emails in batches, following pagination links until maxEmails
-   * is reached or no more emails are available.
+   * WARNING: This method loads ALL emails into memory before returning.
+   * For large syncs, use streamEmailsPaginated() instead to process
+   * emails as they arrive without memory accumulation.
    *
    * @param userId - Email address of the mailbox (required for app auth)
    * @param since - Only return emails received after this date (default: 30 days ago)
@@ -385,12 +482,12 @@ export class GraphEmailClient {
         .orderby("receivedDateTime desc")
         .top(Math.min(batchSize, maxEmails))
         .select(
-          "id,subject,receivedDateTime,from,toRecipients,ccRecipients,body"
+          "id,subject,receivedDateTime,from,toRecipients,ccRecipients,body,hasAttachments,conversationId"
         )
         .get();
 
       while (response?.value && allEmails.length < maxEmails) {
-        const emails = this.parseMessages(response.value);
+        const emails = this.parseMessagesWithAttachments(response.value);
         const remaining = maxEmails - allEmails.length;
         allEmails.push(...emails.slice(0, remaining));
 

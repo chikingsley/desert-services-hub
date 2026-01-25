@@ -11,6 +11,8 @@ SWPPP,Track-out Grates,Price per month to rent a set of track-out grates (aka ru
 SWPPP,SWPPP Sign,"Cost for preparation, delivery, and installation of SWPPP sign.",Size,295,Each,275,0.07
 SWPPP,Dust Sign,"Cost for preparation, delivery, and installation of dust sign.",Size,595,Each,575,0.03
 SWPPP,Fire Access Sign,"Cost for preparation, delivery, and installation of Fire Access sign.",Size,695,Each,675,0.03
+SWPPP,SWPPP Sticker,Sticker displaying NOI Authorization ID (AZC #) for SWPPP compliance.,Quantity,75,Each,,
+SWPPP,Dust Sticker,Sticker for dust permit compliance signage.,Quantity,75,Each,,
 SWPPP,Spill Kit,"Spill kit materials, includes delivery.",Quantity,360,Each,345,0.04
 SWPPP,SWPPP Inspection: 14-day,SWPPP Inspections: Performed every 14 days (+1/2 in rain),Location,205,Each,195,0.05
 SWPPP,SWPPP Inspection: 28-day,SWPPP Inspections: Performed every 28 days (+1/4 in rain),Location,235,Each,225,0.04

@@ -183,6 +183,21 @@ export const catalog: Catalog = {
               unit: "Each",
             },
             {
+              code: "CM-016",
+              name: "SWPPP Sticker",
+              description:
+                "Sticker displaying NOI Authorization ID (AZC #) for SWPPP compliance",
+              price: 75,
+              unit: "Each",
+            },
+            {
+              code: "CM-017",
+              name: "Dust Sticker",
+              description: "Sticker for dust permit compliance signage",
+              price: 75,
+              unit: "Each",
+            },
+            {
               code: "CM-015",
               name: "Concrete Washout (15 yd)",
               description:

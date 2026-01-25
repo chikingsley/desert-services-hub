@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Archive Viewer</title>
+    <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family:
+        -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f5f5f5;
+      color: #333;
+      line-height: 1.6;
+    }
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1 {
+      margin-bottom: 20px;
+      color: #1a1a1a;
+    }
+    h2 {
+      margin-bottom: 15px;
+      color: #333;
+      font-size: 1.25rem;
+    }
+    h3 {
+      margin-bottom: 10px;
+      color: #555;
+      font-size: 1rem;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 350px 1fr;
+      gap: 20px;
+      height: calc(100vh - 100px);
+    }
+
+    .sidebar {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar-header {
+      padding: 15px;
+      border-bottom: 1px solid #eee;
+      background: #fafafa;
+    }
+
+    .conversation-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px;
+    }
+
+    .conversation-item {
+      padding: 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-bottom: 8px;
+      border: 1px solid #eee;
+      transition: all 0.15s ease;
+    }
+    .conversation-item:hover {
+      background: #f5f5f5;
+      border-color: #ddd;
+    }
+    .conversation-item.active {
+      background: #e8f4fd;
+      border-color: #2196f3;
+    }
+    .conversation-item .subject {
+      font-weight: 500;
+      margin-bottom: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .conversation-item .meta {
+      font-size: 0.8rem;
+      color: #666;
+    }
+    .conversation-item .badge {
+      display: inline-block;
+      background: #2196f3;
+      color: white;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      margin-left: 5px;
+    }
+
+    .main-content {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .content-header {
+      padding: 15px 20px;
+      border-bottom: 1px solid #eee;
+      background: #fafafa;
+    }
+
+    .content-body {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+    }
+
+    .email-list {
+      width: 400px;
+      border-right: 1px solid #eee;
+      overflow-y: auto;
+    }
+
+    .email-item {
+      padding: 15px;
+      border-bottom: 1px solid #eee;
+      cursor: pointer;
+    }
+    .email-item:hover {
+      background: #f9f9f9;
+    }
+    .email-item.active {
+      background: #e8f4fd;
+    }
+    .email-item .from {
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+    .email-item .date {
+      font-size: 0.8rem;
+      color: #888;
+    }
+    .email-item .preview {
+      font-size: 0.85rem;
+      color: #666;
+      margin-top: 8px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .email-item .attachments {
+      margin-top: 8px;
+      display: flex;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+    .email-item .attachment-badge {
+      font-size: 0.75rem;
+      background: #e3f2fd;
+      color: #1976d2;
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+
+    .preview-pane {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .preview-header {
+      padding: 15px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .preview-content {
+      flex: 1;
+      overflow: auto;
+    }
+
+    .pdf-viewer {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    .attachment-list {
+      padding: 15px;
+    }
+    .attachment-link {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px;
+      background: #f5f5f5;
+      border-radius: 6px;
+      margin-bottom: 8px;
+      text-decoration: none;
+      color: #333;
+      transition: background 0.15s;
+    }
+    .attachment-link:hover {
+      background: #e8e8e8;
+    }
+    .attachment-link .icon {
+      font-size: 1.5rem;
+    }
+    .attachment-link .name {
+      font-weight: 500;
+    }
+    .attachment-link .size {
+      font-size: 0.8rem;
+      color: #888;
+    }
+
+    .empty-state {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: #888;
+      font-size: 1.1rem;
+    }
+
+    .email-view {
+      padding: 20px;
+      height: 100%;
+      overflow-y: auto;
+    }
+    .email-header {
+      border-bottom: 1px solid #eee;
+      padding-bottom: 15px;
+      margin-bottom: 15px;
+    }
+    .email-header div {
+      margin-bottom: 5px;
+      font-size: 0.9rem;
+    }
+    .email-body {
+      line-height: 1.6;
+    }
+    .email-body.text-body pre {
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      font-family: inherit;
+      margin: 0;
+    }
+    .email-body.html-body {
+      font-size: 0.95rem;
+    }
+    .att-buttons {
+      margin-top: 10px;
+    }
+    .att-btn {
+      background: #e3f2fd;
+      color: #1976d2;
+      border: 1px solid #90caf9;
+      padding: 5px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      margin-right: 8px;
+    }
+    .att-btn:hover {
+      background: #bbdefb;
+    }
+
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: #666;
+    }
+
+    .archive-select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 1rem;
+      margin-bottom: 10px;
+    }
+
+    .stats {
+      font-size: 0.85rem;
+      color: #666;
+      margin-top: 10px;
+    }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Email Archive Viewer</h1>
+
+      <div class="layout">
+        <div class="sidebar">
+          <div class="sidebar-header">
+            <select id="archiveSelect" class="archive-select">
+              <option value="">Select an archive...</option>
+            </select>
+            <div id="archiveStats" class="stats"></div>
+          </div>
+          <div id="conversationList" class="conversation-list">
+            <div class="empty-state">Select an archive to browse</div>
+          </div>
+        </div>
+
+        <div class="main-content">
+          <div class="content-header">
+            <h2 id="conversationSubject">Select a conversation</h2>
+          </div>
+          <div class="content-body">
+            <div id="emailList" class="email-list">
+              <div class="empty-state">No conversation selected</div>
+            </div>
+            <div class="preview-pane">
+              <div
+                id="previewHeader"
+                class="preview-header"
+                style="display: none;"
+              >
+                <h3 id="previewTitle">Attachment Preview</h3>
+              </div>
+              <div id="previewContent" class="preview-content">
+                <div class="empty-state">Select an attachment to preview</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+    "use strict";
+    const API_BASE = "/api/archives";
+
+    let currentArchive = null;
+    let currentConversation = null;
+    const currentEmail = null;
+
+    // Load available archives on page load
+    async function loadArchives() {
+      try {
+        const res = await fetch(API_BASE);
+        const data = await res.json();
+
+        const select = document.getElementById("archiveSelect");
+        select.innerHTML = '<option value="">Select an archive...</option>';
+
+        for (const archive of data.archives) {
+          const option = document.createElement("option");
+          option.value = archive.name;
+          option.textContent = `${archive.mailbox} (${archive.stats.conversationsWithAttachments} convos)`;
+          select.appendChild(option);
+        }
+      } catch (err) {
+        console.error("Failed to load archives:", err);
+      }
+    }
+
+    // Load archive index (conversation list)
+    async function loadArchive(archiveName) {
+      if (!archiveName) {
+        document.getElementById("conversationList").innerHTML =
+          '<div class="empty-state">Select an archive to browse</div>';
+        document.getElementById("archiveStats").innerHTML = "";
+        return;
+      }
+
+      document.getElementById("conversationList").innerHTML =
+        '<div class="loading">Loading...</div>';
+
+      try {
+        const res = await fetch(`${API_BASE}/${archiveName}`);
+        const data = await res.json();
+
+        currentArchive = archiveName;
+
+        // Show stats
+        document.getElementById("archiveStats").innerHTML = `
+          ${data.stats.emailsProcessed.toLocaleString()} emails,
+          ${data.stats.attachmentsDownloaded.toLocaleString()} attachments<br>
+          ${data.dateRange.after?.split("T")[0] || "N/A"} to ${data.dateRange.before?.split("T")[0] || "now"}
+        `;
+
+        // Render conversation list
+        const list = document.getElementById("conversationList");
+        if (data.conversations.length === 0) {
+          list.innerHTML =
+            '<div class="empty-state">No conversations with attachments</div>';
+          return;
+        }
+
+        list.innerHTML = data.conversations
+          .map(
+            (conv) => `
+          <div class="conversation-item" data-folder="${conv.folder}">
+            <div class="subject">${escapeHtml(conv.subject)}</div>
+            <div class="meta">
+              ${conv.emailCount} emails
+              <span class="badge">${conv.attachmentCount} PDFs</span>
+            </div>
+            <div class="meta">${conv.dateRange}</div>
+          </div>
+        `
+          )
+          .join("");
+
+        // Add click handlers
+        list.querySelectorAll(".conversation-item").forEach((item) => {
+          item.addEventListener("click", () =>
+            loadConversation(item.dataset.folder)
+          );
+        });
+      } catch (err) {
+        console.error("Failed to load archive:", err);
+        document.getElementById("conversationList").innerHTML =
+          '<div class="empty-state">Failed to load archive</div>';
+      }
+    }
+
+    // Load conversation details
+    async function loadConversation(folder) {
+      document.querySelectorAll(".conversation-item").forEach((item) => {
+        item.classList.toggle("active", item.dataset.folder === folder);
+      });
+
+      document.getElementById("emailList").innerHTML =
+        '<div class="loading">Loading...</div>';
+
+      try {
+        const res = await fetch(
+          `${API_BASE}/${currentArchive}/conversations/${folder}`
+        );
+        const data = await res.json();
+
+        currentConversation = folder;
+
+        document.getElementById("conversationSubject").textContent =
+          data.subject;
+
+        // Render email list
+        const list = document.getElementById("emailList");
+        list.innerHTML = data.emails
+          .map(
+            (email, idx) => `
+          <div class="email-item" data-idx="${idx}">
+            <div class="from">${escapeHtml(email.from)}</div>
+            <div class="date">${new Date(email.receivedAt).toLocaleString()}</div>
+            <div class="preview">${escapeHtml(email.bodyPreview)}</div>
+            ${
+              email.attachments.length > 0
+                ? `
+              <div class="attachments">
+                ${email.attachments
+                  .filter((a) => a.localPath)
+                  .map(
+                    (a) => `
+                  <span class="attachment-badge" data-path="${a.localPath}">${escapeHtml(a.name)}</span>
+                `
+                  )
+                  .join("")}
+              </div>
+            `
+                : ""
+            }
+          </div>
+        `
+          )
+          .join("");
+
+        // Store emails data for click handlers
+        list.dataset.emails = JSON.stringify(data.emails);
+
+        // Add click handlers for email items (show full email)
+        list.querySelectorAll(".email-item").forEach((item) => {
+          item.addEventListener("click", () => {
+            const idx = Number.parseInt(item.dataset.idx);
+            const emails = JSON.parse(list.dataset.emails);
+            showEmail(emails[idx], item);
+          });
+        });
+
+        // Add click handlers for attachments
+        list.querySelectorAll(".attachment-badge").forEach((badge) => {
+          badge.addEventListener("click", (e) => {
+            e.stopPropagation();
+            showAttachment(badge.dataset.path);
+          });
+        });
+
+        // Show first email by default
+        if (data.emails.length > 0) {
+          showEmail(data.emails[0], list.querySelector(".email-item"));
+        }
+      } catch (err) {
+        console.error("Failed to load conversation:", err);
+        document.getElementById("emailList").innerHTML =
+          '<div class="empty-state">Failed to load conversation</div>';
+      }
+    }
+
+    // Show full email in preview pane
+    function showEmail(email, itemEl) {
+      // Highlight selected email
+      document
+        .querySelectorAll(".email-item")
+        .forEach((el) => el.classList.remove("active"));
+      if (itemEl) itemEl.classList.add("active");
+
+      document.getElementById("previewHeader").style.display = "block";
+      document.getElementById("previewTitle").textContent =
+        `Email from ${email.from}`;
+
+      const content = document.getElementById("previewContent");
+
+      // Use bodyHtml if available, otherwise bodyFull, otherwise bodyPreview
+      const bodyContent =
+        email.bodyHtml || email.bodyFull || email.bodyPreview || "(No content)";
+      const isHtml = email.bodyHtml && email.bodyHtml.includes("<");
+
+      const attachmentButtons = email.attachments
+        .filter((a) => a.localPath)
+        .map(
+          (a) =>
+            `<button class="att-btn" onclick="showAttachment('${a.localPath}')">${escapeHtml(a.name)}</button>`
+        )
+        .join(" ");
+
+      content.innerHTML = `
+        <div class="email-view">
+          <div class="email-header">
+            <div><strong>From:</strong> ${escapeHtml(email.from)}</div>
+            <div><strong>To:</strong> ${escapeHtml(email.to?.join(", ") || "")}</div>
+            <div><strong>Date:</strong> ${new Date(email.receivedAt).toLocaleString()}</div>
+            <div><strong>Subject:</strong> ${escapeHtml(email.subject)}</div>
+            ${attachmentButtons ? `<div class="att-buttons"><strong>Attachments:</strong> ${attachmentButtons}</div>` : ""}
+          </div>
+          <div class="email-body ${isHtml ? "html-body" : "text-body"}">
+            ${isHtml ? bodyContent : `<pre>${escapeHtml(bodyContent)}</pre>`}
+          </div>
+        </div>
+      `;
+    }
+
+    // Show attachment in preview pane
+    function showAttachment(filename) {
+      const url = `${API_BASE}/${currentArchive}/conversations/${currentConversation}/attachments/${encodeURIComponent(filename)}`;
+
+      document.getElementById("previewHeader").style.display = "block";
+      document.getElementById("previewTitle").textContent = filename;
+
+      const content = document.getElementById("previewContent");
+
+      if (filename.toLowerCase().endsWith(".pdf")) {
+        content.innerHTML = `<iframe class="pdf-viewer" src="${url}"></iframe>`;
+      } else {
+        content.innerHTML = `
+          <div class="attachment-list">
+            <a href="${url}" target="_blank" class="attachment-link">
+              <span class="icon">📄</span>
+              <div>
+                <div class="name">${escapeHtml(filename)}</div>
+                <div class="size">Click to download</div>
+              </div>
+            </a>
+          </div>
+        `;
+      }
+    }
+
+    function escapeHtml(str) {
+      if (!str) return "";
+      return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    // Event listeners
+    document.getElementById("archiveSelect").addEventListener("change", (e) => {
+      loadArchive(e.target.value);
+    });
+
+    // Initialize
+    loadArchives();
+    </script>
+  </body>
+</html>

@@ -1,6 +1,7 @@
 import { BUCKETS, uploadFile } from "@/lib/minio";
 import { GraphEmailClient } from "../client";
 import {
+  db,
   getAllMailboxes,
   getMailbox,
   getOrCreateMailbox,
@@ -175,8 +176,17 @@ async function syncMailboxFull(
         let storagePath: string | null = null;
         let pdfBuffer: Buffer | null = null;
 
-        // Download and upload PDF to MinIO
-        if (isPdf) {
+        // Check if attachment already uploaded (resume support)
+        const existingAtt = db
+          .query<{ storage_path: string | null }, [number, string]>(
+            "SELECT storage_path FROM attachments WHERE email_id = ? AND attachment_id = ?"
+          )
+          .get(emailId, att.id);
+
+        const alreadyUploaded = Boolean(existingAtt?.storage_path);
+
+        // Download and upload PDF to MinIO (skip if already uploaded)
+        if (isPdf && !alreadyUploaded) {
           try {
             pdfBuffer = await client.downloadAttachment(
               email.id,
@@ -200,6 +210,10 @@ async function syncMailboxFull(
               `Failed to upload ${att.name} to MinIO: ${uploadErr}`
             );
           }
+        } else if (alreadyUploaded) {
+          // Use existing storage info
+          storageBucket = BUCKETS.EMAIL_ATTACHMENTS;
+          storagePath = existingAtt?.storage_path ?? null;
         }
 
         const attData: InsertAttachmentData = {

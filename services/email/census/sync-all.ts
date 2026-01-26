@@ -36,6 +36,7 @@ const MS_PER_DAY = 24 * 60 * 60 * 1000;
 interface SyncAllOptions {
   mailboxes?: string[];
   since?: Date;
+  before?: Date; // Only emails before this date
   maxPerMailbox?: number;
   concurrency?: number;
   incremental?: boolean;
@@ -85,6 +86,7 @@ async function syncMailboxFull(
   client: GraphEmailClient,
   mailboxEmail: string,
   since: Date,
+  before: Date | undefined,
   maxEmails: number,
   extract: boolean,
   onProgress?: (progress: SyncProgress) => void
@@ -101,11 +103,17 @@ async function syncMailboxFull(
     reportProgress({ mailbox: mailboxEmail, phase: "fetching" });
 
     // Fetch emails from Graph API
-    const emails = await client.getAllEmailsPaginated(
+    let emails = await client.getAllEmailsPaginated(
       mailboxEmail,
       since,
       maxEmails
     );
+
+    // Filter by before date if specified
+    if (before) {
+      const beforeTime = before.getTime();
+      emails = emails.filter((e) => e.receivedDateTime.getTime() < beforeTime);
+    }
 
     reportProgress({
       mailbox: mailboxEmail,
@@ -305,6 +313,7 @@ export async function syncAllMailboxes(
   const {
     mailboxes = [...ALL_MAILBOXES],
     since = new Date(Date.now() - 365 * MS_PER_DAY), // Default: 1 year
+    before,
     maxPerMailbox = 50_000,
     concurrency = 3,
     incremental = false,
@@ -333,6 +342,7 @@ export async function syncAllMailboxes(
         client,
         mailboxEmail,
         effectiveSince,
+        before,
         maxPerMailbox,
         extract,
         onProgress
@@ -428,6 +438,7 @@ if (import.meta.main) {
   // Parse options
   const mailboxArg = args.find((a) => a.startsWith("--mailbox="));
   const sinceArg = args.find((a) => a.startsWith("--since="));
+  const beforeArg = args.find((a) => a.startsWith("--before="));
   const monthsArg = args.find((a) => a.startsWith("--months="));
   const limitArg = args.find((a) => a.startsWith("--limit="));
   const concurrencyArg = args.find((a) => a.startsWith("--concurrency="));
@@ -473,6 +484,10 @@ if (import.meta.main) {
     }
   }
 
+  if (beforeArg) {
+    options.before = new Date(beforeArg.split("=")[1]);
+  }
+
   if (limitArg) {
     const limit = Number.parseInt(limitArg.split("=")[1], 10);
     if (!Number.isNaN(limit)) {
@@ -492,6 +507,9 @@ if (import.meta.main) {
   console.log("=".repeat(60));
   console.log(
     `Since: ${(options.since ?? new Date(Date.now() - 365 * MS_PER_DAY)).toISOString().split("T")[0]}`
+  );
+  console.log(
+    `Before: ${options.before?.toISOString().split("T")[0] ?? "now"}`
   );
   console.log(
     `Mailboxes: ${(options.mailboxes ?? ALL_MAILBOXES).length} mailbox(es)`

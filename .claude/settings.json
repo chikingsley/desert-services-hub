@@ -3,13 +3,24 @@
   "enabledMcpjsonServers": [
     "desert-email",
     "desert-mondaycrm",
-    "desert-quoting"
+    "desert-quoting",
+    "desert-mistral"
   ],
   "permissions": {
-    "deny": ["Bash(rm:*)", "Bash(rm -rf:*)"],
     "allow": ["Bash(ls:*)"]
   },
   "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "uv run python .claude/hooks/block-anthropic-sdk.py"
+          }
+        ]
+      }
+    ],
     "PostToolUse": [
       {
         "matcher": "Edit|Write",

@@ -1,0 +1,105 @@
+[project]
+name = "mistral-mcp"
+version = "0.1.0"
+description = "Mistral Document AI MCP server with OCR, batch processing, and smart PDF handling"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "mcp[cli]>=1.9.0",
+    "mistralai>=1.6.0",
+    "pymupdf>=1.25.0",
+    "pydantic>=2.10.0",
+    "httpx>=0.28.0",
+    "python-dotenv>=1.2.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.25.0",
+    "pytest-dotenv>=0.5.0",
+    "ruff>=0.9.0",
+    "mypy>=1.14.0",
+]
+
+[project.scripts]
+mistral-mcp = "mistral_mcp.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/mistral_mcp"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+env_files = ["../../.env"]
+
+# --- Ruff Configuration ---
+[tool.ruff]
+target-version = "py312"
+line-length = 88
+src = ["src"]
+
+[tool.ruff.lint]
+extend-select = [
+    "F",    # Pyflakes - logical errors, undefined vars, unused imports
+    "W",    # PyCodeStyle warnings
+    "E",    # PyCodeStyle errors
+    "I",    # isort - import sorting
+    "UP",   # pyupgrade - modernize syntax for newer Python
+    "C4",   # flake8-comprehensions - better comprehensions
+    "FA",   # flake8-future-annotations - enforce `from __future__ import annotations`
+    "ISC",  # flake8-implicit-str-concat - string concatenation issues
+    "ICN",  # flake8-import-conventions - common import aliases
+    "RET",  # flake8-return - good return practices
+    "SIM",  # flake8-simplify - simplification rules
+    "TID",  # flake8-tidy-imports - import hygiene
+    "TC",   # flake8-type-checking - TYPE_CHECKING block enforcement
+    "PTH",  # flake8-use-pathlib - pathlib over os.path
+    "B",    # flake8-bugbear - common bugs and design problems
+    "A",    # flake8-builtins - shadowing builtins
+    "ASYNC", # flake8-async - async best practices
+    "S",    # flake8-bandit - security issues
+    "PL",   # pylint - additional checks
+    "PERF", # perflint - performance anti-patterns
+    "RUF",  # Ruff-specific rules
+]
+ignore = [
+    "S101",   # assert statements OK in tests
+    "PLR2004", # magic value comparisons OK
+    "PLR0913", # too many arguments - sometimes needed
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["mistral_mcp"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["S101", "PLR2004"]
+
+# --- MyPy Configuration ---
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_return_any = true
+warn_unused_ignores = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+module = ["pymupdf.*", "mcp.*", "mistralai.*"]
+ignore_missing_imports = true
+
+[tool.pydantic-mypy]
+init_forbid_extra = true
+init_typed = true
+warn_required_dynamic_aliases = true
+
+[dependency-groups]
+dev = [
+    "pytest-dotenv>=0.5.2",
+]

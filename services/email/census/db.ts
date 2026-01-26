@@ -26,6 +26,9 @@ db.run("PRAGMA journal_mode = WAL");
 // Enable foreign key constraints
 db.run("PRAGMA foreign_keys = ON");
 
+// Wait up to 30s for locks (handles concurrent access better)
+db.run("PRAGMA busy_timeout = 30000");
+
 // ============================================
 // Schema: Mailboxes
 // ============================================
@@ -171,6 +174,37 @@ try {
 // Add body_html column for original HTML (preserves links)
 try {
   db.run("ALTER TABLE emails ADD COLUMN body_html TEXT");
+} catch {
+  /* column already exists */
+}
+
+// Add domain extraction columns
+try {
+  db.run("ALTER TABLE emails ADD COLUMN from_domain TEXT");
+} catch {
+  /* column already exists */
+}
+
+try {
+  db.run("ALTER TABLE emails ADD COLUMN is_internal INTEGER DEFAULT 0");
+} catch {
+  /* column already exists */
+}
+
+try {
+  db.run("ALTER TABLE emails ADD COLUMN is_forwarded INTEGER DEFAULT 0");
+} catch {
+  /* column already exists */
+}
+
+try {
+  db.run("ALTER TABLE emails ADD COLUMN original_sender_email TEXT");
+} catch {
+  /* column already exists */
+}
+
+try {
+  db.run("ALTER TABLE emails ADD COLUMN original_sender_domain TEXT");
 } catch {
   /* column already exists */
 }

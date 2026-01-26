@@ -23,6 +23,7 @@ export const ALL_MAILBOXES = [
   "dustpermits@desertservices.net",
   "estimating@desertservices.net",
   "kendra@desertservices.net",
+  "kerin@desertservices.net",
   "jayson@desertservices.net",
   "jeff@desertservices.net",
   "jared@desertservices.net",
@@ -472,7 +473,9 @@ if (import.meta.main) {
   };
 
   if (mailboxArg) {
-    options.mailboxes = [mailboxArg.split("=")[1]];
+    // Support comma-separated mailboxes: --mailbox=kendra@...,kerin@...
+    const mailboxValue = mailboxArg.split("=")[1];
+    options.mailboxes = mailboxValue.split(",").map((m) => m.trim());
   }
 
   if (sinceArg) {

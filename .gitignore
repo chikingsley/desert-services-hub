@@ -62,3 +62,18 @@ services/monday/estimates.token-cache.json
 projects/*/data/
 services/monday/estimates/
 data/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+*.egg-info/
+
+# Reference/external repos
+*/_reference/

@@ -11,6 +11,19 @@
     "desert-quoting": {
       "command": "bun",
       "args": ["./services/quoting/mcp-server.ts"]
+    },
+    "desert-mistral": {
+      "command": "uv",
+      "args": [
+        "--directory",
+        "./services/mistral",
+        "run",
+        "mistral-mcp",
+        "serve"
+      ],
+      "env": {
+        "UV_ENV_FILE": "../../.env"
+      }
     }
   }
 }

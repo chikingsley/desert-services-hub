@@ -572,53 +572,23 @@ export function printMultiSignalStats(stats: MultiSignalLinkStats): void {
 if (import.meta.main) {
   const args = process.argv.slice(2);
   const limitArg = args.find((a) => a.startsWith("--limit="));
-  const limit = limitArg ? Number.parseInt(limitArg.split("=")[1], 10) : 1000;
+  const limit = limitArg ? Number.parseInt(limitArg.split("=")[1], 10) : 0; // 0 = no limit
 
-  // Check for multi-signal mode (default: true, use --llm for LLM mode)
-  const useLlmMode = args.includes("--llm");
-  const useMultiSignal = !useLlmMode;
+  console.log("Starting multi-signal project linking...\n");
+  console.log(limit > 0 ? `Limit: ${limit}` : "Limit: none (all emails)");
+  console.log("Signals: conversation > body > reply_chain\n");
 
-  if (useMultiSignal) {
-    console.log("Starting multi-signal project linking...\n");
-    console.log(`Limit: ${limit}`);
-    console.log("Mode: Multi-signal (fast, no LLM calls)");
-    console.log("Signals: conversation > body > sender > reply_chain\n");
+  const stats = linkEmailsMultiSignal({
+    limit: limit || Number.MAX_SAFE_INTEGER,
+    onProgress: (p) => {
+      if (p.processed % 500 === 0 || p.processed === p.total) {
+        const signalInfo = p.signal ? ` [${p.signal}]` : "";
+        console.log(
+          `Progress: ${p.processed}/${p.total} (${p.linked} linked)${signalInfo}`
+        );
+      }
+    },
+  });
 
-    const stats = linkEmailsMultiSignal({
-      limit,
-      onProgress: (p) => {
-        if (p.processed % 100 === 0 || p.processed === p.total) {
-          const signalInfo = p.signal ? ` [${p.signal}]` : "";
-          console.log(
-            `Progress: ${p.processed}/${p.total} (${p.linked} linked)${signalInfo}`
-          );
-        }
-      },
-    });
-
-    printMultiSignalStats(stats);
-  } else {
-    console.log("Starting LLM-based project linking...\n");
-    console.log(`Limit: ${limit}`);
-    console.log(`Board: ESTIMATING (${ESTIMATING_BOARD_ID})`);
-    console.log(`Linkable categories: ${LINKABLE_CATEGORIES.join(", ")}\n`);
-
-    linkAllEmails({
-      limit,
-      onProgress: (p) => {
-        if (p.processed % 25 === 0 || p.processed === p.total) {
-          console.log(
-            `Progress: ${p.processed}/${p.total} (${p.linked} linked)`
-          );
-        }
-      },
-    })
-      .then((stats) => {
-        printLinkStats(stats);
-      })
-      .catch((error) => {
-        console.error("Project linking failed:", error);
-        process.exit(1);
-      });
-  }
+  printMultiSignalStats(stats);
 }

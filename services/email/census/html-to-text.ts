@@ -5,10 +5,30 @@
  */
 
 /**
+ * Regex to find email addresses in angle brackets that HTMLRewriter might
+ * incorrectly interpret as HTML tags. We escape these before processing.
+ * Pattern matches: <email@domain.tld>
+ */
+const EMAIL_IN_ANGLES_REGEX =
+  /<([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})>/g;
+
+/**
+ * Pre-process HTML to escape email addresses in angle brackets.
+ * HTMLRewriter sees <email@domain.com> as an invalid tag and strips it.
+ * This converts them to &lt;email@domain.com&gt; so they survive processing.
+ */
+function escapeEmailAngles(html: string): string {
+  return html.replace(EMAIL_IN_ANGLES_REGEX, "&lt;$1&gt;");
+}
+
+/**
  * Extract plain text from HTML content.
  * Removes scripts, styles, and converts block elements to newlines.
  */
 export async function htmlToText(html: string): Promise<string> {
+  // Pre-process to preserve email addresses in angle brackets
+  const escapedHtml = escapeEmailAngles(html);
+
   let text = "";
   let skipDepth = 0;
 
@@ -52,7 +72,7 @@ export async function htmlToText(html: string): Promise<string> {
     });
 
   // HTMLRewriter works on Response objects
-  const response = new Response(html, {
+  const response = new Response(escapedHtml, {
     headers: { "Content-Type": "text/html" },
   });
   await rewriter.transform(response).text();

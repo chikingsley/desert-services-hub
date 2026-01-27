@@ -89,9 +89,50 @@ For each scope item in contract:
 
 ### Red Flags
 
-- [ ] "Assume responsibility for fines" → NEVER AGREE
+- [ ] "Assume responsibility for fines" → NEVER AGREE (but check scope - see below)
 - [ ] Inspection quantity not specified → needs redline
 - [ ] BMP install without mobilization → FLAG
+
+### Scoped vs Unscoped Liability (Important!)
+
+**NOT a red flag** - liability scoped to your own work:
+- "Subcontractor responsible for fines **due to Subcontractor's operations**"
+- "Subcontractor shall provide SWPPP for **Subcontractor's work area**"
+- "If violation issued **due to operations performed by Subcontractor**..."
+
+This is standard "be responsible for yourself" language. You break it, you buy it.
+
+**ACTUAL red flag** - unscoped liability:
+- "Subcontractor assumes responsibility for all fines"
+- "Subcontractor shall be liable for any fines issued on project"
+- No qualifier limiting to subcontractor's own actions
+
+**Pattern:** Before flagging fines/liability language, check for scope qualifiers like "Subcontractor's work area" or "due to Subcontractor's operations."
+
+**Example:** See `diamond-view-ballpark/notes.md` - Section 55 looks bad but is OK due to scope.
+
+### At-Risk Bids (Exception to All Rules)
+
+Some contracts have **terrible language everywhere** but are **intentionally accepted** because they're at-risk bids.
+
+**Characteristics:**
+- Large contract value ($100K+ vs typical $10-20K)
+- Large contract size (100+ pages)
+- Bad terms throughout - "responsible for this, responsible for that"
+- But the bid price was set HIGH ENOUGH to absorb the risk
+
+**Why normal red flags don't apply:**
+- Risk was **priced in** to the bid
+- Conscious business decision, not an oversight
+- Money justifies accepting tougher terms
+
+**Validation approach:**
+- Still flag issues (for awareness)
+- But note "may be acceptable if at-risk bid"
+- Check contract value - large contracts may be intentional
+- Prompt for confirmation: "Is this an at-risk bid?"
+
+**Example:** See `sidney-village/notes.md` - $500K contract, 160+ pages, bad language but priced for risk.
 
 ### Location Rules
 
@@ -117,6 +158,24 @@ For each scope item in contract:
 - Tucson = no rock, different rates
 - Rate discrepancy between our estimate and their rates
 
+### Diamond View at Ballpark (Work Authorization)
+
+- SWPPP/Dust Control scope from Catamount Constructors
+- **Key learning:** Section 55 has fines/liability language that LOOKS bad but is OK
+- Liability is scoped to "Subcontractor's work area" - standard self-responsibility
+- Example of false positive on fines language - need scope qualifier check
+- See `diamond-view-ballpark/notes.md` for full analysis
+
+### Sidney Village (Subcontract - At-Risk Bid)
+
+- ~$500K contract with Weis Builders
+- 160+ pages - too large for standard OCR processing
+- **Key learning:** Contract language is "horrible everywhere" but ACCEPTED
+- This is an **at-risk bid** - price was set high enough to cover the risk
+- Example of when all red flags are intentionally accepted for business reasons
+- Scale matters: $500K vs $10-20K changes the calculus
+- See `sidney-village/notes.md` for full analysis
+
 ### Common Issues
 
 - Inspection quantity not specified in contract
@@ -129,9 +188,12 @@ For each scope item in contract:
 
 ## TODO
 
-- Zod schema for extraction output
-- Zod schema for reconciliation output
-- Hook: Tucson projects flag rock entrance as OUT OF SCOPE
-- Hook: "Assume responsibility for fines" = NEVER AGREE
-- Hook: BMP install requires min 1 mobilization
-- Tucson rate card (can't use Maricopa defaults)
+- [x] Zod schema for extraction output → `schemas/extraction-output.ts`
+- [x] Zod schema for reconciliation output → `schemas/reconciliation.ts`
+- [x] Hook: Tucson projects flag rock entrance as OUT OF SCOPE → `workflow/validate.ts`
+- [x] Hook: "Assume responsibility for fines" = NEVER AGREE → `workflow/validate.ts`
+- [x] Hook: BMP install requires min 1 mobilization → `workflow/validate.ts`
+- [ ] Tucson rate card (can't use Maricopa defaults)
+- [ ] Refine fines check to distinguish scoped vs unscoped liability
+- [ ] Add "at-risk bid" flag to contract metadata (bypasses red flags)
+- [ ] Add contract value context to validation (large contracts may be intentional)

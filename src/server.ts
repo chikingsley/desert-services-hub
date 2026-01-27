@@ -40,7 +40,7 @@ import { handleMondayWebhook } from "./api/webhooks";
 import homepage from "./frontend/index.html";
 
 const server = serve({
-  port: process.env.PORT || 3000,
+  port: process.env.PORT || 4747,
 
   routes: {
     // ===========================================
@@ -135,6 +135,8 @@ const server = serve({
     "/quotes/*": homepage,
     "/takeoffs": homepage,
     "/takeoffs/*": homepage,
+    "/contracts": homepage,
+    "/contracts/*": homepage,
     "/catalog": homepage,
     "/settings": homepage,
   },
@@ -151,8 +153,12 @@ const server = serve({
       return new Response(staticFile);
     }
 
-    // SPA fallback - serve homepage for client-side routing
-    return new Response(homepage as unknown as BodyInit);
+    // SPA fallback - serve index.html for client-side routing
+    // Note: HTMLBundle can't be returned from fetch(), only from routes
+    const indexHtml = file("./src/frontend/index.html");
+    return new Response(indexHtml, {
+      headers: { "Content-Type": "text/html" },
+    });
   },
 
   // Development features

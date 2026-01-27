@@ -61,12 +61,14 @@ mcp__desert-mondaycrm__search_items({
 ### 3. Evaluate Results
 
 For each match found, check:
+
 - Does the project name fuzzy-match?
 - Does the contractor/account match?
 - Is the amount close to the contract value?
 - Does the scope align?
 
 Score matches:
+
 - **High confidence**: 2+ fields match
 - **Medium confidence**: 1 field matches, close amount
 - **Low confidence**: Only fuzzy name match
@@ -76,12 +78,14 @@ Score matches:
 Output a summary:
 
 **Contract Details:**
+
 - Project: {name}
 - Contractor: {name}
 - Amount: ${value}
 - Address: {address}
 
 **Best Match(es) in Monday:**
+
 - {Item name} (ID: {id}) - {confidence level}
   - Amount: ${estimate value}
   - Contractor: {account}
@@ -109,6 +113,7 @@ Run ALL search strategies in parallel and compile results.
 **Input:** Contract PDF for "AMS Mesa" with BC Construction Group, $17,845
 
 **Searches run:**
+
 1. `find_best_matches("AMS Mesa")`
 2. `search_items("BC Construction")`
 3. `search_items("Mesa")` or `search_items("221 W 6th")`

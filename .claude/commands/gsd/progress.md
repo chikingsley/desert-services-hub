@@ -15,7 +15,6 @@ Check project progress, summarize recent work and what's ahead, then intelligent
 Provides situational awareness before continuing work.
 </objective>
 
-
 <process>
 
 <step name="verify">
@@ -137,6 +136,7 @@ grep -l "status: diagnosed" .planning/phases/[current-phase-dir]/*-UAT.md 2>/dev
 ```
 
 Track:
+
 - `uat_with_gaps`: UAT.md files with status "diagnosed" (gaps need fixing)
 
 **Step 2: Route based on counts**
@@ -245,6 +245,7 @@ UAT.md exists with gaps (diagnosed issues). User needs to plan fixes.
 **Step 3: Check milestone status (only when phase complete)**
 
 Read ROADMAP.md and identify:
+
 1. Current phase number
 2. All phase numbers in the current milestone section
 

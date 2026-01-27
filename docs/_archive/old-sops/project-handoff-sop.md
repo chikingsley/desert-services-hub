@@ -16,7 +16,7 @@ Use this process after:
 
 Confirm all information is collected. Use checklist:
 
-* *Required for ALL projects:**
+- *Required for ALL projects:**
 
 - [ ] Customer/GC name
 - [ ] Project name and address
@@ -26,7 +26,7 @@ Confirm all information is collected. Use checklist:
 - [ ] Email approval to proceed
 - [ ] Signed estimate or contract
 
-* *Service-specific (check what applies):**
+- *Service-specific (check what applies):**
 
 SWPPP:
 

@@ -21,7 +21,7 @@ import {
 } from "@azure/msal-node";
 import { Client } from "@microsoft/microsoft-graph-client";
 import { TokenCredentialAuthenticationProvider } from "@microsoft/microsoft-graph-client/authProviders/azureTokenCredentials";
-import { getLogoAttachment, wrapWithSignature } from "./templates/index";
+import { getLogoAttachment, wrapWithSignature } from "./email-templates/index";
 import { fileCachePlugin } from "./token-cache";
 import type {
   EmailAttachment,
@@ -327,7 +327,7 @@ export class GraphEmailClient {
         .orderby("receivedDateTime desc")
         .top(effectiveLimit)
         .select(
-          "id,subject,receivedDateTime,from,toRecipients,ccRecipients,body"
+          "id,subject,receivedDateTime,from,toRecipients,ccRecipients,body,categories"
         )
         .get();
 
@@ -401,7 +401,7 @@ export class GraphEmailClient {
         .orderby("receivedDateTime desc")
         .top(Math.min(batchSize, maxEmails))
         .select(
-          "id,subject,receivedDateTime,from,toRecipients,ccRecipients,body,hasAttachments,conversationId"
+          "id,subject,receivedDateTime,from,toRecipients,ccRecipients,body,hasAttachments,conversationId,categories"
         )
         .get();
 
@@ -482,7 +482,7 @@ export class GraphEmailClient {
         .orderby("receivedDateTime desc")
         .top(Math.min(batchSize, maxEmails))
         .select(
-          "id,subject,receivedDateTime,from,toRecipients,ccRecipients,body,hasAttachments,conversationId"
+          "id,subject,receivedDateTime,from,toRecipients,ccRecipients,body,hasAttachments,conversationId,categories"
         )
         .get();
 
@@ -572,6 +572,7 @@ export class GraphEmailClient {
         bodyContent: body?.content ?? "",
         bodyType: body?.contentType === "html" ? "html" : "text",
         conversationId: (msg.conversationId as string) ?? undefined,
+        categories: (msg.categories as string[]) ?? [],
       };
     } catch (error) {
       console.warn("Error parsing message:", error);
@@ -697,7 +698,7 @@ export class GraphEmailClient {
         .search(`"${options.query}"`)
         .top(fetchLimit)
         .select(
-          "id,subject,receivedDateTime,from,toRecipients,ccRecipients,body,hasAttachments,conversationId"
+          "id,subject,receivedDateTime,from,toRecipients,ccRecipients,body,hasAttachments,conversationId,categories"
         )
         .get();
 
@@ -780,7 +781,7 @@ export class GraphEmailClient {
         .filter(options.filter)
         .top(limit)
         .select(
-          "id,subject,receivedDateTime,from,toRecipients,ccRecipients,body,hasAttachments,conversationId"
+          "id,subject,receivedDateTime,from,toRecipients,ccRecipients,body,hasAttachments,conversationId,categories"
         )
         .get();
 
@@ -819,7 +820,7 @@ export class GraphEmailClient {
       const msg = await client
         .api(`${basePath}/messages/${messageId}`)
         .select(
-          "id,subject,receivedDateTime,from,toRecipients,ccRecipients,body,hasAttachments,conversationId"
+          "id,subject,receivedDateTime,from,toRecipients,ccRecipients,body,hasAttachments,conversationId,categories"
         )
         .get();
 
@@ -1150,7 +1151,7 @@ export class GraphEmailClient {
         .orderby("receivedDateTime desc")
         .top(limit)
         .select(
-          "id,subject,receivedDateTime,from,toRecipients,ccRecipients,body,hasAttachments,conversationId"
+          "id,subject,receivedDateTime,from,toRecipients,ccRecipients,body,hasAttachments,conversationId,categories"
         )
         .get();
 
@@ -1212,7 +1213,7 @@ export class GraphEmailClient {
         .search(`"${options.query}"`)
         .top(fetchLimit)
         .select(
-          "id,subject,receivedDateTime,from,toRecipients,ccRecipients,body,hasAttachments,conversationId"
+          "id,subject,receivedDateTime,from,toRecipients,ccRecipients,body,hasAttachments,conversationId,categories"
         )
         .get();
 
@@ -1278,7 +1279,7 @@ export class GraphEmailClient {
         .filter(options.filter)
         .top(limit)
         .select(
-          "id,subject,receivedDateTime,from,toRecipients,ccRecipients,body,hasAttachments,conversationId"
+          "id,subject,receivedDateTime,from,toRecipients,ccRecipients,body,hasAttachments,conversationId,categories"
         )
         .get();
 
@@ -1316,7 +1317,7 @@ export class GraphEmailClient {
       const msg = await client
         .api(`/me/messages/${messageId}`)
         .select(
-          "id,subject,receivedDateTime,from,toRecipients,ccRecipients,body,hasAttachments,conversationId"
+          "id,subject,receivedDateTime,from,toRecipients,ccRecipients,body,hasAttachments,conversationId,categories"
         )
         .get();
 
@@ -1669,7 +1670,7 @@ export class GraphEmailClient {
         .api(messagesPath)
         .filter(`conversationId eq '${conversationId}'`)
         .select(
-          "id,subject,receivedDateTime,from,toRecipients,ccRecipients,body,hasAttachments,conversationId"
+          "id,subject,receivedDateTime,from,toRecipients,ccRecipients,body,hasAttachments,conversationId,categories"
         )
         .get();
 
@@ -2218,6 +2219,84 @@ export class GraphEmailClient {
   }
 
   // ============================================================================
+  // Categories (Outlook color-coded labels)
+  // ============================================================================
+
+  /**
+   * Set categories (color-coded labels) on an email.
+   *
+   * Replaces all existing categories on the message with the provided list.
+   * Categories must exist in the user's master categories list in Outlook.
+   *
+   * @param messageId - The unique ID of the email message
+   * @param categories - Array of category names to apply (e.g., ["Signed Contract", "Needs Action"])
+   * @param userId - Email address of the mailbox (required for app auth)
+   * @returns Promise that resolves when categories are updated
+   *
+   * @example
+   * await client.setCategoryOnEmail('AAMkAGI2...', ['Signed Contract'], 'user@example.com');
+   *
+   * @example
+   * // Remove all categories
+   * await client.setCategoryOnEmail('AAMkAGI2...', [], 'user@example.com');
+   */
+  async setCategoryOnEmail(
+    messageId: string,
+    categories: string[],
+    userId?: string
+  ): Promise<void> {
+    const client = this.getClient();
+    const basePath = this.getBasePath(userId);
+
+    try {
+      await client
+        .api(`${basePath}/messages/${messageId}`)
+        .patch({ categories });
+    } catch (error) {
+      console.error("Error setting email categories:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get the master categories list for a user's mailbox.
+   *
+   * Returns all available categories (color-coded labels) that can be applied
+   * to messages in this mailbox.
+   *
+   * @param userId - Email address of the mailbox (required for app auth)
+   * @returns Promise resolving to array of category objects with displayName and color
+   *
+   * @example
+   * const categories = await client.getMasterCategories('user@example.com');
+   * // [{ displayName: 'Signed Contract', color: 'preset9' }, ...]
+   */
+  async getMasterCategories(
+    userId?: string
+  ): Promise<Array<{ displayName: string; color: string }>> {
+    const client = this.getClient();
+    const basePath = this.getBasePath(userId);
+
+    try {
+      const response = await client
+        .api(`${basePath}/outlook/masterCategories`)
+        .get();
+
+      if (!response?.value) {
+        return [];
+      }
+
+      return response.value.map((cat: Record<string, unknown>) => ({
+        displayName: cat.displayName as string,
+        color: (cat.color as string) ?? "none",
+      }));
+    } catch (error) {
+      console.error("Error fetching master categories:", error);
+      throw error;
+    }
+  }
+
+  // ============================================================================
   // Drafts & Folders (for testing and advanced workflows)
   // ============================================================================
 
@@ -2246,6 +2325,12 @@ export class GraphEmailClient {
     body: string;
     bodyType?: "html" | "text";
     to?: Array<{ email: string; name?: string }>;
+    cc?: Array<{ email: string; name?: string }>;
+    attachments?: Array<{
+      name: string;
+      contentType: string;
+      contentBytes: string;
+    }>;
     userId?: string;
   }): Promise<{ id: string; subject: string }> {
     const client = this.getClient();
@@ -2265,10 +2350,29 @@ export class GraphEmailClient {
       }));
     }
 
+    if (options.cc?.length) {
+      message.ccRecipients = options.cc.map((r) => ({
+        emailAddress: { address: r.email, name: r.name ?? r.email },
+      }));
+    }
+
     try {
       const response = await client.api(`${basePath}/messages`).post(message);
+      const draftId = response.id as string;
+
+      if (options.attachments?.length) {
+        for (const att of options.attachments) {
+          await client.api(`${basePath}/messages/${draftId}/attachments`).post({
+            "@odata.type": "#microsoft.graph.fileAttachment",
+            name: att.name,
+            contentType: att.contentType,
+            contentBytes: att.contentBytes,
+          });
+        }
+      }
+
       return {
-        id: response.id as string,
+        id: draftId,
         subject: response.subject as string,
       };
     } catch (error) {

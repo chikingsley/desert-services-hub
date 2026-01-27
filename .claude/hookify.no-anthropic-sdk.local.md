@@ -14,6 +14,7 @@ conditions:
 You're running inside Claude Code. We don't use the Anthropic SDK directly.
 
 **What to do instead:**
+
 - Use a Claude Code **subagent** (Task tool with appropriate subagent_type)
 - Use **`claude -p`** to run Claude Code as a subprocess
 - Use a **skill** for domain-specific LLM tasks

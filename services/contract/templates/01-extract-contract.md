@@ -41,18 +41,21 @@ Extract the following from the contract. Include page number / section for each.
 ## Contacts
 
 **Project Manager:**
+
 - Name:
 - Phone:
 - Email:
 - Page/Section:
 
 **Superintendent:**
+
 - Name:
 - Phone:
 - Email:
 - Page/Section:
 
 **Billing Contact:**
+
 - Name:
 - Phone:
 - Email:
@@ -79,24 +82,29 @@ Page/Section:
 Extract limits - verification happens in 03-check-insurance.md.
 
 **General Liability:**
+
 - Required Limit: $ ________ per occurrence
 - Required Aggregate: $ ________
 - Page/Section:
 
 **Umbrella / Excess Liability:**
+
 - Required Limit: $ ________
 - Page/Section:
 
 **Auto Liability:**
+
 - Required Limit: $ ________
 - Page/Section:
 
 **Workers Compensation:**
+
 - Required: [Yes / No]
 - Employer's Liability Limit: $ ________
 - Page/Section:
 
 **Additional Requirements:**
+
 - COI Required: [Yes / No]
 - Additional Insured Endorsement: [Yes / No]
 - Waiver of Subrogation: [Yes / No]
@@ -104,6 +112,7 @@ Extract limits - verification happens in 03-check-insurance.md.
 - Page/Section:
 
 **Bonding:**
+
 - Performance Bond Required: [Yes / No]
 - Payment Bond Required: [Yes / No]
 - Bond Amount: $ ________

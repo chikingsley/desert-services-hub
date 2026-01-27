@@ -26,9 +26,11 @@ dodge service (what is this)
 database of all the builders that have this
 
 - -
+
 relationship building, going onsite, and make contact with as many people as possible, and
 
 project manager - smoetimes
+
 - -
 
 cases - should be checking where we are having failures. tracking issues.
@@ -36,6 +38,7 @@ cases - should be checking where we are having failures. tracking issues.
 manager a customer at a high level and manage departments.
 
 Maps - the main thing on mondaycrm that they use.
+
 - -> compliance go
 maybe set it up for the sales guys? (look into it)
 - -> most important thing

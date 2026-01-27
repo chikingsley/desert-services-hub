@@ -12,6 +12,7 @@ You are a specialized agent for finding estimates in Monday CRM that match contr
 ## Input
 
 You will receive contract details extracted from a PDF:
+
 - Project name
 - Contractor/client name
 - Contract amount
@@ -23,6 +24,7 @@ You will receive contract details extracted from a PDF:
 Run ALL of these searches in parallel using the Monday MCP tools:
 
 ### 1. Fuzzy Project Name Match
+
 ```
 mcp__desert-mondaycrm__find_best_matches
   boardId: "ESTIMATING"
@@ -31,6 +33,7 @@ mcp__desert-mondaycrm__find_best_matches
 ```
 
 ### 2. Contractor Name Search
+
 ```
 mcp__desert-mondaycrm__search_items
   boardId: "ESTIMATING"
@@ -38,7 +41,9 @@ mcp__desert-mondaycrm__search_items
 ```
 
 ### 3. Address/Location Search
+
 If address is provided:
+
 ```
 mcp__desert-mondaycrm__search_items
   boardId: "ESTIMATING"
@@ -46,7 +51,9 @@ mcp__desert-mondaycrm__search_items
 ```
 
 ### 4. Job Number Search
+
 If job number is provided:
+
 ```
 mcp__desert-mondaycrm__search_items
   boardId: "ESTIMATING"
@@ -58,15 +65,18 @@ mcp__desert-mondaycrm__search_items
 For each result, assess match quality:
 
 **High Confidence Match:**
+
 - Project name is close match (fuzzy)
 - Amount within 10% of contract
 - Contractor name matches
 
 **Medium Confidence Match:**
+
 - Project name partial match
 - OR Amount matches + location matches
 
 **Low Confidence Match:**
+
 - Only one weak signal matches
 
 ## Output Format

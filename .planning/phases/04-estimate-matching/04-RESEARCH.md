@@ -9,6 +9,7 @@
 Phase 4 implements fuzzy matching between extracted contract data and Monday.com ESTIMATING board items. The goal is to link incoming contracts to their original estimates automatically when confidence is high (>0.8) and present top candidates for human selection when confidence is low.
 
 The existing codebase already has substantial infrastructure for this:
+
 1. **Monday client** (`services/monday/client.ts`) with `findBestMatches()` and `calculateSimilarity()` functions
 2. **MCP server** (`services/monday/mcp-server.ts`) exposing `find_best_matches` tool
 3. **Contract-match skill** (`.claude/skills/contract-match/SKILL.md`) defining the matching workflow
@@ -46,6 +47,7 @@ The established libraries/tools for this domain:
 | Single-field matching | Multi-field weighted scoring | Multi-field (project + contractor) increases accuracy significantly |
 
 **Installation:**
+
 ```bash
 # No new dependencies needed - all functionality exists
 ```
@@ -74,6 +76,7 @@ services/
 **When to use:** Every match attempt between contract and estimate.
 
 **Example:**
+
 ```typescript
 // Source: Derived from existing calculateSimilarity() + requirements
 import { calculateSimilarity } from "@/services/monday/client";
@@ -129,6 +132,7 @@ function calculateMatchScore(
 **When to use:** When determining whether to auto-select or present options.
 
 **Example:**
+
 ```typescript
 // Source: Derived from requirements MATCH-03, MATCH-04
 type MatchResult =
@@ -175,6 +179,7 @@ async function findEstimateMatch(
 **When to use:** When searching Monday board for matches.
 
 **Example:**
+
 ```typescript
 // Source: Existing contract-match-agent.md pattern
 import { findBestMatches, searchItems, getItemsRich } from "@/services/monday/client";
@@ -237,6 +242,7 @@ async function searchAndScore(
 **When to use:** After a match is confirmed (auto or human-selected).
 
 **Example:**
+
 ```typescript
 // Source: Existing lib/db/index.ts patterns
 import { db } from "@/lib/db";
@@ -311,6 +317,7 @@ Problems that look simple but have existing solutions:
 **Why it happens:** Contractors often use different name variations (legal name vs. DBA, abbreviations, etc.).
 
 **How to avoid:**
+
 - Use word-overlap similarity, not exact matching
 - Score contractor match separately and use as confirmation signal, not primary filter
 - Consider first-word matching as fallback (e.g., "BC" matches "BC Construction Group")
@@ -324,6 +331,7 @@ Problems that look simple but have existing solutions:
 **Why it happens:** Estimators use abbreviations; contracts use full legal names.
 
 **How to avoid:**
+
 - The existing word-overlap algorithm handles this by matching individual words
 - "Mesa" matches across both, giving partial similarity
 - Consider adding common abbreviation mappings if this becomes a frequent issue
@@ -337,6 +345,7 @@ Problems that look simple but have existing solutions:
 **Why it happens:** Threshold set too low to avoid manual selection, but results in incorrect matches.
 
 **How to avoid:**
+
 - Start with conservative 0.8 threshold for auto-match
 - Log all auto-matches with full details for review
 - Track false positive rate and adjust threshold based on data
@@ -351,6 +360,7 @@ Problems that look simple but have existing solutions:
 **Why it happens:** Data entry inconsistency in Monday.com; some estimates lack contractor info.
 
 **How to avoid:**
+
 - Check if contractor field is populated before including in score
 - Fall back to project-name-only scoring when contractor missing
 - Flag matches made without contractor confirmation
@@ -364,6 +374,7 @@ Problems that look simple but have existing solutions:
 **Why it happens:** Large boards with thousands of items; multiple searches in quick succession.
 
 **How to avoid:**
+
 - The existing `getItems()` auto-paginates with PAGE_SIZE=500
 - Consider caching board items with short TTL (5 minutes) if doing many matches
 - Use `findBestMatches()` which pre-filters using name search before scoring
@@ -555,6 +566,7 @@ function formatCandidatesForSelection(
 | Sequential searches | Parallel search strategies | Always best practice | Faster matching, better coverage |
 
 **Deprecated/outdated:**
+
 - **string-similarity npm package:** Archived in 2023, no longer maintained. Use existing `calculateSimilarity()` instead.
 - **Full Levenshtein implementation:** Character-level edit distance is less suitable for construction project names with abbreviations.
 
@@ -580,21 +592,25 @@ Things that couldn't be fully resolved:
 ## Sources
 
 ### Primary (HIGH confidence)
+
 - Existing codebase: `services/monday/client.ts` - `calculateSimilarity()`, `findBestMatches()` implementation
 - Existing codebase: `services/monday/mcp-server.ts` - `find_best_matches` tool definition
 - Existing codebase: `.claude/skills/contract-match/SKILL.md` - Matching workflow
 - Existing codebase: `services/monday/types.ts` - BOARD_IDS, ESTIMATING_COLUMNS
 
 ### Secondary (MEDIUM confidence)
+
 - [Fuse.js Documentation](https://www.fusejs.io/) - Fuzzy search patterns, threshold configuration
 - [String Similarity Algorithms](https://medium.com/@appaloosastore/string-similarity-algorithms-compared-3f7b4d12f0ff) - Algorithm comparison
 
 ### Tertiary (LOW confidence)
+
 - [string-similarity GitHub](https://github.com/aceakash/string-similarity) - Archived project, Dice coefficient reference only
 
 ## Metadata
 
 **Confidence breakdown:**
+
 - Standard stack: HIGH - All components already exist in codebase
 - Architecture: HIGH - Extends existing patterns with proven Monday client
 - Pitfalls: MEDIUM - Based on construction industry domain knowledge + existing skills documentation

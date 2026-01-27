@@ -3,7 +3,14 @@
  * Uses app-only authentication (client credentials)
  */
 import { ClientSecretCredential } from "@azure/identity";
-import { Client } from "@microsoft/microsoft-graph-client";
+import {
+  Client,
+  FileUpload,
+  type LargeFileUploadSession,
+  LargeFileUploadTask,
+  type PageCollection,
+  PageIterator,
+} from "@microsoft/microsoft-graph-client";
 import { TokenCredentialAuthenticationProvider } from "@microsoft/microsoft-graph-client/authProviders/azureTokenCredentials";
 import type {
   SharePointConfig,
@@ -22,6 +29,12 @@ import type {
  */
 const DEFAULT_SITE_PATH = "sites/DataDrive";
 const DEFAULT_DRIVE_NAME = "Documents"; // "Shared Documents" appears as "Documents" in API
+
+/** Simple PUT upload limit (Graph API caps at 250MB, we use 4MB threshold for reliability) */
+const LARGE_FILE_THRESHOLD = 4 * 1024 * 1024;
+
+/** Upload session chunk size — 5MB (must be multiple of 320KB) */
+const UPLOAD_CHUNK_SIZE = 5 * 320 * 1024;
 
 export class SharePointClient {
   private readonly client: Client;
@@ -84,7 +97,7 @@ export class SharePointClient {
   // ============================================================================
 
   /**
-   * List files in a folder on the default drive
+   * List files in a folder on the default drive (auto-paginates)
    */
   async listFiles(folderPath = "/"): Promise<SharePointItem[]> {
     const driveId = await this.getDefaultDriveId();
@@ -95,7 +108,7 @@ export class SharePointClient {
   }
 
   /**
-   * Search files on the default drive
+   * Search files on the default drive (auto-paginates)
    */
   async search(query: string): Promise<SharePointItem[]> {
     const driveId = await this.getDefaultDriveId();
@@ -111,7 +124,8 @@ export class SharePointClient {
   }
 
   /**
-   * Upload a file to the default drive
+   * Upload a file to the default drive.
+   * Automatically uses upload sessions for files > 4MB.
    */
   async upload(
     folderPath: string,
@@ -119,15 +133,57 @@ export class SharePointClient {
     content: Buffer
   ): Promise<SharePointItem> {
     const driveId = await this.getDefaultDriveId();
+
+    if (content.length > LARGE_FILE_THRESHOLD) {
+      return this.uploadLargeFile(driveId, folderPath, fileName, content);
+    }
+
     return this.uploadFile(driveId, folderPath, fileName, content);
   }
 
   /**
-   * Create a folder on the default drive
+   * Create a folder on the default drive (idempotent — returns existing folder if it exists)
    */
   async mkdir(parentPath: string, folderName: string): Promise<SharePointItem> {
     const driveId = await this.getDefaultDriveId();
     return this.createFolder(driveId, parentPath, folderName);
+  }
+
+  /**
+   * Create a full nested folder path on the default drive (idempotent).
+   * Each segment is created if it doesn't exist.
+   *
+   * @example
+   * await sp.ensureFolder("Customer Projects/Active/W/Weis Builders/The Verge");
+   */
+  async ensureFolder(fullPath: string): Promise<SharePointItem> {
+    const segments = fullPath.split("/").filter(Boolean);
+    let currentPath = "";
+    let lastItem: SharePointItem | undefined;
+
+    for (const segment of segments) {
+      lastItem = await this.mkdir(currentPath || "/", segment);
+      currentPath = currentPath ? `${currentPath}/${segment}` : segment;
+    }
+
+    if (!lastItem) {
+      throw new Error(`Cannot create empty folder path: "${fullPath}"`);
+    }
+
+    return lastItem;
+  }
+
+  /**
+   * Check if a file or folder exists at the given path
+   */
+  async exists(itemPath: string): Promise<boolean> {
+    const driveId = await this.getDefaultDriveId();
+    try {
+      await this.client.api(`/drives/${driveId}/root:/${itemPath}`).get();
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   /**
@@ -172,13 +228,13 @@ export class SharePointClient {
   }
 
   /**
-   * Search for SharePoint sites
+   * Search for SharePoint sites (auto-paginates)
    */
   async searchSites(query = "*"): Promise<SharePointSite[]> {
-    const response = await this.client.api(`/sites?search=${query}`).get();
-    return (response.value ?? []).map((s: Record<string, unknown>) =>
-      this.parseSite(s)
-    );
+    const response: PageCollection = await this.client
+      .api(`/sites?search=${encodeURIComponent(query)}`)
+      .get();
+    return this.collectPages(response, (s) => this.parseSite(s));
   }
 
   /**
@@ -214,30 +270,26 @@ export class SharePointClient {
   }
 
   /**
-   * List items in a drive's root folder
+   * List items in a drive's root folder (auto-paginates)
    */
   async listDriveItems(driveId: string): Promise<SharePointItem[]> {
-    const response = await this.client
+    const response: PageCollection = await this.client
       .api(`/drives/${driveId}/root/children`)
       .get();
-    return (response.value ?? []).map((i: Record<string, unknown>) =>
-      this.parseItem(i)
-    );
+    return this.collectPages(response, (i) => this.parseItem(i));
   }
 
   /**
-   * List items in a specific folder
+   * List items in a specific folder (auto-paginates)
    */
   async listFolderItems(
     driveId: string,
     folderPath: string
   ): Promise<SharePointItem[]> {
-    const response = await this.client
+    const response: PageCollection = await this.client
       .api(`/drives/${driveId}/root:/${folderPath}:/children`)
       .get();
-    return (response.value ?? []).map((i: Record<string, unknown>) =>
-      this.parseItem(i)
-    );
+    return this.collectPages(response, (i) => this.parseItem(i));
   }
 
   /**
@@ -303,7 +355,7 @@ export class SharePointClient {
   }
 
   /**
-   * Upload a file to a drive
+   * Upload a small file (< 4MB) to a drive via simple PUT
    */
   async uploadFile(
     driveId: string,
@@ -320,7 +372,40 @@ export class SharePointClient {
   }
 
   /**
-   * Create a folder
+   * Upload a large file (> 4MB) using a resumable upload session.
+   * Chunks are 1.6MB (5 * 320KB) for reliability.
+   */
+  async uploadLargeFile(
+    driveId: string,
+    folderPath: string,
+    fileName: string,
+    content: Buffer
+  ): Promise<SharePointItem> {
+    const isRoot = this.isRootPath(folderPath);
+    const filePath = isRoot ? fileName : `${folderPath}/${fileName}`;
+    const sessionUrl = `/drives/${driveId}/root:/${filePath}:/createUploadSession`;
+
+    const session: LargeFileUploadSession =
+      await LargeFileUploadTask.createUploadSession(this.client, sessionUrl, {
+        item: {
+          "@microsoft.graph.conflictBehavior": "replace",
+          name: fileName,
+        },
+      });
+
+    const fileObj = new FileUpload(content, fileName, content.length);
+    const task = new LargeFileUploadTask(this.client, fileObj, session, {
+      rangeSize: UPLOAD_CHUNK_SIZE,
+    });
+
+    const result = await task.upload();
+    const body = result.responseBody as Record<string, unknown>;
+    return this.parseItem(body);
+  }
+
+  /**
+   * Create a folder (idempotent — uses "rename" conflict behavior which
+   * returns the existing folder without error if it already exists)
    */
   async createFolder(
     driveId: string,
@@ -335,7 +420,7 @@ export class SharePointClient {
     const response = await this.client.api(apiPath).post({
       name: folderName,
       folder: {},
-      "@microsoft.graph.conflictBehavior": "fail",
+      "@microsoft.graph.conflictBehavior": "rename",
     });
 
     return this.parseItem(response);
@@ -353,15 +438,14 @@ export class SharePointClient {
   }
 
   /**
-   * Search for files in a drive
+   * Search for files in a drive (auto-paginates)
    */
   async searchFiles(driveId: string, query: string): Promise<SharePointItem[]> {
-    const response = await this.client
-      .api(`/drives/${driveId}/root/search(q='${query}')`)
+    const escaped = query.replace(/'/g, "''");
+    const response: PageCollection = await this.client
+      .api(`/drives/${driveId}/root/search(q='${escaped}')`)
       .get();
-    return (response.value ?? []).map((i: Record<string, unknown>) =>
-      this.parseItem(i)
-    );
+    return this.collectPages(response, (i) => this.parseItem(i));
   }
 
   /**
@@ -379,17 +463,17 @@ export class SharePointClient {
   }
 
   /**
-   * Get items from a SharePoint list
+   * Get items from a SharePoint list (auto-paginates)
    */
   async getListItems(
     siteId: string,
     listId: string
   ): Promise<SharePointListItem[]> {
-    const response = await this.client
+    const response: PageCollection = await this.client
       .api(`/sites/${siteId}/lists/${listId}/items`)
       .expand("fields")
       .get();
-    return (response.value ?? []).map((i: Record<string, unknown>) => ({
+    return this.collectPages(response, (i) => ({
       id: i.id as string,
       fields: (i.fields as Record<string, unknown>) ?? {},
       createdDateTime: i.createdDateTime as string,
@@ -428,6 +512,33 @@ export class SharePointClient {
     await this.client
       .api(`/sites/${siteId}/lists/${listId}/items/${itemId}/fields`)
       .patch(fields);
+  }
+
+  // ============================================================================
+  // Private helpers
+  // ============================================================================
+
+  /**
+   * Collect all pages from a paginated Graph API response.
+   * Uses the SDK's PageIterator to follow @odata.nextLink automatically.
+   */
+  private async collectPages<T>(
+    response: PageCollection,
+    transform: (item: Record<string, unknown>) => T
+  ): Promise<T[]> {
+    const items: T[] = [];
+
+    const iterator = new PageIterator(
+      this.client,
+      response,
+      (data: Record<string, unknown>) => {
+        items.push(transform(data));
+        return true; // continue iterating
+      }
+    );
+
+    await iterator.iterate();
+    return items;
   }
 
   private parseSite(site: Record<string, unknown>): SharePointSite {

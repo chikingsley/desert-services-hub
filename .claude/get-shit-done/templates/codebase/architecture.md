@@ -104,6 +104,7 @@ Template for `.planning/codebase/ARCHITECTURE.md` - captures conceptual code org
 ```
 
 <good_examples>
+
 ```markdown
 # Architecture
 
@@ -219,6 +220,7 @@ Template for `.planning/codebase/ARCHITECTURE.md` - captures conceptual code org
 *Architecture analysis: 2025-01-20*
 *Update when major patterns change*
 ```
+
 </good_examples>
 
 <guidelines>
@@ -232,6 +234,7 @@ Template for `.planning/codebase/ARCHITECTURE.md` - captures conceptual code org
 - Cross-cutting concerns (logging, auth, validation)
 
 **What does NOT belong here:**
+
 - Exhaustive file listings (that's STRUCTURE.md)
 - Technology choices (that's STACK.md)
 - Line-by-line code walkthrough (defer to code reading)
@@ -241,6 +244,7 @@ Template for `.planning/codebase/ARCHITECTURE.md` - captures conceptual code org
 Include file paths as concrete examples of abstractions. Use backtick formatting: `src/services/user.ts`. This makes the architecture document actionable for Claude when planning.
 
 **When filling this template:**
+
 - Read main entry points (index, server, main)
 - Identify layers by reading imports/dependencies
 - Trace a typical request/command execution
@@ -248,6 +252,7 @@ Include file paths as concrete examples of abstractions. Use backtick formatting
 - Keep descriptions conceptual, not mechanical
 
 **Useful for phase planning when:**
+
 - Adding new features (where does it fit in the layers?)
 - Refactoring (understanding current patterns)
 - Identifying where to add code (which layer handles X?)

@@ -106,13 +106,13 @@ These work without user sign-in (daemon/service apps).
 
 ### App-Only Auth (Client Credentials)
 
-- ✅ Read emails from any mailbox
-- ✅ Update email categories (tag/categorize)
-- ✅ Search emails
-- ✅ Download attachments
-- ❌ Send emails (Mail.Send app permission not granted)
+* ✅ Read emails from any mailbox
+* ✅ Update email categories (tag/categorize)
+* ✅ Search emails
+* ✅ Download attachments
+* ❌ Send emails (Mail.Send app permission not granted)
 
 ### Requires Delegated Auth (User Sign-In)
 
-- Microsoft To Do tasks (no app permission exists for Tasks)
-- Send emails (unless you grant Mail.Send app permission)
+* Microsoft To Do tasks (no app permission exists for Tasks)
+* Send emails (unless you grant Mail.Send app permission)

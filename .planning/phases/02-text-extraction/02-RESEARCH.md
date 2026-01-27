@@ -39,11 +39,13 @@ The established libraries/tools for this domain:
 | Per-page storage | Single text blob | Per-page enables citations; single blob is simpler but loses page info |
 
 **Installation:**
+
 ```bash
 bun add @mistralai/mistralai unpdf
 ```
 
 Or if using existing pdfjs-dist:
+
 ```bash
 bun add @mistralai/mistralai
 ```
@@ -51,6 +53,7 @@ bun add @mistralai/mistralai
 ## Architecture Patterns
 
 ### Recommended Project Structure
+
 ```
 services/
   contract/
@@ -74,6 +77,7 @@ services/
 **When to use:** Every PDF that enters the pipeline.
 
 **Example:**
+
 ```typescript
 // Source: Combination of unpdf docs + Mistral OCR docs
 import { extractText, getDocumentProxy } from "unpdf";
@@ -133,6 +137,7 @@ export async function extractText(filePath: string): Promise<ExtractionResult> {
 **When to use:** When digital extraction fails or yields insufficient text.
 
 **Example:**
+
 ```typescript
 // Source: https://docs.mistral.ai/capabilities/document_ai/basic_ocr
 import { Mistral } from "@mistralai/mistralai";
@@ -181,6 +186,7 @@ export async function extractWithMistralOcr(
 **When to use:** After extraction, before agent processing.
 
 **Example:**
+
 ```typescript
 // Source: Existing lib/db/index.ts pattern
 import { db } from "@/lib/db";
@@ -425,6 +431,7 @@ export async function processContract(filePath: string): Promise<void> {
 | Full-document text blob | Per-page storage | 2025 | Enables page-level citations for AI agents |
 
 **Deprecated/outdated:**
+
 - **pdf-parse npm package**: Unmaintained, use unpdf instead
 - **Tesseract.js for production**: Low accuracy compared to cloud AI OCR
 - **Jina AI for OCR**: Works but requirement specifies Mistral; Jina better for web scraping
@@ -451,6 +458,7 @@ Things that couldn't be fully resolved:
 ## Sources
 
 ### Primary (HIGH confidence)
+
 - [Mistral OCR API Documentation](https://docs.mistral.ai/capabilities/document_ai/basic_ocr) - API reference, parameters, response format
 - [Mistral OCR Endpoint Reference](https://docs.mistral.ai/api/endpoint/ocr) - Complete API schema
 - [Mistral TypeScript SDK](https://github.com/mistralai/client-ts) - Official SDK, OCR examples
@@ -458,18 +466,21 @@ Things that couldn't be fully resolved:
 - Existing codebase: `services/jina/pdf/smart-triage.ts` - Current PDF handling patterns
 
 ### Secondary (MEDIUM confidence)
+
 - [Mistral OCR 3 Announcement](https://mistral.ai/news/mistral-ocr-3) - Features, pricing, benchmarks
 - [unpdf npm](https://www.npmjs.com/package/unpdf) - Version info, installation
 - [DeepWiki OCR Examples](https://deepwiki.com/mistralai/client-ts/5.1-ocr-examples) - TypeScript code patterns
 - [Strapi PDF Libraries Comparison](https://strapi.io/blog/7-best-javascript-pdf-parsing-libraries-nodejs-2025) - Library comparison
 
 ### Tertiary (LOW confidence)
+
 - [Mistral OCR Review - Parsio](https://parsio.io/blog/mistral-ocr-test-review/) - Third-party testing (validate claims with official docs)
 - [Medium Mistral OCR Review](https://medium.com/intelligent-document-insights/mistral-ocr-reviewed-711765a9c503) - Real-world issues (hallucinations, table problems)
 
 ## Metadata
 
 **Confidence breakdown:**
+
 - Standard stack: HIGH - Mistral SDK well-documented, unpdf actively maintained
 - Architecture: HIGH - Patterns follow existing codebase conventions, verified with official docs
 - Pitfalls: MEDIUM - Based on third-party reviews and general OCR experience; validate in testing

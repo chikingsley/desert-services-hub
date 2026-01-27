@@ -40,6 +40,7 @@ import {
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 import { GraphEmailClient } from "./client";
+import { wrapWithSignature } from "./email-templates/index";
 import { GraphGroupsClient } from "./groups";
 import {
   formatEmailList,
@@ -722,12 +723,16 @@ Domain is @desertservices.net (NOT .us, NOT .com)`,
   // ========== DRAFT & FOLDER TOOLS ==========
   {
     name: "create_draft",
-    description: "Create a draft email (not sent). Returns draft ID.",
+    description:
+      "Create a draft email (not sent). Auto-adds signature + logo unless skipSignature is true. Returns draft ID.",
     inputSchema: {
       type: "object" as const,
       properties: {
         subject: { type: "string", description: "Email subject" },
-        body: { type: "string", description: "Email body" },
+        body: {
+          type: "string",
+          description: "Email body (signature is added automatically)",
+        },
         bodyType: {
           type: "string",
           enum: ["html", "text"],
@@ -742,7 +747,45 @@ Domain is @desertservices.net (NOT .us, NOT .com)`,
           },
           description: "Recipients (optional for drafts)",
         },
+        cc: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: { email: { type: "string" }, name: { type: "string" } },
+            required: ["email"],
+          },
+          description: "CC recipients (optional)",
+        },
+        attachments: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              name: { type: "string", description: "Filename" },
+              contentType: {
+                type: "string",
+                description: "MIME type (e.g., application/pdf)",
+              },
+              contentBytes: {
+                type: "string",
+                description: "Base64-encoded file content",
+              },
+            },
+            required: ["name", "contentType", "contentBytes"],
+          },
+          description: "File attachments (base64 encoded)",
+        },
+        filePaths: {
+          type: "array",
+          items: { type: "string" },
+          description:
+            "Local file paths to attach (alternative to base64 attachments)",
+        },
         userId: { type: "string", description: "Mailbox to create draft in" },
+        skipSignature: {
+          type: "boolean",
+          description: "Skip auto-signature + logo (default: false)",
+        },
       },
       required: ["subject", "body", "userId"],
     },
@@ -1428,22 +1471,83 @@ const handlers: Record<string, ToolHandler> = {
   // ========== DRAFT & FOLDER TOOLS (App Auth) ==========
 
   async create_draft(args) {
-    const { subject, body, bodyType, to, userId } = args as {
-      subject: string;
-      body: string;
-      bodyType?: "html" | "text";
-      to?: Array<{ email: string; name?: string }>;
-      userId: string;
-    };
-    const client = getAppClient();
-    const draft = await client.createDraft({
+    const {
       subject,
       body,
       bodyType,
       to,
+      cc,
+      attachments,
+      filePaths,
+      userId,
+      skipSignature,
+    } = args as {
+      subject: string;
+      body: string;
+      bodyType?: "html" | "text";
+      to?: Array<{ email: string; name?: string }>;
+      cc?: Array<{ email: string; name?: string }>;
+      attachments?: Array<{
+        name: string;
+        contentType: string;
+        contentBytes: string;
+      }>;
+      filePaths?: string[];
+      userId: string;
+      skipSignature?: boolean;
+    };
+    const client = getAppClient();
+
+    let finalBody = body;
+    let finalBodyType = bodyType;
+
+    if (skipSignature !== true) {
+      finalBody = await wrapWithSignature(body, { embedLogo: true });
+      finalBodyType = "html";
+    }
+
+    // Build attachments list from both base64 and file paths
+    const allAttachments: Array<{
+      name: string;
+      contentType: string;
+      contentBytes: string;
+    }> = [];
+
+    if (attachments?.length) {
+      allAttachments.push(...attachments);
+    }
+
+    if (filePaths?.length) {
+      for (const filePath of filePaths) {
+        const file = Bun.file(filePath);
+        if (!(await file.exists())) {
+          return text(`File not found: ${filePath}`);
+        }
+        const buffer = await file.arrayBuffer();
+        const base64 = Buffer.from(buffer).toString("base64");
+        const name = filePath.split("/").pop() ?? "attachment";
+        const contentType = file.type || "application/octet-stream";
+        allAttachments.push({ name, contentType, contentBytes: base64 });
+      }
+    }
+
+    const draft = await client.createDraft({
+      subject,
+      body: finalBody,
+      bodyType: finalBodyType,
+      to,
+      cc,
+      attachments: allAttachments.length > 0 ? allAttachments : undefined,
       userId,
     });
-    return text(`Draft created: "${draft.subject}" (ID: ${draft.id})`);
+
+    const attInfo =
+      allAttachments.length > 0
+        ? ` with ${allAttachments.length} attachment(s)`
+        : "";
+    return text(
+      `Draft created: "${draft.subject}"${attInfo} (ID: ${draft.id})`
+    );
   },
 
   async send_draft(args) {

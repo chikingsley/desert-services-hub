@@ -10,7 +10,11 @@
  */
 
 import { GraphEmailClient } from "./client";
-import { getLogoAttachment, getTemplate, listTemplates } from "./templates";
+import {
+  getLogoAttachment,
+  getTemplate,
+  listTemplates,
+} from "./email-templates";
 
 const config = {
   azureTenantId: process.env.AZURE_TENANT_ID ?? "",

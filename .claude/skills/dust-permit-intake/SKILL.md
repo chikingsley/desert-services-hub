@@ -13,6 +13,7 @@ Process a dust permit request from initial ask through permit creation.
 ## Overview
 
 This skill orchestrates the full dust permit intake workflow, connecting:
+
 - **Email** (request source, attachments)
 - **Notion** (project/task tracking)
 - **Monday** (estimate lookup)
@@ -175,6 +176,7 @@ ELSE:
 | Parcel Number | No | Plans/County lookup |
 
 If any required field is missing:
+
 1. Check all downloaded attachments
 2. Search related emails for the info
 3. If still missing, flag in Notion task
@@ -182,6 +184,7 @@ If any required field is missing:
 ## Integration Points
 
 ### Email (desert-email MCP)
+
 ```text
 Tools:
 - search-email: Find request and related emails
@@ -192,6 +195,7 @@ Tools:
 ```
 
 ### Notion (Notion MCP)
+
 ```bash
 Databases:
 - Projects: 2e0c1835-5bb2-8197-b0f5-ff284f1d1f19
@@ -206,6 +210,7 @@ Actions:
 ```
 
 ### Monday (desert-mondaycrm MCP)
+
 ```bash
 Boards:
 - DUST_PERMITS: 9850624269
@@ -217,6 +222,7 @@ Actions:
 ```
 
 ### SQLite (find-permit skill)
+
 ```bash
 Database: server/src/db/company-permits.sqlite
 
@@ -228,6 +234,7 @@ Queries:
 ```
 
 ### Auto-Permit API
+
 ```bash
 Base URL: http://localhost:47822 (or deployed URL)
 
@@ -248,8 +255,9 @@ Endpoints:
 **User:** "Do a dust permit for ABC Construction"
 
 **Agent:**
+
 1. Search Notion for "ABC Construction" → Not found
-2. Search email for "ABC Construction dust permit" → Found request from john@abcconstruction.com
+2. Search email for "ABC Construction dust permit" → Found request from <john@abcconstruction.com>
 3. Deep search related emails → Found NOI attachment, grading plan
 4. Download and extract NOI → Got site contact, address, 2.5 acres
 5. Query SQLite for "ABC Construction" → No existing permits (new company)
@@ -258,7 +266,7 @@ Endpoints:
 8. Assess: All required fields present → Ready
 9. POST to auto-permit API with new-company flow
 10. Update Notion task: "Submitted - Pending approval"
-11. Send confirmation email to john@abcconstruction.com
+11. Send confirmation email to <john@abcconstruction.com>
 
 ## Gaps and Follow-ups
 

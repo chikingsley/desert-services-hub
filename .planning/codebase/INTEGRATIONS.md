@@ -5,6 +5,7 @@
 ## APIs & External Services
 
 **Email & Communications:**
+
 - Microsoft Graph (Email) - Search, read, send emails in Office 365 mailboxes
   - SDK/Client: `@microsoft/microsoft-graph-client` 3.0.7
   - Implementation: `services/email/client.ts` (GraphEmailClient)
@@ -13,6 +14,7 @@
   - MCP Server: `services/email/mcp-server.ts` - Exposes 25+ email tools
 
 **Project Management:**
+
 - Monday.com CRM - Manage boards, items, columns for project tracking
   - SDK/Client: Custom GraphQL client in `services/monday/client.ts`
   - API URL: `https://api.monday.com/v2`
@@ -23,6 +25,7 @@
   - MCP Server: `services/monday/mcp-server.ts` - Board and item operations
 
 **Documentation & Knowledge Base:**
+
 - Notion API - Query databases, create/update pages, file uploads
   - SDK/Client: Custom HTTP wrapper in `services/notion/client.ts`
   - API Version: 2022-06-28
@@ -32,6 +35,7 @@
   - MCP Server: `services/notion/mcp-server.ts`
 
 **File Storage & Collaboration:**
+
 - Microsoft Graph (SharePoint) - Access DataDrive site and shared documents
   - SDK/Client: `services/sharepoint/client.ts` (SharePointClient)
   - Implementation: Graph API with app-only auth
@@ -42,6 +46,7 @@
   - Operations: List files, search, download, upload
 
 **AI & Content Analysis:**
+
 - Google Gemini API - Vision, text generation, structured extraction
   - SDK: `@google/genai` 1.38.0
   - Models used:
@@ -53,6 +58,7 @@
   - Usage: PDF extraction, structured data generation with JSON schema responses
 
 **Web Search & Content Extraction:**
+
 - Jina API - Search and content extraction for company enrichment
   - Usage: `services/enrichment/jina-gemini.ts`
   - Endpoint: Implied REST API for search and content reading
@@ -60,6 +66,7 @@
   - Workflow: Search for company info → Extract URLs → Feed to Gemini for structured extraction
 
 **Data Enrichment:**
+
 - People Data Labs (PDL) - Person and company enrichment
   - SDK: `peopledatalabs` 14.1.1
   - Client: `services/enrichment/pdl/client.ts`
@@ -69,6 +76,7 @@
   - Usage: Enrich contractor and client data with company info
 
 **Automation & Workflow:**
+
 - n8n - Low-code workflow automation platform
   - Client: `services/n8n/client.ts`
   - API: REST API with workflow management
@@ -80,6 +88,7 @@
 ## Data Storage
 
 **Databases:**
+
 - SQLite via `bun:sqlite`
   - Connection: `lib/db/index.ts` - Native Bun driver
   - Path: Configurable via `DATABASE_PATH` env var (defaults to `lib/db/app.db`)
@@ -88,6 +97,7 @@
   - Access pattern: Direct SQL queries from API handlers (no ORM)
 
 **File Storage:**
+
 - MinIO S3-compatible object storage
   - Client: `minio` 8.0.6
   - Config: `lib/minio.ts`
@@ -100,6 +110,7 @@
   - Implementation: Bucket initialization with auto-create, file upload with content type
 
 **Caching:**
+
 - Database caching for Monday.com items
   - Table: `monday_cache` in SQLite
   - Fields: board_id, board_title, name, group_id, column_values, synced_at
@@ -108,6 +119,7 @@
 ## Authentication & Identity
 
 **Auth Providers:**
+
 - Azure Active Directory (AAD) / Microsoft Entra
   - Multi-tenant support via `AZURE_TENANT_ID`
   - Two auth modes:
@@ -119,6 +131,7 @@
   - Env vars: `AZURE_TENANT_ID`, `AZURE_CLIENT_ID`, `AZURE_CLIENT_SECRET`
 
 **API Keys (Stateless):**
+
 - Monday.com: Bearer token in Authorization header
 - Notion: Bearer token with custom "Notion-Version" header
 - Google Gemini: API key in request payload
@@ -129,9 +142,11 @@
 ## Monitoring & Observability
 
 **Error Tracking:**
+
 - None detected - No Sentry, Bugsnag, or similar integrations
 
 **Logs:**
+
 - Console-based logging via `console.log` and `console.error`
 - MCP server logs: Unstructured messages to stdout
 - Webhook logging: Basic error logging in `src/api/webhooks.ts`
@@ -140,16 +155,19 @@
 ## CI/CD & Deployment
 
 **Hosting:**
+
 - Not specified in codebase - Deployment target unknown
 - Likely: Self-hosted or cloud VM (considering n8n and MinIO setup)
 
 **CI Pipeline:**
+
 - No GitHub Actions, GitLab CI, or other CI config detected
 - Local build/test: `bun run check` and `bun test`
 
 ## Environment Configuration
 
 **Required env vars (critical):**
+
 - `AZURE_TENANT_ID` - Azure AD tenant ID for Microsoft Graph
 - `AZURE_CLIENT_ID` - Azure AD app ID
 - `AZURE_CLIENT_SECRET` - Azure AD client secret
@@ -160,6 +178,7 @@
 - `DATABASE_PATH` - SQLite database file location
 
 **Optional env vars:**
+
 - `JINA_API_KEY` - Jina web search and extraction
 - `PEOPLE_DATA_LABS_API_KEY` - PDL enrichment
 - `N8N_API_KEY`, `N8N_BASE_URL` - n8n workflow automation
@@ -168,6 +187,7 @@
 - Multiple Monday.com board IDs
 
 **Secrets location:**
+
 - `.env` file (local development)
 - Environment variables (production deployment)
 - Bun auto-loads `.env` on startup
@@ -175,12 +195,14 @@
 ## Webhooks & Callbacks
 
 **Incoming Webhooks:**
+
 - Monday.com → `POST /api/webhooks/monday`
   - Challenge verification for webhook registration
   - Event types: `change_name` (updates item name in cache)
   - Signature verification: None detected (security concern)
 
 **Outgoing Webhooks:**
+
 - n8n workflows can be triggered via webhook
 - Desert Services sends to n8n via HTTP POST to workflow URLs
 
@@ -197,6 +219,7 @@ All services expose tools via Model Context Protocol servers:
 - `services/contract/file-automation/docusign/mcp-server.ts` - Contract signing automation
 
 **MCP Tool Pattern:**
+
 - Tools accept Zod-validated JSON schema inputs
 - Schema conversion: `zod-to-json-schema` for tool definitions
 - Error handling: Clear error messages on schema validation failure
@@ -205,6 +228,7 @@ All services expose tools via Model Context Protocol servers:
 ## Rate Limiting & Quotas
 
 **Known limits:**
+
 - Notion API: 350ms delay between requests (enforced in client)
 - Monday.com: 500-item page size with auto-pagination
 - People Data Labs: Varies by endpoint (10-100 calls/min on free tier)

@@ -3,6 +3,7 @@
 Configuration options for `.planning/` directory behavior.
 
 <config_schema>
+
 ```json
 "planning": {
   "commit_docs": true,
@@ -19,11 +20,13 @@ Configuration options for `.planning/` directory behavior.
 <commit_docs_behavior>
 
 **When `commit_docs: true` (default):**
+
 - Planning files committed normally
 - SUMMARY.md, STATE.md, ROADMAP.md tracked in git
 - Full history of planning decisions preserved
 
 **When `commit_docs: false`:**
+
 - Skip all `git add`/`git commit` for `.planning/` files
 - User must add `.planning/` to `.gitignore`
 - Useful for: OSS contributions, client projects, keeping planning private
@@ -54,11 +57,13 @@ fi
 <search_behavior>
 
 **When `search_gitignored: false` (default):**
+
 - Standard rg behavior (respects .gitignore)
 - Direct path searches work: `rg "pattern" .planning/` finds files
 - Broad searches skip gitignored: `rg "pattern"` skips `.planning/`
 
 **When `search_gitignored: true`:**
+
 - Add `--no-ignore` to broad rg searches that should include `.planning/`
 - Only needed when searching entire repo and expecting `.planning/` matches
 
@@ -71,6 +76,7 @@ fi
 To use uncommitted mode:
 
 1. **Set config:**
+
    ```json
    "planning": {
      "commit_docs": false,
@@ -79,11 +85,13 @@ To use uncommitted mode:
    ```
 
 2. **Add to .gitignore:**
+
    ```
    .planning/
    ```
 
 3. **Existing tracked files:** If `.planning/` was previously tracked:
+
    ```bash
    git rm -r --cached .planning/
    git commit -m "chore: stop tracking planning docs"

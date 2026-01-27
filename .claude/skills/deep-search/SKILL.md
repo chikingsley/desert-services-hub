@@ -10,6 +10,7 @@ Deep search finds ALL related information about a topic by iteratively expanding
 ## When To Use
 
 Use deep search when:
+
 - Starting from a seed email that references prior work, projects, or people
 - The user needs to understand the full history of a project or relationship
 - Documents (estimates, POs, contracts, permits) need to be found and compared
@@ -75,6 +76,7 @@ Organize findings into structured output:
 ### Phase 5: LOOP (if needed)
 
 If gaps remain:
+
 1. Generate new search queries from gaps
 2. Return to CRAWL phase
 3. Repeat until sufficient information gathered or max iterations reached
@@ -95,6 +97,7 @@ Given a seed email or query:
 ### Mailbox Selection
 
 Search mailboxes based on context:
+
 - **Estimating questions**: Search estimators (jared@, etc.)
 - **Contracts/compliance**: Search coordinators (chi@, jayson@, etc.)
 - **Field operations**: Search field staff
@@ -206,6 +209,7 @@ mcp__desert-email__get_email_thread({ messageId, userId })
 ### Reference Files
 
 For detailed patterns and edge cases:
+
 - **`references/algorithm.md`** - Detailed algorithm walkthrough with examples
 - **`references/patterns.md`** - Common search patterns by document type
 

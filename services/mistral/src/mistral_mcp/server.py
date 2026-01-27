@@ -367,6 +367,216 @@ async def identify_document(
         Path(tmp_path).unlink(missing_ok=True)
 
 
+# Schema for chunk_document - structure detection
+STRUCTURE_SCHEMA: dict[str, object] = {
+    "type": "object",
+    "properties": {
+        "high_level": {
+            "type": "object",
+            "properties": {
+                "notes": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "Key observations about structure or OCR quality",
+                },
+                "location": {
+                    "type": ["string", "null"],
+                    "description": "City/region (Tucson, Phoenix, etc.)",
+                },
+                "gc_company": {
+                    "type": "string",
+                    "description": "General contractor name",
+                },
+                "project_name": {"type": "string", "description": "Project name"},
+                "document_type": {
+                    "type": "string",
+                    "enum": ["contract", "LOI", "change_order", "estimate", "other"],
+                },
+                "has_exhibits": {"type": "boolean"},
+                "has_numbered_sections": {"type": "boolean"},
+                "has_sov": {
+                    "type": "boolean",
+                    "description": "Has Schedule of Values with line items and prices",
+                },
+            },
+            "required": ["gc_company", "project_name", "document_type"],
+        },
+        "chunks": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "notes": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "Chunk-specific warnings or quality issues",
+                    },
+                    "id": {
+                        "type": "string",
+                        "description": "Unique ID (exhibit_a, exhibit_a_item_8)",
+                    },
+                    "parent_id": {
+                        "type": ["string", "null"],
+                        "description": "Parent chunk ID if nested, null if top-level",
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "exhibit",
+                            "section",
+                            "numbered_item",
+                            "sov_line",
+                            "signature_block",
+                            "other",
+                        ],
+                    },
+                    "label": {
+                        "type": "string",
+                        "description": "Human-readable label",
+                    },
+                    "page_start": {
+                        "type": "integer",
+                        "description": "Starting page number",
+                    },
+                    "page_end": {
+                        "type": "integer",
+                        "description": "Ending page number",
+                    },
+                    "content": {
+                        "type": "string",
+                        "description": "The actual text content of this chunk",
+                    },
+                },
+                "required": ["id", "type", "label", "content"],
+            },
+        },
+    },
+    "required": ["high_level", "chunks"],
+}
+
+CHUNK_PROMPT = """Analyze this construction document and extract its structure.
+
+Follow the workflow: INGEST → UNDERSTAND → CHUNK → EXTRACT → VALIDATE → REPORT.
+Late chunking: understand first, then chunk. Don’t chunk blindly.
+
+1) UNDERSTAND (high-level scan):
+   - Page count and overall structure (exhibits, numbered sections, SOV)
+   - Document type and key parties
+   - OCR quality (if text is low quality or scanned, note it)
+
+2) CHUNK (structured breakdown):
+   - Exhibits (A, B, C...) = chunk per exhibit
+   - Numbered items in exhibits = nested chunk under parent exhibit
+   - Schedule of Values (SOV) = chunk per line item
+   - Sections with headers = chunk per section
+   - Signature blocks = own chunk
+   - If structure is unclear, use semantic sections but keep them labeled
+
+For each chunk, include:
+- id: Unique identifier (exhibit_a, exhibit_a_item_8, sov_line_1)
+- parent_id: Parent chunk if nested, null if top-level
+- type: exhibit, section, numbered_item, sov_line, signature_block, or other
+- label: Human-readable label
+- page_start/page_end: Page numbers
+- content: The actual text content
+- notes: Any OCR/structure issues for this chunk
+
+Be thorough - capture ALL content. Include full text of each chunk."""
+
+
+@mcp.tool()
+async def chunk_document(
+    ctx: MistralContext,
+    file_path: str,
+    pages: int | None = None,
+) -> str:
+    """
+    Analyze document structure and split into chunks with context.
+
+    Returns hierarchical chunks where each chunk knows its parent context.
+    Use this for systematic validation - process each chunk independently
+    while preserving knowledge of where it came from.
+
+    Args:
+        ctx: MCP context (injected automatically)
+        file_path: Path to the PDF file
+        pages: Max pages to process (default: all)
+
+    Returns:
+        JSON with high_level metadata and array of chunks with parent context.
+
+    Example output:
+        {
+            "high_level": {
+                "location": "Tucson",
+                "gc_company": "A.R. Mays",
+                "project_name": "Sprouts Rita Ranch",
+                "document_type": "LOI",
+                "has_exhibits": true,
+                "has_numbered_sections": true,
+                "has_sov": false
+            },
+            "chunks": [
+                {
+                    "id": "exhibit_a",
+                    "parent_id": null,
+                    "type": "exhibit",
+                    "label": "Exhibit A - Scope of Work",
+                    "page_start": 3,
+                    "page_end": 5,
+                    "content": "..."
+                },
+                {
+                    "id": "exhibit_a_item_8",
+                    "parent_id": "exhibit_a",
+                    "type": "numbered_item",
+                    "label": "Item 8 - SWPPP Preparation",
+                    "page_start": 3,
+                    "page_end": 3,
+                    "content": "Contractor shall prepare SWPPP..."
+                }
+            ]
+        }
+    """
+    source = Path(file_path)
+    client = get_client(ctx)
+
+    if not source.exists():
+        raise FileNotFoundError(f"File not found: {file_path}")
+
+    # Get page count and determine how many to process
+    info = get_pdf_info(str(source))
+    actual_pages = info.page_count if pages is None else min(pages, info.page_count)
+
+    # If processing subset of pages, slice to temp file
+    if actual_pages < info.page_count:
+        with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
+            tmp_path = tmp.name
+        extract_pages(str(source), 1, actual_pages, tmp_path)
+        doc_path = tmp_path
+    else:
+        doc_path = str(source)
+        tmp_path = None
+
+    try:
+        # Use structured extraction with our schema
+        result_json = await client.extract_structured(
+            CHUNK_PROMPT,
+            STRUCTURE_SCHEMA,
+            schema_name="document_chunks",
+            document_path=doc_path,
+        )
+
+        logger.info(f"Chunked {source.name}: {actual_pages} pages processed")
+
+        return result_json
+
+    finally:
+        # Cleanup temp file if we created one
+        if tmp_path:
+            Path(tmp_path).unlink(missing_ok=True)
+
+
 def main() -> None:
     """Run the MCP server."""
     logger.info("Starting Mistral Document AI MCP server...")

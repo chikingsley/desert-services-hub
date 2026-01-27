@@ -145,6 +145,7 @@ Update STATE.md to reflect the new phase:
 1. Read `.planning/STATE.md`
 2. Under "## Current Position" → "**Next Phase:**" add reference to new phase
 3. Under "## Accumulated Context" → "### Roadmap Evolution" add entry:
+
    ```
    - Phase {N} added: {description}
    ```
@@ -182,6 +183,7 @@ Project state updated: .planning/STATE.md
 
 ---
 ```
+
 </step>
 
 </process>

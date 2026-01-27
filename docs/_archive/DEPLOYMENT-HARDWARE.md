@@ -34,6 +34,7 @@ This document compares hardware options for self-hosted deployment of Desert Ser
 **Best for**: Future AI features, local LLM inference, overkill for current needs but future-proof.
 
 **Sources**:
+
 - [NVIDIA DGX Spark](https://www.nvidia.com/en-us/products/workstations/dgx-spark/)
 - [DGX Spark Hardware Docs](https://docs.nvidia.com/dgx/dgx-spark/hardware.html)
 - [Micro Center Listing](https://www.microcenter.com/product/699008/nvidia-dgx-spark)
@@ -59,6 +60,7 @@ This document compares hardware options for self-hosted deployment of Desert Ser
 **Best for**: macOS ecosystem, creative workflows, Docker support via Colima/OrbStack.
 
 **Sources**:
+
 - [Apple Mac Studio Specs](https://www.apple.com/mac-studio/specs/)
 - [Apple Newsroom](https://www.apple.com/newsroom/2025/03/apple-unveils-new-mac-studio-the-most-powerful-mac-ever/)
 
@@ -83,6 +85,7 @@ This document compares hardware options for self-hosted deployment of Desert Ser
 **Best for**: Budget option, still extremely capable, good Docker performance.
 
 **Sources**:
+
 - [Apple Mac Studio](https://www.apple.com/mac-studio/)
 - [EveryMac Comparison](https://everymac.com/systems/apple/mac-studio/mac-studio-faq/differences-between-mac-studio-m3-ultra-m4-max-2025.html)
 

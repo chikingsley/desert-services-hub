@@ -7,12 +7,14 @@ Common patterns for different types of research tasks.
 **Trigger:** "What do we know about [project]?" or "Find everything on [project]"
 
 **Search Strategy:**
+
 1. Search project name across all team mailboxes
 2. Search client/GC name
 3. Search site address
 4. Look for: estimates, POs, contracts, permits, change orders
 
 **Key Documents:**
+
 - Estimate (original pricing)
 - Work Order / PO (approved scope)
 - Contract (terms, insurance requirements)
@@ -21,6 +23,7 @@ Common patterns for different types of research tasks.
 - Invoices (billing history)
 
 **Output Focus:**
+
 - Timeline of project communications
 - Document comparison (estimate vs PO)
 - Scope summary
@@ -33,12 +36,14 @@ Common patterns for different types of research tasks.
 **Trigger:** "Did we send an estimate?" or "What was on the estimate?"
 
 **Search Strategy:**
+
 1. Search estimator mailbox (jared@) for project name
 2. Search "estimate" + project name
 3. Search "quote" + project name
 4. Check sent folder specifically
 
 **Key Data to Extract:**
+
 - Estimate number
 - Date sent
 - Line items with quantities and prices
@@ -47,6 +52,7 @@ Common patterns for different types of research tasks.
 - Expiration date
 
 **Common Issues:**
+
 - Estimate sent but not titled with project name
 - Multiple versions (check dates)
 - Estimate vs work order discrepancy
@@ -58,12 +64,14 @@ Common patterns for different types of research tasks.
 **Trigger:** "Do we have a contract?" or "What are the compliance requirements?"
 
 **Search Strategy:**
+
 1. Search "contract" + client name
 2. Search "agreement" + client name
 3. Search "insurance" + project name
 4. Check coordinator mailboxes (chi@, jayson@)
 
 **Key Documents:**
+
 - Master Service Agreement (MSA)
 - Subcontract Agreement
 - Certificate of Insurance (COI)
@@ -71,6 +79,7 @@ Common patterns for different types of research tasks.
 - Compliance checklists
 
 **Key Data to Extract:**
+
 - Contract parties
 - Effective date and term
 - Payment terms
@@ -85,12 +94,14 @@ Common patterns for different types of research tasks.
 **Trigger:** "What permits do we have?" or "Is there a dust permit?"
 
 **Search Strategy:**
+
 1. Search "permit" + project name
 2. Search "dust" + project name
 3. Search "SWPPP" + project name
 4. Search application/permit numbers if known
 
 **Key Documents:**
+
 - Permit applications
 - Issued permits
 - Inspection reports
@@ -98,6 +109,7 @@ Common patterns for different types of research tasks.
 - NOT (Notice of Termination)
 
 **Key Data to Extract:**
+
 - Permit number
 - Issue date
 - Expiration date
@@ -112,18 +124,21 @@ Common patterns for different types of research tasks.
 **Trigger:** "Have we been paid?" or "What's the billing status?"
 
 **Search Strategy:**
+
 1. Search "invoice" + project name
 2. Search "payment" + project name
 3. Search "AR" or "accounts receivable" + client
 4. Check finance/accounting mailboxes
 
 **Key Documents:**
+
 - Invoices sent
 - Payment confirmations
 - Lien releases
 - Aging reports
 
 **Key Data to Extract:**
+
 - Invoice numbers and dates
 - Amounts billed
 - Amounts paid
@@ -137,12 +152,14 @@ Common patterns for different types of research tasks.
 **Trigger:** "Who is [person]?" or "What's our history with [company]?"
 
 **Search Strategy:**
+
 1. Search email address directly
 2. Search company name
 3. Search person's name in quotes
 4. Look at all projects involving them
 
 **Output Focus:**
+
 - Role/title
 - Projects worked together
 - Communication patterns
@@ -275,6 +292,7 @@ Variations:
 ### Multiple Projects, Same Name
 
 Different sites with similar names:
+
 - Include address in searches
 - Check dates carefully
 - Verify GC/client matches
@@ -282,6 +300,7 @@ Different sites with similar names:
 ### Email Thread Fragmentation
 
 Conversation split across multiple threads:
+
 - Search by original sender
 - Search by date range
 - Use thread tools when available
@@ -289,6 +308,7 @@ Conversation split across multiple threads:
 ### Forwarded Attachments
 
 Original attachment lost in forward chain:
+
 - Search for original email
 - Check parent thread
 - Search by attachment filename
@@ -296,6 +316,7 @@ Original attachment lost in forward chain:
 ### Partial Information
 
 Only some details known:
+
 - Start with what you have
 - Let entity expansion fill gaps
 - Document what remains unknown

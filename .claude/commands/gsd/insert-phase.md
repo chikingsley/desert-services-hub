@@ -161,6 +161,7 @@ Update STATE.md to reflect the inserted phase:
 
 1. Read `.planning/STATE.md`
 2. Under "## Accumulated Context" → "### Roadmap Evolution" add entry:
+
    ```
    - Phase {decimal_phase} inserted after Phase {after_phase}: {description} (URGENT)
    ```
@@ -201,6 +202,7 @@ Project state updated: .planning/STATE.md
 
 ---
 ```
+
 </step>
 
 </process>

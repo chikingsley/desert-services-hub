@@ -124,7 +124,7 @@ These work without user sign-in (daemon/service apps).
 
 ## Teams Bot (Dust Permit Bot)
 
-**Bot Registration:** https://dev.teams.microsoft.com → Tools → Bot management
+**Bot Registration:** <https://dev.teams.microsoft.com> → Tools → Bot management
 **Uses App ID:** f41fe32a-b691-4f31-ae4a-4ecde59b7339 (same as this app)
 
 ### Required Application Permissions

@@ -54,6 +54,7 @@ Phase: $ARGUMENTS (optional)
 </process>
 
 <anti_patterns>
+
 - Don't use AskUserQuestion for test responses — plain text conversation
 - Don't ask severity — infer from description
 - Don't present full checklist upfront — one test at a time
@@ -97,6 +98,7 @@ UAT complete ✓
 ───────────────────────────────────────────────────────────────
 
 **Also available:**
+
 - /gsd:plan-phase {Z+1} — skip discussion, plan directly
 - /gsd:execute-phase {Z+1} — skip to execution (if already planned)
 
@@ -128,6 +130,7 @@ Final phase verified ✓
 ───────────────────────────────────────────────────────────────
 
 **Also available:**
+
 - /gsd:complete-milestone — skip audit, archive directly
 
 ───────────────────────────────────────────────────────────────
@@ -163,6 +166,7 @@ Fix plans verified ✓
 ───────────────────────────────────────────────────────────────
 
 **Also available:**
+
 - cat .planning/phases/{phase_dir}/*-PLAN.md — review fix plans
 - /gsd:plan-phase {Z} --gaps — regenerate fix plans
 
@@ -192,6 +196,7 @@ Fix planning blocked after {X} iterations
 **Manual intervention required**
 
 Review the issues above and either:
+
 1. Provide guidance for fix planning
 2. Manually address blockers
 3. Accept current state and continue
@@ -199,6 +204,7 @@ Review the issues above and either:
 ───────────────────────────────────────────────────────────────
 
 **Options:**
+
 - /gsd:plan-phase {Z} --gaps — retry fix planning with guidance
 - /gsd:discuss-phase {Z} — gather more context before replanning
 
@@ -206,6 +212,7 @@ Review the issues above and either:
 </offer_next>
 
 <success_criteria>
+
 - [ ] UAT.md created with tests from SUMMARY.md
 - [ ] Tests presented one at a time with expected behavior
 - [ ] Plain text responses (no structured forms)

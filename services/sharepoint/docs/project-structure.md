@@ -9,10 +9,10 @@
 
 This document proposes a new folder structure for Desert Services projects in SharePoint, balancing:
 
-- **Usability** - People can find things intuitively
-- **Searchability** - Metadata enables filtering without deep navigation
-- **Automation** - Consistent structure enables n8n/API workflows
-- **Lifecycle Management** - Clear flow from bid → active → closed
+* **Usability** - People can find things intuitively
+* **Searchability** - Metadata enables filtering without deep navigation
+* **Automation** - Consistent structure enables n8n/API workflows
+* **Lifecycle Management** - Clear flow from bid → active → closed
 
 - --
 

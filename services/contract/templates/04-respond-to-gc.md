@@ -22,6 +22,7 @@ These happen on basically every project:
 - [ ] Confirm limits match contract requirements (see 03-check-insurance.md)
 
 Certificate Holder:
+
 ```
 [GC Name]
 [Address]
@@ -106,6 +107,7 @@ Complete only if contract or GC email requests:
 ## Tracking
 
 All actions tracked in Notion project record under:
+
 - PRE-QUALIFICATION / COMPLIANCE section
 - BILLING SETUP section
 

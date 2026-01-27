@@ -25,7 +25,7 @@ __- site walks will also happen for swppp, just depends on what's needed. Herve 
 ### 4. Work Completion Process
 
 - Need to understand the work completion steps better **- (Kelley) - send work completes from notebook weekly. his notes have "who requested", "PO number" and + timesheets.**
-* *- log the hits into the master for billing and look at the notes for the PO numbers**
+- *- log the hits into the master for billing and look at the notes for the PO numbers**
 
 Kelley has an iPhone (company phone)
 

@@ -38,7 +38,7 @@ Update these when policies renew:
 - [ ] PASS - Our limits meet or exceed
 - [ ] FAIL - Contract requires more than we carry
 
-**NOTE:** If umbrella requirement exceeds $4M, STOP. Do not sign until GC revises requirement or approves exception in writing.
+**NOTE:** If umbrella requirement exceeds $5M (our current limit), STOP. Do not sign until GC revises requirement or WTW confirms increased coverage.
 
 ### Auto Liability
 
@@ -66,8 +66,9 @@ Check what the contract requires and confirm we can provide:
 - [ ] Primary and Non-Contributory
 - [ ] Waiver of Subrogation
 
-Who needs to be listed as Additional Insured:
+Who needs to be listed as Additional Insured
 -
+
 -
 -
 
@@ -79,6 +80,7 @@ Who needs to be listed as Additional Insured:
 - [ ] **HOLD** - Limits exceed coverage, need exception or contract revision
 
 If HOLD:
+
 - Flag to Katie Beck at WTW
 - Do NOT sign until resolved
 - Note what needs to change: ________________________________________

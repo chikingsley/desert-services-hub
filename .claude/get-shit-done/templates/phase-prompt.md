@@ -223,6 +223,7 @@ Wave 3 runs after Waves 1 and 2. Pauses at checkpoint, orchestrator presents to 
 ```
 
 **Bad pattern (creates false dependencies):**
+
 ```markdown
 <context>
 @.planning/phases/03-features/03-01-SUMMARY.md  # Just because it's earlier
@@ -282,6 +283,7 @@ See `./.claude/get-shit-done/references/tdd.md` for TDD plan structure.
 | `checkpoint:human-action` | Truly unavoidable manual steps (rare) | Pauses, returns to orchestrator |
 
 **Checkpoint behavior in parallel execution:**
+
 - Plan runs until checkpoint
 - Agent returns with checkpoint details + agent_id
 - Orchestrator presents to user
@@ -427,11 +429,13 @@ After completion, create `.planning/phases/03-features/03-03-SUMMARY.md`
 ## Anti-Patterns
 
 **Bad: Reflexive dependency chaining**
+
 ```yaml
 depends_on: ["03-01"]  # Just because 01 comes before 02
 ```
 
 **Bad: Horizontal layer grouping**
+
 ```
 Plan 01: All models
 Plan 02: All APIs (depends on 01)
@@ -439,6 +443,7 @@ Plan 03: All UIs (depends on 02)
 ```
 
 **Bad: Missing autonomy flag**
+
 ```yaml
 # Has checkpoint but no autonomous: false
 depends_on: []
@@ -447,6 +452,7 @@ files_modified: [...]
 ```
 
 **Bad: Vague tasks**
+
 ```xml
 <task type="auto">
   <name>Set up authentication</name>
@@ -489,6 +495,7 @@ user_setup:
 ```
 
 **The automation-first rule:** `user_setup` contains ONLY what Claude literally cannot do:
+
 - Account creation (requires human signup)
 - Secret retrieval (requires dashboard access)
 - Dashboard configuration (requires human in browser)

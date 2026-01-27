@@ -18,11 +18,13 @@ Template for `.planning/codebase/STRUCTURE.md` - captures physical file organiza
 [ASCII tree of top-level directories with purpose]
 
 ```
+
 [project-root]/
 ├── [dir]/          # [Purpose]
 ├── [dir]/          # [Purpose]
 ├── [dir]/          # [Purpose]
 └── [file]          # [Purpose]
+
 ```
 
 ## Directory Purposes
@@ -115,6 +117,7 @@ Template for `.planning/codebase/STRUCTURE.md` - captures physical file organiza
 ```
 
 <good_examples>
+
 ```markdown
 # Codebase Structure
 
@@ -123,6 +126,7 @@ Template for `.planning/codebase/STRUCTURE.md` - captures physical file organiza
 ## Directory Layout
 
 ```
+
 get-shit-done/
 ├── bin/                # Executable entry points
 ├── commands/           # Slash command definitions
@@ -135,6 +139,7 @@ get-shit-done/
 ├── tests/             # Test files
 ├── package.json       # Project manifest
 └── README.md          # User documentation
+
 ```
 
 ## Directory Purposes
@@ -243,6 +248,7 @@ get-shit-done/
 *Structure analysis: 2025-01-20*
 *Update when directory structure changes*
 ```
+
 </good_examples>
 
 <guidelines>
@@ -255,12 +261,14 @@ get-shit-done/
 - Special/generated directories
 
 **What does NOT belong here:**
+
 - Conceptual architecture (that's ARCHITECTURE.md)
 - Technology stack (that's STACK.md)
 - Code implementation details (defer to code reading)
 - Every single file (focus on directories and key files)
 
 **When filling this template:**
+
 - Use `tree -L 2` or similar to visualize structure
 - Identify top-level directories and their purposes
 - Note naming patterns by observing existing files
@@ -268,6 +276,7 @@ get-shit-done/
 - Keep directory tree concise (max 2-3 levels)
 
 **ASCII tree format:**
+
 ```
 root/
 ├── dir1/           # Purpose
@@ -278,6 +287,7 @@ root/
 ```
 
 **Useful for phase planning when:**
+
 - Adding new features (where should files go?)
 - Understanding project organization
 - Finding where specific logic lives

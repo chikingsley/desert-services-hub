@@ -209,6 +209,7 @@ Wait for user selection.
 Based on user selection, route to appropriate workflow:
 
 - **Execute plan** → Show command for user to run after clearing:
+
   ```
   ---
 
@@ -222,7 +223,9 @@ Based on user selection, route to appropriate workflow:
 
   ---
   ```
+
 - **Plan phase** → Show command for user to run after clearing:
+
   ```
   ---
 
@@ -242,6 +245,7 @@ Based on user selection, route to appropriate workflow:
 
   ---
   ```
+
 - **Transition** → ./transition.md
 - **Check todos** → Read .planning/todos/pending/, present summary
 - **Review alignment** → Read PROJECT.md, compare to current state
@@ -288,6 +292,7 @@ This handles cases where:
 
 <quick_resume>
 If user says "continue" or "go":
+
 - Load state silently
 - Determine primary action
 - Execute immediately without presenting options

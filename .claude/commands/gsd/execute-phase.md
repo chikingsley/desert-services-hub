@@ -31,6 +31,7 @@ Context budget: ~15% orchestrator, 100% fresh per subagent.
 Phase: $ARGUMENTS
 
 **Flags:**
+
 - `--gaps-only` — Execute only gap closure plans (plans with `gap_closure: true` in frontmatter). Use after verify-work creates fix plans.
 
 @.planning/ROADMAP.md
@@ -41,6 +42,7 @@ Phase: $ARGUMENTS
 0. **Resolve Model Profile**
 
    Read model profile for agent spawning:
+
    ```bash
    MODEL_PROFILE=$(cat .planning/config.json 2>/dev/null | grep -o '"model_profile"[[:space:]]*:[[:space:]]*"[^"]*"' | grep -o '"[^"]*"$' | tr -d '"' || echo "balanced")
    ```
@@ -85,11 +87,13 @@ Phase: $ARGUMENTS
 
 6. **Commit any orchestrator corrections**
    Check for uncommitted changes before verification:
+
    ```bash
    git status --porcelain
    ```
 
    **If changes exist:** Orchestrator made corrections between executor completions. Commit them:
+
    ```bash
    git add -u && git commit -m "fix({phase}): orchestrator corrections"
    ```
@@ -169,6 +173,7 @@ Goal verified ✓
 ───────────────────────────────────────────────────────────────
 
 **Also available:**
+
 - /gsd:plan-phase {Z+1} — skip discussion, plan directly
 - /gsd:verify-work {Z} — manual acceptance testing before continuing
 
@@ -200,6 +205,7 @@ All phase goals verified ✓
 ───────────────────────────────────────────────────────────────
 
 **Also available:**
+
 - /gsd:verify-work — manual acceptance testing
 - /gsd:complete-milestone — skip audit, archive directly
 
@@ -235,6 +241,7 @@ Report: .planning/phases/{phase_dir}/{phase}-VERIFICATION.md
 ───────────────────────────────────────────────────────────────
 
 **Also available:**
+
 - cat .planning/phases/{phase_dir}/{phase}-VERIFICATION.md — see full report
 - /gsd:verify-work {Z} — manual testing before planning
 
@@ -243,6 +250,7 @@ Report: .planning/phases/{phase_dir}/{phase}-VERIFICATION.md
 ---
 
 After user runs /gsd:plan-phase {Z} --gaps:
+
 1. Planner reads VERIFICATION.md gaps
 2. Creates plans 04, 05, etc. to close gaps
 3. User runs /gsd:execute-phase {Z} again
@@ -278,6 +286,7 @@ All three run in parallel. Task tool blocks until all complete.
 
 <checkpoint_handling>
 Plans with `autonomous: false` have checkpoints. The execute-phase.md workflow handles the full checkpoint flow:
+
 - Subagent pauses at checkpoint, returns structured state
 - Orchestrator presents to user, collects response
 - Spawns fresh continuation agent (not resume)
@@ -300,6 +309,7 @@ Only rule 4 requires user intervention.
 **Per-Task Commits:**
 
 After each task completes:
+
 1. Stage only files modified by that task
 2. Commit with format: `{type}({phase}-{plan}): {task-name}`
 3. Types: feat, fix, test, refactor, perf, chore
@@ -308,6 +318,7 @@ After each task completes:
 **Plan Metadata Commit:**
 
 After all tasks in a plan complete:
+
 1. Stage plan artifacts only: PLAN.md, SUMMARY.md
 2. Commit with format: `docs({phase}-{plan}): complete [plan-name] plan`
 3. NO code files (already committed per-task)
@@ -315,11 +326,13 @@ After all tasks in a plan complete:
 **Phase Completion Commit:**
 
 After all plans in phase complete (step 7):
+
 1. Stage: ROADMAP.md, STATE.md, REQUIREMENTS.md (if updated), VERIFICATION.md
 2. Commit with format: `docs({phase}): complete {phase-name} phase`
 3. Bundles all phase-level state updates in one commit
 
 **NEVER use:**
+
 - `git add .`
 - `git add -A`
 - `git add src/` or any broad directory
@@ -328,6 +341,7 @@ After all plans in phase complete (step 7):
 </commit_rules>
 
 <success_criteria>
+
 - [ ] All incomplete plans in phase executed
 - [ ] Each plan has SUMMARY.md
 - [ ] Phase goal verified (must_haves checked against codebase)

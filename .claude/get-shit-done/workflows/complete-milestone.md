@@ -34,11 +34,13 @@ When a milestone completes, this workflow:
 **Archive Format:**
 
 **ROADMAP archive** uses `templates/milestone-archive.md` template with:
+
 - Milestone header (status, phases, date)
 - Full phase details from roadmap
 - Milestone summary (decisions, issues, technical debt)
 
 **REQUIREMENTS archive** contains:
+
 - All v1 requirements marked complete with outcomes
 - Traceability table with final status
 - Notes on any requirements that changed during milestone
@@ -444,11 +446,13 @@ Extract completed milestone details and create archive file.
 6. Write filled template to `.planning/milestones/v[X.Y]-ROADMAP.md`
 
 7. Delete ROADMAP.md (fresh one created for next milestone):
+
    ```bash
    rm .planning/ROADMAP.md
    ```
 
 8. Verify archive exists:
+
    ```bash
    ls .planning/milestones/v[X.Y]-ROADMAP.md
    ```
@@ -471,6 +475,7 @@ Archive requirements and prepare for fresh requirements in next milestone.
 **Process:**
 
 1. Read current REQUIREMENTS.md:
+
    ```bash
    cat .planning/REQUIREMENTS.md
    ```
@@ -487,6 +492,7 @@ Archive requirements and prepare for fresh requirements in next milestone.
      - Any requirements dropped and why
 
 4. Write archive file with header:
+
    ```markdown
    # Requirements Archive: v[X.Y] [Milestone Name]
 
@@ -513,11 +519,13 @@ Archive requirements and prepare for fresh requirements in next milestone.
    ```
 
 5. Delete original REQUIREMENTS.md:
+
    ```bash
    rm .planning/REQUIREMENTS.md
    ```
 
 6. Confirm:
+
    ```
    ✅ Requirements archived to milestones/v[X.Y]-REQUIREMENTS.md
    ✅ REQUIREMENTS.md deleted (fresh one needed for next milestone)
@@ -537,6 +545,7 @@ Move the milestone audit file to the archive (if it exists):
 ```
 
 Confirm:
+
 ```
 ✅ Audit archived to milestones/v[X.Y]-MILESTONE-AUDIT.md
 ```
@@ -703,11 +712,13 @@ Tag: v[X.Y]
 <milestone_naming>
 
 **Version conventions:**
+
 - **v1.0** — Initial MVP
 - **v1.1, v1.2, v1.3** — Minor updates, new features, fixes
 - **v2.0, v3.0** — Major rewrites, breaking changes, significant new direction
 
 **Name conventions:**
+
 - v1.0 MVP
 - v1.1 Security
 - v1.2 Performance
@@ -721,12 +732,14 @@ Keep names short (1-2 words describing the focus).
 <what_qualifies>
 
 **Create milestones for:**
+
 - Initial release (v1.0)
 - Public releases
 - Major feature sets shipped
 - Before archiving planning
 
 **Don't create milestones for:**
+
 - Every phase completion (too granular)
 - Work in progress (wait until shipped)
 - Internal dev iterations (unless truly shipped internally)

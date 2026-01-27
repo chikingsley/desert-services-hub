@@ -16,6 +16,7 @@ Start a new milestone through unified flow: questioning → research (optional) 
 This is the brownfield equivalent of new-project. The project exists, PROJECT.md has history. This command gathers "what's next", updates PROJECT.md, then continues through the full requirements → roadmap cycle.
 
 **Creates/Updates:**
+
 - `.planning/PROJECT.md` — updated with new milestone goals
 - `.planning/research/` — domain research (optional, focuses on NEW features)
 - `.planning/REQUIREMENTS.md` — scoped requirements for this milestone
@@ -57,10 +58,12 @@ Milestone name: $ARGUMENTS (optional - will prompt if not provided)
 ## Phase 2: Gather Milestone Goals
 
 **If MILESTONE-CONTEXT.md exists:**
+
 - Use features and scope from discuss-milestone
 - Present summary for confirmation
 
 **If no context file:**
+
 - Present what shipped in last milestone
 - Ask: "What do you want to build next?"
 - Use AskUserQuestion to explore features
@@ -109,6 +112,7 @@ Keep Accumulated Context section (decisions, blockers) from previous milestone.
 Delete MILESTONE-CONTEXT.md if exists (consumed).
 
 Check planning config:
+
 ```bash
 COMMIT_PLANNING_DOCS=$(cat .planning/config.json 2>/dev/null | grep -o '"commit_docs"[[:space:]]*:[[:space:]]*[^,}]*' | grep -o 'true\|false' || echo "true")
 git check-ignore -q .planning 2>/dev/null && COMMIT_PLANNING_DOCS=false
@@ -117,6 +121,7 @@ git check-ignore -q .planning 2>/dev/null && COMMIT_PLANNING_DOCS=false
 If `COMMIT_PLANNING_DOCS=false`: Skip git operations
 
 If `COMMIT_PLANNING_DOCS=true` (default):
+
 ```bash
 git add .planning/PROJECT.md .planning/STATE.md
 git commit -m "docs: start milestone v[X.Y] [Name]"
@@ -145,6 +150,7 @@ Store resolved models for use in Task calls below.
 ## Phase 7: Research Decision
 
 Use AskUserQuestion:
+
 - header: "Research"
 - question: "Research the domain ecosystem for new features before defining requirements?"
 - options:
@@ -154,6 +160,7 @@ Use AskUserQuestion:
 **If "Research first":**
 
 Display stage banner:
+
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  GSD ► RESEARCHING
@@ -163,11 +170,13 @@ Researching [new features] ecosystem...
 ```
 
 Create research directory:
+
 ```bash
 mkdir -p .planning/research
 ```
 
 Display spawning indicator:
+
 ```
 ◆ Spawning 4 researchers in parallel...
   → Stack research (for new features)
@@ -367,6 +376,7 @@ Commit after writing.
 ```
 
 Display research complete banner and key findings:
+
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  GSD ► RESEARCH COMPLETE ✓
@@ -386,6 +396,7 @@ Files: `.planning/research/`
 ## Phase 8: Define Requirements
 
 Display stage banner:
+
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  GSD ► DEFINING REQUIREMENTS
@@ -395,6 +406,7 @@ Display stage banner:
 **Load context:**
 
 Read PROJECT.md and extract:
+
 - Core value (the ONE thing that must work)
 - Current milestone goals
 - Validated requirements (what already exists)
@@ -428,6 +440,7 @@ Here are the features for [new capabilities]:
 Ask: "What are the main things users need to be able to do with [new features]?"
 
 For each capability mentioned:
+
 - Ask clarifying questions to make it specific
 - Probe for related capabilities
 - Group into categories
@@ -446,6 +459,7 @@ For each category, use AskUserQuestion:
   - "None for this milestone" — Defer entire category
 
 Track responses:
+
 - Selected features → this milestone's requirements
 - Unselected table stakes → future milestone
 - Unselected differentiators → out of scope
@@ -453,6 +467,7 @@ Track responses:
 **Identify gaps:**
 
 Use AskUserQuestion:
+
 - header: "Additions"
 - question: "Any requirements research missed? (Features specific to your vision)"
 - options:
@@ -462,6 +477,7 @@ Use AskUserQuestion:
 **Generate REQUIREMENTS.md:**
 
 Create `.planning/REQUIREMENTS.md` with:
+
 - v1 Requirements for THIS milestone grouped by category (checkboxes, REQ-IDs)
 - Future Requirements (deferred to later milestones)
 - Out of Scope (explicit exclusions with reasoning)
@@ -474,6 +490,7 @@ Continue numbering from existing requirements if applicable.
 **Requirement quality criteria:**
 
 Good requirements are:
+
 - **Specific and testable:** "User can reset password via email link" (not "Handle password reset")
 - **User-centric:** "User can X" (not "System does Y")
 - **Atomic:** One capability per requirement (not "User can login and manage profile")
@@ -507,6 +524,7 @@ If "adjust": Return to scoping.
 Check planning config (same pattern as Phase 6).
 
 If committing:
+
 ```bash
 git add .planning/REQUIREMENTS.md
 git commit -m "$(cat <<'EOF'
@@ -520,6 +538,7 @@ EOF
 ## Phase 9: Create Roadmap
 
 Display stage banner:
+
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  GSD ► CREATING ROADMAP
@@ -574,6 +593,7 @@ Write files first, then return. This ensures artifacts persist even if context i
 **Handle roadmapper return:**
 
 **If `## ROADMAP BLOCKED`:**
+
 - Present blocker information
 - Work with user to resolve
 - Re-spawn when resolved
@@ -612,6 +632,7 @@ Success criteria:
 **CRITICAL: Ask for approval before committing:**
 
 Use AskUserQuestion:
+
 - header: "Roadmap"
 - question: "Does this roadmap structure work for you?"
 - options:
@@ -622,8 +643,10 @@ Use AskUserQuestion:
 **If "Approve":** Continue to commit.
 
 **If "Adjust phases":**
+
 - Get user's adjustment notes
 - Re-spawn roadmapper with revision context:
+
   ```
   Task(prompt="
   <revision>
@@ -637,6 +660,7 @@ Use AskUserQuestion:
   </revision>
   ", subagent_type="gsd-roadmapper", model="{roadmapper_model}", description="Revise roadmap")
   ```
+
 - Present revised roadmap
 - Loop until user approves
 
@@ -647,6 +671,7 @@ Use AskUserQuestion:
 Check planning config (same pattern as Phase 6).
 
 If committing:
+
 ```bash
 git add .planning/ROADMAP.md .planning/STATE.md .planning/REQUIREMENTS.md
 git commit -m "$(cat <<'EOF'
@@ -703,6 +728,7 @@ Present completion with next steps:
 </process>
 
 <success_criteria>
+
 - [ ] PROJECT.md updated with Current Milestone section
 - [ ] STATE.md reset for new milestone
 - [ ] MILESTONE-CONTEXT.md consumed and deleted (if existed)

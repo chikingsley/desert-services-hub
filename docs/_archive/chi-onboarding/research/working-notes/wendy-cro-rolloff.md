@@ -4,11 +4,13 @@ people directly follow wendy
 customer service (she's leaving) - answering the phone at all times or texting
 bluebook
 is important
+
 - -
 
 bbbid.thebluebook.com - use to bid on jobs
 
 90% will follow her
+
 - -
 
 personally get email and send something. and get more that way.
@@ -18,10 +20,12 @@ personally get email and send something. and get more that way.
 
 charge a fee
 end of december
+
 - -
 
 gets texts - personal phone
 work phone
+
 - -
 
 wendy - prefers to speak to the contractor
@@ -37,6 +41,7 @@ throw an error
 boxtracker was better but used to this
 
 answering service - wrong phone numbers.. transfering
+
 - -
 
 don't get confirms, call and text

@@ -41,6 +41,12 @@
     "bun-init",
     "bun-example",
     "components",
-    "services/contract/file-automation"
+    "services/contract/file-automation",
+    "services/contract/agents_archive",
+    "services/file-automation/_reference",
+    "services/email/inbox",
+    "**/mcp-server.ts",
+    "**/mcp-server.*.ts",
+    "**/*.mcp.test.ts"
   ]
 }

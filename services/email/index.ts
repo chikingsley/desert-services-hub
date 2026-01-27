@@ -18,6 +18,17 @@ import type {
   SendEmailOptions,
 } from "./types";
 
+// Re-export client classes and types
+export { GraphEmailClient } from "./client";
+export { GraphGroupsClient } from "./groups";
+export type {
+  EmailConfig,
+  EmailMessage,
+  EmailResult,
+  MailboxResult,
+  SendEmailOptions,
+} from "./types";
+
 // ============================================================================
 // Constants
 // ============================================================================

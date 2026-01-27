@@ -2,6 +2,7 @@
 
 dust permit needed > 1 acre
 need contracted or written/email confirmation of billable work to do
+>
 - > add proof to quickbooks
 place permit in queue (monday)
 execute permit

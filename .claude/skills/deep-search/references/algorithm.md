@@ -9,6 +9,7 @@ This document provides a detailed walkthrough of the CRAWL → COLLECT → READ 
 Given a seed email, extract all searchable entities:
 
 **Example Seed Email:**
+
 ```bash
 From: Salvador Beltran <sbeltran@sdbeng.com>
 To: Chi <chi@desertservices.net>
@@ -27,10 +28,11 @@ Salvador
 ```
 
 **Extracted Entities:**
+
 | Type | Value | Confidence |
 |------|-------|------------|
-| person | sbeltran@sdbeng.com | 0.95 |
-| person | chi@desertservices.net | 0.95 |
+| person | <sbeltran@sdbeng.com> | 0.95 |
+| person | <chi@desertservices.net> | 0.95 |
 | company | SDB Engineering (from email domain) | 0.85 |
 | company | Valley Rain Construction | 0.90 |
 | project | Cradle to Crayons | 0.90 |
@@ -102,6 +104,7 @@ Search 6: "kendra@valleyrainaz.com"
 ### Step 1.7: Termination Criteria
 
 Stop CRAWL when:
+
 - No new entities discovered in last iteration
 - Max iterations reached (default: 5)
 - All high-confidence entities have been searched
@@ -177,6 +180,7 @@ const content = await Read({ file_path: "downloads/nw-durango-estimate.pdf" });
 ### Step 3.2: Extract Structured Data
 
 **For Estimates, extract:**
+
 ```text
 Estimate Number: 04232507
 Date: April 24, 2025
@@ -202,6 +206,7 @@ TOTAL: $8,416.95
 ```
 
 **For Work Orders/POs, extract:**
+
 ```text
 PO Number: 220060-010
 Date: April 29, 2025
@@ -330,6 +335,7 @@ A: NW Durango estimate #04232507 was $8,416.95 with detailed line items
 ### When to Loop
 
 Continue searching if:
+
 - Key questions remain unanswered
 - Important documents are referenced but not found
 - New entities emerged that haven't been searched
@@ -350,6 +356,7 @@ Gap resolved: "Dust permit D0058923 issued March 15, 2025, expires March 2026"
 ### Termination
 
 Stop looping when:
+
 - All user questions answered with specifics
 - No actionable gaps remain
 - Max iterations (typically 3-5) reached

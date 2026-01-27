@@ -169,11 +169,13 @@ Notion is where we track open items that need daily follow-up.
 ## Reference
 
 **Estimate Revision Naming** (from sla.md):
+
 - Format: `YYMMDD##R#` (no dashes before R)
 - Example: `25122301R0` (original) → `25122301R1` (first revision)
 - All estimates start at R0
 
 **Internal Email Template**: `services/contract/internalcontracts-email-sample.md`
+
 - Project info + links (Notion, SharePoint, Monday)
 - Contract details (type, value, retention, certified payroll, billing platform)
 - Estimate details (value, version, variance)

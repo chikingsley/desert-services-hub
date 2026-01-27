@@ -7,6 +7,7 @@ Template for `.planning/phases/XX-name/{phase}-CONTEXT.md` - captures implementa
 **Key principle:** Categories are NOT predefined. They emerge from what was actually discussed for THIS phase. A CLI phase has CLI-relevant sections, a UI phase has UI-relevant sections.
 
 **Downstream consumers:**
+
 - `gsd-phase-researcher` — Reads decisions to focus research (e.g., "card layout" → research card component patterns)
 - `gsd-planner` — Reads decisions to create specific tasks (e.g., "infinite scroll" → task includes virtualization)
 
@@ -264,18 +265,21 @@ Organize existing photo library into structured folders. Handle duplicates and a
 The output should answer: "What does the researcher need to investigate? What choices are locked for the planner?"
 
 **Good content (concrete decisions):**
+
 - "Card-based layout, not timeline"
 - "Retry 3 times on network failure, then fail"
 - "Group by year, then by month"
 - "JSON for programmatic use, table for humans"
 
 **Bad content (too vague):**
+
 - "Should feel modern and clean"
 - "Good user experience"
 - "Fast and responsive"
 - "Easy to use"
 
 **After creation:**
+
 - File lives in phase directory: `.planning/phases/XX-name/{phase}-CONTEXT.md`
 - `gsd-phase-researcher` uses decisions to focus investigation
 - `gsd-planner` uses decisions + research to create executable tasks

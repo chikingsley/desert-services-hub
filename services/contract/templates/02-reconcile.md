@@ -78,8 +78,9 @@ Check for these issues:
 - [ ] Unusual retention percent
 - [ ] Contract language under IDG (former company)
 
-Notes:
+Notes
 -
+
 -
 
 ---

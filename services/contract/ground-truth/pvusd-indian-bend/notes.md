@@ -10,9 +10,9 @@
 
 | Role | Name | Email | Phone |
 |------|------|-------|-------|
-| Project Coordinator | Lucia Rodriguez | lrodriguez@chasse.us | 602-585-3704 |
-| Project Manager | Rhett Pedersen | rpedersen@chasse.us | |
-| Superintendent | Austin Lein | alein@chasse.us | |
+| Project Coordinator | Lucia Rodriguez | <lrodriguez@chasse.us> | 602-585-3704 |
+| Project Manager | Rhett Pedersen | <rpedersen@chasse.us> | |
+| Superintendent | Austin Lein | <alein@chasse.us> | |
 
 **Note:** All documents must go to Project Coordinator. Include Project Number in subject line.
 
@@ -29,17 +29,20 @@
 ## Parties
 
 ### General Contractor
+
 - **Name:** CHASSE Building Team
 - **Address:** 230 S Siesta Lane, Tempe, Arizona 85288
 - **Phone:** (480) 425-7777
 - **Licenses:** ROC237943 (KB-01), ROC255354 (A)
 
 ### Owner
+
 - **Name:** Paradise Valley Unified School District 69
 - **Address:** 15002 N 32nd Street, Phoenix, Arizona 85032
 - *(Useful for dust permit)*
 
 ### Architect
+
 - **Name:** Grace Design Studios
 - **Address:** 2929 N Central Avenue, 11th Floor, Phoenix, Arizona
 - *(Nice to have, not critical)*
@@ -49,16 +52,19 @@
 ## Required Actions
 
 ### 1. Execute PSA (Professional Services Agreement)
+
 - Return via email to Project Coordinator within **5 days**
 - **DO NOT mail hard copy**
 - All pages must be initialed and/or signed
 
 ### 2. Insurance Certificate
+
 - Email COI per Exhibit B requirements
 - Send to Project Coordinator
 - **Include Project Number in subject line**
 
 ### 3. Procore Pay Setup
+
 - Billing through Procore Pay (per Exhibit E)
 - Will receive email invitation from Procore
 - Accept invitation to initiate billing
@@ -69,6 +75,7 @@
 ## Extraction Notes
 
 **What's important to capture:**
+
 - Project Number (critical for Procore comms)
 - Project Name
 - Project Location
@@ -86,17 +93,21 @@
 ## Contract Terms
 
 ### Article 4.1 - Contract Price (Page 5)
+
 - **Contract Price:** $6,265.50
 - Plus Reimbursable Expenses (as allowed by Owner per Prime Contract)
 
 ### Article 4.11 - Project Closeout (Page 6)
+
 At final payment submission, must provide:
+
 - All deliverables per Contract Documents
 - Affidavit - no claims/obligations/liens outstanding
 - General release waiving all claims (except previously written unsettled claims)
 - Certificates of insurance confirming coverage remains in effect
 
 ### Article 9.3 - Insurance (Page 9)
+
 - Must provide COI before commencing work
 - 30 days written notice required for cancellation/non-renewal/material changes
 
@@ -105,6 +116,7 @@ At final payment submission, must provide:
 ## Schedule of Values (Article 11, Pages 10-11)
 
 ### Included Items
+
 - SWPPP Inspections every 14 days (and/or rain events)
   - **ISSUE: No quantity specified - NEEDS REDLINE**
   - Strike "includes 1 month inspection every four weeks" - should be every 14 days + rain events only
@@ -115,6 +127,7 @@ At final payment submission, must provide:
 - CCIP/OCIP Insurance
 
 ### Unit Rates (for additional work)
+
 - Additional Inspections: $195.00 each
 - Filter Sock: $2.45/LF
 
@@ -162,15 +175,18 @@ At final payment submission, must provide:
 **Note:** Safety stuff often not enforced for subs, but should be compliant with training requirements.
 
 ### Crew Lead Requirements
+
 - Designated crew leaders must be on site while crews are performing work
 - Must maintain First Aid/CPR/AED certification
 - Preferably OSHA 10 training minimum
 
 ### Site-Specific Orientation
+
 - All employees must attend before start of work
 - Covers: Project Safety Expectations, Incident Reporting, Safe Production Process, project team intro
 
 ### Task Specific Safety Plan
+
 - Required daily when work takes place
 - Form provided by CHASSE
 - Must submit to CHASSE Superintendent before any work starts

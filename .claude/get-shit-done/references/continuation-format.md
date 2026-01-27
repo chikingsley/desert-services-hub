@@ -178,7 +178,7 @@ All 4 phases shipped
 
 ## Pulling Context
 
-### For phases (from ROADMAP.md):
+### For phases (from ROADMAP.md)
 
 ```markdown
 ### Phase 2: Authentication
@@ -187,7 +187,7 @@ All 4 phases shipped
 
 Extract: `**Phase 2: Authentication** — JWT login flow with refresh tokens`
 
-### For plans (from ROADMAP.md):
+### For plans (from ROADMAP.md)
 
 ```markdown
 Plans:
@@ -242,7 +242,9 @@ Sounds like an afterthought. Use "Also available:" instead.
 
 ```
 ```
+
 /gsd:plan-phase 3
+
 ```
 ```
 

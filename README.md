@@ -5,6 +5,7 @@ The unified platform for Desert Services, combining the Next.js web application 
 ## Repository Architecture
 
 This repository is organized into two primary pillars:
+
 - **Application**: Next.js App Router project for user-facing dashboards and tools.
 - **Services**: Bun-native automation logic and API clients located in `services/`.
 
@@ -36,14 +37,17 @@ This repository exposes MCP servers for integration with AI coding assistants (l
 ## Getting Started
 
 ### Prerequisites
+
 - [Bun](https://bun.sh) (v1.3.5 or later)
 
 ### Installation
+
 ```bash
 bun install
 ```
 
 ### Development
+
 ```bash
 # Run the Next.js web application
 bun run dev
@@ -53,5 +57,6 @@ bun run test
 ```
 
 ## Documentation
+
 - **Engineering Standards**: See [CLAUDE.md](CLAUDE.md) for detailed coding conventions, service usage patterns, and testing requirements.
 - **System Design**: See `docs/` for specific SOPs and integration diagrams.

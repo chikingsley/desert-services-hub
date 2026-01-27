@@ -25,7 +25,7 @@ import {
 // Workflow order: Quotes → Contracts → Project Initiation
 const mainNavItems = [
   { title: "Quotes", href: "/quotes", icon: FileText },
-  { title: "Contracts", href: "/contracts", icon: FileCheck, disabled: true },
+  { title: "Contracts", href: "/contracts", icon: FileCheck },
   {
     title: "Project Initiation",
     href: "/projects",

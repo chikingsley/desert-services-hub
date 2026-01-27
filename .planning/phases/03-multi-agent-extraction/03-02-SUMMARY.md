@@ -78,6 +78,7 @@ Each task was committed atomically:
 ## Files Created/Modified
 
 **Created:**
+
 - `services/contract/agents/extractors/contract-info.ts` - Contract type, dates, value, project details
 - `services/contract/agents/extractors/billing.ts` - Retention, platform, contacts, certified payroll
 - `services/contract/agents/extractors/contacts.ts` - PM and superintendent contact info

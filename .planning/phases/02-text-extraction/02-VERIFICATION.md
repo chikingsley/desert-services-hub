@@ -70,6 +70,7 @@ score: 3/3 must-haves verified
 
 **Test:** Place a digital PDF (text-based, not scanned) in the watched folder.
 **Expected:**
+
 - File appears in `processed_contracts` table with status "completed"
 - Pages appear in `contract_pages` table with source "digital"
 - Text is readable and accurate (compare to original PDF)
@@ -81,6 +82,7 @@ score: 3/3 must-haves verified
 
 **Test:** Place a scanned PDF (image-based, no text layer) in the watched folder.
 **Expected:**
+
 - File appears in `processed_contracts` table with status "completed"
 - Pages appear in `contract_pages` table with source "ocr"
 - Text is readable (may have minor OCR errors)
@@ -93,6 +95,7 @@ score: 3/3 must-haves verified
 
 **Test:** Place a PDF with mostly empty pages (< 100 chars/page) in the watched folder.
 **Expected:**
+
 - System detects low text yield and switches to OCR
 - Console logs show the decision: "Low text yield (X chars/page), using OCR"
 
@@ -101,10 +104,13 @@ score: 3/3 must-haves verified
 #### 4. Storage Retrieval Test
 
 **Test:** After processing a PDF, use getExtractedPages and getFullText functions.
+
 ```bash
 bun -e "import { getExtractedPages, getFullText } from './services/contract/extraction/storage'; console.log(getExtractedPages(1)); console.log(getFullText(1))"
 ```
+
 **Expected:**
+
 - getExtractedPages returns array of pages with pageIndex, text, source
 - getFullText returns concatenated text with "---PAGE BREAK---" delimiters
 - Pages are ordered by page_index
@@ -126,6 +132,7 @@ bun -e "import { getExtractedPages, getFullText } from './services/contract/extr
 7. **Wiring verified:** All key links traced through imports and function calls
 
 **Human verification needed** to confirm:
+
 - Actual PDF extraction quality (digital vs scanned)
 - OCR API integration works with real API key
 - End-to-end pipeline flow from file drop to database storage

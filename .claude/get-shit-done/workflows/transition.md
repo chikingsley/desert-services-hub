@@ -397,10 +397,12 @@ Resume file: None
 **Step 1: Read ROADMAP.md and identify phases in current milestone**
 
 Read the ROADMAP.md file and extract:
+
 1. Current phase number (the phase just transitioned from)
 2. All phase numbers in the current milestone section
 
 To find phases, look for:
+
 - Phase headers: lines starting with `### Phase` or `#### Phase`
 - Phase list items: lines like `- [ ] **Phase X:` or `- [x] **Phase X:`
 

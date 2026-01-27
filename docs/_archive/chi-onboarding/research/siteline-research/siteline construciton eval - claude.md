@@ -38,8 +38,8 @@ For visibility, billing reports display billed-to-date versus contract, balance 
 
 * *Siteline integrates only with QuickBooks Enterprise Contractor (Desktop)—not QuickBooks Online.** The integration uses manual file-based transfers:
 
-- **Inbound:** Upload SOVs via CSV spreadsheet templates
-- **Outbound:** Download invoice information as IIF files, then manually import into QuickBooks
+* **Inbound:** Upload SOVs via CSV spreadsheet templates
+* **Outbound:** Download invoice information as IIF files, then manually import into QuickBooks
 
 There is **no real-time or scheduled automatic sync**. Per Siteline's documentation, "QuickBooks Enterprise is primarily a desktop application, so Siteline's integration relies on file-based transfers." This is the shallowest integration among Siteline's accounting connections. Organizations using QuickBooks Online would need to evaluate alternative workflows or consider the deeper integrations available with Sage 300CRE, Viewpoint Vista/Spectrum, Foundation, or CMiC.
 
@@ -109,11 +109,11 @@ Siteline emphasizes fast deployment with **most customers operational within 2 w
 
 * *Onboarding support includes:**
 
-- **Dedicated Onboarding Manager** for the first 6 months
-- Bulk import of existing projects (handled by Siteline)
-- Live online training sessions, video tutorials, webinars, and documentation
-- Training time: approximately 10 minutes for PMs to learn basic billing, under 2 hours total for power users
-- Customer Success handoff with ongoing support (phone, chat, email)
+* **Dedicated Onboarding Manager** for the first 6 months
+* Bulk import of existing projects (handled by Siteline)
+* Live online training sessions, video tutorials, webinars, and documentation
+* Training time: approximately 10 minutes for PMs to learn basic billing, under 2 hours total for power users
+* Customer Success handoff with ongoing support (phone, chat, email)
 
 User reviews universally praise implementation: "The implementation was great and went very smoothly with Siteline's assistance." The Washington Iron Works case study reports syncing their first pay app within 3 business days with less than 2 hours of training. **98% customer retention rate** suggests strong post-implementation satisfaction.
 
@@ -125,19 +125,19 @@ User reviews universally praise implementation: "The implementation was great an
 
 * *Change order tracking is comprehensive:**
 
-- Pre-filled change order request forms generated according to GC requirements
-- Centralized change order log showing status (draft, submitted, requires revisions, rejected)
-- Built-in rate tables for pricing consistency
-- Real-time visibility into pending approvals
-- Integration with billing to automatically incorporate approved changes
-- Permission controls prevent adding unapproved change orders to SOV
+* Pre-filled change order request forms generated according to GC requirements
+* Centralized change order log showing status (draft, submitted, requires revisions, rejected)
+* Built-in rate tables for pricing consistency
+* Real-time visibility into pending approvals
+* Integration with billing to automatically incorporate approved changes
+* Permission controls prevent adding unapproved change orders to SOV
 
 One case study reports VanKirk Electric saves 16 hours per month managing 60+ change orders—reduced from 15 minutes per change order to under 1 minute.
 
 * *Lien waiver management supports all four standard types:**
 
-- Conditional Progress and Conditional Final
-- Unconditional Progress and Unconditional Final
+* Conditional Progress and Conditional Final
+* Unconditional Progress and Unconditional Final
 
 The system auto-generates unconditional waivers when invoices are marked paid and includes a **Lien Waiver Tracker** showing real-time status across lower-tier contractors. Automated workflows generate, send, collect signatures, and send reminders—no account required for lower-tier signing. Users report collecting "waivers 6x faster" with Siteline. One reviewer stated: "Their form fill process is second to none. It transformed the way my company processed billings, tracked cash flow, handled contract compliance, and managed our lien waivers."
 
@@ -147,19 +147,19 @@ The system auto-generates unconditional waivers when invoices are marked paid an
 
 * *Strengths for construction services companies:**
 
-- Deep GC Pay and Textura integrations with one-click submission
-- Comprehensive lien waiver management (highly praised in reviews)
-- Rapid 2-week implementation with dedicated support
-- 15,000+ pre-loaded GC forms
-- Strong change order tracking
-- 98% customer retention suggests high satisfaction
+* Deep GC Pay and Textura integrations with one-click submission
+* Comprehensive lien waiver management (highly praised in reviews)
+* Rapid 2-week implementation with dedicated support
+* 15,000+ pre-loaded GC forms
+* Strong change order tracking
+* 98% customer retention suggests high satisfaction
 
 * *Areas requiring verification or caution:**
 
-- QuickBooks Online is not supported—only Desktop Enterprise
-- Security certifications and 2FA must be verified directly
-- Procore integration has reported issues
-- Month lockdown for audits not documented
-- Custom pricing requires sales engagement
+* QuickBooks Online is not supported—only Desktop Enterprise
+* Security certifications and 2FA must be verified directly
+* Procore integration has reported issues
+* Month lockdown for audits not documented
+* Custom pricing requires sales engagement
 
 * *Bottom line:** Siteline is well-suited for trade contractors seeking to streamline billing to major GC portals (especially Textura and GC Pay) with strong lien waiver automation. Organizations using QuickBooks Online, requiring documented SOC 2 compliance, or needing period lockdown for investor reporting should confirm these capabilities before proceeding.

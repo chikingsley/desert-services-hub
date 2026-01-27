@@ -36,9 +36,10 @@ Contract asks for things that weren't in the quoted scope. Mark up each one.
 11 - Representative at coordination meetings — not quoted, FLAG as scheduling requirement
 
 16 - Dust control:
-  - 1 dust control sign — included in scope
-  - "Assume responsibility for fines" — NEVER AGREE, strike (we never accept liability for GC fines)
-  - Operational dust control — not in scope (can price separately if they want it)
+
+- 1 dust control sign — included in scope
+- "Assume responsibility for fines" — NEVER AGREE, strike (we never accept liability for GC fines)
+- Operational dust control — not in scope (can price separately if they want it)
 
 17 - Traffic control — not in scope, strike
 
@@ -111,6 +112,7 @@ This is a Tucson project. Our estimate used standard (Maricopa) rates.
 Contract has different rates — possibly Tucson-specific.
 
 Need internal clarification:
+
 - Do we have Tucson-specific pricing?
 - Can't use Maricopa defaults for Tucson projects
 - Need explicit Tucson rate card or flag in quoting system

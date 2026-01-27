@@ -91,6 +91,7 @@ Current Pain Points
 - --
 
 Schedule confirm accept - maybe one button to press
+>
 - > press a button and confirm the information in the schedule
 - > confirmation email - confirmation of schedule
 - > what do auditors need to see?

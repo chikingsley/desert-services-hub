@@ -10,11 +10,11 @@
 * *Central Operations Hub (CRO Software)**
 Move all service delivery into CRO to create single source of truth for:
 
-- **What's on site** - Real-time visibility of deployed assets (fence, PJs, roll-offs, BMPs)
-- **Who ordered what, when, and from who** - Complete customer/project/service history
-- **Scheduling** - Eliminate Excel schedules (Dawn's master, Kelly's paper notebook, SWPPP master)
-- **Work completes** - Digital capture replaces manual entry and illegible handwriting
-- **Billing** - Direct connection from work performed to invoice generation
+* **What's on site** - Real-time visibility of deployed assets (fence, PJs, roll-offs, BMPs)
+* **Who ordered what, when, and from who** - Complete customer/project/service history
+* **Scheduling** - Eliminate Excel schedules (Dawn's master, Kelly's paper notebook, SWPPP master)
+* **Work completes** - Digital capture replaces manual entry and illegible handwriting
+* **Billing** - Direct connection from work performed to invoice generation
 
 * *Services moving to CRO:**
 
@@ -24,17 +24,17 @@ Move all service delivery into CRO to create single source of truth for:
 4. **Street Sweeping** - Q2 2025
 5. **SWPPP Field Operations** - Trial in Q1/Q2 2025
 
-    - Deploy assets (fence, sock, signs, inlet protection, rock entrances)
-    - Track what's installed where
-    - Inspector visit scheduling and tracking
-    - Repair/maintenance work orders
-    - Asset inventory visibility
+    * Deploy assets (fence, sock, signs, inlet protection, rock entrances)
+    * Track what's installed where
+    * Inspector visit scheduling and tracking
+    * Repair/maintenance work orders
+    * Asset inventory visibility
 
 * *What stays outside CRO:**
 
-- SWPPP Preconstruction (dust permits, NOI, narrative creation) - handled by PM role + QuickBooks
-- Sales/CRM (Monday.com)
-- Contract management (QuickBooks + SharePoint repository)
+* SWPPP Preconstruction (dust permits, NOI, narrative creation) - handled by PM role + QuickBooks
+* Sales/CRM (Monday.com)
+* Contract management (QuickBooks + SharePoint repository)
 
 - --
 

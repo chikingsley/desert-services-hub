@@ -1,6 +1,7 @@
 # Overall Notes from Stickies
 
 Work completes
+>
 - > what was done.
 
 Jason gets contracts since he sends out estimates
@@ -20,6 +21,7 @@ We sometimes get contracts in advance of work - it just depends on the project.
 In terms of scheduling, it would be SWPPP stuff + water permit stuff concurrently, followed by Water Truck, Street Sweeping and Portajohns and last would be roll-off (if a site happened to get all of our services)
 
 Contract vs Change Order
+>
 - > if something isn't in the contract, we need to get a change order and follow up to get that confirmed and billed.
 - > currently being done by contract admin/billing but no consistent day to day owner
 
@@ -42,6 +44,7 @@ We are not currently tracking when permits or signs require renewal or updates
 - if it the projects were managed by an owner, this would be a part of the pm
 
 - -
+
 RETENTION
 How retention works:
 
@@ -74,6 +77,7 @@ Outstanding/Open balance - there is no way to see this in quickbooks because of 
 The way that the GC likes to be paid is usually listed in the contract. If we don't know or it isn't there, we guess and send an invoice and then if rejected, resubmit the recommended route.
 
 How the SWPPP Scheduling system works.
+>
 - > no colors means ready to bill
 - > green means it's done but the work completes haven't been recieved yet.
 - > pink means scheduled but not completed.
@@ -84,6 +88,7 @@ Monthly billing means sending an invoice monthly or submitting a payment via the
 Street Sweepers are generally not booked all day but it depends on the job.
 
 Don wants to close the billing every month to prevent changes for audit purposes but that doens't work for the way that billing is currently done. For example, he might close the first week of November when the billing hasn't yet been put in for next month.
+>
 - > one solution is to track the billing somewhere else and only put it into quickbooks when the invoice is actually sent. Not sure what happens after if they don't pay and more things get added. I'd assume just another invoice and they would stack but I'd need to check. [mo is exact on edit invoices? <- no clue what this is supposed ot mean but i wrote it.]
 
 Who gets email confirmations of work:

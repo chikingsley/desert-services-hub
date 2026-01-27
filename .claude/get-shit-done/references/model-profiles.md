@@ -21,17 +21,20 @@ Model profiles control which Claude model each GSD agent uses. This allows balan
 ## Profile Philosophy
 
 **quality** - Maximum reasoning power
+
 - Opus for all decision-making agents
 - Sonnet for read-only verification
 - Use when: quota available, critical architecture work
 
 **balanced** (default) - Smart allocation
+
 - Opus only for planning (where architecture decisions happen)
 - Sonnet for execution and research (follows explicit instructions)
 - Sonnet for verification (needs reasoning, not just pattern matching)
 - Use when: normal development, good balance of quality and cost
 
 **budget** - Minimal Opus usage
+
 - Sonnet for anything that writes code
 - Haiku for research and verification
 - Use when: conserving quota, high-volume work, less critical phases
@@ -52,6 +55,7 @@ Orchestrators resolve model before spawning:
 Runtime: `/gsd:set-profile <profile>`
 
 Per-project default: Set in `.planning/config.json`:
+
 ```json
 {
   "model_profile": "balanced"

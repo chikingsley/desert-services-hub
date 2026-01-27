@@ -69,6 +69,7 @@ Before returning PLANNING COMPLETE:
 ## Usage
 
 **From /gsd:plan-phase (standard mode):**
+
 ```python
 Task(
   prompt=filled_template,
@@ -78,6 +79,7 @@ Task(
 ```
 
 **From /gsd:plan-phase --gaps (gap closure mode):**
+
 ```python
 Task(
   prompt=filled_template,  # with mode: gap_closure

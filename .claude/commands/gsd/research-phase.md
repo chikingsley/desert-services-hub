@@ -14,6 +14,7 @@ Research how to implement a phase. Spawns gsd-phase-researcher agent with phase 
 **Note:** This is a standalone research command. For most workflows, use `/gsd:plan-phase` which integrates research automatically.
 
 **Use this command when:**
+
 - You want to research without planning yet
 - You want to re-research after planning is complete
 - You need to investigate before deciding if a phase is feasible
@@ -192,6 +193,7 @@ Task(
 </process>
 
 <success_criteria>
+
 - [ ] Phase validated against roadmap
 - [ ] Existing research checked
 - [ ] gsd-phase-researcher spawned with context

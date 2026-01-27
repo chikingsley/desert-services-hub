@@ -1,6 +1,7 @@
 # notes on x
 
 swppp master
+
 - -
 
 [need to schedule]
@@ -32,6 +33,7 @@ BOOK
 
 PHYSICAL
 installation -> temp fence - compost filter soc/bmp
+>
 - > need email confirming job details
 - > address, site contact, site details
 - -
@@ -39,13 +41,16 @@ installation -> temp fence - compost filter soc/bmp
 contract truing
 how much of each thing (soc, rock entrance) (should be in estimate)
 temp fence details (should be in estimate)
+
 - -
 
 are inlets installed already, is the temp fence installed - are you ready for the soc?
 ready for the rock entrance?
+
 - -
 
 on the day of install
+>
 - > have print schedules OR will send to supervisor emails
 - -
 
@@ -103,6 +108,7 @@ swppp are estimates
 - -
 
 usually send an email (most common) or contract or call someone (for call, they try to get an email sent) -- it can go to sales, delivery managers, jayson, kendra, jared, (dawn, kerin sometimes)
+>
 - > estimate section (under each customer) should be in quickbooks under customer estimates (depending on who's asking)
 - > contract gets sent to contracts email
 - > job gets put in - main estimate goes on the customer, not the job
@@ -123,14 +129,17 @@ not as much an issue but it's an issue because of audits. auditers need confirma
 estimator gets contract
 checks if matches (jared) if dollar amount matches -> if it doens't match he might email jayson/kendra, might hit up the customer
 if it does, send to the general contracts email (everything shoudl be matching)
+
 - -
 
 jeff gardner (chief estimator) used to send directly to who needed it (now it goes to everyone)
+>
 - > should generally be checked and sent directly to who needs
 - -
 
 operations should look thorugh attached estimate to see if they are involved (project naming can be off at this point)
 billing look through to sign off -> send back for changes often -> back forth finalization usually
+
 - -
 
 then all the stuff -> signs, dust permits, contacts, backflow etc, noi, pulling no discharge-ndc (can be in place of an noi) - if they do this, we cant do a swppp book and sign (from the arizona department of environmental quality adeq)
@@ -142,6 +151,7 @@ noi/ndc should be done by customer -> jayson or kerin will send email asking for
 
 billing
 confirmed schedule
+>
 - > no green (work completed that needs to be billed), yellow is questions -> put on invoice -> send at end of month if no contract, or added to and sent at end of month
 
 - -
@@ -151,6 +161,7 @@ kendra -> billing swppp, temp fence, rentals
 - -
 
 how people get in contact
+>
 - > jared, kendra (edocs) most common (for contracts) -> directors
 - > people call directors directly
 

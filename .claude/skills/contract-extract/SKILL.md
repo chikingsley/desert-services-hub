@@ -56,6 +56,7 @@ console.log(text);
 Read the contract text and extract these domains. Pages are separated by `---PAGE BREAK---` markers.
 
 #### Contract Info (EXTR-01)
+
 - contractType: LOI | Subcontract | WorkOrder | Amendment | Unknown
 - contractDate (YYYY-MM-DD)
 - contractValue (number in USD, null if not stated)
@@ -66,6 +67,7 @@ Read the contract text and extract these domains. Pages are separated by `---PAG
 - pageReferences
 
 #### Billing (EXTR-02)
+
 - retentionPercent
 - billingPlatform: Textura | Procore | GCPay | Premier | Email | Other | null
 - billingWindow
@@ -75,17 +77,20 @@ Read the contract text and extract these domains. Pages are separated by `---PAG
 - pageReferences
 
 #### Contacts (EXTR-03)
+
 - projectManager: { name, phone, email }
 - superintendent: { name, phone, email }
 - pageReferences
 
 #### Schedule of Values (EXTR-04)
+
 - sovIncluded (boolean)
 - lineItems: array of { item, description, value }
 - scopeSummary: brief description of work scope
 - pageReferences
 
 #### Insurance (EXTR-05)
+
 - glLimits, umbrellaLimits, autoLimits, workersCompLimits
 - coiRequired (boolean)
 - additionalInsured, waiverOfSubrogation, primaryNonContributory (booleans)
@@ -94,6 +99,7 @@ Read the contract text and extract these domains. Pages are separated by `---PAG
 - pageReferences
 
 #### Site Info (EXTR-06)
+
 - siteAddress
 - siteHours
 - accessInstructions
@@ -101,6 +107,7 @@ Read the contract text and extract these domains. Pages are separated by `---PAG
 - pageReferences
 
 #### Red Flags (EXTR-07)
+
 - unusualTerms: array of { term, concern, pageRef }
 - maintenanceLanguage: boolean (+ details if true)
 - tmLanguage: boolean (+ details if true)
@@ -159,6 +166,7 @@ Output a summary table:
 **Input:** `/contract-extract 10`
 
 **Output:**
+
 ```
 Contract 10: Desert Services LOI & SOW.pdf
 Extracted 7/7 domains successfully

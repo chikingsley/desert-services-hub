@@ -17,6 +17,7 @@ allowed-tools:
 Execute small, ad-hoc tasks with GSD guarantees (atomic commits, STATE.md tracking) while skipping optional agents (research, plan-checker, verifier).
 
 Quick mode is the same system with a shorter path:
+
 - Spawns gsd-planner (quick mode) + gsd-executor(s)
 - Skips gsd-phase-researcher, gsd-plan-checker, gsd-verifier
 - Quick tasks live in `.planning/quick/` separate from planned phases
@@ -90,6 +91,7 @@ Store response as `$DESCRIPTION`.
 If empty, re-prompt: "Please provide a task description."
 
 Generate slug from description:
+
 ```bash
 slug=$(echo "$DESCRIPTION" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g' | sed 's/--*/-/g' | sed 's/^-//;s/-$//' | cut -c1-40)
 ```
@@ -126,6 +128,7 @@ mkdir -p "$QUICK_DIR"
 ```
 
 Report to user:
+
 ```
 Creating quick task ${next_num}: ${DESCRIPTION}
 Directory: ${QUICK_DIR}
@@ -172,6 +175,7 @@ Return: ## PLANNING COMPLETE with plan path
 ```
 
 After planner returns:
+
 1. Verify plan exists at `${QUICK_DIR}/${next_num}-PLAN.md`
 2. Extract plan count (typically 1 for quick tasks)
 3. Report: "Plan created: ${QUICK_DIR}/${next_num}-PLAN.md"
@@ -206,6 +210,7 @@ Project state: @.planning/STATE.md
 ```
 
 After executor returns:
+
 1. Verify summary exists at `${QUICK_DIR}/${next_num}-SUMMARY.md`
 2. Extract commit hash from executor output
 3. Report completion status
@@ -244,6 +249,7 @@ Insert after `### Blockers/Concerns` section:
 **7d. Update "Last activity" line:**
 
 Find and update the line:
+
 ```
 Last activity: $(date +%Y-%m-%d) - Completed quick task ${next_num}: ${DESCRIPTION}
 ```
@@ -274,11 +280,13 @@ EOF
 ```
 
 Get final commit hash:
+
 ```bash
 commit_hash=$(git rev-parse --short HEAD)
 ```
 
 Display completion output:
+
 ```
 ---
 
@@ -297,6 +305,7 @@ Ready for next task: /gsd:quick
 </process>
 
 <success_criteria>
+
 - [ ] ROADMAP.md validation passes
 - [ ] User provides task description
 - [ ] Slug generated (lowercase, hyphens, max 40 chars)

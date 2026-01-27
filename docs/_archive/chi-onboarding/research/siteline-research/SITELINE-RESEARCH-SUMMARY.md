@@ -29,24 +29,24 @@
 
 ### Document 1: "siteline construciton eval - claude.md"
 
-- **Source:** Appears to be Claude-generated research
-- **Tone:** Cautious, highlights gaps
-- **Strengths:** Clear structure, honest about what's NOT documented
-- **Key finding:** QuickBooks Online NOT supported, only Desktop Enterprise
+* **Source:** Appears to be Claude-generated research
+* **Tone:** Cautious, highlights gaps
+* **Strengths:** Clear structure, honest about what's NOT documented
+* **Key finding:** QuickBooks Online NOT supported, only Desktop Enterprise
 
 ### Document 2: "Siteline_ Deep Dive into Features for Subcontractor Billing.pdf"
 
-- **Source:** ChatGPT-generated research
-- **Tone:** More optimistic/sales-oriented
-- **Strengths:** Good alternatives comparison, detailed feature descriptions
-- **Concern:** Contradicts Document 1 on QuickBooks Online ("can likely integrate" vs "not supported")
+* **Source:** ChatGPT-generated research
+* **Tone:** More optimistic/sales-oriented
+* **Strengths:** Good alternatives comparison, detailed feature descriptions
+* **Concern:** Contradicts Document 1 on QuickBooks Online ("can likely integrate" vs "not supported")
 
 ### Web Search (November 2025)
 
-- Confirmed QuickBooks is file-based transfer (IIF files)
-- User reviews confirm Procore integration issues
-- No SOC 2 certification found publicly
-- Users report getting paid 3 weeks faster on average
+* Confirmed QuickBooks is file-based transfer (IIF files)
+* User reviews confirm Procore integration issues
+* No SOC 2 certification found publicly
+* Users report getting paid 3 weeks faster on average
 
 - --
 
@@ -81,10 +81,10 @@
 
 * *What this means:**
 
-- NOT a live, real-time sync
-- Still requires manual import/export steps
-- But eliminates re-typing (data flows via file)
-- QuickBooks remains your system of record for A/R, GL, job costing
+* NOT a live, real-time sync
+* Still requires manual import/export steps
+* But eliminates re-typing (data flows via file)
+* QuickBooks remains your system of record for A/R, GL, job costing
 
 * *QuickBooks Online:** NOT supported per Document 1 (Document 2's claim that it "can likely integrate" appears incorrect based on Siteline's own documentation).
 
@@ -96,11 +96,11 @@
 
 * *Comprehensive support:**
 
-- Generates AIA G702 (Application for Payment) and G703 (Continuation Sheet)
-- Database of 15,000+ GC forms including custom variations
-- Auto-calculates taxes, retainage, carry-over
-- Digital signatures supported
-- 50% drop in pay app revisions reported by users
+* Generates AIA G702 (Application for Payment) and G703 (Continuation Sheet)
+* Database of 15,000+ GC forms including custom variations
+* Auto-calculates taxes, retainage, carry-over
+* Digital signatures supported
+* 50% drop in pay app revisions reported by users
 
 * *Licensing note:** Siteline is NOT affiliated with AIA. If your GCs require officially licensed AIA forms, you may need to secure those separately.
 
@@ -112,17 +112,17 @@
 
 * *What Siteline does:**
 
-- Flexible configuration (overall rate or per-line-item)
-- Time-based rules (e.g., 10% first 3 periods, then 5%)
-- Automatic calculation and carry-forward
-- Billing reports show billed-to-date, balance to finish, retention held
+* Flexible configuration (overall rate or per-line-item)
+* Time-based rules (e.g., 10% first 3 periods, then 5%)
+* Automatic calculation and carry-forward
+* Billing reports show billed-to-date, balance to finish, retention held
 
 * *What's missing:**
 
-- No explicit "outstanding vs held" dedicated view
-- Retainage visibility is within billing reports, not a standalone module
-- Document 1 says this feature is "not found in documentation"
-- Document 2 is more optimistic ("can generate unbilled retainage report")
+* No explicit "outstanding vs held" dedicated view
+* Retainage visibility is within billing reports, not a standalone module
+* Document 1 says this feature is "not found in documentation"
+* Document 2 is more optimistic ("can generate unbilled retainage report")
 
 * *Your need:** You wanted to see 10% held for 2+ years vs. actually outstanding. This may require asking Siteline directly how their reporting handles this.
 
@@ -174,10 +174,10 @@
 
 * *Confirmed supported:**
 
-- Backup documentation (timesheets, material invoices, photos)
-- Compliance documents (Certificates of Insurance, certified payroll)
-- Change order backup
-- Lien waivers
+* Backup documentation (timesheets, material invoices, photos)
+* Compliance documents (Certificates of Insurance, certified payroll)
+* Change order backup
+* Lien waivers
 
 * *Not documented:** File size limits, storage limits, supported file types (though standard construction docs like PDFs and images are clearly supported).
 
@@ -189,12 +189,12 @@
 
 * *This is one of Siteline's strongest features:**
 
-- Generates all 4 standard waiver types (Conditional/Unconditional Progress/Final)
-- Auto-generates unconditional waivers when invoices marked paid
-- Lien Waiver Tracker shows real-time status
-- Lower-tier vendors can sign without creating account
-- Automated reminder emails
-- Users report collecting waivers "6x faster"
+* Generates all 4 standard waiver types (Conditional/Unconditional Progress/Final)
+* Auto-generates unconditional waivers when invoices marked paid
+* Lien Waiver Tracker shows real-time status
+* Lower-tier vendors can sign without creating account
+* Automated reminder emails
+* Users report collecting waivers "6x faster"
 
 * *User quote:** "Their form fill process is second to none. It transformed the way my company processed billings, tracked cash flow, handled contract compliance, and managed our lien waivers."
 
@@ -206,11 +206,11 @@
 
 * *What Siteline does:**
 
-- Centralized change order log with status tracking
-- Pre-filled CO request forms per GC requirements
-- Built-in rate tables for pricing
-- Integration with billing (approved COs flow to SOV)
-- Permission controls prevent billing unapproved COs
+* Centralized change order log with status tracking
+* Pre-filled CO request forms per GC requirements
+* Built-in rate tables for pricing
+* Integration with billing (approved COs flow to SOV)
+* Permission controls prevent billing unapproved COs
 
 * *Case study:** VanKirk Electric saves 16 hours/month managing 60+ change orders.
 
@@ -222,19 +222,19 @@
 
 * *Pricing:**
 
-- Custom quote based on usage, billing volume, integrations
-- NO per-user fees (unlimited seats)
-- No setup/implementation fees reported
-- No free trial
-- Users describe as "accessible price point"
+* Custom quote based on usage, billing volume, integrations
+* NO per-user fees (unlimited seats)
+* No setup/implementation fees reported
+* No free trial
+* Users describe as "accessible price point"
 
 * *Implementation:**
 
-- Most customers operational within 2 weeks
-- Dedicated onboarding manager for first 6 months
-- Siteline handles bulk import of existing projects
-- ~10 minutes for PMs to learn basic billing
-- 98% customer retention rate
+* Most customers operational within 2 weeks
+* Dedicated onboarding manager for first 6 months
+* Siteline handles bulk import of existing projects
+* ~10 minutes for PMs to learn basic billing
+* 98% customer retention rate
 
 * *Verdict:** Fast implementation is attractive. Custom pricing means you need to engage sales.
 
@@ -292,33 +292,33 @@
 
 * *Security (CRITICAL):**
 
-- [ ] Do you offer 2FA? Is it required or optional?
-- [ ] Do you have SOC 2 Type I or Type II certification?
-- [ ] What encryption standards do you use (at rest and in transit)?
-- [ ] What are your backup and disaster recovery procedures?
-- [ ] Can you provide a security questionnaire or MSA with security details?
+* [ ] Do you offer 2FA? Is it required or optional?
+* [ ] Do you have SOC 2 Type I or Type II certification?
+* [ ] What encryption standards do you use (at rest and in transit)?
+* [ ] What are your backup and disaster recovery procedures?
+* [ ] Can you provide a security questionnaire or MSA with security details?
 
 * *Retainage:**
 
-- [ ] Show me how to see retainage held vs. outstanding across all projects
-- [ ] Can I see retainage aging (how long it's been held)?
-- [ ] How does retainage release work when project closes out?
+* [ ] Show me how to see retainage held vs. outstanding across all projects
+* [ ] Can I see retainage aging (how long it's been held)?
+* [ ] How does retainage release work when project closes out?
 
 * *Month Lockdown:**
 
-- [ ] Can I lock/close billing periods to prevent changes?
-- [ ] What audit trail exists for changes to submitted pay apps?
-- [ ] How does this work with QuickBooks period close?
+* [ ] Can I lock/close billing periods to prevent changes?
+* [ ] What audit trail exists for changes to submitted pay apps?
+* [ ] How does this work with QuickBooks period close?
 
 * *Procore:**
 
-- [ ] What are the known limitations with Procore integration?
-- [ ] How many of your customers use Procore successfully?
+* [ ] What are the known limitations with Procore integration?
+* [ ] How many of your customers use Procore successfully?
 
 * *Pricing:**
 
-- [ ] What's the typical pricing range for a company our size (~7 service lines)?
-- [ ] What's included in the base subscription vs. add-ons?
+* [ ] What's the typical pricing range for a company our size (~7 service lines)?
+* [ ] What's included in the base subscription vs. add-ons?
 
 - --
 
@@ -355,23 +355,23 @@
 
 * *What this means for Desert Services:**
 
-- Conductor.is integration is possible
-- Can build automation: Siteline → QuickBooks sync
-- Don't have to rely on file-based IIF import/export
-- Could push final invoice data to QuickBooks programmatically
+* Conductor.is integration is possible
+* Can build automation: Siteline → QuickBooks sync
+* Don't have to rely on file-based IIF import/export
+* Could push final invoice data to QuickBooks programmatically
 
 * *Sources:**
 
-- [Siteline Integrations](https://www.siteline.com/integrations) - "Open API to connect with other construction software"
-- [hh2 iPaaS Integration](https://www.hh2.com/siteline) - Shows API integration patterns
+* [Siteline Integrations](https://www.siteline.com/integrations) - "Open API to connect with other construction software"
+* [hh2 iPaaS Integration](https://www.hh2.com/siteline) - Shows API integration patterns
 
 ### Why Desert Services Got Siteline
 
 * *Background:** Before Siteline, billing team was using QuickBooks incorrectly:
 
-- Open invoice → save → add line items throughout the month
-- Change orders added to same open invoice
-- At month end, send the invoice
+* Open invoice → save → add line items throughout the month
+* Change orders added to same open invoice
+* At month end, send the invoice
 
 * *The problem:** QuickBooks expects invoices created and sent as discrete events. Using it as a "running tally" corrupts the data integrity.
 

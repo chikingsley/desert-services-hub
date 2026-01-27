@@ -42,6 +42,7 @@ The established libraries/tools for this domain:
 | Structured output | JSON mode + manual parse | Structured output enforces schema at API level; JSON mode only guarantees valid JSON |
 
 **Installation:**
+
 ```bash
 # All dependencies already installed, no action needed
 ```
@@ -49,6 +50,7 @@ The established libraries/tools for this domain:
 ## Architecture Patterns
 
 ### Recommended Project Structure
+
 ```
 services/
   contract/
@@ -85,6 +87,7 @@ services/
 **When to use:** Every extraction agent follows this pattern.
 
 **Example:**
+
 ```typescript
 // Source: https://docs.mistral.ai/capabilities/structured_output/custom
 import { z } from "zod";
@@ -161,6 +164,7 @@ If information is not found in the document, use null for that field.`,
 **When to use:** When executing the full extraction pipeline.
 
 **Example:**
+
 ```typescript
 // Source: Pattern derived from MDN Promise.allSettled documentation
 import type { Mistral } from "@mistralai/mistralai";
@@ -247,6 +251,7 @@ export async function runAllAgents(
 **When to use:** All extraction schemas.
 
 **Example:**
+
 ```typescript
 // Source: Derived from existing codebase patterns + Mistral docs
 import { z } from "zod";
@@ -295,6 +300,7 @@ const InsuranceSchema = z.object({
 **When to use:** After running agents, before displaying to user.
 
 **Example:**
+
 ```typescript
 // Source: Existing lib/db/index.ts patterns
 import { db } from "@/lib/db";
@@ -397,6 +403,7 @@ Problems that look simple but have existing solutions:
 **Why it happens:** LLMs are optimized for plausibility, not accuracy. Numbers that "sound right" for contracts may be fabricated.
 
 **How to avoid:**
+
 - Use `temperature: 0` for deterministic extraction
 - Include per-field page citations so humans can verify
 - Add validation rules in Zod (e.g., contract value must be > 0 if present)
@@ -411,6 +418,7 @@ Problems that look simple but have existing solutions:
 **Why it happens:** The model may not accurately count page breaks or may confuse similar content across pages.
 
 **How to avoid:**
+
 - Use clear, consistent page break markers (`---PAGE BREAK---`)
 - In system prompt, explicitly explain page numbering scheme
 - Consider pre-processing text to add explicit `[PAGE 1]`, `[PAGE 2]` markers
@@ -424,6 +432,7 @@ Problems that look simple but have existing solutions:
 **Why it happens:** LLMs may not distinguish between "not found" (null) and "found but empty" ("").
 
 **How to avoid:**
+
 - Use `.nullable()` consistently for optional fields
 - In `.describe()`, explicitly state "Use null if not found in document"
 - Add `.transform()` to normalize empty strings to null if needed
@@ -437,6 +446,7 @@ Problems that look simple but have existing solutions:
 **Why it happens:** Complex tables in contract PDFs may not extract cleanly, especially from OCR.
 
 **How to avoid:**
+
 - Review extracted text from Phase 2 for table quality before agent processing
 - Use markdown-formatted OCR output which preserves table structure
 - Consider array schema for line items rather than trying to parse a single table string
@@ -450,6 +460,7 @@ Problems that look simple but have existing solutions:
 **Why it happens:** Mistral has rate limits; 7 parallel calls from same API key may exceed them.
 
 **How to avoid:**
+
 - Monitor rate limit headers in responses
 - Consider chunking if needed (e.g., 4 agents, then 3)
 - Add exponential backoff retry logic for 429 errors
@@ -622,6 +633,7 @@ export async function extractBilling(
 | Document-level citation | Field-level citation | 2025-2026 | Precise human verification, audit trail |
 
 **Deprecated/outdated:**
+
 - **JSON mode without schema:** Less reliable than structured output with schema
 - **GPT function calling for extraction:** Structured output is cleaner for pure extraction
 - **Instructor library:** Mistral SDK now has native `chat.parse()` support
@@ -653,6 +665,7 @@ Things that couldn't be fully resolved:
 ## Sources
 
 ### Primary (HIGH confidence)
+
 - [Mistral Custom Structured Output Documentation](https://docs.mistral.ai/capabilities/structured_output/custom) - API reference, TypeScript examples
 - [Mistral JSON Mode Documentation](https://docs.mistral.ai/capabilities/structured_output/json_mode) - Response format configuration
 - [Mistral TypeScript SDK](https://github.com/mistralai/client-ts) - Official SDK, chat.parse method
@@ -660,17 +673,20 @@ Things that couldn't be fully resolved:
 - [MDN Promise.allSettled](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/allSettled) - Parallel execution pattern
 
 ### Secondary (MEDIUM confidence)
+
 - [Stop Parsing LLMs with Regex - DEV Community](https://dev.to/dthompsondev/llm-structured-json-building-production-ready-ai-features-with-schema-enforced-outputs-4j2j) - Schema-enforced outputs best practices
 - [LLM-Based Document Extraction Patterns](https://landing.ai/developers/going-beyond-ocrllm-introducing-agentic-document-extraction) - Agentic extraction with citation tracking
 - [Unstract LLM PDF Extraction](https://unstract.com/blog/comparing-approaches-for-using-llms-for-structured-data-extraction-from-pdfs/) - Hallucination prevention strategies
 
 ### Tertiary (LOW confidence)
+
 - [Exploring LLM Citation Generation](https://medium.com/@prestonblckbrn/exploring-llm-citation-generation-in-2025-4ac7c8980794) - Citation tracking patterns
 - [Cradl AI Hallucination-Free Extraction](https://www.cradl.ai/post/hallucination-free-llm-data-extraction) - LLM challenge approach for verification
 
 ## Metadata
 
 **Confidence breakdown:**
+
 - Standard stack: HIGH - Mistral SDK documented, Zod well-established, patterns verified
 - Architecture: HIGH - Parallel execution is standard practice, storage follows existing codebase patterns
 - Pitfalls: MEDIUM - Based on documented LLM extraction challenges, some specifics from community sources

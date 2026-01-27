@@ -15,6 +15,7 @@ Send to internalcontracts@ after extraction, reconciliation, and response action
 ---
 
 **Project Info:**
+
 - Project Name:
 - Address:
 - Account/GC:
@@ -23,6 +24,7 @@ Send to internalcontracts@ after extraction, reconciliation, and response action
 - Monday Estimate: [link]
 
 **Contract Details:**
+
 - Contract Type: [LOI / Subcontract / Work Order]
 - Contract Value: $
 - Contract Date:
@@ -32,31 +34,37 @@ Send to internalcontracts@ after extraction, reconciliation, and response action
 - Schedule of Values: [Received / Missing]
 
 **Estimate Details:**
+
 - Estimate Value: $
 - Estimate Version:
 - Variance (Estimate - Contract): $
 - Revised Estimate: [link if created]
 
 **Contacts:**
+
 - GC PM:
 - GC Superintendent:
 - Billing Contact:
 
 **Scope Summary:**
 -
+
 -
 -
 
 **Red Flags / Special Terms:**
 -
+
 -
 
 **Missing Information:**
 -
+
 -
 
 **Next Actions:**
 -
+
 -
 
 ---
@@ -78,16 +86,19 @@ Thank you for sending over the contract for [Project Name].
 Before we can proceed, we need clarification on the following:
 
 **Scope Questions:**
+
 - [Question about discrepancy]
 -
 -
 
 **Missing Information:**
+
 - [What we need from them]
 -
 -
 
 **Variance:**
+
 - Our estimate: $
 - Contract value: $
 - Difference: $

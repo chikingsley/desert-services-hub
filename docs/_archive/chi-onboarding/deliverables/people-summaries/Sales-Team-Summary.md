@@ -20,73 +20,73 @@ The sales team manages relationships with the top 100+ general contractors, cond
 
 * *Relationship Building & Account Management:**
 
-- Visit assigned general contractor sites minimum once per month (Top 80 tracking)
-- Conduct site inspections documenting what services are in use
-- Build relationships with superintendents and project managers
-- Attend foreman meetings for major white-glove accounts
-- Serve as single point of contact for all service needs
+* Visit assigned general contractor sites minimum once per month (Top 80 tracking)
+* Conduct site inspections documenting what services are in use
+* Build relationships with superintendents and project managers
+* Attend foreman meetings for major white-glove accounts
+* Serve as single point of contact for all service needs
 
 * *Upselling & Cross-Selling:**
 
-- Identify opportunities to add services beyond initial SWPPP contracts
-- Quote pricing for PJs, temp fence, roll-offs, sweeping, water trucks
-- Bundle services for better pricing/value proposition
-- Pitch "one-stop-shop" model to avoid GCs calling multiple vendors
+* Identify opportunities to add services beyond initial SWPPP contracts
+* Quote pricing for PJs, temp fence, roll-offs, sweeping, water trucks
+* Bundle services for better pricing/value proposition
+* Pitch "one-stop-shop" model to avoid GCs calling multiple vendors
 
 * *Problem Solving & Account Support:**
 
-- Handle service issues and complaints in the field
-- Coordinate with division directors (Daniel, Kelly, Kerin, Wendy, Jayson)
-- Manage white-glove accounts with frequent touchpoints
-- Emergency response for customer needs
+* Handle service issues and complaints in the field
+* Coordinate with division directors (Daniel, Kelly, Kerin, Wendy, Jayson)
+* Manage white-glove accounts with frequent touchpoints
+* Emergency response for customer needs
 
 ### Team Structure & Territory Management
 
 * *Brandon & Lacie Slevin:**
 
-- Top 50 General Contractors (regardless of geographic location)
-- Started 6-8 months ago
-- Original role: Relationship building only
-- Current reality: Also project management, problem solving, firefighting
-- Lacie manages Clayco (275K+ account with all 7 services)
+* Top 50 General Contractors (regardless of geographic location)
+* Started 6-8 months ago
+* Original role: Relationship building only
+* Current reality: Also project management, problem solving, firefighting
+* Lacie manages Clayco (275K+ account with all 7 services)
 
 * *Michael Ricks:**
 
-- Next 50 General Contractors
-- 6 months tenure
-- Similar hybrid role: sales + account management + problem solving
+* Next 50 General Contractors
+* 6 months tenure
+* Similar hybrid role: sales + account management + problem solving
 
 * *Michael Hammonds:**
 
-- New prospects (companies with no current relationship)
-- Builds new relationships then transitions to his own book of business
-- Sends opportunities to Brandon/Lacie if existing relationship discovered
+* New prospects (companies with no current relationship)
+* Builds new relationships then transitions to his own book of business
+* Sends opportunities to Brandon/Lacie if existing relationship discovered
 
 * *Rick Haitaian (Sales Operations - not present at meeting):**
 
-- Entry-level SDR-type role (originally designed as such)
-- Monitors dust permits for new leads
-- Follows up on submitted bids/estimates
-- Supposed to provide: PM names, addresses, contact info, start dates
-- Reality: Not consistently happening
+* Entry-level SDR-type role (originally designed as such)
+* Monitors dust permits for new leads
+* Follows up on submitted bids/estimates
+* Supposed to provide: PM names, addresses, contact info, start dates
+* Reality: Not consistently happening
 
 ### Working Hours & Activity
 
 * *Daily Activities:**
 
-- Site visits to assigned top 80 accounts
-- Opportunistic visits to nearby sites when in area
-- Foreman meetings (weekly for major accounts)
-- Email/phone coordination with GCs
-- Internal coordination with division directors
-- Fighting fires and solving problems
+* Site visits to assigned top 80 accounts
+* Opportunistic visits to nearby sites when in area
+* Foreman meetings (weekly for major accounts)
+* Email/phone coordination with GCs
+* Internal coordination with division directors
+* Fighting fires and solving problems
 
 * *Tools Used:**
 
-- Monday.com (inadequate CRM)
-- Personal cell phones (no company phones, no direct lines)
-- Compliance Go (inspectors use, $10/month mapping tool)
-- Email for everything (required for billing protection)
+* Monday.com (inadequate CRM)
+* Personal cell phones (no company phones, no direct lines)
+* Compliance Go (inspectors use, $10/month mapping tool)
+* Email for everything (required for billing protection)
 
 - --
 
@@ -120,23 +120,25 @@ The sales team manages relationships with the top 100+ general contractors, cond
 ### Critical Missing Pieces
 
 * *No Win Notification:**
+
 > "There's no workflow whatsoever. There's no follow-up as far as we won the project and then alerting us." - Lacie
 
 * *Example Scenarios:**
 
-- Lacie driving to job, sees Hayden project with SWPPP signs, had zero knowledge job existed
-- Michael pulls up to Chipotle, sees 4 Desert Services roll-offs, two full, didn't know project started
-- Projects marked "not started" in Monday but already halfway done in field
+* Lacie driving to job, sees Hayden project with SWPPP signs, had zero knowledge job existed
+* Michael pulls up to Chipotle, sees 4 Desert Services roll-offs, two full, didn't know project started
+* Projects marked "not started" in Monday but already halfway done in field
 
 * *Missing Information When Projects Are Won:**
 
-- No PM name or contact
-- No job site address
-- No start date
-- No confirmation which services were actually contracted
-- Sometimes just "bid won" status with nothing else
+* No PM name or contact
+* No job site address
+* No start date
+* No confirmation which services were actually contracted
+* Sometimes just "bid won" status with nothing else
 
 * *Impact:**
+
 > "Once a site has started, if you're going out there and they have already broke ground on that site, fat chance on upselling them on anything. Because they've all... if they have broke ground and started, PJs are gonna be out there. Fence is up. They'll have at least one roll-off dumpster out there." - Michael
 
 - --
@@ -147,67 +149,67 @@ The sales team manages relationships with the top 100+ general contractors, cond
 
 * *1. Dust Permits (Rick monitors)**
 
-- Maricopa County dust permit database
-- Indicates new construction starting
-- Rick supposed to follow up and qualify leads
+* Maricopa County dust permit database
+* Indicates new construction starting
+* Rick supposed to follow up and qualify leads
 
 * *2. Bid Requests from GCs**
 
-- GC estimators send bid invitations
-- Goes to Jared for SWPPP estimates
-- Entered into Monday (sometimes)
-- Rick supposed to follow up post-submission
+* GC estimators send bid invitations
+* Goes to Jared for SWPPP estimates
+* Entered into Monday (sometimes)
+* Rick supposed to follow up post-submission
 
 * *3. Relationship-Driven (Proactive)**
 
-- Sales visiting sites regularly
-- Building superintendent relationships
-- Getting early notification of upcoming projects
-- Example: Michael in contact with Chase PM about new high school before official bid
+* Sales visiting sites regularly
+* Building superintendent relationships
+* Getting early notification of upcoming projects
+* Example: Michael in contact with Chase PM about new high school before official bid
 
 * *4. "Lunch and Learns"**
 
-- Recently started (~2 events so far)
-- Present company capabilities to GC teams
-- Establish annual/2-year pricing agreements
-- Goal: Become preferred vendor with locked pricing
+* Recently started (~2 events so far)
+* Present company capabilities to GC teams
+* Establish annual/2-year pricing agreements
+* Goal: Become preferred vendor with locked pricing
 
 ### Bidding Process
 
 * *Primary Focus: SWPPP**
 
-- SWPPP required in GC's construction plans
-- Must be budgeted for permits and approvals
-- Estimators request SWPPP bids during pre-construction
-- Other services (PJs, fence, roll-offs) not typically in initial bid
+* SWPPP required in GC's construction plans
+* Must be budgeted for permits and approvals
+* Estimators request SWPPP bids during pre-construction
+* Other services (PJs, fence, roll-offs) not typically in initial bid
 
 * *Why Other Services Not Bid Initially:**
 
-- SWPPP built into GC's budget (required by plans/permits)
-- Other services come from different budget line (operations)
-- Some GCs want everything bid together, most don't
-- PMs/Supers handle other services after project awarded
+* SWPPP built into GC's budget (required by plans/permits)
+* Other services come from different budget line (operations)
+* Some GCs want everything bid together, most don't
+* PMs/Supers handle other services after project awarded
 
 * *Estimate Format Issues:**
 
-- SWPPP estimate shows full detail with line-item total
-- Additional services listed as pricing sheets (no quantities/totals)
-- Estimators prefer this (easy to forward just SWPPP portion)
-- Problem: Company can't forecast true project value
-- $30K SWPPP estimate might become $200K with all services
+* SWPPP estimate shows full detail with line-item total
+* Additional services listed as pricing sheets (no quantities/totals)
+* Estimators prefer this (easy to forward just SWPPP portion)
+* Problem: Company can't forecast true project value
+* $30K SWPPP estimate might become $200K with all services
 
 * *Conversion Metrics:**
 
-- Goal: 18% conversion rate on estimates
-- Not fully accurate (company bids multiple variations per opportunity)
-- No systematic tracking of win/loss reasons
+* Goal: 18% conversion rate on estimates
+* Not fully accurate (company bids multiple variations per opportunity)
+* No systematic tracking of win/loss reasons
 
 * *Competitive Position:**
 
-- Rick believes pricing NOT the issue
-- Sales team believes pricing IS a major issue (along with relationships)
-- Recent price increase implemented during sales team's first 6 months
-- Difficult to assess impact without baseline data
+* Rick believes pricing NOT the issue
+* Sales team believes pricing IS a major issue (along with relationships)
+* Recent price increase implemented during sales team's first 6 months
+* Difficult to assess impact without baseline data
 
 - --
 
@@ -217,24 +219,24 @@ The sales team manages relationships with the top 100+ general contractors, cond
 
 * *Structure:**
 
-- Each salesperson has "Top 80" board in Monday
-- Lists assigned GC accounts
-- Supposed to visit each site monthly
-- Document services in use (ours and competitors)
-- Inspection reports with notes
+* Each salesperson has "Top 80" board in Monday
+* Lists assigned GC accounts
+* Supposed to visit each site monthly
+* Document services in use (ours and competitors)
+* Inspection reports with notes
 
 * *Project Opportunities Board:**
 
-- Sites not in Top 80 but worth pursuing
-- Opportunistic visits when in area
-- Don't need monthly cadence
+* Sites not in Top 80 but worth pursuing
+* Opportunistic visits when in area
+* Don't need monthly cadence
 
 * *New Projects Board:**
 
-- Jared supposed to move won bids here
-- Should mark "bid won"
-- Automation supposed to assign to appropriate salesperson based on GC
-- Reality: Automation doesn't work, manual assignment required
+* Jared supposed to move won bids here
+* Should mark "bid won"
+* Automation supposed to assign to appropriate salesperson based on GC
+* Reality: Automation doesn't work, manual assignment required
 
 ### Account Hierarchy Problem
 

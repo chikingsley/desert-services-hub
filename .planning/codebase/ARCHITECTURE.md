@@ -7,6 +7,7 @@
 **Overall:** Full-stack SPA with Bun runtime server, React 19 frontend with client-side routing, and SQLite persistent storage. Server handles REST API and static file serving; frontend is a self-contained React application with data loaders.
 
 **Key Characteristics:**
+
 - Monolithic Bun server (`src/server.ts`) with explicit routing using `Bun.serve()`
 - React Router v7 in Data Mode for client-side routing with data loaders
 - Single SQLite database (`lib/db/index.ts`) with schema centralized in one file
@@ -16,6 +17,7 @@
 ## Layers
 
 **API Layer:**
+
 - Purpose: Handle HTTP requests, validate input, coordinate database operations, generate responses
 - Location: `src/api/` (all route handlers)
 - Contains: Request handlers for quotes, takeoffs, catalog, Monday.com, file upload, webhooks
@@ -23,6 +25,7 @@
 - Used by: Bun server router, frontend fetch calls
 
 **Data Access Layer:**
+
 - Purpose: Direct SQLite database interaction and schema definition
 - Location: `lib/db/index.ts` (single file, all tables defined here)
 - Contains: Database initialization, table creation with foreign keys, exported `db` instance
@@ -30,6 +33,7 @@
 - Used by: All API handlers, no abstraction—direct SQL queries in handlers
 
 **Domain Logic Layer:**
+
 - Purpose: Business rules and transformations (PDF generation, quote calculations, takeoff conversions)
 - Location: `lib/` subdirectories (pdf/, pdf-takeoff/, schemas/)
 - Contains: PDF builder logic, takeoff-to-quote conversion, validation schemas, utility functions
@@ -37,6 +41,7 @@
 - Used by: API handlers, frontend components
 
 **Frontend Layer:**
+
 - Purpose: User interface, client-side state, data fetching
 - Location: `src/frontend/` (SPA bundle)
 - Contains: React Router setup, pages, components, hooks
@@ -44,6 +49,7 @@
 - Used by: Browser, served as HTML/JS/CSS bundle
 
 **Service Integration Layer:**
+
 - Purpose: External APIs and third-party integrations (Monday.com, Notion, email, SharePoint)
 - Location: `services/` (Monday, email, notion, contract, quoting, etc.)
 - Contains: Client libraries, MCP servers, business logic for integrations
@@ -94,6 +100,7 @@
 8. User can convert takeoff to quote via `/api/quotes/:id/takeoff` endpoint
 
 **State Management:**
+
 - Database is source of truth; no Redux/Zustand in frontend
 - React Router loaders pre-fetch data before rendering
 - Component state used only for UI ephemeral state (form inputs, modals, scroll position)
@@ -102,21 +109,25 @@
 ## Key Abstractions
 
 **Quote Versioning:**
+
 - Purpose: Support multiple iterations of a quote without losing history
 - Examples: `src/api/quotes.ts` (createQuote creates QuoteVersion), `src/api/quotes-by-id.ts` (updateQuote creates new version)
 - Pattern: Every quote has `versions` array; `is_current = 1` marks the active version; line items belong to versions, not quotes directly
 
 **EditorQuote Type:**
+
 - Purpose: Normalized application type used internally for PDF rendering, separate from database row types
 - Examples: `lib/types.ts` (EditorQuote interface), `src/api/quotes-by-id.ts` (transforms QuoteRow → EditorQuote)
 - Pattern: API handlers transform raw database rows to application types before using for business logic
 
 **Catalog System:**
+
 - Purpose: Reusable pricing templates organized hierarchically
 - Examples: `lib/types.ts` (CatalogCategory, CatalogSubcategory, CatalogServiceItem), `src/api/catalog.ts` (getCatalog)
 - Pattern: Categories → Subcategories → Items; selection_mode ("pick-one" or "pick-many") controls UI behavior
 
 **PDF Builder Pattern:**
+
 - Purpose: Centralize PDF document structure generation
 - Examples: `lib/pdf/pdf-builder.ts` (buildDocDefinition, buildBackPageDocDefinition), `lib/pdf/generate-pdf.ts` (generatePDF)
 - Pattern: Builders take application types (EditorQuote) and return pdfmake document definitions; separate from rendering
@@ -124,17 +135,20 @@
 ## Entry Points
 
 **Server Entry:**
+
 - Location: `src/server.ts`
 - Triggers: `bun run dev` or `bun run src/server.ts`
 - Responsibilities: Initialize Bun.serve(), define routes, handle static files, manage error handler
 
 **Frontend Entry:**
+
 - Location: `src/frontend/main.tsx`
 - Triggers: Bundled by Bun, served as HTML/CSS/JS from `src/frontend/index.html`
 - Responsibilities: Bootstrap React app, create router, mount to DOM
 
 **API Routes:**
 All in `src/api/` directory:
+
 - `health.ts` → GET /api/health (status check)
 - `quotes.ts` → GET/POST /api/quotes (list/create quotes)
 - `quotes-by-id.ts` → GET/PUT/DELETE /api/quotes/:id (fetch/update/delete single quote, PDF generation)
@@ -150,6 +164,7 @@ All in `src/api/` directory:
 **Strategy:** Try-catch in each handler with console.error logging and JSON error responses. No custom error classes.
 
 **Patterns:**
+
 - API handlers return `Response.json({ error: "message" }, { status: 500 })` on exception
 - Frontend uses React Router's `errorElement: <RouteErrorBoundary />` to catch loader errors
 - Missing resources return 404 responses

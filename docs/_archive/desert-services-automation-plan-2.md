@@ -10,18 +10,18 @@
 This document outlines a phased approach to automating and improving processes across the Desert Services job lifecycle—from bid intake through project closeout and billing. The goal is to create visibility, reduce manual friction, and ensure nothing falls through the cracks.
 
 * *Key Principles:**
-- Start clean. Don't migrate junk data.
-- Get buy-in before implementing
-- Build alongside existing workflows, then transition
-- Automate what's repeatable; keep humans on judgment calls
+* Start clean. Don't migrate junk data.
+* Get buy-in before implementing
+* Build alongside existing workflows, then transition
+* Automate what's repeatable; keep humans on judgment calls
 
 ## Design Principles
 
 * *Relationship-Based, Not Funnel-Based**
 Construction is a relationship business. Our systems should reflect this reality, not force-fit a high-volume transactional sales funnel.
-- **Account Managers over Sales Reps:** Our people manage long-term relationships and site visit calendars, not just "deals" in a pipeline.
-- **Maps over Lists:** Geography matters. Site visits are driven by location and active projects, not just lead status.
-- **Long-Term Context:** We need to know the history of a site and a contact across multiple projects, not just the current transaction.
+* **Account Managers over Sales Reps:** Our people manage long-term relationships and site visit calendars, not just "deals" in a pipeline.
+* **Maps over Lists:** Geography matters. Site visits are driven by location and active projects, not just lead status.
+* **Long-Term Context:** We need to know the history of a site and a contact across multiple projects, not just the current transaction.
 
 - --
 
@@ -74,21 +74,21 @@ Construction is a relationship business. Our systems should reflect this reality
 | Notes | Text | |
 
 * *Project Status Options:**
-- **Estimating** - Bid is out, waiting to hear (lives in Monday, may not be in Notion yet)
-- **Project Initiation** - Won, setting up the project (getting NOI, site contact, etc.)
-- **Active** - Work in progress
-- **On Hold** - Paused for some reason
-- **Closed** - Done or dead
+* **Estimating** - Bid is out, waiting to hear (lives in Monday, may not be in Notion yet)
+* **Project Initiation** - Won, setting up the project (getting NOI, site contact, etc.)
+* **Active** - Work in progress
+* **On Hold** - Paused for some reason
+* **Closed** - Done or dead
 
 * *Bid Outcome Options:**
-- **Won** - Got the main bid (SWPPP)
-- **Lost** - Didn't get main bid
-- **Partial** - Got some services but not others
+* **Won** - Got the main bid (SWPPP)
+* **Lost** - Didn't get main bid
+* **Partial** - Got some services but not others
 
 * *When does a project come to Notion?**
-- When we have actual work to deliver (won something)
-- Projects that are fully lost stay in Monday for Sales to manage
-- If we lose SWPPP but win porta johns → create in Notion, Bid Outcome = Partial, SOV shows what we won
+* When we have actual work to deliver (won something)
+* Projects that are fully lost stay in Monday for Sales to manage
+* If we lose SWPPP but win porta johns → create in Notion, Bid Outcome = Partial, SOV shows what we won
 
 * Note: Dust permit, narrative, SWPPP plan acquisition, etc. are tracked as Scope Items if we're delivering them, or as Tasks if we need to obtain them from others.*
 
@@ -110,12 +110,12 @@ Construction is a relationship business. Our systems should reflect this reality
 | Notes | Text | |
 
 * Status definitions:*
-- **New** - Just added, needs review/scheduling
-- **Scheduled** - Has a date/plan to execute
-- **In Progress** - Work is actively happening
-- **Submitted** - We did our part, waiting on external (permit approval, sign-off, etc.)
-- **Complete** - Done, ready to bill
-- **On Hold** - Paused for some reason
+* **New** - Just added, needs review/scheduling
+* **Scheduled** - Has a date/plan to execute
+* **In Progress** - Work is actively happening
+* **Submitted** - We did our part, waiting on external (permit approval, sign-off, etc.)
+* **Complete** - Done, ready to bill
+* **On Hold** - Paused for some reason
 
 * *Tasks Database** (for tracking blockers and follow-ups)
 | Field | Type | Notes |
@@ -131,20 +131,20 @@ Construction is a relationship business. Our systems should reflect this reality
 | Notes | Text | Audit trail for follow-ups |
 
 * *Task Naming Convention:** `[Action] - [Project Name]`
-- "Get NOI - Chandler Heights Phase 2"
-- "File Dust Permit - Mesa Commerce Park"
-- "Contract Reconciliation - Goodyear Industrial"
-- "Change Order Approval - Signal Butte - Add'l Silt Fence"
+* "Get NOI - Chandler Heights Phase 2"
+* "File Dust Permit - Mesa Commerce Park"
+* "Contract Reconciliation - Goodyear Industrial"
+* "Change Order Approval - Signal Butte - Add'l Silt Fence"
 
 * *When to Create Tasks:**
-- Something is blocking progress and needs follow-up
-- Something has a specific due date that matters
-- You're waiting on someone and need to remember to chase it
+* Something is blocking progress and needs follow-up
+* Something has a specific due date that matters
+* You're waiting on someone and need to remember to chase it
 
 * *When NOT to Create Tasks:**
-- Normal workflow (scope item moves through statuses)
-- Things that are just "in progress" with no blocker
-- Routine work already visible in the SOV
+* Normal workflow (scope item moves through statuses)
+* Things that are just "in progress" with no blocker
+* Routine work already visible in the SOV
 
 * Chi lives in Tasks for daily standup. Everyone else lives in their lane. Tasks is the "what's blocked or due" lens across all projects.*
 
@@ -155,19 +155,21 @@ Construction is a relationship business. Our systems should reflect this reality
 * *User Story 1: Chi at Daily Standup**
 
 Without Tasks database:
-- Open each project one by one
-- Scan SOV for anything stuck
-- Try to remember what you were waiting on
-- Hope you don't miss something
+
+* Open each project one by one
+* Scan SOV for anything stuck
+* Try to remember what you were waiting on
+* Hope you don't miss something
 
 With Tasks database:
-- Open "My Open Tasks" view (Status ≠ Done, sorted by Due Date)
-- See at a glance:
-  - "Get NOI - Chandler Heights Phase 2" - Due today - Waiting on: Customer
-  - "File Dust Permit - Mesa Commerce Park" - Due tomorrow - Waiting on: Us
-  - "Contract Reconciliation - Goodyear Industrial" - Due Friday - Waiting on: Us
-- Work through the list, update statuses, mark complete
-- Done in 5 minutes
+
+* Open "My Open Tasks" view (Status ≠ Done, sorted by Due Date)
+* See at a glance:
+  * "Get NOI - Chandler Heights Phase 2" - Due today - Waiting on: Customer
+  * "File Dust Permit - Mesa Commerce Park" - Due tomorrow - Waiting on: Us
+  * "Contract Reconciliation - Goodyear Industrial" - Due Friday - Waiting on: Us
+* Work through the list, update statuses, mark complete
+* Done in 5 minutes
 
 * *Where Chi lives:** Tasks is the daily operating view. SOV is the record you update. Projects is the container.
 
@@ -181,30 +183,33 @@ With Tasks database:
 4. Create SOV line items from the estimate/contract
 
 Create Tasks only if something is missing:
-- No NOI? → Task: "Get NOI - [Project]" / Due: 3 days
-- No site contact? → Task: "Get Site Contact - [Project]" / Due: 3 days
-- Need to file dust permit? → Task: "File Dust Permit - [Project]" / Due: [based on start]
+
+* No NOI? → Task: "Get NOI - [Project]" / Due: 3 days
+* No site contact? → Task: "Get Site Contact - [Project]" / Due: 3 days
+* Need to file dust permit? → Task: "File Dust Permit - [Project]" / Due: [based on start]
 
 - --
 
 * *User Story 3: Field Supervisor Requests Change Order**
 
 Old way (what we're fixing):
-- Supervisor calls it in
-- Someone writes it on a sticky note
-- Maybe it gets billed, maybe not
+
+* Supervisor calls it in
+* Someone writes it on a sticky note
+* Maybe it gets billed, maybe not
 
 New way:
+
 1. Supervisor submits request (form, text, or call to Chi)
 2. Chi creates Task: "Change Order Approval - [Project] - [Description]"
 3. Chi checks approval checklist:
-    - [ ] Billing info confirmed
-    - [ ] **Evidence obtained** (signed quote, signed estimate, or email approval)
-    - [ ] Site contact confirmed
+    * [ ] Billing info confirmed
+    * [ ] **Evidence obtained** (signed quote, signed estimate, or email approval)
+    * [ ] Site contact confirmed
 4. Once approved AND evidence attached:
-    - Create Scope Item with Change Order flag ✓
-    - Attach evidence (signed doc) to Scope Item
-    - Mark Task as Done
+    * Create Scope Item with Change Order flag ✓
+    * Attach evidence (signed doc) to Scope Item
+    * Mark Task as Done
 5. Work proceeds, gets billed
 
 * *Key:** The Scope Item doesn't get created until you have the signed document. The Task tracks the approval process. The Scope Item is the auditable record.
@@ -216,15 +221,17 @@ New way:
 Chi asked customer for NOI two weeks ago. No response.
 
 Without Tasks:
-- Chi might forget
-- Project sits there, dust permit can't be filed
+
+* Chi might forget
+* Project sits there, dust permit can't be filed
 
 With Tasks:
-- Task: "Get NOI - Chandler Heights Phase 2"
-- Status: In Progress
-- Waiting On: Customer
-- Due Date: [overdue]
-- Notes: "Emailed John 11/15, no response. Called 11/22, left VM."
+
+* Task: "Get NOI - Chandler Heights Phase 2"
+* Status: In Progress
+* Waiting On: Customer
+* Due Date: [overdue]
+* Notes: "Emailed John 11/15, no response. Called 11/22, left VM."
 
 The Task is the audit trail. When Chi sees it overdue + waiting on customer, he knows to escalate.
 
@@ -235,10 +242,11 @@ The Task is the audit trail. When Chi sees it overdue + waiting on customer, he 
 Every Friday by 6 PM, all active projects must have their SOV reflected in QuickBooks.
 
 Recurring Task (auto-generate or manual):
-- Task: "QuickBooks Sync - Week of [Date]"
-- Type: QuickBooks Sync
-- Due: Friday 6 PM
-- Notes: Checklist of active projects to verify
+
+* Task: "QuickBooks Sync - Week of [Date]"
+* Type: QuickBooks Sync
+* Due: Friday 6 PM
+* Notes: Checklist of active projects to verify
 
 - --
 
@@ -255,31 +263,31 @@ Recurring Task (auto-generate or manual):
 * *Chi is the only one who really lives in Tasks.** Everyone else is in their lane.
 
 * *Action Items:**
-- [ ] Create Contacts database in Notion
-- [ ] Create Projects database in Notion
-- [ ] Create Scope Items database in Notion
-- [ ] Create Tasks database in Notion
-- [ ] Create linked views:
-  - SOV filtered by project
-  - Tasks filtered by project
-  - "My Open Tasks" view (due this week)
-  - "Blocked" view (waiting on customer/third party)
-- [ ] Define status options with team
-- [ ] Get agreement: "Nothing goes in without following the standard"
+* [ ] Create Contacts database in Notion
+* [ ] Create Projects database in Notion
+* [ ] Create Scope Items database in Notion
+* [ ] Create Tasks database in Notion
+* [ ] Create linked views:
+  * SOV filtered by project
+  * Tasks filtered by project
+  * "My Open Tasks" view (due this week)
+  * "Blocked" view (waiting on customer/third party)
+* [ ] Define status options with team
+* [ ] Get agreement: "Nothing goes in without following the standard"
 
 - --
 
 ### 1.2 Estimating Intake Automation
 
 * *Current Pain:**
-- Estimator manually identifies drawings (SWPPP, civil, erosion, dust control)
-- Has to download files, open Bluebeam, open QuickBooks/Excel
-- 3,000 deals stuck in "sent" status
+* Estimator manually identifies drawings (SWPPP, civil, erosion, dust control)
+* Has to download files, open Bluebeam, open QuickBooks/Excel
+* 3,000 deals stuck in "sent" status
 
 * *Solution:**
-- Poll SharePoint for new files in project folders
-- Run Gemini Pro on drawings → identify, rename, categorize
-- Update Monday item with attachments and AI summary
+* Poll SharePoint for new files in project folders
+* Run Gemini Pro on drawings → identify, rename, categorize
+* Update Monday item with attachments and AI summary
 
 * *n8n Workflow:**
 

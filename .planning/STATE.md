@@ -19,6 +19,7 @@ Progress: [########--] 80%
 ## Performance Metrics
 
 **Velocity:**
+
 - Total plans completed: 5
 - Average duration: ~5 min
 - Total execution time: ~5 sessions
@@ -33,6 +34,7 @@ Progress: [########--] 80%
 | 4. Estimate Matching | 0/2 | Ready |
 
 **Recent Trend:**
+
 - Last 5 plans: 01-01 (complete), 02-01 (complete), 03-01 (complete), 03-02 (complete), 03-03 (complete)
 - Trend: On track
 

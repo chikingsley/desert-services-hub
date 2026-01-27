@@ -52,7 +52,6 @@ git check-ignore -q .planning 2>/dev/null && COMMIT_PLANNING_DOCS=false
 Store `COMMIT_PLANNING_DOCS` for use in git operations.
 </step>
 
-
 <step name="load_plan">
 Read the plan file provided in your prompt context.
 
@@ -356,6 +355,7 @@ For full automation-first patterns, server lifecycle, CLI handling, and error re
 **See @./.claude/get-shit-done/references/checkpoints.md**
 
 **Quick reference:**
+
 - Users NEVER run CLI commands - Claude does all automation
 - Users ONLY visit URLs, click UI, evaluate visuals, provide secrets
 - Claude starts servers, seeds databases, configures env vars

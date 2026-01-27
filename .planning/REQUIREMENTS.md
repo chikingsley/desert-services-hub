@@ -59,7 +59,7 @@
 
 ### Email Monitoring
 
-- **EMAIL-01**: System monitors contracts@desertservices.net for new emails
+- **EMAIL-01**: System monitors <contracts@desertservices.net> for new emails
 - **EMAIL-02**: Classifies emails as contract vs non-contract
 - **EMAIL-03**: Dual-path monitoring (webhooks + polling fallback)
 - **EMAIL-04**: Heartbeat alerts when monitoring fails
@@ -137,6 +137,7 @@
 | VERIFY-03 | Phase 5 | Pending |
 
 **Coverage:**
+
 - v1 requirements: 29 total
 - Mapped to phases: 29
 - Unmapped: 0

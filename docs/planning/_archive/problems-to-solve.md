@@ -53,15 +53,18 @@ Captured from brain dump (Jan 2026). These are the real issues, not theoretical.
 ## What We're Doing About It
 
 ### Today
+
 1. Make Notion project template work (checklist embedded)
 2. Process inbox - contracts first, then dust permits
 3. When sending to internal contracts, manually follow up with actual people
 
 ### This Week
+
 - Clear inbox backlog (contracts + dust permits only, no backfill)
 - Track what we sent and follow up
 
 ### Later
+
 - Figure out how to get visibility into the black box
 - Asset tracking
 - Cross-service visibility

@@ -19,6 +19,7 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { Button } from "@/components/ui/button";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { CatalogPage, catalogLoader } from "@/pages/catalog";
+import { ContractsPage, contractsLoader } from "@/pages/contracts";
 // Pages
 import { DashboardPage } from "@/pages/dashboard";
 import { QuoteEditorPage, quoteLoader } from "@/pages/quote-editor";
@@ -64,7 +65,7 @@ function RootLayout() {
   return (
     <SidebarProvider className="h-svh overflow-hidden">
       <AppSidebar />
-      <SidebarInset className="texture-noise bg-desert-gradient">
+      <SidebarInset className="texture-noise overflow-auto bg-desert-gradient">
         <Outlet />
       </SidebarInset>
       <Toaster richColors />
@@ -105,6 +106,12 @@ const router = createBrowserRouter([
         path: "takeoffs/:id",
         element: <TakeoffEditorPage />,
         loader: takeoffLoader,
+        errorElement: <RouteErrorBoundary />,
+      },
+      {
+        path: "contracts",
+        element: <ContractsPage />,
+        loader: contractsLoader,
         errorElement: <RouteErrorBoundary />,
       },
       {

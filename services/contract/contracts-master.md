@@ -16,7 +16,7 @@ One doc. Go through step by step. Each step has required info, actions, and fall
 
 ## Trigger
 
-Contract or LOI arrives at contracts@desertservices.com
+Contract or LOI arrives at <contracts@desertservices.com>
 
 ---
 
@@ -25,12 +25,14 @@ Contract or LOI arrives at contracts@desertservices.com
 **Goal:** Get background on this project before doing anything else.
 
 **Required Info:**
+
 - [ ] When was this bid?
 - [ ] Who bid it?
 - [ ] What emails exist about this project?
 - [ ] Any history or context?
 
 **Actions:**
+
 1. Search email for project name
 2. Search email for GC name
 3. Search Monday ESTIMATING for the estimate
@@ -48,6 +50,7 @@ Contract or LOI arrives at contracts@desertservices.com
 **Goal:** Find the matching estimate line item in Monday.
 
 **Required Info:**
+
 - [ ] Monday item ID
 - [ ] Estimate number (e.g., 25010301R0)
 - [ ] Estimate value
@@ -56,12 +59,14 @@ Contract or LOI arrives at contracts@desertservices.com
 - [ ] Address
 
 **Actions:**
+
 1. Search Monday ESTIMATING by project name
 2. If not found, search by GC name
 3. If not found, search by address
 4. Verify it's the right one (check value, scope)
 
 **If not found:**
+
 - Flag as "Missing Estimate"
 - Search email for estimate
 - Check QuickBooks directly
@@ -77,11 +82,13 @@ Contract or LOI arrives at contracts@desertservices.com
 **Goal:** Have a place to track this contract.
 
 **Required Info:**
+
 - [ ] Project name
 - [ ] GC/Account
 - [ ] Address (if known)
 
 **Actions:**
+
 1. Create project in Notion Projects database
 2. Set Intake Status = "Received"
 3. Create a contract task in Tasks database
@@ -101,9 +108,11 @@ Contract or LOI arrives at contracts@desertservices.com
 **Goal:** Update Monday so data is accurate.
 
 **Required Info:**
+
 - [ ] Monday item ID (from Step 2)
 
 **Actions:**
+
 1. Set BID_STATUS = "Won"
 2. Confirm CONTRACTOR is correct
 
@@ -118,10 +127,12 @@ Contract or LOI arrives at contracts@desertservices.com
 **Goal:** Clean up Monday - mark other bids for same project as lost.
 
 **Required Info:**
+
 - [ ] Project name
 - [ ] List of other estimates for same project
 
 **Actions:**
+
 1. Search Monday for same project name, different GC
 2. For each competing bid: set BID_STATUS = "GC Not Awarded"
 
@@ -138,21 +149,25 @@ Contract or LOI arrives at contracts@desertservices.com
 **Goal:** Have the actual estimate PDF for reconciliation.
 
 **Required Info:**
+
 - [ ] Estimate PDF file
 
 **Actions:**
+
 1. Check Monday item - is estimate attached?
 2. If yes, download it
 3. If no, search email for estimate
 4. If not in email, go to QuickBooks, find by estimate number, print PDF
 
 **If can't find:**
+
 - Flag project as "Missing Estimate Document"
 - Reach out to estimator
 
 **Output:** Estimate PDF saved, attached to Monday + Notion.
 
 **Automation:**
+
 - V0: Can check Monday attachment
 - V1: Can search email
 - Manual: QuickBooks lookup
@@ -164,9 +179,11 @@ Contract or LOI arrives at contracts@desertservices.com
 **Goal:** Have the contract PDF for reconciliation.
 
 **Required Info:**
+
 - [ ] Contract PDF file
 
 **Actions:**
+
 1. Save contract from email to SharePoint
 2. Attach to Notion project (Contract Files)
 3. Attach to Monday item (CONTRACTS column)
@@ -182,6 +199,7 @@ Contract or LOI arrives at contracts@desertservices.com
 **Goal:** Pull key info from contract.
 
 **Required Info:**
+
 - [ ] Contract value
 - [ ] Contract type (LOI, Subcontract, Work Order)
 - [ ] Contract date
@@ -194,11 +212,13 @@ Contract or LOI arrives at contracts@desertservices.com
 - [ ] Contacts: Billing contact name, phone, email
 
 **Actions:**
+
 1. Read through contract
 2. Extract each field above
 3. Note page numbers / citations for each
 
 **If missing:**
+
 - PM contact: Flag as "Missing PM Contact"
 - SOV: Flag as "Missing SOV"
 - Billing info: Flag as "Missing Billing Info"
@@ -216,12 +236,14 @@ Contract or LOI arrives at contracts@desertservices.com
 **Goal:** Compare contract to estimate - do they match?
 
 **Required Info:**
+
 - [ ] Contract value
 - [ ] Contract line items / scope
 - [ ] Estimate value
 - [ ] Estimate line items / scope
 
 **Actions:**
+
 1. Compare totals: Contract vs Estimate
 2. List items REMOVED (in estimate, not in contract)
 3. List items ADDED (in contract, not in estimate)
@@ -229,6 +251,7 @@ Contract or LOI arrives at contracts@desertservices.com
 5. Note any red flags (scope ambiguity, missing items, unusual terms)
 
 **Outcomes:**
+
 - **Match:** Totals align, scope aligns. Continue.
 - **Revised Estimate Needed:** Contract differs but makes sense. Create new estimate version.
 - **Clarification Needed:** Doesn't add up. Need to ask client.
@@ -246,10 +269,12 @@ Contract or LOI arrives at contracts@desertservices.com
 **Goal:** Capture actual contract amount in Monday.
 
 **Required Info:**
+
 - [ ] Contract value (from Step 8)
 - [ ] Monday item ID (from Step 2)
 
 **Actions:**
+
 1. Update AWARDED_VALUE column with contract value
 
 **Output:** Monday updated.
@@ -263,6 +288,7 @@ Contract or LOI arrives at contracts@desertservices.com
 **Goal:** Keep QB accurate.
 
 **Required Info:**
+
 - [ ] Estimate number
 - [ ] Correct GC name
 - [ ] Correct project address
@@ -270,6 +296,7 @@ Contract or LOI arrives at contracts@desertservices.com
 - [ ] Estimate PDF (revised if needed)
 
 **Actions:**
+
 1. Find estimate in QuickBooks
 2. Verify GC name is correct - update if needed
 3. Verify address is correct - update if needed
@@ -279,6 +306,7 @@ Contract or LOI arrives at contracts@desertservices.com
 7. Attach estimate PDF to job
 
 **If scope changed:**
+
 - Duplicate estimate
 - Update revision: R0 → R1
 - Update line items to match contract
@@ -296,12 +324,14 @@ Contract or LOI arrives at contracts@desertservices.com
 **Goal:** Project folder exists with all docs.
 
 **Required Info:**
+
 - [ ] GC name
 - [ ] Project name
 - [ ] Contract PDF
 - [ ] Estimate PDF
 
 **Actions:**
+
 1. Check if GC folder exists: `Projects/01-Active/{GC}/`
 2. If not, create it
 3. Check if project folder exists: `Projects/01-Active/{GC}/{Project}/`
@@ -327,12 +357,14 @@ Contract or LOI arrives at contracts@desertservices.com
 **Goal:** Project record is complete.
 
 **Required Info:**
+
 - [ ] All contract data (from Step 8)
 - [ ] Reconciliation outcome (from Step 9)
 - [ ] Monday link (from Step 2)
 - [ ] SharePoint link (from Step 12)
 
 **Actions:**
+
 1. Update all fields in Notion project:
    - Contract value
    - Estimate value
@@ -357,11 +389,13 @@ Contract or LOI arrives at contracts@desertservices.com
 **Goal:** Notify team, signal ready for signature.
 
 **Required Info:**
+
 - [ ] All project info from previous steps
 - [ ] Any missing info / red flags
 - [ ] Next actions needed
 
 **Actions:**
+
 1. Draft email using template
 2. Include: project name, GC, contract value, key contacts, scope summary
 3. Include: any red flags, missing info, clarification needed
@@ -381,11 +415,13 @@ Contract or LOI arrives at contracts@desertservices.com
 **Goal:** Track anything that needs follow-up.
 
 **Required Info:**
+
 - [ ] List of missing info
 - [ ] List of clarifications needed
 - [ ] List of action items
 
 **Actions:**
+
 1. For each open item, create/update task in Notion
 2. Set due dates
 3. If clarification needed from client:
@@ -437,11 +473,13 @@ Located in `services/contract/templates/`:
 ## What's Blocked
 
 **Right now:** Stuck at reconciliation. Getting output from Gemini but:
+
 1. Output not structured for next steps
 2. Not doing anything with the output
 3. Not doing Steps 1-8 or 10-15
 
 **To unblock:**
+
 1. Define exact output format from reconciliation
 2. Build checklist runner that goes step by step
 3. For each step, either do it manually or trigger automation

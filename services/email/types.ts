@@ -60,6 +60,8 @@ export interface EmailMessage {
   hasAttachments?: boolean;
   /** ID linking related emails in the same thread */
   conversationId?: string;
+  /** Outlook categories (color-coded labels) applied to this message */
+  categories?: string[];
 }
 
 /**

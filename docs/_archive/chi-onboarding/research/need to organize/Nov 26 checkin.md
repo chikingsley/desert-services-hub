@@ -51,14 +51,14 @@ From 10+ interviews across all service lines, I identified 9 distinct problem ar
 
 ### SOPs Created
 
-- Dust Control Permit SOP (comprehensive, ready to use)
-- Sign Ordering SOP
-- Printing Inspections SOP
+* Dust Control Permit SOP (comprehensive, ready to use)
+* Sign Ordering SOP
+* Printing Inspections SOP
 
 ### Roadmap Documents
 
-- ideas.md - Full transformation roadmap
-- CEO-MEETING-PREP.md - This summary
+* ideas.md - Full transformation roadmap
+* CEO-MEETING-PREP.md - This summary
 
 - --
 
@@ -72,11 +72,11 @@ These are decisions I'm proposing - need alignment before proceeding.
 
 * *Rationale:**
 
-- Both processes are automatable - triggered from project initiation data
-- Falls into "everything up until delivery" ownership model
-- Training handoff is overhead that doesn't pay off if automating anyway
-- I'll learn edge cases firsthand, which informs automation design
-- Eva's capacity better used elsewhere
+* Both processes are automatable - triggered from project initiation data
+* Falls into "everything up until delivery" ownership model
+* Training handoff is overhead that doesn't pay off if automating anyway
+* I'll learn edge cases firsthand, which informs automation design
+* Eva's capacity better used elsewhere
 
 ### Proposal 2: SWPPP Narrative Binder = Automation Project
 
@@ -84,9 +84,9 @@ The 180-day plan had this as a handoff to Eva. I'm proposing to treat it as an a
 
 * *Rationale:**
 
-- Variables needed for the binder come directly from project initiation data
-- Should auto-generate, not require manual assembly
-- Same pattern: anything up until delivery, I can own and automate
+* Variables needed for the binder come directly from project initiation data
+* Should auto-generate, not require manual assembly
+* Same pattern: anything up until delivery, I can own and automate
 
 ### Proposal 3: Own Everything Up Until Delivery
 
@@ -94,12 +94,12 @@ The 180-day plan had this as a handoff to Eva. I'm proposing to treat it as an a
 
 * *What this means:**
 
-- Win notification → I own it
-- Information gathering → I own it
-- Contract reconciliation → I own it (already doing this)
-- Dust permits, sign ordering → I own it
-- Handoff package → I own it
-- Delivery manager receives complete package → Clear boundary
+* Win notification → I own it
+* Information gathering → I own it
+* Contract reconciliation → I own it (already doing this)
+* Dust permits, sign ordering → I own it
+* Handoff package → I own it
+* Delivery manager receives complete package → Clear boundary
 
 - --
 
@@ -126,10 +126,10 @@ The 180-day plan had this as a handoff to Eva. I'm proposing to treat it as an a
 
 ### Metrics I'll Track
 
-- Time from win notification to delivery handoff
-- What info was missing and had to be chased
-- What broke / what issues surfaced
-- Reduction in contract reconciliation back-and-forth
+* Time from win notification to delivery handoff
+* What info was missing and had to be chased
+* What broke / what issues surfaced
+* Reduction in contract reconciliation back-and-forth
 
 - --
 
@@ -137,31 +137,31 @@ The 180-day plan had this as a handoff to Eva. I'm proposing to treat it as an a
 
 ### Pillar 1: Project Lifecycle Management *(My Primary Focus)*
 
-- Win notification → Information gathering → Contract reconciliation → Handoff to operations
-- Clear data requirements at each stage
-- No more projects falling through cracks
+* Win notification → Information gathering → Contract reconciliation → Handoff to operations
+* Clear data requirements at each stage
+* No more projects falling through cracks
 
 ### Pillar 2: Sales Pipeline & Follow-up
 
-- Automated follow-up sequences on estimates (Day 3, Day 7, Day of GC bid)
-- Integration of lead sources (dust permits, building permits, emails, website)
-- Partner with Rick on implementation
+* Automated follow-up sequences on estimates (Day 3, Day 7, Day of GC bid)
+* Integration of lead sources (dust permits, building permits, emails, website)
+* Partner with Rick on implementation
 
 ### Pillar 3: Document & Information Management
 
-- Central file repository (SharePoint)
-- Clear folder structure: /Projects/[Customer]/[Project Name]/
-- One place to find everything
-- **Automation:** Monday → SharePoint auto-folder creation (mid-Jan, pending IT)
-- **Integration:** Conductor.is → QuickBooks file push (exploring)
-- **Need:** SLA agreement on what data goes where
+* Central file repository (SharePoint)
+* Clear folder structure: /Projects/[Customer]/[Project Name]/
+* One place to find everything
+* **Automation:** Monday → SharePoint auto-folder creation (mid-Jan, pending IT)
+* **Integration:** Conductor.is → QuickBooks file push (exploring)
+* **Need:** SLA agreement on what data goes where
 
 ### Pillar 4: Operational Visibility & Continuous Improvement
 
-- Cross-service visibility (who's doing what on each site)
-- Weekly check-ins / issue tracking
-- KPIs and feedback loops
-- Longer-term, but sets up accountability
+* Cross-service visibility (who's doing what on each site)
+* Weekly check-ins / issue tracking
+* KPIs and feedback loops
+* Longer-term, but sets up accountability
 
 - --
 
@@ -171,15 +171,15 @@ The 180-day plan had this as a handoff to Eva. I'm proposing to treat it as an a
 
 2. **Weekly process improvement cadence** - Not just one meeting, but a structure:
 
-    - 30 min with you weekly to surface issues and decide what needs attention
-    - Cross-functional sessions as needed (I pull in the right people depending on what's being worked on - billing people for billing stuff, sales for sales stuff)
-    - Not everyone in every meeting - just the people who need to be there
+    * 30 min with you weekly to surface issues and decide what needs attention
+    * Cross-functional sessions as needed (I pull in the right people depending on what's being worked on - billing people for billing stuff, sales for sales stuff)
+    * Not everyone in every meeting - just the people who need to be there
 
 3. **Partner with Sales on Monday reorganization** - Align on:
 
-    - Follow-up sequence design
-    - How to structure the board so it works for everyone
-    - Whether to migrate existing projects or start fresh
+    * Follow-up sequence design
+    * How to structure the board so it works for everyone
+    * Whether to migrate existing projects or start fresh
 
 4. **IT review of Conductor.is** - Before I can build automations, need IT to approve the software
 
@@ -187,11 +187,11 @@ The 180-day plan had this as a handoff to Eva. I'm proposing to treat it as an a
 
 ## KEY QUOTES FROM INTERVIEWS
 
-- *"I found out we won by driving past the site"* - Sales Team
-- *"20 emails back and forth"* - On contract reconciliation
-- *"I have no idea what we're doing until I go to bill for it"* - Kendra on change orders
-- *"Each business line runs separately. They don't talk to each other."* - Sales Team
-- *"When contract is done, I should get a packet with everything"* - Jayson on handoffs
+* *"I found out we won by driving past the site"* - Sales Team
+* *"20 emails back and forth"* - On contract reconciliation
+* *"I have no idea what we're doing until I go to bill for it"* - Kendra on change orders
+* *"Each business line runs separately. They don't talk to each other."* - Sales Team
+* *"When contract is done, I should get a packet with everything"* - Jayson on handoffs
 
 - --
 
@@ -199,16 +199,16 @@ The 180-day plan had this as a handoff to Eva. I'm proposing to treat it as an a
 
 ### Days 0-30 (Target: Nov 19) - MOSTLY COMPLETE
 
-- Workflow Maps V0: 10+ complete (estimating, SWPPP, WT, PJ, roll-off, street sweeping, contract review, execution systems)
-- Dust Permit SOP: DONE (taking ownership, not handoff)
-- Sign Ordering SOP: DONE (taking ownership, not handoff)
-- Opportunities Backlog: DONE (8 problem areas with solutions)
-- Interviews/Discovery: DONE (exceeded expectations)
+* Workflow Maps V0: 10+ complete (estimating, SWPPP, WT, PJ, roll-off, street sweeping, contract review, execution systems)
+* Dust Permit SOP: DONE (taking ownership, not handoff)
+* Sign Ordering SOP: DONE (taking ownership, not handoff)
+* Opportunities Backlog: DONE (8 problem areas with solutions)
+* Interviews/Discovery: DONE (exceeded expectations)
 
 ### Days 30-60 (Target: Dec 19) - STARTING
 
-- Pilot workflow: IN PROGRESS (contract reconciliation active)
-- Issue Log: Need to create
-- SLA/KPI Proposal: Need to draft
-- BusyBusy stakeholder alignment: Need to schedule
-- Capture Wendy's CRO knowledge: URGENT (Dec retirement)
+* Pilot workflow: IN PROGRESS (contract reconciliation active)
+* Issue Log: Need to create
+* SLA/KPI Proposal: Need to draft
+* BusyBusy stakeholder alignment: Need to schedule
+* Capture Wendy's CRO knowledge: URGENT (Dec retirement)

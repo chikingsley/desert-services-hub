@@ -22,9 +22,9 @@
 
 * *Purpose:**
 
-- Implement SWPPPs on construction sites
-- Conduct inspections of BMPs (Best Management Practices)
-- Required in California for SWPPP work
+* Implement SWPPPs on construction sites
+* Conduct inspections of BMPs (Best Management Practices)
+* Required in California for SWPPP work
 
 * *Related:** QSD (Qualified SWPPP Designer) - for designing SWPPPs
 
@@ -38,15 +38,15 @@
 
 * *Purpose:**
 
-- Observing, inspecting, and reporting on SWPPP implementation
-- Comprehensive knowledge in sediment and erosion control principles
-- Understanding of NPDES discharge permit requirements
+* Observing, inspecting, and reporting on SWPPP implementation
+* Comprehensive knowledge in sediment and erosion control principles
+* Understanding of NPDES discharge permit requirements
 
 * *Requirements:**
 
-- Demonstrates understanding of sediment and erosion processes
-- Knows how construction discharge pollutants impact environment
-- Meets EPA requirements for "qualified inspector"
+* Demonstrates understanding of sediment and erosion processes
+* Knows how construction discharge pollutants impact environment
+* Meets EPA requirements for "qualified inspector"
 
 * *Issuing Body:** [Ecopliant (IECA)](https://ecopliant.org/cisec/)
 
@@ -58,14 +58,14 @@
 
 * *Purpose:**
 
-- Complete inspections for erosion and sediment control
-- Stormwater compliance inspections
-- Rigorously trained, tested, and certified
+* Complete inspections for erosion and sediment control
+* Stormwater compliance inspections
+* Rigorously trained, tested, and certified
 
 * *Requirements:**
 
-- 3 years of focused experience inspecting construction activities
-- OR 2 years with a related 2-year or 4-year degree
+* 3 years of focused experience inspecting construction activities
+* OR 2 years with a related 2-year or 4-year degree
 
 * *Issuing Body:** [EnviroCert International Inc.](https://envirocert.org/cesswi/)
 
@@ -77,10 +77,10 @@
 
 * *Possibilities:**
 
-- State-specific erosion control certification
-- General "Erosion Control Certification" (not a formal acronym)
-- Internal company designation
-- Typo or abbreviation for something else
+* State-specific erosion control certification
+* General "Erosion Control Certification" (not a formal acronym)
+* Internal company designation
+* Typo or abbreviation for something else
 
 * *Action:** Verify with inspector what "ECC" stands for.
 
@@ -109,16 +109,16 @@
 
 These certifications are relevant to:
 
-- SWPPP services (major service line)
-- Inspector qualifications
-- Compliance requirements
-- Training/development paths for staff
+* SWPPP services (major service line)
+* Inspector qualifications
+* Compliance requirements
+* Training/development paths for staff
 
 - --
 
 ## Sources
 
-- [EnviroCert - CESSWI](https://envirocert.org/cesswi/)
-- [Ecopliant - CISEC](https://ecopliant.org/cisec/)
-- [Stormwater Solutions - Professional Certifications](https://www.stormwater.com/erosion-control/vegetation-management/article/13005906/professional-certifications)
-- [EnviroTech NPDES Services](https://stormwatermanagement.biz/training)
+* [EnviroCert - CESSWI](https://envirocert.org/cesswi/)
+* [Ecopliant - CISEC](https://ecopliant.org/cisec/)
+* [Stormwater Solutions - Professional Certifications](https://www.stormwater.com/erosion-control/vegetation-management/article/13005906/professional-certifications)
+* [EnviroTech NPDES Services](https://stormwatermanagement.biz/training)

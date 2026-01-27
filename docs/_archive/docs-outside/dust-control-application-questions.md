@@ -15,10 +15,10 @@ You are extracting information from construction documents (plans, permits, spec
 
 * *Primary/Contingency Assignment Rules:**
 
-- Each section specifies its minimum requirements (e.g., "Requires at least 1 Primary and 1 Contingency")
-- When multiple control measures are mentioned in documents but not labeled as Primary or Contingency, assign them to meet the section's minimum requirements
-- Example: If a section requires at least 1 Primary and 1 Contingency, and 3 measures are mentioned, label the first as Primary and at least one other as Contingency
-- Example: If a section requires only 1 Contingency and 2 measures are mentioned, label one as Contingency
+* Each section specifies its minimum requirements (e.g., "Requires at least 1 Primary and 1 Contingency")
+* When multiple control measures are mentioned in documents but not labeled as Primary or Contingency, assign them to meet the section's minimum requirements
+* Example: If a section requires at least 1 Primary and 1 Contingency, and 3 measures are mentioned, label the first as Primary and at least one other as Contingency
+* Example: If a section requires only 1 Contingency and 2 measures are mentioned, label one as Contingency
 
 * *Output format:** Replace the bracketed placeholders with actual values. Keep the field labels intact.
 
@@ -28,37 +28,37 @@ You are extracting information from construction documents (plans, permits, spec
 
 ### A.1 Company Details
 
-- **Relationship to property (check all that apply):** `[Owner / Lessee / Agent / Other]`
-- **Type of Entity:** `[select one]`
+* **Relationship to property (check all that apply):** `[Owner / Lessee / Agent / Other]`
+* **Type of Entity:** `[select one]`
 
-  - Association
-  - Business Trust
-  - Corporation
-  - General Partnership
-  - Government Entity
-  - Individual
-  - Limited Liability Company
-  - Limited Partnership
-  - Sole Proprietor
+  * Association
+  * Business Trust
+  * Corporation
+  * General Partnership
+  * Government Entity
+  * Individual
+  * Limited Liability Company
+  * Limited Partnership
+  * Sole Proprietor
 
-- **Company/Individual Name:** `[value]`
-- **Address Line 1:** `[value]`
-- **City:** `[value]`
-- **State:** `[value]`
-- **Zip:** `[value]`
-- **Phone:** `[value]`
-- **Email:** `[value]`
+* **Company/Individual Name:** `[value]`
+* **Address Line 1:** `[value]`
+* **City:** `[value]`
+* **State:** `[value]`
+* **Zip:** `[value]`
+* **Phone:** `[value]`
+* **Email:** `[value]`
 
 ### A.2 President/Owner
 
-- **First Name:** `[value]`
-- **Last Name:** `[value]`
-- **Address Line 1:** `[value]`
-- **City:** `[value]`
-- **State:** `[value]`
-- **Zip:** `[value]`
-- **Phone:** `[value]`
-- **Email:** `[value]`
+* **First Name:** `[value]`
+* **Last Name:** `[value]`
+* **Address Line 1:** `[value]`
+* **City:** `[value]`
+* **State:** `[value]`
+* **Zip:** `[value]`
+* **Phone:** `[value]`
+* **Email:** `[value]`
 
 - --
 
@@ -72,71 +72,71 @@ You are extracting information from construction documents (plans, permits, spec
 
 ### A.5 Property Owner (Complete only if different from Applicant)
 
-- **Type of Entity:** `[select one]`
+* **Type of Entity:** `[select one]`
 
-  - Association
-  - Business Trust
-  - Corporation
-  - General Partnership
-  - Government Entity
-  - Individual
-  - Limited Liability Company
-  - Limited Partnership
-  - Sole Proprietor
+  * Association
+  * Business Trust
+  * Corporation
+  * General Partnership
+  * Government Entity
+  * Individual
+  * Limited Liability Company
+  * Limited Partnership
+  * Sole Proprietor
 
-- **Name:** `[value]`
-- **Address Line 1:** `[value]`
-- **City:** `[value]`
-- **State:** `[value]`
-- **Zip:** `[value]`
-- **Phone:** `[value]`
-- **Contact Person First Name:** `[value]`
-- **Contact Person Last Name:** `[value]`
-- **Contact Person Phone:** `[value]`
-- **Contact Person Email:** `[value]`
+* **Name:** `[value]`
+* **Address Line 1:** `[value]`
+* **City:** `[value]`
+* **State:** `[value]`
+* **Zip:** `[value]`
+* **Phone:** `[value]`
+* **Contact Person First Name:** `[value]`
+* **Contact Person Last Name:** `[value]`
+* **Contact Person Phone:** `[value]`
+* **Contact Person Email:** `[value]`
 
 ### A.6 Primary Project Contact
 
 * Provide a primary project contact/authorized on-site representative for this site.*
 
-- **First Name:** `[value]`
-- **Last Name:** `[value]`
-- **Title:** `[value]`
-- **E-Mail Address:** `[value]`
-- **Company Name:** `[value]`
-- **On-Site Phone:** `[value]`
-- **Mobile:** `[value]`
-- **Fax:** `[value]`
+* **First Name:** `[value]`
+* **Last Name:** `[value]`
+* **Title:** `[value]`
+* **E-Mail Address:** `[value]`
+* **Company Name:** `[value]`
+* **On-Site Phone:** `[value]`
+* **Mobile:** `[value]`
+* **Fax:** `[value]`
 
 - --
 
 ## B. Project Information
 
-- **Full Project Name:** `[value]`
+* **Full Project Name:** `[value]`
 
-  - *Format: If part of larger project, use format like "Sun Health La Loma Campus - Resident Gathering Space"*
+  * *Format: If part of larger project, use format like "Sun Health La Loma Campus - Resident Gathering Space"*
 
-- **Project Description:** `[value]`
+* **Project Description:** `[value]`
 
-  - *Brief description, e.g.: "3-building commercial complex", "custom home", "weed control", "demolition of two buildings", "roadway improvements"*
+  * *Brief description, e.g.: "3-building commercial complex", "custom home", "weed control", "demolition of two buildings", "roadway improvements"*
 
-- **Start Date:** `[MM/DD/YYYY]`
-- **End Date:** `[MM/DD/YYYY]`
+* **Start Date:** `[MM/DD/YYYY]`
+* **End Date:** `[MM/DD/YYYY]`
 
 ### B.1 Estimated Bulk Materials (Rule 310, Section 203)
 
 * Bulk Material includes, but is not limited to, the following: earth, rock, silt, sediment, sand, gravel, soil, fill, aggregate less than 2 inches in length or diameter, dirt, mud, demolition debris, cotton, trash, cinders, pumice, sawdust, feeds, grains, fertilizers, fluff from shredders, and dry concrete. (See Rule 310, Section 203.)*
 
-- **Estimated cubic yards of Bulk Material to be imported and exported in total for the entire project:** `[value]`
+* **Estimated cubic yards of Bulk Material to be imported and exported in total for the entire project:** `[value]`
 
 ### B.2 Asbestos NESHAP Information
 
 * *Definitions:**
 
-- **Demolition:** The wrecking or taking out of any load-supporting structural member of a facility together with any related handling operations or the intentional burning of a facility.
-- **Renovation:** Altering a facility or one or more facility components in any way, including the stripping or removal of Regulated Asbestos Containing Material (RACM) from a facility component.
+* **Demolition:** The wrecking or taking out of any load-supporting structural member of a facility together with any related handling operations or the intentional burning of a facility.
+* **Renovation:** Altering a facility or one or more facility components in any way, including the stripping or removal of Regulated Asbestos Containing Material (RACM) from a facility component.
 
-- **Does the project include any demolition or renovation of a current or prior ranch, farm, business, or commercial structure?** `[Yes/No]`
+* **Does the project include any demolition or renovation of a current or prior ranch, farm, business, or commercial structure?** `[Yes/No]`
 
 - --
 
@@ -160,7 +160,7 @@ You are extracting information from construction documents (plans, permits, spec
 
 #### B.1 Unpaved Staging Areas, Parking Areas, and Material Storage Areas
 
-- **Will Vehicles/Motorized Equipment Be Used on these areas?** `[Yes/No]`
+* **Will Vehicles/Motorized Equipment Be Used on these areas?** `[Yes/No]`
 
 * If Yes, complete the following (requires at least 1 Primary and 1 Contingency):*
 
@@ -183,7 +183,7 @@ You are extracting information from construction documents (plans, permits, spec
 
 #### B.2 Unpaved Access Areas/Haul Roads
 
-- **Will Vehicles/Motorized Equipment Be Used on these areas?** `[Yes/No]`
+* **Will Vehicles/Motorized Equipment Be Used on these areas?** `[Yes/No]`
 
 * If Yes, complete the following (requires at least 1 Primary and 1 Contingency):*
 
@@ -281,7 +281,7 @@ You are extracting information from construction documents (plans, permits, spec
 
 #### D.1 Materials Hauled onto Public Areas
 
-- **Will Materials be Hauled from the Site onto or crossing Areas Accessible to the Public?** `[Yes/No]`
+* **Will Materials be Hauled from the Site onto or crossing Areas Accessible to the Public?** `[Yes/No]`
 
 * If Yes, complete the following (requires at least 1 Contingency):*
 
@@ -295,7 +295,7 @@ You are extracting information from construction documents (plans, permits, spec
 
 #### D.2 Materials Hauled within Work Site (No Public Access)
 
-- **Will Materials be Hauled or Transported within the Boundaries of the Work Site?** `[Yes/No]`
+* **Will Materials be Hauled or Transported within the Boundaries of the Work Site?** `[Yes/No]`
 
 * If Yes, complete the following (requires at least 1 Primary and 1 Contingency):*
 
@@ -311,7 +311,7 @@ You are extracting information from construction documents (plans, permits, spec
 
 #### D.3 Materials Hauled within Site AND Crossing Public Areas
 
-- **Will materials cross or access an Area Accessible to the Public?** `[Yes/No]`
+* **Will materials cross or access an Area Accessible to the Public?** `[Yes/No]`
 
 * If Yes, complete the following (requires at least 1 Contingency):*
 
@@ -323,7 +323,7 @@ You are extracting information from construction documents (plans, permits, spec
 
 #### D.4 Loading, Unloading, and Stacking
 
-- **Will Bulk Materials be Loaded, Unloaded, and/or Stacked?** `[Yes/No]`
+* **Will Bulk Materials be Loaded, Unloaded, and/or Stacked?** `[Yes/No]`
 
 * If Yes, complete the following (requires at least 1 Primary and 1 Contingency):*
 
@@ -341,7 +341,7 @@ You are extracting information from construction documents (plans, permits, spec
 
 #### D.5 Open Storage Piles
 
-- **Will there be Open Storage Piles for Any Amount of Time?** `[Yes/No]`
+* **Will there be Open Storage Piles for Any Amount of Time?** `[Yes/No]`
 
 * If Yes, complete the following (requires at least 1 Primary and 1 Contingency):*
 
@@ -360,7 +360,7 @@ You are extracting information from construction documents (plans, permits, spec
 
 #### E.1 Trackout Control Device
 
-- **Does site have 2+ acres or 100+ cubic yards hauled daily?** `[Yes/No]`
+* **Does site have 2+ acres or 100+ cubic yards hauled daily?** `[Yes/No]`
 
 * If Yes, complete the following (requires at least 1 Contingency):*
 
@@ -389,7 +389,7 @@ You are extracting information from construction documents (plans, permits, spec
 
 #### F.1 Mass Grading
 
-- **Will there be any mass grading on this site?** `[Yes/No]`
+* **Will there be any mass grading on this site?** `[Yes/No]`
 
 * If Yes, complete the following:*
 
@@ -400,7 +400,7 @@ You are extracting information from construction documents (plans, permits, spec
 
 #### F.2 Fine Grading
 
-- **Will there be any fine grading on this site?** `[Yes/No]`
+* **Will there be any fine grading on this site?** `[Yes/No]`
 
 * If Yes, complete the following:*
 
@@ -415,7 +415,7 @@ You are extracting information from construction documents (plans, permits, spec
 
 #### G.1 Underground Utilities & Structure Excavation
 
-- **Will there be underground utilities or structure excavation?** `[Yes/No]`
+* **Will there be underground utilities or structure excavation?** `[Yes/No]`
 
 * If Yes, complete the following:*
 
@@ -426,7 +426,7 @@ You are extracting information from construction documents (plans, permits, spec
 
 #### G.2 Construction of Vertical Structures
 
-- **Will there be any vertical structures built on this site?** `[Yes/No]`
+* **Will there be any vertical structures built on this site?** `[Yes/No]`
 
 * If Yes, complete the following:*
 
@@ -439,7 +439,7 @@ You are extracting information from construction documents (plans, permits, spec
 
 ### Category H: Demolition Activities
 
-- **Will there be any demolition activities on this site?** `[Yes/No]`
+* **Will there be any demolition activities on this site?** `[Yes/No]`
 
 * If Yes, complete the following (requires at least 1 Contingency):*
 
@@ -460,7 +460,7 @@ You are extracting information from construction documents (plans, permits, spec
 
 #### I.1 Disturbance Operations before and during Weed Abatement
 
-- **Will there be any weed abatement by discing or blading?** `[Yes/No]`
+* **Will there be any weed abatement by discing or blading?** `[Yes/No]`
 
 * If Yes, complete the following (requires at least 1 Contingency):*
 
@@ -490,7 +490,7 @@ You are extracting information from construction documents (plans, permits, spec
 
 ### Category J: Blasting Operations
 
-- **Will there be any blasting on this site?** `[Yes/No]`
+* **Will there be any blasting on this site?** `[Yes/No]`
 
 * If Yes, complete the following (requires at least 1 Primary and 1 Contingency):*
 
@@ -543,18 +543,18 @@ You are extracting information from construction documents (plans, permits, spec
 
 * *Common places to find this information in construction documents:**
 
-- **Applicant/Owner info**: Title sheet, cover page, permit application pages
-- **Project name/description**: Title sheet, project summary
-- **Dates**: Construction schedule, phasing plans, permit docs
-- **Site acreage**: Civil drawings, site plan, grading plan
-- **Grading/excavation details**: Grading plans (C-series sheets), earthwork specs
-- **Demolition**: Demo plans, scope of work
-- **Utilities**: Utility plans, MEP drawings
-- **Vertical structures**: Architectural plans, structural drawings
-- **Paving/landscaping**: Landscape plans (L-series), hardscape plans
-- **Water sources**: Civil drawings, utility connections
+* **Applicant/Owner info**: Title sheet, cover page, permit application pages
+* **Project name/description**: Title sheet, project summary
+* **Dates**: Construction schedule, phasing plans, permit docs
+* **Site acreage**: Civil drawings, site plan, grading plan
+* **Grading/excavation details**: Grading plans (C-series sheets), earthwork specs
+* **Demolition**: Demo plans, scope of work
+* **Utilities**: Utility plans, MEP drawings
+* **Vertical structures**: Architectural plans, structural drawings
+* **Paving/landscaping**: Landscape plans (L-series), hardscape plans
+* **Water sources**: Civil drawings, utility connections
 
 * *Default behavior:**
 
-- For data fields (names, addresses, dates, etc.): If not found, mark as `[NOT FOUND IN DOCS]`
-- For Yes/No activity questions (e.g., "Will there be demolition?", "Will there be blasting?"): If not mentioned in docs, **default to No**
+* For data fields (names, addresses, dates, etc.): If not found, mark as `[NOT FOUND IN DOCS]`
+* For Yes/No activity questions (e.g., "Will there be demolition?", "Will there be blasting?"): If not mentioned in docs, **default to No**

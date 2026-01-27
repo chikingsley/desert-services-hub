@@ -8,16 +8,16 @@
 
 * *Findings:**
 
-- 99.6% well-populated records
-- Fixed wrong board ID in `services/monday/types.ts`
-- Added `getItemsRich()` function to properly query mirror/linked columns
-- Exported to `tempfiles/inspection_reports_audit.csv`
+* 99.6% well-populated records
+* Fixed wrong board ID in `services/monday/types.ts`
+* Added `getItemsRich()` function to properly query mirror/linked columns
+* Exported to `tempfiles/inspection_reports_audit.csv`
 
 * *Data Quality Issues:**
 
-- 600 items have inconsistent date prefixes in names
-- 15 duplicate entries
-- Superintendent field has name/phone/email conflicts
+* 600 items have inconsistent date prefixes in names
+* 15 duplicate entries
+* Superintendent field has name/phone/email conflicts
 
 - --
 
@@ -30,9 +30,9 @@
 
 * *Files:**
 
-- `docs/abbreviations_to_verify.md` - Abbreviations to verify
-- `tempfiles/competitors_clean.json` - Clean competitor list
-- `tempfiles/competitors_raw.json` - Raw extracted data
+* `docs/abbreviations_to_verify.md` - Abbreviations to verify
+* `tempfiles/competitors_clean.json` - Clean competitor list
+* `tempfiles/competitors_raw.json` - Raw extracted data
 
 * *Resolved Abbreviations:**
 
@@ -53,8 +53,8 @@
 
 * *File:** `services/monday/client.ts`
 
-- Added `getItemsRich()` for proper mirror/board_relation column data
-- Fixed GraphQL fragments for linked items
+* Added `getItemsRich()` for proper mirror/board_relation column data
+* Fixed GraphQL fragments for linked items
 
 - --
 
@@ -77,40 +77,40 @@
 
 * *What it covers:**
 
-- A. Applicant Information (company, owner, contacts)
-- B. Project Information (name, dates, bulk materials)
-- C. Dust Control Plan (wind, vehicles, surface stabilization, bulk materials, trackout, grading, utilities, demolition, weed abatement, blasting)
-- K. Technical Data (soil, water sources, water application methods)
+* A. Applicant Information (company, owner, contacts)
+* B. Project Information (name, dates, bulk materials)
+* C. Dust Control Plan (wind, vehicles, surface stabilization, bulk materials, trackout, grading, utilities, demolition, weed abatement, blasting)
+* K. Technical Data (soil, water sources, water application methods)
 
 ### Potential Improvements Based on Data
 
 1. **Pre-fill from Inspection Reports:**
 
-    - Water truck provider patterns
-    - Common control measures used
-    - Typical water source configurations
+    * Water truck provider patterns
+    * Common control measures used
+    * Typical water source configurations
 
 2. **Validation from Competitor Data:**
 
-    - Auto-suggest known providers
-    - Flag unknown abbreviations
-    - Standardize naming
+    * Auto-suggest known providers
+    * Flag unknown abbreviations
+    * Standardize naming
 
 3. **Smart Defaults:**
 
-    - Based on project type/size
-    - Based on location (Maricopa County patterns)
-    - Based on contractor history
+    * Based on project type/size
+    * Based on location (Maricopa County patterns)
+    * Based on contractor history
 
 - --
 
 ## Next Steps
 
-- [ ] Verify abbreviations (docs/abbreviations_to_verify.md)
-- [ ] Decide: Push competitors to Notion? (after proper filtering)
-- [ ] Connect inspection report data to dust permit form
-- [ ] Analyze what fields are commonly filled vs left blank
-- [ ] Build better validation/suggestions for the form
+* [ ] Verify abbreviations (docs/abbreviations_to_verify.md)
+* [ ] Decide: Push competitors to Notion? (after proper filtering)
+* [ ] Connect inspection report data to dust permit form
+* [ ] Analyze what fields are commonly filled vs left blank
+* [ ] Build better validation/suggestions for the form
 
 - --
 

@@ -9,6 +9,7 @@
 This document provides prescriptive technology recommendations for building a contract intake system that monitors `contracts@desertservices.net`, extracts information from contract PDFs, matches to Monday.com estimates, and creates task workflows in Notion.
 
 The existing stack (Bun, TypeScript, Microsoft Graph client, Monday.com client, Notion client, pdfjs-dist) provides a solid foundation. The primary decisions involve:
+
 1. **Email monitoring**: Webhooks with polling fallback (not pure polling)
 2. **PDF extraction**: LLM-based extraction using existing pdfjs-dist + Claude API
 3. **Notion tasks**: Direct API calls with rate limiting (no batch API available)
@@ -25,11 +26,13 @@ The existing stack (Bun, TypeScript, Microsoft Graph client, Monday.com client, 
 | Delta Query API | v1.0 | Fallback for missed notifications | HIGH |
 
 **WHY webhooks over polling:**
+
 - Polling 50+ mailboxes hits Azure rate limits immediately ([source](https://medium.com/@anantgna/scaling-microsoft-graph-api-centralized-monitoring-archiving-for-50-high-volume-mailboxes-1ddf329196bf))
 - Webhooks provide near real-time notification (sub-minute latency)
 - Microsoft explicitly recommends webhooks + delta query combination ([source](https://www.voitanos.io/blog/microsoft-graph-webhook-delta-query/))
 
 **Implementation approach:**
+
 ```typescript
 // 1. Create subscription for contracts@ mailbox
 POST /subscriptions
@@ -47,12 +50,14 @@ POST /subscriptions
 ```
 
 **Key constraints:**
+
 - Mail subscription max lifetime: **10,080 minutes (under 7 days)** ([source](https://learn.microsoft.com/en-us/graph/api/resources/subscription?view=graph-rest-1.0))
 - Rich notifications (with resource data): **1,440 minutes (under 1 day)**
 - Max 1000 active subscriptions per mailbox
 - Must proactively renew subscriptions before expiration
 
 **WHAT NOT TO USE:**
+
 - Pure polling: Causes throttling, wastes resources, not real-time
 - Azure Event Grid: Overkill for single-mailbox monitoring; adds Azure infrastructure complexity
 - Azure Event Hubs: Only needed for high-throughput multi-tenant scenarios
@@ -66,18 +71,21 @@ POST /subscriptions
 | pdfjs-dist | ^5.4.530 | PDF text extraction | HIGH |
 
 **WHY keep pdfjs-dist:**
+
 - Already installed and working in the codebase
 - Battle-tested Mozilla library with excellent TypeScript support
 - v5.4.530 is current (latest stable is v5.4.394 bundled in unpdf)
 - Works for digital PDFs (most contracts are digital, not scanned)
 
 **Alternative considered - unpdf v1.4.0:**
+
 - Modern alternative to pdf-parse, serverless-optimized
 - Uses pdfjs-dist v5.4.296 internally
 - Simpler API but adds dependency for marginal benefit
 - **Recommendation:** Skip unless needing serverless deployment
 
 **WHAT NOT TO USE:**
+
 - pdf-parse: Unmaintained, last meaningful update years ago
 - pdf2json: Only needed if you need exact x,y coordinates
 - Tesseract.js/OCR: Only for scanned documents (contracts typically digital)
@@ -92,12 +100,14 @@ POST /subscriptions
 | Gemini API | gemini-2.5-flash | Cost-effective alternative/validator | MEDIUM |
 
 **WHY LLM-based extraction over regex/templates:**
+
 - Contracts have variable formats (different GCs, different templates)
 - LLMs handle layout variations, synonyms, and context
 - Chain-of-thought prompting improves accuracy for multi-step reasoning ([source](https://unstract.com/blog/comparing-approaches-for-using-llms-for-structured-data-extraction-from-pdfs/))
 - Zod schema validation ensures structured output
 
 **Implementation pattern:**
+
 ```typescript
 import { z } from 'zod';
 
@@ -128,11 +138,13 @@ const result = await claude.messages.create({
 ```
 
 **Multi-LLM validation (optional, for high-value contracts):**
+
 - Use Claude for extraction, Gemini for validation
 - Only accept values both LLMs agree on
 - Reduces hallucination risk ([source](https://unstract.com/blog/comparing-approaches-for-using-llms-for-structured-data-extraction-from-pdfs/))
 
 **WHAT NOT TO USE:**
+
 - Regex-based parsing: Brittle, breaks on format changes
 - Template matching: Requires maintaining templates per contractor
 - Document AI services (AWS Textract, Google Document AI): Overkill for text-based contracts, adds cloud vendor lock-in
@@ -147,11 +159,13 @@ const result = await claude.messages.create({
 | Fuzzy matching (existing) | N/A | Handle name variations | HIGH |
 
 **WHY use existing client:**
+
 - `findBestMatches` already implements fuzzy matching
 - `searchByColumn` enables fast lookups by estimate ID
 - No new dependencies needed
 
 **Matching strategy:**
+
 1. If contract contains estimate ID reference, use `searchByColumn('ESTIMATING', 'ESTIMATE_ID', value)`
 2. Otherwise, extract project name and use `findBestMatches('ESTIMATING', projectName)`
 3. Validate match by comparing contractor name, project address
@@ -166,16 +180,19 @@ const result = await claude.messages.create({
 | @notionhq/client | ^5.6.0 | Official SDK (optional upgrade) | MEDIUM |
 
 **WHY direct API over SDK:**
+
 - Existing `services/notion/client.ts` works well
 - SDK v5.x requires API version 2025-09-03 (breaking changes)
 - Direct fetch calls with current API version are stable
 
 **Key constraint - No batch API:**
+
 - Notion API does not support batch operations
 - Must create pages one at a time with rate limiting
 - Existing 350ms delay between requests is appropriate
 
 **Task creation pattern for contract intake:**
+
 ```typescript
 const CONTRACT_INTAKE_TASKS = [
   { name: 'Verify contract matches estimate', assignee: 'contracts' },
@@ -202,6 +219,7 @@ for (const task of CONTRACT_INTAKE_TASKS) {
 ```
 
 **WHAT NOT TO USE:**
+
 - @notionhq/client v5.x: Requires migration to API 2025-09-03, introduces breaking changes for multi-source databases
 - Third-party Notion libraries: Less maintained than official API
 
@@ -221,6 +239,7 @@ For Microsoft Graph webhooks, you need a publicly accessible HTTPS endpoint. Opt
 
 **Webhook validation:**
 Microsoft Graph sends a validation request when creating subscriptions. Your endpoint must:
+
 1. Accept POST with `validationToken` query parameter
 2. Return the token as plain text with 200 status
 3. Respond within 10 seconds
@@ -292,19 +311,23 @@ bun add @notionhq/client@^5.6.0  # Requires API migration
 ## Sources
 
 ### Microsoft Graph
+
 - [Microsoft Graph Webhooks Best Practices](https://www.voitanos.io/blog/microsoft-graph-webhook-delta-query/)
 - [Change Notifications Overview](https://learn.microsoft.com/en-us/graph/change-notifications-overview)
 - [Subscription Resource Type](https://learn.microsoft.com/en-us/graph/api/resources/subscription?view=graph-rest-1.0)
 - [Outlook Change Notifications](https://learn.microsoft.com/en-us/graph/outlook-change-notifications-overview)
 
 ### PDF Extraction
+
 - [7 PDF Parsing Libraries for Node.js](https://strapi.io/blog/7-best-javascript-pdf-parsing-libraries-nodejs-2025)
 - [unpdf GitHub](https://github.com/unjs/unpdf)
 
 ### LLM Document Extraction
+
 - [LLMs for Structured Data Extraction from PDFs](https://unstract.com/blog/comparing-approaches-for-using-llms-for-structured-data-extraction-from-pdfs/)
 - [Best LLM Models for Document Processing 2025](https://algodocs.com/best-llm-models-for-document-processing-in-2025/)
 
 ### Notion API
+
 - [Notion SDK JS GitHub](https://github.com/makenotion/notion-sdk-js)
 - [Notion API Best Practices](https://cursorrules.org/article/notion-api-cursor-mdc-file)

@@ -45,11 +45,13 @@ ls -t .planning/v*-MILESTONE-AUDIT.md 2>/dev/null | head -1
 ```
 
 Parse YAML frontmatter to extract structured gaps:
+
 - `gaps.requirements` — unsatisfied requirements
 - `gaps.integration` — missing cross-phase connections
 - `gaps.flows` — broken E2E flows
 
 If no audit file exists or has no gaps, error:
+
 ```
 No audit gaps found. Run `/gsd:audit-milestone` first.
 ```
@@ -71,12 +73,14 @@ For integration/flow gaps, infer priority from affected requirements.
 Cluster related gaps into logical phases:
 
 **Grouping rules:**
+
 - Same affected phase → combine into one fix phase
 - Same subsystem (auth, API, UI) → combine
 - Dependency order (fix stubs before wiring)
 - Keep phases focused: 2-4 tasks each
 
 **Example grouping:**
+
 ```
 Gap: DASH-01 unsatisfied (Dashboard doesn't fetch)
 Gap: Integration Phase 1→3 (Auth not passed to API calls)
@@ -92,11 +96,13 @@ Gap: Flow "View dashboard" broken at data fetch
 ## 4. Determine Phase Numbers
 
 Find highest existing phase:
+
 ```bash
 ls -d .planning/phases/*/ | sort -V | tail -1
 ```
 
 New phases continue from there:
+
 - If Phase 5 is highest, gaps become Phase 6, 7, 8...
 
 ## 5. Present Gap Closure Plan
@@ -213,6 +219,7 @@ git commit -m "docs(roadmap): add gap closure phases {N}-{M}"
 ## How Gaps Become Tasks
 
 **Requirement gap → Tasks:**
+
 ```yaml
 gap:
   id: DASH-01
@@ -241,6 +248,7 @@ tasks:
 ```
 
 **Integration gap → Tasks:**
+
 ```yaml
 gap:
   from_phase: 1
@@ -265,6 +273,7 @@ tasks:
 ```
 
 **Flow gap → Tasks:**
+
 ```yaml
 gap:
   name: "User views dashboard after login"
@@ -284,6 +293,7 @@ becomes:
 </gap_to_phase_mapping>
 
 <success_criteria>
+
 - [ ] MILESTONE-AUDIT.md loaded and gaps parsed
 - [ ] Gaps prioritized (must/should/nice)
 - [ ] Gaps grouped into logical phases

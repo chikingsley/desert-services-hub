@@ -41,7 +41,7 @@ const workflowSteps = [
     title: "Contract",
     description: "Reconcile & finalize",
     icon: FileCheck,
-    active: false,
+    active: true,
   },
   {
     step: 4,

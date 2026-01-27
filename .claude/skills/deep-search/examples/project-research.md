@@ -15,20 +15,24 @@ Cradle to Crayons is a NEW project requiring a NEW estimate. While the same GC (
 ## Timeline
 
 **April 23, 2025** - NW Durango Estimate Request
+
 - Valley Rain (Kendra) requests quote for NW Durango at Pinnacle Peak, Scottsdale
 - Scope: SWPPP, dust permit, temp fence, inlet protection, porta johns
 
 **April 24, 2025** - NW Durango Estimate Sent
+
 - Jared sends estimate #04232507 to Kendra
 - Total: $8,416.95
 - Full scope: 20 inlet protection, 504 LF fence, 2 porta johns, dust permit
 
 **April 29, 2025** - NW Durango Work Order Received
+
 - Valley Rain issues PO #220060-010
 - Total: $7,204.60 (reduced from estimate)
 - Scope changes: 1 porta john (was 2), reduced sandbags, fence "as needed"
 
 **January 9, 2026** - Cradle to Crayons Request (CURRENT)
+
 - Salvador (SDB Engineering) requests quote via Chi
 - Site: 2929 N 24th St, Phoenix (different from NW Durango)
 - GC: Valley Rain Construction (same GC)
@@ -88,19 +92,22 @@ Note: Kendra flagged the amount difference in her email
 ## People Involved
 
 **Desert Services Team:**
+
 | Name | Email | Role |
 |------|-------|------|
-| Chi | chi@desertservices.net | Project Coordinator, primary contact |
-| Jared | jared@desertservices.net | Estimator |
-| Jayson | jayson@desertservices.net | Field/Compliance |
+| Chi | <chi@desertservices.net> | Project Coordinator, primary contact |
+| Jared | <jared@desertservices.net> | Estimator |
+| Jayson | <jayson@desertservices.net> | Field/Compliance |
 
 **External Contacts:**
+
 | Name | Company | Email | Role |
 |------|---------|-------|------|
-| Salvador Beltran | SDB Engineering | sbeltran@sdbeng.com | Engineering contact, requests quotes |
-| Kendra | Valley Rain Construction | kendra@valleyrainaz.com | GC contact, issues POs |
+| Salvador Beltran | SDB Engineering | <sbeltran@sdbeng.com> | Engineering contact, requests quotes |
+| Kendra | Valley Rain Construction | <kendra@valleyrainaz.com> | GC contact, issues POs |
 
 **Relationship Map:**
+
 - SDB Engineering provides civil engineering services
 - Valley Rain Construction is the General Contractor
 - Desert Services is subcontractor for SWPPP/erosion control

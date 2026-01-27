@@ -19,46 +19,46 @@ Dawn Wagner manages billing operations for Water Trucks, Street Sweeping, Pressu
 
 ### Primary Responsibilities
 
-- **Billing Operations:** Invoice creation and processing for Water Trucks, Street Sweeping, Pressure Washing, and Construction Cleanup
-- **Schedule Management:** Maintaining Excel schedules on SharePoint for all work orders and customer hits
-- **Work Intake Coordination:** Receiving and processing work requests from sales, customers, directors, and answering service
-- **Contract Administration:** Managing PO numbers, tracking contract billing requirements, coordinating with Kendra on contract billing platforms
-- **Customer Communication:** Processing 75-150 emails daily, organizing by department folders, tracking completion status
+* **Billing Operations:** Invoice creation and processing for Water Trucks, Street Sweeping, Pressure Washing, and Construction Cleanup
+* **Schedule Management:** Maintaining Excel schedules on SharePoint for all work orders and customer hits
+* **Work Intake Coordination:** Receiving and processing work requests from sales, customers, directors, and answering service
+* **Contract Administration:** Managing PO numbers, tracking contract billing requirements, coordinating with Kendra on contract billing platforms
+* **Customer Communication:** Processing 75-150 emails daily, organizing by department folders, tracking completion status
 
 ### Key Working Relationships
 
 * *Directors:**
 
-- **Daniel Vargas:** Water Truck Director - handles water trucks, pressure washing, construction cleanup, backflow/miscellaneous services
-- **Kelly Kline:** Street Sweeping Director - works remotely (seen only 3 times in 6 years), manages street sweeping operations
+* **Daniel Vargas:** Water Truck Director - handles water trucks, pressure washing, construction cleanup, backflow/miscellaneous services
+* **Kelly Kline:** Street Sweeping Director - works remotely (seen only 3 times in 6 years), manages street sweeping operations
 
 * *Billing Coordination:**
 
-- **Kendra:** Handles contract billing through Textura, GCPAY, Procore, and Premiere platforms; coordinates on blue-highlighted (contract billing) jobs
-- **Jason:** SWPPP scheduling coordinator; Dawn forwards Daniel's work completes when they include SWPPP work
-- **Don (Controller):** Financial oversight and QuickBooks administration
+* **Kendra:** Handles contract billing through Textura, GCPAY, Procore, and Premiere platforms; coordinates on blue-highlighted (contract billing) jobs
+* **Jason:** SWPPP scheduling coordinator; Dawn forwards Daniel's work completes when they include SWPPP work
+* **Don (Controller):** Financial oversight and QuickBooks administration
 
 * *Other Stakeholders:**
 
-- Sales team (Ammon, Brandon, Rick, Lacey, Mike Hammond)
-- Answering service (provides overflow call coverage)
-- Eva (accounting/admin support)
+* Sales team (Ammon, Brandon, Rick, Lacey, Mike Hammond)
+* Answering service (provides overflow call coverage)
+* Eva (accounting/admin support)
 
 ### Schedule Management System
 
 * *Excel Spreadsheet on SharePoint:**
 
-- "Old school" method - Dawn is the only billing coordinator still using Excel
-- Shared with directors and relevant team members
-- Updated continuously throughout the day
-- Color-coded tracking system
+* "Old school" method - Dawn is the only billing coordinator still using Excel
+* Shared with directors and relevant team members
+* Updated continuously throughout the day
+* Color-coded tracking system
 
 * *Color Coding System:**
 
-- **Yellow:** Job is scheduled/pending
-- **Blue:** Contract billing (Kendra handles through external platforms)
-- **White (no color):** Job completed and billed
-- **Annotations:** "WT" = Water Truck, "SW" = Street Sweeping, includes contact names and phone numbers
+* **Yellow:** Job is scheduled/pending
+* **Blue:** Contract billing (Kendra handles through external platforms)
+* **White (no color):** Job completed and billed
+* **Annotations:** "WT" = Water Truck, "SW" = Street Sweeping, includes contact names and phone numbers
 
 - --
 
@@ -68,69 +68,69 @@ Dawn Wagner manages billing operations for Water Trucks, Street Sweeping, Pressu
 
 * *1. Directors (Primary Source - 80%)**
 
-- Daniel Vargas (Water Truck, Pressure Washing, Construction Cleanup)
-- Kelly Kline (Street Sweeping)
-- Direct calls from 80% of major superintendents who have directors' phone numbers
-- Text messages and emails depending on director preference (Kelly prefers texting, some prefer email)
+* Daniel Vargas (Water Truck, Pressure Washing, Construction Cleanup)
+* Kelly Kline (Street Sweeping)
+* Direct calls from 80% of major superintendents who have directors' phone numbers
+* Text messages and emails depending on director preference (Kelly prefers texting, some prefer email)
 
 * *2. Sales Team (Growing Source)**
 
-- Ammon, Brandon, Rick, Lacey, Mike Hammond
-- New customers from expanded sales efforts
-- Initially sent requests only to directors (15 new sites in September alone)
-- After Dawn "gave angry eyes" and "stomped feet 20 times," now includes her on communications
-- Text or email with job details to both director and Dawn
+* Ammon, Brandon, Rick, Lacey, Mike Hammond
+* New customers from expanded sales efforts
+* Initially sent requests only to directors (15 new sites in September alone)
+* After Dawn "gave angry eyes" and "stomped feet 20 times," now includes her on communications
+* Text or email with job details to both director and Dawn
 
 * *3. Answering Service (Overflow)**
 
-- Captures calls when directors miss phone calls
-- Sends email notifications to Dawn with customer request details
-- Service implemented after research showed "thousands of missed calls"
-- Follow-up from answering service to ensure scheduling confirmation
+* Captures calls when directors miss phone calls
+* Sends email notifications to Dawn with customer request details
+* Service implemented after research showed "thousands of missed calls"
+* Follow-up from answering service to ensure scheduling confirmation
 
 * *4. Direct Customer Contact**
 
-- Emails directly to Dawn for scheduled/recurring services
-- Regular customers (Suntec, Waste Management sites, etc.) send schedules via email
+* Emails directly to Dawn for scheduled/recurring services
+* Regular customers (Suntec, Waste Management sites, etc.) send schedules via email
 
 * *5. Internal Contracts**
 
-- Jared sends contract emails to entire office staff
-- Dawn extracts relevant Water Truck/Street Sweeping scope
-- Sales person typically coordinates with director on contract start-up
+* Jared sends contract emails to entire office staff
+* Dawn extracts relevant Water Truck/Street Sweeping scope
+* Sales person typically coordinates with director on contract start-up
 
 ### Work Request Processing Flow
 
 * *Step 1: Email Receipt**
 
-- Receives 75-150 emails per day
-- Immediately organizes into department folders (Kelly, Daniel, Jeff & Jerry [estimating], Jason [inspectors])
-- Enables quick searching by department instead of entire inbox
+* Receives 75-150 emails per day
+* Immediately organizes into department folders (Kelly, Daniel, Jeff & Jerry [estimating], Jason [inspectors])
+* Enables quick searching by department instead of entire inbox
 
 * *Step 2: Schedule Entry**
 
-- Opens Excel schedule on SharePoint
-- Adds new job with relevant details
+* Opens Excel schedule on SharePoint
+* Adds new job with relevant details
 
-  - Customer name
-  - Service type (SW or WT annotation)
-  - Date and time
-  - Contact person name and phone number
-  - PO number (if required)
+  * Customer name
+  * Service type (SW or WT annotation)
+  * Date and time
+  * Contact person name and phone number
+  * PO number (if required)
 
-- Colors cell yellow to indicate scheduled status
+* Colors cell yellow to indicate scheduled status
 
 * *Step 3: Director Coordination**
 
-- Dawn visible on schedule; directors also maintain their own tracking
-- Daniel emails work completes
-- Kelly sends picture of handwritten work complete sheet weekly
+* Dawn visible on schedule; directors also maintain their own tracking
+* Daniel emails work completes
+* Kelly sends picture of handwritten work complete sheet weekly
 
 * *Step 4: Confirmation & Follow-up**
 
-- If yellow job not completed, Dawn asks director "What's happening? Why didn't we hit this hit?"
-- Customers often reschedule or cancel (particularly Suntec)
-- Dawn leaves unchanged items in schedule rather than deleting
+* If yellow job not completed, Dawn asks director "What's happening? Why didn't we hit this hit?"
+* Customers often reschedule or cancel (particularly Suntec)
+* Dawn leaves unchanged items in schedule rather than deleting
 
 - --
 
@@ -140,26 +140,26 @@ Dawn Wagner manages billing operations for Water Trucks, Street Sweeping, Pressu
 
 * *Structure:**
 
-- Maintained on SharePoint for accessibility
-- Organized by customer/project
-- Includes all scheduled and completed work
-- Dawn references it continuously throughout billing cycle
+* Maintained on SharePoint for accessibility
+* Organized by customer/project
+* Includes all scheduled and completed work
+* Dawn references it continuously throughout billing cycle
 
 * *Information Tracked:**
 
-- Customer name and project site
-- Service date and time
-- Service type (Water Truck, Street Sweeping, etc.)
-- PO numbers for customers requiring them
-- Contact person with phone/email
-- Billing notes and special requirements
+* Customer name and project site
+* Service date and time
+* Service type (Water Truck, Street Sweeping, etc.)
+* PO numbers for customers requiring them
+* Contact person with phone/email
+* Billing notes and special requirements
 
 * *Special Customers Requiring PO Tracking:**
 
-- **Suntec:** Every hit requires separate invoice with specific PO number; "very annoying" per Dawn
-- **ELR Colwin:** Must bill with PO 533513
-- **Corretti Mix:** Requires PO on invoice
-- All Suntec projects need PO tracking
+* **Suntec:** Every hit requires separate invoice with specific PO number; "very annoying" per Dawn
+* **ELR Colwin:** Must bill with PO 533513
+* **Corretti Mix:** Requires PO on invoice
+* All Suntec projects need PO tracking
 
 ### Billing Process
 
@@ -180,85 +180,85 @@ Dawn Wagner manages billing operations for Water Trucks, Street Sweeping, Pressu
 
 * *Timing Challenges:**
 
-- Must wait until end of month to complete billing
-- Actually starts "first or second week of following month"
-- Currently 1-2 weeks behind on timesheets
-- Example: Week ending October 12th work complete received October 22nd
+* Must wait until end of month to complete billing
+* Actually starts "first or second week of following month"
+* Currently 1-2 weeks behind on timesheets
+* Example: Week ending October 12th work complete received October 22nd
 
 * *Timesheet Lag Explanation:**
 
-- Timesheets for week ending 19th not submitted until 20th
-- Payroll processes and reviews timesheets
-- Dawn typically receives them around the 25th
-- Results in billing cycle starting early the following month
+* Timesheets for week ending 19th not submitted until 20th
+* Payroll processes and reviews timesheets
+* Dawn typically receives them around the 25th
+* Results in billing cycle starting early the following month
 
 ### Work Complete Documentation
 
 * *From Daniel Vargas (Water Truck/Pressure Washing/Construction Cleanup):**
 
-- Sends email with work complete details
-- Includes all jobs, dates, times, and any special notes
-- Sometimes includes SWPPP work (Dawn forwards to Jason and Kendra)
+* Sends email with work complete details
+* Includes all jobs, dates, times, and any special notes
+* Sometimes includes SWPPP work (Dawn forwards to Jason and Kendra)
 
 * *From Kelly Kline (Street Sweeping):**
 
-- Maintains handwritten work complete sheet
-- Takes picture and texts to Dawn
-- Dawn texts weekly: "Hey, need work completes for last week"
-- Shows all hits including scheduled jobs (Waste Management, Suntec, etc.) and call-ins
+* Maintains handwritten work complete sheet
+* Takes picture and texts to Dawn
+* Dawn texts weekly: "Hey, need work completes for last week"
+* Shows all hits including scheduled jobs (Waste Management, Suntec, etc.) and call-ins
 
 * *Matching Process:**
 
-- Dawn cross-references work completes against Excel schedule
-- Identifies which jobs were on schedule vs. call-ins
-- Uses work complete to track PO requirements
-- Determines if job is invoice billing or contract billing
+* Dawn cross-references work completes against Excel schedule
+* Identifies which jobs were on schedule vs. call-ins
+* Uses work complete to track PO requirements
+* Determines if job is invoice billing or contract billing
 
 ### Email Organization System
 
 * *Folder Structure:**
 
-- **Kelly:** Street Sweeping related emails
-- **Daniel:** Water Truck/Pressure Washing/Construction Cleanup
-- **Jeff & Jerry:** Estimating
-- **Jason:** Inspectors
-- **Individual folders:** For other departments/individuals as needed
+* **Kelly:** Street Sweeping related emails
+* **Daniel:** Water Truck/Pressure Washing/Construction Cleanup
+* **Jeff & Jerry:** Estimating
+* **Jason:** Inspectors
+* **Individual folders:** For other departments/individuals as needed
 
 * *Benefits:**
 
-- Quick searching within specific department
-- Don't have to "search whole damn email"
-- Just go to folder and search for customer/project name
-- Maintains backup documentation for billing disputes
+* Quick searching within specific department
+* Don't have to "search whole damn email"
+* Just go to folder and search for customer/project name
+* Maintains backup documentation for billing disputes
 
 * *Email Management Philosophy:**
 
-- "If you tell me to do something, don't keep asking me. I will do it. Don't send me another fucking email."
-- Processes emails as received
-- Marks as unread if needs follow-up
-- Once completed, moves to folder ("I don't want to touch it again")
+* "If you tell me to do something, don't keep asking me. I will do it. Don't send me another fucking email."
+* Processes emails as received
+* Marks as unread if needs follow-up
+* Once completed, moves to folder ("I don't want to touch it again")
 
 ### QuickBooks Customer Management
 
 * *Customer Setup:**
 
-- Creates new customers when contracts come in
-- Enters all available contact information
-- Attaches source documentation (emails, contract details) to customer record
-- Uses as "backup for me" and aids in getting paid
+* Creates new customers when contracts come in
+* Enters all available contact information
+* Attaches source documentation (emails, contract details) to customer record
+* Uses as "backup for me" and aids in getting paid
 
 * *Project Tracking:**
 
-- One customer can have multiple projects
-- Example: One company with 6 different Slim Chickens locations
-- Contract must be attached to correct project
-- Contract attachments stored in QuickBooks under project
+* One customer can have multiple projects
+* Example: One company with 6 different Slim Chickens locations
+* Contract must be attached to correct project
+* Contract attachments stored in QuickBooks under project
 
 * *Documentation:**
 
-- Attaches confirmation emails to customer record
-- Stores all correspondence related to payment issues
-- Maintains contract copies under project for reference
+* Attaches confirmation emails to customer record
+* Stores all correspondence related to payment issues
+* Maintains contract copies under project for reference
 
 - --
 
@@ -268,69 +268,69 @@ Dawn Wagner manages billing operations for Water Trucks, Street Sweeping, Pressu
 
 * *Daniel Vargas:**
 
-- Prefers email for documentation
-- Also responsive to texts
-- Sends typed work completes via email
-- "I like email"
+* Prefers email for documentation
+* Also responsive to texts
+* Sends typed work completes via email
+* "I like email"
 
 * *Kelly Kline:**
 
-- Prefers texting
-- Works remotely from home
-- Handwritten work completes (pictures via text)
-- "Kelly likes texting"
-- Dawn has to request weekly: "Need work completes"
+* Prefers texting
+* Works remotely from home
+* Handwritten work completes (pictures via text)
+* "Kelly likes texting"
+* Dawn has to request weekly: "Need work completes"
 
 * *Dawn's Approach:**
 
-- "As long as I get the communication, I don't care"
-- Accepts text, email, or calls
-- Priority is receiving the information regardless of channel
+* "As long as I get the communication, I don't care"
+* Accepts text, email, or calls
+* Priority is receiving the information regardless of channel
 
 ### Sales Team Communication
 
 * *Previous Pattern:**
 
-- Sales sent requests directly to directors only
-- Dawn missed 15 new sites in September
-- "I was dying"
+* Sales sent requests directly to directors only
+* Dawn missed 15 new sites in September
+* "I was dying"
 
 * *Current Pattern (After Dawn's Intervention):**
 
-- Sales includes both director and Dawn on communications
-- Text messages to both Daniel/Dawn or Kelly/Dawn
-- Emails cc both parties
-- Ensures Dawn has intake information for scheduling
+* Sales includes both director and Dawn on communications
+* Text messages to both Daniel/Dawn or Kelly/Dawn
+* Emails cc both parties
+* Ensures Dawn has intake information for scheduling
 
 ### Customer Communication
 
 * *Regular Scheduled Customers:**
 
-- Email schedules to Dawn, Kelly, and sometimes Kendra
-- Example: Suntec emails all three with schedule including PO numbers
-- Provides advance notice for scheduled hits
+* Email schedules to Dawn, Kelly, and sometimes Kendra
+* Example: Suntec emails all three with schedule including PO numbers
+* Provides advance notice for scheduled hits
 
 * *Call-in Customers:**
 
-- Contact directors directly (80% have direct phone numbers)
-- If director misses call, goes to answering service
-- Answering service notifies Dawn via email
+* Contact directors directly (80% have direct phone numbers)
+* If director misses call, goes to answering service
+* Answering service notifies Dawn via email
 
 ### Answering Service Integration
 
 * *Purpose:**
 
-- Captures overflow when directors don't answer
-- Prevents missed sales opportunities
-- Implemented after discovering "thousands of missed calls"
+* Captures overflow when directors don't answer
+* Prevents missed sales opportunities
+* Implemented after discovering "thousands of missed calls"
 
 * *Process:**
 
-- Customer call goes to answering service if unanswered
-- Service sends email to Dawn with customer details
-- Dawn processes like any other work request
-- Answering service follows up: "Hey, did you get this? Did you see this? Did you schedule this?"
-- Service expects response/confirmation
+* Customer call goes to answering service if unanswered
+* Service sends email to Dawn with customer details
+* Dawn processes like any other work request
+* Answering service follows up: "Hey, did you get this? Did you see this? Did you schedule this?"
+* Service expects response/confirmation
 
 - --
 
@@ -340,15 +340,15 @@ Dawn Wagner manages billing operations for Water Trucks, Street Sweeping, Pressu
 
 * *Scale:**
 
-- 75-150 emails per day
-- Mix of work requests, confirmations, questions, and follow-ups
-- Requires constant attention and processing
+* 75-150 emails per day
+* Mix of work requests, confirmations, questions, and follow-ups
+* Requires constant attention and processing
 
 * *Management Strategy:**
 
-- Folder organization by department
-- Immediate triage and categorization
-- Clear communication about not sending duplicate requests
+* Folder organization by department
+* Immediate triage and categorization
+* Clear communication about not sending duplicate requests
 
 * *Quote:** "If you tell me to do something, don't keep asking me. I will do it. Don't send me another fucking email. I'll probably walk over."
 
@@ -356,136 +356,136 @@ Dawn Wagner manages billing operations for Water Trucks, Street Sweeping, Pressu
 
 * *Current Reality:**
 
-- 1-2 weeks behind on receiving timesheets
-- Can't start billing until second week of following month
-- Example: October 12th work not billed until late October
+* 1-2 weeks behind on receiving timesheets
+* Can't start billing until second week of following month
+* Example: October 12th work not billed until late October
 
 * *Contributing Factors:**
 
-- Paper timesheets submitted after week ends
-- Payroll processing time
-- Manual review and approval process
+* Paper timesheets submitted after week ends
+* Payroll processing time
+* Manual review and approval process
 
 * *Future Improvement (BusyBusy App):**
 
-- Daily time tracking instead of weekly batches
-- Could enable real-time billing
-- Would reduce lag from 1-2 weeks to 1-2 days potentially
-- Dawn hopeful but notes: "I don't know if I'm gonna still be using a spreadsheet either"
+* Daily time tracking instead of weekly batches
+* Could enable real-time billing
+* Would reduce lag from 1-2 weeks to 1-2 days potentially
+* Dawn hopeful but notes: "I don't know if I'm gonna still be using a spreadsheet either"
 
 ### 3. Communication Gaps with Sales
 
 * *Historical Issue:**
 
-- Sales sending requests only to directors
-- Dawn missing critical intake information
-- 15 new sites added in September without Dawn's knowledge
+* Sales sending requests only to directors
+* Dawn missing critical intake information
+* 15 new sites added in September without Dawn's knowledge
 
 * *Resolution:**
 
-- Dawn advocated for inclusion ("gave angry eyes," "stomped feet 20 times")
-- Now receiving dual communications
-- Improved coordination but required assertiveness
+* Dawn advocated for inclusion ("gave angry eyes," "stomped feet 20 times")
+* Now receiving dual communications
+* Improved coordination but required assertiveness
 
 * *Ongoing Need:**
 
-- Sales must remember to include Dawn
-- Some salespeople more consistent than others
-- Requires ongoing reinforcement
+* Sales must remember to include Dawn
+* Some salespeople more consistent than others
+* Requires ongoing reinforcement
 
 ### 4. Multiple PO Tracking Requirements
 
 * *Complexity:**
 
-- Different customers have different PO requirements
-- Some require PO on every invoice
-- Some require separate invoice per PO
-- Suntec requires separate invoice for each hit with specific PO
+* Different customers have different PO requirements
+* Some require PO on every invoice
+* Some require separate invoice per PO
+* Suntec requires separate invoice for each hit with specific PO
 
 * *Risk:**
 
-- Incorrect PO = payment delays or disputes
-- Must track across multiple jobs and dates
-- No automated system to flag PO requirements
+* Incorrect PO = payment delays or disputes
+* Must track across multiple jobs and dates
+* No automated system to flag PO requirements
 
 * *Current Management:**
 
-- Pastes PO numbers into Excel schedule for reference
-- Checks schedule when creating invoices
-- Relies on memory and detailed notes
+* Pastes PO numbers into Excel schedule for reference
+* Checks schedule when creating invoices
+* Relies on memory and detailed notes
 
 ### 5. Director Availability & Responsiveness
 
 * *Kelly Kline (Street Sweeping):**
 
-- Works remotely, very limited office presence
-- Seen only 3 times in 6 years (once in first 5 years, twice since Tim's ownership)
-- Dawn's first impression: "Who's the hell is this homeless person?"
-- Requires weekly requests for work completes
-- Handwritten documentation requires picture texting
+* Works remotely, very limited office presence
+* Seen only 3 times in 6 years (once in first 5 years, twice since Tim's ownership)
+* Dawn's first impression: "Who's the hell is this homeless person?"
+* Requires weekly requests for work completes
+* Handwritten documentation requires picture texting
 
 * *Impact:**
 
-- Less immediate feedback on schedule questions
-- Weekly batch work complete submissions instead of daily
-- Harder to clarify discrepancies or missing information
+* Less immediate feedback on schedule questions
+* Weekly batch work complete submissions instead of daily
+* Harder to clarify discrepancies or missing information
 
 ### 6. Contract Coordination Complexity
 
 * *Contract Intake Process:**
 
-- Jared sends contracts to entire office
-- Each person must "pick through" to find relevant scope
-- Not always clear who needs to be involved
+* Jared sends contracts to entire office
+* Each person must "pick through" to find relevant scope
+* Not always clear who needs to be involved
 
 * *Example Issue (Findor vs. Red Point):**
 
-- Contract showed Red Point but work under Findor
-- Mike Hammond requested pre-qual under Findor
-- Dawn had to clarify: "Is it under Red Point or under this?"
-- Required morning of coordination to correct customer setup
+* Contract showed Red Point but work under Findor
+* Mike Hammond requested pre-qual under Findor
+* Dawn had to clarify: "Is it under Red Point or under this?"
+* Required morning of coordination to correct customer setup
 
 * *Communication Needs:**
 
-- Sales should inform directors directly about contract start-ups
-- Example: "We're going on schedule for water truck on this contract like GCON"
-- Dawn sometimes learns about changes indirectly or late
-- Discovered WD contract reduced from 8 hours/day when "ran out of money" - wasn't informed promptly
+* Sales should inform directors directly about contract start-ups
+* Example: "We're going on schedule for water truck on this contract like GCON"
+* Dawn sometimes learns about changes indirectly or late
+* Discovered WD contract reduced from 8 hours/day when "ran out of money" - wasn't informed promptly
 
 ### 7. Schedule Changes & Cancellations
 
 * *Customer Patterns:**
 
-- Frequent rescheduling (particularly Suntec: "very annoying")
-- Last-minute cancellations
-- Schedule changes without formal notice
+* Frequent rescheduling (particularly Suntec: "very annoying")
+* Last-minute cancellations
+* Schedule changes without formal notice
 
 * *Dawn's Approach:**
 
-- Leaves items in schedule even if not completed
-- Asks directors "What's happening? Why didn't we hit this hit?"
-- Sometimes customers reschedule repeatedly
+* Leaves items in schedule even if not completed
+* Asks directors "What's happening? Why didn't we hit this hit?"
+* Sometimes customers reschedule repeatedly
 
 * *System Limitation:**
 
-- No automated change tracking
-- Relies on director communication
-- Manual follow-up required
+* No automated change tracking
+* Relies on director communication
+* Manual follow-up required
 
 ### 8. "Old School" System Concerns
 
 * *Self-Awareness:**
 
-- Dawn acknowledges she's "the old school one"
-- Other billing coordinators (Porta John, Rolloff) use Crow for scheduling and completing
-- Uncertainty about future: "I don't know if I'm gonna still be using a spreadsheet either"
+* Dawn acknowledges she's "the old school one"
+* Other billing coordinators (Porta John, Rolloff) use Crow for scheduling and completing
+* Uncertainty about future: "I don't know if I'm gonna still be using a spreadsheet either"
 
 * *Works But Not Ideal:**
 
-- System functions: "It works, you know"
-- Requires significant manual effort
-- Not scalable with business growth
-- No integration with other systems
+* System functions: "It works, you know"
+* Requires significant manual effort
+* Not scalable with business growth
+* No integration with other systems
 
 - --
 
@@ -497,17 +497,17 @@ Dawn Wagner manages billing operations for Water Trucks, Street Sweeping, Pressu
 
 * *Solution:** BusyBusy app implementation
 
-- Real-time work complete data
-- Daily instead of weekly/batch submissions
-- Automated tracking of jobs, times, locations
-- Potential direct integration with billing
+* Real-time work complete data
+* Daily instead of weekly/batch submissions
+* Automated tracking of jobs, times, locations
+* Potential direct integration with billing
 
 * *Expected Impact:**
 
-- Reduce billing lag from 1-2 weeks to 1-2 days
-- Enable end-of-month billing instead of early following month
-- Improve cash flow
-- Reduce manual data entry and matching
+* Reduce billing lag from 1-2 weeks to 1-2 days
+* Enable end-of-month billing instead of early following month
+* Improve cash flow
+* Reduce manual data entry and matching
 
 ### 2. Integrated Scheduling & Billing Platform
 
@@ -515,17 +515,17 @@ Dawn Wagner manages billing operations for Water Trucks, Street Sweeping, Pressu
 
 * *Solution:** Implement unified platform (potentially Crow or similar)
 
-- Automated schedule updates from work intake
-- Integration with timekeeping (BusyBusy or similar)
-- Direct flow from schedule → work complete → billing
-- Automated PO tracking and flagging
+* Automated schedule updates from work intake
+* Integration with timekeeping (BusyBusy or similar)
+* Direct flow from schedule → work complete → billing
+* Automated PO tracking and flagging
 
 * *Expected Impact:**
 
-- Reduce manual data entry
-- Eliminate schedule/work complete mismatches
-- Automated alerts for PO requirements
-- Scalable for business growth
+* Reduce manual data entry
+* Eliminate schedule/work complete mismatches
+* Automated alerts for PO requirements
+* Scalable for business growth
 
 ### 3. Standardized Contract Communication Process
 
@@ -533,17 +533,17 @@ Dawn Wagner manages billing operations for Water Trucks, Street Sweeping, Pressu
 
 * *Solution:** Structured contract kickoff process
 
-- Sales/estimating notifies all affected directors and Dawn simultaneously
-- Standard email template with relevant service families highlighted
-- Clear start dates, billing requirements, special conditions
-- PO requirements identified upfront
+* Sales/estimating notifies all affected directors and Dawn simultaneously
+* Standard email template with relevant service families highlighted
+* Clear start dates, billing requirements, special conditions
+* PO requirements identified upfront
 
 * *Expected Impact:**
 
-- No surprise schedule additions
-- Proactive PO tracking
-- Better resource planning
-- Reduced billing errors
+* No surprise schedule additions
+* Proactive PO tracking
+* Better resource planning
+* Reduced billing errors
 
 ### 4. Answering Service Integration with Scheduling
 
@@ -551,10 +551,10 @@ Dawn Wagner manages billing operations for Water Trucks, Street Sweeping, Pressu
 
 * *Opportunity:** Direct integration
 
-- Answering service could enter requests directly into scheduling system
-- Reduces Dawn's data entry burden
-- Faster scheduling response time
-- Maintains documentation trail
+* Answering service could enter requests directly into scheduling system
+* Reduces Dawn's data entry burden
+* Faster scheduling response time
+* Maintains documentation trail
 
 * *Feasibility:** Depends on answering service capabilities and chosen platform
 
@@ -564,16 +564,16 @@ Dawn Wagner manages billing operations for Water Trucks, Street Sweeping, Pressu
 
 * *Solution:** Customer database with automated PO flags
 
-- Mark customers with PO requirements in system
-- Automatic alerts when creating schedule entry or invoice
-- Template invoice includes PO field for flagged customers
-- Tracking of which PO used for which job/date
+* Mark customers with PO requirements in system
+* Automatic alerts when creating schedule entry or invoice
+* Template invoice includes PO field for flagged customers
+* Tracking of which PO used for which job/date
 
 * *Expected Impact:**
 
-- Eliminate missed PO requirements
-- Reduce payment delays
-- Less mental burden remembering customer requirements
+* Eliminate missed PO requirements
+* Reduce payment delays
+* Less mental burden remembering customer requirements
 
 ### 6. Work Complete Standardization
 
@@ -581,17 +581,17 @@ Dawn Wagner manages billing operations for Water Trucks, Street Sweeping, Pressu
 
 * *Solution:** Standard digital work complete form
 
-- Same format from all directors
-- Digital submission (BusyBusy or similar)
-- Automated submission rather than requested weekly
-- Structured fields for consistent data
+* Same format from all directors
+* Digital submission (BusyBusy or similar)
+* Automated submission rather than requested weekly
+* Structured fields for consistent data
 
 * *Expected Impact:**
 
-- Easier matching to schedule
-- Reduced follow-up requests
-- More timely billing
-- Better data for analysis
+* Easier matching to schedule
+* Reduced follow-up requests
+* More timely billing
+* Better data for analysis
 
 ### 7. Email Management & Workflow Automation
 
@@ -599,17 +599,17 @@ Dawn Wagner manages billing operations for Water Trucks, Street Sweeping, Pressu
 
 * *Solution:** Work intake portal or system
 
-- Structured work request forms instead of emails
-- Automatic routing to relevant parties
-- Status tracking built-in
-- Reduces email volume significantly
+* Structured work request forms instead of emails
+* Automatic routing to relevant parties
+* Status tracking built-in
+* Reduces email volume significantly
 
 * *Expected Impact:**
 
-- Fewer emails to process
-- Less time organizing and searching
-- Clear audit trail
-- Better for scaling
+* Fewer emails to process
+* Less time organizing and searching
+* Clear audit trail
+* Better for scaling
 
 - --
 
@@ -617,55 +617,55 @@ Dawn Wagner manages billing operations for Water Trucks, Street Sweeping, Pressu
 
 ### Email Volume
 
-- **Daily:** 75-150 emails
-- **Processing:** Immediate triage and folder organization
-- **Folders:** Department-specific (Kelly, Daniel, Jeff & Jerry, Jason, etc.)
+* **Daily:** 75-150 emails
+* **Processing:** Immediate triage and folder organization
+* **Folders:** Department-specific (Kelly, Daniel, Jeff & Jerry, Jason, etc.)
 
 ### Billing Cycle
 
-- **Target:** End of month
-- **Reality:** First or second week of following month
-- **Lag:** 1-2 weeks behind on timesheets
-- **Example:** October 12th work billed late October
+* **Target:** End of month
+* **Reality:** First or second week of following month
+* **Lag:** 1-2 weeks behind on timesheets
+* **Example:** October 12th work billed late October
 
 ### Service Families Managed
 
-- **Water Trucks (WT):** Dust control, lot washes, miscellaneous water services
-- **Street Sweeping (SW):** Scheduled and call-in sweeping
-- **Pressure Washing:** Exterior walls, windows, parking lots, high-pressure cleaning
-- **Construction Cleanup:** Site cleaning and preparation
+* **Water Trucks (WT):** Dust control, lot washes, miscellaneous water services
+* **Street Sweeping (SW):** Scheduled and call-in sweeping
+* **Pressure Washing:** Exterior walls, windows, parking lots, high-pressure cleaning
+* **Construction Cleanup:** Site cleaning and preparation
 
 ### Directors Supported
 
-- **Daniel Vargas:** Water Truck Director (WT, Pressure Washing, Construction Cleanup)
-- **Kelly Kline:** Street Sweeping Director (SW)
+* **Daniel Vargas:** Water Truck Director (WT, Pressure Washing, Construction Cleanup)
+* **Kelly Kline:** Street Sweeping Director (SW)
 
 ### Billing Types
 
-- **Invoice Billing:** Standard jobs billed directly to customer
-- **Contract Billing (Blue-coded):** Handled through Textura, GCPAY, Procore, Premiere platforms with Kendra
+* **Invoice Billing:** Standard jobs billed directly to customer
+* **Contract Billing (Blue-coded):** Handled through Textura, GCPAY, Procore, Premiere platforms with Kendra
 
 ### Special Customers
 
-- **Suntec:** Multiple scheduled sites, separate PO per hit, frequent changes ("very annoying")
-- **Waste Management:** Multiple scheduled sites (Santan, Iron Mountain, Butterfield, Deer Valley, Sky Harbor)
-- **Westpac:** Textura contract billing
-- **Saunders Kia:** Regular water truck schedule
-- **QT14, AP Global:** Regular lot wash customers
+* **Suntec:** Multiple scheduled sites, separate PO per hit, frequent changes ("very annoying")
+* **Waste Management:** Multiple scheduled sites (Santan, Iron Mountain, Butterfield, Deer Valley, Sky Harbor)
+* **Westpac:** Textura contract billing
+* **Saunders Kia:** Regular water truck schedule
+* **QT14, AP Global:** Regular lot wash customers
 
 ### Communication Channels
 
-- **Email:** Primary for most communications
-- **Text:** Kelly prefers texting, some sales team members
-- **Phone:** Direct calls from superintendents (80% have director numbers)
-- **Answering Service:** Overflow call coverage
+* **Email:** Primary for most communications
+* **Text:** Kelly prefers texting, some sales team members
+* **Phone:** Direct calls from superintendents (80% have director numbers)
+* **Answering Service:** Overflow call coverage
 
 ### Technology Used
 
-- **Excel/SharePoint:** Scheduling and tracking
-- **QuickBooks:** Customer management, invoicing, project tracking
-- **Email:** Outlook with folder organization
-- **Text Messaging:** Coordination with Kelly and sales
+* **Excel/SharePoint:** Scheduling and tracking
+* **QuickBooks:** Customer management, invoicing, project tracking
+* **Email:** Outlook with folder organization
+* **Text Messaging:** Coordination with Kelly and sales
 
 - --
 
@@ -673,49 +673,49 @@ Dawn Wagner manages billing operations for Water Trucks, Street Sweeping, Pressu
 
 ### Estimating (Jeff & Jerry)
 
-- Receive contract emails
-- Dawn has dedicated folder for estimating emails
-- Coordination on new customer setup
-- Jared sends contracts for office review
+* Receive contract emails
+* Dawn has dedicated folder for estimating emails
+* Coordination on new customer setup
+* Jared sends contracts for office review
 
 ### SWPPP (Jason)
 
-- Dawn forwards Daniel's work completes when include SWPPP work
-- Jason uses work completes for his scheduling
-- Jason sends daily schedule to team (Dawn receives copy)
-- Coordination on shared customers/jobs
+* Dawn forwards Daniel's work completes when include SWPPP work
+* Jason uses work completes for his scheduling
+* Jason sends daily schedule to team (Dawn receives copy)
+* Coordination on shared customers/jobs
 
 ### Contract Billing (Kendra)
 
-- Dawn creates invoices for contract billing jobs (blue-coded)
-- Emails Kendra when invoice ready
-- Kendra processes through external platforms (Textura, GCPAY, Procore, Premiere)
-- Kendra included on some customer emails (like Suntec) "because she likes to be attached to stuff so she knows what's going on"
+* Dawn creates invoices for contract billing jobs (blue-coded)
+* Emails Kendra when invoice ready
+* Kendra processes through external platforms (Textura, GCPAY, Procore, Premiere)
+* Kendra included on some customer emails (like Suntec) "because she likes to be attached to stuff so she knows what's going on"
 
 ### Accounting (Don - Controller)
 
-- QuickBooks administration and access
-- Financial oversight
-- Invoice approval and processing
+* QuickBooks administration and access
+* Financial oversight
+* Invoice approval and processing
 
 ### HR (Tanya)
 
-- Pre-qualification requests
-- Compliance documentation
-- New customer onboarding coordination
+* Pre-qualification requests
+* Compliance documentation
+* New customer onboarding coordination
 
 ### Sales Team
 
-- Ammon, Brandon, Rick, Lacey, Mike Hammond
-- Coordinate on new customers and contracts
-- Must include Dawn on communications to directors
-- Growing source of work intake
+* Ammon, Brandon, Rick, Lacey, Mike Hammond
+* Coordinate on new customers and contracts
+* Must include Dawn on communications to directors
+* Growing source of work intake
 
 ### Porta John & Rolloff Billing
 
-- Other billing coordinators use Crow system
-- Different workflow than Dawn's Excel approach
-- Dawn is "the old school one"
+* Other billing coordinators use Crow system
+* Different workflow than Dawn's Excel approach
+* Dawn is "the old school one"
 
 - --
 
@@ -781,44 +781,44 @@ Dawn Wagner manages billing operations for Water Trucks, Street Sweeping, Pressu
 
 ### Years of Service
 
-- 6 years with company
-- Predates Tim's ownership (previous owner: Mike Lane)
-- Seen transition from previous to current ownership
+* 6 years with company
+* Predates Tim's ownership (previous owner: Mike Lane)
+* Seen transition from previous to current ownership
 
 ### Office Culture
 
-- Direct communication style encouraged
-- Dawn comfortable advocating for process needs ("gave angry eyes," "stomped feet")
-- Collaborative environment with cross-department coordination
+* Direct communication style encouraged
+* Dawn comfortable advocating for process needs ("gave angry eyes," "stomped feet")
+* Collaborative environment with cross-department coordination
 
 ### Company Growth
 
-- Expanded sales team bringing more work
-- More contract billing opportunities
-- Increased complexity of customer requirements
-- Growing need for scalable systems
+* Expanded sales team bringing more work
+* More contract billing opportunities
+* Increased complexity of customer requirements
+* Growing need for scalable systems
 
 ### Kelly Kline Background
 
-- Street Sweeping Director
-- Works remotely, very rarely in office
-- Has been with company long-term
-- Known for being elusive ("homeless person" first impression)
-- Not officially titled "director" but functions in that capacity
+* Street Sweeping Director
+* Works remotely, very rarely in office
+* Has been with company long-term
+* Known for being elusive ("homeless person" first impression)
+* Not officially titled "director" but functions in that capacity
 
 ### System Evolution
 
-- Other departments moved to Crow (Porta John, Rolloff)
-- Dawn still using Excel/SharePoint
-- Recognition that change may be coming
-- Participated in BusyBusy system selection with Daniel
+* Other departments moved to Crow (Porta John, Rolloff)
+* Dawn still using Excel/SharePoint
+* Recognition that change may be coming
+* Participated in BusyBusy system selection with Daniel
 
 ### Contract Billing Growth
 
-- More jobs requiring Textura, GCPAY, Procore, Premiere
-- Kendra's role expanded to handle contract billing platforms
-- Dawn creates invoices, Kendra processes payments
-- Blue-coding system to distinguish contract billing jobs
+* More jobs requiring Textura, GCPAY, Procore, Premiere
+* Kendra's role expanded to handle contract billing platforms
+* Dawn creates invoices, Kendra processes payments
+* Blue-coding system to distinguish contract billing jobs
 
 - --
 
@@ -828,83 +828,83 @@ Dawn Wagner manages billing operations for Water Trucks, Street Sweeping, Pressu
 
 1. **BusyBusy Rollout for Dawn's Divisions**
 
-    - Complete testing with water truck and street sweeping
-    - Train directors on daily work complete submissions
-    - Test integration with Dawn's billing workflow
+    * Complete testing with water truck and street sweeping
+    * Train directors on daily work complete submissions
+    * Test integration with Dawn's billing workflow
 
 2. **Standardize Sales Communication**
 
-    - Reinforce requirement to include Dawn on all work requests to directors
-    - Create email template for sales team
-    - Track compliance and follow up on exceptions
+    * Reinforce requirement to include Dawn on all work requests to directors
+    * Create email template for sales team
+    * Track compliance and follow up on exceptions
 
 3. **PO Requirement Database**
 
-    - Document all customers requiring POs
-    - Note specific requirements (every invoice, separate per hit, etc.)
-    - Create reference guide for Dawn
+    * Document all customers requiring POs
+    * Note specific requirements (every invoice, separate per hit, etc.)
+    * Create reference guide for Dawn
 
 4. **Weekly Kelly Check-in**
 
-    - Formalize weekly work complete request schedule
-    - Set expectation for submission timing (e.g., every Monday by noon)
-    - Consider moving to more frequent submissions
+    * Formalize weekly work complete request schedule
+    * Set expectation for submission timing (e.g., every Monday by noon)
+    * Consider moving to more frequent submissions
 
 ### Medium-term (3-6 months)
 
 1. **Scheduling System Evaluation**
 
-    - Assess whether to continue Excel or transition to integrated platform
-    - Evaluate Crow or similar systems
-    - Consider integration with BusyBusy
-    - Plan migration if system change decided
+    * Assess whether to continue Excel or transition to integrated platform
+    * Evaluate Crow or similar systems
+    * Consider integration with BusyBusy
+    * Plan migration if system change decided
 
 2. **Contract Communication Process**
 
-    - Implement standardized contract kickoff emails
-    - Include all affected directors and Dawn from day one
-    - Highlight service families involved
-    - Clearly state PO and billing requirements
+    * Implement standardized contract kickoff emails
+    * Include all affected directors and Dawn from day one
+    * Highlight service families involved
+    * Clearly state PO and billing requirements
 
 3. **Answering Service Integration**
 
-    - Explore direct integration with scheduling system
-    - Reduce manual data entry from answering service emails
-    - Maintain documentation trail
+    * Explore direct integration with scheduling system
+    * Reduce manual data entry from answering service emails
+    * Maintain documentation trail
 
 4. **Email Management Tools**
 
-    - Consider work intake portal to reduce email volume
-    - Evaluate automated routing and status tracking
-    - Maintain folder organization in interim
+    * Consider work intake portal to reduce email volume
+    * Evaluate automated routing and status tracking
+    * Maintain folder organization in interim
 
 ### Long-term (6-12 months)
 
 1. **Unified Platform Implementation**
 
-    - Fully integrated scheduling, work complete, and billing system
-    - Eliminate manual Excel maintenance
-    - Enable real-time visibility across departments
-    - Automated PO tracking and flagging
+    * Fully integrated scheduling, work complete, and billing system
+    * Eliminate manual Excel maintenance
+    * Enable real-time visibility across departments
+    * Automated PO tracking and flagging
 
 2. **Cash Flow Optimization**
 
-    - Reduce billing lag from 1-2 weeks to 1-2 days
-    - Enable end-of-month billing instead of early following month
-    - Improve working capital position
+    * Reduce billing lag from 1-2 weeks to 1-2 days
+    * Enable end-of-month billing instead of early following month
+    * Improve working capital position
 
 3. **Scalable Systems for Growth**
 
-    - Support continued sales expansion
-    - Handle increasing contract billing complexity
-    - Reduce manual effort per job
-    - Enable Dawn to manage larger volume without proportional time increase
+    * Support continued sales expansion
+    * Handle increasing contract billing complexity
+    * Reduce manual effort per job
+    * Enable Dawn to manage larger volume without proportional time increase
 
 4. **Cross-Training & Redundancy**
 
-    - Document Dawn's processes and systems
-    - Create backup coverage for vacation/absence
-    - Build bench strength in billing operations
+    * Document Dawn's processes and systems
+    * Create backup coverage for vacation/absence
+    * Build bench strength in billing operations
 
 - --
 
@@ -916,9 +916,9 @@ Dawn Wagner manages complex billing operations for four service families using m
 
 * *Document compiled from:**
 
-- Meeting transcript: Dawn Wagner (October 22, 2024)
-- Cross-referenced with operational context and system descriptions
-- Structured to match comprehensive meeting summary format
+* Meeting transcript: Dawn Wagner (October 22, 2024)
+* Cross-referenced with operational context and system descriptions
+* Structured to match comprehensive meeting summary format
 
 * *Prepared for:** Process workflow documentation and improvement planning
 * *Date:** October 22, 2024

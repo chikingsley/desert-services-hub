@@ -74,6 +74,7 @@ skipped: [N]
 <section_rules>
 
 **Frontmatter:**
+
 - `status`: OVERWRITE - "testing" or "complete"
 - `phase`: IMMUTABLE - set on creation
 - `source`: IMMUTABLE - SUMMARY files being tested
@@ -81,21 +82,25 @@ skipped: [N]
 - `updated`: OVERWRITE - update on every change
 
 **Current Test:**
+
 - OVERWRITE entirely on each test transition
 - Shows which test is active and what's awaited
 - On completion: "[testing complete]"
 
 **Tests:**
+
 - Each test: OVERWRITE result field when user responds
 - `result` values: [pending], pass, issue, skipped
 - If issue: add `reported` (verbatim) and `severity` (inferred)
 - If skipped: add `reason` if provided
 
 **Summary:**
+
 - OVERWRITE counts after each response
 - Tracks: total, passed, issues, pending, skipped
 
 **Gaps:**
+
 - APPEND only when issue found (YAML format)
 - After diagnosis: fill `root_cause`, `artifacts`, `missing`, `debug_session`
 - This section feeds directly into /gsd:plan-phase --gaps
@@ -115,6 +120,7 @@ skipped: [N]
 6. Ready for /gsd:plan-phase --gaps with root causes
 
 **After diagnosis:**
+
 ```yaml
 ## Gaps
 
@@ -137,12 +143,14 @@ skipped: [N]
 <lifecycle>
 
 **Creation:** When /gsd:verify-work starts new session
+
 - Extract tests from SUMMARY.md files
 - Set status to "testing"
 - Current Test points to test 1
 - All tests have result: [pending]
 
 **During testing:**
+
 - Present test from Current Test section
 - User responds with pass confirmation or issue description
 - Update test result (pass/issue/skipped)
@@ -151,12 +159,14 @@ skipped: [N]
 - Move Current Test to next pending test
 
 **On completion:**
+
 - status → "complete"
 - Current Test → "[testing complete]"
 - Commit file
 - Present summary with next steps
 
 **Resume after /clear:**
+
 1. Read frontmatter → know phase and status
 2. Read Current Test → know where we are
 3. Find first [pending] result → continue from there
@@ -180,6 +190,7 @@ Default: **major** (safe default, user can clarify if wrong)
 </severity_guide>
 
 <good_example>
+
 ```markdown
 ---
 status: diagnosed
@@ -244,4 +255,5 @@ skipped: 0
     - "Add commentCount to useEffect dependency array"
   debug_session: ".planning/debug/comment-not-refreshing.md"
 ```
+
 </good_example>

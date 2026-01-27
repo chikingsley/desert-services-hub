@@ -38,12 +38,12 @@
  */
 import { parseArgs } from "node:util";
 import { GraphEmailClient } from "./client";
-import { GraphGroupsClient } from "./groups";
 import {
   getLogoAttachment,
   getTemplate,
   listTemplates,
-} from "./templates/index";
+} from "./email-templates/index";
+import { GraphGroupsClient } from "./groups";
 
 // ============================================================================
 // Configuration

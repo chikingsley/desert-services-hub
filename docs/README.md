@@ -32,7 +32,7 @@ The estimators and coordinators are expected to "just know" what needs doing by 
 | **Monday** | Estimates, Leads, Sales (pre-project) |
 | **SharePoint** | Documents (PDFs, contracts, plans) |
 
-### The workflow:
+### The workflow
 
 1. Email arrives
 2. Identify what it is (contract, permit request, SWPPP request, etc.)
@@ -65,17 +65,21 @@ But at least:
 ## Notion Structure
 
 ### Projects Database
+
 Where projects live. A project is created when we have work to do (contract received, permit requested, etc.)
 
 **Status flow:**
+
 ```text
 Intake → Contract Review → Compliance → Schedule → Operations → Done
 ```
 
 ### Tasks Database
+
 Individual action items. Every task links to a project.
 
 **Status flow:**
+
 ```text
 Not Started → In Progress → Waiting on Response → Done
 ```
@@ -83,6 +87,7 @@ Not Started → In Progress → Waiting on Response → Done
 **Tags:** Dust Permit, Contracts, Process Improvement
 
 **Views:**
+
 - "Need Action" - things that haven't been touched recently but aren't done
 - "By Project" - grouped by project
 - "Board" - kanban by status

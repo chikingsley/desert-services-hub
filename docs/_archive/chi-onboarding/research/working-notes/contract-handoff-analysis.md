@@ -11,20 +11,25 @@
 ### What Happens After Estimate is Sent
 
 * *From Sales-Team-Summary.md:**
+
 > "What Actually Happens: 1. Jared estimates SWPPP job 2. Bid goes out (sometimes entered in Monday, sometimes not) 3. ??? [Black hole - no one follows up consistently] 4. Sales discovers project by **driving past active construction site**"
 
 * *From Rick-Haitaian-Summary.md:**
+
 > "As of 5 months ago (when Rick started), there was NO follow-up on submitted bids/estimates. Rick has since implemented a systematic follow-up system... 3,000+ bids in Monday queue. No systematic follow-up on all of them. Rick focuses on high-dollar opportunities."
 
 ### When Projects Are Won - Missing Critical Info
 
 * *From Sales-Team-Summary.md:**
+
 > "Missing Information When Projects Are Won: No PM name or contact, No job site address, No start date, No confirmation which services were actually contracted, Sometimes just 'bid won' status with nothing else"
 
 * *From Jayson-Roti-Summary.md:**
+
 > "Missing Information: No NOI, No dust permit, No site contact, No schedule, No special site requirements. 'When contract is done, I should get a packet with everything'"
 
 * *From Kendra-Ash-Summary.md:**
+
 > "We're on site before we ever get a contract and know exactly how we're billing or what requirements they have. Reason: 'Everybody like I'm sure we already know everybody needs us on site first before they can do anything else'"
 
 - --
@@ -37,77 +42,77 @@
 
 1. **Project Identity**
 
-    - Project name (consistent across all systems)
-    - GC company name
-    - Site address with cross streets
-    - Legal description
+    * Project name (consistent across all systems)
+    * GC company name
+    * Site address with cross streets
+    * Legal description
 
 2. **Contacts**
 
-    - PM name, phone, email
-    - Site superintendent name, phone, email
-    - GC estimator (for future bids)
+    * PM name, phone, email
+    * Site superintendent name, phone, email
+    * GC estimator (for future bids)
 
 3. **Timeline**
 
-    - Expected start date
-    - Project duration estimate
-    - Install deadlines (if known)
+    * Expected start date
+    * Project duration estimate
+    * Install deadlines (if known)
 
 4. **Financial**
 
-    - PO number (always ask - Dawn-Wagner-Summary.md)
-    - Contract amount
-    - Services contracted (which service lines)
-    - Billing method (Textura, GC Pay, invoice)
-    - Retention percentage
+    * PO number (always ask - Dawn-Wagner-Summary.md)
+    * Contract amount
+    * Services contracted (which service lines)
+    * Billing method (Textura, GC Pay, invoice)
+    * Retention percentage
 
 5. **Authorization**
 
-    - Email confirmation (required for billing protection)
-    - Written authorization for billable items
+    * Email confirmation (required for billing protection)
+    * Written authorization for billable items
 
 ### SERVICE-SPECIFIC REQUIREMENTS
 
 * *SWPPP/Temp Fence (Jayson-Roti-Summary.md):**
 
-- NOI with ADEQ number (CRITICAL BLOCKER)
-- Dust permit OR confirmation GC will pull (CRITICAL BLOCKER)
-- Project acreage
-- Site contact for dust complaints
-- Contractor name (must match NOI)
-- Site-specific requirements (access hours, PPE, badging, etc.)
+* NOI with ADEQ number (CRITICAL BLOCKER)
+* Dust permit OR confirmation GC will pull (CRITICAL BLOCKER)
+* Project acreage
+* Site contact for dust complaints
+* Contractor name (must match NOI)
+* Site-specific requirements (access hours, PPE, badging, etc.)
 
 * *Dust Permit Specific (dust_control_sop.md + recent experience):**
 
-- Accurate site contact (superintendent - gets dust complaints)
-- Accurate site address with cross streets
-- Exact acreage
-- General shape of area / site drawing
-- Property owner or developer info
+* Accurate site contact (superintendent - gets dust complaints)
+* Accurate site address with cross streets
+* Exact acreage
+* General shape of area / site drawing
+* Property owner or developer info
 
 * *Water Trucks/Cleaning (Daniel-Vargas-Summary.md):**
 
-- PO number
-- Time, dates, location
-- Estimated duration
-- Pictures (85% of customers provide)
-- Water source confirmation (hydrant/meter/backflow or water tower)
+* PO number
+* Time, dates, location
+* Estimated duration
+* Pictures (85% of customers provide)
+* Water source confirmation (hydrant/meter/backflow or water tower)
 
 * *Roll-Offs (Wendy-Byers-Summary.md):**
 
-- Size of dumpster
-- Location/address
-- Type: Exchange, termination, or delivery
-- Placement (for new deliveries)
-- PM phone number
+* Size of dumpster
+* Location/address
+* Type: Exchange, termination, or delivery
+* Placement (for new deliveries)
+* PM phone number
 
 * *Signage (Kerin-Reissig-Summary.md):**
 
-- Project name, address
-- Permit types needed (dust, fire, SWPPP)
-- Install date
-- Responsible party contact info
+* Project name, address
+* Permit types needed (dust, fire, SWPPP)
+* Install date
+* Responsible party contact info
 
 - --
 
@@ -123,9 +128,11 @@ If you had these upfront, dust permit could be done in <30 min:
 4. ✅ General shape/site drawing
 
 * *Current reality (Jayson-Roti-Summary.md):**
+
 > "Jayson must request this information via email. Often multiple follow-up requests. Information comes in piecemeal. No standardized handoff from estimating/sales."
 
 * *The 20-email problem:**
+
 > "'20 emails back and forth', Jared, Kendra, Jayson, customer all on thread, Everyone's time wasted on reconciliation"
 
 - --

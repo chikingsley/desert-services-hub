@@ -5,13 +5,16 @@
 ## Test Framework
 
 **Runner:**
+
 - Bun's built-in test runner via `bun test`
 - Config: Implicit (no config file needed)
 
 **Assertion Library:**
+
 - Bun's built-in assertions: `expect()`, `toBe()`, `toEqual()`, `toBeGreaterThan()`, `toBeInstanceOf()`
 
 **Run Commands:**
+
 ```bash
 bun test tests/ services/          # Run all tests
 bun test <file>                    # Run specific test file
@@ -21,6 +24,7 @@ bun test --timeout 60000           # Run with custom timeout
 ## Test File Organization
 
 **Location:**
+
 - Test files co-located with implementation or in dedicated `tests/` directory
 - Examples:
   - `services/monday/monday.test.ts` (co-located)
@@ -28,12 +32,14 @@ bun test --timeout 60000           # Run with custom timeout
   - `src/api/quotes.test.ts` (co-located)
 
 **Naming:**
+
 - Unit tests: `*.unit.test.ts` (e.g., `mcp-server.unit.test.ts`)
 - Integration tests: `*.integration.test.ts` (e.g., `mcp-server.integration.test.ts`)
 - MCP tests: `*.mcp.test.ts` (e.g., `mcp-server.mcp.test.ts`)
 - General tests: `*.test.ts` (e.g., `monday.test.ts`)
 
 **Structure:**
+
 ```
 tests/
 ├── lib/
@@ -55,6 +61,7 @@ services/
 ## Test Structure
 
 **Suite Organization:**
+
 ```typescript
 import { describe, expect, it } from "bun:test";
 
@@ -75,16 +82,19 @@ describe("module name", () => {
 ```
 
 **Patterns:**
+
 - Flat `describe` structure (avoid excessive nesting)
 - Each test uses **Arrange-Act-Assert (AAA)** pattern explicitly
 - One logical assertion per test (can have multiple `expect()` statements for related checks)
 
 **Setup and Teardown:**
+
 - `beforeAll()`: Initialize expensive resources, create test data
 - `afterAll()`: Clean up resources, delete test records
 - No `beforeEach()` or `afterEach()` unless needed for isolation
 
 See `src/api/quotes.test.ts` for cleanup pattern:
+
 ```typescript
 afterAll(() => {
   for (const id of testQuoteIds) {
@@ -105,9 +115,11 @@ afterAll(() => {
 ## Mocking
 
 **Framework:**
+
 - Bun's built-in `mock()` function from `bun:test`
 
 **Patterns:**
+
 ```typescript
 import { beforeAll, mock } from "bun:test";
 
@@ -123,11 +135,13 @@ beforeAll(() => {
 ```
 
 **What to Mock:**
+
 - External APIs (fetch, third-party services)
 - File system operations (in unit tests)
 - Expensive operations (use real data only in integration tests)
 
 **What NOT to Mock:**
+
 - Internal functions within the same module (test the whole behavior)
 - Database operations in integration tests (use test database)
 - Core logic that's being tested (unless specifically testing error handling)
@@ -136,6 +150,7 @@ beforeAll(() => {
 
 **Test Data:**
 Test data is created inline with descriptive variable names. Example from `services/quoting/mcp-server.unit.test.ts`:
+
 ```typescript
 const mockQuotes: HubQuote[] = [
   {
@@ -173,6 +188,7 @@ const mockQuotes: HubQuote[] = [
 
 **Constants in Tests:**
 Tests use constants for unique identifiable values for searching/assertions:
+
 ```typescript
 const TEST_PREFIX = "_TEST_DELETE_ME_";
 const UNIQUE = {
@@ -183,6 +199,7 @@ const UNIQUE = {
 ```
 
 **Location:**
+
 - Shared test data: `tests/lib/pdf/test-data.ts`
 - Inline mock data: Within test file near the test
 - Test utilities: `services/contract/test-utils.ts`
@@ -190,12 +207,14 @@ const UNIQUE = {
 ## Coverage
 
 **Requirements:**
+
 - No enforced minimum coverage requirement
 - Code coverage not currently tracked or reported
 
 ## Test Types
 
 **Unit Tests:**
+
 - Scope: Single function/module behavior
 - Dependencies: Mocked
 - Credentials: Not required
@@ -211,6 +230,7 @@ describe("calculateSimilarity", () => {
 ```
 
 **Integration Tests:**
+
 - Scope: API interactions with real services
 - Dependencies: Real (database, external APIs)
 - Credentials: Required from environment variables
@@ -239,6 +259,7 @@ describe("MCP Server Integration", () => {
 ```
 
 **MCP Tests:**
+
 - Scope: MCP server tool definitions and implementations
 - Naming: `*.mcp.test.ts` or `mcp-server.test.ts`
 - Example: `services/monday/mcp-server.test.ts`
@@ -247,6 +268,7 @@ describe("MCP Server Integration", () => {
 ## Common Patterns
 
 **Async Testing:**
+
 ```typescript
 it("async operation completes", async () => {
   // Arrange
@@ -261,6 +283,7 @@ it("async operation completes", async () => {
 ```
 
 **Error Testing:**
+
 ```typescript
 it("throws when MONDAY_API_KEY not set", async () => {
   const original = process.env.MONDAY_API_KEY;
@@ -276,6 +299,7 @@ it("throws when MONDAY_API_KEY not set", async () => {
 
 **Timeout Configuration:**
 Tests that may take longer can specify timeout in milliseconds:
+
 ```typescript
 test("extracts text from PDF", async () => {
   const text = await extractTextWithPdftotext(fixture);
@@ -285,6 +309,7 @@ test("extracts text from PDF", async () => {
 
 **Conditional Test Skipping:**
 Use `beforeAll()` to check prerequisites and log skip reason:
+
 ```typescript
 beforeAll(async () => {
   hubAvailable = await checkHubAvailable();
@@ -303,13 +328,16 @@ it("calls hub API", async () => {
 ## Test Isolation
 
 **Database Tests:**
+
 - Use unique test data prefixes: `_TEST_DELETE_ME_`
 - Track created IDs in arrays: `const testQuoteIds: string[] = [];`
 - Verify cleanup after all tests: Count remaining records with test prefix
 
 **Environment Variables:**
+
 - Save original values, restore after test
 - Example from `services/monday/monday.test.ts`:
+
   ```typescript
   const original = process.env.MONDAY_API_KEY;
   process.env.MONDAY_API_KEY = undefined;
@@ -318,6 +346,7 @@ it("calls hub API", async () => {
   ```
 
 **External Service Tests:**
+
 - Check availability before running integration tests
 - Skip gracefully if service not available
 - Don't fail CI if external service is down
@@ -325,16 +354,19 @@ it("calls hub API", async () => {
 ## Best Practices
 
 **Test Assertions:**
+
 - Be specific with assertions: `expect(value).toBe(expectedValue)` not just checking truthiness
 - Verify both happy path and error cases
 - Check specific error messages for thrown errors
 
 **Test Naming:**
+
 - Use descriptive `it()` descriptions that read like requirements
 - Bad: `it("calculates")`
 - Good: `it("calculates total for empty items array")`
 
 **Dependencies:**
+
 - Never use `.only` or `.skip` in committed code
 - One test per file can fail without affecting others (tests are isolated)
 - Cleanup errors should not cause test failure (wrap in try-catch)

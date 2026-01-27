@@ -60,6 +60,7 @@ completed: 2026-01-23
 - **Files modified:** 8
 
 ## Accomplishments
+
 - Implemented fast local text extraction using pdfjs-dist for digital PDFs
 - Added Mistral OCR API fallback for scanned PDFs (< 100 chars/page threshold)
 - Created contract_pages SQLite table for per-page storage with source tracking
@@ -75,6 +76,7 @@ Each task was committed atomically:
 3. **Task 3: Create main orchestrator and wire to pipeline** - `aa18890` (feat)
 
 ## Files Created/Modified
+
 - `services/contract/extraction/types.ts` - ExtractedPage and ExtractionResult type definitions
 - `services/contract/extraction/storage.ts` - SQLite storage functions (storeExtractedPages, getExtractedPages, getFullText)
 - `services/contract/extraction/digital-extractor.ts` - pdfjs-dist text extraction for digital PDFs
@@ -85,6 +87,7 @@ Each task was committed atomically:
 - `services/contract/pipeline/index.ts` - Integrated extraction into pipeline handler
 
 ## Decisions Made
+
 - **100 chars/page threshold:** Empirical cutoff to detect scanned PDFs - documents with less than 100 average characters per page are likely scanned images
 - **Data URL approach:** Mistral OCR accepts base64-encoded documents via data URLs, avoiding need for file upload API
 - **Markdown table format:** OCR configured to preserve table structure as markdown for downstream processing
@@ -95,6 +98,7 @@ Each task was committed atomically:
 None - plan executed exactly as written.
 
 ## Issues Encountered
+
 - Biome linter has `useConsistentTypeDefinitions` rule preferring `interface` over `type`, but CLAUDE.md specifies to use `type`. This is a style conflict, not a bug - types work correctly.
 
 ## User Setup Required
@@ -102,15 +106,18 @@ None - plan executed exactly as written.
 **External services require manual configuration.** The plan references Mistral API:
 
 **MISTRAL_API_KEY:**
-- Source: Mistral Console -> API Keys -> Create new key (https://console.mistral.ai/api-keys/)
+
+- Source: Mistral Console -> API Keys -> Create new key (<https://console.mistral.ai/api-keys/>)
 - Add to `.env`: `MISTRAL_API_KEY=your_api_key_here`
 
 **Verification:**
+
 ```bash
 bun -e "import { extractWithOcr } from './services/contract/extraction/ocr-extractor'; console.log('Mistral import OK')"
 ```
 
 ## Next Phase Readiness
+
 - Text extraction pipeline complete and ready for Phase 3 (Entity Extraction)
 - Per-page text with source tracking available in contract_pages table
 - Pipeline integration tested - files dropped in watch folder are processed end-to-end

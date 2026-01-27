@@ -149,11 +149,13 @@ None - no external service configuration required.
 The one-liner MUST be substantive:
 
 **Good:**
+
 - "JWT auth with refresh rotation using jose library"
 - "Prisma schema with User, Session, and Product models"
 - "Dashboard with real-time metrics via Server-Sent Events"
 
 **Bad:**
+
 - "Phase complete"
 - "Authentication implemented"
 - "Foundation finished"
@@ -177,12 +179,14 @@ The one-liner should tell someone what actually shipped.
 - **Files modified:** 8
 
 ## Accomplishments
+
 - User model with email/password auth
 - Login/logout endpoints with httpOnly JWT cookies
 - Protected route middleware checking token validity
 - Refresh token rotation on each request
 
 ## Files Created/Modified
+
 - `prisma/schema.prisma` - User and Session models
 - `src/app/api/auth/login/route.ts` - Login endpoint
 - `src/app/api/auth/logout/route.ts` - Logout endpoint
@@ -190,6 +194,7 @@ The one-liner should tell someone what actually shipped.
 - `src/lib/auth.ts` - JWT helpers using jose
 
 ## Decisions Made
+
 - Used jose instead of jsonwebtoken (ESM-native, Edge-compatible)
 - 15-min access tokens with 7-day refresh tokens
 - Storing refresh tokens in database for revocation capability
@@ -199,6 +204,7 @@ The one-liner should tell someone what actually shipped.
 ### Auto-fixed Issues
 
 **1. [Rule 2 - Missing Critical] Added password hashing with bcrypt**
+
 - **Found during:** Task 2 (Login endpoint implementation)
 - **Issue:** Plan didn't specify password hashing - storing plaintext would be critical security flaw
 - **Fix:** Added bcrypt hashing on registration, comparison on login with salt rounds 10
@@ -207,6 +213,7 @@ The one-liner should tell someone what actually shipped.
 - **Committed in:** abc123f (Task 2 commit)
 
 **2. [Rule 3 - Blocking] Installed missing jose dependency**
+
 - **Found during:** Task 4 (JWT token generation)
 - **Issue:** jose package not in package.json, import failing
 - **Fix:** Ran `npm install jose`
@@ -220,15 +227,18 @@ The one-liner should tell someone what actually shipped.
 **Impact on plan:** Both auto-fixes essential for security and functionality. No scope creep.
 
 ## Issues Encountered
+
 - jsonwebtoken CommonJS import failed in Edge runtime - switched to jose (planned library change, worked as expected)
 
 ## Next Phase Readiness
+
 - Auth foundation complete, ready for feature development
 - User registration endpoint needed before public launch
 
 ---
 *Phase: 01-foundation*
 *Completed: 2025-01-15*
+
 ```
 </example>
 

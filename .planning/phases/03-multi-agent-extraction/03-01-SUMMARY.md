@@ -87,6 +87,7 @@ Each task was committed atomically:
 ## Files Created/Modified
 
 **Created:**
+
 - `services/contract/agents/types.ts` - AgentName union type, AgentResult generic, ExtractionResults
 - `services/contract/agents/schemas/contract-info.ts` - Contract type, dates, value, project details
 - `services/contract/agents/schemas/billing.ts` - Retention, platform, contacts, certified payroll
@@ -99,6 +100,7 @@ Each task was committed atomically:
 - `services/contract/agents/mistral-client.ts` - createMistralClient factory, settings constants
 
 **Modified:**
+
 - `lib/db/index.ts` - Added contract_extractions table with index
 
 ## Decisions Made

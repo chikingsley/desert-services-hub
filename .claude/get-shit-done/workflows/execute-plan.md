@@ -121,6 +121,7 @@ cat .planning/config.json 2>/dev/null
 [Plan X of Y for Phase Z]
 
 Starting execution...
+
 ```
 
 Proceed directly to parse_segments step.
@@ -130,10 +131,12 @@ Proceed directly to parse_segments step.
 Present:
 
 ```
+
 Found plan to execute: {phase}-{plan}-PLAN.md
 [Plan X of Y for Phase Z]
 
 Proceed with execution?
+
 ```
 
 Wait for confirmation before proceeding.
@@ -328,6 +331,7 @@ fi
 ```
 
 **If interrupted agent found:**
+
 - The agent ID file exists from a previous session that didn't complete
 - This agent can potentially be resumed using Task tool's `resume` parameter
 - Present to user: "Previous session was interrupted. Resume agent [ID] or start fresh?"
@@ -337,11 +341,13 @@ fi
 **3. Prune old entries (housekeeping):**
 
 If agent-history.json has more than `max_entries`:
+
 - Remove oldest entries with status "completed"
 - Never remove entries with status "spawned" (may need resume)
 - Keep file under size limit for fast reads
 
 **When to run this step:**
+
 - Pattern A (fully autonomous): Before spawning the single subagent
 - Pattern B (segmented): Before the segment execution loop
 - Pattern C (main context): Skip - no subagents spawned
@@ -496,6 +502,7 @@ Task: Verify database schema
 Built: User and Session tables with relations
 
 How to verify:
+
   1. Check src/db/schema.ts for correct types
 
 ────────────────────────────────────────────────────────
@@ -820,10 +827,10 @@ Alternatives: [other approaches, or "none apparent"]
 Proceed with proposed change? (yes / different approach / defer)
 ```
 
-3. WAIT for user response
-4. If approved: implement, track as `[Rule 4 - Architectural] [description]`
-5. If different approach: discuss and implement
-6. If deferred: note in Summary and continue without change
+1. WAIT for user response
+2. If approved: implement, track as `[Rule 4 - Architectural] [description]`
+3. If different approach: discuss and implement
+4. If deferred: note in Summary and continue without change
 
 **User decision required.** These changes affect system design.
 
@@ -905,12 +912,14 @@ None - plan executed exactly as written.
 </deviation_documentation>
 
 <tdd_plan_execution>
+
 ## TDD Plan Execution
 
 When executing a plan with `type: tdd` in frontmatter, follow the RED-GREEN-REFACTOR cycle for the single feature defined in the plan.
 
 **1. Check test infrastructure (if first TDD plan):**
 If no test framework configured:
+
 - Detect project type from package.json/requirements.txt/etc.
 - Install minimal test framework (Jest, pytest, Go testing, etc.)
 - Create test config file
@@ -918,6 +927,7 @@ If no test framework configured:
 - This is part of the RED phase, not a separate task
 
 **2. RED - Write failing test:**
+
 - Read `<behavior>` element for test specification
 - Create test file if doesn't exist (follow project conventions)
 - Write test(s) that describe expected behavior
@@ -925,29 +935,34 @@ If no test framework configured:
 - Commit: `test({phase}-{plan}): add failing test for [feature]`
 
 **3. GREEN - Implement to pass:**
+
 - Read `<implementation>` element for guidance
 - Write minimal code to make test pass
 - Run tests - MUST pass
 - Commit: `feat({phase}-{plan}): implement [feature]`
 
 **4. REFACTOR (if needed):**
+
 - Clean up code if obvious improvements
 - Run tests - MUST still pass
 - Commit only if changes made: `refactor({phase}-{plan}): clean up [feature]`
 
 **Commit pattern for TDD plans:**
 Each TDD plan produces 2-3 atomic commits:
+
 1. `test({phase}-{plan}): add failing test for X`
 2. `feat({phase}-{plan}): implement X`
 3. `refactor({phase}-{plan}): clean up X` (optional)
 
 **Error handling:**
+
 - If test doesn't fail in RED phase: Test is wrong or feature already exists. Investigate before proceeding.
 - If test doesn't pass in GREEN phase: Debug implementation, keep iterating until green.
 - If tests fail in REFACTOR phase: Undo refactor, commit was premature.
 
 **Verification:**
 After TDD plan completion, ensure:
+
 - All tests pass
 - Test coverage for the new behavior exists
 - No unrelated tests broken
@@ -955,6 +970,7 @@ After TDD plan completion, ensure:
 **Why TDD uses dedicated plans:** TDD requires 2-3 execution cycles (RED → GREEN → REFACTOR), each with file reads, test runs, and potential debugging. This consumes 40-50% of context for a single feature. Dedicated plans ensure full quality throughout the cycle.
 
 **Comparison:**
+
 - Standard plans: Multiple tasks, 1 commit per task, 2-4 commits total
 - TDD plans: Single feature, 2-3 commits for RED/GREEN/REFACTOR cycle
 
@@ -962,6 +978,7 @@ See `./.claude/get-shit-done/references/tdd.md` for TDD plan structure.
 </tdd_plan_execution>
 
 <task_commit>
+
 ## Task Commit Protocol
 
 After each task completes (verification passed, done criteria met), commit immediately:
@@ -1041,6 +1058,7 @@ echo "Task ${TASK_NUM} committed: ${TASK_COMMIT}"
 ```
 
 Store in array or list for SUMMARY generation:
+
 ```bash
 TASK_COMMITS+=("Task ${TASK_NUM}: ${TASK_COMMIT}")
 ```
@@ -1189,6 +1207,7 @@ Type "done" when Convex is authenticated and project created.
 **After you return:**
 
 The orchestrator will:
+
 1. Parse your structured return
 2. Present checkpoint details to the user
 3. Collect user's response
@@ -1516,12 +1535,14 @@ PLAN.md was already committed during plan-phase. This final commit captures exec
 **Check planning config:**
 
 If `COMMIT_PLANNING_DOCS=false` (set in load_project_state):
+
 - Skip all git operations for .planning/ files
 - Planning docs exist locally but are gitignored
 - Log: "Skipping planning docs commit (commit_docs: false)"
 - Proceed to next step
 
 If `COMMIT_PLANNING_DOCS=true` (default):
+
 - Continue with git operations below
 
 **1. Stage execution artifacts:**
@@ -1615,6 +1636,7 @@ git diff --name-only ${FIRST_TASK}^..HEAD 2>/dev/null
 | File renamed/moved | Update paths in relevant docs |
 
 **Skip update if only:**
+
 - Code changes within existing files
 - Bug fixes
 - Content changes (no structural impact)
@@ -1685,6 +1707,7 @@ Compare the counts from Step 1:
 **Route A: More plans remain in this phase**
 
 Identify the next unexecuted plan:
+
 - Find the first PLAN.md file that has no matching SUMMARY.md
 - Read its `<objective>` section
 
@@ -1696,6 +1719,7 @@ Summary: .planning/phases/{phase-dir}/{phase}-{plan}-SUMMARY.md
 {Y} of {X} plans complete for Phase {Z}.
 
 ⚡ Auto-continuing: Execute next plan ({phase}-{next-plan})
+
 ```
 
 Loop back to identify_plan step automatically.
@@ -1703,6 +1727,7 @@ Loop back to identify_plan step automatically.
 
 <if mode="interactive" OR="custom with gates.execute_next_plan true">
 ```
+
 Plan {phase}-{plan} complete.
 Summary: .planning/phases/{phase-dir}/{phase}-{plan}-SUMMARY.md
 
@@ -1721,10 +1746,12 @@ Summary: .planning/phases/{phase-dir}/{phase}-{plan}-SUMMARY.md
 ---
 
 **Also available:**
+
 - `/gsd:verify-work {phase}-{plan}` — manual acceptance testing before continuing
 - Review what was built before continuing
 
 ---
+
 ```
 
 Wait for user to clear and run next command.
@@ -1762,6 +1789,7 @@ State: "Current phase is {X}. Milestone has {N} phases (highest: {Y})."
 Read ROADMAP.md to get the next phase's name and goal.
 
 ```
+
 Plan {phase}-{plan} complete.
 Summary: .planning/phases/{phase-dir}/{phase}-{plan}-SUMMARY.md
 
@@ -1782,11 +1810,13 @@ All {Y} plans finished.
 ---
 
 **Also available:**
+
 - `/gsd:verify-work {Z}` — manual acceptance testing before continuing
 - `/gsd:discuss-phase {Z+1}` — gather context first
 - Review phase accomplishments before continuing
 
 ---
+
 ```
 
 ---
@@ -1794,6 +1824,7 @@ All {Y} plans finished.
 **Route C: Milestone complete (all phases done)**
 
 ```
+
 🎉 MILESTONE COMPLETE!
 
 Plan {phase}-{plan} complete.
@@ -1820,11 +1851,13 @@ All {Y} plans finished.
 ---
 
 **Also available:**
+
 - `/gsd:verify-work` — manual acceptance testing before completing milestone
 - `/gsd:add-phase <description>` — add another phase before completing
 - Review accomplishments before archiving
 
 ---
+
 ```
 
 </step>

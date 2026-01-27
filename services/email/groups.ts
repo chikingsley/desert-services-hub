@@ -20,6 +20,7 @@ const DEFAULT_MAX_CONVERSATIONS = 100;
 
 interface GraphListResponse<T> {
   value?: T[];
+  "@odata.nextLink"?: string;
 }
 
 interface GraphConversationRaw {
@@ -129,55 +130,94 @@ export class GraphGroupsClient {
   }
 
   /**
-   * Retrieves all conversations in a Microsoft 365 Group.
+   * Retrieves conversations in a Microsoft 365 Group with automatic pagination.
+   *
+   * Follows @odata.nextLink to fetch all conversations matching the criteria,
+   * similar to how email sync handles pagination.
    *
    * @param groupId - The unique identifier of the M365 Group
    * @param options - Optional configuration for the request
-   * @param options.top - Maximum number of conversations to return (default: 50)
-   * @param options.orderBy - Sort order for results (default: "lastDeliveredDateTime desc")
    * @param options.since - Filter to only include conversations after this date
+   * @param options.orderBy - Sort order for results (default: "lastDeliveredDateTime desc")
+   * @param options.top - Maximum total results to return (stops pagination early). Omit to get all.
+   * @param options.batchSize - Number of conversations per API request (default: 50)
    * @returns Array of group conversations with metadata (threads not populated)
    *
    * @example
-   * // Get recent conversations
+   * // Get all conversations (auto-paginates)
    * const conversations = await client.getGroupConversations('group-id');
+   *
+   * @example
+   * // Get only the 10 most recent conversations
+   * const recent = await client.getGroupConversations('group-id', { top: 10 });
    *
    * @example
    * // Get conversations from the last 7 days
    * const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
    * const recentConvs = await client.getGroupConversations('group-id', {
-   *   top: 100,
    *   since: weekAgo
    * });
    */
   async getGroupConversations(
     groupId: string,
     options: {
-      top?: number;
-      orderBy?: string;
       since?: Date;
+      orderBy?: string;
+      top?: number;
+      batchSize?: number;
     } = {}
   ): Promise<GroupConversation[]> {
-    const { top = DEFAULT_TOP, orderBy = DEFAULT_ORDER, since } = options;
+    const {
+      orderBy = DEFAULT_ORDER,
+      since,
+      top,
+      batchSize = DEFAULT_TOP,
+    } = options;
 
-    let url = `/groups/${groupId}/conversations?$top=${top}&$orderby=${orderBy}`;
+    // If top is specified and smaller than batchSize, use top as the batch size
+    const effectiveBatchSize = top && top < batchSize ? top : batchSize;
+
+    let url = `/groups/${groupId}/conversations?$top=${effectiveBatchSize}&$orderby=${orderBy}`;
     if (since) {
       const dateFilter = `lastDeliveredDateTime ge ${since.toISOString()}`;
       url += `&$filter=${encodeURIComponent(dateFilter)}`;
     }
 
-    const response =
-      await this.graphGet<GraphListResponse<GraphConversationRaw>>(url);
+    const allConversations: GroupConversation[] = [];
 
-    return (response.value ?? [])
-      .filter((conv) => conv.id)
-      .map((conv) => ({
-        id: conv.id as string,
-        topic: conv.topic ?? "",
-        hasAttachments: Boolean(conv.hasAttachments),
-        lastDeliveredDateTime: conv.lastDeliveredDateTime ?? "",
-        threads: [],
-      }));
+    // Paginate through results
+    while (url) {
+      const response =
+        await this.graphGet<GraphListResponse<GraphConversationRaw>>(url);
+
+      const conversations = (response.value ?? [])
+        .filter((conv) => conv.id)
+        .map((conv) => ({
+          id: conv.id as string,
+          topic: conv.topic ?? "",
+          hasAttachments: Boolean(conv.hasAttachments),
+          lastDeliveredDateTime: conv.lastDeliveredDateTime ?? "",
+          threads: [],
+        }));
+
+      allConversations.push(...conversations);
+
+      // Stop if we've reached the requested limit
+      if (top && allConversations.length >= top) {
+        return allConversations.slice(0, top);
+      }
+
+      // Follow pagination link if present
+      const nextLink = response["@odata.nextLink"];
+      if (nextLink) {
+        // nextLink is a full URL, extract just the path
+        url = nextLink.replace(GRAPH_API_BASE, "");
+      } else {
+        break;
+      }
+    }
+
+    return allConversations;
   }
 
   /**

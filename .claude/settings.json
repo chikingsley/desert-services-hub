@@ -10,17 +10,6 @@
     "allow": ["Bash(ls:*)"]
   },
   "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "Edit|Write",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "uv run python .claude/hooks/block-anthropic-sdk.py"
-          }
-        ]
-      }
-    ],
     "PostToolUse": [
       {
         "matcher": "Edit|Write",
@@ -28,27 +17,9 @@
           {
             "type": "command",
             "command": "bun x ultracite fix"
-          },
-          {
-            "type": "command",
-            "command": "node .claude/hooks/catalog-sync-warning.js"
-          }
-        ]
-      }
-    ],
-    "SessionStart": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node .claude/hooks/gsd-check-update.js"
           }
         ]
       }
     ]
-  },
-  "statusLine": {
-    "type": "command",
-    "command": "node .claude/hooks/gsd-statusline.js"
   }
 }

@@ -43,6 +43,7 @@ The contract intake system should follow the existing service-oriented patterns 
 ### Data Flow (Contract Email -> Tasks in Notion)
 
 **Phase 1: Email Detection**
+
 ```
 contracts@desertservices.net inbox
     -> GraphEmailClient.filterEmails({ filter: 'hasAttachments eq true' })
@@ -50,6 +51,7 @@ contracts@desertservices.net inbox
 ```
 
 **Phase 2: Classification**
+
 ```
 EmailMessage
     -> classifyByPattern(email) // Fast, free - 88.5% accurate from census data
@@ -61,6 +63,7 @@ EmailMessage
 ```
 
 **Phase 3: Attachment Download & Parsing**
+
 ```
 EmailMessage (classified as CONTRACT)
     -> GraphEmailClient.downloadAllAttachments(messageId, userId)
@@ -72,6 +75,7 @@ EmailMessage (classified as CONTRACT)
 ```
 
 **Phase 4: Context Assembly**
+
 ```
 ContractPackage { contractor, project, amounts }
     -> Search Monday ESTIMATING board for matching estimate:
@@ -90,6 +94,7 @@ ContractPackage { contractor, project, amounts }
 ```
 
 **Phase 5: Task Creation**
+
 ```
 IntakeContext
     -> Create Notion page in Tasks database:
@@ -112,6 +117,7 @@ IntakeContext
 ```
 
 **Phase 6: Status Tracking**
+
 ```
 IntakeContext
     -> Update Monday ESTIMATING item (if found):
@@ -269,8 +275,10 @@ async function getUserClient(): Promise<GraphEmailClient> {
 Based on dependencies between components:
 
 ### Phase 1: Email Detection (Foundation)
+
 **Why first:** Everything depends on detecting contract emails
 **Components:**
+
 - Contract classifier (adapt `services/email/census/classify.ts` patterns)
 - Email polling logic for contracts mailbox
 - SQLite table for tracking processed emails
@@ -279,8 +287,10 @@ Based on dependencies between components:
 **Outputs:** Filtered stream of contract-classified emails
 
 ### Phase 2: Document Parsing (Core Processing)
+
 **Why second:** Need structured contract data before context assembly
 **Components:**
+
 - Integration with existing `services/contract/client.ts`
 - Temp file handling for PDF attachments
 - Error handling for parse failures
@@ -289,8 +299,10 @@ Based on dependencies between components:
 **Outputs:** `ContractPackage` with parsed contract details
 
 ### Phase 3: Context Assembly (Enrichment)
+
 **Why third:** Lookup operations require parsed data
 **Components:**
+
 - Estimate lookup in Monday.com (fuzzy match)
 - Email thread gathering (related correspondence)
 - Reconciliation check (estimate vs contract amounts)
@@ -299,8 +311,10 @@ Based on dependencies between components:
 **Outputs:** Enriched `IntakeContext` bundle
 
 ### Phase 4: Task Creation (Output)
+
 **Why fourth:** Creates the final deliverable
 **Components:**
+
 - Notion task creation with full context
 - Dedupe check (find existing task first)
 - Priority assignment based on discrepancies
@@ -309,8 +323,10 @@ Based on dependencies between components:
 **Outputs:** Notion task page ID
 
 ### Phase 5: Status Tracking (Feedback Loop)
+
 **Why fifth:** Updates source systems after successful processing
 **Components:**
+
 - Monday.com status updates
 - Email archiving/flagging
 - Processing history logging
@@ -319,8 +335,10 @@ Based on dependencies between components:
 **Outputs:** Updated Monday items, archived emails
 
 ### Phase 6: Orchestrator & Scheduler
+
 **Why last:** Ties everything together
 **Components:**
+
 - Pipeline coordinator that chains phases
 - Scheduler for periodic polling
 - Error handling and retry logic

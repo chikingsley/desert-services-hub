@@ -54,12 +54,15 @@ npm install [packages]
 # or
 yarn add [packages]
 ```
+
 </standard_stack>
 
 <architecture_patterns>
+
 ## Architecture Patterns
 
 ### Recommended Project Structure
+
 ```
 src/
 ├── [folder]/        # [purpose]
@@ -68,27 +71,33 @@ src/
 ```
 
 ### Pattern 1: [Pattern Name]
+
 **What:** [description]
 **When to use:** [conditions]
 **Example:**
+
 ```typescript
 // [code example from Context7/official docs]
 ```
 
 ### Pattern 2: [Pattern Name]
+
 **What:** [description]
 **When to use:** [conditions]
 **Example:**
+
 ```typescript
 // [code example]
 ```
 
 ### Anti-Patterns to Avoid
+
 - **[Anti-pattern]:** [why it's bad, what to do instead]
 - **[Anti-pattern]:** [why it's bad, what to do instead]
 </architecture_patterns>
 
 <dont_hand_roll>
+
 ## Don't Hand-Roll
 
 Problems that look simple but have existing solutions:
@@ -103,21 +112,25 @@ Problems that look simple but have existing solutions:
 </dont_hand_roll>
 
 <common_pitfalls>
+
 ## Common Pitfalls
 
 ### Pitfall 1: [Name]
+
 **What goes wrong:** [description]
 **Why it happens:** [root cause]
 **How to avoid:** [prevention strategy]
 **Warning signs:** [how to detect early]
 
 ### Pitfall 2: [Name]
+
 **What goes wrong:** [description]
 **Why it happens:** [root cause]
 **How to avoid:** [prevention strategy]
 **Warning signs:** [how to detect early]
 
 ### Pitfall 3: [Name]
+
 **What goes wrong:** [description]
 **Why it happens:** [root cause]
 **How to avoid:** [prevention strategy]
@@ -125,30 +138,36 @@ Problems that look simple but have existing solutions:
 </common_pitfalls>
 
 <code_examples>
+
 ## Code Examples
 
 Verified patterns from official sources:
 
 ### [Common Operation 1]
+
 ```typescript
 // Source: [Context7/official docs URL]
 [code]
 ```
 
 ### [Common Operation 2]
+
 ```typescript
 // Source: [Context7/official docs URL]
 [code]
 ```
 
 ### [Common Operation 3]
+
 ```typescript
 // Source: [Context7/official docs URL]
 [code]
 ```
+
 </code_examples>
 
 <sota_updates>
+
 ## State of the Art (2024-2025)
 
 What's changed recently:
@@ -158,14 +177,17 @@ What's changed recently:
 | [old] | [new] | [date/version] | [what it means for implementation] |
 
 **New tools/patterns to consider:**
+
 - [Tool/Pattern]: [what it enables, when to use]
 - [Tool/Pattern]: [what it enables, when to use]
 
 **Deprecated/outdated:**
+
 - [Thing]: [why it's outdated, what replaced it]
 </sota_updates>
 
 <open_questions>
+
 ## Open Questions
 
 Things that couldn't be fully resolved:
@@ -185,13 +207,16 @@ Things that couldn't be fully resolved:
 ## Sources
 
 ### Primary (HIGH confidence)
+
 - [Context7 library ID] - [topics fetched]
 - [Official docs URL] - [what was checked]
 
 ### Secondary (MEDIUM confidence)
+
 - [WebSearch verified with official source] - [finding + verification]
 
 ### Tertiary (LOW confidence - needs validation)
+
 - [WebSearch only] - [finding, marked for validation during implementation]
 </sources>
 
@@ -199,12 +224,14 @@ Things that couldn't be fully resolved:
 ## Metadata
 
 **Research scope:**
+
 - Core technology: [what]
 - Ecosystem: [libraries explored]
 - Patterns: [patterns researched]
 - Pitfalls: [areas checked]
 
 **Confidence breakdown:**
+
 - Standard stack: [HIGH/MEDIUM/LOW] - [reason]
 - Architecture: [HIGH/MEDIUM/LOW] - [reason]
 - Pitfalls: [HIGH/MEDIUM/LOW] - [reason]
@@ -219,6 +246,7 @@ Things that couldn't be fully resolved:
 *Phase: XX-name*
 *Research completed: [date]*
 *Ready for planning: [yes/no]*
+
 ```
 
 ---
@@ -272,12 +300,15 @@ Key finding: Don't hand-roll physics or collision detection. Rapier (via @react-
 ```bash
 npm install three @react-three/fiber @react-three/drei @react-three/rapier zustand
 ```
+
 </standard_stack>
 
 <architecture_patterns>
+
 ## Architecture Patterns
 
 ### Recommended Project Structure
+
 ```
 src/
 ├── components/
@@ -295,9 +326,11 @@ src/
 ```
 
 ### Pattern 1: Vehicle with Rapier Physics
+
 **What:** Use RigidBody with vehicle-specific settings, not custom physics
 **When to use:** Any ground vehicle
 **Example:**
+
 ```typescript
 // Source: @react-three/rapier docs
 import { RigidBody, useRapier } from '@react-three/rapier'
@@ -324,9 +357,11 @@ function Vehicle() {
 ```
 
 ### Pattern 2: Instanced Meshes for City
+
 **What:** Use InstancedMesh for repeated objects (buildings, trees, props)
 **When to use:** >100 similar objects
 **Example:**
+
 ```typescript
 // Source: drei docs
 import { Instances, Instance } from '@react-three/drei'
@@ -345,12 +380,14 @@ function Buildings({ positions }) {
 ```
 
 ### Anti-Patterns to Avoid
+
 - **Creating meshes in render loop:** Create once, update transforms only
 - **Not using InstancedMesh:** Individual meshes for buildings kills performance
 - **Custom physics math:** Rapier handles it better, every time
 </architecture_patterns>
 
 <dont_hand_roll>
+
 ## Don't Hand-Roll
 
 | Problem | Don't Build | Use Instead | Why |
@@ -365,21 +402,25 @@ function Buildings({ positions }) {
 </dont_hand_roll>
 
 <common_pitfalls>
+
 ## Common Pitfalls
 
 ### Pitfall 1: Physics Tunneling
+
 **What goes wrong:** Fast objects pass through walls
 **Why it happens:** Default physics step too large for velocity
 **How to avoid:** Use CCD (Continuous Collision Detection) in Rapier
 **Warning signs:** Objects randomly appearing outside buildings
 
 ### Pitfall 2: Performance Death by Draw Calls
+
 **What goes wrong:** Game stutters with many buildings
 **Why it happens:** Each mesh = 1 draw call, hundreds of buildings = hundreds of calls
 **How to avoid:** InstancedMesh for similar objects, merge static geometry
 **Warning signs:** GPU bound, low FPS despite simple scene
 
 ### Pitfall 3: Vehicle "Floaty" Feel
+
 **What goes wrong:** Car doesn't feel grounded
 **Why it happens:** Missing proper wheel/suspension simulation
 **How to avoid:** Use Rapier vehicle controller or tune mass/damping carefully
@@ -387,9 +428,11 @@ function Buildings({ positions }) {
 </common_pitfalls>
 
 <code_examples>
+
 ## Code Examples
 
 ### Basic R3F + Rapier Setup
+
 ```typescript
 // Source: @react-three/rapier getting started
 import { Canvas } from '@react-three/fiber'
@@ -409,6 +452,7 @@ function Game() {
 ```
 
 ### Vehicle Controls Hook
+
 ```typescript
 // Source: Community pattern, verified with drei docs
 import { useFrame } from '@react-three/fiber'
@@ -433,9 +477,11 @@ function useVehicleControls(rigidBodyRef) {
   })
 }
 ```
+
 </code_examples>
 
 <sota_updates>
+
 ## State of the Art (2024-2025)
 
 | Old Approach | Current Approach | When Changed | Impact |
@@ -445,10 +491,12 @@ function useVehicleControls(rigidBodyRef) {
 | Manual InstancedMesh | drei <Instances> | 2022 | Simpler API, handles updates |
 
 **New tools/patterns to consider:**
+
 - **WebGPU:** Coming but not production-ready for games yet (2025)
 - **drei Gltf helpers:** <useGLTF.preload> for loading screens
 
 **Deprecated/outdated:**
+
 - **cannon.js (original):** Use cannon-es fork or better, Rapier
 - **Manual raycasting for physics:** Just use Rapier colliders
 </sota_updates>
@@ -457,15 +505,18 @@ function useVehicleControls(rigidBodyRef) {
 ## Sources
 
 ### Primary (HIGH confidence)
+
 - /pmndrs/react-three-fiber - getting started, hooks, performance
 - /pmndrs/drei - instances, controls, helpers
 - /dimforge/rapier-js - physics setup, vehicle physics
 
 ### Secondary (MEDIUM confidence)
+
 - Three.js discourse "city driving game" threads - verified patterns against docs
 - R3F examples repository - verified code works
 
 ### Tertiary (LOW confidence - needs validation)
+
 - None - all findings verified
 </sources>
 
@@ -473,12 +524,14 @@ function useVehicleControls(rigidBodyRef) {
 ## Metadata
 
 **Research scope:**
+
 - Core technology: Three.js + React Three Fiber
 - Ecosystem: Rapier, drei, zustand
 - Patterns: Vehicle physics, instancing, city generation
 - Pitfalls: Performance, physics, feel
 
 **Confidence breakdown:**
+
 - Standard stack: HIGH - verified with Context7, widely used
 - Architecture: HIGH - from official examples
 - Pitfalls: HIGH - documented in discourse, verified in docs
@@ -493,6 +546,7 @@ function useVehicleControls(rigidBodyRef) {
 *Phase: 03-city-driving*
 *Research completed: 2025-01-20*
 *Ready for planning: yes*
+
 ```
 
 ---

@@ -19,18 +19,21 @@ Process incoming contracts end-to-end: find in email, match to estimate, reconci
 ### 1. Find the Contract
 
 **If given a project/contractor name:**
+
 ```bash
 Search email for: "{project name}" OR "{contractor name}" subcontract OR contract
 Mailboxes: chi@, jared@, jayson@, jeff@, internalcontracts@
 ```
 
 **If given an email directly:**
+
 - Extract contract PDF attachment
 - Note sender, date, subject
 
 ### 2. Find the Estimate in Monday
 
 Search ESTIMATING board in this order:
+
 1. Project name (fuzzy match)
 2. Contractor/Account name
 3. Address if available
@@ -49,11 +52,13 @@ mcp__desert-mondaycrm__find_best_matches({
 ### 3. Reconcile (if both found)
 
 Compare contract vs estimate:
+
 - Total values
 - Line items (what's removed, what's added)
 - Calculate variance
 
 Determine outcome:
+
 - **Match** - Values align within tolerance
 - **Revised Estimate** - Differs but reconcilable
 - **Clarification Needed** - Can't reconcile without questions
@@ -61,11 +66,13 @@ Determine outcome:
 ### 4. Create/Update Notion Project
 
 **Check for existing project:**
+
 ```text
 Search Notion: "{project name}" OR "{contractor name}"
 ```
 
 **If new, create with V0 minimum:**
+
 - Project name: "{Project} - {Contractor}"
 - Account: {contractor}
 - Status: "Intake"
@@ -73,6 +80,7 @@ Search Notion: "{project name}" OR "{contractor name}"
 - Page content: Quick Context + Email Trail + Next Actions
 
 **Page content template:**
+
 ```markdown
 ## Quick Context
 **Source:** {Subcontract/DocuSign/etc} received {date}
@@ -99,6 +107,7 @@ Search Notion: "{project name}" OR "{contractor name}"
 ### 5. Create Notion Task (if needed)
 
 If reconciliation needed or clarification required:
+
 ```sql
 Create task: "Contract Reconciliation - {project name}"
 Link to project
@@ -132,6 +141,7 @@ Status: appropriate status
 ## Output
 
 After processing, report:
+
 1. Project name and Notion link
 2. Estimate found (yes/no + Monday link)
 3. Reconciliation outcome

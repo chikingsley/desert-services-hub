@@ -16,6 +16,8 @@ export const BUCKETS = {
   THUMBNAILS: process.env.MINIO_BUCKET_THUMBNAILS || "thumbnails",
   EMAIL_ATTACHMENTS:
     process.env.MINIO_BUCKET_EMAIL_ATTACHMENTS || "email-attachments",
+  MONDAY_ESTIMATES:
+    process.env.MINIO_BUCKET_MONDAY_ESTIMATES || "monday-estimates",
 } as const;
 
 /**

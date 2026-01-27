@@ -3,7 +3,7 @@
 * *Created:** 12/24/2025 13:18:35  
 * *Updated:** 12/24/2025 13:19:14  
 * *Exported:** 12/27/2025 6:29:11  
-* *Link:** [[claude.ai/chat](https://claude.ai/chat/b42fbf7c-f41e-4bdd-88a4-7f39cab2c65b)](https://claude.ai/chat/b42fbf7c-f41e-4bdd-88a4-7f39cab2c65b)  
+* *Link:** [[claude.ai/chat](https://claude.ai/chat/b42fbf7c-f41e-4bdd-88a4-7f39cab2c65b)](<https://claude.ai/chat/b42fbf7c-f41e-4bdd-88a4-7f39cab2c65b>)  
 
 ## Prompt
 

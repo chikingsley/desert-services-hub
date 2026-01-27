@@ -34,6 +34,7 @@ The established libraries/tools for this domain:
 | SHA-256 content hash | Filename only | More robust dedup but overkill for v1 requirement |
 
 **Installation:**
+
 ```bash
 bun add chokidar
 ```
@@ -41,6 +42,7 @@ bun add chokidar
 ## Architecture Patterns
 
 ### Recommended Project Structure
+
 ```
 services/
   contract/
@@ -58,6 +60,7 @@ services/
 **When to use:** Long-running services that need to survive restarts and handle termination gracefully.
 
 **Example:**
+
 ```typescript
 // Source: https://bun.com/docs/guides/read-file/watch + chokidar README
 import chokidar from "chokidar";
@@ -122,6 +125,7 @@ process.on("SIGTERM", async () => {
 **When to use:** Need persistence across restarts, minimal complexity.
 
 **Example:**
+
 ```typescript
 // Source: Existing lib/db/index.ts pattern
 import { db } from "@/lib/db";
@@ -306,6 +310,7 @@ main().catch(console.error);
 | fs.watch polyfills | Native fs.watch in Bun | 2023 | Bun now has fs.watch, but reliability issues remain for recursive mode |
 
 **Deprecated/outdated:**
+
 - chokidar v4 and below: Still works but v5 is recommended for new projects
 - `gaze`, `watch`: Older file watchers, chokidar is the standard now
 - `fs.watchFile`: Polling-based, use fs.watch or chokidar for efficiency
@@ -327,22 +332,26 @@ Things that couldn't be fully resolved:
 ## Sources
 
 ### Primary (HIGH confidence)
+
 - [Bun File Watching Documentation](https://bun.com/docs/guides/read-file/watch) - fs.watch API and usage
 - [Bun Hashing API](https://bun.com/docs/api/hashing) - CryptoHasher for SHA-256
 - [chokidar README](https://github.com/paulmillr/chokidar/blob/main/README.md) - Full v5 API documentation
 - Existing codebase: `lib/db/index.ts` - SQLite patterns, `services/email/client.ts` - Service class patterns
 
 ### Secondary (MEDIUM confidence)
+
 - [chokidar npm](https://www.npmjs.com/package/chokidar) - Version info, usage stats
 - [Bun fs.watch GitHub issues](https://github.com/oven-sh/bun/issues/15939) - Recursive mode limitations
 - [Transloadit Deduplication Guide](https://transloadit.com/devtips/efficient-file-deduplication-with-sha-256-and-node-js/) - SHA-256 dedup patterns
 
 ### Tertiary (LOW confidence)
+
 - WebSearch results on Bun reliability - Multiple sources mention issues, but couldn't verify current state
 
 ## Metadata
 
 **Confidence breakdown:**
+
 - Standard stack: HIGH - chokidar is well-documented, Bun hashing is official docs
 - Architecture: HIGH - Patterns match existing codebase conventions
 - Pitfalls: MEDIUM - Based on GitHub issues and general file watching experience, not all verified in current Bun

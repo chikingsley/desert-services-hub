@@ -31,7 +31,7 @@ Default to using **Bun** instead of Node.js.
 Prefer running actual `.ts` files with `bun` for type safety:
 
 ```bash
-bun services/email/census/extract-attachments.ts --limit=10
+bun services/contract/census/sync-all.ts
 ```
 
 For quick one-offs where no script exists, `bun -e` is acceptable:
@@ -47,7 +47,7 @@ bun -e "import { searchItems } from './services/monday/client'; console.log(awai
 For ad-hoc queries, use `sqlite3` CLI directly (no Bun overhead):
 
 ```bash
-sqlite3 services/email/census/census.db
+sqlite3 services/contract/census/census.db
 ```
 
 Then run queries:
@@ -147,7 +147,7 @@ For new contracts going through intake, use the 18-step checklist in PROJECT.md.
 
 **Always query local SQLite databases before calling any external API.** We have synced data from Monday, email, and other sources locally. Do NOT call MCP tools or APIs for data that already exists in these databases.
 
-### Census DB (`services/email/census/census.db`)
+### Census DB (`services/contract/census/census.db`)
 
 - `emails` — All synced emails across mailboxes. Has `notion_project_id`, `project_name`, `contractor_name` for linking.
 - `attachments` — 20k+ email attachments cataloged. Has `storage_bucket`, `storage_path` for MinIO references.
@@ -172,6 +172,47 @@ For new contracts going through intake, use the 18-step checklist in PROJECT.md.
 - **Find emails for a project** → query `emails` table in census.db
 - **Find attachments** → query `attachments` table in census.db
 - **Only use MCP/API** when local data is stale, missing, or you need to write/update the remote system
+
+### Downloading Files from MinIO
+
+All email attachments and estimate PDFs are stored in MinIO. **DO NOT** use curl, `mc` CLI, or email API to download - use the utilities in `services/contract/census/files.ts`.
+
+**Download a single attachment:**
+```typescript
+import { downloadAttachment } from '@/services/contract/census/files';
+
+await downloadAttachment(12345, 'output/contract.pdf');
+```
+
+**Download all attachments for a project:**
+```typescript
+import { downloadProjectFiles } from '@/services/contract/census/files';
+
+const files = await downloadProjectFiles(
+  'Elanto at Prasada',
+  'services/contract/ground-truth/elanto/'
+);
+// Returns: ['services/contract/ground-truth/elanto/Contract.pdf', ...]
+```
+
+**Get file content without saving:**
+```typescript
+import { getAttachmentContent } from '@/services/contract/census/files';
+
+const content = await getAttachmentContent(12345); // Uint8Array
+```
+
+**Available utilities (`services/contract/census/files.ts`):**
+- `downloadAttachment(id, outputPath)` — Download single file by attachment ID
+- `downloadProjectFiles(searchTerm, folder)` — Download all PDFs matching search
+- `downloadAttachmentsToFolder(ids[], folder)` — Download specific attachments
+- `getAttachmentContent(id)` — Get file bytes without saving
+- `downloadFromStoragePath(path, outputPath)` — Download using raw storage path
+
+**Low-level access (`lib/minio.ts`):**
+- `getFile(bucket, path)` → `Uint8Array`
+- `getPresignedUrl(bucket, path)` → temporary URL
+- `BUCKETS.EMAIL_ATTACHMENTS`, `BUCKETS.MONDAY_ESTIMATES`
 
 ---
 

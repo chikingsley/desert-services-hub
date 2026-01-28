@@ -18,7 +18,7 @@ import {
 // Types
 // ============================================================================
 
-export type SwpppProject = {
+export interface SwpppProject {
   /** Row number in the worksheet (1-based, excluding header) */
   rowNumber: number;
   /** Source worksheet */
@@ -45,9 +45,9 @@ export type SwpppProject = {
   invoice: string;
   /** Work completed notes (if applicable) */
   workCompleted: string;
-};
+}
 
-export type SearchOptions = {
+export interface SearchOptions {
   /** Worksheet to search (default: all) */
   worksheet?: WorksheetName;
   /** Case-insensitive search in job name */
@@ -58,14 +58,14 @@ export type SearchOptions = {
   query?: string;
   /** Maximum results to return */
   limit?: number;
-};
+}
 
 // ============================================================================
 // Client
 // ============================================================================
 
 export class SwpppMasterClient {
-  private sp: SharePointClient;
+  private readonly sp: SharePointClient;
   private driveId: string | null = null;
 
   constructor(config?: {
@@ -82,7 +82,9 @@ export class SwpppMasterClient {
   }
 
   private async getDriveId(): Promise<string> {
-    if (this.driveId) return this.driveId;
+    if (this.driveId) {
+      return this.driveId;
+    }
     this.driveId = await this.sp.getDefaultDriveId();
     return this.driveId;
   }
@@ -188,7 +190,9 @@ export class SwpppMasterClient {
     const exactMatch = projects.find(
       (p) => p.jobName.toLowerCase() === jobName.toLowerCase()
     );
-    if (exactMatch) return exactMatch;
+    if (exactMatch) {
+      return exactMatch;
+    }
 
     // Fuzzy match if enabled
     if (options.fuzzy) {
@@ -244,7 +248,9 @@ export class SwpppMasterClient {
 
     return rows.map((row, index) => {
       const getString = (idx: number | undefined): string => {
-        if (idx === undefined) return "";
+        if (idx === undefined) {
+          return "";
+        }
         const val = row[idx];
         return val === null || val === undefined ? "" : String(val);
       };
@@ -252,9 +258,13 @@ export class SwpppMasterClient {
       const getDateOrNull = (
         idx: number | undefined
       ): number | string | null => {
-        if (idx === undefined) return null;
+        if (idx === undefined) {
+          return null;
+        }
         const val = row[idx];
-        if (val === null || val === undefined || val === "") return null;
+        if (val === null || val === undefined || val === "") {
+          return null;
+        }
         return val as number | string;
       };
 

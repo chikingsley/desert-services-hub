@@ -295,10 +295,14 @@ export function validateCitationQuote(
   sourceTexts: Map<DocumentType, string[]>
 ): boolean {
   const docPages = sourceTexts.get(citation.document);
-  if (!docPages) return false;
+  if (!docPages) {
+    return false;
+  }
 
   const pageText = docPages[citation.page - 1]; // 0-indexed array
-  if (!pageText) return false;
+  if (!pageText) {
+    return false;
+  }
 
   // Normalize whitespace for comparison
   const normalizedQuote = citation.quote.toLowerCase().replace(/\s+/g, " ");

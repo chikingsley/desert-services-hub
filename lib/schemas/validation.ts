@@ -67,15 +67,15 @@ export function tryParse<T>(
 /**
  * Format a ZodError into a human-readable string
  */
-export function formatZodError(error: ZodError): string {
+export function formatZodError(zodError: ZodError): string {
   const issues =
-    error.issues ??
-    (error as unknown as { errors: typeof error.issues }).errors ??
+    zodError.issues ??
+    (zodError as unknown as { errors: typeof zodError.issues }).errors ??
     [];
   return issues
-    .map((e) => {
-      const path = e.path.join(".");
-      return path ? `${path}: ${e.message}` : e.message;
+    .map((issue) => {
+      const path = issue.path.join(".");
+      return path ? `${path}: ${issue.message}` : issue.message;
     })
     .join("\n");
 }

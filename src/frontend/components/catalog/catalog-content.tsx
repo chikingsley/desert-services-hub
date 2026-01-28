@@ -803,11 +803,15 @@ export function CatalogContent({
                     {searchQuery ? "No matches found" : "No categories yet"}
                   </p>
                   <p className="mt-1 text-muted-foreground text-sm">
-                    {searchQuery
-                      ? "Try a different search term."
-                      : isReadOnly
-                        ? "No catalog items are available yet."
-                        : "Seed from the JSON catalog or add categories manually."}
+                    {(() => {
+                      if (searchQuery) {
+                        return "Try a different search term.";
+                      }
+                      if (isReadOnly) {
+                        return "No catalog items are available yet.";
+                      }
+                      return "Seed from the JSON catalog or add categories manually.";
+                    })()}
                   </p>
                 </div>
                 {!(searchQuery || isReadOnly) && (

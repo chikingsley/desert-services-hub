@@ -46,11 +46,23 @@ const DOCUSIGN_LINK_PATTERN =
 const SECURITY_CODE_PATTERN =
   /security code:\s*(?:<br\s*\/?>)?\s*([A-F0-9]{30,})/i;
 
+const RE_DOCUSIGN_SENDER =
+  /(?:from|sent by)[:\s]+([^<\n]+?)(?:\s*(?:via|<|sent))/i;
+const RE_DOCUSIGN_RECIPIENT =
+  /(?:<b>Sent:<\/b>|Sent:).*?(?:<b>To:<\/b>|To:)\s*([^<\n]+)/is;
+const RE_DOCUSIGN_SUBJECT =
+  /(?:<b>Subject:<\/b>|Subject:)\s*(?:<\/?\w[^>]*>)*\s*([^\n<]+)/i;
+const RE_WHITESPACE_SPLIT = /\s+/;
+const RE_AMPERSAND = /&amp;/g;
+const RE_TRAILING_QUOTE = /"$/;
+const RE_TRAILING_SINGLE_QUOTE = /'$/;
+const RE_REPLY_PREFIX = /^(?:Re|Fw|FW|Fwd):\s*/gi;
+
 // ============================================================================
 // Types
 // ============================================================================
 
-type LinkRequest = {
+interface LinkRequest {
   /** The "requested new link" email */
   triggerEmail: EmailMessage;
   /** Subject line of the DocuSign document (extracted from thread) */
@@ -59,9 +71,9 @@ type LinkRequest = {
   docusignSender: string | null;
   /** Original recipient of the DocuSign signing request */
   originalRecipient: string | null;
-};
+}
 
-type FoundLink = {
+interface FoundLink {
   request: LinkRequest;
   /** The new DocuSign email containing the fresh link */
   email: EmailMessage;
@@ -71,7 +83,7 @@ type FoundLink = {
   signingUrl: string;
   /** The security code (if present) */
   securityCode: string | null;
-};
+}
 
 // ============================================================================
 // Client
@@ -124,15 +136,11 @@ function extractDocuSignContext(triggerEmail: EmailMessage): LinkRequest {
   );
 
   // Extract DocuSign sender name (the person who sent the signing request)
-  const senderMatch = body.match(
-    /(?:from|sent by)[:\s]+([^<\n]+?)(?:\s*(?:via|<|sent))/i
-  );
+  const senderMatch = body.match(RE_DOCUSIGN_SENDER);
   const docusignSender = senderMatch?.[1]?.trim() ?? null;
 
   // Extract original recipient (who the DocuSign was sent to)
-  const toMatch = body.match(
-    /(?:<b>Sent:<\/b>|Sent:).*?(?:<b>To:<\/b>|To:)\s*([^<\n]+)/is
-  );
+  const toMatch = body.match(RE_DOCUSIGN_RECIPIENT);
   const originalRecipient = toMatch?.[1]?.trim() ?? null;
 
   return {
@@ -145,7 +153,7 @@ function extractDocuSignContext(triggerEmail: EmailMessage): LinkRequest {
 
 function extractOriginalSubject(body: string, emailSubject: string): string {
   // Remove Re:, Fw:, FW: prefixes to get the core subject
-  let subject = emailSubject.replace(/^(?:Re|Fw|FW|Fwd):\s*/gi, "").trim();
+  let subject = emailSubject.replace(RE_REPLY_PREFIX, "").trim();
 
   // If the subject already looks like a DocuSign document name, use it
   if (subject.length > 5) {
@@ -153,11 +161,9 @@ function extractOriginalSubject(body: string, emailSubject: string): string {
   }
 
   // Try to extract from the body's quoted reply chain
-  const subjectMatch = body.match(
-    /(?:<b>Subject:<\/b>|Subject:)\s*(?:<\/?\w[^>]*>)*\s*([^\n<]+)/i
-  );
+  const subjectMatch = body.match(RE_DOCUSIGN_SUBJECT);
   if (subjectMatch?.[1]) {
-    subject = subjectMatch[1].replace(/^(?:Re|Fw|FW|Fwd):\s*/gi, "").trim();
+    subject = subjectMatch[1].replace(RE_REPLY_PREFIX, "").trim();
   }
 
   return subject;
@@ -174,13 +180,16 @@ function extractOriginalSubject(body: string, emailSubject: string): string {
  */
 function buildSearchQuery(fullSubject: string): string {
   // Remove common noise: "Re:", "FW:" prefixes
-  const cleaned = fullSubject.replace(/^(?:Re|Fw|FW|Fwd):\s*/gi, "").trim();
+  const cleaned = fullSubject.replace(RE_REPLY_PREFIX, "").trim();
 
   // Strip dashes and special chars that break KQL search, collapse spaces
-  const sanitized = cleaned.replace(/[-–—]/g, " ").replace(/\s+/g, " ").trim();
+  const sanitized = cleaned
+    .replace(/[-–—]/g, " ")
+    .replace(RE_WHITESPACE_SPLIT, " ")
+    .trim();
 
   // Take the first 6 words (KQL works best with shorter queries)
-  const words = sanitized.split(/\s+/);
+  const words = sanitized.split(RE_WHITESPACE_SPLIT);
   return words.slice(0, 6).join(" ");
 }
 
@@ -260,7 +269,10 @@ function extractSigningUrl(body: string): string | null {
     return null;
   }
   // Clean up HTML encoding artifacts
-  return matches[0].replace(/&amp;/g, "&").replace(/"$/, "").replace(/'$/, "");
+  return matches[0]
+    .replace(RE_AMPERSAND, "&")
+    .replace(RE_TRAILING_QUOTE, "")
+    .replace(RE_TRAILING_SINGLE_QUOTE, "");
 }
 
 function extractSecurityCode(body: string): string | null {

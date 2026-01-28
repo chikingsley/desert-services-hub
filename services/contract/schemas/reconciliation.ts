@@ -174,6 +174,10 @@ export function calculateMathCheck(
         // Unclear items - add to kept for calculation but flag
         keptTotal += item.contractAmount ?? item.estimateAmount ?? 0;
         break;
+      default:
+        // Unknown status - treat as kept
+        keptTotal += item.contractAmount ?? item.estimateAmount ?? 0;
+        break;
     }
   }
 

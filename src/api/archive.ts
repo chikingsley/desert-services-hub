@@ -58,7 +58,17 @@ interface ArchiveIndex {
 export async function listArchives(_req: Request): Promise<Response> {
   try {
     const entries = await readdir(ARCHIVE_DIR, { withFileTypes: true });
-    const archives = [];
+    const archives: Array<{
+      name: string;
+      mailbox: string;
+      downloadedAt: string;
+      dateRange: { after: string; before: string | null };
+      stats: {
+        emailsProcessed: number;
+        attachmentsDownloaded: number;
+        conversationsWithAttachments: number;
+      };
+    }> = [];
 
     for (const entry of entries) {
       if (entry.isDirectory()) {

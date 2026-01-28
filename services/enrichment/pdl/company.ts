@@ -403,6 +403,7 @@ export async function cleanCompany(
     // Call PDL Company Cleaner API
     // Note: The SDK accepts any combination of name/website/profile
     const response = await client.company.cleaner(
+      // biome-ignore lint/suspicious/noExplicitAny: PDL SDK has complex union types that require any
       cleanerParams as unknown as any
     );
 

@@ -113,30 +113,38 @@ export function CatalogItemRow({
 
       {/* Price - Inline Editable */}
       <div className="w-28 shrink-0">
-        {isEditingPrice && !readOnly ? (
-          <Input
-            autoFocus
-            className="h-7 text-right font-medium text-sm"
-            onBlur={handlePriceSubmit}
-            onChange={(e) => setEditPrice(e.target.value)}
-            onKeyDown={handlePriceKeyDown}
-            step="0.01"
-            type="number"
-            value={editPrice}
-          />
-        ) : readOnly ? (
-          <span className="block w-full text-right font-display font-semibold text-foreground text-sm">
-            ${formatPrice(item.price)}
-          </span>
-        ) : (
-          <button
-            className="w-full text-right font-display font-semibold text-primary text-sm transition-colors hover:text-primary/80"
-            onClick={() => setIsEditingPrice(true)}
-            type="button"
-          >
-            ${formatPrice(item.price)}
-          </button>
-        )}
+        {(() => {
+          if (isEditingPrice && !readOnly) {
+            return (
+              <Input
+                autoFocus
+                className="h-7 text-right font-medium text-sm"
+                onBlur={handlePriceSubmit}
+                onChange={(e) => setEditPrice(e.target.value)}
+                onKeyDown={handlePriceKeyDown}
+                step="0.01"
+                type="number"
+                value={editPrice}
+              />
+            );
+          }
+          if (readOnly) {
+            return (
+              <span className="block w-full text-right font-display font-semibold text-foreground text-sm">
+                ${formatPrice(item.price)}
+              </span>
+            );
+          }
+          return (
+            <button
+              className="w-full text-right font-display font-semibold text-primary text-sm transition-colors hover:text-primary/80"
+              onClick={() => setIsEditingPrice(true)}
+              type="button"
+            >
+              ${formatPrice(item.price)}
+            </button>
+          );
+        })()}
       </div>
 
       {/* Action Buttons - Always visible on hover */}

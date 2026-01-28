@@ -313,7 +313,9 @@ export function TakeoffEditorPage() {
     setAnnotations([]);
   }, [setAnnotations]);
 
-  const handleToolClear = useCallback(() => {}, []);
+  const handleToolClear = useCallback(() => {
+    // Tool clear handler - intentionally empty for now
+  }, []);
 
   const getNextNumber = useCallback(
     (itemId: string) => {

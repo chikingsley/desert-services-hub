@@ -1,0 +1,46 @@
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  </head>
+  <body>
+    <div style="font-family: Arial, sans-serif; font-size: 14px; color: #333;">
+      <div>Arrived at {{arrivalTime}},</div>
+      <div><br></div>
+      <div>{{planSummary}}</div>
+      <div><br></div>
+
+      {{#if dustPermitsHtml}}
+      <div><strong>Dust Permits</strong></div>
+      {{{dustPermitsHtml}}}
+      {{/if}}
+
+      {{#if contractsHtml}}
+      <div><strong>Contracts</strong></div>
+      {{{contractsHtml}}}
+      {{/if}}
+
+      {{#if otherTasksHtml}}
+      <div><strong>Other</strong></div>
+      {{{otherTasksHtml}}}
+      {{/if}}
+
+      <div>Best,</div>
+      <div>—</div>
+      <div><br></div>
+
+      <div>Chi Ejimofor</div>
+      <div>Project Coordinator</div>
+      <div>E: <a href="mailto:chi@desertservices.net">chi@desertservices.net</a></div>
+      <div>M: (304) 216-8700</div>
+      <div><img src="cid:logo" alt="Desert Services LLC" width="264" style="max-width:100%"></div>
+
+      {{#if metricsHtml}}
+      <div style="border-top: 1px solid #ddd; padding-top: 12px; margin-top: 12px; font-size: 13px; color: #666;">
+        <div><strong>Pipeline Status</strong> (Coming Soon)</div>
+        <div><br></div>
+        {{{metricsHtml}}}
+      </div>
+      {{/if}}
+    </div>
+  </body>
+</html>

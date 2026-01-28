@@ -22,6 +22,14 @@ const SUBFOLDERS = [
   "07-Closeout",
 ] as const;
 
+// Regex patterns for filename sanitization (module-level for performance)
+const RE_INVALID_CHARS = /[:\\/*?"<>|#%&{}~]/g;
+const RE_FWD_PREFIX = /^FWD-\s*/i;
+const RE_RE_PREFIX = /^RE-\s*/i;
+const RE_FW_PREFIX = /^FW-\s*/i;
+const RE_MULTIPLE_DASHES = /-{2,}/g;
+const RE_LEADING_TRAILING_DASHES = /^-+|-+$/g;
+
 // Project -> Contractor mapping for folder structure
 const PROJECT_CONTRACTORS: Record<
   string,
@@ -122,12 +130,12 @@ const PROJECT_CONTRACTORS: Record<
 
 function sanitizeFilename(filename: string): string {
   return filename
-    .replace(/[:\\/*?"<>|#%&{}~]/g, "-")
-    .replace(/^FWD-\s*/i, "")
-    .replace(/^RE-\s*/i, "")
-    .replace(/^FW-\s*/i, "")
-    .replace(/-{2,}/g, "-")
-    .replace(/^-+|-+$/g, "")
+    .replace(RE_INVALID_CHARS, "-")
+    .replace(RE_FWD_PREFIX, "")
+    .replace(RE_RE_PREFIX, "")
+    .replace(RE_FW_PREFIX, "")
+    .replace(RE_MULTIPLE_DASHES, "-")
+    .replace(RE_LEADING_TRAILING_DASHES, "")
     .trim();
 }
 
@@ -137,45 +145,53 @@ function classifyAttachment(filename: string): string {
     lower.includes("estimate") ||
     lower.includes("est_") ||
     lower.includes("quote")
-  )
+  ) {
     return "01-Estimates";
+  }
   if (
     lower.includes("contract") ||
     lower.includes("po") ||
     lower.includes("agreement") ||
     lower.includes("rev")
-  )
+  ) {
     return "02-Contracts";
+  }
   if (
     lower.includes("permit") ||
     lower.includes("dust") ||
     lower.includes("noi") ||
     lower.includes("ndc")
-  )
+  ) {
     return "03-Permits";
+  }
   if (
     lower.includes("swppp") ||
     lower.includes("narrative") ||
     lower.includes("bmp")
-  )
+  ) {
     return "04-SWPPP";
-  if (lower.includes("inspection") || lower.includes("photo"))
+  }
+  if (lower.includes("inspection") || lower.includes("photo")) {
     return "05-Inspections";
+  }
   if (
     lower.includes("invoice") ||
     lower.includes("billing") ||
     lower.includes("lien") ||
     lower.includes("aia")
-  )
+  ) {
     return "06-Billing";
-  if (lower.includes("closeout") || lower.includes("final"))
+  }
+  if (lower.includes("closeout") || lower.includes("final")) {
     return "07-Closeout";
+  }
   if (
     lower.includes("insurance") ||
     lower.includes("coi") ||
     lower.includes("certificate")
-  )
+  ) {
     return "02-Contracts";
+  }
   return "02-Contracts";
 }
 
@@ -201,11 +217,11 @@ const EXCLUDE_IDS = [
   "2f5c1835-5bb2-8167-91e4-e27e9e311143", // Symbiont
 ];
 
-type ProjectRow = {
+interface ProjectRow {
   notion_project_id: string;
   project_name: string;
   pdf_count: number;
-};
+}
 
 const projects = db
   .query(
@@ -246,12 +262,12 @@ if (dryRun) {
   process.exit(0);
 }
 
-type AttachmentRow = {
+interface AttachmentRow {
   name: string;
   storage_bucket: string;
   storage_path: string;
   size: number;
-};
+}
 
 let totalUploaded = 0;
 let totalFailed = 0;
@@ -296,7 +312,9 @@ for (const proj of projects) {
   // Dedupe by name
   const seen = new Set<string>();
   for (const att of attachments) {
-    if (seen.has(att.name)) continue;
+    if (seen.has(att.name)) {
+      continue;
+    }
     seen.add(att.name);
 
     const subfolder = classifyAttachment(att.name);

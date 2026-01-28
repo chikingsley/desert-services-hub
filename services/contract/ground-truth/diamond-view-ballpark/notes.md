@@ -38,6 +38,7 @@ This is standard "you break it, you buy it" - not "you're liable for our problem
 ### The Actual Red Flag (for reference)
 
 Unscoped language like:
+
 - "Subcontractor assumes responsibility for all fines"
 - "Subcontractor shall be liable for any fines issued on project"
 - No qualifier limiting it to subcontractor's own actions

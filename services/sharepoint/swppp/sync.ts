@@ -22,11 +22,11 @@ import {
 // Sync Functions
 // ============================================================================
 
-export type SyncResult = {
+export interface SyncResult {
   worksheet: WorksheetName;
   rowsSynced: number;
   duration: number;
-};
+}
 
 /**
  * Sync a single worksheet from SharePoint to SQLite

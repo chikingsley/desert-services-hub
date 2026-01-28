@@ -9,6 +9,14 @@ const DOCUSIGN_HREF_PATTERN =
   /href=["']?(https?:\/\/[^"'\s>]*docusign[^"'\s>]*)/gi;
 const DOCUSIGN_PLAIN_URL_PATTERN =
   /(https?:\/\/[^\s<>"']*docusign\.(?:net|com)[^\s<>"']*)/gi;
+const RE_DOCUSIGN_SUBJECT_PATTERN =
+  /(?:Completed|Signed|Voided|Please (?:DocuSign|sign)):\s*(.+)/i;
+const RE_DOCUMENT_NAME = /Document Name:\s*([^\n<]+)/i;
+const RE_SUBJECT_LINE = /Subject:\s*([^\n<]+)/i;
+const RE_BOLD_DOCUMENT = /<b>([^<]+)<\/b>\s*(?:has been|is ready)/i;
+const RE_ENVELOPE_ID = /[?&](?:a|envelopeId|EnvelopeId)=([a-f0-9-]{36})/i;
+const RE_SENT_BY_FROM = /(?:sent by|from)\s+([^<\n]+)/i;
+const RE_CONTACT_EMAIL = /(?:sent by|from|contact)[^<]*<([^@]+@[^>]+)>/i;
 
 type DocuSignEmailType =
   | "completed" // All parties signed, document ready
@@ -110,19 +118,13 @@ function detectEmailType(subject: string, body: string): DocuSignEmailType {
  */
 function extractDocumentName(subject: string, body: string): string | null {
   // Try subject first: "Completed: Document Name"
-  const subjectMatch = subject.match(
-    /(?:Completed|Signed|Voided|Please (?:DocuSign|sign)):\s*(.+)/i
-  );
+  const subjectMatch = subject.match(RE_DOCUSIGN_SUBJECT_PATTERN);
   if (subjectMatch?.[1]) {
     return subjectMatch[1].trim();
   }
 
   // Try body patterns
-  const bodyPatterns = [
-    /Document Name:\s*([^\n<]+)/i,
-    /Subject:\s*([^\n<]+)/i,
-    /<b>([^<]+)<\/b>\s*(?:has been|is ready)/i,
-  ];
+  const bodyPatterns = [RE_DOCUMENT_NAME, RE_SUBJECT_LINE, RE_BOLD_DOCUMENT];
 
   for (const pattern of bodyPatterns) {
     const match = body.match(pattern);
@@ -140,7 +142,7 @@ function extractDocumentName(subject: string, body: string): string | null {
 function extractEnvelopeId(urls: string[]): string | null {
   for (const url of urls) {
     // Pattern: ?a=<envelope-id>&...
-    const match = url.match(/[?&](?:a|envelopeId|EnvelopeId)=([a-f0-9-]{36})/i);
+    const match = url.match(RE_ENVELOPE_ID);
     if (match?.[1]) {
       return match[1];
     }
@@ -261,14 +263,12 @@ export function parseDocuSignEmail(
   let senderEmail: string | null = null;
 
   // Try to extract the actual sender from the body
-  const senderMatch = body.match(/(?:sent by|from)\s+([^<\n]+)/i);
+  const senderMatch = body.match(RE_SENT_BY_FROM);
   if (senderMatch?.[1]) {
     senderName = senderMatch[1].trim();
   }
 
-  const emailMatch = body.match(
-    /(?:sent by|from|contact)[^<]*<([^@]+@[^>]+)>/i
-  );
+  const emailMatch = body.match(RE_CONTACT_EMAIL);
   if (emailMatch?.[1]) {
     senderEmail = emailMatch[1].trim();
   }

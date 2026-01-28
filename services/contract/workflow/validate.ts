@@ -9,6 +9,12 @@ import type {
   ReconciliationOutput,
 } from "../schemas";
 
+// ============================================================================
+// Regex Patterns (module-level for performance)
+// ============================================================================
+
+const RE_INSPECTION_QUANTITY = /\d+\s*(inspection|visit)/i;
+
 // ============================================
 // Types
 // ============================================
@@ -59,7 +65,9 @@ const ruleTucsonNoRock: ValidationRule = (extraction, reconciliation) => {
   const location = extraction.location.value?.toLowerCase() || "";
   const isTucson = location.includes("tucson") || location.includes("pima");
 
-  if (!isTucson) return null;
+  if (!isTucson) {
+    return null;
+  }
 
   // Check reconciliation for rock entrance items
   if (reconciliation) {
@@ -123,8 +131,13 @@ const ruleNoFinesLiability: ValidationRule = (extraction) => {
 /**
  * Rule: Inspection quantity must be specified.
  */
-const ruleInspectionQuantity: ValidationRule = (extraction, reconciliation) => {
-  if (!reconciliation) return null;
+const ruleInspectionQuantity: ValidationRule = (
+  _extraction,
+  reconciliation
+) => {
+  if (!reconciliation) {
+    return null;
+  }
 
   // Find inspection line items
   const inspectionItems = reconciliation.lineItems.filter(
@@ -155,8 +168,10 @@ const ruleInspectionQuantity: ValidationRule = (extraction, reconciliation) => {
 /**
  * Rule: BMP install items require at least one mobilization.
  */
-const ruleBMPMobilization: ValidationRule = (extraction, reconciliation) => {
-  if (!reconciliation) return null;
+const ruleBMPMobilization: ValidationRule = (_extraction, reconciliation) => {
+  if (!reconciliation) {
+    return null;
+  }
 
   // Check for BMP install items
   const bmpKeywords = [
@@ -176,7 +191,9 @@ const ruleBMPMobilization: ValidationRule = (extraction, reconciliation) => {
       bmpKeywords.some((kw) => item.description.toLowerCase().includes(kw))
   );
 
-  if (!hasBMPInstall) return null;
+  if (!hasBMPInstall) {
+    return null;
+  }
 
   // Check for mobilization
   const hasMobilization = reconciliation.lineItems.some(
@@ -301,8 +318,10 @@ const ruleCertifiedPayroll: ValidationRule = (extraction) => {
 /**
  * Rule: Rate discrepancies should be flagged.
  */
-const ruleRateDiscrepancy: ValidationRule = (extraction, reconciliation) => {
-  if (!reconciliation) return null;
+const ruleRateDiscrepancy: ValidationRule = (_extraction, reconciliation) => {
+  if (!reconciliation) {
+    return null;
+  }
 
   // Check unit rates for discrepancies
   for (const rate of reconciliation.unitRates) {
@@ -330,7 +349,9 @@ const ruleRateDiscrepancy: ValidationRule = (extraction, reconciliation) => {
  * Rule: Textura/GCPay requirement should match billing platform.
  */
 const ruleBillingPlatform: ValidationRule = (extraction, reconciliation) => {
-  if (!reconciliation) return null;
+  if (!reconciliation) {
+    return null;
+  }
 
   // Check if Textura/GCPay line item was removed
   const texturRemoved = reconciliation.lineItems.some(
@@ -405,6 +426,10 @@ export function validateExtraction(
         case "info":
           info.push(issue);
           break;
+        default:
+          // Unknown severity - treat as warning
+          warnings.push(issue);
+          break;
       }
     }
   }
@@ -462,7 +487,7 @@ export function scanForRedFlags(ocrText: string): ValidationIssue[] {
   // No inspection quantity
   if (
     (textLower.includes("inspection") || textLower.includes("swppp")) &&
-    !textLower.match(/\d+\s*(inspection|visit)/i)
+    !textLower.match(RE_INSPECTION_QUANTITY)
   ) {
     issues.push({
       ruleId: "RED_FLAG_INSPECTION_QTY",

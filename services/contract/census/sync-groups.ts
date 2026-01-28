@@ -14,7 +14,7 @@
  *   bun services/email/census/sync-groups.ts status
  */
 import { BUCKETS, uploadFile } from "@/lib/minio";
-import { GraphGroupsClient } from "../groups";
+import { GraphGroupsClient } from "../../email/groups";
 import {
   db,
   getOrCreateMailbox,
@@ -131,7 +131,8 @@ async function syncGroup(
             ccEmails: [],
             receivedAt: post.receivedDateTime,
             hasAttachments: post.hasAttachments,
-            attachmentNames: post.attachments?.map((a) => a.name) ?? [],
+            attachmentNames:
+              post.attachments?.map((a: { name: string }) => a.name) ?? [],
             bodyPreview: fullText.substring(0, 500),
             bodyFull: fullText,
             bodyHtml: post.bodyType === "html" ? post.bodyContent : undefined,

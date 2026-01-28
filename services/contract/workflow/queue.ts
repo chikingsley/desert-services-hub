@@ -365,8 +365,12 @@ export function formatQueueDisplay(contracts: QueuedContract[]): string {
 
   for (let i = 0; i < contracts.length; i++) {
     const c = contracts[i];
-    const status =
-      c.status === "pending" ? "[ ]" : c.status === "processed" ? "[x]" : "[?]";
+    let status = "[?]";
+    if (c.status === "pending") {
+      status = "[ ]";
+    } else if (c.status === "processed") {
+      status = "[x]";
+    }
 
     lines.push(`${i + 1}. ${status} ${c.normalizedSubject}`);
     lines.push(`   From: ${c.latestFrom}`);
@@ -416,12 +420,12 @@ export function formatContractDetails(normalizedSubject: string): string {
   lines.push("");
 
   for (const att of attachments) {
-    const status =
-      att.extractionStatus === "success"
-        ? "✓"
-        : att.extractionStatus === "pending"
-          ? "⏳"
-          : "✗";
+    let status = "✗";
+    if (att.extractionStatus === "success") {
+      status = "✓";
+    } else if (att.extractionStatus === "pending") {
+      status = "⏳";
+    }
     const size = att.size ? `${Math.round(att.size / 1024)}KB` : "?";
     lines.push(`- ${status} ${att.name} (${size})`);
   }

@@ -1,5 +1,5 @@
 import { BUCKETS, uploadFile } from "@/lib/minio";
-import { GraphEmailClient } from "../client";
+import { GraphEmailClient } from "../../email/client";
 import {
   db,
   getAllMailboxes,
@@ -116,7 +116,10 @@ async function syncMailboxFull(
     // Filter by before date if specified
     if (before) {
       const beforeTime = before.getTime();
-      emails = emails.filter((e) => e.receivedDateTime.getTime() < beforeTime);
+      emails = emails.filter(
+        (e: { receivedDateTime: Date }) =>
+          e.receivedDateTime.getTime() < beforeTime
+      );
     }
 
     reportProgress({
@@ -144,13 +147,20 @@ async function syncMailboxFull(
             email.id,
             mailboxEmail
           );
-          attachmentNames = attachments.map((a) => a.name);
-          attachmentMeta = attachments.map((a) => ({
-            id: a.id,
-            name: a.name,
-            contentType: a.contentType,
-            size: a.size,
-          }));
+          attachmentNames = attachments.map((a: { name: string }) => a.name);
+          attachmentMeta = attachments.map(
+            (a: {
+              id: string;
+              name: string;
+              contentType: string;
+              size: number;
+            }) => ({
+              id: a.id,
+              name: a.name,
+              contentType: a.contentType,
+              size: a.size,
+            })
+          );
         } catch {
           // Skip attachment fetch errors
         }
@@ -166,8 +176,8 @@ async function syncMailboxFull(
         subject: email.subject,
         fromEmail: email.fromEmail,
         fromName: email.fromName,
-        toEmails: email.toRecipients.map((r) => r.email),
-        ccEmails: email.ccRecipients.map((r) => r.email),
+        toEmails: email.toRecipients.map((r: { email: string }) => r.email),
+        ccEmails: email.ccRecipients.map((r: { email: string }) => r.email),
         receivedAt: email.receivedDateTime.toISOString(),
         hasAttachments: email.hasAttachments ?? false,
         attachmentNames,
@@ -208,16 +218,17 @@ async function syncMailboxFull(
             );
 
             // Upload to MinIO: email-attachments/{emailId}/{attachmentId}/{filename}
-            const objectPath = `${emailId}/${att.id}/${att.name}`;
-            await uploadFile(
-              BUCKETS.EMAIL_ATTACHMENTS,
-              objectPath,
-              pdfBuffer,
-              "application/pdf"
-            );
-
-            storageBucket = BUCKETS.EMAIL_ATTACHMENTS;
-            storagePath = objectPath;
+            if (pdfBuffer) {
+              const objectPath = `${emailId}/${att.id}/${att.name}`;
+              await uploadFile(
+                BUCKETS.EMAIL_ATTACHMENTS,
+                objectPath,
+                pdfBuffer,
+                "application/pdf"
+              );
+              storageBucket = BUCKETS.EMAIL_ATTACHMENTS;
+              storagePath = objectPath;
+            }
           } catch (uploadErr) {
             console.error(
               `Failed to upload ${att.name} to MinIO: ${uploadErr}`
@@ -576,7 +587,7 @@ if (import.meta.main) {
     console.log(`\n${"=".repeat(60)}`);
     console.log("M365 GROUP STATUS");
     console.log(`${"=".repeat(60)}\n`);
-    for (const [email, groupId] of Object.entries(ALL_GROUPS)) {
+    for (const [email, _groupId] of Object.entries(ALL_GROUPS)) {
       const mailbox = db
         .query<{ email_count: number; last_sync_at: string | null }, [string]>(
           "SELECT email_count, last_sync_at FROM mailboxes WHERE email = ?"
@@ -731,8 +742,11 @@ if (import.meta.main) {
         since: options.since,
         onProgress: (p) => {
           let emoji = "→";
-          if (p.phase === "complete") emoji = "✓";
-          else if (p.phase === "error") emoji = "✗";
+          if (p.phase === "complete") {
+            emoji = "✓";
+          } else if (p.phase === "error") {
+            emoji = "✗";
+          }
 
           if (p.phase === "fetching") {
             console.log(`${emoji} [${p.group}] Fetching conversations...`);

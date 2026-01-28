@@ -19,6 +19,12 @@ import {
 } from "../schemas";
 import type { CollectedDocument } from "./collect";
 
+// ============================================================================
+// Regex Patterns (module-level for performance)
+// ============================================================================
+
+const RE_PDF_EXTENSION = /\.pdf$/i;
+
 // ============================================
 // Types
 // ============================================
@@ -101,8 +107,8 @@ function isRetryableError(error: unknown): boolean {
  * Run Mistral OCR on a PDF file (internal implementation).
  * Uses the mistral-mcp CLI.
  */
-async function runMistralOCR(pdfPath: string): Promise<string> {
-  const ocrPath = pdfPath.replace(/\.pdf$/i, ".md");
+function runMistralOCR(pdfPath: string): Promise<string> {
+  const ocrPath = pdfPath.replace(RE_PDF_EXTENSION, ".md");
 
   // Run mistral-mcp ocr command
   return new Promise((resolve, reject) => {
@@ -113,11 +119,11 @@ async function runMistralOCR(pdfPath: string): Promise<string> {
       env: { ...process.env },
     });
 
-    let stdout = "";
+    let _stdout = "";
     let stderr = "";
 
     proc.stdout?.on("data", (data) => {
-      stdout += data.toString();
+      _stdout += data.toString();
     });
 
     proc.stderr?.on("data", (data) => {
@@ -191,7 +197,7 @@ async function runGeminiOCR(pdfPath: string): Promise<string> {
  * 4. Save the result to a .md file for future use
  */
 export async function runOCR(pdfPath: string): Promise<string> {
-  const ocrPath = pdfPath.replace(/\.pdf$/i, ".md");
+  const ocrPath = pdfPath.replace(RE_PDF_EXTENSION, ".md");
 
   // Check if OCR already exists (cache hit)
   if (existsSync(ocrPath)) {
@@ -295,7 +301,7 @@ export async function runOCROnAll(
       results.push({
         documentType: doc.type,
         pdfPath: doc.path,
-        ocrPath: doc.path.replace(/\.pdf$/i, ".md"),
+        ocrPath: doc.path.replace(RE_PDF_EXTENSION, ".md"),
         fullText,
         pages,
       });
@@ -321,7 +327,9 @@ export function findCitation(
   for (const result of ocrResults) {
     for (let pageIdx = 0; pageIdx < result.pages.length; pageIdx++) {
       const pageText = result.pages[pageIdx];
-      if (!pageText) continue;
+      if (!pageText) {
+        continue;
+      }
 
       const matches =
         typeof pattern === "string"

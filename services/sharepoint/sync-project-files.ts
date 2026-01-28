@@ -29,6 +29,14 @@ import { parseArgs } from "node:util";
 import { getFile } from "../../lib/minio";
 import { SharePointClient } from "./client";
 
+// Regex patterns for filename sanitization (module-level for performance)
+const RE_INVALID_CHARS = /[:\\/*?"<>|#%&{}~]/g;
+const RE_FWD_PREFIX = /^FWD-\s*/i;
+const RE_RE_PREFIX = /^RE-\s*/i;
+const RE_FW_PREFIX = /^FW-\s*/i;
+const RE_MULTIPLE_DASHES = /-{2,}/g;
+const RE_LEADING_TRAILING_DASHES = /^-+|-+$/g;
+
 // ---------------------------------------------------------------------------
 // Config
 // ---------------------------------------------------------------------------
@@ -59,46 +67,56 @@ function classifyAttachment(filename: string): string {
     lower.includes("estimate") ||
     lower.includes("est_") ||
     lower.includes("quote")
-  )
+  ) {
     return "01-Estimates";
+  }
   if (
     lower.includes("contract") ||
     lower.includes("po") ||
     lower.includes("agreement") ||
     lower.includes("rev")
-  )
+  ) {
     return "02-Contracts";
+  }
   if (
     lower.includes("permit") ||
     lower.includes("dust") ||
     lower.includes("noi") ||
     lower.includes("ndc")
-  )
+  ) {
     return "03-Permits";
+  }
   if (
     lower.includes("swppp") ||
     lower.includes("narrative") ||
     lower.includes("bmp")
-  )
+  ) {
     return "04-SWPPP";
-  if (lower.includes("inspection") || lower.includes("photo"))
+  }
+  if (lower.includes("inspection") || lower.includes("photo")) {
     return "05-Inspections";
+  }
   if (
     lower.includes("invoice") ||
     lower.includes("billing") ||
     lower.includes("lien") ||
     lower.includes("aia")
-  )
+  ) {
     return "06-Billing";
-  if (lower.includes("closeout") || lower.includes("final"))
+  }
+  if (lower.includes("closeout") || lower.includes("final")) {
     return "07-Closeout";
+  }
   if (
     lower.includes("insurance") ||
     lower.includes("coi") ||
     lower.includes("certificate")
-  )
+  ) {
     return "02-Contracts";
-  if (lower.includes("change") || lower.includes("co ")) return "02-Contracts";
+  }
+  if (lower.includes("change") || lower.includes("co ")) {
+    return "02-Contracts";
+  }
 
   return "02-Contracts";
 }
@@ -108,12 +126,12 @@ function classifyAttachment(filename: string): string {
  */
 function sanitizeFilename(filename: string): string {
   return filename
-    .replace(/[:\\/*?"<>|#%&{}~]/g, "-")
-    .replace(/^FWD-\s*/i, "")
-    .replace(/^RE-\s*/i, "")
-    .replace(/^FW-\s*/i, "")
-    .replace(/-{2,}/g, "-")
-    .replace(/^-+|-+$/g, "")
+    .replace(RE_INVALID_CHARS, "-")
+    .replace(RE_FWD_PREFIX, "")
+    .replace(RE_RE_PREFIX, "")
+    .replace(RE_FW_PREFIX, "")
+    .replace(RE_MULTIPLE_DASHES, "-")
+    .replace(RE_LEADING_TRAILING_DASHES, "")
     .trim();
 }
 
@@ -181,7 +199,7 @@ if (notionId) {
   params = { $search: `%${projectNameQuery}%` };
 }
 
-type AttachmentRow = {
+interface AttachmentRow {
   id: number;
   name: string;
   content_type: string;
@@ -191,7 +209,7 @@ type AttachmentRow = {
   subject: string;
   from_email: string;
   email_date: string;
-};
+}
 
 const attachments = db.query(query).all(params) as AttachmentRow[];
 

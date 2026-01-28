@@ -13,7 +13,13 @@ export function Logo({ className, variant = "icon" }: LogoProps) {
 
   return (
     <div className={cn("relative flex items-center justify-center", className)}>
-      <img alt="Desert Services Logo" className="h-full w-auto" src={src} />
+      <img
+        alt="Desert Services Logo"
+        className="h-full w-auto"
+        height={40}
+        src={src}
+        width={40}
+      />
     </div>
   );
 }

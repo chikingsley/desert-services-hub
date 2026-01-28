@@ -143,7 +143,9 @@ export interface GCResponseData {
 
 // Register helpers
 Handlebars.registerHelper("formatMoney", (value: number) => {
-  if (value === null || value === undefined) return "0.00";
+  if (value === null || value === undefined) {
+    return "0.00";
+  }
   return value.toLocaleString("en-US", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
@@ -349,9 +351,15 @@ export function createGCResponseEmail(
   const body = renderGCResponse(data);
 
   const cc: string[] = [];
-  if (options?.ccKendra) cc.push("kendra@desertservices.net");
-  if (options?.ccJared) cc.push("jared@desertservices.net");
-  if (options?.ccSales) cc.push(options.ccSales);
+  if (options?.ccKendra) {
+    cc.push("kendra@desertservices.net");
+  }
+  if (options?.ccJared) {
+    cc.push("jared@desertservices.net");
+  }
+  if (options?.ccSales) {
+    cc.push(options.ccSales);
+  }
 
   const subject = data.isReady
     ? `RE: ${data.projectName} - Contract Acknowledged`

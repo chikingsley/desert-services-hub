@@ -96,6 +96,7 @@ For each scope item in contract:
 ### Scoped vs Unscoped Liability (Important!)
 
 **NOT a red flag** - liability scoped to your own work:
+
 - "Subcontractor responsible for fines **due to Subcontractor's operations**"
 - "Subcontractor shall provide SWPPP for **Subcontractor's work area**"
 - "If violation issued **due to operations performed by Subcontractor**..."
@@ -103,6 +104,7 @@ For each scope item in contract:
 This is standard "be responsible for yourself" language. You break it, you buy it.
 
 **ACTUAL red flag** - unscoped liability:
+
 - "Subcontractor assumes responsibility for all fines"
 - "Subcontractor shall be liable for any fines issued on project"
 - No qualifier limiting to subcontractor's own actions
@@ -116,17 +118,20 @@ This is standard "be responsible for yourself" language. You break it, you buy i
 Some contracts have **terrible language everywhere** but are **intentionally accepted** because they're at-risk bids.
 
 **Characteristics:**
+
 - Large contract value ($100K+ vs typical $10-20K)
 - Large contract size (100+ pages)
 - Bad terms throughout - "responsible for this, responsible for that"
 - But the bid price was set HIGH ENOUGH to absorb the risk
 
 **Why normal red flags don't apply:**
+
 - Risk was **priced in** to the bid
 - Conscious business decision, not an oversight
 - Money justifies accepting tougher terms
 
 **Validation approach:**
+
 - Still flag issues (for awareness)
 - But note "may be acceptable if at-risk bid"
 - Check contract value - large contracts may be intentional

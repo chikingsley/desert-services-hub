@@ -18,6 +18,24 @@ export interface ParsedForward {
   forwardedByBody: string; // Any content added by the forwarder before the forward block
 }
 
+// ============================================================================
+// Regex Patterns (module-level for performance)
+// ============================================================================
+
+const RE_HEADER_SEPARATOR = /[;,]/;
+const RE_NAMED_EMAIL = /^(.+?)\s*<([^>]+)>$/;
+const RE_QUOTE_STRIP = /^["']|["']$/g;
+const RE_PLAIN_EMAIL = /^[\w.-]+@[\w.-]+\.\w+$/;
+const RE_ANY_EMAIL = /([\w.-]+@[\w.-]+\.\w+)/;
+const RE_DIV_REPLY = /<\/div><div>/i;
+const RE_HR_TAG = /^(.*?)<hr/is;
+const RE_DOUBLE_NEWLINE = /\n\n/;
+const RE_OUTLOOK_HEADER =
+  /^(From:\s*.+?\nSent:\s*.+?\nTo:\s*.+?(?:\nCc:\s*.+?)?\nSubject:\s*.+?)\n/im;
+const RE_HTML_TAG = /<[^>]*>/g;
+const RE_FORWARD_PREFIX = /^(FW|Fwd|FWD):\s*/i;
+const RE_REPLY_PREFIX = /^(RE|Re):\s*/i;
+
 export interface ReplyFromForwardOptions {
   /** The forwarded email body (HTML or text) */
   forwardedBody: string;
@@ -98,7 +116,7 @@ function parseEmailAddresses(
   const results: Array<{ email: string; name?: string }> = [];
 
   // Split by semicolon or comma (common separators)
-  const parts = headerValue.split(/[;,]/).map((p) => p.trim());
+  const parts = headerValue.split(RE_HEADER_SEPARATOR).map((p) => p.trim());
 
   for (const part of parts) {
     if (part.length === 0) {
@@ -106,24 +124,24 @@ function parseEmailAddresses(
     }
 
     // Try "Name <email>" format
-    const namedMatch = part.match(/^(.+?)\s*<([^>]+)>$/);
+    const namedMatch = part.match(RE_NAMED_EMAIL);
     if (namedMatch?.[1] && namedMatch[2]) {
       results.push({
-        name: namedMatch[1].trim().replace(/^["']|["']$/g, ""),
+        name: namedMatch[1].trim().replace(RE_QUOTE_STRIP, ""),
         email: namedMatch[2].trim().toLowerCase(),
       });
       continue;
     }
 
     // Try plain email format
-    const emailMatch = part.match(/^[\w.-]+@[\w.-]+\.\w+$/);
+    const emailMatch = part.match(RE_PLAIN_EMAIL);
     if (emailMatch) {
       results.push({ email: part.toLowerCase() });
       continue;
     }
 
     // Try to extract email from anywhere in the string
-    const anyEmailMatch = part.match(/([\w.-]+@[\w.-]+\.\w+)/);
+    const anyEmailMatch = part.match(RE_ANY_EMAIL);
     if (anyEmailMatch?.[1]) {
       results.push({ email: anyEmailMatch[1].toLowerCase() });
     }
@@ -140,7 +158,7 @@ function htmlToText(html: string): string {
     .replace(/<br\s*\/?>/gi, "\n")
     .replace(/<\/div>/gi, "\n")
     .replace(/<\/p>/gi, "\n\n")
-    .replace(/<[^>]+>/g, "")
+    .replace(RE_HTML_TAG, "")
     .replace(/&nbsp;/g, " ")
     .replace(/&lt;/g, "<")
     .replace(/&gt;/g, ">")
@@ -203,13 +221,13 @@ export function parseForwardedEmail(body: string): ParsedForward {
 
     const toMatch = body.match(HTML_FORWARD_PATTERNS.to);
     if (toMatch?.[1]) {
-      const toText = decodeHtmlEntities(toMatch[1].replace(/<[^>]*>/g, ""));
+      const toText = decodeHtmlEntities(toMatch[1].replace(RE_HTML_TAG, ""));
       result.originalTo = parseEmailAddresses(toText);
     }
 
     const ccMatch = body.match(HTML_FORWARD_PATTERNS.cc);
     if (ccMatch?.[1]) {
-      const ccText = decodeHtmlEntities(ccMatch[1].replace(/<[^>]*>/g, ""));
+      const ccText = decodeHtmlEntities(ccMatch[1].replace(RE_HTML_TAG, ""));
       result.originalCc = parseEmailAddresses(ccText);
     }
 
@@ -219,7 +237,7 @@ export function parseForwardedEmail(body: string): ParsedForward {
     }
 
     // Extract body after the forward header block
-    const divRplyMatch = body.match(/<\/div><div>/i);
+    const divRplyMatch = body.match(RE_DIV_REPLY);
     if (divRplyMatch) {
       const afterHeaders = body.slice(
         body.indexOf(divRplyMatch[0]) + divRplyMatch[0].length
@@ -230,7 +248,7 @@ export function parseForwardedEmail(body: string): ParsedForward {
     }
 
     // Extract pre-forward content (comment added by forwarder)
-    const hrMatch = body.match(/^(.*?)<hr/is);
+    const hrMatch = body.match(RE_HR_TAG);
     if (hrMatch?.[1]) {
       result.forwardedByBody = htmlToText(hrMatch[1]);
     }
@@ -257,7 +275,7 @@ export function parseForwardedEmail(body: string): ParsedForward {
     );
 
     // Find where headers end and body begins (double newline)
-    const headerEndMatch = afterMarker.match(/\n\n/);
+    const headerEndMatch = afterMarker.match(RE_DOUBLE_NEWLINE);
     if (headerEndMatch) {
       headerSection = afterMarker.slice(0, headerEndMatch.index);
       bodySection = afterMarker.slice(
@@ -269,9 +287,7 @@ export function parseForwardedEmail(body: string): ParsedForward {
     }
   } else {
     // Outlook format: look for "From:" followed by "Sent:" pattern
-    const outlookHeaderMatch = textBody.match(
-      /^(From:\s*.+?\nSent:\s*.+?\nTo:\s*.+?(?:\nCc:\s*.+?)?\nSubject:\s*.+?)\n/im
-    );
+    const outlookHeaderMatch = textBody.match(RE_OUTLOOK_HEADER);
 
     if (outlookHeaderMatch?.[1]) {
       const headerStart = textBody.indexOf(outlookHeaderMatch[0]);
@@ -353,8 +369,8 @@ function cleanSubject(subject: string | null): string {
 
   // Remove forward prefixes
   const cleaned = subject
-    .replace(/^(FW|Fwd|FWD):\s*/i, "")
-    .replace(/^(RE|Re):\s*/i, "")
+    .replace(RE_FORWARD_PREFIX, "")
+    .replace(RE_REPLY_PREFIX, "")
     .trim();
 
   // Add RE: prefix

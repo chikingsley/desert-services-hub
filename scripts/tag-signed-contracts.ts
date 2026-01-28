@@ -55,14 +55,14 @@ const subjectClauses = SIGNED_SUBJECT_PATTERNS.map(
 // Build query for project name matches
 const projectPlaceholders = SIGNED_PROJECTS.map(() => "?").join(", ");
 
-type EmailRow = {
+interface EmailRow {
   id: number;
   message_id: string;
   subject: string | null;
   received_at: string;
   project_name: string | null;
   categories: string | null;
-};
+}
 
 // Find all contracts@ emails that match either criterion
 const rows = db

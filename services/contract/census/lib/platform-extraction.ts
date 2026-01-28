@@ -241,7 +241,9 @@ export function shouldExclude(
  * Check if an email is from a platform domain.
  */
 export function isPlatformEmail(domain: string | null): boolean {
-  if (!domain) return false;
+  if (!domain) {
+    return false;
+  }
   return domain.toLowerCase() in PLATFORM_DOMAINS;
 }
 
@@ -252,10 +254,14 @@ export function shouldExcludePlatformEmail(
   domain: string | null,
   subject: string | null
 ): boolean {
-  if (!(domain && subject)) return false;
+  if (!(domain && subject)) {
+    return false;
+  }
 
   const config = PLATFORM_DOMAINS[domain.toLowerCase()];
-  if (!config?.excludeSubjects) return false;
+  if (!config?.excludeSubjects) {
+    return false;
+  }
 
   for (const pattern of config.excludeSubjects) {
     if (pattern.test(subject)) {
@@ -306,10 +312,14 @@ export function extractRealSender(
   body: string | null,
   subject: string | null
 ): PlatformExtraction | null {
-  if (!domain) return null;
+  if (!domain) {
+    return null;
+  }
 
   const config = PLATFORM_DOMAINS[domain.toLowerCase()];
-  if (!config) return null;
+  if (!config) {
+    return null;
+  }
 
   const result: PlatformExtraction = {
     platformName: config.name,
@@ -501,16 +511,10 @@ export function processPlatformEmails(): void {
           email.id
         );
       } else {
-        updateStmt.run(
-          1,
-          PLATFORM_DOMAINS[domain!]?.name ?? null,
-          null,
-          null,
-          null,
-          null,
-          0,
-          email.id
-        );
+        const platformName = domain
+          ? (PLATFORM_DOMAINS[domain]?.name ?? null)
+          : null;
+        updateStmt.run(1, platformName, null, null, null, null, 0, email.id);
       }
     } else {
       updateStmt.run(0, null, null, null, null, null, 0, email.id);

@@ -156,7 +156,7 @@ window.sessionStorage.setItem(
 
 
 <script nonce="">"use strict";
-var telemetry = {
+const telemetry = {
 mark: (name, context) => {
 if (performance && typeof performance.mark === 'function') {
 performance.mark(name, context)

@@ -14,6 +14,9 @@
       "complexity": {
         "noExcessiveCognitiveComplexity": "off"
       },
+      "performance": {
+        "noBarrelFile": "off"
+      },
       "nursery": {
         "useSortedClasses": {
           "level": "warn",
@@ -34,7 +37,8 @@
       "!app",
       "!bun-init",
       "!bun-example",
-      "!components"
+      "!components",
+      "!services/file-automation/_reference"
     ]
   },
   "overrides": [
@@ -46,20 +50,14 @@
         "app/**",
         "bun-init/**",
         "bun-example/**",
-        "components/**"
+        "components/**",
+        "services/file-automation/_reference/**"
       ],
       "linter": {
         "enabled": false
-      }
-    },
-    {
-      "includes": ["lib/pdf-takeoff/index.ts"],
-      "linter": {
-        "rules": {
-          "performance": {
-            "noBarrelFile": "off"
-          }
-        }
+      },
+      "formatter": {
+        "enabled": false
       }
     },
     {
@@ -108,6 +106,64 @@
         "rules": {
           "style": {
             "useFilenamingConvention": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["src/frontend/components/ui/**/*"],
+      "linter": {
+        "rules": {
+          "performance": {
+            "noNamespaceImport": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["src/frontend/components/ui/calendar.tsx"],
+      "linter": {
+        "rules": {
+          "correctness": {
+            "noNestedComponentDefinitions": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["services/contract/census/db.ts"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noRedeclare": "off"
+          },
+          "style": {
+            "noExportedImports": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": [
+        "src/frontend/components/ui/button-group.tsx",
+        "src/frontend/components/ui/field.tsx",
+        "src/frontend/components/ui/item.tsx",
+        "src/frontend/components/ui/input-group.tsx"
+      ],
+      "linter": {
+        "rules": {
+          "a11y": {
+            "useSemanticElements": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["src/frontend/components/takeoffs/new-takeoff-dialog.tsx"],
+      "linter": {
+        "rules": {
+          "a11y": {
+            "noNoninteractiveElementInteractions": "off"
           }
         }
       }

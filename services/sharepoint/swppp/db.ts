@@ -82,8 +82,12 @@ function initSchema(database: Database): void {
  * Convert Excel serial date to ISO string
  */
 function excelDateToISO(excelDate: number | string | null): string | null {
-  if (excelDate === null || excelDate === "") return null;
-  if (typeof excelDate === "string") return excelDate;
+  if (excelDate === null || excelDate === "") {
+    return null;
+  }
+  if (typeof excelDate === "string") {
+    return excelDate;
+  }
 
   // Excel serial date: days since 1899-12-30
   const excelEpoch = new Date(1899, 11, 30);
@@ -189,7 +193,7 @@ export function getLastSyncTime(worksheet: WorksheetName): string | null {
 // Query Operations
 // ============================================================================
 
-export type ProjectRow = {
+export interface ProjectRow {
   id: number;
   row_number: number;
   worksheet: string;
@@ -205,7 +209,7 @@ export type ProjectRow = {
   invoice: string | null;
   work_completed: string | null;
   synced_at: string;
-};
+}
 
 /**
  * Query projects from SQLite

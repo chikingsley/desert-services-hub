@@ -124,3 +124,51 @@ Need internal clarification:
 - Tucson projects: flag rock entrance requests as OUT OF SCOPE
 - "Assume responsibility for fines" language: NEVER AGREE
 - Inspection line items without quantity: require redline with specific count
+
+---
+
+## Follow-up Actions
+
+### Contract Redlines (BEFORE SIGNING)
+
+- [ ] Mark up Exhibit A with redlines per notes above
+  - Item 11: FLAG coordination meetings as scheduling requirement
+  - Item 16: Strike "assume responsibility for fines" language
+  - Item 16: Remove operational dust control (not in scope)
+  - Item 17: Strike traffic control
+  - Item 19: Strike water meter
+  - Item 20: Strike construction water
+  - Item 22: Strike power wash parking lot
+  - Item 30: Strike GSA temporary entrance (can't do in Tucson)
+  - Item 34: Clarify compost filter sock included (not silt fence)
+  - Item 40: Add "12 inspections included, extras at unit rate"
+
+### Reconciliation Follow-up
+
+- [ ] Request actual SOV from A.R. Mays to reconcile $2,256 discrepancy
+- [ ] Clarify if Textura/Procore/GCPay fee applies
+- [ ] Clarify if CCIP/OCIP applies
+- [ ] Clarify mobilization count/pricing
+- [ ] Verify source of Tucson rates in contract
+
+### Insurance
+
+- [ ] Send COI with A.R. Mays as Additional Insured
+  - GL
+  - Auto
+  - WC
+  - Professional Liability
+- [ ] Due within 5 days of signing
+
+### After Contract Signed
+
+- [ ] Mark estimate as Won in Monday
+- [ ] Update awarded value to $19,439.00
+- [ ] Create SharePoint folder: Customer Projects/Active/A/A.R. Mays Construction/Sprouts 058 Rita Ranch/
+- [ ] Upload signed contract
+
+### Internal Follow-up
+
+- [ ] Establish Tucson-specific pricing/rate card
+- [ ] Add "Tucson - no rock entrances" flag to quoting system
+- [ ] Add "assume fines liability" contract language detection

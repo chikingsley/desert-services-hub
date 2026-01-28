@@ -10,7 +10,7 @@
  */
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { ensureBucket, fileExists, getFile, minioClient } from "@/lib/minio";
-import { GraphEmailClient } from "../../client";
+import { GraphEmailClient } from "../../../email/client";
 import {
   db,
   getEmailByMessageId,

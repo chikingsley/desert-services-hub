@@ -3,31 +3,36 @@
  *
  * SQLite database for storing email metadata, classifications, and extracted tasks.
  * Provides visibility into company email across all key mailboxes.
+ *
+ * NOTE: Types are now in db/types.ts, connection is in db/connection.ts
+ * This file maintains backward compatibility by re-exporting everything.
  */
-import { Database } from "bun:sqlite";
-import { existsSync, mkdirSync } from "node:fs";
-import { dirname, join } from "node:path";
 
-// Initialize SQLite database
-const defaultPath = join(import.meta.dir, "census.db");
-const dbPath = process.env.CENSUS_DATABASE_PATH ?? defaultPath;
+// Import database connection from centralized module
+import { db } from "./db/connection";
 
-// Ensure the directory exists
-const dbDir = dirname(dbPath);
-if (!existsSync(dbDir)) {
-  mkdirSync(dbDir, { recursive: true });
-}
-
-const db = new Database(dbPath, { create: true });
-
-// Enable WAL mode for better performance
-db.run("PRAGMA journal_mode = WAL");
-
-// Enable foreign key constraints
-db.run("PRAGMA foreign_keys = ON");
-
-// Wait up to 30s for locks (handles concurrent access better)
-db.run("PRAGMA busy_timeout = 30000");
+// Re-export types for backward compatibility
+export type {
+  Account,
+  AccountType,
+  Attachment,
+  ClassificationMethod,
+  ClassificationStats,
+  Email,
+  EmailClassification,
+  EmailEntity,
+  EmailTask,
+  Estimate,
+  ExtractionStatus,
+  InsertAttachmentData,
+  InsertEmailData,
+  InsertTaskData,
+  Mailbox,
+  Project,
+  TaskPriority,
+  TaskType,
+  UpsertEstimateData,
+} from "./db/types";
 
 // ============================================
 // Schema: Mailboxes
@@ -146,6 +151,25 @@ db.run(`
     FOREIGN KEY (account_id) REFERENCES accounts(id)
   )
 `);
+
+// ============================================
+// Project Aliases Table
+// ============================================
+db.run(`
+  CREATE TABLE IF NOT EXISTS project_aliases (
+    id INTEGER PRIMARY KEY,
+    project_id INTEGER NOT NULL,
+    alias TEXT NOT NULL,
+    normalized_alias TEXT NOT NULL,
+    source TEXT DEFAULT 'manual',  -- 'manual', 'monday', 'learned'
+    created_at TEXT DEFAULT (datetime('now')),
+    FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
+    UNIQUE(project_id, normalized_alias)
+  )
+`);
+db.run(
+  "CREATE INDEX IF NOT EXISTS idx_project_aliases_normalized ON project_aliases(normalized_alias)"
+);
 
 // Add account_id and project_id to emails if not exists
 try {
@@ -1216,6 +1240,85 @@ export function getEmailsForProject(projectId: number): Email[] {
   return rows.map(parseEmailRow);
 }
 
+// ============================================
+// Project Alias Functions
+// ============================================
+
+export function addProjectAlias(
+  projectId: number,
+  alias: string,
+  source: "manual" | "monday" | "learned" = "manual"
+): boolean {
+  const normalized = alias
+    .toLowerCase()
+    .replace(/[^\w\s]/g, "")
+    .trim();
+  if (!normalized) {
+    return false;
+  }
+
+  try {
+    db.run(
+      `INSERT OR IGNORE INTO project_aliases (project_id, alias, normalized_alias, source)
+       VALUES (?, ?, ?, ?)`,
+      [projectId, alias, normalized, source]
+    );
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function getProjectByAlias(alias: string): Project | null {
+  const normalized = alias
+    .toLowerCase()
+    .replace(/[^\w\s]/g, "")
+    .trim();
+  const row = db
+    .query<{ project_id: number }, [string]>(
+      "SELECT project_id FROM project_aliases WHERE normalized_alias = ?"
+    )
+    .get(normalized);
+
+  if (!row) {
+    return null;
+  }
+  return getProjectById(row.project_id);
+}
+
+export function getAliasesForProject(projectId: number): string[] {
+  const rows = db
+    .query<{ alias: string }, [number]>(
+      "SELECT alias FROM project_aliases WHERE project_id = ?"
+    )
+    .all(projectId);
+  return rows.map((r) => r.alias);
+}
+
+export function findProjectByText(text: string): Project | null {
+  // First try exact alias match
+  const byAlias = getProjectByAlias(text);
+  if (byAlias) {
+    return byAlias;
+  }
+
+  // Then try normalized project name
+  const normalized = text
+    .toLowerCase()
+    .replace(/[^\w\s]/g, "")
+    .replace(/\s+/g, "");
+  const row = db
+    .query<Record<string, unknown>, [string]>(
+      "SELECT * FROM projects WHERE normalized_name = ?"
+    )
+    .get(normalized);
+
+  if (row) {
+    return parseProjectRow(row);
+  }
+  return null;
+}
+
 export function getEmailsForAccount(accountId: number): Email[] {
   const rows = db
     .query<Record<string, unknown>, [number]>(
@@ -1369,6 +1472,33 @@ export function getAttachmentStats(): {
     }
   }
   return stats;
+}
+
+/**
+ * Search attachments by project/contractor name (searches email subject, project_name, contractor_name)
+ * Returns attachments that have storage_path (i.e., are downloadable from MinIO)
+ */
+export function searchAttachments(
+  searchTerm: string,
+  limit = 100
+): Attachment[] {
+  const pattern = `%${searchTerm}%`;
+
+  const rows = db
+    .query<Record<string, unknown>, [string, string, string, number]>(
+      `SELECT a.*
+       FROM attachments a
+       JOIN emails e ON a.email_id = e.id
+       WHERE a.storage_path IS NOT NULL
+         AND (e.subject LIKE ?
+           OR e.project_name LIKE ?
+           OR e.contractor_name LIKE ?)
+       ORDER BY e.received_at DESC
+       LIMIT ?`
+    )
+    .all(pattern, pattern, pattern, limit);
+
+  return rows.map(parseAttachmentRow);
 }
 
 export function searchEmailsFullText(

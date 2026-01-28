@@ -8,12 +8,12 @@
 
 type Severity = "error" | "warning";
 
-type Issue = {
+interface Issue {
   severity: Severity;
   rule: string;
   message: string;
   match?: string;
-};
+}
 
 const FORBIDDEN_PHRASES = [
   "hope this finds you well",
@@ -63,6 +63,22 @@ const SIGNATURE_FRAGMENTS = [
 const MAX_BODY_LINES = 20;
 const WARN_BODY_LINES = 12;
 
+// Top-level regex patterns for performance
+const CLOSING_PATTERNS = [
+  /thanks,\s*<\/div>/i,
+  /thank you,\s*<\/div>/i,
+  /regards,\s*<\/div>/i,
+] as const;
+
+const UL_NO_MARGIN_PATTERN = /<ul(?![^>]*margin)/i;
+const UL_PATTERN = /<ul/i;
+const UL_EXTRACT_PATTERN = /<ul[^>]*>/i;
+const LI_PATTERN = /<li>/i;
+const LI_DIV_PATTERN = /<li>\s*<div>/i;
+const FIRST_DIV_PATTERN = /<div>([^<]+)<\/div>/;
+const GREETING_NEXT_PATTERN = /<div>[^<]+,<\/div>\s*(<[^>]+>)/;
+const DEAR_OPENING_PATTERN = /^<div>\s*dear\s/i;
+
 export function validateDraft(html: string): Issue[] {
   const issues: Issue[] = [];
   const textContent = html.replace(/<[^>]+>/g, " ").toLowerCase();
@@ -80,12 +96,7 @@ export function validateDraft(html: string): Issue[] {
   }
 
   // Check wrong closing
-  const closingPatterns = [
-    /thanks,\s*<\/div>/i,
-    /thank you,\s*<\/div>/i,
-    /regards,\s*<\/div>/i,
-  ];
-  for (const pattern of closingPatterns) {
+  for (const pattern of CLOSING_PATTERNS) {
     if (pattern.test(html)) {
       issues.push({
         severity: "error",
@@ -122,8 +133,8 @@ export function validateDraft(html: string): Issue[] {
   }
 
   // Check <ul> has margin reset
-  if (/<ul(?![^>]*margin)/i.test(html) && /<ul/i.test(html)) {
-    const ulMatch = html.match(/<ul[^>]*>/i)?.[0] ?? "";
+  if (UL_NO_MARGIN_PATTERN.test(html) && UL_PATTERN.test(html)) {
+    const ulMatch = html.match(UL_EXTRACT_PATTERN)?.[0] ?? "";
     if (!ulMatch.includes("margin-top:0")) {
       issues.push({
         severity: "warning",
@@ -135,7 +146,7 @@ export function validateDraft(html: string): Issue[] {
   }
 
   // Check list items wrapped in div
-  if (/<li>/i.test(html) && !/<li>\s*<div>/i.test(html)) {
+  if (LI_PATTERN.test(html) && !LI_DIV_PATTERN.test(html)) {
     issues.push({
       severity: "warning",
       rule: "li-needs-div",
@@ -166,7 +177,7 @@ export function validateDraft(html: string): Issue[] {
   }
 
   // Check greeting format
-  const firstDiv = html.match(/<div>([^<]+)<\/div>/)?.[1]?.trim() ?? "";
+  const firstDiv = html.match(FIRST_DIV_PATTERN)?.[1]?.trim() ?? "";
   if (firstDiv && !firstDiv.endsWith(",")) {
     issues.push({
       severity: "warning",
@@ -176,7 +187,7 @@ export function validateDraft(html: string): Issue[] {
   }
 
   // Check blank line after greeting
-  const greetingAndNext = html.match(/<div>[^<]+,<\/div>\s*(<[^>]+>)/)?.[1];
+  const greetingAndNext = html.match(GREETING_NEXT_PATTERN)?.[1];
   if (greetingAndNext && !greetingAndNext.includes("<br>")) {
     issues.push({
       severity: "warning",
@@ -187,7 +198,7 @@ export function validateDraft(html: string): Issue[] {
   }
 
   // Check "Dear" opening
-  if (/^<div>\s*dear\s/i.test(html)) {
+  if (DEAR_OPENING_PATTERN.test(html)) {
     issues.push({
       severity: "error",
       rule: "no-dear",
@@ -243,7 +254,9 @@ if (import.meta.main) {
     const decoder = new TextDecoder();
     while (true) {
       const { done, value } = await reader.read();
-      if (done) break;
+      if (done) {
+        break;
+      }
       chunks.push(decoder.decode(value));
     }
     html = chunks.join("");

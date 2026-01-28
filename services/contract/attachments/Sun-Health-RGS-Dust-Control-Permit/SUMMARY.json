@@ -1,0 +1,161 @@
+{
+  "project": "Sun Health RGS - Dust Control Permit",
+  "fetchedAt": "2026-01-27T22:31:21.955Z",
+  "totalAttachments": 4,
+  "downloaded": 1,
+  "skipped": 3,
+  "errors": 0,
+  "files": ["02 - SWPPP - Desert Services.pdf"],
+  "timeline": [
+    {
+      "date": "2025-12-11T23:52:59.000Z",
+      "subject": "Sun Health RGS - Duct Control Permit ",
+      "from": "David Mueller",
+      "to": "[\"jared@desertsevices.net\",\"chi@desertservices.net\",\"ghoskins@pwiconstruction.com\"]",
+      "cc": "[\"joe.romero@pwiconstruction.com\"]"
+    },
+    {
+      "date": "2025-12-11T23:52:59.000Z",
+      "subject": "Sun Health RGS - Duct Control Permit ",
+      "from": "David Mueller",
+      "to": "[\"jared@desertsevices.net\",\"chi@desertservices.net\",\"ghoskins@pwiconstruction.com\"]",
+      "cc": "[\"joe.romero@pwiconstruction.com\"]"
+    },
+    {
+      "date": "2025-12-11T23:56:50.000Z",
+      "subject": "FW: Sun Health RGS - Duct Control Permit ",
+      "from": "David Mueller",
+      "to": "[\"jared@desertservices.net\"]",
+      "cc": "[]"
+    },
+    {
+      "date": "2025-12-12T00:03:33.000Z",
+      "subject": "Fw: Sun Health RGS - Duct Control Permit ",
+      "from": "Jared Aiken",
+      "to": "[\"chi@desertservices.net\"]",
+      "cc": "[]"
+    },
+    {
+      "date": "2025-12-12T00:03:37.000Z",
+      "subject": "Fw: Sun Health RGS - Duct Control Permit ",
+      "from": "Jared Aiken",
+      "to": "[\"chi@desertservices.net\"]",
+      "cc": "[]"
+    },
+    {
+      "date": "2025-12-12T00:03:37.000Z",
+      "subject": "Fw: Sun Health RGS - Duct Control Permit ",
+      "from": "Jared Aiken",
+      "to": "[\"chi@desertservices.net\"]",
+      "cc": "[]"
+    },
+    {
+      "date": "2025-12-12T00:44:55.000Z",
+      "subject": "RE: Sun Health RGS - Duct Control Permit ",
+      "from": "Gary Hoskins",
+      "to": "[\"mueller@pwiconstruction.com\",\"jared@desertsevices.net\",\"chi@desertservices.net\"]",
+      "cc": "[\"joe.romero@pwiconstruction.com\"]"
+    },
+    {
+      "date": "2025-12-12T00:44:55.000Z",
+      "subject": "RE: Sun Health RGS - Duct Control Permit ",
+      "from": "Gary Hoskins",
+      "to": "[\"mueller@pwiconstruction.com\",\"jared@desertsevices.net\",\"chi@desertservices.net\"]",
+      "cc": "[\"joe.romero@pwiconstruction.com\"]"
+    },
+    {
+      "date": "2025-12-12T00:48:54.000Z",
+      "subject": "FW: Sun Health RGS - Duct Control Permit ",
+      "from": "David Mueller",
+      "to": "[\"jared@desertservices.net\",\"ghoskins@pwiconstruction.com\"]",
+      "cc": "[]"
+    },
+    {
+      "date": "2025-12-22T12:36:10.000Z",
+      "subject": "Dust Permit Ready for Billing: SUN HEALTH",
+      "from": "Chi Ejimofor",
+      "to": "[\"chi@desertservices.net\"]",
+      "cc": "[]"
+    },
+    {
+      "date": "2025-12-22T12:36:10.000Z",
+      "subject": "Dust Permit Ready for Billing: SUN HEALTH",
+      "from": "Chi Ejimofor",
+      "to": "[\"chi@desertservices.net\"]",
+      "cc": "[]"
+    },
+    {
+      "date": "2025-12-22T12:36:10.000Z",
+      "subject": "Dust Permit Ready for Billing: SUN HEALTH",
+      "from": "Chi Ejimofor",
+      "to": "[\"chi@desertservices.net\"]",
+      "cc": "[]"
+    },
+    {
+      "date": "2025-12-23T19:00:16.000Z",
+      "subject": "Sun Health Dust Permit",
+      "from": "Jose Olivas III",
+      "to": "[\"Jayson@desertservices.net\"]",
+      "cc": "[\"brooksk@gconinc.com\",\"seant@gconinc.com\",\"coler@gconinc.com\"]"
+    },
+    {
+      "date": "2025-12-24T00:01:00.000Z",
+      "subject": "RE: Sun Health Dust Permit",
+      "from": "Jayson Roti",
+      "to": "[\"jolivas@gconinc.com\",\"Jayson@desertservices.net\",\"chi@desertservices.net\",\"Jared@desertservices.net\"]",
+      "cc": "[\"brooksk@gconinc.com\",\"seant@gconinc.com\",\"coler@gconinc.com\"]"
+    },
+    {
+      "date": "2025-12-24T00:01:22.000Z",
+      "subject": "RE: Sun Health Dust Permit",
+      "from": "Jayson Roti",
+      "to": "[\"jolivas@gconinc.com\",\"Jayson@desertservices.net\",\"chi@desertservices.net\",\"Jared@desertservices.net\"]",
+      "cc": "[\"brooksk@gconinc.com\",\"seant@gconinc.com\",\"coler@gconinc.com\"]"
+    },
+    {
+      "date": "2025-12-24T00:01:22.000Z",
+      "subject": "RE: Sun Health Dust Permit",
+      "from": "Jayson Roti",
+      "to": "[\"jolivas@gconinc.com\",\"Jayson@desertservices.net\",\"chi@desertservices.net\",\"Jared@desertservices.net\"]",
+      "cc": "[\"brooksk@gconinc.com\",\"seant@gconinc.com\",\"coler@gconinc.com\"]"
+    },
+    {
+      "date": "2025-12-24T00:01:22.000Z",
+      "subject": "RE: Sun Health Dust Permit",
+      "from": "Jayson Roti",
+      "to": "[\"jolivas@gconinc.com\",\"Jayson@desertservices.net\",\"chi@desertservices.net\",\"Jared@desertservices.net\"]",
+      "cc": "[\"brooksk@gconinc.com\",\"seant@gconinc.com\",\"coler@gconinc.com\"]"
+    },
+    {
+      "date": "2025-12-24T00:01:22.000Z",
+      "subject": "RE: Sun Health Dust Permit",
+      "from": "Jayson Roti",
+      "to": "[\"jolivas@gconinc.com\",\"Jayson@desertservices.net\",\"chi@desertservices.net\",\"Jared@desertservices.net\"]",
+      "cc": "[\"brooksk@gconinc.com\",\"seant@gconinc.com\",\"coler@gconinc.com\"]"
+    }
+  ],
+  "billingCommunication": {
+    "sentToBilling": false,
+    "note": "Billing notification sent Dec 22, 2025, but only to chi@desertservices.net (self). NOT sent to Kendra or Jayson/Jason.",
+    "billingEmails": [
+      {
+        "date": "2025-12-22T12:36:10.000Z",
+        "subject": "Dust Permit Ready for Billing: SUN HEALTH",
+        "to": "[\"chi@desertservices.net\"]",
+        "cc": "[]"
+      },
+      {
+        "date": "2025-12-22T12:36:10.000Z",
+        "subject": "Dust Permit Ready for Billing: SUN HEALTH",
+        "to": "[\"chi@desertservices.net\"]",
+        "cc": "[]"
+      },
+      {
+        "date": "2025-12-22T12:36:10.000Z",
+        "subject": "Dust Permit Ready for Billing: SUN HEALTH",
+        "to": "[\"chi@desertservices.net\"]",
+        "cc": "[]"
+      }
+    ]
+  }
+}

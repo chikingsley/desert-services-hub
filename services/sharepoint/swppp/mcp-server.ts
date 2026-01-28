@@ -38,12 +38,14 @@ import { getSyncStatus, syncAll, syncWorksheet } from "./sync";
 // Types
 // ============================================================================
 
-type ToolResponse = {
+interface ToolResponse {
   content: Array<{ type: "text"; text: string }>;
   isError?: boolean;
-};
+}
 
-type ToolHandler = (args: Record<string, unknown>) => Promise<ToolResponse>;
+type ToolHandler = (
+  args: Record<string, unknown>
+) => ToolResponse | Promise<ToolResponse>;
 
 // ============================================================================
 // MCP Server Setup
@@ -59,7 +61,9 @@ const server = new Server(
 // ============================================================================
 
 function resolveWorksheet(name: string | undefined): WorksheetName | undefined {
-  if (!name) return undefined;
+  if (!name) {
+    return undefined;
+  }
 
   const upper = name.toUpperCase().replace(/[^A-Z]/g, "");
   if (upper.includes("NEED") || upper.includes("SCHEDULE")) {
@@ -310,7 +314,7 @@ const toolHandlers: Record<string, ToolHandler> = {
   },
 
   // SQLite handlers
-  async query_swppp_local(args) {
+  query_swppp_local(args) {
     try {
       const results = queryProjects({
         jobName: args.jobName as string | undefined,
@@ -329,7 +333,7 @@ const toolHandlers: Record<string, ToolHandler> = {
     }
   },
 
-  async list_swppp_job_names(args) {
+  list_swppp_job_names(args) {
     try {
       const worksheet = resolveWorksheet(args.worksheet as string | undefined);
       const names = getJobNames(worksheet);
@@ -339,7 +343,7 @@ const toolHandlers: Record<string, ToolHandler> = {
     }
   },
 
-  async list_swppp_contractors(args) {
+  list_swppp_contractors(args) {
     try {
       const worksheet = resolveWorksheet(args.worksheet as string | undefined);
       const contractors = getContractors(worksheet);
@@ -377,7 +381,7 @@ const toolHandlers: Record<string, ToolHandler> = {
     }
   },
 
-  async get_swppp_sync_status(_args) {
+  get_swppp_sync_status(_args) {
     try {
       const status = getSyncStatus();
       return success(status);
@@ -403,7 +407,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     return error(`Unknown tool: ${name}`);
   }
 
-  return handler(args);
+  return await handler(args);
 });
 
 // ============================================================================

@@ -227,7 +227,6 @@ export async function searchJson(
 /**
  * Parse search results from raw markdown response
  */
-// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Parsing logic is inherently complex
 export function parseSearchResults(rawResponse: string): JinaSearchResult[] {
   const results: JinaSearchResult[] = [];
   const lines = rawResponse.split("\n");

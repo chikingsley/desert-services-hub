@@ -23,6 +23,7 @@
 | `dust-permit-revised` | Customer | Revision confirmation (includes Changes Made) |
 | `dust-permit-renewed` | Customer | Renewal confirmation (includes superseded app) |
 | `dust-permit-reminder` | Customer | Renewal reminder before expiration |
+| `sandstorm-sign-order` | Vendor (Sandstorm Signs) | Simple sign order emails from Kerin |
 
 ## Recipients
 
@@ -46,6 +47,15 @@
 - `permitCost`, `acceleratedFee` (optional), `scheduleValue`
 - `invoiceNumber`, `invoiceDate`, `projectFolderLink`
 
+**Payment Information (for QuickBooks clearing accounts):**
+
+- `vendorName` - Who was paid (e.g., "Maricopa County Air Quality Department")
+- `paymentMethod` - "Credit Card" or "Vendor Invoice"
+- `confirmationId` (optional) - Payment confirmation ID for credit card payments
+- `paymentDate` (optional) - Date payment was processed
+- `cardLastFour` (optional) - Last 4 digits of card used
+- `cardholderName` (optional) - Name on the card
+
 ### dust-permit-billing-revised (internal - revision)
 
 - `recipientName`, `accountName`, `projectName`
@@ -55,6 +65,11 @@
 - `invoiceNumber`, `invoiceDate`, `projectFolderLink`
 - `changesHtml` - HTML list items for changes
 
+**Payment Information (for QuickBooks clearing accounts):**
+
+- `vendorName`, `paymentMethod`
+- `confirmationId`, `paymentDate`, `cardLastFour`, `cardholderName` (all optional)
+
 ### dust-permit-billing-renewed (internal - renewal)
 
 - `recipientName`, `accountName`, `projectName`
@@ -62,6 +77,11 @@
 - `address`, `acceleratedProcessing`
 - `permitCost`, `acceleratedFee` (optional), `scheduleValue`
 - `invoiceNumber`, `invoiceDate`, `projectFolderLink`
+
+**Payment Information (for QuickBooks clearing accounts):**
+
+- `vendorName`, `paymentMethod`
+- `confirmationId`, `paymentDate`, `cardLastFour`, `cardholderName` (all optional)
 
 ### dust-permit-submitted (customer)
 
@@ -95,6 +115,45 @@
 
 - `recipientName`, `accountName`, `projectName`
 - `applicationNumber`, `permitNumber`, `siteAddress`, `expirationDate`
+
+### sandstorm-sign-order (vendor - Sandstorm Signs)
+
+Simple template for sign orders to Sandstorm Signs. Based on patterns from 129+ emails.
+
+**Recipient:** `kelli@sandstormsign.com` (54/58 initial sign orders go here). `designer@sandstormsign.com` is only used in replies from Sandstorm.
+
+**Subject format:** `MM.DD.YY Sign Order` or `MM.DD.YY [Sign Type] sign order`
+
+**Variables:**
+
+- `signDetails` - Main sign order content (e.g., "1 SWPPP sign needed", "1 dust and 1 SWPPP sign") - **Required**
+- `additionalMessage` (optional) - Any additional instructions or notes
+- `showDoubleExclamation` - Set to "true" for "Thank you!!" instead of "Thank you!" (default: false)
+
+**Common sign types:**
+
+- SWPPP signs
+- Dust signs
+- SWPPP stickers
+- Dust stickers
+- Fire Access signs
+- Job Information signs
+
+**Example:**
+
+```typescript
+const html = await getTemplate('sandstorm-sign-order', {
+  signDetails: '1 SWPPP sign needed',
+});
+
+await email.sendEmail({
+  to: [{ email: 'kelli@sandstormsign.com' }],
+  subject: '01.26.26 SWPPP sign order',
+  body: html,
+  bodyType: 'html',
+  attachments: [logo],
+});
+```
 
 ## Usage Example
 

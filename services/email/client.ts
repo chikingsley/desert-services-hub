@@ -2330,6 +2330,8 @@ export class GraphEmailClient {
       name: string;
       contentType: string;
       contentBytes: string;
+      contentId?: string;
+      isInline?: boolean;
     }>;
     userId?: string;
   }): Promise<{ id: string; subject: string }> {
@@ -2367,6 +2369,8 @@ export class GraphEmailClient {
             name: att.name,
             contentType: att.contentType,
             contentBytes: att.contentBytes,
+            ...(att.contentId && { contentId: att.contentId }),
+            ...(att.isInline && { isInline: true }),
           });
         }
       }

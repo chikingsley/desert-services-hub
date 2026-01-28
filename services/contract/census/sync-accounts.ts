@@ -16,6 +16,14 @@ import { query } from "@/services/monday/client";
 import { BOARD_IDS } from "@/services/monday/types";
 import { db } from "./db";
 
+// ============================================================================
+// Regex Patterns (module-level for performance)
+// ============================================================================
+
+const RE_HTTP_PROTOCOL = /^https?:\/\//;
+const RE_WWW_PREFIX = /^www\./;
+const RE_TRAILING_SLASHES = /\/+$/;
+
 // ============================================
 // Schema migration — add monday columns to accounts
 // ============================================
@@ -118,9 +126,9 @@ async function fetchAllContractors(): Promise<MondayContractor[]> {
           : rawDomain;
 
         cleaned = cleaned
-          .replace(/^https?:\/\//, "")
-          .replace(/^www\./, "")
-          .replace(/\/+$/, "")
+          .replace(RE_HTTP_PROTOCOL, "")
+          .replace(RE_WWW_PREFIX, "")
+          .replace(RE_TRAILING_SLASHES, "")
           .trim()
           .toLowerCase();
 
@@ -165,7 +173,7 @@ function linkContractorsToAccounts(
      WHERE domain = ?`
   );
 
-  const insertAccount = db.query<null, [string, string, string, string]>(
+  const _insertAccount = db.query<null, [string, string, string, string]>(
     `INSERT OR IGNORE INTO accounts (domain, name, type, monday_account_id, monday_name)
      VALUES (?, ?, 'contractor', ?, ?)`
   );
@@ -197,28 +205,27 @@ function linkContractorsToAccounts(
           `  ✓ Linked: ${contractor.domain} → ${contractor.name} (monday:${contractor.id})`
         );
       }
+    } else if (dryRun) {
+      // No census account for this domain — create one
+      result.unmatched++;
+      console.log(
+        `  ? Would create: ${contractor.domain} → ${contractor.name}`
+      );
     } else {
       // No census account for this domain — create one
-      if (dryRun) {
-        result.unmatched++;
-        console.log(
-          `  ? Would create: ${contractor.domain} → ${contractor.name}`
+      try {
+        db.run(
+          `INSERT OR IGNORE INTO accounts (domain, name, type, monday_account_id, monday_name)
+           VALUES (?, ?, 'contractor', ?, ?)`,
+          [contractor.domain, contractor.name, contractor.id, contractor.name]
         );
-      } else {
-        try {
-          db.run(
-            `INSERT OR IGNORE INTO accounts (domain, name, type, monday_account_id, monday_name)
-             VALUES (?, ?, 'contractor', ?, ?)`,
-            [contractor.domain, contractor.name, contractor.id, contractor.name]
-          );
-          result.created++;
-          console.log(
-            `  + Created: ${contractor.domain} → ${contractor.name} (monday:${contractor.id})`
-          );
-        } catch (error) {
-          const msg = error instanceof Error ? error.message : String(error);
-          result.errors.push(`${contractor.name}: ${msg}`);
-        }
+        result.created++;
+        console.log(
+          `  + Created: ${contractor.domain} → ${contractor.name} (monday:${contractor.id})`
+        );
+      } catch (error) {
+        const msg = error instanceof Error ? error.message : String(error);
+        result.errors.push(`${contractor.name}: ${msg}`);
       }
     }
   }

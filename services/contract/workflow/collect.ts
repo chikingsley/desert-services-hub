@@ -220,7 +220,7 @@ export async function collectDocuments(
 
     // Check if already exists locally
     if (existsSync(targetPath)) {
-      const stats = Bun.file(targetPath);
+      const _stats = Bun.file(targetPath);
       result.pdfs.push({
         name: attachment.name,
         path: targetPath,

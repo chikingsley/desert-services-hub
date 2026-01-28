@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+/// <reference types="bun-types" />
 /**
  * Desert Email MCP Server
  *
@@ -19,7 +20,7 @@
  * - **Search tools**: `search_all_mailboxes`, `search_mailboxes`, `search_user_mailbox`,
  *   `search_emails`, `filter_emails`
  * - **Read tools**: `get_email`, `get_email_thread`, `get_attachments`, `download_attachment`
- * - **Send tools**: `send_email`, `send_test_email`, `confirm_send_email`, `reply_to_email`
+ * - **Send tools**: `send_email`, `send_test_email`, `confirm_send_email`, `reply_to_email`, `send_sandstorm_sign_order`, `send_morning_status`, `send_evening_status`
  * - **Management tools**: `archive_email`, `move_email`, `delete_email`, `mark_read`,
  *   `mark_unread`, `flag_email`
  * - **Draft/Folder tools**: `create_draft`, `send_draft`, `create_folder`, `delete_folder`,
@@ -40,7 +41,11 @@ import {
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 import { GraphEmailClient } from "./client";
-import { wrapWithSignature } from "./email-templates/index";
+import {
+  getLogoAttachment,
+  getTemplate,
+  wrapWithSignature,
+} from "./email-templates/index";
 import { GraphGroupsClient } from "./groups";
 import {
   formatEmailList,
@@ -72,6 +77,13 @@ const emailConfig = {
   azureClientId: process.env.AZURE_CLIENT_ID || "",
   azureClientSecret: process.env.AZURE_CLIENT_SECRET || "",
 };
+
+// ============================================================================
+// Regex Patterns (module-level for performance)
+// ============================================================================
+
+const RE_FACILITY_ID_IN_DETAILS = /F\d{5,6}/;
+const RE_FACILITY_ID_FORMAT = /^F\d{5,6}$/;
 
 // ============================================================================
 // Email Clients (Dual Auth - lazy initialized)
@@ -558,6 +570,182 @@ Domain is @desertservices.net (NOT .us, NOT .com)`,
         },
       },
       required: ["to", "subject", "body"],
+    },
+  },
+  {
+    name: "send_sandstorm_sign_order",
+    description:
+      "Send or draft a sign order email to Sandstorm Signs (kelli@sandstormsign.com) using the standardized template. Automatically formats the email with Chi's signature and logo. Subject line follows pattern: MM.DD.YY Sign Order. Use for SWPPP signs, Dust signs, stickers, Fire Access signs, and Job Information signs. IMPORTANT: Facility ID (format: F######) is REQUIRED when ordering Maricopa County dust signs. Set createAsDraft: true to create a draft for review instead of sending immediately.",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        signDetails: {
+          type: "string",
+          description:
+            "Main sign order content (e.g., '1 SWPPP sign needed', '1 dust and 1 SWPPP sign', '3 SWPPP Signs and 3 Dust Signs'). If ordering dust signs, Facility ID must be included in signDetails or provided separately via facilityId parameter.",
+        },
+        subject: {
+          type: "string",
+          description:
+            "Email subject line in format MM.DD.YY Sign Order or MM.DD.YY [Sign Type] sign order (e.g., '01.26.26 SWPPP sign order')",
+        },
+        facilityId: {
+          type: "string",
+          description:
+            "Facility ID for Maricopa County dust signs (REQUIRED if ordering dust signs). Format: F followed by 5-6 digits (e.g., F050044, F052737). Must match pattern: ^F\\d{5,6}$",
+          pattern: "^F\\d{5,6}$",
+        },
+        additionalMessage: {
+          type: "string",
+          description:
+            "Optional additional instructions or notes to include in the email",
+        },
+        showDoubleExclamation: {
+          type: "boolean",
+          description:
+            "Use 'Thank you!!' instead of 'Thank you!' (default: false)",
+        },
+        createAsDraft: {
+          type: "boolean",
+          description:
+            "Create as draft instead of sending immediately (default: false). Use draft ID with send_draft tool to send later.",
+        },
+        userId: {
+          type: "string",
+          description:
+            "Mailbox to create draft in (required if createAsDraft is true, e.g., 'chi@desertservices.net')",
+        },
+      },
+      required: ["signDetails", "subject"],
+    },
+  },
+  {
+    name: "send_morning_status",
+    description:
+      "Send a morning check-in status email to Tim and Rick (cc Yolanda). Use this when the user says they've arrived and describes what they're working on. Parses their input to extract arrival time, dust permits, contracts, and other tasks. Subject line: 'Morning Check-in — [Date]'.",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        arrivalTime: {
+          type: "string",
+          description:
+            "Time the user arrived (e.g., '6:56am', '7:30am'). Extract from user's message.",
+        },
+        planSummary: {
+          type: "string",
+          description:
+            "Brief summary of the day's plan (e.g., 'Working on outstanding dust permits in the morning, then contracts after')",
+        },
+        dustPermits: {
+          type: "array",
+          items: { type: "string" },
+          description:
+            "List of dust permit projects to work on (e.g., ['Northern Parkway', 'Legacy Sport Arena & Hotel'])",
+        },
+        contracts: {
+          type: "array",
+          items: { type: "string" },
+          description:
+            "List of contracts to work on (e.g., ['Elanto at Prasada', 'VT303', 'Sprouts Rita Ranch'])",
+        },
+        otherTasks: {
+          type: "array",
+          items: { type: "string" },
+          description:
+            "List of other tasks not related to dust permits or contracts",
+        },
+        includeMetrics: {
+          type: "boolean",
+          description:
+            "Include pipeline status metrics at the bottom of the email (default: true)",
+        },
+        to: {
+          type: "array",
+          items: { type: "string" },
+          description:
+            "Override recipient emails (default: tim@desertservices.net, rick@desertservices.net)",
+        },
+        cc: {
+          type: "array",
+          items: { type: "string" },
+          description:
+            "Override CC emails (default: yolanda@desertservices.net)",
+        },
+        createAsDraft: {
+          type: "boolean",
+          description:
+            "Create as draft instead of sending immediately (default: false). Use draft ID with send_draft tool to send later.",
+        },
+        userId: {
+          type: "string",
+          description:
+            "Mailbox to create draft in (required if createAsDraft is true, e.g., 'chi@desertservices.net')",
+        },
+      },
+      required: ["arrivalTime", "planSummary"],
+    },
+  },
+  {
+    name: "send_evening_status",
+    description:
+      "Send an end-of-day status email to Jayson. Use this when the user describes what they completed, pushed, or any blockers. Subject line: 'End of Day — [Date]'.",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        completed: {
+          type: "array",
+          items: { type: "string" },
+          description:
+            "List of items completed today (e.g., ['Northern Parkway permit', 'Elanto at Prasada contract'])",
+        },
+        pushed: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              item: { type: "string", description: "Item that was pushed" },
+              reason: {
+                type: "string",
+                description: "Reason for pushing (optional)",
+              },
+            },
+            required: ["item"],
+          },
+          description:
+            "List of items pushed to tomorrow with optional reasons (e.g., [{item: 'VT303', reason: 'waiting on customer'}])",
+        },
+        blockers: {
+          type: "array",
+          items: { type: "string" },
+          description: "List of blockers encountered",
+        },
+        tomorrowPriorities: {
+          type: "array",
+          items: { type: "string" },
+          description: "Priorities for tomorrow",
+        },
+        includeMetrics: {
+          type: "boolean",
+          description:
+            "Include pipeline status metrics at the bottom of the email (default: true)",
+        },
+        to: {
+          type: "string",
+          description:
+            "Override recipient email (default: jayson@desertservices.net)",
+        },
+        createAsDraft: {
+          type: "boolean",
+          description:
+            "Create as draft instead of sending immediately (default: false). Use draft ID with send_draft tool to send later.",
+        },
+        userId: {
+          type: "string",
+          description:
+            "Mailbox to create draft in (required if createAsDraft is true, e.g., 'chi@desertservices.net')",
+        },
+      },
+      required: [],
     },
   },
   {
@@ -1242,6 +1430,338 @@ const handlers: Record<string, ToolHandler> = {
     return text(`Email sent to ${to.map((r) => r.email).join(", ")}${attInfo}`);
   },
 
+  async send_sandstorm_sign_order(args) {
+    const {
+      signDetails,
+      subject,
+      facilityId,
+      additionalMessage,
+      showDoubleExclamation = false,
+      createAsDraft = false,
+      userId,
+    } = args as {
+      signDetails: string;
+      subject: string;
+      facilityId?: string;
+      additionalMessage?: string;
+      showDoubleExclamation?: boolean;
+      createAsDraft?: boolean;
+      userId?: string;
+    };
+
+    // Validate Facility ID is provided when ordering dust signs
+    const isDustSignOrder =
+      signDetails.toLowerCase().includes("dust") &&
+      !signDetails.toLowerCase().includes("dustag"); // Pinal County uses DUSTAG format
+
+    if (isDustSignOrder) {
+      // Check if Facility ID is in signDetails or provided separately
+      const hasFacilityIdInDetails =
+        RE_FACILITY_ID_IN_DETAILS.test(signDetails);
+      const hasFacilityIdParam =
+        facilityId && RE_FACILITY_ID_FORMAT.test(facilityId);
+
+      if (!(hasFacilityIdInDetails || hasFacilityIdParam)) {
+        return text(
+          "Error: Facility ID is REQUIRED for Maricopa County dust signs. " +
+            "Please provide Facility ID (format: F######, e.g., F050044) either in signDetails or via facilityId parameter. " +
+            "Example: '1 dust sign - Facility ID: F050044' or provide facilityId: 'F050044'"
+        );
+      }
+
+      // Validate Facility ID format if provided separately
+      if (facilityId && !RE_FACILITY_ID_FORMAT.test(facilityId)) {
+        return text(
+          `Error: Invalid Facility ID format. Must be F followed by 5-6 digits (e.g., F050044, F052737). Received: ${facilityId}`
+        );
+      }
+    }
+
+    // Build sign details with Facility ID if provided separately
+    let finalSignDetails = signDetails;
+    if (facilityId && !signDetails.includes(facilityId)) {
+      finalSignDetails = `${signDetails}\n\nFacility ID: ${facilityId}`;
+    }
+
+    // Generate HTML body using the sandstorm-sign-order template
+    const templateVars: Record<string, string> = {
+      signDetails: finalSignDetails,
+      showDoubleExclamation: showDoubleExclamation ? "true" : "",
+    };
+    if (additionalMessage) {
+      templateVars.additionalMessage = additionalMessage;
+    }
+    const html = await getTemplate("sandstorm-sign-order", templateVars);
+
+    // Get logo attachment
+    const logo = await getLogoAttachment();
+
+    const to = [{ email: "kelli@sandstormsign.com", name: "Kelli Atkinson" }];
+
+    if (createAsDraft) {
+      if (!userId) {
+        return text(
+          "Error: userId is required when createAsDraft is true (e.g., 'chi@desertservices.net')"
+        );
+      }
+      const client = getAppClient();
+      const draft = await client.createDraft({
+        subject,
+        body: html,
+        bodyType: "html",
+        to,
+        attachments: [logo],
+        userId,
+      });
+      return text(
+        `Sandstorm sign order draft created: "${subject}" (ID: ${draft.id}). Use send_draft tool to send it.`
+      );
+    }
+    // Send email immediately
+    const client = await getUserClient();
+    await client.sendEmail({
+      to,
+      subject,
+      body: html,
+      bodyType: "html",
+      attachments: [logo],
+    });
+    return text(
+      `Sandstorm sign order email sent to kelli@sandstormsign.com with subject: "${subject}"`
+    );
+  },
+
+  async send_morning_status(args) {
+    const {
+      arrivalTime,
+      planSummary,
+      dustPermits,
+      contracts,
+      otherTasks,
+      includeMetrics = true,
+      to = ["tim@desertservices.net", "rick@desertservices.net"],
+      cc = ["yolanda@desertservices.net"],
+      createAsDraft = false,
+      userId,
+    } = args as {
+      arrivalTime: string;
+      planSummary: string;
+      dustPermits?: string[];
+      contracts?: string[];
+      otherTasks?: string[];
+      includeMetrics?: boolean;
+      to?: string[];
+      cc?: string[];
+      createAsDraft?: boolean;
+      userId?: string;
+    };
+
+    if (createAsDraft && !userId) {
+      return text(
+        "Error: userId is required when createAsDraft is true (e.g., 'chi@desertservices.net')"
+      );
+    }
+
+    // Build HTML lists
+    const toHtmlList = (items: string[]) =>
+      `<ul style="margin-top:4px; margin-bottom:12px">\n${items.map((i) => `  <li>${i}</li>`).join("\n")}\n</ul>`;
+
+    const templateVars: Record<string, string> = {
+      arrivalTime,
+      planSummary,
+    };
+
+    if (dustPermits && dustPermits.length > 0) {
+      templateVars.dustPermitsHtml = toHtmlList(dustPermits);
+    }
+    if (contracts && contracts.length > 0) {
+      templateVars.contractsHtml = toHtmlList(contracts);
+    }
+    if (otherTasks && otherTasks.length > 0) {
+      templateVars.otherTasksHtml = toHtmlList(otherTasks);
+    }
+    if (includeMetrics) {
+      // TODO: Connect to Notion/Monday for real metrics
+      templateVars.metricsHtml = `
+<div><em>Contracts:</em></div>
+<ul style="margin-top:4px; margin-bottom:12px">
+  <li>Intake: --</li>
+  <li>Reconciling: --</li>
+  <li>Waiting on Customer: --</li>
+  <li>Ready to Sign: --</li>
+</ul>
+<div><em>Dust Permits:</em></div>
+<ul style="margin-top:4px; margin-bottom:12px">
+  <li>Outstanding: --</li>
+</ul>
+<div style="font-size: 11px; color: #999;">(Metrics coming soon)</div>`;
+    }
+
+    const html = await getTemplate("daily-status-morning", templateVars);
+    const logo = await getLogoAttachment();
+    const toRecipients = to.map((email) => ({ email }));
+    const ccRecipients = cc.map((email) => ({ email }));
+    const formattedDate = new Date().toLocaleDateString("en-US", {
+      weekday: "long",
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    });
+    const subject = `Morning Check-in — ${formattedDate}`;
+
+    const permitCount = dustPermits?.length || 0;
+    const contractCount = contracts?.length || 0;
+
+    if (createAsDraft) {
+      if (!userId) {
+        return text(
+          "Error: userId is required when createAsDraft is true. Please provide a mailbox address (e.g., 'chi@desertservices.net')."
+        );
+      }
+      const client = getAppClient();
+      const draft = await client.createDraft({
+        subject,
+        body: html,
+        bodyType: "html",
+        to: toRecipients,
+        cc: ccRecipients,
+        attachments: [logo],
+        userId,
+      });
+      return text(
+        `Morning status draft created in ${userId}. Draft ID: ${draft.id}. ` +
+          `Plan: ${permitCount} dust permit(s), ${contractCount} contract(s). Use send_draft tool to send it.`
+      );
+    }
+
+    const client = await getUserClient();
+    await client.sendEmail({
+      to: toRecipients,
+      cc: ccRecipients,
+      subject,
+      body: html,
+      bodyType: "html",
+      attachments: [logo],
+    });
+    return text(
+      `Morning status email sent to ${to}. Arrival: ${arrivalTime}. Plan: ${permitCount} dust permit(s), ${contractCount} contract(s).`
+    );
+  },
+
+  async send_evening_status(args) {
+    const {
+      completed,
+      pushed,
+      blockers,
+      tomorrowPriorities,
+      includeMetrics = true,
+      to = "jayson@desertservices.net",
+      createAsDraft = false,
+      userId,
+    } = args as {
+      completed?: string[];
+      pushed?: Array<{ item: string; reason?: string }>;
+      blockers?: string[];
+      tomorrowPriorities?: string[];
+      includeMetrics?: boolean;
+      to?: string;
+      createAsDraft?: boolean;
+      userId?: string;
+    };
+
+    if (createAsDraft && !userId) {
+      return text(
+        "Error: userId is required when createAsDraft is true (e.g., 'chi@desertservices.net')"
+      );
+    }
+
+    // Build HTML lists
+    const toHtmlList = (items: string[]) =>
+      `<ul style="margin-top:4px; margin-bottom:12px">\n${items.map((i) => `  <li>${i}</li>`).join("\n")}\n</ul>`;
+
+    const toPushedHtmlList = (
+      items: Array<{ item: string; reason?: string }>
+    ) =>
+      `<ul style="margin-top:4px; margin-bottom:12px">\n${items.map((i) => `  <li>${i.item}${i.reason ? ` — ${i.reason}` : ""}</li>`).join("\n")}\n</ul>`;
+
+    const templateVars: Record<string, string> = {};
+
+    if (completed && completed.length > 0) {
+      templateVars.completedHtml = toHtmlList(completed);
+    }
+    if (pushed && pushed.length > 0) {
+      templateVars.pushedHtml = toPushedHtmlList(pushed);
+    }
+    if (blockers && blockers.length > 0) {
+      templateVars.blockersHtml = toHtmlList(blockers);
+    }
+    if (tomorrowPriorities && tomorrowPriorities.length > 0) {
+      templateVars.tomorrowHtml = toHtmlList(tomorrowPriorities);
+    }
+    if (includeMetrics) {
+      templateVars.metricsHtml = `
+<div><em>Contracts:</em></div>
+<ul style="margin-top:4px; margin-bottom:12px">
+  <li>Intake: --</li>
+  <li>Reconciling: --</li>
+  <li>Waiting on Customer: --</li>
+  <li>Ready to Sign: --</li>
+</ul>
+<div><em>Dust Permits:</em></div>
+<ul style="margin-top:4px; margin-bottom:12px">
+  <li>Outstanding: --</li>
+</ul>
+<div style="font-size: 11px; color: #999;">(Metrics coming soon)</div>`;
+    }
+
+    const html = await getTemplate("daily-status-evening", templateVars);
+    const logo = await getLogoAttachment();
+    const toRecipients = [{ email: to }];
+    const formattedDate = new Date().toLocaleDateString("en-US", {
+      weekday: "long",
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    });
+    const subject = `End of Day — ${formattedDate}`;
+
+    const doneCount = completed?.length || 0;
+    const pushedCount = pushed?.length || 0;
+
+    if (createAsDraft) {
+      if (!userId) {
+        return text(
+          "Error: userId is required when createAsDraft is true. Please provide a mailbox address (e.g., 'chi@desertservices.net')."
+        );
+      }
+      const client = getAppClient();
+      const draft = await client.createDraft({
+        subject,
+        body: html,
+        bodyType: "html",
+        to: toRecipients,
+        attachments: [logo],
+        userId,
+      });
+      return text(
+        `Evening status draft created in ${userId}. Draft ID: ${draft.id}. ` +
+          `Done: ${doneCount} item(s), Pushed: ${pushedCount} item(s). Use send_draft tool to send it.`
+      );
+    }
+
+    const client = await getUserClient();
+    await client.sendEmail({
+      to: toRecipients,
+      subject,
+      body: html,
+      bodyType: "html",
+      attachments: [logo],
+    });
+    return text(
+      `Evening status email sent to ${to}. Done: ${doneCount} item(s), Pushed: ${pushedCount} item(s).`
+    );
+  },
+
   async send_test_email(args) {
     const {
       to,
@@ -1748,27 +2268,31 @@ const handlers: Record<string, ToolHandler> = {
  * All handlers return MCP-formatted responses with `content` array containing
  * text results. Errors are caught and returned with `isError: true`.
  */
-server.setRequestHandler(CallToolRequestSchema, async (request) => {
-  const { name, arguments: args } = request.params;
-  const handler = handlers[name];
+server.setRequestHandler(
+  CallToolRequestSchema,
+  // @ts-expect-error MCP SDK type mismatch - handler works correctly at runtime
+  async (request) => {
+    const { name, arguments: args } = request.params;
+    const handler = handlers[name];
 
-  if (!handler) {
-    return {
-      content: [{ type: "text" as const, text: `Unknown tool: ${name}` }],
-      isError: true,
-    };
-  }
+    if (!handler) {
+      return {
+        content: [{ type: "text" as const, text: `Unknown tool: ${name}` }],
+        isError: true,
+      };
+    }
 
-  try {
-    return await handler(args ?? {});
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    return {
-      content: [{ type: "text" as const, text: `Error: ${message}` }],
-      isError: true,
-    };
+    try {
+      return await handler(args ?? {});
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return {
+        content: [{ type: "text" as const, text: `Error: ${message}` }],
+        isError: true,
+      };
+    }
   }
-});
+);
 
 // ============================================================================
 // Start Server

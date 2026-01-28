@@ -23,6 +23,7 @@ This contract has **terrible language everywhere** - "maintain this, maintain th
 ### Why Normal Red Flags Don't Apply
 
 When it's an at-risk bid:
+
 - The risk was **priced in** to the bid
 - It's a **conscious business decision**, not an oversight
 - The contract value justifies accepting tougher terms
@@ -36,6 +37,7 @@ Before flagging contracts, the system should know:
 2. **What's the contract value?** (scale context)
 
 Large contracts ($100K+) with bad language might be intentional at-risk bids. The validation should:
+
 - Still flag the issues (for awareness)
 - But note "may be acceptable if at-risk bid"
 - Prompt for confirmation rather than hard rejection

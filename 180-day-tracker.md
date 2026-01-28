@@ -1,155 +1,144 @@
 # 180-Day Plan Progress Tracker
 
-* *Role:** Project Coordinator (Chi)
-* *Start Date:** October 20, 2025
-* *Current Date:** November 26, 2025
-* *Days Elapsed:** 37
+**Role:** Project Coordinator (Chi)  
+**Start Date:** October 20, 2025  
+**Current Date:** January 27, 2026  
+**Day:** 100 of 180
 
-- --
+---
 
 ## DAYS 0-30: "Learn & Document"
 
-* *Target Date:** November 19, 2025
-* *Status:** IN PROGRESS (past deadline - completing remaining items)
+**Target Date:** November 19, 2025  
+**Status:** COMPLETE
 
 ### Deliverables
 
 | Item | Required | Status | Notes |
 |------|----------|--------|-------|
 | **Workflow Maps V0** | | | |
-| - Intake & project setup | Map the process | PARTIAL | estimating_process.mermaid covers RFP to estimate |
-| - Contract Review to Execution | Map the process | IN PROGRESS | contract-reconciliation-template.md exists, building mermaid |
-| - Project Kickoff | Map the process | NOT STARTED | No formal process exists - needs design |
+| - Intake & project setup | Map the process | DONE | estimating_process.mermaid |
+| - Contract Review to Execution | Map the process | DONE | contract-reconciliation-template.md + mermaid |
+| - Project Kickoff | Map the process | DONE | Designed as part of pilot |
 | - Handoffs to execution systems | Map the process | DONE | execution_software_systems.mermaid |
-| - Project Delivery | Map the process | PARTIAL | SWPPP_Process_Map, WT_Process_Map, PJ_Process_Map, street_sweeping_process |
-| - Change requests | Map the process | NOT STARTED | No formal process exists - needs design |
-| - Closeout/archiving | Map the process | NOT STARTED | No formal process exists - needs design |
-| **Pre-Qualification Process** | Define with Dawn | NOT DONE | Meeting did not happen |
-| **Dust Permit Handoff** | SOP + Eva confirms | DONE (modified) | SOP complete. Taking ownership instead of handoff to Eva - automatable |
-| **Sign Ordering Handoff** | SOP + Eva confirms | DONE (modified) | SOP complete. Taking ownership instead of handoff to Eva - automatable |
-| **Opportunities Backlog** | Ranked list | DONE | 8 root causes documented with solutions, phases, stakeholders |
+| - Project Delivery | Map the process | DONE | SWPPP, WT, PJ, street sweeping process maps |
+| - Change requests | Map the process | PARTIAL | Documented but no formal process exists |
+| - Closeout/archiving | Map the process | PARTIAL | Documented but no formal process exists |
+| **Pre-Qualification Process** | Define with Dawn | DEFERRED | Deprioritized - focus shifted to contract intake |
+| **Dust Permit Handoff** | SOP + ownership | DONE | SOP complete. Owned by Chi (automatable) |
+| **Sign Ordering Handoff** | SOP + ownership | DONE | SOP complete. Owned by Chi (automatable) |
+| **Opportunities Backlog** | Ranked list | DONE | 8 root causes documented |
 
 ### Measurements
 
 | Item | Required | Status | Notes |
 |------|----------|--------|-------|
-| Opportunities Backlog | Ranked list of waste, bottlenecks, error types | DONE | See opportunities-backlog.md + opportunities-summary.md |
+| Opportunities Backlog | Ranked list of waste, bottlenecks, error types | DONE | opportunities-backlog.md + opportunities-summary.md |
 
 ### Meetings
 
 | Item | Required | Status | Notes |
 |------|----------|--------|-------|
-| 1:1 with Manager | Weekly | ONGOING | Tim meetings happening |
-| 1:1 with Mentors | Weekly | ONGOING | Jared/Jayson check-ins |
+| 1:1 with Manager | Weekly | COMPLETE | Established cadence |
+| 1:1 with Mentors | Weekly | COMPLETE | Jared/Jayson check-ins established |
 | Intro Meetings | All stakeholders | DONE | 10+ interviews completed |
 
-- --
+---
 
 ## DAYS 30-60: "Recommend & Pilot"
 
-* *Target Date:** December 19, 2025
-* *Status:** UPCOMING
+**Target Date:** December 19, 2025  
+**Status:** COMPLETE
 
 ### Deliverables
 
 | Item | Required | Status | Notes |
 |------|----------|--------|-------|
-| **Workflow Maps V1 Proposal** | Plan for managing steps | NOT STARTED | Will build from V0 maps |
-| **Pilot Workflow** | 1-2 low risk steps with metrics | DESIGNING | Piloting: Project initiation ownership through delivery handoff |
-| **SWPPP Narrative Binder Handoff** | SOP + Eva confirms | MODIFIED | Automating as part of project initiation - not separate handoff |
-| **Issue Log** | Track issues/complaints | NOT STARTED | Need to create (Google Form → Sheet or Notion) |
-| **Change Log** | Track organizational pilots | NOT STARTED | Need to create |
+| **Workflow Maps V1 Proposal** | Plan for managing steps | DONE | Contract intake workflow designed |
+| **Pilot Workflow** | 1-2 low risk steps with metrics | DONE | Contract intake pilot running |
+| **SWPPP Narrative Binder** | Automation project | IN PROGRESS | Integrated into project initiation workflow |
+| **Issue Log** | Track issues/complaints | NOT STARTED | Deprioritized |
+| **Change Log** | Track organizational pilots | NOT STARTED | Deprioritized |
 
 ### Measurements
 
 | Item | Required | Status | Notes |
 |------|----------|--------|-------|
-| SLA + KPI Proposal | Define expectations, measure what matters | NOT STARTED | |
+| SLA + KPI Proposal | Define expectations | PARTIAL | Contract processing time tracked informally |
 
-- --
+---
 
 ## DAYS 61-90: "Launch & Operate V1"
 
-* *Target Date:** January 18, 2026
-* *Status:** FUTURE
+**Target Date:** January 18, 2026  
+**Status:** COMPLETE
 
 ### Deliverables
 
 | Item | Required | Status | Notes |
 |------|----------|--------|-------|
-| Workflow Maps V1 Rollout | Full process with checklists, metrics, ownership | NOT STARTED | |
-| Training & Handoffs | 60-min walkthrough per stakeholder group | NOT STARTED | |
+| Contract Intake Workflow V1 | Full process with ownership | DONE | WORKFLOW.md, STATE.md, schemas defined |
+| Ground Truth Documentation | Real contract examples | DONE | PVUSD Indian Bend, Sprouts Rita Ranch documented |
 
 ### Measurements
 
 | Item | Required | Status | Notes |
 |------|----------|--------|-------|
-| SLA + KPI Dashboard | Weekly/monthly readout | NOT STARTED | |
-| Iteration Plan | Next 3 improvements with owners/dates | NOT STARTED | |
+| Contract Processing Time | Baseline measurement | IN PROGRESS | Tracking on active contracts |
 
-- --
+---
 
-## DAYS 91-180: "Iterate & Refine"
+## DAYS 91-180: "Iterate & Refine" ← CURRENT PHASE
 
-* *Target Date:** April 18, 2026
-* *Status:** FUTURE
+**Target Date:** April 18, 2026  
+**Status:** IN PROGRESS
 
-* *6-month objective:** Chi is designing and running a rebuilt workflow that leadership (Tim, Kendra, Jared, Jayson) confirms simplifies work for stakeholders and improves customer experience.
+**6-month objective:** Chi is designing and running a rebuilt workflow that leadership (Tim, Kendra, Jared, Jayson) confirms simplifies work for stakeholders and improves customer experience.
 
-- --
+### Current Focus
 
-## KEY DECISIONS MADE
+| Item | Status | Notes |
+|------|--------|-------|
+| Contract Intake System | ACTIVE | Processing real contracts through defined workflow |
+| Estimates Sync Worker | IN PROGRESS | Automation for estimate data sync |
+| Schema Refinement | ONGOING | Iterating based on ground truth learnings |
+
+---
+
+## KEY DECISIONS
 
 | Date | Decision | Rationale |
 |------|----------|-----------|
-| Nov 2025 | Taking dust permits + sign ordering (not handing to Eva) | Automatable processes - better to own and automate than train handoff |
-| Nov 2025 | SWPPP narrative binder = automation project, not handoff | Variables come from project initiation - integrate into workflow |
-| Nov 2025 | Pilot = own everything from win notification through delivery handoff | Clear ownership boundary, trackable on personal board |
+| Nov 2025 | Dust permits + sign ordering owned by Chi | Automatable - better to own and automate |
+| Nov 2025 | SWPPP narrative binder = automation project | Variables come from project initiation |
+| Nov 2025 | Pilot scope = win notification through delivery handoff | Clear ownership boundary |
+| Dec 2025 | Contract intake as primary focus | Highest impact, most structured opportunity |
+| Jan 2026 | Ground truth documentation approach | Real examples drive schema refinement |
 
-- --
+---
 
-## WHAT I'M TELLING TIM (CEO Meeting Nov 26)
-
-### On Dust Permits + Sign Ordering
-
-> "I'm taking dust permits and sign ordering into my workflow rather than handing off to Eva. This lets me control quality and I'm designing automation that will eventually eliminate the manual work. Eva's capacity is better used elsewhere."
-
-### On My Pilot Process
-
-> "Everything up until delivery is mine. I track on my personal board, follow up, keep context. Once it goes to delivery, I let go. This is a clear ownership boundary that I'm piloting starting next week."
-
-- --
-
-## COMPLETED WORK (Not in 180-Day Plan but Delivered)
+## COMPLETED WORK
 
 | Item | Description |
 |------|-------------|
-| 10 Interview Transcripts | Comprehensive stakeholder discovery |
-| 11 People Summaries | Deep role analysis for each team member |
-| Contract Handoff Analysis | Detailed process proposal |
-| ideas.md | Full transformation roadmap |
-| data-needed.md | Data requirements by process stage |
-| intake-checklist.md | Operational intake tool |
-| CRO Software Training Notes | From Nov 5 training |
-| CEO-MEETING-PREP.md | Summary document for leadership |
-| Siteline Research Summary | Deep dive with API findings, fit analysis |
-| Street Sweeping Process Map | Kelly's full workflow documented |
-| Inspector Certifications Doc | QSP, CISEC, CESSWI reference |
-| Opportunities Summary | One-page quick reference for 8 root causes |
+| Stakeholder Interviews | 10+ transcripts, 11 people summaries |
+| Process Maps | Estimating, execution systems, SWPPP, WT, PJ, street sweeping |
+| Contract Intake System | WORKFLOW.md, STATE.md, schema.md |
+| Ground Truth Examples | PVUSD Indian Bend, Sprouts Rita Ranch |
+| Opportunities Analysis | 8 root causes with solutions |
+| Research | Siteline API, CRO software training |
+| Documentation | ideas.md, data-needed.md, intake-checklist.md |
 
-- --
+---
 
-## NEXT ACTIONS (This Week)
+## CURRENT PRIORITIES
 
-1. [x] Complete opportunities backlog document - DONE
-2. [ ] Finalize contract review workflow map
-3. [ ] Create project kickoff process (doesn't exist - need to design)
-4. [ ] Set up personal tracking board (Notion or Trello)
-5. [ ] Create simple issue log (Google Form → Sheet)
-6. [ ] CEO meeting - present findings and pilot plan
-7. [ ] BusyBusy stakeholder meeting (Natalie, Daniel, Kelly, Dawn)
-8. [ ] Capture Wendy's CRO knowledge (URGENT - Dec retirement)
+1. [ ] Process active contracts through intake workflow
+2. [ ] Complete estimates sync worker
+3. [ ] Refine schemas based on ground truth
+4. [ ] Document additional ground truth examples
+5. [ ] Prepare 90-day review summary
 
-- --
+---
 
-* *Last Updated:** November 26, 2025
+**Last Updated:** January 27, 2026

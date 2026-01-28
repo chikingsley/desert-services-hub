@@ -18,6 +18,12 @@ import {
   validateReconciliation,
 } from "../schemas";
 
+// ============================================================================
+// Regex Patterns (module-level for performance)
+// ============================================================================
+
+const RE_AMOUNT_MATCH = /\$?\s*([\d,]+\.?\d*)\s*$/;
+
 // ============================================
 // Types
 // ============================================
@@ -100,7 +106,9 @@ function findMatchingContractItem(
   } | null = null;
 
   for (let i = 0; i < contractItems.length; i++) {
-    if (usedIndices.has(i)) continue;
+    if (usedIndices.has(i)) {
+      continue;
+    }
 
     const score = descriptionSimilarity(
       estimateItem.description,
@@ -170,7 +178,9 @@ export function reconcile(input: ReconciliationInput): ReconciliationOutput {
 
   // Find items in contract but not in estimate (ADDED)
   for (let i = 0; i < input.contractItems.length; i++) {
-    if (usedContractIndices.has(i)) continue;
+    if (usedContractIndices.has(i)) {
+      continue;
+    }
 
     const contractItem = input.contractItems[i];
 
@@ -308,10 +318,10 @@ export function parseLineItemsFromOCR(ocrText: string): EstimateLineItem[] {
     }
 
     // Try to extract amount from line
-    const amountMatch = line.match(/\$?\s*([\d,]+\.?\d*)\s*$/);
+    const amountMatch = line.match(RE_AMOUNT_MATCH);
     if (amountMatch) {
       const amount = Number.parseFloat(amountMatch[1].replace(/,/g, ""));
-      if (!isNaN(amount) && amount > 0) {
+      if (!Number.isNaN(amount) && amount > 0) {
         // Extract description (everything before the amount)
         const description = line
           .replace(amountMatch[0], "")

@@ -8,35 +8,37 @@
       <br>
     </div>
     <div>
-      A dust permit revision for <strong>{{accountName}}</strong>&nbsp;on
-      project "<strong>{{projectName}}</strong>" has been submitted to Maricopa
-      County. Please prepare for billing.
+      A dust permit revision has been submitted to Maricopa County. Please prepare for billing.
       <br>
       <br>
     </div>
-    <div>Here are the key details:</div>
     <ul style="margin-top:0; margin-bottom:0">
-      <li><div>Permit Status: Revision Submitted</div></li>
-      <li><div>Application #: {{applicationNumber}} (see attached)</div></li>
-      <li><div>Superseded Application #: {{supersededApplicationNumber}}</div></li>
-      <li><div>Permit # (Facility ID): {{permitNumber}}</div></li>
-      <li><div>Project Name: {{projectName}}</div></li>
-      <li><div>Site Address: {{address}}</div></li>
-      <li><div>Account: {{accountName}}</div></li>
-      <li><div>Accelerated Processing: {{acceleratedProcessing}}</div></li>
-      <li><div>Permit Cost (County Fee): {{permitCost}}</div></li>
-      {{#if acceleratedFee}}<li><div>Accelerated Fee: {{acceleratedFee}}</div></li>{{/if}}
-      <li><div>Schedule Value: {{scheduleValue}}</div></li>
-      <li><div>Invoice #: {{invoiceNumber}} (see attached)</div></li>
-      <li><div>Invoice Date: {{invoiceDate}}</div></li>
-      <li><div>Project Folder: <a href="{{projectFolderLink}}">View in SharePoint</a></div></li>
+      <li><div><strong>Customer:</strong> {{accountName}}</div></li>
+      <li><div><strong>Project:</strong> {{projectName}}</div></li>
+      <li><div><strong>Site Address:</strong> {{address}}</div></li>
+      <li><div><strong>Application #:</strong> {{applicationNumber}}</div></li>
+      <li><div><strong>Superseded Application #:</strong> {{supersededApplicationNumber}}</div></li>
+      <li><div><strong>Permit # (Facility ID):</strong> {{permitNumber}}</div></li>
+      <li><div><strong>Accelerated Processing:</strong> {{acceleratedProcessing}}</div></li>
+      <li><div><strong>Vendor Paid:</strong> {{vendorName}}</div></li>
+      <li><div><strong>Permit Cost:</strong> {{permitCost}}</div></li>
+      {{#if acceleratedFee}}<li><div><strong>Accelerated Fee:</strong> {{acceleratedFee}}</div></li>{{/if}}
+      <li><div><strong>Schedule Value:</strong> {{scheduleValue}}</div></li>
+      <li><div><strong>Payment Method:</strong> {{paymentMethod}}</div></li>
+      {{#if paymentDate}}<li><div><strong>Payment Date:</strong> {{paymentDate}}</div></li>{{/if}}
+      {{#if confirmationId}}<li><div><strong>Confirmation #:</strong> {{confirmationId}}</div></li>{{/if}}
+      {{#if cardLastFour}}<li><div><strong>Card Last 4:</strong> {{cardLastFour}}</div></li>{{/if}}
+      {{#if cardholderName}}<li><div><strong>Cardholder:</strong> {{cardholderName}}</div></li>{{/if}}
+      <li><div><strong>Invoice #:</strong> {{invoiceNumber}}</div></li>
+      <li><div><strong>Invoice Date:</strong> {{invoiceDate}}</div></li>
+      <li><div><strong>Project Folder:</strong> <a href="{{projectFolderLink}}">View in SharePoint</a></div></li>
     </ul>
     <div>
       <br>
     </div>
-    <div>Changes Made:</div>
+    <div><strong>Changes Made:</strong></div>
     <ul style="margin-top:0; margin-bottom:0">
-      {{#if changesHtml}}{{changesHtml}}{{/if}}
+      {{{changesHtml}}}
     </ul>
     <div>
       <br>

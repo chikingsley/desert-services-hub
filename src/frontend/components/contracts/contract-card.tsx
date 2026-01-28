@@ -176,7 +176,10 @@ export function ContractCard({
                 setDragState({ type: "preview", container });
                 return () => setDragState({ type: "dragging" });
               }
-              return () => {};
+              // Empty cleanup function - no-op when container is not available
+              return () => {
+                // No-op cleanup
+              };
             },
             nativeSetDragImage,
           });
@@ -206,12 +209,14 @@ export function ContractCard({
         getIsSticky: () => true,
         onDragEnter: ({ self, source }) => {
           if (source.data.contractId !== contract.id) {
-            setClosestEdge(extractClosestEdge(self.data));
+            const edge = extractClosestEdge(self.data);
+            setClosestEdge(edge === "left" || edge === "right" ? null : edge);
           }
         },
         onDrag: ({ self, source }) => {
           if (source.data.contractId !== contract.id) {
-            setClosestEdge(extractClosestEdge(self.data));
+            const edge = extractClosestEdge(self.data);
+            setClosestEdge(edge === "left" || edge === "right" ? null : edge);
           }
         },
         onDragLeave: () => setClosestEdge(null),

@@ -15,16 +15,8 @@ You will receive a contractor folder path within the AIA JOBS directory.
 
 ## Folder Structure Pattern
 
-```
-AIA JOBS/
-├── {Contractor}/
-│   ├── {Project}/
-│   │   ├── {Month Year}.xls
-│   │   └── ...
-│   ├── {Project 2}/
-│   ├── zzz Completed Jobs/     ← Special: contains archived projects
-│   │   └── {Project}/
-│   └── {standalone files}.xls  ← Some contractors have files at root
+```text
+/AIA JOBS/[Contractor]/[Project]/[File]
 ```
 
 ## Examples
@@ -41,8 +33,7 @@ AIA JOBS/
 
 ## Output CSV Columns
 
-```
-source,contractor_name,project_name,billing_period,is_completed,file_type,file_path
+```csv
 ```
 
 Where:

@@ -89,14 +89,7 @@ There is always a blank line between:
 
 Always:
 
-```
-Best,
---
-
-Chi Ejimofor
-Project Coordinator
-E: chi@desertservices.net
-M: (304) 405-2446
+```yaml
 ```
 
 The `--` separator is on its own line. There is a blank line between `--` and the name.

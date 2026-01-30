@@ -50,13 +50,9 @@ The established libraries/tools for this domain:
 
 ```bash
 # No new dependencies needed - all functionality exists
+```css
 ```
 
-## Architecture Patterns
-
-### Recommended Project Structure
-
-```
 services/
   contract/
     matching/                    # NEW: Estimate matching module
@@ -67,16 +63,8 @@ services/
   monday/
     client.ts                    # EXISTING: findBestMatches(), calculateSimilarity()
     mcp-server.ts                # EXISTING: find_best_matches tool
-```
 
-### Pattern 1: Multi-Field Weighted Scoring
-
-**What:** Combine similarity scores from multiple fields (project name, contractor) with configurable weights to produce a single confidence score.
-
-**When to use:** Every match attempt between contract and estimate.
-
-**Example:**
-
+```css
 ```typescript
 // Source: Derived from existing calculateSimilarity() + requirements
 import { calculateSimilarity } from "@/services/monday/client";
@@ -123,16 +111,7 @@ function calculateMatchScore(
 
   return { projectScore, contractorScore, combinedScore };
 }
-```
-
-### Pattern 2: Tiered Confidence Response
-
-**What:** Return different response types based on confidence score thresholds.
-
-**When to use:** When determining whether to auto-select or present options.
-
-**Example:**
-
+```css
 ```typescript
 // Source: Derived from requirements MATCH-03, MATCH-04
 type MatchResult =
@@ -170,16 +149,7 @@ async function findEstimateMatch(
     candidates: candidates.slice(0, MAX_CANDIDATES)
   };
 }
-```
-
-### Pattern 3: Parallel Search Strategy
-
-**What:** Run multiple search strategies in parallel and merge results.
-
-**When to use:** When searching Monday board for matches.
-
-**Example:**
-
+```css
 ```typescript
 // Source: Existing contract-match-agent.md pattern
 import { findBestMatches, searchItems, getItemsRich } from "@/services/monday/client";
@@ -233,16 +203,7 @@ async function searchAndScore(
   // Sort by combined score descending
   return candidates.sort((a, b) => b.combinedScore - a.combinedScore);
 }
-```
-
-### Pattern 4: Match Result Storage
-
-**What:** Store match decisions (auto and manual) in SQLite for audit trail and linking.
-
-**When to use:** After a match is confirmed (auto or human-selected).
-
-**Example:**
-
+```css
 ```typescript
 // Source: Existing lib/db/index.ts patterns
 import { db } from "@/lib/db";
@@ -285,108 +246,7 @@ function storeMatchResult(
     matchedBy
   );
 }
-```
-
-### Anti-Patterns to Avoid
-
-- **Single-field matching only:** Using project name alone misses opportunities to confirm with contractor. Always use multi-field scoring when contractor data is available.
-- **Binary matching (match/no-match):** Construction names vary too much. Use confidence scores and thresholds for nuanced decisions.
-- **Hard-coded thresholds everywhere:** Define thresholds as constants at the top of the module for easy tuning.
-- **Fetching all items then filtering in memory:** The ESTIMATING board may have thousands of items. Use `findBestMatches()` which filters server-side first, then scores in memory.
-- **Ignoring the "Shell Estimates" group:** The existing client excludes this group by default. Don't override this unless explicitly needed.
-
-## Don't Hand-Roll
-
-Problems that look simple but have existing solutions:
-
-| Problem | Don't Build | Use Instead | Why |
-|---------|-------------|-------------|-----|
-| Fuzzy string matching | Custom Levenshtein | Existing `calculateSimilarity()` | Already tuned for project names, handles abbreviations |
-| Monday API pagination | Manual cursor handling | Existing `getItems()` | Auto-paginates, handles rate limits |
-| Board relation lookups | Manual GraphQL queries | `getItemsRich()` | Fetches linked item data including contractor mirror |
-| MCP tool exposure | New server implementation | Extend existing `mcp-server.ts` | Consistent patterns, already registered in Claude |
-
-**Key insight:** The existing Monday client has sophisticated fuzzy matching that works well for construction project names. The primary enhancement needed is multi-field scoring (project + contractor) rather than replacing the algorithm.
-
-## Common Pitfalls
-
-### Pitfall 1: Contractor Name Variations
-
-**What goes wrong:** Contract says "BC Construction Group" but Monday has "BCCG" or "BC Construction".
-
-**Why it happens:** Contractors often use different name variations (legal name vs. DBA, abbreviations, etc.).
-
-**How to avoid:**
-
-- Use word-overlap similarity, not exact matching
-- Score contractor match separately and use as confirmation signal, not primary filter
-- Consider first-word matching as fallback (e.g., "BC" matches "BC Construction Group")
-
-**Warning signs:** Low contractor scores even when project names match well.
-
-### Pitfall 2: Project Name Abbreviations
-
-**What goes wrong:** Contract says "American Management Services - Mesa" but estimate is "AMS Mesa".
-
-**Why it happens:** Estimators use abbreviations; contracts use full legal names.
-
-**How to avoid:**
-
-- The existing word-overlap algorithm handles this by matching individual words
-- "Mesa" matches across both, giving partial similarity
-- Consider adding common abbreviation mappings if this becomes a frequent issue
-
-**Warning signs:** Many near-misses where human can clearly see the match but algorithm scores low.
-
-### Pitfall 3: Auto-Match Threshold Too Low
-
-**What goes wrong:** System auto-links contracts to wrong estimates, requiring manual correction.
-
-**Why it happens:** Threshold set too low to avoid manual selection, but results in incorrect matches.
-
-**How to avoid:**
-
-- Start with conservative 0.8 threshold for auto-match
-- Log all auto-matches with full details for review
-- Track false positive rate and adjust threshold based on data
-- Better to require human confirmation than link incorrectly
-
-**Warning signs:** Users reporting incorrectly linked contracts.
-
-### Pitfall 4: Missing Contractor Data in Monday
-
-**What goes wrong:** ESTIMATING items don't have contractor populated, so multi-field scoring degrades.
-
-**Why it happens:** Data entry inconsistency in Monday.com; some estimates lack contractor info.
-
-**How to avoid:**
-
-- Check if contractor field is populated before including in score
-- Fall back to project-name-only scoring when contractor missing
-- Flag matches made without contractor confirmation
-
-**Warning signs:** Many estimates returning null contractor in `deal_account` column.
-
-### Pitfall 5: Rate Limiting on Board Fetch
-
-**What goes wrong:** Fetching all ESTIMATING items for matching hits Monday API rate limits.
-
-**Why it happens:** Large boards with thousands of items; multiple searches in quick succession.
-
-**How to avoid:**
-
-- The existing `getItems()` auto-paginates with PAGE_SIZE=500
-- Consider caching board items with short TTL (5 minutes) if doing many matches
-- Use `findBestMatches()` which pre-filters using name search before scoring
-
-**Warning signs:** 429 errors from Monday API, intermittent match failures.
-
-## Code Examples
-
-Verified patterns from official sources and existing codebase:
-
-### Complete Matcher Implementation
-
+```css
 ```typescript
 // Source: Combining existing client.ts patterns with requirements
 import {
@@ -500,10 +360,7 @@ export async function findEstimateMatch(
     topConfidence: topCandidate.combinedScore,
   };
 }
-```
-
-### Link Contract to Estimate in Monday
-
+```css
 ```typescript
 // Source: Existing client.ts updateItem pattern
 import { updateItem } from "@/services/monday/client";
@@ -522,10 +379,7 @@ export async function linkContractToEstimate(
     },
   });
 }
-```
-
-### Human Selection Interface Data
-
+```css
 ```typescript
 // Source: Requirements MATCH-04
 type SelectionOption = {

@@ -9,42 +9,14 @@ Configuration options for `.planning/` directory behavior.
   "commit_docs": true,
   "search_gitignored": false
 }
-```
-
-| Option | Default | Description |
-|--------|---------|-------------|
-| `commit_docs` | `true` | Whether to commit planning artifacts to git |
-| `search_gitignored` | `false` | Add `--no-ignore` to broad rg searches |
-</config_schema>
-
-<commit_docs_behavior>
-
-**When `commit_docs: true` (default):**
-
-- Planning files committed normally
-- SUMMARY.md, STATE.md, ROADMAP.md tracked in git
-- Full history of planning decisions preserved
-
-**When `commit_docs: false`:**
-
-- Skip all `git add`/`git commit` for `.planning/` files
-- User must add `.planning/` to `.gitignore`
-- Useful for: OSS contributions, client projects, keeping planning private
-
-**Checking the config:**
-
+```text
 ```bash
 # Check config.json first
 COMMIT_DOCS=$(cat .planning/config.json 2>/dev/null | grep -o '"commit_docs"[[:space:]]*:[[:space:]]*[^,}]*' | grep -o 'true\|false' || echo "true")
 
 # Auto-detect gitignored (overrides config)
 git check-ignore -q .planning 2>/dev/null && COMMIT_DOCS=false
-```
-
-**Auto-detection:** If `.planning/` is gitignored, `commit_docs` is automatically `false` regardless of config.json. This prevents git errors when users have `.planning/` in `.gitignore`.
-
-**Conditional git operations:**
-
+```text
 ```bash
 if [ "$COMMIT_DOCS" = "true" ]; then
   git add .planning/STATE.md
@@ -86,7 +58,7 @@ To use uncommitted mode:
 
 2. **Add to .gitignore:**
 
-   ```
+   ```text
    .planning/
    ```
 

@@ -37,13 +37,9 @@ The established libraries/tools for this domain:
 
 ```bash
 bun add chokidar
+```css
 ```
 
-## Architecture Patterns
-
-### Recommended Project Structure
-
-```
 services/
   contract/
     pipeline/
@@ -51,16 +47,8 @@ services/
       dedup.ts         # Processed file tracking (SQLite)
       types.ts         # Pipeline event types
       index.ts         # Main entrypoint (start/stop watcher)
-```
 
-### Pattern 1: Event-Driven Pipeline with Graceful Shutdown
-
-**What:** Watcher emits events, handler processes files, process signals handled for clean shutdown.
-
-**When to use:** Long-running services that need to survive restarts and handle termination gracefully.
-
-**Example:**
-
+```csv
 ```typescript
 // Source: https://bun.com/docs/guides/read-file/watch + chokidar README
 import chokidar from "chokidar";
@@ -116,16 +104,7 @@ process.on("SIGTERM", async () => {
   await stopWatcher();
   process.exit(0);
 });
-```
-
-### Pattern 2: SQLite Deduplication Table
-
-**What:** Simple table tracking processed files by filename and timestamp.
-
-**When to use:** Need persistence across restarts, minimal complexity.
-
-**Example:**
-
+```css
 ```typescript
 // Source: Existing lib/db/index.ts pattern
 import { db } from "@/lib/db";
@@ -156,87 +135,7 @@ export async function markAsProcessed(filePath: string): Promise<void> {
     [filename, filePath]
   );
 }
-```
-
-### Anti-Patterns to Avoid
-
-- **Polling instead of watching:** Don't use `setInterval` to scan directory. Wastes CPU, misses rapid changes. Use event-driven watching.
-- **Processing before write complete:** Files may still be copying. Use `awaitWriteFinish` option in chokidar.
-- **In-memory only deduplication:** Loses state on restart. Use SQLite for persistence.
-- **Blocking the event loop:** Don't do heavy processing in watcher callback. Queue work or use async handlers.
-- **Not handling errors:** Watcher errors can crash the process. Always add `.on("error", ...)` handler.
-
-## Don't Hand-Roll
-
-Problems that look simple but have existing solutions:
-
-| Problem | Don't Build | Use Instead | Why |
-|---------|-------------|-------------|-----|
-| Cross-platform file watching | Custom fs.watch wrapper | chokidar | Handles edge cases: atomic writes, symlinks, recursive expansion, macOS/Windows/Linux differences |
-| Write-in-progress detection | File lock checking | chokidar's `awaitWriteFinish` | Polling file size until stable is error-prone; chokidar implements it correctly |
-| Process signal handling | Manual signal setup each time | Single graceful shutdown module | Easy to forget SIGTERM, leak resources |
-| SHA-256 hashing | Node crypto (slower) | Bun.CryptoHasher | Hardware-accelerated, native to Bun |
-
-**Key insight:** File watching has many edge cases that took chokidar years to solve. The 10 lines of fs.watch code will grow to 200 lines once you handle atomic writes, incomplete files, rapid events, symlinks, and platform differences.
-
-## Common Pitfalls
-
-### Pitfall 1: Recursive Watch Doesn't Expand Dynamically
-
-**What goes wrong:** In Bun's native `fs.watch`, setting `recursive: true` only watches subdirectories that exist at watch start. New directories aren't watched.
-
-**Why it happens:** Bun's implementation snapshots directory structure at initialization.
-
-**How to avoid:** Use chokidar which handles dynamic directory expansion.
-
-**Warning signs:** Files added to new subdirectories silently ignored.
-
-### Pitfall 2: Processing Incomplete Files
-
-**What goes wrong:** Watcher triggers on file creation, but file is still being copied. PDF is truncated or corrupt.
-
-**Why it happens:** OS creates file entry before write completes.
-
-**How to avoid:** Use chokidar's `awaitWriteFinish: { stabilityThreshold: 2000 }` to wait for file size to stabilize.
-
-**Warning signs:** Random PDF parsing failures, "unexpected end of file" errors.
-
-### Pitfall 3: Event Storms on Bulk Drops
-
-**What goes wrong:** User drops 50 PDFs at once, system spawns 50 parallel processes, overwhelms downstream APIs.
-
-**Why it happens:** Each file triggers an event immediately.
-
-**How to avoid:** Queue events and process with concurrency limit. Use `p-limit` or simple semaphore.
-
-**Warning signs:** API rate limits hit, memory spikes, timeouts.
-
-### Pitfall 4: Lost State on Restart
-
-**What goes wrong:** Process restarts, re-processes all files in folder, creates duplicates.
-
-**Why it happens:** Using in-memory Set for deduplication.
-
-**How to avoid:** Store processed filenames in SQLite; set `ignoreInitial: true` in chokidar.
-
-**Warning signs:** Duplicate entries after every restart.
-
-### Pitfall 5: No Error Recovery
-
-**What goes wrong:** Watcher throws ENOENT when folder deleted, process crashes.
-
-**Why it happens:** No error handler attached.
-
-**How to avoid:** Add `.on("error", handler)` to watcher. Log, alert, retry directory check.
-
-**Warning signs:** Service dies silently when watched folder is moved.
-
-## Code Examples
-
-Verified patterns from official sources:
-
-### Initialize Watcher with Full Options
-
+```css
 ```typescript
 // Source: https://github.com/paulmillr/chokidar/blob/main/README.md
 import chokidar from "chokidar";
@@ -257,10 +156,7 @@ watcher
   .on("add", (path) => console.log(`File ${path} added`))
   .on("error", (error) => console.error(`Watcher error: ${error}`))
   .on("ready", () => console.log("Initial scan complete. Ready for changes"));
-```
-
-### Content Hash for Future Deduplication
-
+```css
 ```typescript
 // Source: https://bun.com/docs/api/hashing
 import { basename } from "node:path";
@@ -272,10 +168,7 @@ export async function hashFileContent(filePath: string): Promise<string> {
   hasher.update(content);
   return hasher.digest("hex");
 }
-```
-
-### Main Entrypoint Pattern
-
+```css
 ```typescript
 // services/contract/pipeline/index.ts
 import { startWatcher, stopWatcher } from "./watcher";

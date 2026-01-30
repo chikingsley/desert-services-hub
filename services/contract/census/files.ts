@@ -15,9 +15,10 @@ import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { BUCKETS, getFile } from "@/lib/minio";
 import { getAttachmentById, searchAttachments } from "./db";
+import type { Attachment } from "./db/types";
 
 // Re-export Attachment type for convenience
-export type { Attachment } from "./db";
+export type { Attachment } from "./db/types";
 
 /**
  * Download a single attachment by ID to a local path

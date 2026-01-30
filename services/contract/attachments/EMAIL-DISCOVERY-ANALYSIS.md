@@ -24,7 +24,7 @@
 // Deterministic threading
 const thread = await emailClient.getEmailThread(conversationId);
 // All emails with same conversationId are related
-```
+```markdown
 
 **References:**
 
@@ -48,7 +48,7 @@ const thread = await emailClient.getEmailThread(conversationId);
 
 ```sql
 SELECT * FROM attachments WHERE email_id = ?
-```
+```css
 
 **Confidence:** 100% - Simple relational query
 
@@ -68,7 +68,7 @@ SELECT * FROM attachments WHERE email_id = ?
 WHERE subject LIKE '%BAZ2502%'
 WHERE from_email LIKE '%@maricopa.gov%'
 WHERE body_preview LIKE '%D0063234%'
-```
+```css
 
 **Confidence:** 100% - When you know what to search for
 
@@ -88,7 +88,7 @@ WHERE body_preview LIKE '%D0063234%'
 WHERE received_at >= '2025-12-22' 
   AND received_at <= '2026-01-15'
 ORDER BY received_at DESC
-```
+```css
 
 **Confidence:** 100% - Standard SQL
 
@@ -110,7 +110,7 @@ function searchBodyForProjectMatch(
     return projectId;
   }
 }
-```
+```text
 
 **Deterministic signals:**
 
@@ -151,7 +151,7 @@ function linkEmailToProject(email: Email): Project | null {
   
   return totalConfidence > 0.7 ? project : null;
 }
-```
+```css
 
 **Confidence:** 85-90% with multiple signals
 
@@ -193,7 +193,7 @@ function fuzzyMatch(a: string, b: string): number {
   const maxLen = Math.max(normalizedA.length, normalizedB.length);
   return 1 - (distance / maxLen);
 }
-```
+```markdown
 
 **ML/LLM enhancement:**
 
@@ -236,7 +236,7 @@ function shouldNotifyBilling(email: Email): boolean {
   
   return hasBillingKeyword && !sentToBilling;
 }
-```
+```markdown
 
 **ML/LLM enhancement:**
 
@@ -297,7 +297,7 @@ function classifyEmail(email: Email): Classification {
   
   return score[maxType[0]] > 0.5 ? maxType[0] : 'UNKNOWN';
 }
-```
+```markdown
 
 **ML/LLM enhancement:**
 
@@ -366,7 +366,7 @@ class EmailDiscoveryEngine {
     return [...deterministic, ...related];
   }
 }
-```
+```css
 
 ---
 
@@ -405,7 +405,7 @@ function discoverAll(emailId: number): DiscoveryResult {
     confidence: calculateConfidence(...)
   };
 }
-```
+```css
 
 **Expected accuracy:** 85-90%
 
@@ -426,7 +426,7 @@ if (deterministicConfidence < 0.7) {
   const llmResult = await llmClassify(email);
   return combineResults(deterministic, llmResult);
 }
-```
+```css
 
 **Expected accuracy:** 95-98%
 
@@ -506,7 +506,7 @@ if (deterministicConfidence < 0.7) {
 4. Get attachments: WHERE email_id IN (370, 3457, 277, 3453) ✅
 
 // Result: Found 2 permits, 100% accurate
-```
+```css
 
 **This was 100% deterministic** - no LLM needed!
 
@@ -650,7 +650,7 @@ class EmailDiscoveryEngine {
     return Math.min(totalWeight / maxWeight, 1.0);
   }
 }
-```
+```text
 
 **Usage:**
 

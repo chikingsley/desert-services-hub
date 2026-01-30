@@ -128,10 +128,7 @@ Template for `.planning/codebase/CONVENTIONS.md` - captures coding style and pat
 
 *Convention analysis: [date]*
 *Update when patterns change*
-```
-
-<good_examples>
-
+```html
 ```markdown
 # Coding Conventions
 

@@ -39,7 +39,8 @@ This folder contains all documents related to the Sun Health RGS Dust Control Pe
 ⚠️ **NOT SENT TO BILLING TEAM**
 
 The billing notification "Dust Permit Ready for Billing: SUN HEALTH" was sent on **December 22, 2025** but:
-- **Sent TO:** chi@desertservices.net (Chi sent to himself)
+
+- **Sent TO:** <chi@desertservices.net> (Chi sent to himself)
 - **NOT sent to:** Kendra Ash or Jayson/Jason Roti
 - **Permit Cost:** $570 + $500 = $1,070
 

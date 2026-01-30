@@ -16,7 +16,7 @@ User: "next"
 → Present context bundle
 → Suggest actions
 → User: approve / modify / skip / drill
-```
+```css
 
 ---
 

@@ -71,10 +71,7 @@ Line Items:
 Subtotal: $8,103.60
 Tax (3.87%): $313.35
 TOTAL: $8,416.95
-```
-
-### NW Durango Work Order Details
-
+```css
 ```bash
 PO #220060-010 - April 29, 2025
 Total: $7,204.60
@@ -85,91 +82,7 @@ Scope Changes from Estimate:
 - Fence: "as needed" (was 504 LF specified) - FLEXIBLE
 
 Note: Kendra flagged the amount difference in her email
-```
-
----
-
-## People Involved
-
-**Desert Services Team:**
-
-| Name | Email | Role |
-|------|-------|------|
-| Chi | <chi@desertservices.net> | Project Coordinator, primary contact |
-| Jared | <jared@desertservices.net> | Estimator |
-| Jayson | <jayson@desertservices.net> | Field/Compliance |
-
-**External Contacts:**
-
-| Name | Company | Email | Role |
-|------|---------|-------|------|
-| Salvador Beltran | SDB Engineering | <sbeltran@sdbeng.com> | Engineering contact, requests quotes |
-| Kendra | Valley Rain Construction | <kendra@valleyrainaz.com> | GC contact, issues POs |
-
-**Relationship Map:**
-
-- SDB Engineering provides civil engineering services
-- Valley Rain Construction is the General Contractor
-- Desert Services is subcontractor for SWPPP/erosion control
-- Salvador (SDB) typically requests quotes on behalf of Valley Rain projects
-
----
-
-## Key Findings
-
-1. **NO ESTIMATE EXISTS for Cradle to Crayons**
-   - Searched Jared's mailbox: "Cradle to Crayons estimate" → 0 results
-   - Searched Jared's mailbox: "Cradle Crayons" → 0 results
-   - Searched Jared's mailbox: "2929 N 24th" → 0 results
-   - This is a new request that needs an estimate created
-
-2. **Different Project, Same Relationships**
-   - NW Durango: Pinnacle Peak & Pima, Scottsdale
-   - Cradle to Crayons: 2929 N 24th St, Phoenix
-   - Same GC (Valley Rain), same engineering contact (Salvador/SDB)
-   - BUT: Different sites, different scopes, different projects
-
-3. **Simpler Scope than Prior Project**
-   - NW Durango required: SWPPP, dust permit, 504 LF fence, 20 inlet protection, 2 porta johns
-   - Cradle to Crayons requires: Wattle, 250 LF fence, 1 porta john, NO SWPPP
-   - Expect lower estimate than NW Durango's $8,416.95
-
-4. **Prior Work Order Had Scope Reductions**
-   - Estimate to WO variance: -$1,212.35 (-14.4%)
-   - Valley Rain reduced porta johns and sandbags
-   - Consider this when pricing Cradle to Crayons
-
----
-
-## Gaps / Open Questions
-
-1. **Dust permit status** - Not mentioned in Cradle to Crayons request. Clarify if needed.
-2. **Start date precision** - "Mid-Feb 2026" is vague. Get specific date for scheduling.
-3. **Contract status** - Do we have MSA with Valley Rain? (Not found in search)
-4. **Wattle specification** - No quantity given. Need clarification for estimate.
-
----
-
-## Recommended Actions
-
-1. **Create estimate for Cradle to Crayons**
-   - Use NW Durango as reference but adjust for simpler scope
-   - Include: wattle (TBD qty), 250 LF silt fence, 1 porta john rental
-   - Exclude SWPPP (not required per request)
-
-2. **Clarify scope details**
-   - Ask Salvador: How much wattle needed?
-   - Ask Salvador: Is dust permit required?
-   - Confirm "mid-Feb" start date
-
-3. **Send estimate to Salvador**
-   - CC Kendra at Valley Rain (she issues POs)
-   - Reference the relationship from NW Durango project
-
----
-
-## Search Log
-
+```css
 ```text
 Iteration 1:
 - chi@ "Cradle to Crayons" → 2 results

@@ -50,7 +50,7 @@ be an identical JSON POST body.
 {
  "challenge": "3eZbrw1aBm2rZgRNFdxV2595E9CY3gmdALWMmHkvFXO7tYXAYM8P"
 }
-```
+```text
 
 Here's a simple example of a webhook listener that will print the output of
 the webhook and respond correctly to the challenge:
@@ -60,7 +60,7 @@ app.post("/", function(req, res) {
   console.log(JSON.stringify(req.body, 0, 2));
   res.status(200).send(req.body);
 })
-```
+```text
 
 ```python Python - provided by @Jorgemolina from the developers community
 from flask import Flask, request, abort, jsonify
@@ -82,7 +82,7 @@ def webhook():
 
 if __name__ == '__main__':
     app.run(debug=True)
-```
+```css
 
 ## Authenticating requests
 
@@ -131,7 +131,7 @@ query {
     config
   }
 }
-```
+```text
 
 ```javascript Sample JavaScript Query
 let query = 'query { webhooks (board_ids: 1234567890) { id event board_id ' +
@@ -149,7 +149,7 @@ fetch ("https://api.monday.com/v2", {
   })
    .then(res => res.json())
    .then(res => console.log(JSON.stringify(res, null, 2)));
-```
+```css
 
 ## Arguments
 
@@ -203,7 +203,7 @@ mutation {
     board_id
   }
 }
-```
+```text
 
 ```javascript Sample JavaScript Mutation
 fetch ("https://api.monday.com/v2", {
@@ -220,7 +220,7 @@ fetch ("https://api.monday.com/v2", {
        "{ id board_id } }"
    })
   })
-```
+```css
 
 ### Create webhook arguments
 
@@ -258,7 +258,7 @@ mutation {
     board_id
   }
 }
-```
+```text
 
 ```javascript Sample JavaScript Mutation
 fetch ("https://api.monday.com/v2", {
@@ -271,7 +271,7 @@ fetch ("https://api.monday.com/v2", {
      query : "mutation { delete_webhook (id: 12) { id board_id } }"
    })
   })
-```
+```css
 
 ### Delete webhook arguments
 
@@ -307,7 +307,7 @@ samples below!
   "subscriptionId": 73759690,
   "triggerUuid": "b5ed2e17c530f43668de130142445cba"
  }
-```
+```text
 
 ```json create_subitem
 "event": {
@@ -330,7 +330,7 @@ samples below!
   "parentItemId": "1771812716",
   "parentItemBoardId": "1771812698"
  }
-```
+```text
 
 ```json change_column_value - sample
 "event": {
@@ -357,7 +357,7 @@ samples below!
   "subscriptionId": 73760484,
   "triggerUuid": "645fc8d8709d35718f1ae00ceded91e9"
  }
-```
+```text
 
 ```json create_update
 "event": {
@@ -375,7 +375,7 @@ samples below!
   "subscriptionId": 73760983,
   "triggerUuid": "6119292e27abcc571f90ea4177e94973"
  }
-```
+```text
 
 ```json status_column_change
 "event": {

@@ -149,41 +149,7 @@ Contract intake systems in construction have evolved from manual triage to AI-po
 
 ## Feature Dependencies
 
-```
-Email Classification (existing)
-       │
-       ▼
-Contract Detection ──────────────────┐
-       │                             │
-       ▼                             │
-Document Parsing (existing)          │
-       │                             │
-       ├──────────────┐              │
-       ▼              ▼              ▼
-Project Info    Contact Info    Email Context
-       │              │              │
-       └──────────────┼──────────────┘
-                      │
-                      ▼
-              Estimate Matching (NEW)
-                      │
-                      ▼
-              Task Template Selection
-                      │
-    ┌─────────────────┼─────────────────┐
-    ▼                 ▼                 ▼
-Task 1: Reconcile  Task 2: Email    Task 3: Update QB
-(needs estimate)   (needs contact)  (needs project)
-    │                 │                 │
-    └─────────────────┼─────────────────┘
-                      │
-                      ▼
-              Notion Task Creation
-              (with role assignment)
-                      │
-                      ▼
-              Link Artifacts to Tasks
-              (PDF, estimate, contact)
+```text
 ```
 
 ### Critical Path

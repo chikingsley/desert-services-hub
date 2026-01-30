@@ -68,12 +68,7 @@ Template for `.planning/phases/XX-name/{phase}-CONTEXT.md` - captures implementa
 
 *Phase: XX-name*
 *Context gathered: [date]*
-```
-
-<good_examples>
-
-**Example 1: Visual feature (Post Feed)**
-
+```html
 ```markdown
 # Phase 3: Post Feed - Context
 
@@ -131,10 +126,7 @@ Display posts from followed users in a scrollable feed. Users can view posts and
 
 *Phase: 03-post-feed*
 *Context gathered: 2025-01-20*
-```
-
-**Example 2: CLI tool (Database backup)**
-
+```text
 ```markdown
 # Phase 2: Backup Command - Context
 
@@ -193,10 +185,7 @@ CLI command to backup database to local file or S3. Supports full and incrementa
 
 *Phase: 02-backup-command*
 *Context gathered: 2025-01-20*
-```
-
-**Example 3: Organization task (Photo library)**
-
+```text
 ```markdown
 # Phase 1: Photo Organization - Context
 

@@ -45,13 +45,9 @@ The established libraries/tools for this domain:
 
 ```bash
 # All dependencies already installed, no action needed
+```css
 ```
 
-## Architecture Patterns
-
-### Recommended Project Structure
-
-```
 services/
   contract/
     extraction/                  # (existing from Phase 2)
@@ -78,16 +74,8 @@ services/
         red-flags.ts             # extractRedFlags()
       orchestrator.ts            # runAllAgents() - parallel execution
       storage.ts                 # storeAgentResults()
-```
 
-### Pattern 1: Agent with Structured Output
-
-**What:** Each agent calls Mistral with a Zod schema and receives typed, validated output.
-
-**When to use:** Every extraction agent follows this pattern.
-
-**Example:**
-
+```css
 ```typescript
 // Source: https://docs.mistral.ai/capabilities/structured_output/custom
 import { z } from "zod";
@@ -155,16 +143,7 @@ If information is not found in the document, use null for that field.`,
 
   return response.choices[0].message.parsed as ContractInfo;
 }
-```
-
-### Pattern 2: Parallel Agent Orchestration
-
-**What:** Run all agents simultaneously using `Promise.allSettled()` to handle partial failures.
-
-**When to use:** When executing the full extraction pipeline.
-
-**Example:**
-
+```css
 ```typescript
 // Source: Pattern derived from MDN Promise.allSettled documentation
 import type { Mistral } from "@mistralai/mistralai";
@@ -242,16 +221,7 @@ export async function runAllAgents(
 
   return resultMap;
 }
-```
-
-### Pattern 3: Citation-Aware Schema Design
-
-**What:** Include page reference fields in every schema so humans can verify extracted data.
-
-**When to use:** All extraction schemas.
-
-**Example:**
-
+```css
 ```typescript
 // Source: Derived from existing codebase patterns + Mistral docs
 import { z } from "zod";
@@ -291,16 +261,7 @@ const InsuranceSchema = z.object({
     .describe("Performance/payment bond requirements if any"),
   pageReferences: pageReferencesField,
 });
-```
-
-### Pattern 4: Storage Schema for Agent Results
-
-**What:** Store extraction results in SQLite with agent name, JSON data, and metadata.
-
-**When to use:** After running agents, before displaying to user.
-
-**Example:**
-
+```csv
 ```typescript
 // Source: Existing lib/db/index.ts patterns
 import { db } from "@/lib/db";
@@ -368,111 +329,7 @@ export function getAgentResults(contractId: number): Array<{
     durationMs: row.duration_ms,
   }));
 }
-```
-
-### Anti-Patterns to Avoid
-
-- **Sequential agent execution:** Running agents one after another wastes time. Use `Promise.allSettled()` for parallel execution.
-- **Using `Promise.all()` for agents:** If one agent fails, all results are lost. Use `allSettled()` to preserve partial results.
-- **Basic JSON mode without schema:** Schema enforcement at the API level is more reliable than just requesting JSON output.
-- **Omitting `.describe()` on schema fields:** The model needs guidance on expected formats (date formats, currency handling).
-- **Storing raw LLM text instead of validated JSON:** Always validate with Zod before storing; invalid data causes downstream issues.
-- **Temperature > 0 for extraction:** Use `temperature: 0` for deterministic, reproducible extractions.
-- **Single monolithic extraction prompt:** Specialized agents perform better than one mega-prompt asking for everything.
-
-## Don't Hand-Roll
-
-Problems that look simple but have existing solutions:
-
-| Problem | Don't Build | Use Instead | Why |
-|---------|-------------|-------------|-----|
-| JSON schema enforcement | Prompt engineering only | Mistral `responseFormat` with Zod | API-level enforcement is more reliable than prompt tricks |
-| Parallel execution with error handling | Custom Promise wrapper | `Promise.allSettled()` | Built-in, well-tested, handles all edge cases |
-| Type inference from schemas | Manual type definitions | `z.infer<typeof Schema>` | Single source of truth for types and validation |
-| LLM retry on validation failure | Manual retry loop | Zod `.safeParse()` + conditional retry | Clean separation of validation and retry logic |
-| Date parsing from varied formats | Custom regex | Zod `.transform()` with date parsing | Handles edge cases, normalizes formats |
-
-**Key insight:** Mistral's structured output mode with Zod schemas provides double validation: schema enforcement at generation time (API level) and runtime validation (Zod parse). This combination virtually eliminates malformed outputs.
-
-## Common Pitfalls
-
-### Pitfall 1: LLM Hallucination on Financial Values
-
-**What goes wrong:** Model invents contract values, dates, or permit numbers that look plausible but are incorrect.
-
-**Why it happens:** LLMs are optimized for plausibility, not accuracy. Numbers that "sound right" for contracts may be fabricated.
-
-**How to avoid:**
-
-- Use `temperature: 0` for deterministic extraction
-- Include per-field page citations so humans can verify
-- Add validation rules in Zod (e.g., contract value must be > 0 if present)
-- Flag extractions where page reference is missing
-
-**Warning signs:** Values that don't appear in the source text, round numbers that seem too convenient, dates outside reasonable ranges.
-
-### Pitfall 2: Page Citation Drift
-
-**What goes wrong:** Model cites wrong page numbers or provides citations for hallucinated data.
-
-**Why it happens:** The model may not accurately count page breaks or may confuse similar content across pages.
-
-**How to avoid:**
-
-- Use clear, consistent page break markers (`---PAGE BREAK---`)
-- In system prompt, explicitly explain page numbering scheme
-- Consider pre-processing text to add explicit `[PAGE 1]`, `[PAGE 2]` markers
-
-**Warning signs:** Cited page numbers exceed document length, multiple conflicting citations for same field.
-
-### Pitfall 3: Schema Mismatch on Nullable Fields
-
-**What goes wrong:** Model returns empty string `""` instead of `null` for missing fields, or vice versa.
-
-**Why it happens:** LLMs may not distinguish between "not found" (null) and "found but empty" ("").
-
-**How to avoid:**
-
-- Use `.nullable()` consistently for optional fields
-- In `.describe()`, explicitly state "Use null if not found in document"
-- Add `.transform()` to normalize empty strings to null if needed
-
-**Warning signs:** Many empty strings in extraction results, inconsistent null handling across agents.
-
-### Pitfall 4: SOV Table Extraction Corruption
-
-**What goes wrong:** Schedule of Values line items are garbled, merged, or have misaligned columns.
-
-**Why it happens:** Complex tables in contract PDFs may not extract cleanly, especially from OCR.
-
-**How to avoid:**
-
-- Review extracted text from Phase 2 for table quality before agent processing
-- Use markdown-formatted OCR output which preserves table structure
-- Consider array schema for line items rather than trying to parse a single table string
-
-**Warning signs:** Line item totals don't match contract value, item descriptions appear truncated or merged.
-
-### Pitfall 5: Rate Limiting on Parallel Requests
-
-**What goes wrong:** 7 simultaneous Mistral API calls hit rate limits, causing failures.
-
-**Why it happens:** Mistral has rate limits; 7 parallel calls from same API key may exceed them.
-
-**How to avoid:**
-
-- Monitor rate limit headers in responses
-- Consider chunking if needed (e.g., 4 agents, then 3)
-- Add exponential backoff retry logic for 429 errors
-
-**Warning signs:** Intermittent 429 errors, some agents succeed while others fail consistently.
-
-## Code Examples
-
-Verified patterns from official sources:
-
-### Initialize Mistral Client (Reusable)
-
+```csv
 ```typescript
 // Source: https://github.com/mistralai/client-ts
 import { Mistral } from "@mistralai/mistralai";
@@ -484,10 +341,7 @@ export function createMistralClient(): Mistral {
   }
   return new Mistral({ apiKey });
 }
-```
-
-### Complete Billing Schema Example
-
+```css
 ```typescript
 // Source: Requirements EXTR-02 + Mistral docs
 import { z } from "zod";
@@ -524,10 +378,7 @@ export const BillingSchema = z.object({
 });
 
 export type BillingInfo = z.infer<typeof BillingSchema>;
-```
-
-### Red Flags Detection Schema
-
+```css
 ```typescript
 // Source: Requirements EXTR-07
 import { z } from "zod";
@@ -577,10 +428,7 @@ export const RedFlagSchema = z.object({
 });
 
 export type RedFlagsInfo = z.infer<typeof RedFlagSchema>;
-```
-
-### Full Agent Implementation
-
+```css
 ```typescript
 // Source: Combines Mistral docs + codebase patterns
 import { z } from "zod";

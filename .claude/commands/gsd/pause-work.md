@@ -84,32 +84,17 @@ last_updated: [timestamp]
 <next_action>
 Start with: [specific first action when resuming]
 </next_action>
-```
-
-Be specific enough for a fresh Claude to understand immediately.
-</step>
-
-<step name="commit">
-**Check planning config:**
-
+```html
 ```bash
 COMMIT_PLANNING_DOCS=$(cat .planning/config.json 2>/dev/null | grep -o '"commit_docs"[[:space:]]*:[[:space:]]*[^,}]*' | grep -o 'true\|false' || echo "true")
 git check-ignore -q .planning 2>/dev/null && COMMIT_PLANNING_DOCS=false
-```
-
-**If `COMMIT_PLANNING_DOCS=false`:** Skip git operations
-
-**If `COMMIT_PLANNING_DOCS=true` (default):**
-
+```text
 ```bash
 git add .planning/phases/*/.continue-here.md
 git commit -m "wip: [phase-name] paused at task [X]/[Y]"
+```html
 ```
 
-</step>
-
-<step name="confirm">
-```
 ✓ Handoff created: .planning/phases/[XX-name]/.continue-here.md
 
 Current state:
@@ -121,15 +106,5 @@ Current state:
 
 To resume: /gsd:resume-work
 
-```
-</step>
-
-</process>
-
-<success_criteria>
-- [ ] .continue-here.md created in correct phase directory
-- [ ] All sections filled with specific content
-- [ ] Committed as WIP
-- [ ] User knows location and how to resume
-</success_criteria>
+```html
 ```

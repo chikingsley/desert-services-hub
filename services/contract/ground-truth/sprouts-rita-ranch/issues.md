@@ -24,10 +24,10 @@ Per WORKFLOW.md Key Principle #1:
 
 **Fix:** Add citations from LOI documents:
 
-```
+```text
 Source: loi_SOW_R1_DesertServices.pdf, page 2
 Quote: "Item 16. Dust Control..."
-```
+```css
 
 ### 2. SEPARATE TASKS FILE
 
@@ -55,7 +55,7 @@ Per WORKFLOW.md Step 5:
 
 **Problem:** Math doesn't work:
 
-```
+```text
 Estimate: $22,995.00
 Contract: $19,439.00
 Difference: -$3,556.00

@@ -37,7 +37,7 @@ Look for:
 
 For each chunk, report:
 
-```
+```text
 [CHUNK 1] type: exhibit, label: "Exhibit A - Scope of Work"
   Lines: 45-120
   Preview: "The contractor shall provide..."
@@ -45,7 +45,7 @@ For each chunk, report:
 [CHUNK 2] type: sov, label: "Schedule of Values"
   Lines: 121-150
   Preview: "Item 1: SWPPP Inspections..."
-```
+```css
 
 ## Validation
 

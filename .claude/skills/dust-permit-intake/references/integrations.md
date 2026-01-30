@@ -21,10 +21,7 @@ Quick reference for all integration points used in the dust permit intake proces
 // 3. jayson@desertservices.net
 // 4. jeff@desertservices.net
 // 5. internalcontracts@desertservices.net
-```
-
-### Get Attachments
-
+```css
 ```typescript
 // MCP Tool: list-attachments
 { messageId: "...", userId: "chi@desertservices.net" }
@@ -37,10 +34,7 @@ Quick reference for all integration points used in the dust permit intake proces
 // - NVC.pdf, Notice of Void and Cancel
 // - Grading Plan, Site Plan
 // - SWPPP Plan
-```
-
-### Send Confirmation
-
+```css
 ```typescript
 // MCP Tool: send-email
 {
@@ -49,34 +43,14 @@ Quick reference for all integration points used in the dust permit intake proces
   body: "<HTML from dust-permit-submitted template>",
   bodyType: "html"
 }
-```
-
-### Email Templates
-
-| Template | When to Use |
-|----------|-------------|
-| `dust-permit-submitted` | After permit is submitted to county |
-| `dust-permit-issued` | When permit is approved |
-| `dust-permit-billing` | Internal notification for invoicing |
-
-Location: `services/email/templates/`
-
----
-
-## Notion
-
-### Database IDs
-
+```css
 ```typescript
 const NOTION_DBS = {
   PROJECTS: "2e0c1835-5bb2-8197-b0f5-ff284f1d1f19",
   TASKS: "collection://2e0c1835-5bb2-81d0-a579-000be2bce0e9",
   DUST_PERMITS: "49cd5e58-2c32-4fcb-ba35-e7b978b71e5a"
 };
-```
-
-### Search for Existing Project
-
+```css
 ```typescript
 // Using Notion MCP: notion-search
 {
@@ -89,10 +63,7 @@ const NOTION_DBS = {
   query: "[search term]",
   data_source_url: "collection://2e0c1835-5bb2-8197-b0f5-ff284f1d1f19"
 }
-```
-
-### Create Project
-
+```css
 ```typescript
 // Using Notion MCP: notion-create-pages
 {
@@ -106,10 +77,7 @@ const NOTION_DBS = {
     content: "## Project Context\n\n[Paste email thread summary]\n\n## Documents\n\n- NOI: [link]\n- Plans: [link]"
   }]
 }
-```
-
-### Create Dust Permit Task
-
+```css
 ```typescript
 // Using Notion MCP: notion-create-pages
 {
@@ -123,10 +91,7 @@ const NOTION_DBS = {
     content: "## Permit Details\n\n- Company: [name]\n- Site Address: [address]\n- Site Contact: [name, phone, email]\n- Acreage: [X acres]\n\n## Missing Info\n\n- [ ] [list any gaps]"
   }]
 }
-```
-
-### Update Task Status
-
+```css
 ```typescript
 // Using Notion MCP: notion-update-page
 {
@@ -139,14 +104,7 @@ const NOTION_DBS = {
     }
   }
 }
-```
-
----
-
-## Monday (desert-mondaycrm MCP)
-
-### Board IDs
-
+```css
 ```typescript
 const MONDAY_BOARDS = {
   DUST_PERMITS: "9850624269",
@@ -155,10 +113,7 @@ const MONDAY_BOARDS = {
   CONTRACTORS: "7943937856",
   CONTACTS: "7943937855"
 };
-```
-
-### Search for Related Estimate
-
+```css
 ```typescript
 // MCP Tool: search-items
 {
@@ -168,10 +123,7 @@ const MONDAY_BOARDS = {
 
 // Returns items with fuzzy match
 // Check if estimate exists for this project
-```
-
-### Link to Dust Permit Board
-
+```css
 ```typescript
 // MCP Tool: create-item
 {
@@ -181,20 +133,10 @@ const MONDAY_BOARDS = {
     // Column IDs vary - check board schema
   }
 }
-```
-
----
-
-## SQLite (Permit History)
-
-### Database Location
-
+```css
 ```text
 auto-permit/server/src/db/company-permits.sqlite
-```
-
-### Company Lookup
-
+```css
 ```sql
 -- Check if company exists
 SELECT * FROM companies
@@ -202,10 +144,7 @@ WHERE name LIKE '%[company_name]%'
 LIMIT 5;
 
 -- Returns: id, name, address, city, state, phone, email
-```
-
-### Permit History
-
+```css
 ```sql
 -- Find permits for company
 SELECT * FROM permits
@@ -215,42 +154,24 @@ ORDER BY effective_date DESC;
 -- Returns: id, project_name, company_id, company_name, status,
 --          submitted_date, effective_date, expiration_date,
 --          closed_date, address, city, parcel
-```
-
-### Check Active Permits
-
+```css
 ```sql
 -- Find active permits (not expired, not closed)
 SELECT * FROM permits
 WHERE company_id = [company_id]
   AND status = 'active'
   AND (expiration_date IS NULL OR expiration_date > date('now'));
-```
-
-### Via find-permit Skill
-
-The `find-permit` skill in ds-workbench wraps these queries:
-
+```css
 ```bash
 "Find permit for ABC Construction"
 "Search permits by address 123 Main St"
 "Show expiring permits"
 "List active permits for company ID 42"
-```
-
----
-
-## Auto-Permit API
-
-### Base URL
-
+```css
 ```text
 Local: http://localhost:47822
 Deployed: [check docker-compose or cloudflare tunnel]
-```
-
-### Create New Company Permit
-
+```css
 ```typescript
 // POST /api/applications/create
 {
@@ -279,10 +200,7 @@ Deployed: [check docker-compose or cloudflare tunnel]
   acreage: "2.5",
   parcel: "123-45-678"  // optional
 }
-```
-
-### Create Existing Company Permit
-
+```css
 ```typescript
 // POST /api/applications/create
 {
@@ -296,10 +214,7 @@ Deployed: [check docker-compose or cloudflare tunnel]
   projectAddress: "...",
   // ...
 }
-```
-
-### Renew Permit
-
+```css
 ```typescript
 // POST /api/applications/create
 {
@@ -313,10 +228,7 @@ Deployed: [check docker-compose or cloudflare tunnel]
   siteContactPhone: "...",
   siteContactEmail: "..."
 }
-```
-
-### Extract Data from PDFs
-
+```css
 ```typescript
 // POST /api/applications/extract
 {
@@ -325,42 +237,19 @@ Deployed: [check docker-compose or cloudflare tunnel]
 }
 
 // Returns extracted FormData with all fields populated
-```
-
-### Check Permit Status
-
+```css
 ```typescript
 // GET /api/permits
 // Returns all permits in system with current status
 
 // GET /api/permits/:id
 // Returns specific permit details
-```
-
----
-
-## Deep Search (Skill)
-
-Used to find all related emails and attachments.
-
-### Trigger
-
+```css
 ```bash
 "deep search [project name]"
 "research [company name] emails"
 "find all related emails for [X]"
-```
-
-### What It Does
-
-1. Searches across all configured mailboxes
-2. Downloads and parses attachments
-3. Extracts structured data (dates, values, contacts)
-4. Builds timeline of communications
-5. Returns comprehensive findings
-
-### Output Format
-
+```csv
 ```markdown
 ## Summary
 Brief overview of what was found
@@ -383,12 +272,7 @@ Brief overview of what was found
 ## Recommended Actions
 1. Request site contact info from GC
 2. Verify acreage with engineer
-```
-
----
-
-## Process Flow Summary
-
+```css
 ```bash
 1. User: "dust permit for X"
    └─► Parse what X refers to

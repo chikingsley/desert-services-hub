@@ -144,12 +144,7 @@ STEP 7: UPDATE TRACKING
     - Who to contact
     - Estimated timeline
 
-```
-
-## Decision Points
-
-### New Company vs Existing Company
-
+```css
 ```bash
 Query: SELECT * FROM companies WHERE name LIKE '%[company_name]%'
 
@@ -160,31 +155,7 @@ IF results.length > 0:
 ELSE:
     → new-company workflow
     → Will need full company details (address, phone, email)
-```
-
-### Permit Ready vs Needs More Info
-
-| Field | Required | Source |
-|-------|----------|--------|
-| Company Name | Yes | Email/NOI |
-| Project Name | Yes | Email/NOI |
-| Site Address | Yes | NOI/Plans |
-| Site Contact Name | Yes | NOI/Email |
-| Site Contact Phone | Yes | NOI/Email |
-| Site Contact Email | Yes | NOI/Email |
-| Acreage | Yes | NOI/Plans |
-| Parcel Number | No | Plans/County lookup |
-
-If any required field is missing:
-
-1. Check all downloaded attachments
-2. Search related emails for the info
-3. If still missing, flag in Notion task
-
-## Integration Points
-
-### Email (desert-email MCP)
-
+```css
 ```text
 Tools:
 - search-email: Find request and related emails
@@ -192,10 +163,7 @@ Tools:
 - list-attachments: Find NOI, plans, SWPPP
 - download-attachment: Get document files
 - send-email: Confirmation notifications
-```
-
-### Notion (Notion MCP)
-
+```css
 ```bash
 Databases:
 - Projects: 2e0c1835-5bb2-8197-b0f5-ff284f1d1f19
@@ -207,10 +175,7 @@ Actions:
 - Create new project if needed
 - Create dust permit task
 - Update with context and status
-```
-
-### Monday (desert-mondaycrm MCP)
-
+```css
 ```bash
 Boards:
 - DUST_PERMITS: 9850624269
@@ -219,10 +184,7 @@ Boards:
 Actions:
 - Check if estimate exists for project
 - Link permit to estimate if found
-```
-
-### SQLite (find-permit skill)
-
+```css
 ```bash
 Database: server/src/db/company-permits.sqlite
 
@@ -231,10 +193,7 @@ Queries:
 - Search by project name
 - Search by address
 - Get active permits for company
-```
-
-### Auto-Permit API
-
+```css
 ```bash
 Base URL: http://localhost:47822 (or deployed URL)
 
@@ -248,30 +207,7 @@ Endpoints:
 
 - GET /api/permits
   - List current permits in system
-```
-
-## Example Interaction
-
-**User:** "Do a dust permit for ABC Construction"
-
-**Agent:**
-
-1. Search Notion for "ABC Construction" → Not found
-2. Search email for "ABC Construction dust permit" → Found request from <john@abcconstruction.com>
-3. Deep search related emails → Found NOI attachment, grading plan
-4. Download and extract NOI → Got site contact, address, 2.5 acres
-5. Query SQLite for "ABC Construction" → No existing permits (new company)
-6. Create Notion project "ABC Construction - [Project Name]"
-7. Create dust permit task with extracted info
-8. Assess: All required fields present → Ready
-9. POST to auto-permit API with new-company flow
-10. Update Notion task: "Submitted - Pending approval"
-11. Send confirmation email to <john@abcconstruction.com>
-
-## Gaps and Follow-ups
-
-When information is missing, document in Notion task:
-
+```css
 ```markdown
 ## Missing Information
 

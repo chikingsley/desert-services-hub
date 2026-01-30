@@ -21,7 +21,7 @@ Per WORKFLOW.md Key Principle #1:
 
 **Fix:** Add citations from emails or documents. Example format:
 
-```
+```text
 Source: email, "Darrin Grove" thread 1/26/26
 Quote: "PO# VT303 North - go ahead on signs"
 ```

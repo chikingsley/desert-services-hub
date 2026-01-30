@@ -153,7 +153,7 @@ await email.sendEmail({
   bodyType: 'html',
   attachments: [logo],
 });
-```
+```css
 
 ## Usage Example
 

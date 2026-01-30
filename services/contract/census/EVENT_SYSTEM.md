@@ -10,7 +10,7 @@ This document describes the event-driven orchestration layer for Desert Services
 
 ## Data Model
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                              PROJECT HUB                                 │
 │                                                                         │
@@ -34,7 +34,7 @@ This document describes the event-driven orchestration layer for Desert Services
 │   plan delivered    → "plan_delivered"      → send_to_stakeholders      │
 │                                                                         │
 └─────────────────────────────────────────────────────────────────────────┘
-```
+```css
 
 ---
 
@@ -196,11 +196,11 @@ System Actions:
 - `sync_to_sharepoint` - Upload files to SharePoint
 
 **Status Flow:**
-```
+```text
 pending → running → complete
                   → failed (can retry)
         → skipped (manually skipped)
-```
+```markdown
 
 **Agent Questions:**
 - "There are 2 pending actions for this project. Execute them?"
@@ -227,7 +227,7 @@ Templates defining what actions fire on what events. Configurable.
 
 **Default Workflows:**
 
-```
+```text
 permit_submitted:
   → send_customer_email (template: dust-permit-submitted)
   → send_internal_billing (template: dust-permit-billing)
@@ -242,7 +242,7 @@ permit_renewed:
 contract_signed:
   → send_internal_ops (template: internal-handoff)
   → update_monday (set status: Won)
-```
+```css
 
 ---
 
@@ -270,7 +270,7 @@ await spawnActionsForEvent(event.id);
 
 // 3. Execute pending actions
 await executePendingActions(project_id: 123);
-```
+```css
 
 ### Pattern 2: Webhook from Auto-Permit (Future)
 
@@ -292,13 +292,13 @@ Auto-permit sends webhook after submission:
 // 3. Log event
 // 4. Spawn actions
 // 5. Optionally auto-execute or queue for review
-```
+```css
 
 ### Pattern 3: Agent Workflow (Target State)
 
 Agent walks through the process interactively:
 
-```
+```text
 Agent: "Permit D0064501 was submitted for Lexington 420 - Northern Pkwy.
         I found 3 stakeholders from email history:
         - Missy Peterson (PM) - mpeterson@stevensleinweber.com
@@ -337,6 +337,7 @@ Agent: [Executes actions, logs results]
 ### Auto-Permit (company-permits.sqlite)
 
 Sync permits from auto-permit DB:
+
 - Path: `/Users/chiejimofor/Documents/Github/auto-permit/src/db/company-permits.sqlite`
 - Tables: `permits`, `companies`
 - Sync: On-demand or scheduled, match by application_number
@@ -349,6 +350,7 @@ Sync permits from auto-permit DB:
 ### Email Templates
 
 Existing templates in `services/email/email-templates/`:
+
 - `dust-permit-submitted.hbs` - Customer notification
 - `dust-permit-billing.hbs` - Internal billing notification
 - `dust-permit-issued.hbs` - Customer notification

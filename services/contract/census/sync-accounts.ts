@@ -14,7 +14,7 @@
  */
 import { query } from "@/services/monday/client";
 import { BOARD_IDS } from "@/services/monday/types";
-import { db } from "./db";
+import { db } from "./db/connection";
 
 // ============================================================================
 // Regex Patterns (module-level for performance)
@@ -23,26 +23,6 @@ import { db } from "./db";
 const RE_HTTP_PROTOCOL = /^https?:\/\//;
 const RE_WWW_PREFIX = /^www\./;
 const RE_TRAILING_SLASHES = /\/+$/;
-
-// ============================================
-// Schema migration — add monday columns to accounts
-// ============================================
-
-try {
-  db.run("ALTER TABLE accounts ADD COLUMN monday_account_id TEXT");
-} catch {
-  /* column already exists */
-}
-
-try {
-  db.run("ALTER TABLE accounts ADD COLUMN monday_name TEXT");
-} catch {
-  /* column already exists */
-}
-
-db.run(
-  "CREATE INDEX IF NOT EXISTS idx_accounts_monday ON accounts(monday_account_id)"
-);
 
 // ============================================
 // Types

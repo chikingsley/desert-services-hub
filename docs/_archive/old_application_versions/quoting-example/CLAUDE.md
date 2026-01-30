@@ -34,7 +34,7 @@ import { test, expect } from "bun:test";
 test("hello world", () => {
   expect(1).toBe(1);
 });
-```
+```css
 
 ## Frontend
 
@@ -71,7 +71,7 @@ Bun.serve({
     console: true,
   }
 })
-```
+```text
 
 HTML files can import .tsx, .jsx or .js files directly and Bun's bundler will transpile & bundle automatically. `<link>` tags can point to stylesheets and Bun's CSS bundler will bundle.
 
@@ -82,7 +82,7 @@ HTML files can import .tsx, .jsx or .js files directly and Bun's bundler will tr
     <script type="module" src="./frontend.tsx"></script>
   </body>
 </html>
-```
+```text
 
 With the following `frontend.tsx`:
 
@@ -100,7 +100,7 @@ export default function Frontend() {
 }
 
 root.render(<Frontend />);
-```
+```text
 
 Then, run index.ts
 

@@ -33,8 +33,7 @@ Examples:
 
 Create a CSV file with these columns:
 
-```
-source,folder_type,contractor_name,project_name,has_wos,file_year,file_path
+```csv
 ```
 
 Where:

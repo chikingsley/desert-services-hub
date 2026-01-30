@@ -262,46 +262,21 @@ Record in `user_setup` frontmatter. Only include what Claude literally cannot do
 
 **Dependency graph construction:**
 
-```
-Example with 6 tasks:
-
-Task A (User model): needs nothing, creates src/models/user.ts
-Task B (Product model): needs nothing, creates src/models/product.ts
-Task C (User API): needs Task A, creates src/api/users.ts
-Task D (Product API): needs Task B, creates src/api/products.ts
-Task E (Dashboard): needs Task C + D, creates src/components/Dashboard.tsx
-Task F (Verify UI): checkpoint:human-verify, needs Task E
-
-Graph:
-  A --> C --\
-              --> E --> F
-  B --> D --/
-
-Wave analysis:
-  Wave 1: A, B (independent roots)
-  Wave 2: C, D (depend only on Wave 1)
-  Wave 3: E (depends on Wave 2)
-  Wave 4: F (checkpoint, depends on Wave 3)
+```csv
 ```
 
 ## Vertical Slices vs Horizontal Layers
 
 **Vertical slices (PREFER):**
 
-```
-Plan 01: User feature (model + API + UI)
-Plan 02: Product feature (model + API + UI)
-Plan 03: Order feature (model + API + UI)
+```text
 ```
 
 Result: All three can run in parallel (Wave 1)
 
 **Horizontal layers (AVOID):**
 
-```
-Plan 01: Create User model, Product model, Order model
-Plan 02: Create User API, Product API, Order API
-Plan 03: Create User UI, Product UI, Order UI
+```csv
 ```
 
 Result: Fully sequential (02 needs 01, 03 needs 02)
@@ -328,90 +303,7 @@ files_modified: [src/models/user.ts, src/api/users.ts]
 
 # Plan 02 frontmatter (no overlap = parallel)
 files_modified: [src/models/product.ts, src/api/products.ts]
-```
-
-No overlap -> can run parallel.
-
-If file appears in multiple plans: Later plan depends on earlier (by plan number).
-
-</dependency_graph>
-
-<scope_estimation>
-
-## Context Budget Rules
-
-**Plans should complete within ~50% of context usage.**
-
-Why 50% not 80%?
-
-- No context anxiety possible
-- Quality maintained start to finish
-- Room for unexpected complexity
-- If you target 80%, you've already spent 40% in degradation mode
-
-**Each plan: 2-3 tasks maximum. Stay under 50% context.**
-
-| Task Complexity | Tasks/Plan | Context/Task | Total |
-|-----------------|------------|--------------|-------|
-| Simple (CRUD, config) | 3 | ~10-15% | ~30-45% |
-| Complex (auth, payments) | 2 | ~20-30% | ~40-50% |
-| Very complex (migrations, refactors) | 1-2 | ~30-40% | ~30-50% |
-
-## Split Signals
-
-**ALWAYS split if:**
-
-- More than 3 tasks (even if tasks seem small)
-- Multiple subsystems (DB + API + UI = separate plans)
-- Any task with >5 file modifications
-- Checkpoint + implementation work in same plan
-- Discovery + implementation in same plan
-
-**CONSIDER splitting:**
-
-- Estimated >5 files modified total
-- Complex domains (auth, payments, data modeling)
-- Any uncertainty about approach
-- Natural semantic boundaries (Setup -> Core -> Features)
-
-## Depth Calibration
-
-Depth controls compression tolerance, not artificial inflation.
-
-| Depth | Typical Plans/Phase | Tasks/Plan |
-|-------|---------------------|------------|
-| Quick | 1-3 | 2-3 |
-| Standard | 3-5 | 2-3 |
-| Comprehensive | 5-10 | 2-3 |
-
-**Key principle:** Derive plans from actual work. Depth determines how aggressively you combine things, not a target to hit.
-
-- Comprehensive auth phase = 8 plans (because auth genuinely has 8 concerns)
-- Comprehensive "add config file" phase = 1 plan (because that's all it is)
-
-Don't pad small work to hit a number. Don't compress complex work to look efficient.
-
-## Estimating Context Per Task
-
-| Files Modified | Context Impact |
-|----------------|----------------|
-| 0-3 files | ~10-15% (small) |
-| 4-6 files | ~20-30% (medium) |
-| 7+ files | ~40%+ (large - split) |
-
-| Complexity | Context/Task |
-|------------|--------------|
-| Simple CRUD | ~15% |
-| Business logic | ~25% |
-| Complex algorithms | ~40% |
-| Domain modeling | ~35% |
-
-</scope_estimation>
-
-<plan_format>
-
-## PLAN.md Structure
-
+```html
 ```markdown
 ---
 phase: XX-name
@@ -473,37 +365,7 @@ Output: [What artifacts will be created]
 <output>
 After completion, create `.planning/phases/XX-name/{phase}-{plan}-SUMMARY.md`
 </output>
-```
-
-## Frontmatter Fields
-
-| Field | Required | Purpose |
-|-------|----------|---------|
-| `phase` | Yes | Phase identifier (e.g., `01-foundation`) |
-| `plan` | Yes | Plan number within phase |
-| `type` | Yes | `execute` for standard, `tdd` for TDD plans |
-| `wave` | Yes | Execution wave number (1, 2, 3...) |
-| `depends_on` | Yes | Array of plan IDs this plan requires |
-| `files_modified` | Yes | Files this plan touches |
-| `autonomous` | Yes | `true` if no checkpoints, `false` if has checkpoints |
-| `user_setup` | No | Human-required setup items |
-| `must_haves` | Yes | Goal-backward verification criteria |
-
-**Wave is pre-computed:** Wave numbers are assigned during planning. Execute-phase reads `wave` directly from frontmatter and groups plans by wave number.
-
-## Context Section Rules
-
-Only include prior plan SUMMARY references if genuinely needed:
-
-- This plan uses types/exports from prior plan
-- Prior plan made decision that affects this plan
-
-**Anti-pattern:** Reflexive chaining (02 refs 01, 03 refs 02...). Independent plans need NO prior SUMMARY references.
-
-## User Setup Frontmatter
-
-When external services involved:
-
+```css
 ```yaml
 user_setup:
   - service: stripe
@@ -514,81 +376,7 @@ user_setup:
     dashboard_config:
       - task: "Create webhook endpoint"
         location: "Stripe Dashboard -> Developers -> Webhooks"
-```
-
-Only include what Claude literally cannot do (account creation, secret retrieval, dashboard config).
-
-</plan_format>
-
-<goal_backward>
-
-## Goal-Backward Methodology
-
-**Forward planning asks:** "What should we build?"
-**Goal-backward planning asks:** "What must be TRUE for the goal to be achieved?"
-
-Forward planning produces tasks. Goal-backward planning produces requirements that tasks must satisfy.
-
-## The Process
-
-**Step 1: State the Goal**
-Take the phase goal from ROADMAP.md. This is the outcome, not the work.
-
-- Good: "Working chat interface" (outcome)
-- Bad: "Build chat components" (task)
-
-If the roadmap goal is task-shaped, reframe it as outcome-shaped.
-
-**Step 2: Derive Observable Truths**
-Ask: "What must be TRUE for this goal to be achieved?"
-
-List 3-7 truths from the USER's perspective. These are observable behaviors.
-
-For "working chat interface":
-
-- User can see existing messages
-- User can type a new message
-- User can send the message
-- Sent message appears in the list
-- Messages persist across page refresh
-
-**Test:** Each truth should be verifiable by a human using the application.
-
-**Step 3: Derive Required Artifacts**
-For each truth, ask: "What must EXIST for this to be true?"
-
-"User can see existing messages" requires:
-
-- Message list component (renders Message[])
-- Messages state (loaded from somewhere)
-- API route or data source (provides messages)
-- Message type definition (shapes the data)
-
-**Test:** Each artifact should be a specific file or database object.
-
-**Step 4: Derive Required Wiring**
-For each artifact, ask: "What must be CONNECTED for this artifact to function?"
-
-Message list component wiring:
-
-- Imports Message type (not using `any`)
-- Receives messages prop or fetches from API
-- Maps over messages to render (not hardcoded)
-- Handles empty state (not just crashes)
-
-**Step 5: Identify Key Links**
-Ask: "Where is this most likely to break?"
-
-Key links are critical connections that, if missing, cause cascading failures.
-
-For chat interface:
-
-- Input onSubmit -> API call (if broken: typing works but sending doesn't)
-- API save -> database (if broken: appears to send but doesn't persist)
-- Component -> real data (if broken: shows placeholder, not messages)
-
-## Must-Haves Output Format
-
+```csv
 ```yaml
 must_haves:
   truths:
@@ -614,43 +402,7 @@ must_haves:
       to: "prisma.message"
       via: "database query"
       pattern: "prisma\\.message\\.(find|create)"
-```
-
-## Common Failures
-
-**Truths too vague:**
-
-- Bad: "User can use chat"
-- Good: "User can see messages", "User can send message", "Messages persist"
-
-**Artifacts too abstract:**
-
-- Bad: "Chat system", "Auth module"
-- Good: "src/components/Chat.tsx", "src/app/api/auth/login/route.ts"
-
-**Missing wiring:**
-
-- Bad: Listing components without how they connect
-- Good: "Chat.tsx fetches from /api/chat via useEffect on mount"
-
-</goal_backward>
-
-<checkpoints>
-
-## Checkpoint Types
-
-**checkpoint:human-verify (90% of checkpoints)**
-Human confirms Claude's automated work works correctly.
-
-Use for:
-
-- Visual UI checks (layout, styling, responsiveness)
-- Interactive flows (click through wizard, test user flows)
-- Functional verification (feature works as expected)
-- Animation smoothness, accessibility testing
-
-Structure:
-
+```csv
 ```xml
 <task type="checkpoint:human-verify" gate="blocking">
   <what-built>[What Claude automated]</what-built>
@@ -659,19 +411,7 @@ Structure:
   </how-to-verify>
   <resume-signal>Type "approved" or describe issues</resume-signal>
 </task>
-```
-
-**checkpoint:decision (9% of checkpoints)**
-Human makes implementation choice that affects direction.
-
-Use for:
-
-- Technology selection (which auth provider, which database)
-- Architecture decisions (monorepo vs separate repos)
-- Design choices, feature prioritization
-
-Structure:
-
+```markdown
 ```xml
 <task type="checkpoint:decision" gate="blocking">
   <decision>[What's being decided]</decision>
@@ -685,75 +425,19 @@ Structure:
   </options>
   <resume-signal>Select: option-a, option-b, or ...</resume-signal>
 </task>
-```
-
-**checkpoint:human-action (1% - rare)**
-Action has NO CLI/API and requires human-only interaction.
-
-Use ONLY for:
-
-- Email verification links
-- SMS 2FA codes
-- Manual account approvals
-- Credit card 3D Secure flows
-
-Do NOT use for:
-
-- Deploying to Vercel (use `vercel` CLI)
-- Creating Stripe webhooks (use Stripe API)
-- Creating databases (use provider CLI)
-- Running builds/tests (use Bash tool)
-- Creating files (use Write tool)
-
-## Authentication Gates
-
-When Claude tries CLI/API and gets auth error, this is NOT a failure - it's a gate.
-
-Pattern: Claude tries automation -> auth error -> creates checkpoint -> user authenticates -> Claude retries -> continues
-
-Authentication gates are created dynamically when Claude encounters auth errors during automation. They're NOT pre-planned.
-
-## Writing Guidelines
-
-**DO:**
-
-- Automate everything with CLI/API before checkpoint
-- Be specific: "Visit <https://myapp.vercel.app>" not "check deployment"
-- Number verification steps
-- State expected outcomes
-
-**DON'T:**
-
-- Ask human to do work Claude can automate
-- Mix multiple verifications in one checkpoint
-- Place checkpoints before automation completes
-
-## Anti-Patterns
-
-**Bad - Asking human to automate:**
-
+```markdown
 ```xml
 <task type="checkpoint:human-action">
   <action>Deploy to Vercel</action>
   <instructions>Visit vercel.com, import repo, click deploy...</instructions>
 </task>
-```
-
-Why bad: Vercel has a CLI. Claude should run `vercel --yes`.
-
-**Bad - Too many checkpoints:**
-
+```text
 ```xml
 <task type="auto">Create schema</task>
 <task type="checkpoint:human-verify">Check schema</task>
 <task type="auto">Create API</task>
 <task type="checkpoint:human-verify">Check API</task>
-```
-
-Why bad: Verification fatigue. Combine into one checkpoint at end.
-
-**Good - Single verification checkpoint:**
-
+```text
 ```xml
 <task type="auto">Create schema</task>
 <task type="auto">Create API</task>
@@ -762,36 +446,7 @@ Why bad: Verification fatigue. Combine into one checkpoint at end.
   <what-built>Complete auth flow (schema + API + UI)</what-built>
   <how-to-verify>Test full flow: register, login, access protected page</how-to-verify>
 </task>
-```
-
-</checkpoints>
-
-<tdd_integration>
-
-## When TDD Improves Quality
-
-TDD is about design quality, not coverage metrics. The red-green-refactor cycle forces thinking about behavior before implementation.
-
-**Heuristic:** Can you write `expect(fn(input)).toBe(output)` before writing `fn`?
-
-**TDD candidates:**
-
-- Business logic with defined inputs/outputs
-- API endpoints with request/response contracts
-- Data transformations, parsing, formatting
-- Validation rules and constraints
-- Algorithms with testable behavior
-
-**Skip TDD:**
-
-- UI layout and styling
-- Configuration changes
-- Glue code connecting existing components
-- One-off scripts
-- Simple CRUD with no business logic
-
-## TDD Plan Structure
-
+```html
 ```markdown
 ---
 phase: XX-name
@@ -814,56 +469,7 @@ Output: [Working, tested feature]
   </behavior>
   <implementation>[How to implement once tests pass]</implementation>
 </feature>
-```
-
-**One feature per TDD plan.** If features are trivial enough to batch, they're trivial enough to skip TDD.
-
-## Red-Green-Refactor Cycle
-
-**RED - Write failing test:**
-
-1. Create test file following project conventions
-2. Write test describing expected behavior
-3. Run test - it MUST fail
-4. Commit: `test({phase}-{plan}): add failing test for [feature]`
-
-**GREEN - Implement to pass:**
-
-1. Write minimal code to make test pass
-2. No cleverness, no optimization - just make it work
-3. Run test - it MUST pass
-4. Commit: `feat({phase}-{plan}): implement [feature]`
-
-**REFACTOR (if needed):**
-
-1. Clean up implementation if obvious improvements exist
-2. Run tests - MUST still pass
-3. Commit only if changes: `refactor({phase}-{plan}): clean up [feature]`
-
-**Result:** Each TDD plan produces 2-3 atomic commits.
-
-## Context Budget for TDD
-
-TDD plans target ~40% context (lower than standard plans' ~50%).
-
-Why lower:
-
-- RED phase: write test, run test, potentially debug why it didn't fail
-- GREEN phase: implement, run test, potentially iterate
-- REFACTOR phase: modify code, run tests, verify no regressions
-
-Each phase involves file reads, test runs, output analysis. The back-and-forth is heavier than linear execution.
-
-</tdd_integration>
-
-<gap_closure_mode>
-
-## Planning from Verification Gaps
-
-Triggered by `--gaps` flag. Creates plans to address verification or UAT failures.
-
-**1. Find gap sources:**
-
+```css
 ```bash
 # Match both zero-padded (05-*) and unpadded (5-*) folders
 PADDED_PHASE=$(printf "%02d" ${PHASE_ARG} 2>/dev/null || echo "${PHASE_ARG}")
@@ -874,35 +480,7 @@ ls "$PHASE_DIR"/*-VERIFICATION.md 2>/dev/null
 
 # Check for UAT.md with diagnosed status (user testing gaps)
 grep -l "status: diagnosed" "$PHASE_DIR"/*-UAT.md 2>/dev/null
-```
-
-**2. Parse gaps:**
-
-Each gap has:
-
-- `truth`: The observable behavior that failed
-- `reason`: Why it failed
-- `artifacts`: Files with issues
-- `missing`: Specific things to add/fix
-
-**3. Load existing SUMMARYs:**
-
-Understand what's already built. Gap closure plans reference existing work.
-
-**4. Find next plan number:**
-
-If plans 01, 02, 03 exist, next is 04.
-
-**5. Group gaps into plans:**
-
-Cluster related gaps by:
-
-- Same artifact (multiple issues in Chat.tsx -> one plan)
-- Same concern (fetch + render -> one "wire frontend" plan)
-- Dependency order (can't wire if artifact is stub -> fix stub first)
-
-**6. Create gap closure tasks:**
-
+```markdown
 ```xml
 <task name="{fix_description}" type="auto">
   <files>{artifact.path}</files>
@@ -916,10 +494,7 @@ Cluster related gaps by:
   <verify>{How to confirm gap is closed}</verify>
   <done>{Observable truth now achievable}</done>
 </task>
-```
-
-**7. Write PLAN.md files:**
-
+```text
 ```yaml
 ---
 phase: XX-name
@@ -931,36 +506,10 @@ files_modified: [...]
 autonomous: true
 gap_closure: true     # Flag for tracking
 ---
-```
-
-</gap_closure_mode>
-
-<revision_mode>
-
-## Planning from Checker Feedback
-
-Triggered when orchestrator provides `<revision_context>` with checker issues. You are NOT starting fresh — you are making targeted updates to existing plans.
-
-**Mindset:** Surgeon, not architect. Minimal changes to address specific issues.
-
-### Step 1: Load Existing Plans
-
-Read all PLAN.md files in the phase directory:
-
+```html
 ```bash
 cat .planning/phases/${PHASE}-*/*-PLAN.md
-```
-
-Build mental model of:
-
-- Current plan structure (wave assignments, dependencies)
-- Existing tasks (what's already planned)
-- must_haves (goal-backward criteria)
-
-### Step 2: Parse Checker Issues
-
-Issues come in structured format:
-
+```css
 ```yaml
 issues:
   - plan: "16-01"
@@ -968,66 +517,11 @@ issues:
     severity: "blocker"
     description: "Task 2 missing <verify> element"
     fix_hint: "Add verification command for build output"
-```
-
-Group issues by:
-
-- Plan (which PLAN.md needs updating)
-- Dimension (what type of issue)
-- Severity (blocker vs warning)
-
-### Step 3: Determine Revision Strategy
-
-**For each issue type:**
-
-| Dimension | Revision Strategy |
-|-----------|-------------------|
-| requirement_coverage | Add task(s) to cover missing requirement |
-| task_completeness | Add missing elements to existing task |
-| dependency_correctness | Fix depends_on array, recompute waves |
-| key_links_planned | Add wiring task or update action to include wiring |
-| scope_sanity | Split plan into multiple smaller plans |
-| must_haves_derivation | Derive and add must_haves to frontmatter |
-
-### Step 4: Make Targeted Updates
-
-**DO:**
-
-- Edit specific sections that checker flagged
-- Preserve working parts of plans
-- Update wave numbers if dependencies change
-- Keep changes minimal and focused
-
-**DO NOT:**
-
-- Rewrite entire plans for minor issues
-- Change task structure if only missing elements
-- Add unnecessary tasks beyond what checker requested
-- Break existing working plans
-
-### Step 5: Validate Changes
-
-After making edits, self-check:
-
-- [ ] All flagged issues addressed
-- [ ] No new issues introduced
-- [ ] Wave numbers still valid
-- [ ] Dependencies still correct
-- [ ] Files on disk updated (use Write tool)
-
-### Step 6: Commit Revised Plans
-
-**If `COMMIT_PLANNING_DOCS=false`:** Skip git operations, log "Skipping planning docs commit (commit_docs: false)"
-
-**If `COMMIT_PLANNING_DOCS=true` (default):**
-
+```typescript
 ```bash
 git add .planning/phases/${PHASE}-*/${PHASE}-*-PLAN.md
 git commit -m "fix(${PHASE}): revise plans based on checker feedback"
-```
-
-### Step 7: Return Revision Summary
-
+```css
 ```markdown
 ## REVISION COMPLETE
 
@@ -1052,114 +546,25 @@ git commit -m "fix(${PHASE}): revise plans based on checker feedback"
 | Issue | Reason |
 |-------|--------|
 | {issue} | {why not addressed - needs user input} |
-```
-
-</revision_mode>
-
-<execution_flow>
-
-<step name="load_project_state" priority="first">
-Read `.planning/STATE.md` and parse:
-- Current position (which phase we're planning)
-- Accumulated decisions (constraints on this phase)
-- Pending todos (candidates for inclusion)
-- Blockers/concerns (things this phase may address)
-
-If STATE.md missing but .planning/ exists, offer to reconstruct or continue without.
-
-**Load planning config:**
-
+```html
 ```bash
 # Check if planning docs should be committed (default: true)
 COMMIT_PLANNING_DOCS=$(cat .planning/config.json 2>/dev/null | grep -o '"commit_docs"[[:space:]]*:[[:space:]]*[^,}]*' | grep -o 'true\|false' || echo "true")
 # Auto-detect gitignored (overrides config)
 git check-ignore -q .planning 2>/dev/null && COMMIT_PLANNING_DOCS=false
-```
-
-Store `COMMIT_PLANNING_DOCS` for use in git operations.
-</step>
-
-<step name="load_codebase_context">
-Check for codebase map:
-
+```html
 ```bash
 ls .planning/codebase/*.md 2>/dev/null
-```
-
-If exists, load relevant documents based on phase type:
-
-| Phase Keywords | Load These |
-|----------------|------------|
-| UI, frontend, components | CONVENTIONS.md, STRUCTURE.md |
-| API, backend, endpoints | ARCHITECTURE.md, CONVENTIONS.md |
-| database, schema, models | ARCHITECTURE.md, STACK.md |
-| testing, tests | TESTING.md, CONVENTIONS.md |
-| integration, external API | INTEGRATIONS.md, STACK.md |
-| refactor, cleanup | CONCERNS.md, ARCHITECTURE.md |
-| setup, config | STACK.md, STRUCTURE.md |
-| (default) | STACK.md, ARCHITECTURE.md |
-
-</step>
-
-<step name="identify_phase">
-Check roadmap and existing phases:
-
+```csv
 ```bash
 cat .planning/ROADMAP.md
 ls .planning/phases/
-```
-
-If multiple phases available, ask which one to plan. If obvious (first incomplete phase), proceed.
-
-Read any existing PLAN.md or DISCOVERY.md in the phase directory.
-
-**Check for --gaps flag:** If present, switch to gap_closure_mode.
-</step>
-
-<step name="mandatory_discovery">
-Apply discovery level protocol (see discovery_levels section).
-</step>
-
-<step name="read_project_history">
-**Intelligent context assembly from frontmatter dependency graph:**
-
-1. Scan all summary frontmatter (first ~25 lines):
-
+```csv
 ```bash
 for f in .planning/phases/*/*-SUMMARY.md; do
   sed -n '1,/^---$/p; /^---$/q' "$f" | head -30
 done
-```
-
-1. Build dependency graph for current phase:
-
-- Check `affects` field: Which prior phases affect current phase?
-- Check `subsystem`: Which prior phases share same subsystem?
-- Check `requires` chains: Transitive dependencies
-- Check roadmap: Any phases marked as dependencies?
-
-1. Select relevant summaries (typically 2-4 prior phases)
-
-2. Extract context from frontmatter:
-
-- Tech available (union of tech-stack.added)
-- Patterns established
-- Key files
-- Decisions
-
-1. Read FULL summaries only for selected relevant phases.
-
-**From STATE.md:** Decisions -> constrain approach. Pending todos -> candidates.
-</step>
-
-<step name="gather_phase_context">
-Understand:
-- Phase goal (from roadmap)
-- What exists already (scan codebase if mid-project)
-- Dependencies met (previous phases complete?)
-
-**Load phase-specific context files (MANDATORY):**
-
+```markdown
 ```bash
 # Match both zero-padded (05-*) and unpadded (5-*) folders
 PADDED_PHASE=$(printf "%02d" ${PHASE} 2>/dev/null || echo "${PHASE}")
@@ -1173,43 +578,9 @@ cat "${PHASE_DIR}"/*-RESEARCH.md 2>/dev/null
 
 # Read DISCOVERY.md if exists (from mandatory discovery)
 cat "${PHASE_DIR}"/*-DISCOVERY.md 2>/dev/null
+```csv
 ```
 
-**If CONTEXT.md exists:** Honor user's vision, prioritize their essential features, respect stated boundaries. These are locked decisions - do not revisit.
-
-**If RESEARCH.md exists:** Use standard_stack, architecture_patterns, dont_hand_roll, common_pitfalls. Research has already identified the right tools.
-</step>
-
-<step name="break_into_tasks">
-Decompose phase into tasks. **Think dependencies first, not sequence.**
-
-For each potential task:
-
-1. What does this task NEED? (files, types, APIs that must exist)
-2. What does this task CREATE? (files, types, APIs others might need)
-3. Can this run independently? (no dependencies = Wave 1 candidate)
-
-Apply TDD detection heuristic. Apply user setup detection.
-</step>
-
-<step name="build_dependency_graph">
-Map task dependencies explicitly before grouping into plans.
-
-For each task, record needs/creates/has_checkpoint.
-
-Identify parallelization opportunities:
-
-- No dependencies = Wave 1 (parallel)
-- Depends only on Wave 1 = Wave 2 (parallel)
-- Shared file conflict = Must be sequential
-
-Prefer vertical slices over horizontal layers.
-</step>
-
-<step name="assign_waves">
-Compute wave numbers before writing plans.
-
-```
 waves = {}  # plan_id -> wave_number
 
 for each plan in plan_order:
@@ -1219,91 +590,8 @@ for each plan in plan_order:
     plan.wave = max(waves[dep] for dep in plan.depends_on) + 1
 
   waves[plan.id] = plan.wave
-```
 
-</step>
-
-<step name="group_into_plans">
-Group tasks into plans based on dependency waves and autonomy.
-
-Rules:
-
-1. Same-wave tasks with no file conflicts -> can be in parallel plans
-2. Tasks with shared files -> must be in same plan or sequential plans
-3. Checkpoint tasks -> mark plan as `autonomous: false`
-4. Each plan: 2-3 tasks max, single concern, ~50% context target
-</step>
-
-<step name="derive_must_haves">
-Apply goal-backward methodology to derive must_haves for PLAN.md frontmatter.
-
-1. State the goal (outcome, not task)
-2. Derive observable truths (3-7, user perspective)
-3. Derive required artifacts (specific files)
-4. Derive required wiring (connections)
-5. Identify key links (critical connections)
-</step>
-
-<step name="estimate_scope">
-After grouping, verify each plan fits context budget.
-
-2-3 tasks, ~50% context target. Split if necessary.
-
-Check depth setting and calibrate accordingly.
-</step>
-
-<step name="confirm_breakdown">
-Present breakdown with wave structure.
-
-Wait for confirmation in interactive mode. Auto-approve in yolo mode.
-</step>
-
-<step name="write_phase_prompt">
-Use template structure for each PLAN.md.
-
-Write to `.planning/phases/XX-name/{phase}-{NN}-PLAN.md` (e.g., `01-02-PLAN.md` for Phase 1, Plan 2)
-
-Include frontmatter (phase, plan, type, wave, depends_on, files_modified, autonomous, must_haves).
-</step>
-
-<step name="update_roadmap">
-Update ROADMAP.md to finalize phase placeholders created by add-phase or insert-phase.
-
-1. Read `.planning/ROADMAP.md`
-2. Find the phase entry (`### Phase {N}:`)
-3. Update placeholders:
-
-**Goal** (only if placeholder):
-
-- `[To be planned]` → derive from CONTEXT.md > RESEARCH.md > phase description
-- `[Urgent work - to be planned]` → derive from same sources
-- If Goal already has real content → leave it alone
-
-**Plans** (always update):
-
-- `**Plans:** 0 plans` → `**Plans:** {N} plans`
-- `**Plans:** (created by /gsd:plan-phase)` → `**Plans:** {N} plans`
-
-**Plan list** (always update):
-
-- Replace `Plans:\n- [ ] TBD ...` with actual plan checkboxes:
-
-  ```
-  Plans:
-  - [ ] {phase}-01-PLAN.md — {brief objective}
-  - [ ] {phase}-02-PLAN.md — {brief objective}
-  ```
-
-1. Write updated ROADMAP.md
-</step>
-
-<step name="git_commit">
-Commit phase plan(s) and updated roadmap:
-
-**If `COMMIT_PLANNING_DOCS=false`:** Skip git operations, log "Skipping planning docs commit (commit_docs: false)"
-
-**If `COMMIT_PLANNING_DOCS=true` (default):**
-
+```html
 ```bash
 git add .planning/phases/${PHASE}-*/${PHASE}-*-PLAN.md .planning/ROADMAP.md
 git commit -m "docs(${PHASE}): create phase plan
@@ -1312,20 +600,7 @@ Phase ${PHASE}: ${PHASE_NAME}
 - [N] plan(s) in [M] wave(s)
 - [X] parallel, [Y] sequential
 - Ready for execution"
-```
-
-</step>
-
-<step name="offer_next">
-Return structured planning outcome to orchestrator.
-</step>
-
-</execution_flow>
-
-<structured_returns>
-
-## Planning Complete
-
+```html
 ```markdown
 ## PLANNING COMPLETE
 
@@ -1351,10 +626,7 @@ Return structured planning outcome to orchestrator.
 Execute: `/gsd:execute-phase {phase}`
 
 <sub>`/clear` first - fresh context window</sub>
-```
-
-## Checkpoint Reached
-
+```css
 ```markdown
 ## CHECKPOINT REACHED
 
@@ -1373,10 +645,7 @@ Execute: `/gsd:execute-phase {phase}`
 ### Awaiting
 
 [What to do to continue]
-```
-
-## Gap Closure Plans Created
-
+```css
 ```markdown
 ## GAP CLOSURE PLANS CREATED
 
@@ -1393,10 +662,7 @@ Execute: `/gsd:execute-phase {phase}`
 ### Next Steps
 
 Execute: `/gsd:execute-phase {phase} --gaps-only`
-```
-
-## Revision Complete
-
+```css
 ```markdown
 ## REVISION COMPLETE
 

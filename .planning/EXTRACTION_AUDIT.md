@@ -20,12 +20,7 @@ Generated: 2026-01-23T15:28:44.774Z
   "fob": "Buyers Facility (Seller bears risk until delivery)",
   "priceType": "Fixed - order shall not be filled at higher price"
 }
-```
-
-### contacts
-
-**Status:** success
-
+```css
 ```json
 {
   "gcProjectContact": {
@@ -42,12 +37,7 @@ Generated: 2026-01-23T15:28:44.774Z
     "email": "ap@laytonconstruction.com"
   }
 }
-```
-
-### contractInfo
-
-**Status:** success
-
+```css
 ```json
 {
   "documentType": "Purchase Order",
@@ -66,23 +56,13 @@ Generated: 2026-01-23T15:28:44.774Z
   "scopeOfWork": "SWPPP materials and services",
   "governingLaw": "State of Arizona"
 }
-```
-
-### insurance
-
-**Status:** success
-
+```css
 ```json
 {
   "requirementsNoted": false,
   "notes": "No specific insurance requirements mentioned in PO. Standard indemnification clause in Section X requires Seller to indemnify Buyer and Owner for personal injury and property damage arising from negligent acts."
 }
-```
-
-### redFlags
-
-**Status:** success
-
+```css
 ```json
 {
   "flags": [
@@ -114,12 +94,7 @@ Generated: 2026-01-23T15:28:44.774Z
   ],
   "overallRisk": "medium-high"
 }
-```
-
-### siteInfo
-
-**Status:** success
-
+```css
 ```json
 {
   "projectName": "Trailhead Multifamily",
@@ -129,12 +104,7 @@ Generated: 2026-01-23T15:28:44.774Z
   "zip": "85383",
   "projectType": "Multifamily Residential Construction"
 }
-```
-
-### sov
-
-**Status:** success
-
+```css
 ```json
 {
   "lineItems": [
@@ -191,16 +161,7 @@ Generated: 2026-01-23T15:28:44.774Z
   "subtotal": 20170,
   "total": 20170
 }
-```
-
----
-
-## Contract 10: Desert Services LOI & SOW.pdf
-
-### billing
-
-**Status:** success
-
+```css
 ```json
 {
   "retentionPercent": null,
@@ -213,12 +174,7 @@ Generated: 2026-01-23T15:28:44.774Z
     5
   ]
 }
-```
-
-### contacts
-
-**Status:** success
-
+```css
 ```json
 {
   "projectManager": null,
@@ -231,12 +187,7 @@ Generated: 2026-01-23T15:28:44.774Z
     1
   ]
 }
-```
-
-### contractInfo
-
-**Status:** success
-
+```css
 ```json
 {
   "contractType": "LOI",
@@ -253,12 +204,7 @@ Generated: 2026-01-23T15:28:44.774Z
     2
   ]
 }
-```
-
-### insurance
-
-**Status:** success
-
+```css
 ```json
 {
   "glLimits": null,
@@ -281,12 +227,7 @@ Generated: 2026-01-23T15:28:44.774Z
     1
   ]
 }
-```
-
-### redFlags
-
-**Status:** success
-
+```css
 ```json
 {
   "unusualTerms": [
@@ -333,12 +274,7 @@ Generated: 2026-01-23T15:28:44.774Z
     6
   ]
 }
-```
-
-### siteInfo
-
-**Status:** success
-
+```css
 ```json
 {
   "siteAddress": "Houghton Rd. & Old Vail Rd. (NWC), Tucson, AZ 85747",
@@ -358,12 +294,7 @@ Generated: 2026-01-23T15:28:44.774Z
     5
   ]
 }
-```
-
-### sov
-
-**Status:** success
-
+```css
 ```json
 {
   "sovIncluded": true,

@@ -1,9 +1,9 @@
 #!/usr/bin/env bun
-import type { Email } from "./db.ts";
+import { searchEmailsFullText } from "./db";
 /**
  * Search census database for contact information
  */
-import { searchEmailsFullText } from "./db.ts";
+import type { Email } from "./db/types";
 
 const query = process.argv[2] || "";
 

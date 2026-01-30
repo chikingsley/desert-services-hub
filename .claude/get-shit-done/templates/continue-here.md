@@ -10,8 +10,7 @@ total_tasks: 7
 status: in_progress
 last_updated: 2025-01-15T14:30:00Z
 ---
-```
-
+```text
 ```markdown
 <current_state>
 [Where exactly are we? What's the immediate context?]

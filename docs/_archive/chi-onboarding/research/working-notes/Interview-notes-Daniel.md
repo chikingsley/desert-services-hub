@@ -41,14 +41,14 @@ SWPPP is 4 man crews. - WT doesn't
 estimate has to be approved -- it's sent back via email. ALL projects are confirmed via email first. -- we ask what PO is needed ALWAYS. Time, Dates service is needed, location, how long they estimate the job will take, pictures.. water source onsite usually hydrant/meter/backflow - maybe water tower, will check if we can find.
 sodella - dirty contractor, have very dirty sites. can take 13-14 hours
 
-* -
+* *
 
 name of gc
 name of jobsite
 addresses for jobsite
 site contact
 
-* -
+* *
 
 after approval, it goes on dawns sheet (for contracts)
 mainly callins - that need last minute, and get an email.

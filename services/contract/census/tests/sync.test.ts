@@ -11,13 +11,9 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { ensureBucket, fileExists, getFile, minioClient } from "@/lib/minio";
 import { GraphEmailClient } from "../../../email/client";
-import {
-  db,
-  getEmailByMessageId,
-  getOrCreateMailbox,
-  type InsertEmailData,
-  insertEmail,
-} from "../db";
+import { getEmailByMessageId, getOrCreateMailbox, insertEmail } from "../db";
+import { db } from "../db/connection";
+import type { InsertEmailData } from "../db/types";
 
 // Test constants
 const TEST_MAILBOX = "estimating@desertservices.net";

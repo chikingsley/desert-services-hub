@@ -15,7 +15,7 @@ End-to-end workflow for processing contracts from contracts@ email to internal h
 │    EMAILS       │ ◀── │   RECONCILE     │ ◀── │   VALIDATE      │
 │  internal + GC  │     │  math check     │     │  business rules │
 └─────────────────┘     └─────────────────┘     └─────────────────┘
-```
+```css
 
 ## Key Principles
 
@@ -35,7 +35,7 @@ Reconciliation MUST balance:
 
 ```text
 Estimate - Removed + Added = Contract
-```
+```css
 
 If it doesn't balance, the workflow flags it for review.
 
@@ -64,7 +64,7 @@ bun services/contract/workflow/queue.ts search "sun health"
 
 # View details for a contract thread
 bun services/contract/workflow/queue.ts details "Sun Health La Loma RGS"
-```
+```css
 
 **Output:** List of contracts with attachment info, dates, and status.
 
@@ -81,7 +81,7 @@ bun services/contract/workflow/collect.ts add ./ground-truth/sun-health-la-loma-
 
 # List documents in a folder
 bun services/contract/workflow/collect.ts list ./ground-truth/sun-health-la-loma-rgs
-```
+```css
 
 **Output:** Project folder with all PDFs, missing document warnings.
 
@@ -95,7 +95,7 @@ bun services/contract/workflow/extract.ts ocr ./ground-truth/sun-health-la-loma-
 
 # Extract from all PDFs in a folder (programmatic)
 # See extract.ts for extractFromDocuments()
-```
+```css
 
 **Output:**
 
@@ -127,7 +127,7 @@ bun services/contract/workflow/reconcile.ts validate ./ground-truth/sun-health-l
 
 # Show example manual reconciliation
 bun services/contract/workflow/reconcile.ts manual
-```
+```css
 
 **Output:**
 
@@ -172,7 +172,7 @@ services/contract/
 │   └── gc-response.hbs       # GC response template
 ├── ground-truth/             # Example contracts and notes
 └── WORKFLOW.md               # This file
-```
+```css
 
 ---
 

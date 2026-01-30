@@ -23,44 +23,11 @@ Check if this is an existing project:
 ls .planning/STATE.md 2>/dev/null && echo "Project exists"
 ls .planning/ROADMAP.md 2>/dev/null && echo "Roadmap exists"
 ls .planning/PROJECT.md 2>/dev/null && echo "Project file exists"
-```
-
-**If STATE.md exists:** Proceed to load_state
-**If only ROADMAP.md/PROJECT.md exist:** Offer to reconstruct STATE.md
-**If .planning/ doesn't exist:** This is a new project - route to /gsd:new-project
-</step>
-
-<step name="load_state">
-
-Read and parse STATE.md, then PROJECT.md:
-
+```html
 ```bash
 cat .planning/STATE.md
 cat .planning/PROJECT.md
-```
-
-**From STATE.md extract:**
-
-- **Project Reference**: Core value and current focus
-- **Current Position**: Phase X of Y, Plan A of B, Status
-- **Progress**: Visual progress bar
-- **Recent Decisions**: Key decisions affecting current work
-- **Pending Todos**: Ideas captured during sessions
-- **Blockers/Concerns**: Issues carried forward
-- **Session Continuity**: Where we left off, any resume files
-
-**From PROJECT.md extract:**
-
-- **What This Is**: Current accurate description
-- **Requirements**: Validated, Active, Out of Scope
-- **Key Decisions**: Full decision log with outcomes
-- **Constraints**: Hard limits on implementation
-
-</step>
-
-<step name="check_incomplete_work">
-Look for incomplete work that needs attention:
-
+```csv
 ```bash
 # Check for continue-here files (mid-plan resumption)
 ls .planning/phases/*/.continue-here*.md 2>/dev/null
@@ -76,30 +43,9 @@ if [ -f .planning/current-agent-id.txt ] && [ -s .planning/current-agent-id.txt 
   AGENT_ID=$(cat .planning/current-agent-id.txt | tr -d '\n')
   echo "Interrupted agent: $AGENT_ID"
 fi
+```markdown
 ```
 
-**If .continue-here file exists:**
-
-- This is a mid-plan resumption point
-- Read the file for specific resumption context
-- Flag: "Found mid-plan checkpoint"
-
-**If PLAN without SUMMARY exists:**
-
-- Execution was started but not completed
-- Flag: "Found incomplete plan execution"
-
-**If interrupted agent found:**
-
-- Subagent was spawned but session ended before completion
-- Read agent-history.json for task details
-- Flag: "Found interrupted agent"
-  </step>
-
-<step name="present_status">
-Present complete project status to user:
-
-```
 ╔══════════════════════════════════════════════════════════════╗
 ║  PROJECT STATUS                                               ║
 ╠══════════════════════════════════════════════════════════════╣
@@ -134,51 +80,14 @@ Present complete project status to user:
 
 [If alignment is not ✓:]
 ⚠️  Brief alignment: [status] - [assessment]
+
+```html
 ```
 
-</step>
-
-<step name="determine_next_action">
-Based on project state, determine the most logical next action:
-
-**If interrupted agent exists:**
-→ Primary: Resume interrupted agent (Task tool with resume parameter)
-→ Option: Start fresh (abandon agent work)
-
-**If .continue-here file exists:**
-→ Primary: Resume from checkpoint
-→ Option: Start fresh on current plan
-
-**If incomplete plan (PLAN without SUMMARY):**
-→ Primary: Complete the incomplete plan
-→ Option: Abandon and move on
-
-**If phase in progress, all plans complete:**
-→ Primary: Transition to next phase
-→ Option: Review completed work
-
-**If phase ready to plan:**
-→ Check if CONTEXT.md exists for this phase:
-
-- If CONTEXT.md missing:
-  → Primary: Discuss phase vision (how user imagines it working)
-  → Secondary: Plan directly (skip context gathering)
-- If CONTEXT.md exists:
-  → Primary: Plan the phase
-  → Option: Review roadmap
-
-**If phase ready to execute:**
-→ Primary: Execute next plan
-→ Option: Review the plan first
-</step>
-
-<step name="offer_options">
-Present contextual options based on project state:
-
-```
 What would you like to do?
 
 [Primary action based on state - e.g.:]
+
 1. Resume interrupted agent [if interrupted agent found]
    OR
 1. Execute phase (/gsd:execute-phase {phase})
@@ -192,71 +101,11 @@ What would you like to do?
 3. Check pending todos ([N] pending)
 4. Review brief alignment
 5. Something else
-```
 
-**Note:** When offering phase planning, check for CONTEXT.md existence first:
-
+```text
 ```bash
 ls .planning/phases/XX-name/CONTEXT.md 2>/dev/null
-```
-
-If missing, suggest discuss-phase before plan. If exists, offer plan directly.
-
-Wait for user selection.
-</step>
-
-<step name="route_to_workflow">
-Based on user selection, route to appropriate workflow:
-
-- **Execute plan** → Show command for user to run after clearing:
-
-  ```
-  ---
-
-  ## ▶ Next Up
-
-  **{phase}-{plan}: [Plan Name]** — [objective from PLAN.md]
-
-  `/gsd:execute-phase {phase}`
-
-  <sub>`/clear` first → fresh context window</sub>
-
-  ---
-  ```
-
-- **Plan phase** → Show command for user to run after clearing:
-
-  ```
-  ---
-
-  ## ▶ Next Up
-
-  **Phase [N]: [Name]** — [Goal from ROADMAP.md]
-
-  `/gsd:plan-phase [phase-number]`
-
-  <sub>`/clear` first → fresh context window</sub>
-
-  ---
-
-  **Also available:**
-  - `/gsd:discuss-phase [N]` — gather context first
-  - `/gsd:research-phase [N]` — investigate unknowns
-
-  ---
-  ```
-
-- **Transition** → ./transition.md
-- **Check todos** → Read .planning/todos/pending/, present summary
-- **Review alignment** → Read PROJECT.md, compare to current state
-- **Something else** → Ask what they need
-</step>
-
-<step name="update_session">
-Before proceeding to routed workflow, update session continuity:
-
-Update STATE.md:
-
+```csv
 ```markdown
 ## Session Continuity
 

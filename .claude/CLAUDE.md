@@ -21,16 +21,6 @@ bun x ultracite fix    # Auto-fix formatting and lint issues
 bun x ultracite check  # Check for issues without fixing
 ```
 
-## Tech Stack
-
-- **Framework**: Next.js 16 with App Router (React 19, Server Components)
-- **Database**: SQLite via `bun:sqlite` (`lib/db/index.ts`)
-- **Styling**: Tailwind CSS v4 with tw-animate-css
-- **UI Components**: shadcn/ui (new-york style) with Radix primitives
-- **Icons**: lucide-react
-- **PDF**: pdfjs-dist v5 for viewing, pdf-lib for export
-- **Linting/Formatting**: Ultracite (Biome preset)
-
 ## Architecture
 
 ### Directory Structure

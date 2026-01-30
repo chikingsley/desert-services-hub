@@ -24,10 +24,12 @@ import { BOARD_IDS, ESTIMATING_COLUMNS } from "@/services/monday/types";
 import {
   getEstimateByMondayId,
   getEstimateStats,
-  type UpsertEstimateData,
   updateEstimateStorage,
+  updatePlansStorage,
   upsertEstimate,
 } from "./db";
+import type { UpsertEstimateData } from "./db/types";
+import { createProgressBar } from "./lib/progress";
 
 // ============================================
 // Types
@@ -242,6 +244,33 @@ async function downloadAndUploadEstimatePdf(
   return { bucket: BUCKETS.MONDAY_ESTIMATES, path: objectPath };
 }
 
+async function downloadAndUploadPlanPdf(
+  mondayItemId: string,
+  asset: Asset
+): Promise<string | null> {
+  const objectPath = `${mondayItemId}/${asset.name}`;
+
+  // Check if already uploaded
+  const exists = await fileExists(BUCKETS.MONDAY_PLANS, objectPath);
+  if (exists) {
+    return objectPath;
+  }
+
+  // Download from Monday's public URL
+  const response = await fetch(asset.public_url);
+  if (!response.ok) {
+    throw new Error(`Failed to download plan: ${response.status}`);
+  }
+
+  const arrayBuffer = await response.arrayBuffer();
+  const buffer = Buffer.from(arrayBuffer);
+
+  // Upload to MinIO
+  await uploadFile(BUCKETS.MONDAY_PLANS, objectPath, buffer, "application/pdf");
+
+  return objectPath;
+}
+
 // ============================================
 // Sync Logic
 // ============================================
@@ -249,7 +278,12 @@ async function downloadAndUploadEstimatePdf(
 export async function syncEstimates(
   options: SyncOptions = {}
 ): Promise<SyncResult> {
-  const { limit, skipFiles = false, onProgress } = options;
+  const {
+    limit,
+    skipFiles = false,
+    includePlans = false,
+    onProgress,
+  } = options;
 
   const result: SyncResult = {
     itemsSynced: 0,
@@ -295,6 +329,38 @@ export async function syncEstimates(
       );
       for (const [id, assets] of batchAssets) {
         assetMap.set(id, assets);
+      }
+    }
+  }
+
+  // Batch fetch assets for items with plan files (if includePlans is true)
+  const plansAssetMap = new Map<string, Asset[]>();
+  if (includePlans && !skipFiles) {
+    const itemsWithPlansColumn = items.filter((item) => {
+      const fileValue = item.columns[ESTIMATING_COLUMNS.PLANS.id];
+      return fileValue && fileValue !== "";
+    });
+
+    if (itemsWithPlansColumn.length > 0) {
+      const itemIds = itemsWithPlansColumn.map((i) => i.id);
+      // Use smaller batch size (25) for plans to avoid API timeouts
+      for (let i = 0; i < itemIds.length; i += 25) {
+        const batch = itemIds.slice(i, i + 25);
+        try {
+          const batchAssets = await fetchItemAssets(
+            batch,
+            ESTIMATING_COLUMNS.PLANS.id
+          );
+          for (const [id, assets] of batchAssets) {
+            plansAssetMap.set(id, assets);
+          }
+        } catch (error) {
+          // Log but continue - don't fail entire sync for one batch
+          console.error(
+            `Plans batch fetch error (items ${i}-${i + 25}):`,
+            error
+          );
+        }
       }
     }
   }
@@ -380,6 +446,39 @@ export async function syncEstimates(
             fileStatus: "no-file",
           });
         }
+
+        // Handle plans file sync (if includePlans is true)
+        if (includePlans) {
+          const plansAssets = plansAssetMap.get(item.id) ?? [];
+          const plansPdfAssets = plansAssets.filter(
+            (a) => a.name.toLowerCase().endsWith(".pdf") && a.public_url
+          );
+
+          if (plansPdfAssets.length > 0) {
+            const planAsset = plansPdfAssets[0];
+            const existing = getEstimateByMondayId(item.id);
+
+            // Skip if already synced
+            if (!existing?.plansStoragePath) {
+              try {
+                const plansPath = await downloadAndUploadPlanPdf(
+                  item.id,
+                  planAsset
+                );
+                if (plansPath) {
+                  updatePlansStorage(item.id, plansPath);
+                  result.filesUploaded++;
+                }
+              } catch (planError) {
+                const planErrMsg =
+                  planError instanceof Error
+                    ? planError.message
+                    : String(planError);
+                result.errors.push(`${item.name} (plans): ${planErrMsg}`);
+              }
+            }
+          }
+        }
       }
     } catch (error) {
       const errMsg = error instanceof Error ? error.message : String(error);
@@ -420,6 +519,7 @@ if (import.meta.main) {
   const skipFiles = args.includes("--skip-files");
   const includePlans = args.includes("--include-plans");
   const includeContracts = args.includes("--include-contracts");
+  const skipLinking = args.includes("--skip-linking");
 
   const limit = limitArg
     ? Number.parseInt(limitArg.split("=")[1], 10)
@@ -430,9 +530,12 @@ if (import.meta.main) {
   console.log("=".repeat(50));
   console.log(`Limit: ${limit ?? "all"}`);
   console.log(`Skip files: ${skipFiles}`);
-  console.log(`Include plans: ${includePlans} (not implemented)`);
+  console.log(`Include plans: ${includePlans}`);
   console.log(`Include contracts: ${includeContracts} (not implemented)`);
+  console.log(`Skip project linking: ${skipLinking}`);
   console.log(`${"=".repeat(50)}\n`);
+
+  let bar: ReturnType<typeof createProgressBar> | null = null;
 
   syncEstimates({
     limit,
@@ -442,24 +545,17 @@ if (import.meta.main) {
     onProgress: (p) => {
       if (p.phase === "fetching") {
         console.log("Fetching items from Monday.com...");
-      } else if (p.phase === "syncing" && p.current !== undefined) {
-        let icon = "\u2192";
-        if (p.fileStatus === "done") {
-          icon = "\u2713";
-        } else if (p.fileStatus === "skipped") {
-          icon = "\u21B7";
-        } else if (p.fileStatus === "no-file") {
-          icon = "\u2205";
-        } else if (p.fileStatus === "downloading") {
-          icon = "\u2193";
+      } else if (p.phase === "syncing" && p.current !== undefined && p.total) {
+        if (!bar) {
+          bar = createProgressBar(p.total, "Syncing");
         }
-
-        const name = (p.itemName ?? "").slice(0, 40).padEnd(40);
-        console.log(`[${p.current}/${p.total}] ${icon} ${name}`);
+        bar.update(p.current);
+      } else if (p.phase === "complete") {
+        bar?.stop();
       }
     },
   })
-    .then((result) => {
+    .then(async (result) => {
       console.log(`\n${"=".repeat(50)}`);
       console.log("SYNC COMPLETE");
       console.log("=".repeat(50));
@@ -475,6 +571,23 @@ if (import.meta.main) {
         if (result.errors.length > 10) {
           console.log(`  ... and ${result.errors.length - 10} more`);
         }
+      }
+
+      // Step 2: Link estimates to projects (unless skipped)
+      if (!skipLinking) {
+        console.log(`\n${"=".repeat(50)}`);
+        console.log("LINKING ESTIMATES TO PROJECTS");
+        console.log("=".repeat(50) + "\n");
+
+        const { linkEstimatesToProjects, showStats: showLinkStats } =
+          await import("./link-estimates-to-projects");
+        const linkResult = linkEstimatesToProjects();
+
+        console.log(`Projects created: ${linkResult.projectsCreated}`);
+        console.log(`Projects reused: ${linkResult.projectsReused}`);
+        console.log(`Aliases added: ${linkResult.aliasesAdded}`);
+
+        showLinkStats();
       }
 
       printStats();

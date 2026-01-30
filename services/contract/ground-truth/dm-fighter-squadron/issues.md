@@ -21,7 +21,7 @@ Per WORKFLOW.md Key Principle #1:
 
 **Fix:** Add citations from USACE letters. Example:
 
-```
+```text
 Source: 22-014 C-0001 SERIAL LETTER - RESUMPTION OF WORK REQUEST.pdf, page 1
 Quote: "The work order shall resume on..."
 ```

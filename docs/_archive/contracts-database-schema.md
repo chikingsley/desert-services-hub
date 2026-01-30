@@ -161,25 +161,25 @@ Sum: All currency columns
 
 ```notion
 dateBetween(prop("Contract Signed"), prop("Contract Sent"), "days")
-```
+```css
 
 ### Variance
 
 ```notion
 prop("Contract Value") - prop("Estimate Value")
-```
+```css
 
 ### Balance Due
 
 ```notion
 prop("Billed to Date") - prop("Paid to Date")
-```
+```css
 
 ### Retention Amount
 
 ```notion
 prop("Contract Value") * prop("Retention %")
-```
+```css
 
 ### Onboarding Complete (Boolean)
 

@@ -44,7 +44,7 @@ This document captures design decisions, open questions, and planned features fo
 │     └── Handoff to ops                                               │
 │                                                                      │
 └──────────────────────────────────────────────────────────────────────┘
-```
+```css
 
 ### Current State
 
@@ -88,7 +88,7 @@ Quote
     ├── recipient_email
     ├── sent_at
     └── status (draft | sent | viewed | accepted | declined | superseded)
-```
+```css
 
 ### Key Concepts
 
@@ -132,7 +132,7 @@ Takeoff
 │   └── notes
 │
 └── quote_id (FK, optional - linked quote)
-```
+```css
 
 ### Linking Takeoff → Quote
 
@@ -145,7 +145,7 @@ Quote.LineItems[]
     ├── quantity (from measurement)
     ├── unit_price (from catalog)
     └── total
-```
+```css
 
 **Flow**: Takeoff measurements have an `item_type` (e.g., "inlet"). When exporting, match to catalog items, create line items with calculated quantities.
 
@@ -163,7 +163,7 @@ Quote.LineItems[]
         ├─ Full Service
         ├─ Dust Permit Only
         └─ [Custom templates TBD]
-```
+```css
 
 **Decision**: "New" creates a blank quote. Templates are a power-user feature.
 
@@ -213,7 +213,7 @@ Quote.LineItems[]
 │                     Content Area                            │
 │                                                             │
 └─────────────────────────────────────────────────────────────┘
-```
+```css
 
 ### Proposed: Toolbar + Collapsible Preview
 
@@ -225,7 +225,7 @@ Quote.LineItems[]
 │      Editor Panel         │      PDF Preview (collapsible)  │
 │                           │                                 │
 └─────────────────────────────────────────────────────────────┘
-```
+```css
 
 ### Sidebar Navigation (Decided)
 
@@ -497,7 +497,7 @@ Start with **hybrid**:
 │  │  - Draggable/editable objects                       ││
 │  └─────────────────────────────────────────────────────┘│
 └─────────────────────────────────────────────────────────┘
-```
+```css
 
 #### How It Works
 
@@ -544,7 +544,7 @@ function TakeoffViewer({ pdfUrl }: { pdfUrl: string }) {
     </div>
   );
 }
-```
+```css
 
 #### Saving Annotations
 
@@ -566,7 +566,7 @@ const loadMarkups = async (quoteId: string, stage: Konva.Stage) => {
     // Apply to stage...
   }
 };
-```
+```css
 
 #### Key Questions Answered
 
@@ -689,7 +689,7 @@ const handleMouseMove = (e: KonvaEventObject<MouseEvent>) => {
     ))}
   </Layer>
 </Stage>
-```
+```css
 
 #### Count Tool (Drop Markers)
 
@@ -718,7 +718,7 @@ const handleClick = (e: KonvaEventObject<MouseEvent>) => {
     <Text text={String(m.count)} fill="#fff" align="center" />
   </Group>
 ))}
-```
+```css
 
 #### Linear Measurement (Two-Point Line)
 
@@ -742,7 +742,7 @@ const handleClick = (pos) => {
     setStartPoint(null);  // Reset for next
   }
 };
-```
+```css
 
 #### Legend Auto-Population
 
@@ -772,7 +772,7 @@ const legend = useMemo(() => {
     </div>
   ))}
 </div>
-```
+```css
 
 ### Map Libraries vs Canvas Libraries
 
@@ -853,7 +853,7 @@ Reconciliation Complete
 ├── Status: Reconciled / Issues Found
 ├── Notes attached
 └── Ready for project initiation
-```
+```css
 
 ### Technical Approach
 
@@ -877,7 +877,7 @@ ContractReconciliation
 │   ├── status (pass | fail | na)
 │   └── notes
 └── reconciled_at
-```
+```css
 
 ---
 

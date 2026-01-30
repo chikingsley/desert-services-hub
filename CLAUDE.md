@@ -95,39 +95,29 @@ The primary work right now is processing contracts through the intake pipeline. 
 
 We are manually processing ~25 projects. Some are new intake, some are already active. **READ THE EMAILS FIRST** before applying any checklist. The emails tell you what stage the project is actually in. Don't assume intake — check the timeline, check what's already happening.
 
-For new contracts going through intake, use the 18-step checklist in PROJECT.md. For active projects, document current state from emails instead. Each project needs:
+For new contracts going through intake, see `.planning/PROJECT.md`. For active projects, document current state from emails instead. Each project needs:
 
 1. Research project (search census DB locally — emails, estimates, attachments)
 2. Find estimate in Monday (query `estimates` table in census.db — DO NOT call Monday API)
-3. Create/update Notion project page (database ID: `2f5c1835-5bb2-8062-a2a9-c37dd689454e`)
-4. Mark Won in Monday, mark competing lost
-5. Get estimate PDF + contract PDF
-6. Extract contract data
-7. Verify insurance
-8. Reconcile contract vs estimate
-9. Award value in Monday
-10. SharePoint folder setup (new pattern — old folders are gone)
-11. Finalize Notion page
-12. Internal email to internalcontracts@ group
-13. Track open items
-14. Start dust permit / order SWPPP if applicable
-
-### Notion Projects Database
-
-- Database ID: `2f5c1835-5bb2-8062-a2a9-c37dd689454e`
-- Data source: `2f5c1835-5bb2-80b5-99b4-000bc3de5e73`
-- Properties: Project name (title), Account (text), Stage (select), Owner (people), Dates (date), Files (file)
-- Stage options: Intake, Reconciling, Issues Sent to Customer, Ready to Sign, Waiting on Signature, Signed - Notify Team, Active Project, Done, Canceled
+3. Mark Won in Monday, mark competing lost
+4. Get estimate PDF + contract PDF
+5. Extract contract data
+6. Verify insurance
+7. Reconcile contract vs estimate
+8. Award value in Monday
+9. SharePoint folder setup
+10. Internal email to internalcontracts@ group
+11. Track open items
+12. Start dust permit / order SWPPP if applicable
 
 ### Key Rules
 
 - **All project files must end up in SharePoint** — cataloging in MinIO is not enough
 - **Use the file naming convention** from `services/sharepoint/paths.ts`
-- **Link everything with census `notion_project_id`** — emails, attachments tied to Notion project pages
 - **Contracts may not be in email** — check DocuSign, Procore, internal contracts group, shared drives
 - **Read `.planning/PROJECT.md` and `.planning/STATE.md`** at the start of contract work sessions
 - **No `bun -e` for workflows** — write durable `.ts` scripts in the repo that can be run repeatedly and improved over time. Only use `bun -e` for one-off queries if you ask first. Workflows must be files, not inline scripts.
-- **READ THE EMAILS before making any determination** — don't just search subjects/metadata. Read `body_preview` for every email on a project to understand what's actually happening before writing anything to Notion or making status calls.
+- **READ THE EMAILS before making any determination** — don't just search subjects/metadata. Read `body_preview` for every email on a project to understand what's actually happening.
 
 ### SharePoint Structure
 
@@ -138,10 +128,22 @@ For new contracts going through intake, use the 18-step checklist in PROJECT.md.
 - Project folders inside contractor: `Active/W/Weis Builders/The Verge at Ballpark Village/`
 - Subfolders per project: `01-Estimates`, `02-Contracts`, `03-Permits`, `04-SWPPP`, `05-Inspections`, `06-Billing`, `07-Closeout`
 - **Full path**: `Customer Projects/Active/{Letter}/{Contractor}/{Project}/{Subfolder}/`
-- Sync script: `bun services/sharepoint/sync-project-files.ts --notion-id=<id> --contractor='Weis Builders' --project='The Verge at Ballpark Village'`
+- Sync script: `bun services/sharepoint/sync-project-files.ts --contractor='Weis Builders' --project='The Verge at Ballpark Village'`
 - Client: `services/sharepoint/client.ts` — `upload()`, `mkdir()`, `listFiles()`, `search()`, `download()`
 
 ---
+
+## Discovering Existing Utilities
+
+**Before creating new scripts or utilities, search the codebase for existing solutions:**
+
+- Use `codebase_search` to find existing functions: "How to search census database for attachments?", "How to download files from MinIO?"
+- Check `services/contract/census/files.ts` for file download utilities
+- Check `services/contract/census/db.ts` for database query functions
+- Review `CLAUDE.md` sections for documented patterns and utilities
+- Look for similar scripts in `scripts/` folder before creating new ones
+
+**Common utilities are already documented in this file** - search for relevant sections before implementing from scratch.
 
 ## Local Data First (IMPORTANT)
 
@@ -149,7 +151,7 @@ For new contracts going through intake, use the 18-step checklist in PROJECT.md.
 
 ### Census DB (`services/contract/census/census.db`)
 
-- `emails` — All synced emails across mailboxes. Has `notion_project_id`, `project_name`, `contractor_name` for linking.
+- `emails` — All synced emails across mailboxes. Has `project_name`, `contractor_name` for linking.
 - `attachments` — 20k+ email attachments cataloged. Has `storage_bucket`, `storage_path` for MinIO references.
 - `estimates` — 4,749 estimates synced from Monday. Has `monday_item_id`, `name`, `estimate_number`, `contractor`, `bid_status`, `bid_value`, `awarded_value`, `sharepoint_url`, storage paths.
 - `projects` — Projects extracted from email data. Has `monday_item_id`, `account_id`, `email_count`.
@@ -178,6 +180,7 @@ For new contracts going through intake, use the 18-step checklist in PROJECT.md.
 All email attachments and estimate PDFs are stored in MinIO. **DO NOT** use curl, `mc` CLI, or email API to download - use the utilities in `services/contract/census/files.ts`.
 
 **Download a single attachment:**
+
 ```typescript
 import { downloadAttachment } from '@/services/contract/census/files';
 
@@ -185,6 +188,7 @@ await downloadAttachment(12345, 'output/contract.pdf');
 ```
 
 **Download all attachments for a project:**
+
 ```typescript
 import { downloadProjectFiles } from '@/services/contract/census/files';
 
@@ -196,6 +200,7 @@ const files = await downloadProjectFiles(
 ```
 
 **Get file content without saving:**
+
 ```typescript
 import { getAttachmentContent } from '@/services/contract/census/files';
 
@@ -203,16 +208,66 @@ const content = await getAttachmentContent(12345); // Uint8Array
 ```
 
 **Available utilities (`services/contract/census/files.ts`):**
+
 - `downloadAttachment(id, outputPath)` — Download single file by attachment ID
-- `downloadProjectFiles(searchTerm, folder)` — Download all PDFs matching search
+- `downloadProjectFiles(searchTerm, folder)` — Download all PDFs matching search (searches by email subject/project/contractor, not filename)
 - `downloadAttachmentsToFolder(ids[], folder)` — Download specific attachments
 - `getAttachmentContent(id)` — Get file bytes without saving
 - `downloadFromStoragePath(path, outputPath)` — Download using raw storage path
 
 **Low-level access (`lib/minio.ts`):**
+
 - `getFile(bucket, path)` → `Uint8Array`
 - `getPresignedUrl(bucket, path)` → temporary URL
 - `BUCKETS.EMAIL_ATTACHMENTS`, `BUCKETS.MONDAY_ESTIMATES`
+
+### Searching Census Database for Attachments
+
+**Search by email subject/project/contractor** (uses `searchAttachments` from `db.ts`):
+
+```typescript
+import { searchAttachments } from '@/services/contract/census/db';
+
+const attachments = searchAttachments('Elanto at Prasada');
+// Searches email subject, project_name, contractor_name - NOT attachment filename
+```
+
+**Search by attachment filename** (direct DB query):
+
+```typescript
+import { db } from '@/services/contract/census/db/connection';
+
+const attachments = db
+  .query<{ id: number; name: string; storage_path: string | null }, [string]>(
+    `SELECT a.id, a.name, a.storage_path
+     FROM attachments a
+     WHERE a.storage_path IS NOT NULL
+       AND a.name LIKE ?
+     ORDER BY a.id DESC
+     LIMIT 20`
+  )
+  .all('%W-9 2026%');
+```
+
+**Search by email subject/body with attachment filename filter**:
+
+```typescript
+import { db } from '@/services/contract/census/db/connection';
+
+const attachments = db
+  .query<{ id: number; name: string; storage_path: string | null }, [string, string, string]>(
+    `SELECT DISTINCT a.id, a.name, a.storage_path
+     FROM attachments a
+     JOIN emails e ON a.email_id = e.id
+     WHERE a.storage_path IS NOT NULL
+       AND (e.subject LIKE ? OR e.body_full LIKE ?)
+       AND a.name LIKE ?
+     ORDER BY e.received_at DESC`
+  )
+  .all('%W9%', '%W9%', '%2026%');
+```
+
+**Note**: `searchAttachments()` searches by email metadata (subject/project/contractor), not attachment filenames. For filename searches, query the database directly as shown above.
 
 ---
 
@@ -257,12 +312,6 @@ WHERE m.email = 'contracts@desertservices.net';
 - All searches auto-paginate and exclude "Shell Estimates" by default.
 - **Monday URL format**: `https://desert-services-company.monday.com/boards/{boardId}/pulses/{itemId}` — NOT `monday.com/boards/...`. The subdomain is required.
 - **When marking Won**: Also mark competing estimates (same project, different GC or earlier bids) as "GC Not Awarded".
-
-### Notion Integration (`services/notion`)
-
-- **Dedupe helpers**: `findOrCreateByTitle`, `findOrCreateByEmail`, `checkForDuplicates`.
-- **Status Limitation**: Notion API only accepts default statuses.
-  - **Workaround**: Use "Not Started" and put the actual status in "Next Steps" (e.g., "WAITING ON RESPONSE - ...").
 
 ### SharePoint (`services/sharepoint`)
 

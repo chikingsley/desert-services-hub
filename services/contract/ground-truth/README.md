@@ -30,7 +30,7 @@ From `.planning/EXTRACTION_AUDIT.md`:
 
 When staging, use descriptive names:
 
-```
+```text
 {project-shortname}/
   source-contract.pdf
   source-estimate.pdf

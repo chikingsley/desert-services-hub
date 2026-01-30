@@ -16,14 +16,13 @@
 import { BUCKETS, uploadFile } from "@/lib/minio";
 import { GraphGroupsClient } from "../../email/groups";
 import {
-  db,
   getOrCreateMailbox,
-  type InsertAttachmentData,
-  type InsertEmailData,
   insertAttachment,
   insertEmail,
   updateMailboxSyncState,
 } from "./db";
+import { db } from "./db/connection";
+import type { InsertAttachmentData, InsertEmailData } from "./db/types";
 import { htmlToText } from "./lib/html-to-text";
 import { ALL_GROUPS } from "./sync-all";
 

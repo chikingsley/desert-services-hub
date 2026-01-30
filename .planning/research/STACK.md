@@ -47,67 +47,7 @@ POST /subscriptions
 
 // 2. Implement lifecycle notification handler for renewal
 // 3. Schedule backstop delta query every 4-6 hours
-```
-
-**Key constraints:**
-
-- Mail subscription max lifetime: **10,080 minutes (under 7 days)** ([source](https://learn.microsoft.com/en-us/graph/api/resources/subscription?view=graph-rest-1.0))
-- Rich notifications (with resource data): **1,440 minutes (under 1 day)**
-- Max 1000 active subscriptions per mailbox
-- Must proactively renew subscriptions before expiration
-
-**WHAT NOT TO USE:**
-
-- Pure polling: Causes throttling, wastes resources, not real-time
-- Azure Event Grid: Overkill for single-mailbox monitoring; adds Azure infrastructure complexity
-- Azure Event Hubs: Only needed for high-throughput multi-tenant scenarios
-
----
-
-### PDF Text Extraction: pdfjs-dist (Already Installed)
-
-| Technology | Version | Purpose | Confidence |
-|------------|---------|---------|------------|
-| pdfjs-dist | ^5.4.530 | PDF text extraction | HIGH |
-
-**WHY keep pdfjs-dist:**
-
-- Already installed and working in the codebase
-- Battle-tested Mozilla library with excellent TypeScript support
-- v5.4.530 is current (latest stable is v5.4.394 bundled in unpdf)
-- Works for digital PDFs (most contracts are digital, not scanned)
-
-**Alternative considered - unpdf v1.4.0:**
-
-- Modern alternative to pdf-parse, serverless-optimized
-- Uses pdfjs-dist v5.4.296 internally
-- Simpler API but adds dependency for marginal benefit
-- **Recommendation:** Skip unless needing serverless deployment
-
-**WHAT NOT TO USE:**
-
-- pdf-parse: Unmaintained, last meaningful update years ago
-- pdf2json: Only needed if you need exact x,y coordinates
-- Tesseract.js/OCR: Only for scanned documents (contracts typically digital)
-
----
-
-### Contract Information Extraction: LLM-Based Parsing
-
-| Technology | Version | Purpose | Confidence |
-|------------|---------|---------|------------|
-| Claude API (claude-3-5-sonnet or claude-3-haiku) | Latest | Structured data extraction from text | HIGH |
-| Gemini API | gemini-2.5-flash | Cost-effective alternative/validator | MEDIUM |
-
-**WHY LLM-based extraction over regex/templates:**
-
-- Contracts have variable formats (different GCs, different templates)
-- LLMs handle layout variations, synonyms, and context
-- Chain-of-thought prompting improves accuracy for multi-step reasoning ([source](https://unstract.com/blog/comparing-approaches-for-using-llms-for-structured-data-extraction-from-pdfs/))
-- Zod schema validation ensures structured output
-
-**Implementation pattern:**
-
+```csv
 ```typescript
 import { z } from 'zod';
 
@@ -135,64 +75,7 @@ const result = await claude.messages.create({
     content: `Extract contract information from this document:\n\n${text}\n\nReturn JSON matching this schema: ${JSON.stringify(ContractSchema.shape)}`
   }],
 });
-```
-
-**Multi-LLM validation (optional, for high-value contracts):**
-
-- Use Claude for extraction, Gemini for validation
-- Only accept values both LLMs agree on
-- Reduces hallucination risk ([source](https://unstract.com/blog/comparing-approaches-for-using-llms-for-structured-data-extraction-from-pdfs/))
-
-**WHAT NOT TO USE:**
-
-- Regex-based parsing: Brittle, breaks on format changes
-- Template matching: Requires maintaining templates per contractor
-- Document AI services (AWS Textract, Google Document AI): Overkill for text-based contracts, adds cloud vendor lock-in
-
----
-
-### Monday.com Estimate Matching: Existing Client
-
-| Technology | Version | Purpose | Confidence |
-|------------|---------|---------|------------|
-| Monday.com GraphQL API | 2024-01 | Match contracts to estimates | HIGH |
-| Fuzzy matching (existing) | N/A | Handle name variations | HIGH |
-
-**WHY use existing client:**
-
-- `findBestMatches` already implements fuzzy matching
-- `searchByColumn` enables fast lookups by estimate ID
-- No new dependencies needed
-
-**Matching strategy:**
-
-1. If contract contains estimate ID reference, use `searchByColumn('ESTIMATING', 'ESTIMATE_ID', value)`
-2. Otherwise, extract project name and use `findBestMatches('ESTIMATING', projectName)`
-3. Validate match by comparing contractor name, project address
-
----
-
-### Notion Task Creation: Direct API with Rate Limiting
-
-| Technology | Version | Purpose | Confidence |
-|------------|---------|---------|------------|
-| Notion API | 2022-06-28 (current) | Task creation | HIGH |
-| @notionhq/client | ^5.6.0 | Official SDK (optional upgrade) | MEDIUM |
-
-**WHY direct API over SDK:**
-
-- Existing `services/notion/client.ts` works well
-- SDK v5.x requires API version 2025-09-03 (breaking changes)
-- Direct fetch calls with current API version are stable
-
-**Key constraint - No batch API:**
-
-- Notion API does not support batch operations
-- Must create pages one at a time with rate limiting
-- Existing 350ms delay between requests is appropriate
-
-**Task creation pattern for contract intake:**
-
+```csv
 ```typescript
 const CONTRACT_INTAKE_TASKS = [
   { name: 'Verify contract matches estimate', assignee: 'contracts' },
@@ -216,38 +99,7 @@ for (const task of CONTRACT_INTAKE_TASKS) {
   });
   await sleep(350);  // Rate limiting
 }
-```
-
-**WHAT NOT TO USE:**
-
-- @notionhq/client v5.x: Requires migration to API 2025-09-03, introduces breaking changes for multi-source databases
-- Third-party Notion libraries: Less maintained than official API
-
----
-
-## Architecture Decisions
-
-### Webhook Endpoint Requirements
-
-For Microsoft Graph webhooks, you need a publicly accessible HTTPS endpoint. Options:
-
-| Option | Complexity | Cost | Recommendation |
-|--------|------------|------|----------------|
-| Next.js API route + ngrok (dev) | Low | Free | Development only |
-| Vercel/Netlify serverless function | Low | Free tier | Good for low volume |
-| Dedicated endpoint on existing server | Medium | Existing | Best for production |
-
-**Webhook validation:**
-Microsoft Graph sends a validation request when creating subscriptions. Your endpoint must:
-
-1. Accept POST with `validationToken` query parameter
-2. Return the token as plain text with 200 status
-3. Respond within 10 seconds
-
-### State Management
-
-Track processed emails to avoid duplicates:
-
+```css
 ```typescript
 // SQLite table for tracking processed contracts
 CREATE TABLE processed_contracts (
@@ -261,28 +113,7 @@ CREATE TABLE processed_contracts (
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   processed_at DATETIME
 );
-```
-
----
-
-## What NOT to Use (and Why)
-
-| Technology | Why Not |
-|------------|---------|
-| **Pure polling for email** | Causes throttling, wastes resources, not real-time |
-| **Azure Event Grid** | Overkill for single-mailbox; adds Azure infrastructure |
-| **pdf-parse npm package** | Unmaintained since 2019 |
-| **Tesseract.js for all PDFs** | OCR is slow and unnecessary for digital contracts |
-| **@notionhq/client v5.x** | Breaking API changes; existing direct API works fine |
-| **Third-party contract parsing services** | Adds cost and vendor lock-in for solvable problem |
-| **Notion batch API** | Doesn't exist; must use sequential calls |
-
----
-
-## Installation
-
-No new dependencies required. Existing stack covers all needs:
-
+```csv
 ```bash
 # Already installed:
 # - pdfjs-dist: PDF text extraction

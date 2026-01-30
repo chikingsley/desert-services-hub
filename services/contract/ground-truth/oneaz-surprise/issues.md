@@ -22,10 +22,10 @@ Per WORKFLOW.md Key Principle #1:
 
 **Fix:** Upload PO documents and add citations. Example format:
 
-```
+```text
 Source: po, page 1
 Quote: "PO Number: 4 - SWPPP and Porta Potty"
-```
+```css
 
 ### 2. POs NOT UPLOADED TO FOLDER
 
@@ -54,7 +54,7 @@ Quote: "PO Number: 4 - SWPPP and Porta Potty"
 
 **Fix:** Clarify in notes which estimate maps to which PO:
 
-```
+```text
 PO 4 (SWPPP + Porta) → Estimate 01072612 ($15,975.50)
 PO 5 (Temp Fence) → Part of 11102505 or separate?
 ```

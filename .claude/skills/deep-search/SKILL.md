@@ -92,32 +92,13 @@ Given a seed email or query:
 2. List all entities: people, companies, projects, references
 3. Search for each entity across relevant mailboxes
 4. Log: "Found X related emails, Y with attachments"
-```
-
-### Mailbox Selection
-
-Search mailboxes based on context:
-
-- **Estimating questions**: Search estimators (jared@, etc.)
-- **Contracts/compliance**: Search coordinators (chi@, jayson@, etc.)
-- **Field operations**: Search field staff
-- **General**: Search primary contact + team leads
-
-### Attachment Handling
-
-Download and read attachments:
-
+```csv
 ```bash
 1. List attachments for each relevant email
 2. Download to local directory (services/inbox/downloads/)
 3. Read PDF content
 4. Extract structured data
-```
-
-### Output Format
-
-Structure the final output:
-
+```css
 ```markdown
 ## Summary
 [2-3 sentence overview of what was found]
@@ -144,35 +125,7 @@ Structure the final output:
 
 ## Recommended Actions
 - [Specific next steps]
-```
-
-## Critical Rules
-
-### Do NOT stop at "found X emails"
-
-Finding emails is CRAWL. Continue to COLLECT, READ, and COMPILE.
-
-**Bad**: "I found 10 related emails with prior project history."
-**Good**: "I found 10 related emails. The April 2025 estimate (#04232507) was for $8,416.95 including 20 inlet protection units at $145 each, 504 LF of fence at $1.25/LF..."
-
-### Do NOT leave questions unanswered
-
-If the user asks "did we send an estimate?" - search and answer definitively.
-
-**Bad**: "Action item: Confirm if estimate was sent."
-**Good**: "Searched Jared's mailbox for 'Cradle to Crayons estimate' - NO results found. No estimate has been sent for this project."
-
-### Do NOT summarize without specifics
-
-Extract actual data: line items, prices, dates, quantities.
-
-**Bad**: "The work order had a different scope than the estimate."
-**Good**: "Work Order PO# 220060-010 ($7,204.60) reduced scope from estimate: 1 porta toilet instead of 2, 1 sandbag per stand instead of 2."
-
-## Available Tools
-
-### Email Search
-
+```csv
 ```typescript
 // Search user's mailbox
 mcp__desert-email__search_user_mailbox({ userId, query, limit })
@@ -182,20 +135,14 @@ mcp__desert-email__search_mailboxes({ userIds: [...], query, limit })
 
 // Search all org mailboxes
 mcp__desert-email__search_all_mailboxes({ query, limit })
-```
-
-### Attachments
-
+```css
 ```typescript
 // List attachments
 mcp__desert-email__get_attachments({ messageId, userId })
 
 // Download attachment
 mcp__desert-email__download_attachment({ messageId, attachmentId, userId })
-```
-
-### Email Details
-
+```css
 ```typescript
 // Get full email with body
 mcp__desert-email__get_email({ messageId, userId })

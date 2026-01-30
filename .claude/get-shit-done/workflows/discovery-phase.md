@@ -51,13 +51,13 @@ For: Single known library, confirming syntax/version still correct.
 
 1. Resolve library in Context7:
 
-   ```
+   ```text
    mcp__context7__resolve-library-id with libraryName: "[library]"
    ```
 
 2. Fetch relevant docs:
 
-   ```
+   ```markdown
    mcp__context7__get-library-docs with:
    - context7CompatibleLibraryID: [from step 1]
    - topic: [specific concern]
@@ -91,7 +91,7 @@ For: Choosing between options, new external integration.
 
 2. **Context7 for each option:**
 
-   ```
+   ```markdown
    For each library/framework:
    - mcp__context7__resolve-library-id
    - mcp__context7__get-library-docs (mode: "code" for API, "info" for concepts)
@@ -245,18 +245,7 @@ If "address first": Gather user input on questions, update discovery.
 </step>
 
 <step name="offer_next">
-```
-Discovery complete: .planning/phases/XX-name/DISCOVERY.md
-Recommendation: [one-liner]
-Confidence: [level]
-
-What's next?
-
-1. Discuss phase context (/gsd:discuss-phase [current-phase])
-2. Create phase plan (/gsd:plan-phase [current-phase])
-3. Refine discovery (dig deeper)
-4. Review discovery
-
+```yaml
 ```
 
 NOTE: DISCOVERY.md is NOT committed separately. It will be committed with phase completion.
@@ -266,11 +255,13 @@ NOTE: DISCOVERY.md is NOT committed separately. It will be committed with phase 
 
 <success_criteria>
 **Level 1 (Quick Verify):**
+
 - Context7 consulted for library/topic
 - Current state verified or concerns escalated
 - Verbal confirmation to proceed (no files)
 
 **Level 2 (Standard):**
+
 - Context7 consulted for all options
 - WebSearch findings cross-verified
 - DISCOVERY.md created with recommendation
@@ -278,6 +269,7 @@ NOTE: DISCOVERY.md is NOT committed separately. It will be committed with phase 
 - Ready to inform PLAN.md creation
 
 **Level 3 (Deep Dive):**
+
 - Discovery scope defined
 - Context7 exhaustively consulted
 - All WebSearch findings verified against authoritative sources

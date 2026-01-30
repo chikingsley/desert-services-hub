@@ -133,23 +133,7 @@ Requirement that supports no criterion:
 
 ## Example Gap Resolution
 
-```
-Phase 2: Authentication
-Goal: Users can securely access their accounts
-
-Success Criteria:
-1. User can create account with email/password ← AUTH-01 ✓
-2. User can log in across sessions ← AUTH-02 ✓
-3. User can log out from any page ← AUTH-03 ✓
-4. User can reset forgotten password ← ??? GAP
-
-Requirements: AUTH-01, AUTH-02, AUTH-03
-
-Gap: Criterion 4 (password reset) has no requirement.
-
-Options:
-1. Add AUTH-04: "User can reset password via email link"
-2. Remove criterion 4 (defer password reset to v2)
+```yaml
 ```
 
 </goal_backward_phases>
@@ -218,29 +202,17 @@ Read depth from config.json. Depth controls compression tolerance.
 
 **Foundation → Features → Enhancement**
 
-```
-Phase 1: Setup (project scaffolding, CI/CD)
-Phase 2: Auth (user accounts)
-Phase 3: Core Content (main features)
-Phase 4: Social (sharing, following)
-Phase 5: Polish (performance, edge cases)
+```csv
 ```
 
 **Vertical Slices (Independent Features)**
 
-```
-Phase 1: Setup
-Phase 2: User Profiles (complete feature)
-Phase 3: Content Creation (complete feature)
-Phase 4: Discovery (complete feature)
+```text
 ```
 
 **Anti-Pattern: Horizontal Layers**
 
-```
-Phase 1: All database models ← Too coupled
-Phase 2: All API endpoints ← Can't verify independently
-Phase 3: All UI components ← Nothing works until end
+```text
 ```
 
 </phase_identification>
@@ -253,30 +225,12 @@ After phase identification, verify every v1 requirement is mapped.
 
 **Build coverage map:**
 
-```
-AUTH-01 → Phase 2
-AUTH-02 → Phase 2
-AUTH-03 → Phase 2
-PROF-01 → Phase 3
-PROF-02 → Phase 3
-CONT-01 → Phase 4
-CONT-02 → Phase 4
-...
-
-Mapped: 12/12 ✓
+```text
 ```
 
 **If orphaned requirements found:**
 
-```
-⚠️ Orphaned requirements (no phase):
-- NOTF-01: User receives in-app notifications
-- NOTF-02: User receives email for followers
-
-Options:
-1. Create Phase 6: Notifications
-2. Add to existing Phase 5
-3. Defer to v2 (update REQUIREMENTS.md)
+```markdown
 ```
 
 **Do not proceed until coverage = 100%.**
@@ -294,38 +248,7 @@ After roadmap creation, REQUIREMENTS.md gets updated with phase mappings:
 | AUTH-02 | Phase 2 | Pending |
 | PROF-01 | Phase 3 | Pending |
 ...
-```
-
-</coverage_validation>
-
-<output_formats>
-
-## ROADMAP.md Structure
-
-Use template from `./.claude/get-shit-done/templates/roadmap.md`.
-
-Key sections:
-
-- Overview (2-3 sentences)
-- Phases with Goal, Dependencies, Requirements, Success Criteria
-- Progress table
-
-## STATE.md Structure
-
-Use template from `./.claude/get-shit-done/templates/state.md`.
-
-Key sections:
-
-- Project Reference (core value, current focus)
-- Current Position (phase, plan, status, progress bar)
-- Performance Metrics
-- Accumulated Context (decisions, todos, blockers)
-- Session Continuity
-
-## Draft Presentation Format
-
-When presenting to user for approval:
-
+```html
 ```markdown
 ## ROADMAP DRAFT
 
@@ -362,111 +285,19 @@ When presenting to user for approval:
 ### Awaiting
 
 Approve roadmap or provide feedback for revision.
+```html
 ```
 
-</output_formats>
-
-<execution_flow>
-
-## Step 1: Receive Context
-
-Orchestrator provides:
-
-- PROJECT.md content (core value, constraints)
-- REQUIREMENTS.md content (v1 requirements with REQ-IDs)
-- research/SUMMARY.md content (if exists - phase suggestions)
-- config.json (depth setting)
-
-Parse and confirm understanding before proceeding.
-
-## Step 2: Extract Requirements
-
-Parse REQUIREMENTS.md:
-
-- Count total v1 requirements
-- Extract categories (AUTH, CONTENT, etc.)
-- Build requirement list with IDs
-
-```
 Categories: 4
+
 - Authentication: 3 requirements (AUTH-01, AUTH-02, AUTH-03)
 - Profiles: 2 requirements (PROF-01, PROF-02)
 - Content: 4 requirements (CONT-01, CONT-02, CONT-03, CONT-04)
 - Social: 2 requirements (SOC-01, SOC-02)
 
 Total v1: 11 requirements
-```
 
-## Step 3: Load Research Context (if exists)
-
-If research/SUMMARY.md provided:
-
-- Extract suggested phase structure from "Implications for Roadmap"
-- Note research flags (which phases need deeper research)
-- Use as input, not mandate
-
-Research informs phase identification but requirements drive coverage.
-
-## Step 4: Identify Phases
-
-Apply phase identification methodology:
-
-1. Group requirements by natural delivery boundaries
-2. Identify dependencies between groups
-3. Create phases that complete coherent capabilities
-4. Check depth setting for compression guidance
-
-## Step 5: Derive Success Criteria
-
-For each phase, apply goal-backward:
-
-1. State phase goal (outcome, not task)
-2. Derive 2-5 observable truths (user perspective)
-3. Cross-check against requirements
-4. Flag any gaps
-
-## Step 6: Validate Coverage
-
-Verify 100% requirement mapping:
-
-- Every v1 requirement → exactly one phase
-- No orphans, no duplicates
-
-If gaps found, include in draft for user decision.
-
-## Step 7: Write Files Immediately
-
-**Write files first, then return.** This ensures artifacts persist even if context is lost.
-
-1. **Write ROADMAP.md** using output format
-
-2. **Write STATE.md** using output format
-
-3. **Update REQUIREMENTS.md traceability section**
-
-Files on disk = context preserved. User can review actual files.
-
-## Step 8: Return Summary
-
-Return `## ROADMAP CREATED` with summary of what was written.
-
-## Step 9: Handle Revision (if needed)
-
-If orchestrator provides revision feedback:
-
-- Parse specific concerns
-- Update files in place (Edit, not rewrite from scratch)
-- Re-validate coverage
-- Return `## ROADMAP REVISED` with changes made
-
-</execution_flow>
-
-<structured_returns>
-
-## Roadmap Created
-
-When files are written and returning to orchestrator:
-
+```css
 ```markdown
 ## ROADMAP CREATED
 
@@ -511,12 +342,7 @@ User can review actual files:
 ⚠️ Issues found during creation:
 - {gap description}
 - Resolution applied: {what was done}
-```
-
-## Roadmap Revised
-
-After incorporating user feedback and updating files:
-
+```css
 ```markdown
 ## ROADMAP REVISED
 
@@ -541,12 +367,7 @@ After incorporating user feedback and updating files:
 ### Ready for Planning
 
 Next: `/gsd:plan-phase 1`
-```
-
-## Roadmap Blocked
-
-When unable to proceed:
-
+```css
 ```markdown
 ## ROADMAP BLOCKED
 

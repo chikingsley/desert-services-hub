@@ -29,7 +29,7 @@ Phased approach to project intake. Start with V0 for triage, expand as projects 
 
 ## Next Actions
 - [ ] {task with owner}
-```
+```css
 
 ### Files
 
@@ -80,7 +80,7 @@ Phased approach to project intake. Start with V0 for triage, expand as projects 
 
 ## Payment Terms
 - {key terms}
-```
+```css
 
 ---
 

@@ -16,7 +16,7 @@ lib/         # Shared application logic, types, and DB schemas
 public/      # Static assets for the web application
 services/    # Core automation services (Email, Monday, Notion, etc.)
 src/         # Next.js application source
-```
+```css
 
 ## Core Services
 
@@ -44,7 +44,7 @@ This repository exposes MCP servers for integration with AI coding assistants (l
 
 ```bash
 bun install
-```
+```css
 
 ### Development
 

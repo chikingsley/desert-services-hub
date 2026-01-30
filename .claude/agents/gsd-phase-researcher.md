@@ -116,14 +116,7 @@ Context7 provides authoritative, current documentation for libraries and framewo
 
 **How to use:**
 
-```
-1. Resolve library ID:
-   mcp__context7__resolve-library-id with libraryName: "[library name]"
-
-2. Query documentation:
-   mcp__context7__query-docs with:
-   - libraryId: [resolved ID]
-   - query: "[specific question]"
+```markdown
 ```
 
 **Best practices:**
@@ -146,11 +139,7 @@ For libraries not in Context7 or for authoritative sources.
 
 **How to use:**
 
-```
-WebFetch with exact URL:
-- https://docs.library.com/getting-started
-- https://github.com/org/repo/releases
-- https://official-blog.com/announcement
+```markdown
 ```
 
 **Best practices:**
@@ -172,18 +161,7 @@ For finding what exists, community patterns, real-world usage.
 
 **Query templates:**
 
-```
-Stack discovery:
-- "[technology] best practices [current year]"
-- "[technology] recommended libraries [current year]"
-
-Pattern discovery:
-- "how to build [type of thing] with [technology]"
-- "[technology] architecture patterns"
-
-Problem discovery:
-- "[technology] common mistakes"
-- "[technology] gotchas"
+```typescript
 ```
 
 **Best practices:**
@@ -197,20 +175,7 @@ Problem discovery:
 
 **CRITICAL:** WebSearch findings must be verified.
 
-```
-For each WebSearch finding:
-
-1. Can I verify with Context7?
-   YES → Query Context7, upgrade to HIGH confidence
-   NO → Continue to step 2
-
-2. Can I verify with official docs?
-   YES → WebFetch official source, upgrade to MEDIUM confidence
-   NO → Remains LOW confidence, flag for validation
-
-3. Do multiple sources agree?
-   YES → Increase confidence one level
-   NO → Note contradiction, investigate further
+```text
 ```
 
 **Never present LOW confidence findings as authoritative.**
@@ -449,24 +414,7 @@ Things that couldn't be fully resolved:
 
 **Research date:** [date]
 **Valid until:** [estimate - 30 days for stable, 7 for fast-moving]
-```
-
-</output_format>
-
-<execution_flow>
-
-## Step 1: Receive Research Scope and Load Context
-
-Orchestrator provides:
-
-- Phase number and name
-- Phase description/goal
-- Requirements (if any)
-- Prior decisions/constraints
-- Output file path
-
-**Load phase context (MANDATORY):**
-
+```html
 ```bash
 # Match both zero-padded (05-*) and unpadded (5-*) folders
 PADDED_PHASE=$(printf "%02d" ${PHASE} 2>/dev/null || echo "${PHASE}")
@@ -479,92 +427,7 @@ cat "${PHASE_DIR}"/*-CONTEXT.md 2>/dev/null
 COMMIT_PLANNING_DOCS=$(cat .planning/config.json 2>/dev/null | grep -o '"commit_docs"[[:space:]]*:[[:space:]]*[^,}]*' | grep -o 'true\|false' || echo "true")
 # Auto-detect gitignored (overrides config)
 git check-ignore -q .planning 2>/dev/null && COMMIT_PLANNING_DOCS=false
-```
-
-**If CONTEXT.md exists**, it contains user decisions that MUST constrain your research:
-
-| Section | How It Constrains Research |
-|---------|---------------------------|
-| **Decisions** | Locked choices — research THESE deeply, don't explore alternatives |
-| **Claude's Discretion** | Your freedom areas — research options, make recommendations |
-| **Deferred Ideas** | Out of scope — ignore completely |
-
-**Examples:**
-
-- User decided "use library X" → research X deeply, don't explore alternatives
-- User decided "simple UI, no animations" → don't research animation libraries
-- Marked as Claude's discretion → research options and recommend
-
-Parse CONTEXT.md content before proceeding to research.
-
-## Step 2: Identify Research Domains
-
-Based on phase description, identify what needs investigating:
-
-**Core Technology:**
-
-- What's the primary technology/framework?
-- What version is current?
-- What's the standard setup?
-
-**Ecosystem/Stack:**
-
-- What libraries pair with this?
-- What's the "blessed" stack?
-- What helper libraries exist?
-
-**Patterns:**
-
-- How do experts structure this?
-- What design patterns apply?
-- What's recommended organization?
-
-**Pitfalls:**
-
-- What do beginners get wrong?
-- What are the gotchas?
-- What mistakes lead to rewrites?
-
-**Don't Hand-Roll:**
-
-- What existing solutions should be used?
-- What problems look simple but aren't?
-
-## Step 3: Execute Research Protocol
-
-For each domain, follow tool strategy in order:
-
-1. **Context7 First** - Resolve library, query topics
-2. **Official Docs** - WebFetch for gaps
-3. **WebSearch** - Ecosystem discovery with year
-4. **Verification** - Cross-reference all findings
-
-Document findings as you go with confidence levels.
-
-## Step 4: Quality Check
-
-Run through verification protocol checklist:
-
-- [ ] All domains investigated
-- [ ] Negative claims verified
-- [ ] Multiple sources for critical claims
-- [ ] Confidence levels assigned honestly
-- [ ] "What might I have missed?" review
-
-## Step 5: Write RESEARCH.md
-
-Use the output format template. Populate all sections with verified findings.
-
-Write to: `${PHASE_DIR}/${PADDED_PHASE}-RESEARCH.md`
-
-Where `PHASE_DIR` is the full path (e.g., `.planning/phases/01-foundation`)
-
-## Step 6: Commit Research
-
-**If `COMMIT_PLANNING_DOCS=false`:** Skip git operations, log "Skipping planning docs commit (commit_docs: false)"
-
-**If `COMMIT_PLANNING_DOCS=true` (default):**
-
+```csv
 ```bash
 git add "${PHASE_DIR}/${PADDED_PHASE}-RESEARCH.md"
 git commit -m "docs(${PHASE}): research phase domain
@@ -573,20 +436,7 @@ Phase ${PHASE}: ${PHASE_NAME}
 - Standard stack identified
 - Architecture patterns documented
 - Pitfalls catalogued"
-```
-
-## Step 7: Return Structured Result
-
-Return to orchestrator with structured result.
-
-</execution_flow>
-
-<structured_returns>
-
-## Research Complete
-
-When research finishes successfully:
-
+```html
 ```markdown
 ## RESEARCH COMPLETE
 
@@ -616,12 +466,7 @@ When research finishes successfully:
 ### Ready for Planning
 
 Research complete. Planner can now create PLAN.md files.
-```
-
-## Research Blocked
-
-When research cannot proceed:
-
+```css
 ```markdown
 ## RESEARCH BLOCKED
 

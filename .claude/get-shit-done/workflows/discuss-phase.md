@@ -61,11 +61,7 @@ The phase boundary comes from ROADMAP.md and is FIXED. Discussion clarifies HOW 
 
 **When user suggests scope creep:**
 
-```
-"[Feature X] would be a new capability — that's its own phase.
-Want me to note it for the roadmap backlog?
-
-For now, let's focus on [phase domain]."
+```text
 ```
 
 Capture the idea in a "Deferred Ideas" section. Don't lose it, don't act on it.
@@ -87,18 +83,7 @@ Gray areas are **implementation decisions the user cares about** — things that
 
 **Don't use generic category labels** (UI, UX, Behavior). Generate specific gray areas:
 
-```
-Phase: "User authentication"
-→ Session handling, Error responses, Multi-device policy, Recovery flow
-
-Phase: "Organize photo library"
-→ Grouping criteria, Duplicate handling, Naming convention, Folder structure
-
-Phase: "CLI for database backups"
-→ Output format, Flag design, Progress reporting, Error recovery
-
-Phase: "API documentation"
-→ Structure/navigation, Code examples depth, Versioning approach, Interactive elements
+```csv
 ```
 
 **The key question:** What decisions would change the outcome that the user should weigh in on?
@@ -124,10 +109,7 @@ Load and validate:
 
 **If phase not found:**
 
-```
-Phase [X] not found in roadmap.
-
-Use /gsd:progress to see available phases.
+```text
 ```
 
 Exit workflow.
@@ -142,165 +124,60 @@ Check if CONTEXT.md already exists:
 # Match both zero-padded (05-*) and unpadded (5-*) folders
 PADDED_PHASE=$(printf "%02d" ${PHASE})
 ls .planning/phases/${PADDED_PHASE}-*/CONTEXT.md .planning/phases/${PADDED_PHASE}-*/${PADDED_PHASE}-CONTEXT.md .planning/phases/${PHASE}-*/CONTEXT.md .planning/phases/${PHASE}-*/${PHASE}-CONTEXT.md 2>/dev/null
+```markdown
 ```
 
-**If exists:**
-Use AskUserQuestion:
-
-- header: "Existing context"
-- question: "Phase [X] already has context. What do you want to do?"
-- options:
-  - "Update it" — Review and revise existing context
-  - "View it" — Show me what's there
-  - "Skip" — Use existing context as-is
-
-If "Update": Load existing, continue to analyze_phase
-If "View": Display CONTEXT.md, then offer update/skip
-If "Skip": Exit workflow
-
-**If doesn't exist:** Continue to analyze_phase.
-</step>
-
-<step name="analyze_phase">
-Analyze the phase to identify gray areas worth discussing.
-
-**Read the phase description from ROADMAP.md and determine:**
-
-1. **Domain boundary** — What capability is this phase delivering? State it clearly.
-
-2. **Gray areas by category** — For each relevant category (UI, UX, Behavior, Empty States, Content), identify 1-2 specific ambiguities that would change implementation.
-
-3. **Skip assessment** — If no meaningful gray areas exist (pure infrastructure, clear-cut implementation), the phase may not need discussion.
-
-**Output your analysis internally, then present to user.**
-
-Example analysis for "Post Feed" phase:
-
-```
 Domain: Displaying posts from followed users
 Gray areas:
+
 - UI: Layout style (cards vs timeline vs grid)
 - UI: Information density (full posts vs previews)
 - Behavior: Loading pattern (infinite scroll vs pagination)
 - Empty State: What shows when no posts exist
 - Content: What metadata displays (time, author, reactions count)
+
+```html
 ```
 
-</step>
-
-<step name="present_gray_areas">
-Present the domain boundary and gray areas to user.
-
-**First, state the boundary:**
-
-```
 Phase [X]: [Name]
 Domain: [What this phase delivers — from your analysis]
 
 We'll clarify HOW to implement this.
 (New capabilities belong in other phases.)
+
+```csv
 ```
 
-**Then use AskUserQuestion (multiSelect: true):**
-
-- header: "Discuss"
-- question: "Which areas do you want to discuss for [phase name]?"
-- options: Generate 3-4 phase-specific gray areas, each formatted as:
-  - "[Specific area]" (label) — concrete, not generic
-  - [1-2 questions this covers] (description)
-
-**Do NOT include a "skip" or "you decide" option.** User ran this command to discuss — give them real choices.
-
-**Examples by domain:**
-
-For "Post Feed" (visual feature):
-
-```
 ☐ Layout style — Cards vs list vs timeline? Information density?
 ☐ Loading behavior — Infinite scroll or pagination? Pull to refresh?
 ☐ Content ordering — Chronological, algorithmic, or user choice?
 ☐ Post metadata — What info per post? Timestamps, reactions, author?
+
+```text
 ```
 
-For "Database backup CLI" (command-line tool):
-
-```
 ☐ Output format — JSON, table, or plain text? Verbosity levels?
 ☐ Flag design — Short flags, long flags, or both? Required vs optional?
 ☐ Progress reporting — Silent, progress bar, or verbose logging?
 ☐ Error recovery — Fail fast, retry, or prompt for action?
+
+```text
 ```
 
-For "Organize photo library" (organization task):
-
-```
 ☐ Grouping criteria — By date, location, faces, or events?
 ☐ Duplicate handling — Keep best, keep all, or prompt each time?
 ☐ Naming convention — Original names, dates, or descriptive?
 ☐ Folder structure — Flat, nested by year, or by category?
+
+```csv
 ```
 
-Continue to discuss_areas with selected areas.
-</step>
-
-<step name="discuss_areas">
-For each selected area, conduct a focused discussion loop.
-
-**Philosophy: 4 questions, then check.**
-
-Ask 4 questions per area before offering to continue or move on. Each answer often reveals the next question.
-
-**For each area:**
-
-1. **Announce the area:**
-
-   ```
-   Let's talk about [Area].
-   ```
-
-2. **Ask 4 questions using AskUserQuestion:**
-   - header: "[Area]"
-   - question: Specific decision for this area
-   - options: 2-3 concrete choices (AskUserQuestion adds "Other" automatically)
-   - Include "You decide" as an option when reasonable — captures Claude discretion
-
-3. **After 4 questions, check:**
-   - header: "[Area]"
-   - question: "More questions about [area], or move to next?"
-   - options: "More questions" / "Next area"
-
-   If "More questions" → ask 4 more, then check again
-   If "Next area" → proceed to next selected area
-
-4. **After all areas complete:**
-   - header: "Done"
-   - question: "That covers [list areas]. Ready to create context?"
-   - options: "Create context" / "Revisit an area"
-
-**Question design:**
-
-- Options should be concrete, not abstract ("Cards" not "Option A")
-- Each answer should inform the next question
-- If user picks "Other", receive their input, reflect it back, confirm
-
-**Scope creep handling:**
-If user mentions something outside the phase domain:
-
-```
 "[Feature] sounds like a new capability — that belongs in its own phase.
 I'll note it as a deferred idea.
 
 Back to [current area]: [return to current question]"
-```
 
-Track deferred ideas internally.
-</step>
-
-<step name="write_context">
-Create CONTEXT.md capturing decisions made.
-
-**Find or create phase directory:**
-
+```sql
 ```bash
 # Match existing directory (padded or unpadded)
 PADDED_PHASE=$(printf "%02d" ${PHASE})
@@ -311,12 +188,7 @@ if [ -z "$PHASE_DIR" ]; then
   mkdir -p ".planning/phases/${PADDED_PHASE}-${PHASE_NAME}"
   PHASE_DIR=".planning/phases/${PADDED_PHASE}-${PHASE_NAME}"
 fi
-```
-
-**File location:** `${PHASE_DIR}/${PADDED_PHASE}-CONTEXT.md`
-
-**Structure the content by what was discussed:**
-
+```text
 ```markdown
 # Phase [X]: [Name] - Context
 
@@ -367,27 +239,25 @@ fi
 
 *Phase: XX-name*
 *Context gathered: [date]*
+```html
 ```
 
-Write file.
-</step>
-
-<step name="confirm_creation">
-Present summary and next steps:
-
-```
 Created: .planning/phases/${PADDED_PHASE}-${SLUG}/${PADDED_PHASE}-CONTEXT.md
 
 ## Decisions Captured
 
 ### [Category]
+
 - [Key decision]
 
 ### [Category]
+
 - [Key decision]
 
 [If deferred ideas exist:]
+
 ## Noted for Later
+
 - [Deferred idea] — future phase
 
 ---
@@ -403,28 +273,17 @@ Created: .planning/phases/${PADDED_PHASE}-${SLUG}/${PADDED_PHASE}-CONTEXT.md
 ---
 
 **Also available:**
+
 - `/gsd:plan-phase ${PHASE} --skip-research` — plan without research
 - Review/edit CONTEXT.md before continuing
 
 ---
-```
 
-</step>
-
-<step name="git_commit">
-Commit phase context:
-
-**Check planning config:**
-
+```html
 ```bash
 COMMIT_PLANNING_DOCS=$(cat .planning/config.json 2>/dev/null | grep -o '"commit_docs"[[:space:]]*:[[:space:]]*[^,}]*' | grep -o 'true\|false' || echo "true")
 git check-ignore -q .planning 2>/dev/null && COMMIT_PLANNING_DOCS=false
-```
-
-**If `COMMIT_PLANNING_DOCS=false`:** Skip git operations
-
-**If `COMMIT_PLANNING_DOCS=true` (default):**
-
+```text
 ```bash
 git add "${PHASE_DIR}/${PADDED_PHASE}-CONTEXT.md"
 git commit -m "$(cat <<'EOF'

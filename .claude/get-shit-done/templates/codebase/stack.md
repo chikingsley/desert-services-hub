@@ -79,10 +79,7 @@ Template for `.planning/codebase/STACK.md` - captures the technology foundation.
 
 *Stack analysis: [date]*
 *Update after major dependency changes*
-```
-
-<good_examples>
-
+```html
 ```markdown
 # Technology Stack
 

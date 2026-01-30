@@ -47,16 +47,7 @@ After completing setup, verify with:
 
 ```bash
 # [Verification commands]
-```
-
-Expected results:
-
-- [What success looks like]
-
----
-
-**Once all items complete:** Mark status as "Complete" at top of file.
-
+```markdown
 ```
 
 ---
@@ -93,34 +84,7 @@ user_setup:
     local_dev:
       - "Run: stripe listen --forward-to localhost:3000/api/webhooks/stripe"
       - "Use the webhook secret from CLI output for local testing"
-```
-
----
-
-## The Automation-First Rule
-
-**USER-SETUP.md contains ONLY what Claude literally cannot do.**
-
-| Claude CAN Do (not in USER-SETUP) | Claude CANNOT Do (→ USER-SETUP) |
-|-----------------------------------|--------------------------------|
-| `npm install stripe` | Create Stripe account |
-| Write webhook handler code | Get API keys from dashboard |
-| Create `.env.local` file structure | Copy actual secret values |
-| Run `stripe listen` | Authenticate Stripe CLI (browser OAuth) |
-| Configure package.json | Access external service dashboards |
-| Write any code | Retrieve secrets from third-party systems |
-
-**The test:** "Does this require a human in a browser, accessing an account Claude doesn't have credentials for?"
-
-- Yes → USER-SETUP.md
-- No → Claude does it automatically
-
----
-
-## Service-Specific Examples
-
-<stripe_example>
-
+```css
 ```markdown
 # Phase 10: User Setup Required
 
@@ -167,14 +131,7 @@ Complete these items for Stripe integration to function.
 For local webhook testing:
 ```bash
 stripe listen --forward-to localhost:3000/api/webhooks/stripe
-```
-
-Use the webhook signing secret from CLI output (starts with `whsec_`).
-
-## Verification
-
-After completing setup:
-
+```css
 ```bash
 # Check env vars are set
 grep STRIPE .env.local
@@ -186,18 +143,13 @@ npm run build
 curl -X POST http://localhost:3000/api/webhooks/stripe \
   -H "Content-Type: application/json" \
   -d '{}'
+```yaml
 ```
 
-Expected: Build passes, webhook returns 400 (signature validation working).
-
----
-
-**Once all items complete:** Mark status as "Complete" at top of file.
-
-```
 </stripe_example>
 
 <supabase_example>
+
 ```markdown
 # Phase 2: User Setup Required
 
@@ -243,16 +195,13 @@ grep SUPABASE .env.local
 
 # Verify connection (run in project directory)
 npx supabase status
+```text
 ```
 
----
-
-**Once all items complete:** Mark status as "Complete" at top of file.
-
-```
 </supabase_example>
 
 <sendgrid_example>
+
 ```markdown
 # Phase 5: User Setup Required
 
@@ -299,13 +248,9 @@ grep SENDGRID .env.local
 curl -X POST http://localhost:3000/api/test-email \
   -H "Content-Type: application/json" \
   -d '{"to": "your@email.com"}'
+```text
 ```
 
----
-
-**Once all items complete:** Mark status as "Complete" at top of file.
-
-```
 </sendgrid_example>
 
 ---

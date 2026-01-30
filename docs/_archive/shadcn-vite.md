@@ -11,19 +11,19 @@ Start by creating a new React project using `vite`. Select the **React + TypeScr
 
 ```bash
 npm create vite@latest
-```
+```css
 
 ### Add Tailwind CSS
 
 ```bash
 npm install tailwindcss @tailwindcss/vite
-```
+```text
 
 Replace everything in `src/index.css` with the following:
 
 ```css title="src/index.css"
 @import "tailwindcss";
-```
+```css
 
 ### Edit tsconfig.json file
 
@@ -49,7 +49,7 @@ Add the `baseUrl` and `paths` properties to the `compilerOptions` section of the
     }
   }
 }
-```
+```css
 
 ### Edit tsconfig.app.json file
 
@@ -68,7 +68,7 @@ Add the following code to the `tsconfig.app.json` file to resolve paths, for you
     // ...
   }
 }
-```
+```css
 
 ### Update vite.config.ts
 
@@ -76,7 +76,7 @@ Add the following code to the vite.config.ts so your app can resolve paths witho
 
 ```bash
 npm install -D @types/node
-```
+```text
 
 ```typescript title="vite.config.ts" showLineNumbers {1,2,8-13}
 import path from "path"
@@ -93,7 +93,7 @@ export default defineConfig({
     },
   },
 })
-```
+```css
 
 ### Run the CLI
 
@@ -101,13 +101,13 @@ Run the `shadcn` init command to setup your project:
 
 ```bash
 npx shadcn@latest init
-```
+```text
 
 You will be asked a few questions to configure `components.json`.
 
 ```txt
 Which color would you like to use as base color? › Neutral
-```
+```css
 
 ### Add Components
 
@@ -115,7 +115,7 @@ You can now start adding components to your project.
 
 ```bash
 npx shadcn@latest add button
-```
+```text
 
 The command above will add the `Button` component to your project. You can then import it like this:
 

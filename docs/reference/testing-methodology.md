@@ -46,7 +46,7 @@ bun test lib/__mocks__
 
 # Watch mode
 bun test --watch
-```
+```css
 
 ## Test Structure
 

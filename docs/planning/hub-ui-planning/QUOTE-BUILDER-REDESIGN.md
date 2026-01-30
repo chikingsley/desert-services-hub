@@ -156,10 +156,10 @@ Requirements and analysis for improving the quote builder.
 
 **Decision: Three-section header (from prototype)**
 
-```
+```text
 [Breadcrumbs: Quotes > Job Name]     [Undo] [Redo]     [Save Status] [Export ▼] [Finalize]
         LEFT (flex-1)                   CENTER              RIGHT (flex-1, justify-end)
-```
+```markdown
 
 - [x] Left: Breadcrumbs with job name (no estimate number shown)
 - [x] Center: Undo/Redo buttons
@@ -200,7 +200,7 @@ ALTER TABLE quote_sections ADD COLUMN title TEXT;
 -- Line items: track version changes (for revision history)
 ALTER TABLE quote_line_items ADD COLUMN version_added INTEGER DEFAULT 1;
 ALTER TABLE quote_line_items ADD COLUMN version_removed INTEGER;
-```
+```css
 
 *(Note: `catalog_item_id` was considered but not needed - items just copy data from catalog)*
 
@@ -221,7 +221,7 @@ if (sectionExists) {
 // Fixed:
 // Generate unique ID, always allow adding
 const sectionId = crypto.randomUUID();
-```
+```text
 
 **Remove pick-one enforcement:**
 
@@ -233,7 +233,7 @@ if (isPickOne && subcategory) {
 
 // Fixed:
 // Don't remove, just add the new item
-```
+```css
 
 **Add new functions:**
 
@@ -279,9 +279,9 @@ if (isPickOne && subcategory) {
 
 **Takeoff Editor Header:**
 
-```
+```text
 [Undo] [Redo] [Save] [View Quote #X] or [Create Quote]
-```
+```markdown
 
 - Has undo/redo with keyboard shortcuts (Ctrl+Z, etc.)
 - Conditional button: shows linked quote OR create quote option
@@ -289,9 +289,9 @@ if (isPickOne && subcategory) {
 
 **Quote Editor Header:**
 
-```
+```text
 [From takeoff: X] (link, if has takeoff_id)
-```
+```markdown
 
 - Save status is INSIDE the editor card, not in PageHeader
 - No undo/redo buttons
@@ -324,7 +324,7 @@ if (isPickOne && subcategory) {
 
 ### Navigation Flow Diagram
 
-```
+```text
 CURRENT:
 Sidebar: [Takeoffs] [Quotes] [Contracts] [Projects]
                 ↓           ↓
@@ -348,11 +348,11 @@ Sidebar: [Quotes] [Contracts] [Projects]  (Takeoffs removed)
     /quotes/:id
          ├── [Takeoff] tab → PDF viewer + annotation tools
          └── [Quote] tab → Line items editor
-```
+```css
 
 ### Component Architecture for Phase 3
 
-```
+```text
 QuoteWorkspace (new wrapper component)
 ├── PageHeader
 │   ├── Title: Job Name

@@ -73,11 +73,7 @@ Run all phases in order: certs → aia → excel → normalize → load
 
 For parallel agent spawning:
 
-```
-Use Task tool with subagent_type matching agent name
-Run multiple agents in parallel where possible
-Wait for all agents to complete before proceeding
-Report progress after each batch
+```text
 ```
 
 ## Progress Reporting
@@ -90,21 +86,5 @@ After each phase/batch, report:
 
 ## Output Structure
 
-```
-projects/accounts/data/
-├── raw/
-│   ├── certs_A.csv
-│   ├── certs_B.csv
-│   ├── ...
-│   ├── aia_hunter.csv
-│   ├── aia_arco.csv
-│   ├── ...
-│   ├── excel_rental_items.csv
-│   └── ...
-├── canonical/
-│   ├── accounts.csv
-│   └── projects.csv
-└── links/
-    ├── account_links.csv
-    └── project_links.csv
+```text
 ```

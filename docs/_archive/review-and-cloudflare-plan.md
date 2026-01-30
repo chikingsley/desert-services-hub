@@ -141,7 +141,7 @@ Plus commercial layer for quotes/contracts.
 
 ### 3.1 Core Entities
 
-```
+```text
 Account (customer / billing entity)
 ├── Location (service address; can be temporary/event)
 │   ├── Job (delivery, pickup, service, swap, etc.)
@@ -162,7 +162,7 @@ Invoice → InvoiceLineItem
 Product, PriceAdjustment, Condition (billing rules)
 Document (metadata → SharePoint/R2)
 AuditLog
-```
+```css
 
 ### 3.2 Key Invariants
 
@@ -228,7 +228,7 @@ AuditLog
 
 **You don't need a new ERP right now.** Siteline + QuickBooks Enterprise is the right architecture. Siteline handles construction billing; QB remains the financial ledger.
 
-```
+```text
 BetterFleet (your app)
     │
     ├── Quotes/SOV/Projects → push to Siteline API

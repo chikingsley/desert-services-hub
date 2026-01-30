@@ -1,11 +1,3 @@
-/**
- * Event System Functions
- *
- * Core logic for event-driven orchestration.
- * See EVENT_SYSTEM.md for full documentation.
- */
-
-import { Database } from "bun:sqlite";
 import type {
   Action,
   ActionInsert,
@@ -22,16 +14,6 @@ import type {
 } from "./event-types";
 
 // =============================================================================
-// DATABASE CONNECTION
-// =============================================================================
-
-const DB_PATH = "services/contract/census/census.db";
-
-function getDb(): Database {
-  return new Database(DB_PATH);
-}
-
-// =============================================================================
 // STAKEHOLDER FUNCTIONS
 // =============================================================================
 
@@ -39,7 +21,7 @@ function getDb(): Database {
  * Get all stakeholders for a project
  */
 export function getStakeholders(projectId: number): Stakeholder[] {
-  const db = getDb();
+  const db = db;
   const rows = db
     .query(
       `
@@ -77,7 +59,7 @@ export function getStakeholdersForEvent(
  * Get internal stakeholders (Desert Services team)
  */
 export function getInternalStakeholders(role?: string): Stakeholder[] {
-  const db = getDb();
+  const db = db;
   let query = "SELECT * FROM stakeholders WHERE is_internal = 1";
   const params: (string | number)[] = [];
 
@@ -101,7 +83,7 @@ export function getInternalStakeholders(role?: string): Stakeholder[] {
  * Add a stakeholder to a project
  */
 export function addStakeholder(data: StakeholderInsert): number {
-  const db = getDb();
+  const db = db;
   const result = db
     .query(
       `
@@ -152,7 +134,7 @@ export function addStakeholders(
  * Get a permit by application number
  */
 export function getPermitByAppNumber(applicationNumber: string): Permit | null {
-  const db = getDb();
+  const db = db;
   const row = db
     .query("SELECT * FROM permits WHERE application_number = ?")
     .get(applicationNumber) as Permit | null;
@@ -164,7 +146,7 @@ export function getPermitByAppNumber(applicationNumber: string): Permit | null {
  * Get permits for a project
  */
 export function getPermitsForProject(projectId: number): Permit[] {
-  const db = getDb();
+  const db = db;
   const rows = db
     .query(
       `
@@ -182,7 +164,7 @@ export function getPermitsForProject(projectId: number): Permit[] {
  * Create a new permit record
  */
 export function createPermit(data: PermitInsert): number {
-  const db = getDb();
+  const db = db;
   const result = db
     .query(
       `
@@ -224,7 +206,7 @@ export function markPermitNotified(
   permitId: number,
   type: "customer" | "internal"
 ): void {
-  const db = getDb();
+  const db = db;
   const column =
     type === "customer" ? "customer_notified_at" : "internal_notified_at";
   db.query(`UPDATE permits SET ${column} = datetime('now') WHERE id = ?`).run(
@@ -240,7 +222,7 @@ export function markPermitNotified(
  * Log an event
  */
 export function logEvent(data: EventInsert): number {
-  const db = getDb();
+  const db = db;
   const result = db
     .query(
       `
@@ -266,7 +248,7 @@ export function logEvent(data: EventInsert): number {
  * Get recent events for a project
  */
 export function getEventsForProject(projectId: number, limit = 50): Event[] {
-  const db = getDb();
+  const db = db;
   const rows = db
     .query(
       `
@@ -290,7 +272,7 @@ export function getEventsForProject(projectId: number, limit = 50): Event[] {
  * Get an event by ID
  */
 export function getEvent(eventId: number): Event | null {
-  const db = getDb();
+  const db = db;
   const row = db
     .query("SELECT * FROM events WHERE id = ?")
     .get(eventId) as Event | null;
@@ -315,7 +297,7 @@ export function getEvent(eventId: number): Event | null {
  * Get workflows for an event type
  */
 export function getWorkflowsForEvent(eventType: EventType): Workflow[] {
-  const db = getDb();
+  const db = db;
   const rows = db
     .query(
       `
@@ -342,7 +324,7 @@ export function getWorkflowsForEvent(eventType: EventType): Workflow[] {
  * Spawn actions for an event based on active workflows
  */
 export function spawnActionsForEvent(eventId: number): SpawnActionsResult {
-  const db = getDb();
+  const db = db;
   const event = getEvent(eventId);
 
   if (!event) {
@@ -384,7 +366,7 @@ export function spawnActionsForEvent(eventId: number): SpawnActionsResult {
  * Get pending actions for a project
  */
 export function getPendingActions(projectId?: number): Action[] {
-  const db = getDb();
+  const db = db;
   let query = "SELECT * FROM actions WHERE status = 'pending'";
   const params: (string | number)[] = [];
 
@@ -410,7 +392,7 @@ export function getPendingActions(projectId?: number): Action[] {
  * Get an action by ID
  */
 export function getAction(actionId: number): Action | null {
-  const db = getDb();
+  const db = db;
   const row = db
     .query("SELECT * FROM actions WHERE id = ?")
     .get(actionId) as Action | null;
@@ -437,7 +419,7 @@ export function updateActionStatus(
   result?: Record<string, unknown>,
   error?: string
 ): void {
-  const db = getDb();
+  const db = db;
 
   if (status === "running") {
     db.query(
@@ -475,7 +457,7 @@ export function updateActionStatus(
  * Create an action manually (not from workflow)
  */
 export function createAction(data: ActionInsert): number {
-  const db = getDb();
+  const db = db;
   const result = db
     .query(
       `
@@ -524,7 +506,7 @@ export function triggerEvent(data: EventInsert): {
  * Returns project_id
  */
 export function findOrCreateProject(name: string, accountId?: number): number {
-  const db = getDb();
+  const db = db;
   const normalized = name.toLowerCase().trim();
 
   // Try exact match first
@@ -570,7 +552,7 @@ export async function runMigration(): Promise<void> {
     "services/contract/census/migrations/001-event-system.sql";
   const sql = await Bun.file(migrationPath).text();
 
-  const db = getDb();
+  const db = db;
 
   // Split by semicolon and run each statement
   const statements = sql

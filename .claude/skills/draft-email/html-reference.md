@@ -29,83 +29,40 @@ The full signature block rendered by the system:
 <div>E: <a href="mailto:chi@desertservices.net">chi@desertservices.net</a></div>
 <div>M: (304) 405-2446</div>
 <div><img src="cid:logo" alt="Desert Services LLC" width="264" style="max-width:100%"></div>
-```
-
-**Do NOT include the signature or logo in the drafted body.** Just output the body content up to the last line before "Best,".
-
-## Element Patterns
-
-### Line / Paragraph
-
+```css
 ```html
 <div>Text content here</div>
-```
-
-Never use `<p>` tags — Outlook adds extra spacing. Always `<div>`.
-
-### Blank Line (Spacing)
-
+```html
 ```html
 <div><br></div>
-```
-
-Use this between logical sections: after greeting, between paragraphs, before signature.
-
-### Bold
-
+```csv
 ```html
 <b>important text</b>
-```
-
-Use `<b>`, not `<strong>`. Outlook handles `<b>` more consistently.
-
-### Link
-
+```css
 ```html
 <a href="mailto:kendra@desertservices.net">kendra@desertservices.net</a>
 <a href="https://example.com">link text</a>
-```
-
-### Unordered List (Bullets)
-
+```css
 ```html
 <ul style="margin-top:0; margin-bottom:0">
   <li><div>First item</div></li>
   <li><div>Second item</div></li>
   <li><div>Third item</div></li>
 </ul>
-```
-
-Always wrap list item content in `<div>`. Always include the margin reset on `<ul>`.
-
-### Ordered List (Numbered)
-
+```html
 ```html
 <ol style="margin-top:0; margin-bottom:0">
   <li><div>First item</div></li>
   <li><div>Second item</div></li>
 </ol>
-```
-
-### Inline Numbered Items (Chi's Style)
-
-When Chi uses informal numbering in prose (not a formal list), use plain text with parenthetical numbers:
-
+```css
 ```html
 <div>(1) The contract lists IDG, which is no longer our active company name/entity. Can you update the contract to match Desert Services LLC?</div>
 <div>(2) Then in Exhibits B-2 and B-3, $5M aggregate coverage is required...</div>
-```
-
-### Pricing Line Items
-
+```css
 ```html
 <div>Compost Filter Sock (1,200 LF) — $2,940.00</div>
-```
-
-Use em dash `—` (not hyphen `-` or en dash `–`) between description and price.
-
-## Complete Email Body Example
-
+```css
 ```html
 <div>Matt,</div>
 <div><br></div>
@@ -132,3 +89,4 @@ Note: No signature in the body — it's appended by the template system.
 - `<table>` for layout (never use tables)
 - CSS classes (Outlook strips them)
 - `<span>` with styling (use `<b>` for bold, plain text for everything else)
+- `<div><br></div>` immediately before or after `<ul>`/`<ol>` tags (Outlook's native list margins provide sufficient spacing)

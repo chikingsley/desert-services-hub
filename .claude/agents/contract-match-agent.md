@@ -25,39 +25,26 @@ Run ALL of these searches in parallel using the Monday MCP tools:
 
 ### 1. Fuzzy Project Name Match
 
-```
-mcp__desert-mondaycrm__find_best_matches
-  boardId: "ESTIMATING"
-  name: {project name}
-  limit: 5
+```yaml
 ```
 
 ### 2. Contractor Name Search
 
-```
-mcp__desert-mondaycrm__search_items
-  boardId: "ESTIMATING"
-  searchTerm: {contractor name - first word or two}
+```yaml
 ```
 
 ### 3. Address/Location Search
 
 If address is provided:
 
-```
-mcp__desert-mondaycrm__search_items
-  boardId: "ESTIMATING"
-  searchTerm: {city or street name}
+```yaml
 ```
 
 ### 4. Job Number Search
 
 If job number is provided:
 
-```
-mcp__desert-mondaycrm__search_items
-  boardId: "ESTIMATING"
-  searchTerm: {job number}
+```yaml
 ```
 
 ## Evaluation
@@ -83,29 +70,7 @@ For each result, assess match quality:
 
 Return structured results:
 
-```
-## Search Results Summary
-
-**Searches Performed:**
-- Project name "{name}": {count} results
-- Contractor "{name}": {count} results
-- Address "{location}": {count} results
-
-## Best Matches
-
-### 1. {Item Name} (ID: {id})
-- Confidence: HIGH/MEDIUM/LOW
-- Estimate Amount: ${value}
-- Contract Amount: ${value}
-- Difference: ${diff} ({%})
-- Account/Contractor: {name}
-- Match Signals: {list what matched}
-
-### 2. {Next best match...}
-
-## Recommendation
-
-{Which item is most likely the match and why}
+```css
 ```
 
 ## Important Notes

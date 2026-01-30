@@ -189,7 +189,7 @@ Best regards,
 Desert Services
 [Your Email]
 [Your Phone]
-```
+```markdown
 
 Send Checklist:
 
@@ -230,7 +230,7 @@ P.O. Box 236
 Scottsdale, AZ 85252
 800 N Mary Street
 Tempe, AZ 85288
-```
+```text
 
 Example 2 (Even Simpler):
 
@@ -246,7 +246,7 @@ P.O. Box 236
 Scottsdale, AZ 85252
 800 N Mary Street
 Tempe, AZ 85288
-```
+```yaml
 
 Template (Based on Actual Usage):
 Subject: `RE: [Original Subject]` or `Safety Plan & SDS Sheets - [Project Name]`
@@ -261,7 +261,7 @@ Thank you
 Desert Services
 [Your Phone]
 [Your Address]
-```
+```yaml
 
 Note: Dawn's responses are very brief - just "Please see attached" with signature. No need for lengthy explanations.
 

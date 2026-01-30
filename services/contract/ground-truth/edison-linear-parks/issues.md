@@ -21,7 +21,7 @@ Per WORKFLOW.md Key Principle #1:
 
 **Fix:** Extract from Contract_Package.pdf with proper citations:
 
-```
+```text
 Source: Contract_Package.pdf, page X
 Quote: "Notice to Proceed: January 19, 2026"
 ```

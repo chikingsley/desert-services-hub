@@ -14,11 +14,7 @@
  * NO derived names. Domain is the identifier. Display names come from
  * real data (platform extraction, manual entry, etc.) not guessing.
  */
-import { Database } from "bun:sqlite";
-import { join } from "node:path";
-
-const dbPath = join(import.meta.dir, "../census.db");
-const db = new Database(dbPath);
+import { db } from "../db/connection";
 
 // ============================================================================
 // Domain Configuration

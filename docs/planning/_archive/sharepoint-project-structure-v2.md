@@ -37,7 +37,7 @@ Projects/
 ├── 01-Active/           ← Contract signed, work in progress
 ├── 02-Completed/        ← Work done, closeout complete
 └── 03-Lost/             ← Didn't win, but keep for reference
-```
+```markdown
 
 **Why this works:**
 
@@ -62,7 +62,7 @@ Projects/
 │   └── [Project Name - Contractor]/
 └── 03-Lost/
     └── [Project Name - Contractor]/
-```
+```css
 
 ### Project Folder Naming
 
@@ -123,7 +123,7 @@ Examples:
     ├── FinalInspection-2025-12-30.pdf
     ├── Lien-Waiver-Final-2025-12-30.pdf
     └── CloseoutLetter-2025-12-31.pdf
-```
+```css
 
 ---
 
@@ -133,7 +133,7 @@ Examples:
 
 ```text
 [DocumentType]-[Identifier]-[Date]-[Modifier].ext
-```
+```css
 
 - **DocumentType**: What kind of document (Estimate, Contract, Invoice, etc.)
 - **Identifier**: Reference number, version, or descriptor
@@ -222,7 +222,7 @@ Projects/00-Bidding/
      └── 01-Estimates/
          ├── Estimate-2025-12-08-SWPPP-v1.pdf
          └── Plans-2025-12-08-Civil.pdf
-```
+```css
 
 **Metadata:** Status = "Bidding", ServiceTypes = "SWPPP"
 
@@ -238,7 +238,7 @@ Projects/01-Active/
      ├── 02-Contracts/
      │   └── Contract-Signed-2025-12-16.pdf
      └── [other folders created as needed]
-```
+```css
 
 **Metadata:** Status = "Active", StartDate = "2025-12-16"
 
@@ -250,7 +250,7 @@ Move folder from `01-Active/` to `02-Completed/`:
 Projects/02-Completed/
 └── Kiwanis Playground - Caliente Construction/
      └── [all project files]
-```
+```css
 
 **Metadata:** Status = "Completed", EndDate = "2025-12-31"
 
@@ -263,7 +263,7 @@ Projects/03-Lost/
 └── Some Other Project - Builder XYZ/
      └── 01-Estimates/
          └── [estimate files kept for reference]
-```
+```css
 
 **Metadata:** Status = "Lost"
 

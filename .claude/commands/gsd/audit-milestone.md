@@ -45,55 +45,18 @@ Read model profile for agent spawning:
 
 ```bash
 MODEL_PROFILE=$(cat .planning/config.json 2>/dev/null | grep -o '"model_profile"[[:space:]]*:[[:space:]]*"[^"]*"' | grep -o '"[^"]*"$' | tr -d '"' || echo "balanced")
-```
-
-Default to "balanced" if not set.
-
-**Model lookup table:**
-
-| Agent | quality | balanced | budget |
-|-------|---------|----------|--------|
-| gsd-integration-checker | sonnet | sonnet | haiku |
-
-Store resolved model for use in Task call below.
-
-## 1. Determine Milestone Scope
-
+```text
 ```bash
 # Get phases in milestone
 ls -d .planning/phases/*/ | sort -V
-```
-
-- Parse version from arguments or detect current from ROADMAP.md
-- Identify all phase directories in scope
-- Extract milestone definition of done from ROADMAP.md
-- Extract requirements mapped to this milestone from REQUIREMENTS.md
-
-## 2. Read All Phase Verifications
-
-For each phase directory, read the VERIFICATION.md:
-
+```css
 ```bash
 cat .planning/phases/01-*/*-VERIFICATION.md
 cat .planning/phases/02-*/*-VERIFICATION.md
 # etc.
+```csv
 ```
 
-From each VERIFICATION.md, extract:
-
-- **Status:** passed | gaps_found
-- **Critical gaps:** (if any — these are blockers)
-- **Non-critical gaps:** tech debt, deferred items, warnings
-- **Anti-patterns found:** TODOs, stubs, placeholders
-- **Requirements coverage:** which requirements satisfied/blocked
-
-If a phase is missing VERIFICATION.md, flag it as "unverified phase" — this is a blocker.
-
-## 3. Spawn Integration Checker
-
-With phase context collected:
-
-```
 Task(
   prompt="Check cross-phase integration and E2E flows.
 
@@ -105,27 +68,8 @@ Verify cross-phase wiring and E2E user flows.",
   subagent_type="gsd-integration-checker",
   model="{integration_checker_model}"
 )
-```
 
-## 4. Collect Results
-
-Combine:
-
-- Phase-level gaps and tech debt (from step 2)
-- Integration checker's report (wiring gaps, broken flows)
-
-## 5. Check Requirements Coverage
-
-For each requirement in REQUIREMENTS.md mapped to this milestone:
-
-- Find owning phase
-- Check phase verification status
-- Determine: satisfied | partial | unsatisfied
-
-## 6. Aggregate into v{version}-MILESTONE-AUDIT.md
-
-Create `.planning/v{version}-v{version}-MILESTONE-AUDIT.md` with:
-
+```css
 ```yaml
 ---
 milestone: {version}

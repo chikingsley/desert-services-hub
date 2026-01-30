@@ -114,36 +114,7 @@ Before declaring plan complete:
 <output>
 After completion, create `.planning/phases/XX-name/{phase}-{plan}-SUMMARY.md`
 </output>
-```
-
----
-
-## Frontmatter Fields
-
-| Field | Required | Purpose |
-|-------|----------|---------|
-| `phase` | Yes | Phase identifier (e.g., `01-foundation`) |
-| `plan` | Yes | Plan number within phase (e.g., `01`, `02`) |
-| `type` | Yes | Always `execute` for standard plans, `tdd` for TDD plans |
-| `wave` | Yes | Execution wave number (1, 2, 3...). Pre-computed at plan time. |
-| `depends_on` | Yes | Array of plan IDs this plan requires. |
-| `files_modified` | Yes | Files this plan touches. |
-| `autonomous` | Yes | `true` if no checkpoints, `false` if has checkpoints |
-| `user_setup` | No | Array of human-required setup items (external services) |
-| `must_haves` | Yes | Goal-backward verification criteria (see below) |
-
-**Wave is pre-computed:** Wave numbers are assigned during `/gsd:plan-phase`. Execute-phase reads `wave` directly from frontmatter and groups plans by wave number. No runtime dependency analysis needed.
-
-**Must-haves enable verification:** The `must_haves` field carries goal-backward requirements from planning to execution. After all plans complete, execute-phase spawns a verification subagent that checks these criteria against the actual codebase.
-
----
-
-## Parallel vs Sequential
-
-<parallel_examples>
-
-**Wave 1 candidates (parallel):**
-
+```css
 ```yaml
 # Plan 01 - User feature
 wave: 1
@@ -162,12 +133,7 @@ wave: 1
 depends_on: []
 files_modified: [src/models/order.ts, src/api/orders.ts]
 autonomous: true
-```
-
-All three run in parallel (Wave 1) - no dependencies, no file conflicts.
-
-**Sequential (genuine dependency):**
-
+```text
 ```yaml
 # Plan 01 - Auth foundation
 wave: 1
@@ -180,30 +146,14 @@ wave: 2
 depends_on: ["01"]
 files_modified: [src/features/dashboard.ts]
 autonomous: true
-```
-
-Plan 02 in Wave 2 waits for Plan 01 in Wave 1 - genuine dependency on auth types/middleware.
-
-**Checkpoint plan:**
-
+```text
 ```yaml
 # Plan 03 - UI with verification
 wave: 3
 depends_on: ["01", "02"]
 files_modified: [src/components/Dashboard.tsx]
 autonomous: false  # Has checkpoint:human-verify
-```
-
-Wave 3 runs after Waves 1 and 2. Pauses at checkpoint, orchestrator presents to user, resumes on approval.
-
-</parallel_examples>
-
----
-
-## Context Section
-
-**Parallel-aware context:**
-
+```csv
 ```markdown
 <context>
 @.planning/PROJECT.md
@@ -220,82 +170,23 @@ Wave 3 runs after Waves 1 and 2. Pauses at checkpoint, orchestrator presents to 
 
 @src/relevant/source.ts
 </context>
-```
-
-**Bad pattern (creates false dependencies):**
-
+```text
 ```markdown
 <context>
 @.planning/phases/03-features/03-01-SUMMARY.md  # Just because it's earlier
 @.planning/phases/03-features/03-02-SUMMARY.md  # Reflexive chaining
 </context>
+```css
 ```
 
----
-
-## Scope Guidance
-
-**Plan sizing:**
-
-- 2-3 tasks per plan
-- ~50% context usage maximum
-- Complex phases: Multiple focused plans, not one large plan
-
-**When to split:**
-
-- Different subsystems (auth vs API vs UI)
-- >3 tasks
-- Risk of context overflow
-- TDD candidates - separate plans
-
-**Vertical slices preferred:**
-
-```
 PREFER: Plan 01 = User (model + API + UI)
         Plan 02 = Product (model + API + UI)
 
 AVOID:  Plan 01 = All models
         Plan 02 = All APIs
         Plan 03 = All UIs
-```
 
----
-
-## TDD Plans
-
-TDD features get dedicated plans with `type: tdd`.
-
-**Heuristic:** Can you write `expect(fn(input)).toBe(output)` before writing `fn`?
-→ Yes: Create a TDD plan
-→ No: Standard task in standard plan
-
-See `./.claude/get-shit-done/references/tdd.md` for TDD plan structure.
-
----
-
-## Task Types
-
-| Type | Use For | Autonomy |
-|------|---------|----------|
-| `auto` | Everything Claude can do independently | Fully autonomous |
-| `checkpoint:human-verify` | Visual/functional verification | Pauses, returns to orchestrator |
-| `checkpoint:decision` | Implementation choices | Pauses, returns to orchestrator |
-| `checkpoint:human-action` | Truly unavoidable manual steps (rare) | Pauses, returns to orchestrator |
-
-**Checkpoint behavior in parallel execution:**
-
-- Plan runs until checkpoint
-- Agent returns with checkpoint details + agent_id
-- Orchestrator presents to user
-- User responds
-- Orchestrator resumes agent with `resume: agent_id`
-
----
-
-## Examples
-
-**Autonomous parallel plan:**
-
+```css
 ```markdown
 ---
 phase: 03-features
@@ -351,10 +242,7 @@ Output: User model, API endpoints, and UI components.
 <output>
 After completion, create `.planning/phases/03-features/03-01-SUMMARY.md`
 </output>
-```
-
-**Plan with checkpoint (non-autonomous):**
-
+```text
 ```markdown
 ---
 phase: 03-features
@@ -422,61 +310,29 @@ Output: Working dashboard component.
 <output>
 After completion, create `.planning/phases/03-features/03-03-SUMMARY.md`
 </output>
-```
-
----
-
-## Anti-Patterns
-
-**Bad: Reflexive dependency chaining**
-
+```css
 ```yaml
 depends_on: ["03-01"]  # Just because 01 comes before 02
+```text
 ```
 
-**Bad: Horizontal layer grouping**
-
-```
 Plan 01: All models
 Plan 02: All APIs (depends on 01)
 Plan 03: All UIs (depends on 02)
-```
 
-**Bad: Missing autonomy flag**
-
+```text
 ```yaml
 # Has checkpoint but no autonomous: false
 depends_on: []
 files_modified: [...]
 # autonomous: ???  <- Missing!
-```
-
-**Bad: Vague tasks**
-
+```text
 ```xml
 <task type="auto">
   <name>Set up authentication</name>
   <action>Add auth to the app</action>
 </task>
-```
-
----
-
-## Guidelines
-
-- Always use XML structure for Claude parsing
-- Include `wave`, `depends_on`, `files_modified`, `autonomous` in every plan
-- Prefer vertical slices over horizontal layers
-- Only reference prior SUMMARYs when genuinely needed
-- Group checkpoints with related auto tasks in same plan
-- 2-3 tasks per plan, ~50% context max
-
----
-
-## User Setup (External Services)
-
-When a plan introduces external services requiring human configuration, declare in frontmatter:
-
+```csv
 ```yaml
 user_setup:
   - service: stripe
@@ -492,28 +348,7 @@ user_setup:
         details: "URL: https://[your-domain]/api/webhooks/stripe"
     local_dev:
       - "stripe listen --forward-to localhost:3000/api/webhooks/stripe"
-```
-
-**The automation-first rule:** `user_setup` contains ONLY what Claude literally cannot do:
-
-- Account creation (requires human signup)
-- Secret retrieval (requires dashboard access)
-- Dashboard configuration (requires human in browser)
-
-**NOT included:** Package installs, code changes, file creation, CLI commands Claude can run.
-
-**Result:** Execute-plan generates `{phase}-USER-SETUP.md` with checklist for the user.
-
-See `./.claude/get-shit-done/templates/user-setup.md` for full schema and examples
-
----
-
-## Must-Haves (Goal-Backward Verification)
-
-The `must_haves` field defines what must be TRUE for the phase goal to be achieved. Derived during planning, verified after execution.
-
-**Structure:**
-
+```csv
 ```yaml
 must_haves:
   truths:

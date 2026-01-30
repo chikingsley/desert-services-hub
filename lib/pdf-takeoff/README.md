@@ -18,7 +18,7 @@ A React library for construction takeoffs on PDF documents. Built on top of `pdf
 ```bash
 # This is currently a local library
 # Copy the lib/pdf-takeoff folder to your project
-```
+```css
 
 ## Quick Start
 
@@ -47,7 +47,7 @@ function TakeoffViewer() {
     </PdfLoader>
   );
 }
-```
+```css
 
 ## Configuration
 
@@ -63,7 +63,7 @@ const items: TakeoffItemConfig[] = [
   { id: "curb_inlet", label: "Curb Inlet", color: "#22c55e", type: "count" },
   { id: "area", label: "Area", color: "#8b5cf6", type: "area" },
 ];
-```
+```css
 
 ### Scale Presets
 
@@ -80,7 +80,7 @@ const customScale: ScalePresetConfig = {
   label: '1" = 15\'',
   pixelsPerFoot: 72 / 15, // PDF uses 72 points per inch
 };
-```
+```css
 
 ## Measurements
 
@@ -105,7 +105,7 @@ const areaSqFeet = pdfPointsSquaredToSquareFeet(areaPdfPoints, scale);
 
 // Get summary by item type
 const summary = summarizeByItem(annotations, scale, itemConfigs);
-```
+```css
 
 ## Export
 
@@ -126,7 +126,7 @@ downloadAsJson(data, "takeoff.json");
 // Export as CSV
 const csv = exportToCsv(annotations, pageScales, scalePresets, itemConfigs);
 downloadAsCsv(csv, "takeoff.csv");
-```
+```css
 
 ## Annotation Types
 
@@ -142,7 +142,7 @@ interface CountMarker {
   color: string;
   number: number;
 }
-```
+```css
 
 ### PolylineAnnotation
 
@@ -156,7 +156,7 @@ interface PolylineAnnotation {
   color: string;
   strokeWidth: number;
 }
-```
+```css
 
 ### PolygonAnnotation
 

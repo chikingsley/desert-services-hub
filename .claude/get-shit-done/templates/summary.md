@@ -125,46 +125,7 @@ None - no external service configuration required.
 ---
 *Phase: XX-name*
 *Completed: [date]*
-```
-
-<frontmatter_guidance>
-**Purpose:** Enable automatic context assembly via dependency graph. Frontmatter makes summary metadata machine-readable so plan-phase can scan all summaries quickly and select relevant ones based on dependencies.
-
-**Fast scanning:** Frontmatter is first ~25 lines, cheap to scan across all summaries without reading full content.
-
-**Dependency graph:** `requires`/`provides`/`affects` create explicit links between phases, enabling transitive closure for context selection.
-
-**Subsystem:** Primary categorization (auth, payments, ui, api, database, infra, testing) for detecting related phases.
-
-**Tags:** Searchable technical keywords (libraries, frameworks, tools) for tech stack awareness.
-
-**Key-files:** Important files for @context references in PLAN.md.
-
-**Patterns:** Established conventions future phases should maintain.
-
-**Population:** Frontmatter is populated during summary creation in execute-plan.md. See `<step name="create_summary">` for field-by-field guidance.
-</frontmatter_guidance>
-
-<one_liner_rules>
-The one-liner MUST be substantive:
-
-**Good:**
-
-- "JWT auth with refresh rotation using jose library"
-- "Prisma schema with User, Session, and Product models"
-- "Dashboard with real-time metrics via Server-Sent Events"
-
-**Bad:**
-
-- "Phase complete"
-- "Authentication implemented"
-- "Foundation finished"
-- "All tasks done"
-
-The one-liner should tell someone what actually shipped.
-</one_liner_rules>
-
-<example>
+```csv
 ```markdown
 # Phase 1: Foundation Summary
 
@@ -240,6 +201,7 @@ The one-liner should tell someone what actually shipped.
 *Completed: 2025-01-15*
 
 ```
+
 </example>
 
 <guidelines>
@@ -248,6 +210,7 @@ The one-liner should tell someone what actually shipped.
 **One-liner:** Must be substantive. "JWT auth with refresh rotation using jose library" not "Authentication implemented".
 
 **Decisions section:**
+
 - Key decisions made during execution with rationale
 - Extracted to STATE.md accumulated context
 - Use "None - followed plan as specified" if no deviations

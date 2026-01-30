@@ -72,7 +72,7 @@ Where projects live. A project is created when we have work to do (contract rece
 
 ```text
 Intake → Contract Review → Compliance → Schedule → Operations → Done
-```
+```css
 
 ### Tasks Database
 

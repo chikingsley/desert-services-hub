@@ -67,60 +67,7 @@ skipped: [N]
   artifacts: []      # Filled by diagnosis
   missing: []        # Filled by diagnosis
   debug_session: ""  # Filled by diagnosis
-```
-
----
-
-<section_rules>
-
-**Frontmatter:**
-
-- `status`: OVERWRITE - "testing" or "complete"
-- `phase`: IMMUTABLE - set on creation
-- `source`: IMMUTABLE - SUMMARY files being tested
-- `started`: IMMUTABLE - set on creation
-- `updated`: OVERWRITE - update on every change
-
-**Current Test:**
-
-- OVERWRITE entirely on each test transition
-- Shows which test is active and what's awaited
-- On completion: "[testing complete]"
-
-**Tests:**
-
-- Each test: OVERWRITE result field when user responds
-- `result` values: [pending], pass, issue, skipped
-- If issue: add `reported` (verbatim) and `severity` (inferred)
-- If skipped: add `reason` if provided
-
-**Summary:**
-
-- OVERWRITE counts after each response
-- Tracks: total, passed, issues, pending, skipped
-
-**Gaps:**
-
-- APPEND only when issue found (YAML format)
-- After diagnosis: fill `root_cause`, `artifacts`, `missing`, `debug_session`
-- This section feeds directly into /gsd:plan-phase --gaps
-
-</section_rules>
-
-<diagnosis_lifecycle>
-
-**After testing complete (status: complete), if gaps exist:**
-
-1. User runs diagnosis (from verify-work offer or manually)
-2. diagnose-issues workflow spawns parallel debug agents
-3. Each agent investigates one gap, returns root cause
-4. UAT.md Gaps section updated with diagnosis:
-   - Each gap gets `root_cause`, `artifacts`, `missing`, `debug_session` filled
-5. status → "diagnosed"
-6. Ready for /gsd:plan-phase --gaps with root causes
-
-**After diagnosis:**
-
+```html
 ```yaml
 ## Gaps
 
@@ -136,61 +83,7 @@ skipped: [N]
   missing:
     - "Add commentCount to useEffect dependency array"
   debug_session: ".planning/debug/comment-not-refreshing.md"
-```
-
-</diagnosis_lifecycle>
-
-<lifecycle>
-
-**Creation:** When /gsd:verify-work starts new session
-
-- Extract tests from SUMMARY.md files
-- Set status to "testing"
-- Current Test points to test 1
-- All tests have result: [pending]
-
-**During testing:**
-
-- Present test from Current Test section
-- User responds with pass confirmation or issue description
-- Update test result (pass/issue/skipped)
-- Update Summary counts
-- If issue: append to Gaps section (YAML format), infer severity
-- Move Current Test to next pending test
-
-**On completion:**
-
-- status → "complete"
-- Current Test → "[testing complete]"
-- Commit file
-- Present summary with next steps
-
-**Resume after /clear:**
-
-1. Read frontmatter → know phase and status
-2. Read Current Test → know where we are
-3. Find first [pending] result → continue from there
-4. Summary shows progress so far
-
-</lifecycle>
-
-<severity_guide>
-
-Severity is INFERRED from user's natural language, never asked.
-
-| User describes | Infer |
-|----------------|-------|
-| Crash, error, exception, fails completely, unusable | blocker |
-| Doesn't work, nothing happens, wrong behavior, missing | major |
-| Works but..., slow, weird, minor, small issue | minor |
-| Color, font, spacing, alignment, visual, looks off | cosmetic |
-
-Default: **major** (safe default, user can clarify if wrong)
-
-</severity_guide>
-
-<good_example>
-
+```html
 ```markdown
 ---
 status: diagnosed

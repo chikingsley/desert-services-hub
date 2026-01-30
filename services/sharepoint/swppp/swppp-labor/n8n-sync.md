@@ -44,7 +44,7 @@ Extract Work Items  ←──── Google Gemini Chat Model
 Calculate Labor (+ status determination)
       ↓
 Create a database page (Notion Projects)
-```
+```css
 
 ### Notion Projects Mapping
 
@@ -69,7 +69,7 @@ function determineStatus(scheduledDate, schedulingNotes, workDescription) {
   // Contains 'ready now' → In progress
   // Default → Not started
 }
-```
+```css
 
 ---
 
@@ -125,7 +125,7 @@ function determineStatus(scheduledDate, schedulingNotes, workDescription) {
   "schedulingNotes": ["Ready on 12-18-2025", "See Steve when you arrive"],
   "contactInfo": {"name": "Steve", "phone": "602-555-1234"}
 }
-```
+```css
 
 ### Excel Date Conversion
 

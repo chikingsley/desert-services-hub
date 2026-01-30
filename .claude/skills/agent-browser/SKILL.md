@@ -13,38 +13,20 @@ agent-browser snapshot -i       # Get interactive elements with refs
 agent-browser click @e1         # Click element by ref
 agent-browser fill @e2 "text"   # Fill input by ref
 agent-browser close             # Close browser
-```
-
-## Core workflow
-
-1. Navigate: `agent-browser open <url>`
-2. Snapshot: `agent-browser snapshot -i` (returns elements with refs like `@e1`, `@e2`)
-3. Interact using refs from the snapshot
-4. Re-snapshot after navigation or significant DOM changes
-
-## Commands
-
-### Navigation
-
+```css
 ```bash
 agent-browser open <url>      # Navigate to URL
 agent-browser back            # Go back
 agent-browser forward         # Go forward  
 agent-browser reload          # Reload page
 agent-browser close           # Close browser
-```
-
-### Snapshot (page analysis)
-
+```css
 ```bash
 agent-browser snapshot        # Full accessibility tree
 agent-browser snapshot -i     # Interactive elements only (recommended)
 agent-browser snapshot -c     # Compact output
 agent-browser snapshot -d 3   # Limit depth to 3
-```
-
-### Interactions (use @refs from snapshot)
-
+```css
 ```bash
 agent-browser click @e1           # Click
 agent-browser dblclick @e1        # Double-click
@@ -58,44 +40,29 @@ agent-browser uncheck @e1         # Uncheck checkbox
 agent-browser select @e1 "value"  # Select dropdown
 agent-browser scroll down 500     # Scroll page
 agent-browser scrollintoview @e1  # Scroll element into view
-```
-
-### Get information
-
+```css
 ```bash
 agent-browser get text @e1        # Get element text
 agent-browser get value @e1       # Get input value
 agent-browser get title           # Get page title
 agent-browser get url             # Get current URL
-```
-
-### Screenshots
-
+```css
 ```bash
 agent-browser screenshot          # Screenshot to stdout
 agent-browser screenshot path.png # Save to file
 agent-browser screenshot --full   # Full page
-```
-
-### Wait
-
+```css
 ```bash
 agent-browser wait @e1                     # Wait for element
 agent-browser wait 2000                    # Wait milliseconds
 agent-browser wait --text "Success"        # Wait for text
 agent-browser wait --load networkidle      # Wait for network idle
-```
-
-### Semantic locators (alternative to refs)
-
+```css
 ```bash
 agent-browser find role button click --name "Submit"
 agent-browser find text "Sign In" click
 agent-browser find label "Email" fill "user@test.com"
-```
-
-## Example: Form submission
-
+```css
 ```bash
 agent-browser open https://example.com/form
 agent-browser snapshot -i
@@ -106,10 +73,7 @@ agent-browser fill @e2 "password123"
 agent-browser click @e3
 agent-browser wait --load networkidle
 agent-browser snapshot -i  # Check result
-```
-
-## Example: Authentication with saved state
-
+```css
 ```bash
 # Login once
 agent-browser open https://app.example.com/login
@@ -123,27 +87,16 @@ agent-browser state save auth.json
 # Later sessions: load saved state
 agent-browser state load auth.json
 agent-browser open https://app.example.com/dashboard
-```
-
-## Sessions (parallel browsers)
-
+```css
 ```bash
 agent-browser --session test1 open site-a.com
 agent-browser --session test2 open site-b.com
 agent-browser session list
-```
-
-## JSON output (for parsing)
-
-Add `--json` for machine-readable output:
-
+```css
 ```bash
 agent-browser snapshot -i --json
 agent-browser get text @e1 --json
-```
-
-## Debugging
-
+```css
 ```bash
 agent-browser open example.com --headed  # Show browser window
 agent-browser console                    # View console messages

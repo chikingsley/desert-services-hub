@@ -105,7 +105,7 @@ type APIUserObject = {
     },
   }
 }
-```
+```csv
 
 For example, in a free workspace where bots are limited to FileUploads of 5 MiB, the response looks like:
 
@@ -124,7 +124,7 @@ For example, in a free workspace where bots are limited to FileUploads of 5 MiB,
     }
   }
 }
-```
+```css
 
 ### Other limitations
 
@@ -283,7 +283,7 @@ The maximum allowed length of `filename` string is 900 bytes, including any file
   "x-readme-fauxas": true,
   "_id": "606ecc2cd9e93b0044cf6e47:67eace18749e710e21666006"
 }
-```
+```css
 
 ## Uploading larger files
 
@@ -299,7 +299,7 @@ To send files larger than 20 MB, split them up into segments of 5-20 MB each. On
 # Split `largefile.txt` into 10MB chunks, named as follows:
 # split_part_aa, split_part_ab, etc.
 split -b 10M ./largefile.txt split_part
-```
+```text
 
 ```typescript
 import * as splitFile from "split-file";
@@ -318,7 +318,7 @@ const outputFilenames = await splitFile.splitFileBySize(
   inputFile,
   1024 * 1024 * 10, // 10 MB
 );
-```
+```markdown
 
 > 📘 Convention for sizes of file parts
 >
@@ -343,7 +343,7 @@ curl --request POST \
     "number_of_parts": 5,
     "filename": "image.png"
   }'
-```
+```css
 
 ## Step 3: Send all file parts
 
@@ -390,7 +390,7 @@ curl --request POST \
     "external_url": "https://example.com/image.png",
     "filename": "image.png"
   }'
-```
+```markdown
 
 At this step, Notion will return a `validation_error` (HTTP 400) if any of the following are true:
 

@@ -7,11 +7,7 @@
  *
  * Also handles exclusions for domains we want to skip entirely.
  */
-import { Database } from "bun:sqlite";
-import { join } from "node:path";
-
-const dbPath = join(import.meta.dir, "../census.db");
-const db = new Database(dbPath);
+import { db } from "../db/connection";
 
 // ============================================================================
 // Domain Configuration

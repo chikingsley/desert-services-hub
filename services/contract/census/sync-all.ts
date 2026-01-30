@@ -1,17 +1,17 @@
 import { BUCKETS, uploadFile } from "@/lib/minio";
 import { GraphEmailClient } from "../../email/client";
 import {
-  db,
   getAllMailboxes,
   getMailbox,
   getOrCreateMailbox,
-  type InsertAttachmentData,
-  type InsertEmailData,
   insertAttachment,
   insertEmail,
   updateMailboxSyncState,
 } from "./db";
+import { db } from "./db/connection";
+import type { InsertAttachmentData, InsertEmailData } from "./db/types";
 import { htmlToText } from "./lib/html-to-text";
+import { isSpam } from "./lib/spam-filter";
 
 // All company mailboxes to sync
 // NOTE: internalcontracts@ is a Microsoft 365 Group, not a mailbox.
@@ -130,8 +130,15 @@ async function syncMailboxFull(
 
     let storedCount = 0;
     let attachmentCount = 0;
+    let spamFiltered = 0;
 
     for (const email of emails) {
+      // Skip spam/marketing emails
+      const spamCheck = isSpam(email.from, email.subject);
+      if (spamCheck.isSpam) {
+        spamFiltered++;
+        continue;
+      }
       // Get attachment metadata
       let attachmentNames: string[] = [];
       let attachmentMeta: Array<{
@@ -268,6 +275,10 @@ async function syncMailboxFull(
     }
 
     updateMailboxSyncState(mailbox.id, storedCount);
+
+    if (spamFiltered > 0) {
+      console.log(`   [${mailboxEmail}] Filtered ${spamFiltered} spam emails`);
+    }
 
     reportProgress({
       mailbox: mailboxEmail,

@@ -12,22 +12,17 @@
  * - Date proximity matching
  * - Feedback mechanism for corrections
  */
-
-import { Database } from "bun:sqlite";
-import { join } from "node:path";
+import { db } from "./db/connection";
 import type {
   Attachment,
   ClassificationMethod,
   Email,
   EmailClassification,
   ExtractionStatus,
-} from "./db";
+} from "./db/types";
 
 // Re-export types for convenience
-export type { Attachment, Email } from "./db";
-
-const dbPath = join(import.meta.dir, "census.db");
-const db = new Database(dbPath);
+export type { Attachment, Email } from "./db/types";
 
 // ============================================================================
 // Regex Patterns (module-level for performance)

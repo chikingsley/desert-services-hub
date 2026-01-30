@@ -2,125 +2,105 @@
 
 Compliance audit against WORKFLOW.md and extraction standards.
 
----
-
-## Workflow Compliance
-
-### 1. NO SOURCE CITATIONS (Critical)
-
-Per WORKFLOW.md Key Principle #1:
-> Every extracted value MUST have a source citation: Document type, Page number, Exact quote from the document
-
-**Problem:** No citations provided for any extracted data.
-
-**Examples of uncited data:**
-
-- "Contact: Jared Tieman - Senior Construction Manager" — no source
-- "Contract Admin: Sarahi Dehesa" — no source
-- Insurance requirements (Section 13) — no page numbers or quotes
-- "$4,940.00 (01222609 - PRASADA CLUBHOUSE)" — no source
-
-**Fix:** Add citations from contract and emails. Example format:
-
-```
-Source: contract, page X
-Quote: "Section 13. Insurance Requirements..."
-```
-
-### 2. DATA ACCURACY ERROR - WRONG NAME (Fixed)
-
-**Original Problem:** tasks.md line 5 said "Jared Aiken" but should be "Jared Tieman".
-
-**Status:** FIXED in this audit.
-
-### 3. CONTRACT NOT UPLOADED TO FOLDER
-
-**Problem:** Notes reference "Small Project Contract from Property Reserve" sent 1/27/26 but no PDF in folder.
-
-**Current folder contents:** Only notes.md, tasks.md, and now issues.md
-
-**Fix:** Upload contract document to folder as `contract.pdf`.
-
-### 4. NO RECONCILIATION
-
-Per WORKFLOW.md Step 5:
-> Estimate - Removed + Added = Contract
-
-**Problem:** Two different values mentioned with no reconciliation:
-
-- Quick quote: $3,290.00 (1/23/26)
-- Monday estimate: $4,940.00 (01222609)
-
-**Questions unanswered:**
-
-- Why did price increase from $3,290 to $4,940?
-- What scope was added?
-- Does contract match either amount?
-
-**Fix:** Create reconciliation section showing:
-
-```
-Original quick quote: $3,290.00
-- 1,100 LF wattles/silt fence @ $2.75 = $3,025.00
-- Mobilization = $265.00
-
-Final estimate: $4,940.00
-- Additional scope: [what was added?]
-
-Contract value: TBD (awaiting final contract)
-```
-
-### 5. SEPARATE TASKS FILE
-
-**Problem:** `tasks.md` is a separate file. Per existing patterns, follow-up actions should be in `notes.md` under "## Follow-up Actions".
-
-**Fix:** Merge tasks.md content into notes.md.
-
-### 6. NO EXTRACTION.JSON
-
-Per ground-truth/README.md file naming convention:
-> extraction-raw.json — Raw Claude extraction output
-
-**Problem:** No structured extraction output generated.
-
-**Fix:** Run extraction workflow once contract is signed.
-
-### 7. NO VALIDATION RUN
-
-Per WORKFLOW.md Step 4 (Validate):
-
-**Rules not checked:**
-
-- `INSPECTION_QUANTITY` — N/A (erosion control, not SWPPP inspections)
-- `BMP_MOBILIZATION` — Mobilization is included ($265) ✓
-- `NO_FINES_LIABILITY` — Not checked against contract language
-- Insurance requirements — Listed but not verified against our coverage
-
-**Fix:** Run validation once contract document is available.
+**Last updated:** 2026-01-29
+**Status:** Most issues RESOLVED after contract extraction
 
 ---
 
-## Data Quality Issues
+## Critical Issues
 
-### 8. INSURANCE STATUS NOT VERIFIED
+### ⚠️ COMPANY NAME MISSPELLED (Critical - Fix Before Signing)
 
-**Problem:** Insurance requirements listed from Section 13:
+**Problem:** Contract p.1 line 4 spells company name wrong:
+> "Property Reserve Arizona, LLC ("Owner") and **Deseret** Services LLC ("Contractor")"
 
-- WC: $500K
-- Employers Liability: $500K
-- CGL: $1M/$2M
-- Auto: $500K
-- Property Reserve as Additional Insured
+But signature block p.6 has it correct:
+> "**Desert** Services LLC"
 
-**But:** No status on whether our current coverage meets these requirements.
+**Why it matters:** Legal documents must have correct party names. "Deseret" vs "Desert" is a different word entirely.
 
-**Fix:** Add "Insurance Status: [Verified/Pending Review]" after COI is requested.
+**Fix:** Request Property Reserve correct the contractor name from "Deseret Services LLC" to "Desert Services LLC" in the contract body before signing.
 
-### 9. MONDAY ESTIMATE NAME MISMATCH
+---
 
-**Problem:** Monday estimate name is "PRASADA CLUBHOUSE" but this is erosion control work, not clubhouse construction.
+## Resolved Issues
 
-**Fix:** Notes correctly flag this, but should be updated in Monday to "ELANTO AT PRASADA - EROSION CONTROL".
+### ✓ CONTRACT PDF OBTAINED
+
+- Downloaded from census DB (email ID 168011, attachment ID 73163)
+- Location: `contract-prasada.pdf` (7 pages)
+- Also obtained: `eft-authorization-form.pdf`
+
+### ✓ SOURCE CITATIONS ADDED
+
+- All extracted data now has page references
+- Example: "Contract Sum: $4,940.00" → contract p.1
+
+### ✓ RECONCILIATION COMPLETED
+
+- Quick quote $3,290 vs Contract $4,940 = +$1,650
+- Explanation: Scope extended north, filter sock increased from $3,025 to $4,675
+- Math check: RECONCILES
+
+### ✓ NAME CLARIFICATION
+
+- Original confusion: "Jared Aiken" vs "Jared Tieman"
+- Resolution: Both are correct people
+  - Jared Tieman = Property Reserve contact (external)
+  - Jared Aiken = Desert Services signatory (internal)
+
+### ✓ TASKS MERGED INTO NOTES
+
+- Separate tasks.md file deleted
+- Content moved to "Follow-up Actions" section in notes.md
+
+### ✓ INSURANCE VERIFIED
+
+- All contract requirements are within our limits
+- GL $1M/$2M: Met
+- Auto $500K: Met (we have $1M)
+- WC Statutory: Met
+- Employers $500K: Met (we have $1M)
+
+---
+
+## Remaining Issues
+
+### 1. SECTION 7 COMPLETION DATES BLANK (Critical - Blocker)
+
+**Problem:** Contract p.2 Section 7 has blank fields:
+> "Contractor will complete the Work and have it ready for Owner's inspection by the _____ day of **_**, 20**_"
+> "Unless otherwise approved by Owner in writing, Contractor will not commence the Work until after the _____ day of**_**, 20**_"
+
+**Owner:** Jared Aiken needs to determine schedule and fill in dates.
+
+**Fix:** Fill in start and completion dates before signing.
+
+### 2. COI NOT YET REQUESTED
+
+**Problem:** Insurance requirements documented but COI not sent.
+
+**Required:**
+
+- Additional Insured: Property Reserve Arizona, LLC and consultants
+- Waiver of Subrogation: Yes
+- Primary & Non-Contributory: Yes
+- Form: ACORD 25 (2010/05)
+- Carrier Rating: B+ Class VII+ (A.M. Best)
+
+**Fix:** Request COI from Dawn.
+
+### 3. W9 2026 NEEDED
+
+**Problem:** Property Reserve needs current year W9.
+
+**Fix:** Prepare 2026 W9.
+
+### 4. MONDAY ESTIMATE NAME MISMATCH (Minor)
+
+**Problem:** Monday estimate #01222609 is named "PRASADA CLUBHOUSE" but work is erosion control.
+
+**Fix:** Update to "ELANTO AT PRASADA - EROSION CONTROL" after contract signed.
 
 ---
 
@@ -128,61 +108,63 @@ Per WORKFLOW.md Step 4 (Validate):
 
 | Field | Status | Importance |
 |-------|--------|------------|
-| Contract PDF | Missing | Critical |
-| Contract value | TBD | Critical |
-| Completion dates | Missing (Section 7) | Critical |
-| Reconciliation | Missing | Important |
-| Insurance verification | Not confirmed | Important |
+| Contract PDF | ✓ Have | — |
+| Contract value | ✓ $4,940.00 | — |
+| Completion dates | **BLANK** - needs filled | Critical |
+| Reconciliation | ✓ Completed | — |
+| Insurance verification | ✓ All limits met | — |
 | W9 2026 | Needed | Important |
-| EFT form | Needed if opting in | Nice to have |
+| EFT form | ✓ Have (optional) | Nice to have |
+| COI | Pending Dawn | Important |
 
 ---
 
 ## Actionable Next Steps
 
-### Before Contract Signing (Current State)
+### Before Contract Signing
 
-1. [ ] Provide completion dates for Section 7 of contract (Jared Tieman to determine schedule)
-2. [ ] Prepare 2026 W9 for Property Reserve
-3. [ ] Complete EFT Authorization form (if opting for electronic payments)
-4. [ ] Request COI from Dawn with Property Reserve as Additional Insured
-5. [ ] Merge tasks.md into notes.md
+1. [ ] **Fill in Section 7 completion dates** (Jared Aiken to determine)
+2. [ ] Prepare 2026 W9
+3. [ ] Complete EFT Authorization form (optional - already downloaded)
+4. [ ] Request COI from Dawn with Property Reserve Arizona, LLC as Additional Insured
 
 ### Contract Signing
 
-1. [ ] Sign and return contract to Sarahi Dehesa
-2. [ ] Upload signed contract to folder
+1. [ ] Sign contract (Jared Aiken per signature block p.6)
+2. [ ] Return to Sarahi Dehesa (<sarahi.dehesa@propertyreserve.org>)
 
 ### After Contract Signed
 
-1. [ ] Mark estimate Won in Monday (01222609)
-2. [ ] Update Monday item name to "ELANTO AT PRASADA - EROSION CONTROL"
-3. [ ] Create SharePoint folder
-4. [ ] Run extraction workflow with citations
-5. [ ] Complete reconciliation
-6. [ ] Confirm start date with Jared Tieman
+1. [ ] Mark estimate Won in Monday (#01222609)
+2. [ ] Rename in Monday: "ELANTO AT PRASADA - EROSION CONTROL"
+3. [ ] Create SharePoint folder: Customer Projects/Active/P/Property Reserve/Elanto at Prasada/
+4. [ ] Upload signed contract
+5. [ ] Send to internalcontracts@
 
 ---
 
 ## Open Questions
 
-- [ ] Is the $4,940 estimate accurate? Quick quote was $3,290, but extended scope to north may have increased it
+- [x] ~~Is the $4,940 estimate accurate?~~ YES - reconciled, scope extended north
 - [ ] Did Property Reserve ever get the mud scraped/swept separately, or is that still needed?
-- [ ] Confirm this is erosion control only (no SWPPP inspection work)
+- [x] ~~Confirm erosion control only~~ YES - only filter sock + mobilization in Exhibit A
 
 ---
 
 ## Ready for Action?
 
-**PARTIALLY** — Waiting on completion dates to finalize contract.
+**ALMOST** — Need Section 7 completion dates filled in
 
-**Current status:** Property Reserve sent contract template 1/27/26. Waiting for Desert Services to provide Section 7 completion dates.
+**Current status:** Contract extracted with citations, reconciliation complete, insurance verified.
 
-**Blockers:**
+**Single Blocker:**
 
-1. Jared Tieman needs to determine schedule/completion dates
-2. W9, EFT form, and COI need to be prepared
+- Section 7 completion dates are blank - Jared Aiken needs to determine schedule
 
-**Once dates provided:** Contract can be signed and returned to Sarahi Dehesa.
+**Once dates filled:**
 
-**Key context:** Small direct contract with Property Reserve (Mormon Church real estate arm). No GC involvement. Time-sensitive — they wanted work done quickly.
+1. Get COI from Dawn
+2. Prepare W9
+3. Sign and return to Sarahi Dehesa
+
+**No red flags** - Standard small project contract with Property Reserve. Utah governing law is normal for them. Our insurance meets all requirements.

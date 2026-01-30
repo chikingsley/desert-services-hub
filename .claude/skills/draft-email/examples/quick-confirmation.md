@@ -8,10 +8,7 @@ Ultra-short emails — confirmations, handoffs, one-liners. These prove that bre
 
 **Context**: Someone asked to close out a dust permit, it's done.
 
-```
-Marc,
-
-There you go!
+```text
 ```
 
 **Pattern**: "There you go!" — implies the action is complete and/or attachment is included. Nothing else needed.
@@ -22,10 +19,7 @@ There you go!
 
 **Context**: Someone asked when something would be ready.
 
-```
-Todd,
-
-Expected by end of next week. Will send it over when it's finished.
+```text
 ```
 
 **Pattern**: Answer + next step. Two sentences.
@@ -36,10 +30,7 @@ Expected by end of next week. Will send it over when it's finished.
 
 **Context**: Confirming a number discussed previously.
 
-```
-Joe,
-
-Yes, that is correct, the new contract total would be that $18,189. Updating inspections from 24 to 48 would do the trick.
+```csv
 ```
 
 **Pattern**: Affirms, restates the number, brief explanation.
@@ -50,10 +41,7 @@ Yes, that is correct, the new contract total would be that $18,189. Updating ins
 
 **Context**: Need someone to do one specific thing.
 
-```
-Frank, Cathie,
-
-Any updates on this counter signature?
+```csv
 ```
 
 **Pattern**: Shortest possible email — names + one question. No preamble.

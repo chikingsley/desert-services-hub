@@ -8,18 +8,18 @@ This document outlines planned improvements for PDF storage, caching, and perfor
 
 ### PDF Storage (Now)
 
-```
+```text
 User uploads PDF → stored as base64 in memory (takeoff-store.ts)
                  → lost on page refresh for unsaved takeoffs
                  → pdf_url column exists in SQLite but unused
-```
+```css
 
 ### Takeoff ↔ Quote Relationship (Now)
 
-```
+```text
 Takeoffs table ←──FK──→ Quotes table (takeoff_id)
                         (implemented, quotes link back to takeoffs)
-```
+```css
 
 ### What's Missing
 
@@ -51,7 +51,7 @@ Takeoffs table ←──FK──→ Quotes table (takeoff_id)
 
 ### Architecture
 
-```
+```text
 ┌─────────────────┐     ┌──────────────────────┐
 │   Next.js App   │     │   MinIO AIStor       │
 │                 │     │   (Docker/Licensed)  │
@@ -61,7 +61,7 @@ Takeoffs table ←──FK──→ Quotes table (takeoff_id)
 │  - pdf_url ─────┼────▶│    {id}/optimized.pdf│
 │                 │     │    {id}/thumb.png    │
 └─────────────────┘     └──────────────────────┘
-```
+```css
 
 ### Object Metadata (Tags)
 
@@ -75,7 +75,7 @@ Each PDF in MinIO can have tags:
 
 ### Flow: Upload PDF
 
-```
+```text
 1. User selects PDF file
 2. Upload to MinIO: PUT /takeoffs/{id}/original.pdf
 3. Background job:
@@ -84,15 +84,15 @@ Each PDF in MinIO can have tags:
    c. Extract text (optional) → store in SQLite
 4. Update SQLite: pdf_url = "minio://takeoffs/{id}/optimized.pdf"
 5. Show PDF in viewer (stream from MinIO or use optimized)
-```
+```css
 
 ### Flow: View Takeoff
 
-```
+```text
 1. Fetch takeoff from SQLite (includes pdf_url)
 2. Stream PDF from MinIO via signed URL or proxy
 3. Render with pdfjs-dist
-```
+```css
 
 ### Implementation Tasks
 
@@ -142,7 +142,7 @@ export async function compressPdf(inputBuffer: Buffer): Promise<Buffer> {
 
   return Buffer.from(compressed);
 }
-```
+```css
 
 ### Tasks
 
@@ -181,7 +181,7 @@ function getCachedScreenshot(key: string, position: LTWH, ...): string {
   cache.set(key, image);
   return image;
 }
-```
+```css
 
 - Fast, session-only
 - Auto-clears on page refresh
@@ -192,17 +192,17 @@ function getCachedScreenshot(key: string, position: LTWH, ...): string {
 ```typescript
 // Store thumbnails in browser's IndexedDB
 // Persists across sessions until explicitly cleared
-```
+```css
 
 - Survives refresh
 - Need cleanup strategy (delete when takeoff deleted)
 
 #### Option C: Server-Side (MinIO)
 
-```
+```text
 Store thumbnails in MinIO alongside PDF:
   /takeoffs/{id}/annotations/{annotation_id}.png
-```
+```css
 
 - Permanent storage
 - Useful for reports, sharing
@@ -243,7 +243,7 @@ import throttle from 'lodash.throttle';
 const handleMouseMove = throttle((e: MouseEvent) => {
   setCursorPosition({ x: e.clientX, y: e.clientY });
 }, 16);
-```
+```css
 
 ### Other Optimizations
 
@@ -264,31 +264,31 @@ const handleMouseMove = throttle((e: MouseEvent) => {
 
 ### Current Flow
 
-```
+```text
 Takeoff Editor → "Create Quote" button
   → Stores data in sessionStorage
   → Navigates to /quotes/new?from=takeoff
   → Creates quote with takeoff_id FK
-```
+```css
 
 ### Improved Flow (Bidirectional)
 
 #### From Takeoff → Quote
 
-```
+```text
 Takeoff Editor
   ├── "Create Quote" → /quotes/new?from=takeoff (existing)
   └── "View Linked Quote" → /quotes/{quoteId} (if exists)
-```
+```css
 
 #### From Quote → Takeoff
 
-```
+```text
 Quote Editor
   ├── Shows "Source: [Takeoff Name]" if takeoff_id exists
   ├── "View Takeoff" → /takeoffs/{takeoffId}
   └── "Update from Takeoff" → re-sync measurements
-```
+```css
 
 ### UI Changes Needed
 
@@ -336,7 +336,7 @@ services:
 
 volumes:
   aistor_data:
-```
+```text
 
 ```bash
 # 1. Get license key from https://subnet.min.io/health?download-license
@@ -350,7 +350,7 @@ docker compose up aistor-setup
 
 # Access console at http://localhost:9001
 # S3 API at http://localhost:9000
-```
+```css
 
 ---
 

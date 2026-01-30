@@ -86,6 +86,48 @@ const RE_FACILITY_ID_IN_DETAILS = /F\d{5,6}/;
 const RE_FACILITY_ID_FORMAT = /^F\d{5,6}$/;
 
 // ============================================================================
+// Writable Mailbox Whitelist
+// ============================================================================
+
+/**
+ * Mailboxes that allow write operations (create draft, delete, archive, move, etc.).
+ * All other mailboxes are read-only to prevent accidental modifications.
+ */
+const WRITABLE_MAILBOXES = [
+  "chi@desertservices.net",
+  "contracts@desertservices.net",
+  "dustpermits@desertservices.net",
+] as const;
+
+/**
+ * Validates that a userId is in the writable mailboxes whitelist.
+ * Throws an error if the mailbox is not allowed for write operations.
+ *
+ * @param userId - The mailbox email address to check
+ * @param operation - The operation name (for error message)
+ * @throws Error if the mailbox is not in the whitelist
+ */
+function assertWritableMailbox(
+  userId: string | undefined,
+  operation: string
+): void {
+  if (!userId) {
+    return; // Some operations don't require userId
+  }
+  const normalized = userId.toLowerCase().trim();
+  if (
+    !WRITABLE_MAILBOXES.includes(
+      normalized as (typeof WRITABLE_MAILBOXES)[number]
+    )
+  ) {
+    throw new Error(
+      `Operation "${operation}" not allowed on mailbox "${userId}". ` +
+        `Write operations are restricted to: ${WRITABLE_MAILBOXES.join(", ")}`
+    );
+  }
+}
+
+// ============================================================================
 // Email Clients (Dual Auth - lazy initialized)
 // ============================================================================
 
@@ -991,6 +1033,86 @@ Domain is @desertservices.net (NOT .us, NOT .com)`,
     },
   },
   {
+    name: "create_reply_draft",
+    description:
+      "Create a reply draft to an existing email (not sent). Use this when you need to reply to a specific email thread. The draft preserves the conversation thread and can include attachments. Use send_draft to send it later.",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        messageId: {
+          type: "string",
+          description: "ID of the email message to reply to",
+        },
+        body: {
+          type: "string",
+          description: "Reply body content",
+        },
+        bodyType: {
+          type: "string",
+          enum: ["html", "text"],
+          description: "Body format (default: text)",
+        },
+        replyAll: {
+          type: "boolean",
+          description: "Reply to all recipients (default: false)",
+        },
+        to: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: { email: { type: "string" }, name: { type: "string" } },
+            required: ["email"],
+          },
+          description:
+            "Override To recipients (default: reply to original sender)",
+        },
+        cc: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: { email: { type: "string" }, name: { type: "string" } },
+            required: ["email"],
+          },
+          description: "CC recipients",
+        },
+        attachments: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              name: { type: "string", description: "Filename" },
+              contentType: {
+                type: "string",
+                description: "MIME type (e.g., application/pdf)",
+              },
+              contentBytes: {
+                type: "string",
+                description: "Base64-encoded file content",
+              },
+            },
+            required: ["name", "contentType", "contentBytes"],
+          },
+          description: "File attachments (base64 encoded)",
+        },
+        filePaths: {
+          type: "array",
+          items: { type: "string" },
+          description:
+            "Local file paths to attach (alternative to base64 attachments)",
+        },
+        userId: {
+          type: "string",
+          description: "Mailbox containing the original email",
+        },
+        skipSignature: {
+          type: "boolean",
+          description: "Skip auto-signature + logo (default: false)",
+        },
+      },
+      required: ["messageId", "body", "userId"],
+    },
+  },
+  {
     name: "create_folder",
     description: "Create a new mail folder.",
     inputSchema: {
@@ -1504,6 +1626,7 @@ const handlers: Record<string, ToolHandler> = {
           "Error: userId is required when createAsDraft is true (e.g., 'chi@desertservices.net')"
         );
       }
+      assertWritableMailbox(userId, "send_sandstorm_sign_order");
       const client = getAppClient();
       const draft = await client.createDraft({
         subject,
@@ -1517,7 +1640,7 @@ const handlers: Record<string, ToolHandler> = {
         `Sandstorm sign order draft created: "${subject}" (ID: ${draft.id}). Use send_draft tool to send it.`
       );
     }
-    // Send email immediately
+    // Send email immediately (uses user auth, sends from Chi's account)
     const client = await getUserClient();
     await client.sendEmail({
       to,
@@ -1560,6 +1683,9 @@ const handlers: Record<string, ToolHandler> = {
       return text(
         "Error: userId is required when createAsDraft is true (e.g., 'chi@desertservices.net')"
       );
+    }
+    if (createAsDraft) {
+      assertWritableMailbox(userId, "send_morning_status");
     }
 
     // Build HTML lists
@@ -1612,12 +1738,7 @@ const handlers: Record<string, ToolHandler> = {
     const permitCount = dustPermits?.length || 0;
     const contractCount = contracts?.length || 0;
 
-    if (createAsDraft) {
-      if (!userId) {
-        return text(
-          "Error: userId is required when createAsDraft is true. Please provide a mailbox address (e.g., 'chi@desertservices.net')."
-        );
-      }
+    if (createAsDraft && userId) {
       const client = getAppClient();
       const draft = await client.createDraft({
         subject,
@@ -1674,6 +1795,9 @@ const handlers: Record<string, ToolHandler> = {
         "Error: userId is required when createAsDraft is true (e.g., 'chi@desertservices.net')"
       );
     }
+    if (createAsDraft) {
+      assertWritableMailbox(userId, "send_evening_status");
+    }
 
     // Build HTML lists
     const toHtmlList = (items: string[]) =>
@@ -1728,12 +1852,7 @@ const handlers: Record<string, ToolHandler> = {
     const doneCount = completed?.length || 0;
     const pushedCount = pushed?.length || 0;
 
-    if (createAsDraft) {
-      if (!userId) {
-        return text(
-          "Error: userId is required when createAsDraft is true. Please provide a mailbox address (e.g., 'chi@desertservices.net')."
-        );
-      }
+    if (createAsDraft && userId) {
       const client = getAppClient();
       const draft = await client.createDraft({
         subject,
@@ -1749,6 +1868,7 @@ const handlers: Record<string, ToolHandler> = {
       );
     }
 
+    // Send email immediately (uses user auth, sends from Chi's account)
     const client = await getUserClient();
     await client.sendEmail({
       to: toRecipients,
@@ -1855,6 +1975,7 @@ const handlers: Record<string, ToolHandler> = {
       userId?: string;
       skipSignature?: boolean;
     };
+    assertWritableMailbox(userId, "reply_to_email");
 
     if (replyAll === true && confirmed !== true) {
       const readClient = getAppClient();
@@ -1931,6 +2052,7 @@ const handlers: Record<string, ToolHandler> = {
       messageId: string;
       userId: string;
     };
+    assertWritableMailbox(userId, "archive_email");
     const client = getAppClient();
     await client.archiveEmail(messageId, userId);
     return text("Email archived successfully");
@@ -1942,6 +2064,7 @@ const handlers: Record<string, ToolHandler> = {
       destinationId: string;
       userId: string;
     };
+    assertWritableMailbox(userId, "move_email");
     const client = getAppClient();
     await client.moveEmail(messageId, destinationId, userId);
     return text(`Email moved to ${destinationId}`);
@@ -1952,6 +2075,7 @@ const handlers: Record<string, ToolHandler> = {
       messageId: string;
       userId: string;
     };
+    assertWritableMailbox(userId, "delete_email");
     const client = getAppClient();
     await client.deleteEmail(messageId, userId);
     return text("Email deleted (moved to Deleted Items)");
@@ -1962,6 +2086,7 @@ const handlers: Record<string, ToolHandler> = {
       messageId: string;
       userId: string;
     };
+    assertWritableMailbox(userId, "mark_read");
     const client = getAppClient();
     await client.markAsRead(messageId, userId);
     return text("Email marked as read");
@@ -1972,6 +2097,7 @@ const handlers: Record<string, ToolHandler> = {
       messageId: string;
       userId: string;
     };
+    assertWritableMailbox(userId, "mark_unread");
     const client = getAppClient();
     await client.markAsUnread(messageId, userId);
     return text("Email marked as unread");
@@ -1983,6 +2109,7 @@ const handlers: Record<string, ToolHandler> = {
       flagStatus: "flagged" | "complete" | "notFlagged";
       userId: string;
     };
+    assertWritableMailbox(userId, "flag_email");
     const client = getAppClient();
     await client.flagEmail(messageId, flagStatus, userId);
     return text(`Email flag set to: ${flagStatus}`);
@@ -2016,6 +2143,7 @@ const handlers: Record<string, ToolHandler> = {
       userId: string;
       skipSignature?: boolean;
     };
+    assertWritableMailbox(userId, "create_draft");
     const client = getAppClient();
 
     let finalBody = body;
@@ -2071,13 +2199,96 @@ const handlers: Record<string, ToolHandler> = {
   },
 
   async send_draft(args) {
-    const { draftId } = args as {
+    const { draftId, userId } = args as {
       draftId: string;
       userId: string;
     };
+    assertWritableMailbox(userId, "send_draft");
     const client = await getUserClient();
     await client.sendDraft(draftId);
     return text("Draft sent successfully");
+  },
+
+  async create_reply_draft(args) {
+    const {
+      messageId,
+      body,
+      bodyType,
+      replyAll,
+      to,
+      cc,
+      attachments,
+      filePaths,
+      userId,
+      skipSignature,
+    } = args as {
+      messageId: string;
+      body: string;
+      bodyType?: "html" | "text";
+      replyAll?: boolean;
+      to?: Array<{ email: string; name?: string }>;
+      cc?: Array<{ email: string; name?: string }>;
+      attachments?: Array<{
+        name: string;
+        contentType: string;
+        contentBytes: string;
+      }>;
+      filePaths?: string[];
+      userId: string;
+      skipSignature?: boolean;
+    };
+    assertWritableMailbox(userId, "create_reply_draft");
+
+    const client = getAppClient();
+
+    // Build attachments list from both base64 and file paths
+    const allAttachments: Array<{
+      name: string;
+      contentType: string;
+      contentBytes: string;
+    }> = [];
+
+    if (attachments?.length) {
+      allAttachments.push(...attachments);
+    }
+
+    if (filePaths?.length) {
+      for (const filePath of filePaths) {
+        const file = Bun.file(filePath);
+        if (!(await file.exists())) {
+          return text(`File not found: ${filePath}`);
+        }
+        const buffer = await file.arrayBuffer();
+        const base64 = Buffer.from(buffer).toString("base64");
+        const name = filePath.split("/").pop() ?? "attachment";
+        const contentType = file.type || "application/octet-stream";
+        allAttachments.push({ name, contentType, contentBytes: base64 });
+      }
+    }
+
+    const draft = await client.createReplyDraft({
+      messageId,
+      body,
+      bodyType,
+      replyAll,
+      to,
+      cc,
+      attachments: allAttachments.length > 0 ? allAttachments : undefined,
+      userId,
+      skipSignature,
+    });
+
+    const attInfo =
+      allAttachments.length > 0
+        ? ` with ${allAttachments.length} attachment(s)`
+        : "";
+    const action = replyAll ? "Reply-all" : "Reply";
+    const recipientInfo = to?.length
+      ? ` to ${to.map((r) => r.email).join(", ")}`
+      : "";
+    return text(
+      `${action} draft created: "${draft.subject}"${recipientInfo}${attInfo} (ID: ${draft.id}). Use send_draft tool to send it.`
+    );
   },
 
   async create_folder(args) {
@@ -2086,6 +2297,7 @@ const handlers: Record<string, ToolHandler> = {
       userId: string;
       parentFolderId?: string;
     };
+    assertWritableMailbox(userId, "create_folder");
     const client = getAppClient();
     const folder = await client.createFolder(
       displayName,
@@ -2100,6 +2312,7 @@ const handlers: Record<string, ToolHandler> = {
       folderId: string;
       userId: string;
     };
+    assertWritableMailbox(userId, "delete_folder");
     const client = getAppClient();
     await client.deleteFolder(folderId, userId);
     return text("Folder deleted successfully");
@@ -2111,6 +2324,7 @@ const handlers: Record<string, ToolHandler> = {
       newName: string;
       userId: string;
     };
+    assertWritableMailbox(userId, "rename_folder");
     const client = getAppClient();
     const folder = await client.renameFolder(folderId, newName, userId);
     return text(`Folder renamed to "${folder.displayName}"`);
@@ -2122,6 +2336,7 @@ const handlers: Record<string, ToolHandler> = {
       destinationId: string;
       userId: string;
     };
+    assertWritableMailbox(userId, "move_folder");
     const client = getAppClient();
     const folder = await client.moveFolder(folderId, destinationId, userId);
     return text(
@@ -2130,12 +2345,13 @@ const handlers: Record<string, ToolHandler> = {
   },
 
   async forward_email(args) {
-    const { messageId, to, comment } = args as {
+    const { messageId, to, comment, userId } = args as {
       messageId: string;
       to: Array<{ email: string; name?: string }>;
       comment?: string;
       userId: string;
     };
+    assertWritableMailbox(userId, "forward_email");
     const client = await getUserClient();
     await client.forwardEmail(messageId, to, comment);
     return text(`Email forwarded to ${to.map((r) => r.email).join(", ")}`);

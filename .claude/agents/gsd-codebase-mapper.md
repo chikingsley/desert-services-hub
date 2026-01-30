@@ -95,10 +95,7 @@ ls -la *.config.* .env* tsconfig.json .nvmrc .python-version 2>/dev/null
 
 # Find SDK/API imports
 grep -r "import.*stripe\|import.*supabase\|import.*aws\|import.*@" src/ --include="*.ts" --include="*.tsx" 2>/dev/null | head -50
-```
-
-**For arch focus:**
-
+```text
 ```bash
 # Directory structure
 find . -type d -not -path '*/node_modules/*' -not -path '*/.git/*' | head -50
@@ -108,10 +105,7 @@ ls src/index.* src/main.* src/app.* src/server.* app/page.* 2>/dev/null
 
 # Import patterns to understand layers
 grep -r "^import" src/ --include="*.ts" --include="*.tsx" 2>/dev/null | head -100
-```
-
-**For quality focus:**
-
+```text
 ```bash
 # Linting/formatting config
 ls .eslintrc* .prettierrc* eslint.config.* biome.json 2>/dev/null
@@ -123,10 +117,7 @@ find . -name "*.test.*" -o -name "*.spec.*" | head -30
 
 # Sample source files for convention analysis
 ls src/**/*.ts 2>/dev/null | head -10
-```
-
-**For concerns focus:**
-
+```text
 ```bash
 # TODO/FIXME comments
 grep -rn "TODO\|FIXME\|HACK\|XXX" src/ --include="*.ts" --include="*.tsx" 2>/dev/null | head -50
@@ -136,50 +127,20 @@ find src/ -name "*.ts" -o -name "*.tsx" | xargs wc -l 2>/dev/null | sort -rn | h
 
 # Empty returns/stubs
 grep -rn "return null\|return \[\]\|return {}" src/ --include="*.ts" --include="*.tsx" 2>/dev/null | head -30
+```csv
 ```
 
-Read key files identified during exploration. Use Glob and Grep liberally.
-</step>
-
-<step name="write_documents">
-Write document(s) to `.planning/codebase/` using the templates below.
-
-**Document naming:** UPPERCASE.md (e.g., STACK.md, ARCHITECTURE.md)
-
-**Template filling:**
-
-1. Replace `[YYYY-MM-DD]` with current date
-2. Replace `[Placeholder text]` with findings from exploration
-3. If something is not found, use "Not detected" or "Not applicable"
-4. Always include file paths with backticks
-
-Use the Write tool to create each document.
-</step>
-
-<step name="return_confirmation">
-Return a brief confirmation. DO NOT include document contents.
-
-Format:
-
-```
 ## Mapping Complete
 
 **Focus:** {focus}
 **Documents written:**
+
 - `.planning/codebase/{DOC1}.md` ({N} lines)
 - `.planning/codebase/{DOC2}.md` ({N} lines)
 
 Ready for orchestrator summary.
-```
 
-</step>
-
-</process>
-
-<templates>
-
-## STACK.md Template (tech focus)
-
+```html
 ```markdown
 # Technology Stack
 
@@ -241,10 +202,7 @@ Ready for orchestrator summary.
 ---
 
 *Stack analysis: [date]*
-```
-
-## INTEGRATIONS.md Template (tech focus)
-
+```css
 ```markdown
 # External Integrations
 
@@ -311,10 +269,7 @@ Ready for orchestrator summary.
 ---
 
 *Integration audit: [date]*
-```
-
-## ARCHITECTURE.md Template (arch focus)
-
+```css
 ```markdown
 # Architecture
 
@@ -380,10 +335,7 @@ Ready for orchestrator summary.
 ---
 
 *Architecture analysis: [date]*
-```
-
-## STRUCTURE.md Template (arch focus)
-
+```css
 ```markdown
 # Codebase Structure
 
@@ -391,18 +343,13 @@ Ready for orchestrator summary.
 
 ## Directory Layout
 
-```
-
-[project-root]/
-├── [dir]/          # [Purpose]
-├── [dir]/          # [Purpose]
-└── [file]          # [Purpose]
-
+```text
 ```
 
 ## Directory Purposes
 
 **[Directory Name]:**
+
 - Purpose: [What lives here]
 - Contains: [Types of files]
 - Key files: `[important files]`
@@ -410,40 +357,46 @@ Ready for orchestrator summary.
 ## Key File Locations
 
 **Entry Points:**
+
 - `[path]`: [Purpose]
 
 **Configuration:**
+
 - `[path]`: [Purpose]
 
 **Core Logic:**
+
 - `[path]`: [Purpose]
 
 **Testing:**
+
 - `[path]`: [Purpose]
 
 ## Naming Conventions
 
 **Files:**
-- [Pattern]: [Example]
 
 **Directories:**
-- [Pattern]: [Example]
 
 ## Where to Add New Code
 
 **New Feature:**
+
 - Primary code: `[path]`
 - Tests: `[path]`
 
 **New Component/Module:**
+
 - Implementation: `[path]`
 
 **Utilities:**
+
 - Shared helpers: `[path]`
 
 ## Special Directories
 
 **[Directory]:**
+
 - Purpose: [What it contains]
 - Generated: [Yes/No]
 - Committed: [Yes/No]
@@ -451,10 +404,8 @@ Ready for orchestrator summary.
 ---
 
 *Structure analysis: [date]*
-```
 
-## CONVENTIONS.md Template (quality focus)
-
+```css
 ```markdown
 # Coding Conventions
 
@@ -531,10 +482,7 @@ Ready for orchestrator summary.
 ---
 
 *Convention analysis: [date]*
-```
-
-## TESTING.md Template (quality focus)
-
+```css
 ```markdown
 # Testing Patterns
 
@@ -554,110 +502,30 @@ Ready for orchestrator summary.
 [command]              # Run all tests
 [command]              # Watch mode
 [command]              # Coverage
+```css
 ```
 
-## Test File Organization
-
-**Location:**
-
-- [Pattern: co-located or separate]
-
-**Naming:**
-
-- [Pattern]
-
-**Structure:**
-
-```
 [Directory pattern]
-```
 
-## Test Structure
-
-**Suite Organization:**
-
+```css
 ```typescript
 [Show actual pattern from codebase]
-```
-
-**Patterns:**
-
-- [Setup pattern]
-- [Teardown pattern]
-- [Assertion pattern]
-
-## Mocking
-
-**Framework:** [Tool]
-
-**Patterns:**
-
+```css
 ```typescript
 [Show actual mocking pattern from codebase]
-```
-
-**What to Mock:**
-
-- [Guidelines]
-
-**What NOT to Mock:**
-
-- [Guidelines]
-
-## Fixtures and Factories
-
-**Test Data:**
-
+```css
 ```typescript
 [Show pattern from codebase]
-```
-
-**Location:**
-
-- [Where fixtures live]
-
-## Coverage
-
-**Requirements:** [Target or "None enforced"]
-
-**View Coverage:**
-
+```css
 ```bash
 [command]
-```
-
-## Test Types
-
-**Unit Tests:**
-
-- [Scope and approach]
-
-**Integration Tests:**
-
-- [Scope and approach]
-
-**E2E Tests:**
-
-- [Framework or "Not used"]
-
-## Common Patterns
-
-**Async Testing:**
-
+```css
 ```typescript
 [Pattern]
-```
-
-**Error Testing:**
-
+```text
 ```typescript
 [Pattern]
-```
-
----
-
-*Testing analysis: [date]*
-
+```text
 ```
 
 ## CONCERNS.md Template (concerns focus)

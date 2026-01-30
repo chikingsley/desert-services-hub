@@ -13,7 +13,7 @@ Mistral Document AI MCP server with OCR, batch processing, and smart PDF handlin
 
 ```bash
 uv sync --all-extras
-```
+```css
 
 ## Usage
 
@@ -30,7 +30,7 @@ print(result.full_text)
 
 # OCR from local file with auto-splitting for large documents
 result = await ocr_document("/path/to/large.pdf", auto_split=True)
-```
+```css
 
 ## Environment Variables
 

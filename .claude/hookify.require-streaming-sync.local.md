@@ -24,10 +24,7 @@ const emails = await client.getAllEmailsPaginated(mailbox, since, max);
 for (const email of emails) {
   insertEmail(email);  // Only starts storing AFTER full fetch
 }
-```
-
-**The Solution - Stream and Store:**
-
+```text
 ```typescript
 // GOOD: Fetch page → store immediately → repeat
 let nextLink: string | undefined;

@@ -4,13 +4,13 @@ To install dependencies:
 
 ```bash
 bun install
-```
+```text
 
 To start a development server:
 
 ```bash
 bun dev
-```
+```text
 
 To run for production:
 

@@ -51,49 +51,21 @@ Before returning PLANNING COMPLETE:
 - [ ] Waves assigned for parallel execution
 - [ ] must_haves derived from phase goal
 </quality_gate>
-```
-
----
-
-## Placeholders
-
-| Placeholder | Source | Example |
-|-------------|--------|---------|
-| `{phase_number}` | From roadmap/arguments | `5` or `2.1` |
-| `{phase_dir}` | Phase directory name | `05-user-profiles` |
-| `{phase}` | Phase prefix | `05` |
-| `{standard \| gap_closure}` | Mode flag | `standard` |
-
----
-
-## Usage
-
-**From /gsd:plan-phase (standard mode):**
-
+```css
 ```python
 Task(
   prompt=filled_template,
   subagent_type="gsd-planner",
   description="Plan Phase {phase}"
 )
-```
-
-**From /gsd:plan-phase --gaps (gap closure mode):**
-
+```text
 ```python
 Task(
   prompt=filled_template,  # with mode: gap_closure
   subagent_type="gsd-planner",
   description="Plan gaps for Phase {phase}"
 )
-```
-
----
-
-## Continuation
-
-For checkpoints, spawn fresh agent with:
-
+```css
 ```markdown
 <objective>
 Continue planning for Phase {phase_number}: {phase_name}

@@ -2411,6 +2411,130 @@ export class GraphEmailClient {
   }
 
   /**
+   * Create a reply draft to an existing email.
+   *
+   * Creates a draft reply (not sent) that can be edited and sent later.
+   * Uses the Graph API createReply endpoint which preserves the conversation thread.
+   *
+   * @param options - Reply draft options
+   * @param options.messageId - ID of the message to reply to
+   * @param options.body - Reply body content
+   * @param options.bodyType - Body format: 'html' or 'text' (default: 'text')
+   * @param options.replyAll - If true, creates reply-all draft (default: false)
+   * @param options.attachments - Optional file attachments
+   * @param options.userId - Email address of the mailbox (required for app auth)
+   * @param options.skipSignature - If true, don't auto-add signature (default: false)
+   * @returns Promise resolving to object with draft id and subject
+   *
+   * @example
+   * const draft = await client.createReplyDraft({
+   *   messageId: 'AAMkAG...',
+   *   body: 'Thanks for the update!',
+   *   userId: 'chi@desertservices.net'
+   * });
+   * // Draft is now in Drafts folder, can be sent with sendDraft(draft.id)
+   */
+  async createReplyDraft(options: {
+    messageId: string;
+    body: string;
+    bodyType?: "html" | "text";
+    replyAll?: boolean;
+    to?: Array<{ email: string; name?: string }>;
+    cc?: Array<{ email: string; name?: string }>;
+    attachments?: Array<{
+      name: string;
+      contentType: string;
+      contentBytes: string;
+      contentId?: string;
+      isInline?: boolean;
+    }>;
+    userId: string;
+    skipSignature?: boolean;
+  }): Promise<{ id: string; subject: string }> {
+    const client = this.getClient();
+    const basePath = this.getBasePath(options.userId);
+    const action = options.replyAll ? "createReplyAll" : "createReply";
+
+    // Step 1: Create the reply draft (empty body initially)
+    const draftResponse = await client
+      .api(`${basePath}/messages/${options.messageId}/${action}`)
+      .post({});
+
+    const draftId = draftResponse.id as string;
+    const subject = draftResponse.subject as string;
+
+    // Step 2: Update the draft with body content
+    let body = options.body;
+    let bodyType = options.bodyType ?? "text";
+    const attachmentsToAdd: Array<{
+      name: string;
+      contentType: string;
+      contentBytes: string;
+      contentId?: string;
+      isInline?: boolean;
+    }> = [];
+
+    // Auto-wrap with signature unless explicitly skipped
+    if (options.skipSignature !== true) {
+      body = await wrapWithSignature(options.body);
+      bodyType = "html";
+
+      // Add logo attachment for signature
+      const logo = await getLogoAttachment();
+      attachmentsToAdd.push({
+        name: logo.name,
+        contentType: logo.contentType,
+        contentBytes: logo.contentBytes,
+        contentId: logo.contentId,
+        isInline: logo.isInline,
+      });
+    }
+
+    // Add user-provided attachments
+    if (options.attachments?.length) {
+      attachmentsToAdd.push(...options.attachments);
+    }
+
+    // Build the patch payload with body and optional recipients
+    const patchPayload: Record<string, unknown> = {
+      body: {
+        contentType: bodyType,
+        content: body,
+      },
+    };
+
+    // Override recipients if provided
+    if (options.to?.length) {
+      patchPayload.toRecipients = options.to.map((r) => ({
+        emailAddress: { address: r.email, name: r.name ?? r.email },
+      }));
+    }
+
+    if (options.cc?.length) {
+      patchPayload.ccRecipients = options.cc.map((r) => ({
+        emailAddress: { address: r.email, name: r.name ?? r.email },
+      }));
+    }
+
+    // Update draft with body and recipients
+    await client.api(`${basePath}/messages/${draftId}`).patch(patchPayload);
+
+    // Step 3: Add attachments
+    for (const att of attachmentsToAdd) {
+      await client.api(`${basePath}/messages/${draftId}/attachments`).post({
+        "@odata.type": "#microsoft.graph.fileAttachment",
+        name: att.name,
+        contentType: att.contentType,
+        contentBytes: att.contentBytes,
+        ...(att.contentId && { contentId: att.contentId }),
+        ...(att.isInline && { isInline: true }),
+      });
+    }
+
+    return { id: draftId, subject };
+  }
+
+  /**
    * Create a mail folder.
    *
    * @param displayName - Name for the new folder

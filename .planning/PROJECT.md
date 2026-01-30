@@ -10,150 +10,215 @@ A contract intake and task management system for Desert Services. When a contrac
 
 ## The Workflow
 
-### Stage 0: Intake / Documentation
+Two parallel tracks run simultaneously after intake:
+
+- **Track A: Contract Processing** — reconciliation, approval, finalization
+- **Track B: Work Kickoffs** — triggered by GC response, runs parallel to contract processing
+
+---
+
+### Track A: Contract Processing
+
+#### Stage 0: Intake
 
 **Trigger:** Contract comes in (via email, DocuSign, etc.)
 
-**Tasks:**
+**Atomic Steps:**
 
-1. Retrieve contract documents (PDF from DocuSign or other source)
-2. Place documents in workable location (SharePoint folder)
-3. Locate the associated estimate in Monday.com
-4. Mark estimate as "Won" in Monday
-5. Mark any competing estimates as "GC Not Awarded"
-6. Send initial touchpoint email to contractor: "Do you need anything installed?"
-
-**Outputs:**
-
-- All documents gathered in one place
-- Monday.com updated
-- Initial customer contact made
+1. **[ ] Get contract PDF** — download from DocuSign or email attachment
+2. **[ ] Save to SharePoint** — place in `/Projects/Active/[GC]/[Project]/02-Contracts/`
+3. **[ ] Find estimate in Monday** — search by project name, GC, or address
+4. **[ ] Mark "Won" in Monday** — set `BID_STATUS` = "Won"
+5. **[ ] Mark competing as "Lost"** — set `BID_STATUS` = "GC Not Awarded" for other bids on same project
+6. **[ ] Initial touchpoint to GC** — email: "Contract received. Do you need anything started?" (triggers Track B)
 
 **SLA:** 4 hours from contract receipt
 
 ---
 
-### Stage 1: Reconciliation
+#### Stage 1: Reconciliation
 
-**Trigger:** Documentation complete, ready to work
+**Trigger:** Intake complete, contract in SharePoint
 
-**Tasks:**
+**Atomic Steps:**
 
-1. Extract contract data (use extraction template)
-2. Verify insurance requirements against our limits (see Reference section)
-3. Walk through contract line items against original estimate
-4. Identify: What's been removed? What's still in? What's been added?
-5. Determine if contract is good to sign or has issues
-
-**Outputs:**
-
-- Extraction complete with all key data captured
-- Insurance verified (or flagged for exception)
-- Reconciliation complete (issues documented if any)
-- Clear determination: GOOD or HAS ISSUES
+1. **[ ] Quick sanity checks** — company name spelled right? address/phone/email correct? (see Validation Rules)
+2. **[ ] Extract core data** — parties, dates, contract value, retention %, billing platform
+3. **[ ] Extract SOV + verify totals** — schedule of values, confirm line items sum to total
+4. **[ ] Extract contacts** — PM, Super, Billing, site contact
+5. **[ ] Flag red lines** — check for red flags (fines liability, inspection qty, BMP+mobilization)
+6. **[ ] Insurance check** — compare requirements to our limits (2 min task, see Reference)
+7. **[ ] Compare to estimate** — line by line diff: what's added, removed, changed?
+8. **[ ] Check for blank fields** — completion dates, critical terms must be filled
+9. **[ ] Determination** — mark as GOOD or HAS ISSUES
 
 **SLA:** 1 business day
 
 ---
 
-### Stage 2: Customer Response
+#### Stage 2: Contract Resolution
 
-**Trigger:** Reconciliation complete
+**Trigger:** Reconciliation complete (determination made)
 
-**Path A — Contract is good:**
+**If GOOD:**
 
-1. Send "ready to sign" confirmation to customer
-2. Proceed to Stage 3
+1. **[ ] Email GC** — "Contract looks good, ready to sign"
+2. **[ ] Proceed to Stage 3**
 
-**Path B — Contract has issues:**
+**If HAS ISSUES:**
 
-1. Send email to customer detailing issues
-2. Move contract to WAITING status
-3. Follow up daily until resolved
+1. **[ ] Email GC** — detailed issues list with specific asks
+2. **[ ] Set status to WAITING**
+3. **[ ] Enter Waiting Loop**
 
-**Outputs:**
-
-- Customer notified of status
-- If issues: clear documentation of what needs to change
-
-**SLA:** 4 hours after reconciliation complete
+**SLA:** 4 hours after reconciliation
 
 ---
 
-### Stage 2.5: Waiting / Back-and-Forth (Loop)
+#### Stage 2.5: Waiting Loop
 
-**Trigger:** Issues sent to customer, awaiting response
+**Trigger:** Issues sent, awaiting GC response
 
-**Status:** BLOCKED — requires external action
+**Daily Atomic Actions:**
 
-**Daily Actions:**
+1. **[ ] Check for GC response** — email, Monday comments, etc.
+2. **[ ] If no response** — send follow-up email
+3. **[ ] If response received** — do Verification Pass
 
-- Check for customer response
-- If no response: send follow-up
-- If response received: return to Stage 1 for verification pass
+**Verification Pass (faster than initial reconciliation):**
 
-**Verification Pass:**
+1. **[ ] Review changes** — confirm GC made requested changes
+2. **[ ] Re-determine** — GOOD or STILL HAS ISSUES
+3. **[ ] If good** — proceed to Stage 3
+4. **[ ] If still issues** — repeat Stage 2 (issues email)
 
-- Faster than initial reconciliation
-- Focused scope: confirm requested changes were made
-- If good: proceed to Stage 2 Path A
-- If still has issues: repeat Stage 2 Path B
-
-**Visibility Requirements:**
-
-- Show days since last follow-up
-- Surface at top of daily action list
-- Flag if >1 day since last contact
+**Visibility:** Flag if >1 day since last contact, surface at top of daily action list
 
 ---
 
-### Stage 3: Internal Notification
+#### Stage 3: System Updates (BEFORE notifications)
 
-**Trigger:** Contract approved and ready to sign (or signed)
+**Trigger:** Contract approved (GOOD determination after any waiting)
 
-**Tasks:**
+**Atomic Steps:**
 
-1. Compose project details email
-2. Send to internalcontracts@ group
-
-**Outputs:**
-
-- Internal team notified
-- Project details distributed
-
-**SLA:** 4 hours after contract approval
-
----
-
-### Stage 4: System Updates
-
-**Trigger:** Internal notification sent
-
-**Tasks:**
-
-1. Update estimate in QuickBooks
-2. Create new QuickBooks job number
-3. Move contract and estimate documents into QuickBooks
-4. Set up SharePoint folder structure
-
-**Outputs:**
-
-- QuickBooks job created
-- All documentation linked
-- Contract fully processed
+1. **[ ] Create QB job number** — if doesn't exist from Track B
+2. **[ ] Update QB estimate** — final contract value, mark as FINAL (not partial)
+3. **[ ] Move docs to QB** — attach contract PDF, final estimate
+4. **[ ] Update Monday awarded value** — set `AWARDED_VALUE` to final contract amount
+5. **[ ] SharePoint folder structure** — ensure `01-Estimates`, `02-Contracts`, `03-Permits`, etc.
 
 **SLA:** Same business day
 
 ---
 
+#### Stage 4: Targeted Notifications
+
+**Trigger:** System updates complete (QB is ready)
+
+**Atomic Steps:**
+
+1. **[ ] Notify Billing/Kendra** — QB job #, billing platform, retention %, billing window
+2. **[ ] Notify Inspections/Jason** — site address, schedule, safety requirements, site contact
+3. **[ ] Notify Installations** — scope items, mobilization date, site access info
+4. **[ ] Internal email (legacy)** — summary to internalcontracts@ group
+
+**SLA:** 4 hours after system updates
+
+---
+
+### Track B: Work Kickoffs (Parallel to Track A)
+
+**Trigger:** GC responds to initial touchpoint with "yes, start [work]"
+
+This track runs in parallel with contract reconciliation. Work can start before contract is fully approved.
+
+---
+
+#### Step B1: Immediate Verification
+
+**Do these immediately when GC says "start work":**
+
+1. **[ ] Verify on-site contact** — "Is [name] the correct person for SWPPP sign and dust permit?"
+2. **[ ] Verify address** — "Is [address] correct for the signs?"
+
+---
+
+#### Step B2: QB Setup (Partial)
+
+**Before any work kicks off:**
+
+1. **[ ] Create QB job number** — if doesn't exist yet
+2. **[ ] Add estimate to QB** — mark as PARTIAL/PENDING (not final contract)
+3. **[ ] Print email confirmation to PDF** — save GC's "yes, start work" email to SharePoint/QB
+
+---
+
+#### Step B3: Prerequisites
+
+Each prerequisite has a decision tree. Check these in order.
+
+**NOI (Notice of Intent):**
+
+- Always REQUEST from GC (we never do it ourselves)
+- Attach instructions for how to complete it
+- Wait for GC to provide
+
+**SWPPP Plan:**
+
+```text
+Is SWPPP Plan on the estimate (did they order from us)?
+├── YES → Ask "do you need it started?" → If yes, ORDER it
+└── NO → Is a SWPPP Plan already ATTACHED in Monday?
+    ├── YES → Use it (we have it)
+    └── NO → Do other deliverables need it? (narrative)
+        ├── YES → ASK GC for it
+        └── NO → Skip
+```
+
+**Dust Permit:**
+
+```text
+Is Dust Permit on the estimate (did they order from us)?
+├── YES → Ask "do you need it started?" → If yes, SUBMIT it
+└── NO → Is permit already ATTACHED/exists?
+    ├── YES → Use it
+    └── NO → Do other deliverables need it? (dust sign, narrative)
+        ├── YES → ASK GC for it or clarify
+        └── NO → Skip
+```
+
+---
+
+#### Step B4: Deliverables (Dependency Chain)
+
+Deliverables can only be done when their prerequisites are met.
+
+| Deliverable | Requires | Action |
+|-------------|----------|--------|
+| **Dust Sign** | Dust Permit | Order from Sandstorm when permit arrives |
+| **SWPPP Sign** | NOI | Order from Sandstorm when NOI arrives |
+| **Narrative** | SWPPP Plan + NOI + Dust Permit | Complete when all three are in |
+
+**As things come in:**
+
+1. **[ ] Dust Permit arrives** → Order Dust Sign (needs verified address)
+2. **[ ] NOI arrives** → Order SWPPP Sign (needs verified on-site contact)
+3. **[ ] All three in** → Complete Narrative
+
+---
+
 ### SLA Summary
 
-- Stage 0 (Intake): 4 hours — Yellow at 4h, Red at 8h
-- Stage 1 (Reconciliation): 1 business day — Yellow at 1d, Red at 2d
-- Stage 2 (Customer Response): 4 hours — Yellow at 4h, Red at 8h
-- Stage 2.5 (Waiting): Daily follow-up — Flag daily, Red if >2 days no contact
-- Stage 3 (Internal Notification): 4 hours — Yellow at 4h, Red at 8h
-- Stage 4 (System Updates): Same day — Yellow at EOD, Red if overnight
+| Stage | SLA | Yellow | Red |
+|-------|-----|--------|-----|
+| Stage 0 (Intake) | 4 hours | 4h | 8h |
+| Stage 1 (Reconciliation) | 1 business day | 1d | 2d |
+| Stage 2 (Contract Resolution) | 4 hours | 4h | 8h |
+| Stage 2.5 (Waiting Loop) | Daily follow-up | 1d no contact | 2d no contact |
+| Stage 3 (System Updates) | Same business day | EOD | Overnight |
+| Stage 4 (Notifications) | 4 hours | 4h | 8h |
+| Track B (Work Kickoffs) | Parallel — no blocking SLA | — | — |
 
 ---
 
@@ -161,40 +226,106 @@ A contract intake and task management system for Desert Services. When a contrac
 
 Use this checklist until automation exists. As features ship, items get replaced.
 
-### Contract Processing Checklist
+### Track A: Contract Processing Checklist
 
-1. **[ ] Research Project**: Search email/Monday for history
-2. **[ ] Find Estimate in Monday**: Locate item by project name/GC/address
-3. **[ ] Create/Update Notion**: Ensure project record exists
-4. **[ ] Mark "Won" in Monday**: Set `BID_STATUS` = "Won"
-5. **[ ] Mark Competing Lost**: Set `BID_STATUS` = "GC Not Awarded" for other bids
-6. **[ ] Get Estimate PDF**: Download from Monday or QB
-7. **[ ] Get Contract PDF**: Save to SharePoint, link in Notion/Monday
-8. **[ ] Extract Data**: Use extraction template. Capture:
-   - Contract type, date, value
-   - Retention %, billing platform, billing window
-   - Certified payroll requirements
-   - Schedule of values (attach separately)
-   - All contacts (PM, Super, Billing)
-   - Scope summary (line items)
-   - Insurance requirements (GL, umbrella, auto, WC limits)
-   - Site info (address, hours, access, safety)
-   - Red flags or unusual terms
-9. **[ ] Verify Insurance**: Compare contract requirements against Desert Services limits. If limits exceed coverage, STOP - contact WTW before signing
-10. **[ ] Reconcile**: Compare totals and scope. Identify Added/Removed items
-11. **[ ] Award Value in Monday**: Set `AWARDED_VALUE` to actual contract amount
-12. **[ ] QuickBooks Update (Manual)**: Update job, address, and estimate version
-13. **[ ] SharePoint Setup**: Create folder structure (`01-Estimates`, `02-Contracts`, etc.)
-14. **[ ] Finalize Notion**: Populate all fields and set status to "Validated"
-15. **[ ] Internal Email**: Notify team using the standard template
-16. **[ ] Track Open Items**: Create Notion tasks for any missing docs/info
-17. **[ ] Start Dust Permit** (if applicable): Kick off dust permit process based on contract scope
-18. **[ ] Order SWPPP Plan** (if applicable): Send drawings to engineer, initiate SWPPP plan
+#### Stage 0: Intake
+
+1. **[ ] Get contract PDF** — download from DocuSign or email
+2. **[ ] Save to SharePoint** — `/Projects/Active/[GC]/[Project]/02-Contracts/`
+3. **[ ] Find estimate in Monday** — search by project name, GC, or address
+4. **[ ] Mark "Won" in Monday** — `BID_STATUS` = "Won"
+5. **[ ] Mark competing as "Lost"** — `BID_STATUS` = "GC Not Awarded"
+6. **[ ] Initial touchpoint to GC** — "Contract received. Do you need anything started?"
+
+#### Stage 1: Reconciliation
+
+1. **[ ] Quick sanity checks** — company name spelled right? address/phone correct?
+2. **[ ] Extract core data** — parties, dates, value, retention %, billing platform
+3. **[ ] Extract SOV** — schedule of values, verify totals match
+4. **[ ] Extract contacts** — PM, Super, Billing, site contact
+5. **[ ] Flag red lines** — fines liability, inspection qty, BMP+mobilization (see Validation Rules)
+6. **[ ] Insurance check** — compare to our limits (see Reference)
+7. **[ ] Compare to estimate** — line by line: added, removed, changed
+8. **[ ] Check for blank fields** — completion dates, critical terms filled?
+9. **[ ] Determination** — mark GOOD or HAS ISSUES
+
+#### Stage 2: Contract Resolution
+
+1. **[ ] If GOOD** — email GC "ready to sign", proceed to Stage 3
+2. **[ ] If ISSUES** — email GC with issues list, enter waiting loop
+
+#### Stage 2.5: Waiting Loop (if issues)
+
+1. **[ ] Daily check** — did GC respond?
+2. **[ ] If no response** — send follow-up
+3. **[ ] If response** — verification pass: review changes, re-determine
+4. **[ ] Repeat** — until GOOD or resolved
+
+#### Stage 3: System Updates
+
+1. **[ ] Create/update QB job** — job number, final contract value
+2. **[ ] Move docs to QB** — contract PDF, final estimate
+3. **[ ] Update Monday awarded value** — `AWARDED_VALUE` = final amount
+4. **[ ] SharePoint folder structure** — ensure `01-Estimates`, `02-Contracts`, `03-Permits`, etc.
+
+#### Stage 4: Targeted Notifications
+
+1. **[ ] Notify Billing/Kendra** — QB job #, billing platform, retention %, billing window
+2. **[ ] Notify Inspections/Jason** — site address, schedule, safety, site contact
+3. **[ ] Notify Installations** — scope items, mobilization, site access
+4. **[ ] Internal email (legacy)** — summary to internalcontracts@
+
+---
+
+### Track B: Work Kickoffs Checklist
+
+*Run in parallel with Track A when GC says "yes, start work"*
+
+#### Step B1: Immediate Verification
+
+1. **[ ] Verify on-site contact** — confirm correct person for signs/permits
+2. **[ ] Verify address** — confirm correct address for signs
+
+#### Step B2: QB Setup (Partial)
+
+1. **[ ] Create QB job number** — if doesn't exist
+2. **[ ] Add estimate to QB** — mark as PARTIAL/PENDING
+3. **[ ] Print email confirmation** — save GC's "start work" email to PDF
+
+#### Step B3: Prerequisites
+
+**NOI:**
+
+1. **[ ] Request NOI from GC** — attach instructions, wait for them to provide
+
+**SWPPP Plan:**
+
+1. **[ ] Check: On estimate?** — did they order from us?
+2. **[ ] If yes on estimate** — ask if they need it started → order if yes
+3. **[ ] If no on estimate** — check: already attached in Monday?
+4. **[ ] If attached** — use it
+5. **[ ] If not attached + needed** — ask GC for it
+
+**Dust Permit:**
+
+1. **[ ] Check: On estimate?** — did they order from us?
+2. **[ ] If yes on estimate** — ask if they need it started → submit if yes
+3. **[ ] If no on estimate** — check: already attached?
+4. **[ ] If attached** — use it
+5. **[ ] If not attached + needed** — ask GC or clarify
+
+#### Step B4: Deliverables (when prerequisites arrive)
+
+1. **[ ] Dust Permit arrives** → Order Dust Sign from Sandstorm
+2. **[ ] NOI arrives** → Order SWPPP Sign from Sandstorm
+3. **[ ] All three in (SWPPP Plan + NOI + Dust Permit)** → Complete Narrative
+
+---
 
 ### Intake Triage (Other Work Types)
 
-- **Dust Permit Request**: Create minimal Notion, check grading plan & acreage
-- **SWPPP Plan Request**: Create minimal Notion, send drawings to engineer
+- **Dust Permit Request (no contract)**: Create minimal Notion, check grading plan & acreage, run Track B prerequisite logic
+- **SWPPP Plan Request (no contract)**: Create minimal Notion, send drawings to engineer
 - **BMP Install Request**: Verify project exists, confirm site access & mobilization
 
 ---
@@ -248,14 +379,15 @@ Use this checklist until automation exists. As features ship, items get replaced
 
 ### Out of Scope (v2)
 
-- Downstream dependent tasks (signs, narrative, installation tracking)
 - Full activity history UI
 - Agent automation of task execution — v1 is human scaffolding
 - Mobile app — web/Notion only
-- QuickBooks integration — manual update, just track that it was done
+- QuickBooks API integration — manual update, just track that it was done
 - Real-time email webhooks — v1 can poll or be triggered manually
 - Automated document retrieval from DocuSign
 - Response detection (auto-flag when customer replies)
+
+**Now in scope (Track B):** Downstream dependent tasks (signs, narrative) are now documented with decision trees and dependency chains.
 
 ---
 
@@ -301,6 +433,97 @@ Use this checklist until automation exists. As features ship, items get replaced
 - (952) 842-6329 / <katie.beck@wtwco.com>
 - COI requests: <certificates@wtwco.com>
 
+### Validation Rules (from Ground Truth)
+
+**Quick Sanity Checks (run first):**
+
+- [ ] Company name spelled correctly? ("Desert Services" not "Deseret", etc.)
+- [ ] Company address, phone, email correct?
+- [ ] Contract parties correctly identified?
+- [ ] Signatory name correct?
+
+**Red Flags:**
+
+| Pattern | Action |
+|---------|--------|
+| "Assume responsibility for fines" (unscoped) | NEVER AGREE — strike |
+| "Assume responsibility for fines **due to Subcontractor's operations**" | OK — scoped to our work |
+| Inspection quantity not specified | Redline to add count |
+| BMP install without mobilization | FLAG — needs mobilization |
+| Blank completion dates | BLOCKER — fill before signing |
+
+**Scoped vs Unscoped Liability:**
+
+- **OK (scoped):** "responsible for fines due to Subcontractor's operations" — standard self-responsibility
+- **NOT OK (unscoped):** "assumes responsibility for all fines" — we're on the hook for others' mistakes
+
+**At-Risk Bids:**
+
+Large contracts ($100K+, 100+ pages) may have terrible language everywhere but be intentionally accepted. The risk was priced into the bid. Still flag issues but note "may be acceptable if at-risk bid."
+
+**Location Rules:**
+
+| Location | Rule |
+|----------|------|
+| Tucson | No rock entrances, different rates — flag if quoted Maricopa rates |
+| (add more as discovered) | |
+
+### Document Standards
+
+**Every extracted value MUST have a source citation:**
+
+```text
+Source: contract.pdf, page 1
+Quote: "Contract Sum: $4,940.00"
+```
+
+**Folder Requirements:**
+
+| File | Required | Purpose |
+|------|----------|---------|
+| Contract/PO PDF | Yes | Source document |
+| Estimate PDF | Yes | For reconciliation |
+| notes.md | Yes | Extraction + follow-ups |
+| extraction-raw.json | Yes | Structured extraction output |
+| issues.md | If any | Document problems found |
+
+**Document Classification:**
+
+- **Contract** — full subcontract with terms
+- **PO (Purchase Order)** — simpler authorization
+- **LOI (Letter of Intent)** — preliminary agreement
+- **Work Authorization** — scope-specific approval
+
+Don't call a PO a "contract" — carry the correct type through all outputs.
+
+### Common Pitfalls (from Issues Logs)
+
+**Extraction Failures:**
+
+- Summarizing from memory instead of documents → fabricated info
+- No verification step → errors slip through
+- Missing citations → can't trace where data came from
+- SOV section fabricated → presented estimate as if it were contract SOV
+
+**Admin Failures:**
+
+- Monday not updated → estimates stuck at "Bid Sent" instead of "Won"
+- PO/contract not uploaded to folder → can't complete extraction
+- Separate tasks.md file → should be merged into notes.md
+- Multiple estimates unclear → which one maps to this contract?
+
+**Reconciliation Failures:**
+
+- Math doesn't balance → need actual SOV from GC
+- Rate discrepancies not resolved → pricing issues after work starts
+- Items in scope not in estimate → need to price or strike
+
+**Timing Failures:**
+
+- Blank contract fields → completion dates unfilled, blocks signing
+- Pricing issues discovered after work starts → grates example at OneAZ
+- Missing documents for deadlines → cost escalation docs due Feb 13 (DM Fighter Squadron)
+
 ---
 
 ## Context
@@ -341,4 +564,4 @@ Use this checklist until automation exists. As features ship, items get replaced
 
 ---
 
-*Last updated: 2026-01-27*
+*Last updated: 2026-01-28*

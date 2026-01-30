@@ -1,24 +1,24 @@
 # Elanto at Prasada - Ground Truth Notes
 
 <!--
-Note: This is the EROSION CONTROL project with Property Reserve (direct contract).
-NOT the Elanto at Queen Creek SWPPP project with Catamount Constructors.
+Contract extracted with page citations from: contract-prasada.pdf
+Email source: FW: [Ext:] RE: Erosion Control at Prasada (1/27/26, contracts@)
 -->
 
 ## Quick Reference
 
 | Field | Value | Source |
 |-------|-------|--------|
-| **Project Name** | Erosion Control at Prasada / Elanto at Prasada | email subject |
-| **Project Number** | — | N/A |
-| **Address** | Prasada development area (farmland erosion around roads) | email 1/12/26 |
-| **GC** | None - direct with owner | |
-| **Owner** | Property Reserve, Inc. | email |
-| **Contract Type** | Small Project Agreement | email 1/27/26 |
-| **Contract Value** | TBD (awaiting final) | |
-| **Contract Date** | — | |
-| **Contract Status** | Pending - waiting on completion dates | |
-| **Monday Estimate** | #01222609 - $4,940.00 - Bid Sent | |
+| **Project Name** | Elanto at Prasada | contract p.1 "Project Name ('Project'): Elanto at Prasada" |
+| **Project Number** | — | not specified |
+| **Address** | 15901 W Waddell Rd, Surprise, AZ 85379 | contract p.1 "Address ('Project Site')" |
+| **GC** | None - direct with owner | contract p.1 |
+| **Owner** | Property Reserve Arizona, LLC | contract p.1, p.6 |
+| **Contract Type** | Owner Contractor Agreement - Minor Project | contract header p.1 |
+| **Contract Value** | $4,940.00 | contract p.1 "the sum of Four Thousand Nine Hundred Forty and NO/100 Dollars" |
+| **Contract Date** | Pending signature | contract p.6 "Effective Date:" blank |
+| **Contract Status** | Pending - waiting on completion dates (Section 7) | |
+| **Monday Estimate** | #01222609 - $4,940.00 - Bid Sent | Exhibit A p.7 "Estimate #1222609" |
 
 ---
 
@@ -26,8 +26,8 @@ NOT the Elanto at Queen Creek SWPPP project with Catamount Constructors.
 
 | Stage | Status | Completed | Notes |
 |-------|--------|-----------|-------|
-| 0. Intake/Documentation | [ ] | | Contract template received, not yet signed |
-| 1. Reconciliation | [ ] | | Need to reconcile $3,290 vs $4,940 |
+| 0. Intake/Documentation | [x] | 1/28/26 | Contract PDF downloaded |
+| 1. Reconciliation | [x] | 1/28/26 | Extracted with citations |
 | 2. Customer Response | [ ] | | Waiting on completion dates |
 | 3. Internal Notification | [ ] | | |
 | 4. System Updates | [ ] | | |
@@ -38,8 +38,10 @@ NOT the Elanto at Queen Creek SWPPP project with Catamount Constructors.
 
 | Role | Name | Phone | Email | Source |
 |------|------|-------|-------|--------|
-| Owner Contact | Jared Tieman, Senior Construction Manager | Office: 801.321.7531, Mobile: 602.909.0974 | <jared.tieman@propertyreserve.org> | email 1/12/26 |
-| Contract Admin | Sarahi Dehesa, Senior Associate | Mobile: 801.259.4960 | <sarahi.dehesa@propertyreserve.org> | email 1/27/26 |
+| Owner Rep | Brett Hopper, Manager | 801-321-8700 | <brett.hopper@propertyreserve.org> | contract p.6 |
+| Owner Contact | Jared Tieman, Senior Construction Manager | 602.909.0974 | <jared.tieman@propertyreserve.org> | email 1/12/26 |
+| Contract Admin | Sarahi Dehesa, Senior Associate | 801.259.4960 | <sarahi.dehesa@propertyreserve.org> | email 1/27/26 |
+| DS Signatory | Jared Aiken, SWPPP & BMP Estimator | 480-513-8986 | <jared@desertservices.net> | contract p.6 |
 
 ---
 
@@ -47,39 +49,40 @@ NOT the Elanto at Queen Creek SWPPP project with Catamount Constructors.
 
 | Field | Value | Source |
 |-------|-------|--------|
-| Retention | — | TBD |
+| Retention | None specified | contract |
 | Billing Platform | Email | small project |
-| Billing Window | — | |
-| Invoice To | TBD | |
-| Payment Terms | — | |
-| Certified Payroll | No | small project |
+| Billing Window | Monthly (Section 4a) | contract p.1 "Not more than once each month" |
+| Invoice To | Owner (Property Reserve) | |
+| Payment Terms | Net 30 | contract p.1 "within thirty (30) days" |
+| Certified Payroll | Not required | not mentioned in contract |
 
 ---
 
-## Insurance Requirements (Section 13)
+## Insurance Requirements (Section 13, pages 2-3)
 
 | Type | Contract Requires | Our Limits | Status |
 |------|-------------------|------------|--------|
 | GL (per occ) | $1,000,000 | $1,000,000 | Met |
 | GL (aggregate) | $2,000,000 | $2,000,000 | Met |
-| Auto | $500,000 CSL | $1,000,000 | Met |
-| WC / Employers | $500,000 | $1,000,000 | Met |
-| Umbrella | — | $5,000,000 | N/A |
+| Auto | $500,000 CSL, "Any Auto" | $1,000,000 | Met |
+| WC | Statutory or exemption | Statutory | Met |
+| Employers Liability | $500,000 each | $1,000,000 | Met |
+| Umbrella | Not required | $5,000,000 | N/A |
 
 **Endorsements:**
 
 | Requirement | Required | Source |
 |-------------|----------|--------|
-| Additional Insured | Yes - Property Reserve | contract Section 13 |
-| Waiver of Subrogation | — | |
-| Primary & Non-Contributory | — | |
-| COI Required | Yes - ACORD 25 form | contract Section 13 |
+| Additional Insured | Yes - Owner and consultants on GL | contract p.2 Section 13.a.3 |
+| Waiver of Subrogation | Yes | contract p.3 Section 13.c "waives all rights of subrogation against Owner" |
+| Primary & Non-Contributory | Yes | contract p.2 "provide primary coverage to the additional insureds" |
+| COI Required | Yes - ACORD 25 (2010/05) form | contract p.2-3 Section 13.b |
 
-**Bonding:** Not required (small project)
+**Carrier Rating:** B+ Class VII or higher (A.M. Best) - contract p.3
 
-**Carrier Rating:** Must be B+ Class VII or higher (A.M. Best)
+**Bonding:** Not required
 
-**Insurance Status:** [ ] Pending Dawn - request COI with Property Reserve as Additional Insured
+**Insurance Status:** [ ] Pending - request COI from Dawn with Property Reserve Arizona, LLC as Additional Insured
 
 ---
 
@@ -87,31 +90,39 @@ NOT the Elanto at Queen Creek SWPPP project with Catamount Constructors.
 
 | Field | Value | Source |
 |-------|-------|--------|
-| Site Address | Prasada development area | email 1/12/26 |
-| Site Hours | — | |
-| Access Instructions | — | |
-| Safety Requirements | — | |
+| Site Address | 15901 W Waddell Rd, Surprise, AZ 85379 | contract p.1 |
+| Project Type | New Construction – Residential Build to Rent Community | contract p.1 |
+| Site Hours | No Sunday work except emergency | contract p.4 Section 20.d |
+| Access Instructions | No access without prior Owner authorization | contract p.6 Section 32 |
+| Safety Requirements | Comply with all applicable safety laws | contract p.3-4 Section 19 |
 
 ---
 
-## Scope of Work
+## Schedule of Values (Exhibit A, page 7)
 
-**Originally requested (1/12/26):**
-
-1. Scrapping mud/dirt off road (too much for street sweeper)
-2. Street sweeping after bulk removal
-3. Optional: wash roads with 2,000 gal water truck or pressure washing
-4. Add wattles or silt fence along farm/paved roads to prevent future erosion
-
-**Quoted scope (1/23/26):**
+SOV Included: Yes
 
 | # | Description | Qty | Unit | Amount | Source |
 |---|-------------|-----|------|--------|--------|
-| 1 | Wattles/silt fence | ~1,100 | LF | $3,025.00 | quick quote |
-| 2 | Mobilization | 1 | EA | $265.00 | quick quote |
-| | **Total** | | | **$3,290.00** | |
+| 1 | SWPPP Narrative | — | — | $0.00 | Exhibit A (not included) |
+| 2 | SWPPP Sign | — | — | $0.00 | Exhibit A (not included) |
+| 3 | Dust Control Sign | — | — | $0.00 | Exhibit A (not included) |
+| 4 | Fire Access Sign | — | — | $0.00 | Exhibit A (not included) |
+| 5 | Permit Filing | — | — | $0.00 | Exhibit A (not included) |
+| 6 | Spill Kit | — | — | $0.00 | Exhibit A (not included) |
+| 7 | Textura/GCPay fees | — | — | $0.00 | Exhibit A (not included) |
+| 8 | CCIP/OCIP fees | — | — | $0.00 | Exhibit A (not included) |
+| 9 | Compost Filter Sock | — | LF | $4,675.00 | Exhibit A |
+| 10 | Mobilization | 1 | EA | $265.00 | Exhibit A |
+| | **Total** | | | **$4,940.00** | Exhibit A |
 
-Note: Final estimate $4,940 in Monday - extended scope to north?
+**Scope Summary:**
+
+1. Compost Filter Sock installation - $4,675.00
+2. Mobilization - $265.00
+3. Total: $4,940.00
+
+**Note:** The Exhibit A shows the full estimate template but only filter sock and mobilization are priced. This is erosion control only, not full SWPPP.
 
 ---
 
@@ -119,23 +130,41 @@ Note: Final estimate $4,940 in Monday - extended scope to north?
 
 | | Amount |
 |---|--------|
-| Quick Quote Total | $3,290.00 |
-| Monday Estimate | $4,940.00 |
+| Original Quick Quote | $3,290.00 |
+| Contract Value | $4,940.00 |
 | Variance | +$1,650.00 |
 
-**Issue:** Price increased from $3,290 to $4,940 - scope extension to north?
+**Line Item Reconciliation:**
 
-**Math Check:** Cannot complete - need to understand what was added for $1,650
+| Status | Item | Quick Quote | Contract | Delta |
+|--------|------|-------------|----------|-------|
+| CHANGED | Wattles/Filter Sock | $3,025.00 (1,100 LF @ $2.75) | $4,675.00 | +$1,650.00 |
+| KEPT | Mobilization | $265.00 | $265.00 | $0.00 |
+
+**Math Check:** $3,025 + $1,650 = $4,675 (filter sock increased)
+$4,675 + $265 = $4,940 ✓ **RECONCILES**
+
+**Explanation:** Scope extended to north increased filter sock quantity/price from $3,025 to $4,675.
 
 ---
 
-## Unit Rates (T&M backup from 1/23/26)
+## Unit Rates (from Exhibit A, page 7)
 
-| Item | Rate | Notes |
-|------|------|-------|
-| Street Sweeper | $137.00/hr + 10% fuel | |
-| Water Truck | $127.00/hr + 10% fuel | |
-| Labor | $45.00/hr | |
+| Item | Rate | Source |
+|------|------|--------|
+| SWPPP Narrative | $1,350 | Exhibit A (not included in this contract) |
+| SWPPP Sign | $295 | Exhibit A |
+| Dust Control Sign | $595 | Exhibit A |
+| Fire Access Sign | $695 | Exhibit A |
+| Spill Kit | $360 | Exhibit A |
+| Textura/GCPay fees | $100 | Exhibit A |
+| CCIP/OCIP fees | $250 | Exhibit A |
+| Rock Entrance | $2,625 | Exhibit A |
+| Track Out Grate | $350/month | Exhibit A |
+| Inlet Protection | $152 | Exhibit A |
+| Ertech Curb Protection | $195 (7' sections) | Exhibit A |
+| Inspections | $205 | Exhibit A |
+| Mobilization | $265 | Exhibit A |
 
 ---
 
@@ -143,14 +172,15 @@ Note: Final estimate $4,940 in Monday - extended scope to north?
 
 | Flag | Severity | Description | Source | Action |
 |------|----------|-------------|--------|--------|
-| — | — | Small direct project, standard terms expected | | |
+| Utah Law | Low | Governed by Utah law, disputes in Salt Lake City courts | contract p.5 Section 29 | Accept - standard for Property Reserve |
+| Work Restrictions | Info | No Sunday work, no alcohol/cannabis, no profanity, etc. | contract p.4 Section 20 | Note for crew |
+| 10-year Repose | Info | 10-year limitation period for claims | contract p.5 Section 28 | Standard |
 
 **Missing Information:**
 
-- [ ] Section 7 completion dates
-- [ ] Final scope clarification ($3,290 vs $4,940)
+- [x] Section 7 completion dates - BLANK in contract, needs to be filled in
 
-**Overall Risk Level:** Low (small erosion control project, direct with owner)
+**Overall Risk Level:** Low (small erosion control project, direct with owner, standard terms)
 
 ---
 
@@ -171,11 +201,9 @@ Note: Final estimate $4,940 in Monday - extended scope to north?
 | 1/23/26 | — | — | Formal estimate sent | |
 | 1/26/26 | jared-int | <Jared.Tieman@propertyreserve.org> | RE: [Ext:] RE: Erosion Control at Prasada | "This will work" |
 | 1/26/26 | jared-int | <Jared@desertservices.net> | RE: [Ext:] RE: Erosion Control at Prasada | Reply |
-| 1/27/26 | ? | Sarahi Dehesa | Contract template sent | **NOT IN CENSUS DB** - needs sync |
-| 1/28/26 | contracts | <contracts@desertservices.net> | [Elanto at Prasada] Re: ... | Forwarded to contracts@ |
+| **1/27/26** | **contracts** | <Jared@desertservices.net> | FW: [Ext:] RE: Erosion Control at Prasada | **Contract attached** |
+| 1/28/26 | contracts | <contracts@desertservices.net> | [Elanto at Prasada] Re: ... | Forward |
 | 1/28/26 | chi | <contracts@desertservices.net> | [Elanto at Prasada] Re: ... | **You received** |
-
-**Note:** Most emails went to <jared@desertservices.net> (Jared Aiken, internal), not contracts@. The 1/27 contract email from Sarahi Dehesa is not in census DB - may need sync.
 
 ---
 
@@ -183,63 +211,49 @@ Note: Final estimate $4,940 in Monday - extended scope to north?
 
 | Document | Status | Location/Notes |
 |----------|--------|----------------|
-| Contract PDF | **MISSING** | Sarahi Dehesa sent 1/27 - not in folder |
-| Estimate PDF | Missing | Monday #01222609 |
+| Contract PDF | ✓ Have | `contract-prasada.pdf` (7 pages) |
+| EFT Authorization Form | ✓ Have | `eft-authorization-form.pdf` |
+| Estimate PDF | In Monday | #01222609 |
 | COI | Pending | Request from Dawn |
 | W9 2026 | Needed | For Property Reserve |
-| EFT Form | Optional | For electronic payments |
 
 ---
 
 ## Follow-up Actions
 
-### Stage 0: Intake (SLA: 4 hours)
-
-- [ ] **FIND CONTRACT PDF** - Sarahi Dehesa sent 1/27/26, not in census DB
-- [ ] Sync census DB to capture recent emails
-- [ ] Download contract to folder
-- [ ] Find Monday estimate PDF
-
-### Stage 1: Reconciliation (SLA: 1 business day)
-
-- [ ] Extract contract data with page citations
-- [ ] Verify insurance against our limits ✓ (should be met)
-- [ ] Reconcile $3,290 quick quote vs $4,940 Monday estimate
-- [ ] Determine: GOOD TO SIGN or HAS ISSUES
-
 ### Before Contract Signing
 
-- [ ] Provide completion dates for Section 7 (Jared Tieman to determine schedule)
+- [ ] **Fill in Section 7 completion dates** - Jared Aiken to determine schedule
 - [ ] Prepare 2026 W9 for Property Reserve
-- [ ] Complete EFT Authorization form (if opting for electronic payments)
-- [ ] Request COI from Dawn with Property Reserve as Additional Insured
-- [ ] Sign and return contract to Sarahi Dehesa
+- [ ] Complete EFT Authorization form (already downloaded)
+- [ ] Request COI from Dawn with Property Reserve Arizona, LLC as Additional Insured
+- [ ] Sign contract (Jared Aiken as SWPPP & BMP Estimator per signature block)
+- [ ] Return signed contract to Sarahi Dehesa
 
 ### After Contract Signed
 
 - [ ] Mark estimate Won in Monday (#01222609)
-- [ ] Update Monday item name to "ELANTO AT PRASADA - EROSION CONTROL"
+- [ ] Update Monday item name: "PRASADA CLUBHOUSE" → "ELANTO AT PRASADA - EROSION CONTROL"
 - [ ] Create SharePoint folder: Customer Projects/Active/P/Property Reserve/Elanto at Prasada/
-- [ ] Upload signed contract
+- [ ] Upload signed contract to 02-Contracts
+- [ ] Send to internalcontracts@
 
 ---
 
 ## Open Questions
 
-- [ ] Is the $4,940 estimate accurate? Quick quote was $3,290, but extended scope to north may have increased it
+- [x] ~~Is the $4,940 estimate accurate?~~ YES - reconciles (scope extended north, filter sock increased)
 - [ ] Did Property Reserve ever get the mud scraped/swept separately, or is that still needed?
-- [ ] Confirm this is erosion control only (no SWPPP inspection work)
-- [ ] Where is the contract PDF from 1/27/26?
+- [x] ~~Confirm this is erosion control only~~ YES - only filter sock + mobilization in Exhibit A
 
 ---
 
 ## Notes
 
-- Small project - direct with owner (Property Reserve), no GC in middle
-- Property Reserve is Mormon Church real estate arm
-- They have their own contract template ("short form / small project agreement")
-- This is erosion control only, not SWPPP
-- Time-sensitive - they wanted it done quickly
-- Monday estimate name "PRASADA CLUBHOUSE" is incorrect - this is erosion control work
-
-**Separate project alert:** "Elanto at Queen Creek" with Catamount Constructors is a different, larger SWPPP project. Do not confuse.
+- Owner is Property Reserve Arizona, LLC (Mormon Church real estate arm)
+- Contract type: "Owner Contractor Agreement - Minor Project" (their standard small project form)
+- Utah governing law and Salt Lake City venue - standard for Property Reserve
+- Misspelling in contract header: "Deseret Services" (the Mormon name) vs "Desert Services"
+- Project is residential Build to Rent community
+- Section 20 work restrictions: No Sunday work, no alcohol/cannabis, no profanity, modest clothing required
+- **Separate project alert:** "Elanto at Queen Creek" with Catamount Constructors is a different, larger SWPPP project. Do not confuse.

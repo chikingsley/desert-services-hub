@@ -2,18 +2,18 @@
 
 **Project:** PCDS - New Music Building
 **Address:** 3001 East Stanford Drive, Paradise Valley, AZ 85253
-**GC:** Chasse Building Team (Jessica Durham - jdurham@chasse.us)
+**GC:** Chasse Building Team (Jessica Durham - <jdurham@chasse.us>)
 **Contract #:** 220668-31101
 **Cost Code:** 31100
 **Desert Services Scope:** SWPPP (erosion control / stormwater compliance)
-**Notion Page:** https://www.notion.so/2f5c18355bb28162bb91f0cc6efbafae
+**Notion Page:** <https://www.notion.so/2f5c18355bb28162bb91f0cc6efbafae>
 
 ## Monday Estimates
 
 - **Won**: Est #03192502, Monday ID 9646558019 — Monday shows $13,585 (INCORRECT — actual contract is $6,330)
-  - https://desert-services-company.monday.com/boards/7943937851/pulses/9646558019
+  - <https://desert-services-company.monday.com/boards/7943937851/pulses/9646558019>
 - **Bid Sent**: Est #8012403, Monday ID 9758583199 — $9,171, created 1/27/2026 (purpose unclear — likely extended scope estimate)
-  - https://desert-services-company.monday.com/boards/7943937851/pulses/9758583199
+  - <https://desert-services-company.monday.com/boards/7943937851/pulses/9758583199>
 
 ## Estimate #03192502 — Full Scope (3/19/2025, Jared Aiken)
 
@@ -54,7 +54,7 @@
 ## Change Order SCO002 — Detail
 
 - DocuSign sent: 1/23/2026 by Jessica Durham (Chasse)
-- Sent to: Jeff Gardner (Jeff@desertservices.net)
+- Sent to: Jeff Gardner (<Jeff@desertservices.net>)
 - Reason: Project ran beyond original 6-month SWPPP inspection estimate
 - 4 additional SWPPP inspections performed:
   - 12/10/2025
@@ -72,6 +72,7 @@ Desert Services CO Request Invoice: Inv_CO_REQUEST_from_DESERT_SERVICES_LLC_1827
 We do not have the SCO001 document. The -$1,665 deduct brought the contract from $6,330 to $4,665.
 
 Possible explanations:
+
 - Removed inspections (8-9 inspections would be ~$1,560-$1,755)
 - Removed combination of items
 - The $1,630 dust permit was never in the contract total, so it's not that

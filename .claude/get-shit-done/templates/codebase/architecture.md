@@ -101,10 +101,7 @@ Template for `.planning/codebase/ARCHITECTURE.md` - captures conceptual code org
 
 *Architecture analysis: [date]*
 *Update when major patterns change*
-```
-
-<good_examples>
-
+```html
 ```markdown
 # Architecture
 

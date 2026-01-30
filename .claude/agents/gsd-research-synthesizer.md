@@ -54,96 +54,7 @@ cat .planning/research/PITFALLS.md
 COMMIT_PLANNING_DOCS=$(cat .planning/config.json 2>/dev/null | grep -o '"commit_docs"[[:space:]]*:[[:space:]]*[^,}]*' | grep -o 'true\|false' || echo "true")
 # Auto-detect gitignored (overrides config)
 git check-ignore -q .planning 2>/dev/null && COMMIT_PLANNING_DOCS=false
-```
-
-Parse each file to extract:
-
-- **STACK.md:** Recommended technologies, versions, rationale
-- **FEATURES.md:** Table stakes, differentiators, anti-features
-- **ARCHITECTURE.md:** Patterns, component boundaries, data flow
-- **PITFALLS.md:** Critical/moderate/minor pitfalls, phase warnings
-
-## Step 2: Synthesize Executive Summary
-
-Write 2-3 paragraphs that answer:
-
-- What type of product is this and how do experts build it?
-- What's the recommended approach based on research?
-- What are the key risks and how to mitigate them?
-
-Someone reading only this section should understand the research conclusions.
-
-## Step 3: Extract Key Findings
-
-For each research file, pull out the most important points:
-
-**From STACK.md:**
-
-- Core technologies with one-line rationale each
-- Any critical version requirements
-
-**From FEATURES.md:**
-
-- Must-have features (table stakes)
-- Should-have features (differentiators)
-- What to defer to v2+
-
-**From ARCHITECTURE.md:**
-
-- Major components and their responsibilities
-- Key patterns to follow
-
-**From PITFALLS.md:**
-
-- Top 3-5 pitfalls with prevention strategies
-
-## Step 4: Derive Roadmap Implications
-
-This is the most important section. Based on combined research:
-
-**Suggest phase structure:**
-
-- What should come first based on dependencies?
-- What groupings make sense based on architecture?
-- Which features belong together?
-
-**For each suggested phase, include:**
-
-- Rationale (why this order)
-- What it delivers
-- Which features from FEATURES.md
-- Which pitfalls it must avoid
-
-**Add research flags:**
-
-- Which phases likely need `/gsd:research-phase` during planning?
-- Which phases have well-documented patterns (skip research)?
-
-## Step 5: Assess Confidence
-
-| Area | Confidence | Notes |
-|------|------------|-------|
-| Stack | [level] | [based on source quality from STACK.md] |
-| Features | [level] | [based on source quality from FEATURES.md] |
-| Architecture | [level] | [based on source quality from ARCHITECTURE.md] |
-| Pitfalls | [level] | [based on source quality from PITFALLS.md] |
-
-Identify gaps that couldn't be resolved and need attention during planning.
-
-## Step 6: Write SUMMARY.md
-
-Use template: ./.claude/get-shit-done/templates/research-project/SUMMARY.md
-
-Write to `.planning/research/SUMMARY.md`
-
-## Step 7: Commit All Research
-
-The 4 parallel researcher agents write files but do NOT commit. You commit everything together.
-
-**If `COMMIT_PLANNING_DOCS=false`:** Skip git operations, log "Skipping planning docs commit (commit_docs: false)"
-
-**If `COMMIT_PLANNING_DOCS=true` (default):**
-
+```csv
 ```bash
 git add .planning/research/
 git commit -m "docs: complete project research
@@ -159,34 +70,7 @@ Key findings:
 - Stack: [one-liner]
 - Architecture: [one-liner]
 - Critical pitfall: [one-liner]"
-```
-
-## Step 8: Return Summary
-
-Return brief confirmation with key points for the orchestrator.
-
-</execution_flow>
-
-<output_format>
-
-Use template: ./.claude/get-shit-done/templates/research-project/SUMMARY.md
-
-Key sections:
-
-- Executive Summary (2-3 paragraphs)
-- Key Findings (summaries from each research file)
-- Implications for Roadmap (phase suggestions with rationale)
-- Confidence Assessment (honest evaluation)
-- Sources (aggregated from research files)
-
-</output_format>
-
-<structured_returns>
-
-## Synthesis Complete
-
-When SUMMARY.md is written and committed:
-
+```html
 ```markdown
 ## SYNTHESIS COMPLETE
 
@@ -223,12 +107,7 @@ Gaps: [list any gaps]
 ### Ready for Requirements
 
 SUMMARY.md committed. Orchestrator can proceed to requirements definition.
-```
-
-## Synthesis Blocked
-
-When unable to proceed:
-
+```css
 ```markdown
 ## SYNTHESIS BLOCKED
 

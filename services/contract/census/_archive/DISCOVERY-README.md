@@ -23,7 +23,7 @@ const result = await discoveryEngine.discover(39009);
 console.log(`Found ${result.emails.length} related emails`);
 console.log(`Confidence: ${(result.confidence * 100).toFixed(1)}%`);
 console.log(`Groups: ${result.groups.length}`);
-```
+```css
 
 ## How It Works
 
@@ -37,7 +37,7 @@ if (seedEmail.conversationId) {
   const thread = getThreadByConversationId(seedEmail.conversationId);
   // All emails in thread are related (100% confidence)
 }
-```
+```css
 
 **Confidence:** 100% - This is Outlook's native threading
 
@@ -53,7 +53,7 @@ const baseSubject = normalizeSubjectJWZ("RE: Sun Health RGS - Dust Permit");
 // Find emails with similar subjects
 const matches = findEmailsBySubject(baseSubject);
 // Uses Jaccard similarity for word overlap
-```
+```css
 
 **Confidence:** 70-85% - Depends on subject similarity
 
@@ -81,7 +81,7 @@ for (const att of attachments) {
   const related = findEmailsWithAttachmentName(att.name);
   // These emails are likely related
 }
-```
+```css
 
 **Confidence:** 90% - Shared attachments indicate relationship
 
@@ -95,7 +95,7 @@ const dateMatches = findEmailsByDateRange(
   seedEmail.receivedAt - 30 days,
   seedEmail.receivedAt + 30 days
 );
-```
+```css
 
 **Confidence:** 60% - Lower confidence, but useful signal
 
@@ -116,7 +116,7 @@ interface DiscoveryResult {
     discoveredAt: string;
   };
 }
-```
+```css
 
 ## Email Groups
 
@@ -155,7 +155,7 @@ await discoveryEngine.provideFeedback({
   action: 'regroup',
   targetGroupId: 'project-123'
 });
-```
+```css
 
 Feedback is applied on subsequent discovery calls.
 
@@ -182,7 +182,7 @@ function EmailDiscoveryUI({ seedEmailId }) {
     </div>
   );
 }
-```
+```css
 
 See `discovery-ui-example.tsx` for full React component example.
 
@@ -204,7 +204,7 @@ await discoveryAPI.provideFeedback(39009, {
   action: 'exclude',
   reason: 'Not related'
 });
-```
+```css
 
 ## Example: Finding Sun Health RGS Documents
 
@@ -224,7 +224,7 @@ const result = await discoveryEngine.discover(seedEmailId);
 console.log(`Found ${result.emails.length} related emails`);
 console.log(`Found ${result.attachments.length} attachments`);
 console.log(`Groups: ${result.groups.map(g => g.name).join(', ')}`);
-```
+```css
 
 ## Testing
 
@@ -234,7 +234,7 @@ bun run discovery-example.ts 39009
 
 # Or use any email ID from your database
 bun run discovery-example.ts 1330
-```
+```css
 
 ## Algorithm Details
 

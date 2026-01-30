@@ -23,7 +23,7 @@ These happen on basically every project:
 
 Certificate Holder:
 
-```
+```text
 [GC Name]
 [Address]
 [City, State ZIP]

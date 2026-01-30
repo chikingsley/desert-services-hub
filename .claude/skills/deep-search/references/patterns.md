@@ -178,76 +178,38 @@ Patterns:
 - Names after "From:", "To:", "Cc:"
 - Names after signatures
 - Names mentioned in body with titles
-```
-
-### Companies
-
+```css
 ```text
 Patterns:
 - Email domain (infer company from @company.com)
 - Text followed by Inc, LLC, Corp, Company, Co
 - Explicit mentions: "GC:", "Client:", "Contractor:"
-```
-
-### Projects
-
+```css
 ```text
 Patterns:
 - Text after "Project:", "Job:", "Site:"
 - Capitalized multi-word phrases
 - Addresses (street + city)
 - Project numbers/codes
-```
-
-### References
-
+```css
 ```text
 Patterns:
 - Numbers after "Estimate #", "Quote #"
 - Numbers after "PO#", "Work Order #"
 - Numbers after "Permit #", "Application #"
 - Numbers after "Invoice #"
-```
-
----
-
-## Mailbox Selection Guide
-
-| Research Type | Primary Mailbox | Secondary Mailboxes |
-|---------------|-----------------|---------------------|
-| Estimates | jared@ | chi@ |
-| Contracts | chi@, jayson@ | - |
-| Field operations | jayson@ | chi@ |
-| Permits | chi@ | jayson@ |
-| Client communication | chi@ | all team |
-| Vendor communication | chi@ | jayson@ |
-| General project | chi@ | jared@, jayson@ |
-
----
-
-## Search Query Optimization
-
-### Good Queries
-
+```css
 ```text
 "Valley Rain Construction"     # Exact company name
 "NW Durango"                   # Project name
 sbeltran@sdbeng.com           # Exact email
 "estimate" "Valley Rain"      # Multiple terms
-```
-
-### Avoid
-
+```css
 ```text
 "estimate"                    # Too broad
 construction                  # Too common
 "Phoenix project"             # Too vague
-```
-
-### Query Variations
-
-When initial search yields few results, try variations:
-
+```css
 ```text
 Original: "Cradle to Crayons"
 Variations:

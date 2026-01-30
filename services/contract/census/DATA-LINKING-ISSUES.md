@@ -18,6 +18,7 @@ Projects with account_id:    48 (1.3%)
 **Issue:** Only 48 out of 3,624 projects have `account_id` set.
 
 **Example:**
+
 ```sql
 -- Project exists
 SELECT * FROM projects WHERE name LIKE '%Diamond View%';
@@ -33,6 +34,7 @@ SELECT * FROM accounts WHERE name LIKE '%Catamount%';
 ```
 
 **Fix Needed:** When syncing estimates → projects:
+
 1. Match `estimate.contractor` to `account.name` (fuzzy match)
 2. Set `project.account_id` from the matched account
 3. Set `estimate.account_domain` from the matched account
@@ -42,18 +44,21 @@ SELECT * FROM accounts WHERE name LIKE '%Catamount%';
 **Issue:** `estimate.account_domain` is NULL even when `estimate.contractor` has a value.
 
 **Current:**
+
 ```text
 estimate.contractor = "Catamount Constructors, Inc."
 estimate.account_domain = NULL
 ```
 
 **Should be:**
+
 ```text
 estimate.contractor = "Catamount Constructors, Inc."
 estimate.account_domain = "catamountinc.com"
 ```
 
 **Fix Needed:** In `sync-estimates.ts`:
+
 1. When upserting estimate, lookup account by contractor name
 2. Set `account_domain` from matched account
 
@@ -62,6 +67,7 @@ estimate.account_domain = "catamountinc.com"
 **Issue:** Same project exists multiple times with slight name variations.
 
 **Example:**
+
 ```sql
 SELECT id, name FROM projects WHERE name LIKE '%Diamond View%';
 -- 44:   "Diamond View at Ballpark"
@@ -70,7 +76,8 @@ SELECT id, name FROM projects WHERE name LIKE '%Diamond View%';
 -- 3394: "The Diamond At Ballpark Village"
 ```
 
-**Fix Needed:** 
+**Fix Needed:**
+
 1. Normalize project names before insert
 2. Dedupe existing projects (merge email counts, keep lowest ID)
 3. Use `normalized_name` column for matching
@@ -80,10 +87,12 @@ SELECT id, name FROM projects WHERE name LIKE '%Diamond View%';
 **Issue:** Recent chi@ emails have `account_id: NULL` even when sender domain has an account.
 
 **Example:** Email from `lacie@desertservices.net` about "Diamond View" has:
+
 - `account_id: NULL` (internal email, no external account)
 - `project_id: NULL` (should be linked based on subject)
 
 **Fix Needed:** For internal emails:
+
 1. Don't try to link by sender domain (it's internal)
 2. Link by subject/body content to project
 3. Inherit `account_id` from the linked project
@@ -93,12 +102,14 @@ SELECT id, name FROM projects WHERE name LIKE '%Diamond View%';
 **Issue:** Only 6% of emails have `project_id`. The linking logic exists but needs to run.
 
 **Current linking signals (in `db/repositories/linking.ts`):**
+
 1. Conversation thread - if sibling email is linked
 2. Sender history - if sender usually emails about a project
 3. Subject matching - if subject contains project name
 4. Body matching - if body contains project name
 
 **Fix Needed:** Run the linking batch job:
+
 ```bash
 # In census folder
 bun run link-emails.ts  # (needs to be created or run existing)

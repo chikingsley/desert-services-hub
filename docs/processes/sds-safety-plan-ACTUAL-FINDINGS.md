@@ -42,7 +42,7 @@ P.O. Box 236
 Scottsdale, AZ 85252
 800 N Mary Street
 Tempe, AZ 85288
-```
+```text
 
 Example 2:
 
@@ -58,7 +58,7 @@ P.O. Box 236
 Scottsdale, AZ 85252
 800 N Mary Street
 Tempe, AZ 85288
-```
+```css
 
 Key Points:
 
@@ -76,7 +76,7 @@ Subject: Subcontract 3870-004 Hayden & 101 Ph 1 Waterline, Desert Services
 [Empty body - just attachment]
 
 Attachment: Subcontractor Safety Management Plan October 26.pdf
-```
+```markdown
 
 Key Points:
 

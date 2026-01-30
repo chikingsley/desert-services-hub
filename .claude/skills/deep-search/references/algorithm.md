@@ -25,44 +25,13 @@ Can you get me pricing for the below project?
 
 Thanks,
 Salvador
-```
-
-**Extracted Entities:**
-
-| Type | Value | Confidence |
-|------|-------|------------|
-| person | <sbeltran@sdbeng.com> | 0.95 |
-| person | <chi@desertservices.net> | 0.95 |
-| company | SDB Engineering (from email domain) | 0.85 |
-| company | Valley Rain Construction | 0.90 |
-| project | Cradle to Crayons | 0.90 |
-| project | Drainage Improvements | 0.70 |
-| reference | 2929 N 24th St | 0.80 |
-
-### Step 1.2: Initial Search Queries
-
-Generate search queries from high-confidence entities:
-
+```text
 ```text
 Query 1: "Cradle to Crayons"
 Query 2: "Valley Rain Construction"
 Query 3: "sbeltran@sdbeng.com"
 Query 4: "2929 N 24th St"
-```
-
-### Step 1.3: Mailbox Selection
-
-Determine which mailboxes to search based on context:
-
-| Context | Mailboxes |
-|---------|-----------|
-| Estimating request | jared@ (primary estimator) |
-| Contract/compliance | chi@, jayson@ |
-| All communications | chi@ (coordinator) |
-| Project history | Search all team leads |
-
-### Step 1.4: Execute Searches
-
+```css
 ```bash
 Search 1: chi@desertservices.net for "Cradle to Crayons"
   → 2 results
@@ -75,12 +44,7 @@ Search 3: jared@desertservices.net for "Cradle to Crayons"
 
 Search 4: chi@desertservices.net for "SDB"
   → 8 results (multiple projects)
-```
-
-### Step 1.5: Entity Expansion
-
-New entities discovered from search results:
-
+```css
 ```text
 From Valley Rain results:
   - New project: "NW Durango" (same GC, same contact)
@@ -89,34 +53,14 @@ From Valley Rain results:
 From SDB results:
   - Pattern: SDB frequently requests through Salvador
   - Related projects list grows
-```
-
-### Step 1.6: Second-Pass Searches
-
+```css
 ```text
 Search 5: "NW Durango" across chi@, jared@
   → 6 results with attachments
 
 Search 6: "kendra@valleyrainaz.com"
   → 3 results (includes work order)
-```
-
-### Step 1.7: Termination Criteria
-
-Stop CRAWL when:
-
-- No new entities discovered in last iteration
-- Max iterations reached (default: 5)
-- All high-confidence entities have been searched
-
----
-
-## Phase 2: COLLECT - Downloading Attachments
-
-### Step 2.1: Identify Emails with Attachments
-
-From CRAWL results, filter to emails with `hasAttachments: true`:
-
+```css
 ```text
 Email 1: NW Durango - Estimate Request (Apr 23, 2025)
   → 0 attachments
@@ -129,10 +73,7 @@ Email 3: NW Durango - Work Order (Apr 29, 2025)
 
 Email 4: Valley Rain - Contract Template (Jan 2025)
   → 1 attachment: contract-template.docx
-```
-
-### Step 2.2: Download Each Attachment
-
+```css
 ```typescript
 // Get attachments list
 const attachments = await mcp__desert-email__get_attachments({
@@ -151,36 +92,17 @@ for (const att of attachments) {
   // Save locally
   await Bun.write(`downloads/${project}-${doctype}.pdf`, Buffer.from(data));
 }
-```
-
-### Step 2.3: Organize by Type
-
-Create descriptive filenames:
-
+```sql
 ```text
 downloads/
 ├── nw-durango-estimate-2025-04-24.pdf
 ├── nw-durango-workorder-2025-04-29.pdf
 └── valley-rain-contract-template.docx
-```
-
----
-
-## Phase 3: READ - Extracting Data
-
-### Step 3.1: Parse PDF Content
-
-Use Claude's Read tool to extract text from PDFs:
-
+```css
 ```typescript
 // Read the PDF
 const content = await Read({ file_path: "downloads/nw-durango-estimate.pdf" });
-```
-
-### Step 3.2: Extract Structured Data
-
-**For Estimates, extract:**
-
+```css
 ```text
 Estimate Number: 04232507
 Date: April 24, 2025
@@ -203,10 +125,7 @@ Line Items:
 Subtotal: $8,103.60
 Tax: $313.35
 TOTAL: $8,416.95
-```
-
-**For Work Orders/POs, extract:**
-
+```text
 ```text
 PO Number: 220060-010
 Date: April 29, 2025
@@ -220,12 +139,7 @@ Scope Changes from Estimate:
 
 Total: $7,204.60 (vs $8,416.95 estimate)
 Variance: -$1,212.35 (-14.4%)
-```
-
-### Step 3.3: Note Discrepancies
-
-Flag differences between documents:
-
+```css
 ```text
 DISCREPANCY FOUND:
 - Estimate #04232507: $8,416.95
@@ -236,14 +150,7 @@ Scope Reductions:
 - Porta johns reduced from 2 to 1
 - Sandbags reduced from 2/stand to 1/stand
 - Fence changed from fixed 504 LF to "as needed"
-```
-
----
-
-## Phase 4: COMPILE - Organizing Findings
-
-### Step 4.1: Build Timeline
-
+```css
 ```markdown
 ## Timeline
 
@@ -265,10 +172,7 @@ Scope Reductions:
 - Salvador (SDB) requests quote for Cradle to Crayons
 - Same GC (Valley Rain), simpler scope
 - No SWPPP required, 250 LF fence, 1 porta john
-```
-
-### Step 4.2: Document Summary
-
+```css
 ```markdown
 ## Documents Found
 
@@ -277,10 +181,7 @@ Scope Reductions:
 | NW Durango Estimate #04232507 | Apr 24, 2025 | $8,416.95 | Superseded by WO |
 | NW Durango WO #220060-010 | Apr 29, 2025 | $7,204.60 | Active |
 | Cradle to Crayons Estimate | - | - | NOT FOUND |
-```
-
-### Step 4.3: People Summary
-
+```css
 ```markdown
 ## People Involved
 
@@ -293,10 +194,7 @@ Scope Reductions:
 - Salvador Beltran (sbeltran@sdbeng.com) - SDB Engineering, requests quotes
 
 **Relationship:** SDB provides engineering, Valley Rain is GC, Desert Services is subcontractor
-```
-
-### Step 4.4: Gap Analysis
-
+```css
 ```markdown
 ## Gaps / Unknown
 
@@ -304,12 +202,7 @@ Scope Reductions:
 2. **Contract status unclear** - No signed contract found in email
 3. **Dust permit status** - Not mentioned in Cradle to Crayons request
 4. **Payment history** - No invoices found in search results
-```
-
-### Step 4.5: Answer User Questions
-
-If user asked specific questions, answer them directly:
-
+```css
 ```markdown
 ## Answers to Your Questions
 
@@ -326,22 +219,7 @@ A: YES, but it's a DIFFERENT PROJECT. Same GC (Valley Rain), same engineering
 A: NW Durango estimate #04232507 was $8,416.95 with detailed line items
    [see above]. Cradle to Crayons has simpler scope (no SWPPP, 250 LF fence
    vs 504 LF, 1 porta john vs 2).
-```
-
----
-
-## Phase 5: LOOP - Iterating if Needed
-
-### When to Loop
-
-Continue searching if:
-
-- Key questions remain unanswered
-- Important documents are referenced but not found
-- New entities emerged that haven't been searched
-
-### Loop Example
-
+```css
 ```bash
 Gap identified: "Dust permit status unclear"
 

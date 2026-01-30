@@ -117,10 +117,7 @@ Template for `.planning/codebase/CONCERNS.md` - captures known issues and areas 
 
 *Concerns audit: [date]*
 *Update as issues are fixed or new ones discovered*
-```
-
-<good_examples>
-
+```html
 ```markdown
 # Codebase Concerns
 

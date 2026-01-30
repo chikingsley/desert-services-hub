@@ -13,12 +13,7 @@ Semi-automated contract processing with anti-hallucination safeguards.
 ⚠️  NEVER read PDF files directly - PDFs are binary, Read tool fails
 ⚠️  NEVER call desert-mistral MCP directly - no retry/fallback
 ⚠️  ALWAYS use the OCR script with built-in Gemini fallback
-```
-
-### Bad vs Good
-
-**OCR a PDF:**
-
+```text
 ```bash
 # ❌ BAD - MCP has no fallback when rate limited
 desert-mistral - ocr (MCP)
@@ -28,117 +23,30 @@ Read("/path/to/file.pdf")
 
 # ✅ GOOD - Script has retry + Gemini fallback
 bun run services/contract/workflow/extract.ts ocr "/path/to/file.pdf"
-```
-
-**After OCR:**
-
+```text
 ```bash
 # ❌ BAD - Still trying to read PDF
 Read("/path/to/file.pdf")
 
 # ✅ GOOD - Read the markdown output
 Read("/path/to/file.md")
-```
-
-## Algorithm: IDENTIFY → COLLECT → OCR → EXTRACT → RECONCILE → VALIDATE
-
-### Phase 1: IDENTIFY
-
-Find the contract in census.db:
-
+```text
 ```bash
 bun run services/contract/workflow/queue.ts search "project name"
-```
-
-Confirm with user which contract thread to process.
-
-### Phase 2: COLLECT
-
-Gather PDFs from email attachments:
-
+```text
 ```bash
 bun run services/contract/workflow/collect.ts collect "normalized subject"
-```
-
-Check what's collected:
-
-- Contract/PO PDF? (required)
-- Estimate PDF? (required for reconciliation)
-
-If estimate missing → search Monday ESTIMATING board, download from QuickBooks.
-
-### Phase 3: OCR
-
-For each PDF, run the OCR script:
-
+```csv
 ```bash
 bun run services/contract/workflow/extract.ts ocr "/full/path/to/file.pdf"
-```
-
-**What happens:**
-
-1. Tries Mistral OCR (via MCP internally)
-2. If 429/500/502 → retries 3x with exponential backoff
-3. If still failing → falls back to Gemini 3.0 Flash
-4. Creates `/path/to/file.md` with OCR text
-
-**Then read the markdown:**
-
+```bash
 ```bash
 Read("/full/path/to/file.md")
-```
-
-### Phase 4: EXTRACT
-
-Read OCR markdown files and extract into `notes.md` format.
-
-**Required sections:**
-
-- Key Contacts table
-- Project Info
-- Parties (Owner, GC, Sub)
-- Contract Terms
-- Insurance Requirements
-- Reconciliation
-
-**Citation rules:**
-
-- Every value needs source: `(Page X)` or exact quote
-- If not in document → "Not specified"
-- If unclear → mark with `?`
-
-### Phase 5: RECONCILE
-
-Compare estimate line items to contract scope:
-
-| Status | Meaning |
-|--------|---------|
-| KEPT | Item in both estimate and contract |
-| REMOVED | In estimate, not in contract (note reason) |
-| ADDED | In contract, not in estimate |
-
-**Math check:**
-
+```csv
 ```text
 Estimate - Removed + Added = Contract?
 If NO → flag MISMATCH
-```
-
-### Phase 6: VALIDATE
-
-Check business rules:
-
-| Rule | Severity | Action |
-|------|----------|--------|
-| Tucson + rock entrance | 🔴 ERROR | Strike, OUT OF SCOPE |
-| "assume responsibility for fines" | 🔴 ERROR | NEVER AGREE, strike |
-| Inspection qty missing | 🟡 WARNING | Redline with count |
-| BMP install, no mobilization | 🟡 WARNING | Flag with GC |
-
-## Workflow Checklist
-
-Copy and track progress:
-
+```csv
 ```text
 Contract Processing: [PROJECT NAME]
 - [ ] Phase 1: Identified contract thread
@@ -149,12 +57,7 @@ Contract Processing: [PROJECT NAME]
 - [ ] Phase 6: Validated business rules
 - [ ] Draft: Follow-up actions listed
 - [ ] Draft: Emails ready (if applicable)
-```
-
-## Output Format
-
-Structure `notes.md` like this:
-
+```text
 ```markdown
 # [Project Name]
 
@@ -186,12 +89,7 @@ Math: $Estimate - $Removed = $Contract ✓ RECONCILES
 - [ ] Execute contract
 - [ ] Send COI to [contact]
 - [ ] Mark Won in Monday
-```
-
-## CLI Commands
-
-All commands run from repo root:
-
+```text
 ```bash
 # Search queue
 bun run services/contract/workflow/queue.ts search "query"

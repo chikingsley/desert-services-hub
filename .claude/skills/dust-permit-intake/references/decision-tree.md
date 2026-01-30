@@ -20,10 +20,7 @@ User says: "dust permit for [X]"
                 │
                 ▼
         START PROCESS
-```
-
-## Step 1: Find Context
-
+```css
 ```text
                 ┌─────────────┐
                 │ Search      │
@@ -53,10 +50,7 @@ User says: "dust permit for [X]"
 │ existing│      │ Email       │
 │ context │      │ (deep-search│
 └─────────┘      └─────────────┘
-```
-
-## Step 2: Document Requirements
-
+```css
 ```text
 ┌─────────────────────────────────────────────────┐
 │              REQUIRED DOCUMENTS                 │
@@ -87,10 +81,7 @@ User says: "dust permit for [X]"
 │  └─────────────┘          └─────────────┘      │
 │                                                 │
 └─────────────────────────────────────────────────┘
-```
-
-## Step 3: Company Lookup
-
+```css
 ```bash
 ┌─────────────────────────────────────┐
 │  Query SQLite: company-permits.db   │
@@ -113,10 +104,7 @@ User says: "dust permit for [X]"
 │ Check for     │ │ • Email       │
 │ active permits│ │ • Contact name│
 └───────────────┘ └───────────────┘
-```
-
-## Step 4: Readiness Check
-
+```css
 ```sql
 ┌─────────────────────────────────────────────────┐
 │              MINIMUM VIABLE PERMIT              │
@@ -155,10 +143,7 @@ User says: "dust permit for [X]"
 │               │ │ → Note what's │
 │               │ │   missing     │
 └───────────────┘ └───────────────┘
-```
-
-## Step 5: API Flow Selection
-
+```css
 ```bash
 ┌─────────────────────────────────────────────────┐
 │           AUTO-PERMIT API FLOWS                 │
@@ -197,12 +182,7 @@ User says: "dust permit for [X]"
 │  └─────────────────────────────────────────┘   │
 │                                                 │
 └─────────────────────────────────────────────────┘
-```
-
-## Common Scenarios
-
-### Scenario A: Request email with NOI attached
-
+```css
 ```sql
 1. Email has NOI PDF
 2. Extract NOI → get all required fields
@@ -210,10 +190,7 @@ User says: "dust permit for [X]"
 4. Create Notion project/task
 5. Submit to auto-permit API
 6. Send confirmation
-```
-
-### Scenario B: Request email, no attachments
-
+```css
 ```bash
 1. Email says "need dust permit for XYZ project"
 2. Deep search for related emails
@@ -221,20 +198,14 @@ User says: "dust permit for [X]"
 4. If not found → flag as incomplete
 5. Create Notion task with what we have
 6. Note: "Missing NOI, need to request"
-```
-
-### Scenario C: Verbal request (no email)
-
+```css
 ```bash
 1. No email to reference
 2. Search Notion for project name
 3. Search email for any related correspondence
 4. If found context → proceed
 5. If no context → ask user for source
-```
-
-### Scenario D: Renewal request
-
+```css
 ```bash
 1. Check SQLite for existing permit
 2. Verify permit is active/expiring

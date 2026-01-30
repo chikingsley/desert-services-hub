@@ -164,14 +164,7 @@ Context7 provides authoritative, current documentation for libraries and framewo
 
 **How to use:**
 
-```
-1. Resolve library ID:
-   mcp__context7__resolve-library-id with libraryName: "[library name]"
-
-2. Query documentation:
-   mcp__context7__query-docs with:
-   - libraryId: [resolved ID]
-   - query: "[specific question]"
+```markdown
 ```
 
 **Best practices:**
@@ -194,11 +187,7 @@ For libraries not in Context7 or for authoritative sources.
 
 **How to use:**
 
-```
-WebFetch with exact URL:
-- https://docs.library.com/getting-started
-- https://github.com/org/repo/releases
-- https://official-blog.com/announcement
+```markdown
 ```
 
 **Best practices:**
@@ -221,21 +210,7 @@ For finding what exists, community patterns, real-world usage.
 
 **Query templates:**
 
-```
-Ecosystem discovery:
-- "[technology] best practices [current year]"
-- "[technology] recommended libraries [current year]"
-- "[technology] vs [alternative] [current year]"
-
-Pattern discovery:
-- "how to build [type of thing] with [technology]"
-- "[technology] project structure"
-- "[technology] architecture patterns"
-
-Problem discovery:
-- "[technology] common mistakes"
-- "[technology] performance issues"
-- "[technology] gotchas"
+```markdown
 ```
 
 **Best practices:**
@@ -249,20 +224,7 @@ Problem discovery:
 
 **CRITICAL:** WebSearch findings must be verified.
 
-```
-For each WebSearch finding:
-
-1. Can I verify with Context7?
-   YES → Query Context7, upgrade to HIGH confidence
-   NO → Continue to step 2
-
-2. Can I verify with official docs?
-   YES → WebFetch official source, upgrade to MEDIUM confidence
-   NO → Remains LOW confidence, flag for validation
-
-3. Do multiple sources agree?
-   YES → Increase confidence one level
-   NO → Note contradiction, investigate further
+```text
 ```
 
 **Never present LOW confidence findings as authoritative.**
@@ -424,12 +386,7 @@ Based on research, suggested phase structure:
 
 - [Areas where research was inconclusive]
 - [Topics needing phase-specific research later]
-```
-
-## STACK.md
-
-Recommended technologies with versions and rationale.
-
+```css
 ```markdown
 # Technology Stack
 
@@ -477,12 +434,7 @@ npm install -D [packages]
 ## Sources
 
 - [Context7/official sources]
-```
-
-## FEATURES.md
-
-Feature landscape - table stakes, differentiators, anti-features.
-
+```csv
 ```markdown
 # Feature Landscape
 
@@ -515,32 +467,26 @@ Features to explicitly NOT build. Common mistakes in this domain.
 
 ## Feature Dependencies
 
-```
-
-[Dependency diagram or description]
-Feature A → Feature B (B requires A)
-
+```text
 ```
 
 ## MVP Recommendation
 
 For MVP, prioritize:
+
 1. [Table stakes feature]
 2. [Table stakes feature]
 3. [One differentiator]
 
 Defer to post-MVP:
+
 - [Feature]: [reason to defer]
 
 ## Sources
 
 - [Competitor analysis, market research sources]
-```
 
-## ARCHITECTURE.md
-
-System structure patterns with component boundaries.
-
+```css
 ```markdown
 # Architecture Patterns
 
@@ -587,12 +533,7 @@ System structure patterns with component boundaries.
 ## Sources
 
 - [Architecture references]
-```
-
-## PITFALLS.md
-
-Common mistakes with prevention strategies.
-
+```css
 ```markdown
 # Domain Pitfalls
 
@@ -635,10 +576,7 @@ Mistakes that cause annoyance but are fixable.
 ## Sources
 
 - [Post-mortems, issue discussions, community wisdom]
-```
-
-## Comparison Matrix (if comparison mode)
-
+```css
 ```markdown
 # Comparison: [Option A] vs [Option B] vs [Option C]
 
@@ -677,10 +615,7 @@ Mistakes that cause annoyance but are fixable.
 ## Sources
 
 [URLs with confidence levels]
-```
-
-## Feasibility Assessment (if feasibility mode)
-
+```css
 ```markdown
 # Feasibility Assessment: [Goal]
 
@@ -712,98 +647,7 @@ What's needed to achieve this:
 ## Sources
 
 [URLs with confidence levels]
-```
-
-</output_formats>
-
-<execution_flow>
-
-## Step 1: Receive Research Scope
-
-Orchestrator provides:
-
-- Project name and description
-- Research mode (ecosystem/feasibility/comparison)
-- Project context (from PROJECT.md if exists)
-- Specific questions to answer
-
-Parse and confirm understanding before proceeding.
-
-## Step 2: Identify Research Domains
-
-Based on project description, identify what needs investigating:
-
-**Technology Landscape:**
-
-- What frameworks/platforms are used for this type of product?
-- What's the current standard stack?
-- What are the emerging alternatives?
-
-**Feature Landscape:**
-
-- What do users expect (table stakes)?
-- What differentiates products in this space?
-- What are common anti-features to avoid?
-
-**Architecture Patterns:**
-
-- How are similar products structured?
-- What are the component boundaries?
-- What patterns work well?
-
-**Domain Pitfalls:**
-
-- What mistakes do teams commonly make?
-- What causes rewrites?
-- What's harder than it looks?
-
-## Step 3: Execute Research Protocol
-
-For each domain, follow tool strategy in order:
-
-1. **Context7 First** - For known technologies
-2. **Official Docs** - WebFetch for authoritative sources
-3. **WebSearch** - Ecosystem discovery with year
-4. **Verification** - Cross-reference all findings
-
-Document findings as you go with confidence levels.
-
-## Step 4: Quality Check
-
-Run through verification protocol checklist:
-
-- [ ] All domains investigated
-- [ ] Negative claims verified
-- [ ] Multiple sources for critical claims
-- [ ] Confidence levels assigned honestly
-- [ ] "What might I have missed?" review
-
-## Step 5: Write Output Files
-
-Create files in `.planning/research/`:
-
-1. **SUMMARY.md** - Always (synthesizes everything)
-2. **STACK.md** - Always (technology recommendations)
-3. **FEATURES.md** - Always (feature landscape)
-4. **ARCHITECTURE.md** - If architecture patterns discovered
-5. **PITFALLS.md** - Always (domain warnings)
-6. **COMPARISON.md** - If comparison mode
-7. **FEASIBILITY.md** - If feasibility mode
-
-## Step 6: Return Structured Result
-
-**DO NOT commit.** You are always spawned in parallel with other researchers. The orchestrator or synthesizer agent commits all research files together after all researchers complete.
-
-Return to orchestrator with structured result.
-
-</execution_flow>
-
-<structured_returns>
-
-## Research Complete
-
-When research finishes successfully:
-
+```html
 ```markdown
 ## RESEARCH COMPLETE
 
@@ -845,12 +689,7 @@ When research finishes successfully:
 ### Ready for Roadmap
 
 Research complete. Proceeding to roadmap creation.
-```
-
-## Research Blocked
-
-When research cannot proceed:
-
+```css
 ```markdown
 ## RESEARCH BLOCKED
 

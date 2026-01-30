@@ -40,7 +40,7 @@ For a **4-person crew**:
 
 ## Formula
 
-```
+```text
 Total Man-Minutes =
     (Install Panels × 12.7) +
     (Relocate Panels × 10.1) +
@@ -50,7 +50,7 @@ Total Man-Minutes =
     (Inlets × 15.6) +
     (Is Maintenance ? 32.1 : 0) +
     41.4
-```
+```css
 
 **To convert to crew-hours:** `Man-Minutes / (Crew Size × 60)`
 
@@ -158,7 +158,7 @@ bun scripts/labor-analysis-archive/swppp-labor-model-v4.ts
 
 # Run validation tests
 bun test scripts/labor-analysis-archive/swppp-labor-model.test.ts
-```
+```css
 
 ### Quick Estimation (Inline)
 

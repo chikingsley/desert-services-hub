@@ -4,7 +4,7 @@
 
 Two services with overlapping concerns:
 
-```
+```text
 services/email/          services/contract/
 ├── client.ts            ├── agents/           (7 extraction agents)
 ├── census/              ├── matching/         (estimate matching)
@@ -15,7 +15,7 @@ services/email/          services/contract/
 │   │   └── ...
 │   └── inbox/           └── ...
 └── ...
-```
+```css
 
 **The gap:** Email service identifies 41+ contracts but doesn't feed them to the contract pipeline. Contract pipeline watches a local folder instead of pulling from census.
 
@@ -42,7 +42,7 @@ services/email/          services/contract/
 
 ### Files to DELETE (already deleted or obsolete)
 
-```
+```text
 services/contract/
 ├── client.ts                    # DELETED (was SDK test)
 ├── contract.test.ts             # DELETED
@@ -53,17 +53,17 @@ services/contract/
 │   ├── ocr-extractor.ts         # DELETED
 │   └── text-extractor.ts        # DELETED
 └── templates/_archive/          # DELETED
-```
+```css
 
 ### Files to REVIEW for deletion
 
-```
+```text
 services/contract/
 ├── pipeline/watcher.ts          # Replace with DB-driven source
 ├── pipeline/dedup.ts            # May not need if using email IDs
 ├── chunker.ts                   # Redundant with extraction/storage
 └── file-automation/             # Moved to services/file-automation/
-```
+```css
 
 ---
 
@@ -71,16 +71,16 @@ services/contract/
 
 ### Files to DELETE or DEPRECATE
 
-```
+```text
 services/email/census/
 ├── lib/extract-attachments.ts   # Use contract service's mcp-extractor instead
 ├── extract-attachments.test.ts  # Goes with above
 └── (possibly others after review)
-```
+```css
 
 ### Keep These (core email functionality)
 
-```
+```text
 services/email/
 ├── client.ts                    # Core Graph API client
 ├── types.ts                     # Email types
@@ -94,7 +94,7 @@ services/email/
         ├── link-accounts.ts     # Account linking
         ├── platform-extraction.ts # Platform sender detection
         └── html-to-text.ts      # Body conversion
-```
+```css
 
 ---
 
@@ -226,7 +226,7 @@ export async function processAllContracts(options?: {
 
   return { processed, failed, errors };
 }
-```
+```css
 
 ### Schema Update: Link contracts to emails
 
@@ -236,7 +236,7 @@ Add `email_id` to `processed_contracts` table:
 ALTER TABLE processed_contracts ADD COLUMN email_id INTEGER REFERENCES emails(id);
 ALTER TABLE processed_contracts ADD COLUMN message_id TEXT;
 CREATE INDEX idx_processed_contracts_email ON processed_contracts(email_id);
-```
+```css
 
 ---
 
@@ -244,14 +244,14 @@ CREATE INDEX idx_processed_contracts_email ON processed_contracts(email_id);
 
 ### Current: Two separate databases
 
-```
+```text
 services/email/census/census.db     services/contract/contracts.db (implicit)
 ├── emails                          ├── processed_contracts
 ├── attachments                     ├── contract_pages
 ├── accounts                        ├── contract_extractions
 ├── projects                        └── contract_matches
 └── estimates
-```
+```css
 
 ### Target: Single source with clear ownership
 
@@ -287,7 +287,7 @@ bun services/contract/pipeline/email-source.ts --email-id=123
 
 # Show processing status
 bun services/contract/pipeline/email-source.ts --status
-```
+```css
 
 ### Existing email commands (keep)
 
@@ -297,7 +297,7 @@ bun services/email/census/sync-all.ts
 
 # Sync estimates
 bun services/email/census/sync-estimates.ts
-```
+```css
 
 ---
 
@@ -326,7 +326,7 @@ bun services/email/census/sync-estimates.ts
 
 ## Workflow After Consolidation
 
-```
+```text
 1. Email arrives at contracts@desertservices.net
            ↓
 2. sync-all.ts ingests to census DB

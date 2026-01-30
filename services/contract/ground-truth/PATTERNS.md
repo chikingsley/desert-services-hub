@@ -6,7 +6,7 @@ What we've learned from reviewing contracts. This informs extraction and validat
 
 ## Pipeline
 
-```
+```text
 INGEST → UNDERSTAND → CHUNK → EXTRACT → VALIDATE → REPORT
 ```
 
@@ -57,6 +57,12 @@ Pull structured data from each chunk:
 
 Check extracted data against rules. Each check = pass/fail/warning.
 
+**Quick Checks (run first):**
+
+- [ ] Is the company name spelled correctly? ("Desert Services" not "Deseret", etc.)
+- [ ] Is company contact info correct? (address, phone, email)
+- [ ] Are contract parties correctly identified?
+
 ### 6. Report
 
 Aggregate results. Show what passed, what failed, what needs attention.
@@ -72,6 +78,13 @@ Aggregate results. Show what passed, what failed, what needs attention.
 - [ ] Has project location
 - [ ] Has GC name
 - [ ] Has at least one contact (super, PM, or coordinator)
+
+### Contractor Info (Quick Sanity Checks)
+
+- [ ] Company name spelled correctly throughout ("Desert Services" not "Deseret", etc.)
+- [ ] Company address correct
+- [ ] Company phone/email correct
+- [ ] Signatory name correct
 
 ### Scope vs Estimate
 
@@ -181,6 +194,14 @@ Some contracts have **terrible language everywhere** but are **intentionally acc
 - Scale matters: $500K vs $10-20K changes the calculus
 - See `sidney-village/notes.md` for full analysis
 
+### Elanto at Prasada (Owner Contractor Agreement)
+
+- Property Reserve Arizona, LLC contract
+- **Key learning:** Company name misspelled in contract body ("Deseret" vs "Desert")
+- Signature block had it correct, but body text was wrong
+- Example of why quick sanity checks on contractor info matter
+- See `elanto-at-prasada/issues.md` for full analysis
+
 ### Common Issues
 
 - Inspection quantity not specified in contract
@@ -188,6 +209,7 @@ Some contracts have **terrible language everywhere** but are **intentionally acc
 - "Assume responsibility for fines" language
 - Scanned schedules can't be OCR'd
 - Mobilization needed for BMP installs but removed from contract
+- **Company name misspelled** - always verify contractor name is correct throughout
 
 ---
 

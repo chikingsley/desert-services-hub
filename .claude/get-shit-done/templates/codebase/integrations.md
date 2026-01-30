@@ -124,10 +124,7 @@ Template for `.planning/codebase/INTEGRATIONS.md` - captures external service de
 
 *Integration audit: [date]*
 *Update when adding/removing external services*
-```
-
-<good_examples>
-
+```html
 ```markdown
 # External Integrations
 

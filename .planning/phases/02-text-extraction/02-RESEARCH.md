@@ -42,19 +42,12 @@ The established libraries/tools for this domain:
 
 ```bash
 bun add @mistralai/mistralai unpdf
-```
-
-Or if using existing pdfjs-dist:
-
+```text
 ```bash
 bun add @mistralai/mistralai
+```css
 ```
 
-## Architecture Patterns
-
-### Recommended Project Structure
-
-```
 services/
   contract/
     pipeline/
@@ -68,16 +61,8 @@ services/
       ocr-extractor.ts   # Mistral OCR extraction
       types.ts           # Extraction types (ExtractedPage, ExtractionResult)
       storage.ts         # SQLite storage for extracted text
-```
 
-### Pattern 1: Two-Tier Extraction Strategy
-
-**What:** Try local extraction first, fall back to OCR if text yield is too low.
-
-**When to use:** Every PDF that enters the pipeline.
-
-**Example:**
-
+```css
 ```typescript
 // Source: Combination of unpdf docs + Mistral OCR docs
 import { extractText, getDocumentProxy } from "unpdf";
@@ -128,16 +113,7 @@ export async function extractText(filePath: string): Promise<ExtractionResult> {
     processingTimeMs: Date.now() - start,
   };
 }
-```
-
-### Pattern 2: Mistral OCR Integration
-
-**What:** Call Mistral OCR API with base64-encoded PDF.
-
-**When to use:** When digital extraction fails or yields insufficient text.
-
-**Example:**
-
+```css
 ```typescript
 // Source: https://docs.mistral.ai/capabilities/document_ai/basic_ocr
 import { Mistral } from "@mistralai/mistralai";
@@ -177,16 +153,7 @@ export async function extractWithMistralOcr(
     processingTimeMs: Date.now() - startTime,
   };
 }
-```
-
-### Pattern 3: Per-Page SQLite Storage
-
-**What:** Store extracted text per page for multi-agent access with citation support.
-
-**When to use:** After extraction, before agent processing.
-
-**Example:**
-
+```css
 ```typescript
 // Source: Existing lib/db/index.ts pattern
 import { db } from "@/lib/db";
@@ -230,88 +197,7 @@ export function getFullText(contractId: number): string {
   const pages = getExtractedText(contractId);
   return pages.map(p => p.text).join("\n\n---PAGE BREAK---\n\n");
 }
-```
-
-### Anti-Patterns to Avoid
-
-- **Always using OCR:** Expensive ($1-2/1000 pages) and slower than local extraction. Only use for scanned PDFs.
-- **Storing text as single blob:** Loses page-level granularity needed for citations. Store per-page.
-- **Not handling large PDFs:** Mistral has 50MB/1000 page limits. Add chunking for large documents.
-- **Blocking on OCR:** OCR can take 1-5 seconds per page. Make extraction async and update status.
-- **Ignoring table structure:** Contract SOVs have tables. Use `tableFormat: "markdown"` to preserve structure.
-
-## Don't Hand-Roll
-
-Problems that look simple but have existing solutions:
-
-| Problem | Don't Build | Use Instead | Why |
-|---------|-------------|-------------|-----|
-| PDF text extraction | Custom pdfjs wrapper | unpdf / existing pdfjs-dist | Handles encoding, font issues, page layouts |
-| OCR for scanned PDFs | Tesseract wrapper | Mistral OCR | 94.9% accuracy vs ~85% for Tesseract, handles tables/handwriting |
-| Detecting scanned vs digital | Heuristic KB/page only | Text extraction attempt + threshold | More reliable than file size heuristic alone |
-| Table extraction | Regex on OCR output | Mistral tableFormat: "markdown" | Preserves structure, handles merged cells |
-| Base64 encoding | Manual Buffer operations | Buffer.from().toString("base64") | Built-in, correct, handles edge cases |
-
-**Key insight:** Mistral OCR solves the hard problems (handwriting, low-DPI scans, tables, multi-column layouts) that traditional OCR struggles with. The $1-2/1000 pages cost is negligible compared to building and maintaining a custom OCR pipeline.
-
-## Common Pitfalls
-
-### Pitfall 1: Assuming All PDFs Have Extractable Text
-
-**What goes wrong:** Digital extraction returns empty strings or garbage characters.
-
-**Why it happens:** PDF may be scanned, have embedded fonts without text mapping, or use non-standard encoding.
-
-**How to avoid:** Always check text yield. If total extracted characters < threshold (e.g., 100 per page average), fall back to OCR.
-
-**Warning signs:** Empty text arrays, text full of unicode replacement characters, text length << expected for document size.
-
-### Pitfall 2: Mistral OCR File Size Limits
-
-**What goes wrong:** API returns 413 or error for large PDFs.
-
-**Why it happens:** Mistral OCR limits: 50MB max file size, 1000 pages max.
-
-**How to avoid:** Check file size before calling OCR. For large files, process in chunks (split PDF into sections).
-
-**Warning signs:** Contracts over 50 pages or with high-resolution scans. Construction contracts can be 100+ pages.
-
-### Pitfall 3: Table Data Becomes Unusable
-
-**What goes wrong:** SOV (Schedule of Values) tables extracted as jumbled text, values misaligned.
-
-**Why it happens:** Default OCR output merges table cells linearly without structure.
-
-**How to avoid:** Use `tableFormat: "markdown"` or `tableFormat: "html"` in Mistral OCR. Store table markdown separately if needed.
-
-**Warning signs:** Extracted text has numbers/values but no clear column alignment or headers.
-
-### Pitfall 4: Lost Page Citations
-
-**What goes wrong:** Agents cite "page 5" but extraction merged all text into one blob.
-
-**Why it happens:** Stored extracted text as single string without page boundaries.
-
-**How to avoid:** Store per-page with page_index. Include page breaks in full-text retrieval.
-
-**Warning signs:** Multi-agent outputs cite pages but can't be verified.
-
-### Pitfall 5: OCR Hallucinations in Financial Data
-
-**What goes wrong:** Contract values, dates, or permit numbers are slightly wrong.
-
-**Why it happens:** OCR models can hallucinate, especially on low-quality scans. Mistral tests show 27.5% missing data rate in structured extraction.
-
-**How to avoid:** Store raw OCR output alongside any structured extraction. Flag low-confidence extractions. Human verification step for critical values (Phase 5).
-
-**Warning signs:** Values that don't match expected formats (e.g., permit numbers with wrong prefix).
-
-## Code Examples
-
-Verified patterns from official sources:
-
-### Initialize Mistral Client
-
+```css
 ```typescript
 // Source: https://github.com/mistralai/client-ts
 import { Mistral } from "@mistralai/mistralai";
@@ -319,10 +205,7 @@ import { Mistral } from "@mistralai/mistralai";
 const mistral = new Mistral({
   apiKey: process.env.MISTRAL_API_KEY ?? "",
 });
-```
-
-### OCR with URL (Public PDF)
-
+```css
 ```typescript
 // Source: https://docs.mistral.ai/capabilities/document_ai/basic_ocr
 const result = await mistral.ocr.process({
@@ -340,10 +223,7 @@ const result = await mistral.ocr.process({
 // result.pages[].markdown - extracted text with markdown formatting
 // result.pages[].tables - tables if tableFormat specified
 // result.pages[].dimensions - { dpi, height, width }
-```
-
-### OCR with Base64 (Local PDF)
-
+```css
 ```typescript
 // Source: https://docs.mistral.ai/api/endpoint/ocr
 const buffer = await Bun.file(filePath).arrayBuffer();
@@ -357,10 +237,7 @@ const result = await mistral.ocr.process({
   },
   pages: [0, 1, 2], // Optional: specific pages only
 });
-```
-
-### Digital Extraction with unpdf
-
+```css
 ```typescript
 // Source: https://github.com/unjs/unpdf
 import { extractText, getDocumentProxy } from "unpdf";
@@ -375,10 +252,7 @@ const { totalPages, text } = await extractText(pdf, { mergePages: false });
 // Merged extraction
 const { text: fullText } = await extractText(pdf, { mergePages: true });
 // fullText is single string
-```
-
-### Check if PDF is Likely Scanned
-
+```css
 ```typescript
 // Source: Derived from existing services/jina/pdf/smart-triage.ts pattern
 import { extractText, getDocumentProxy } from "unpdf";
@@ -395,10 +269,7 @@ async function isLikelyScannnedPdf(filePath: string): Promise<boolean> {
 
   return avgCharsPerPage < MIN_CHARS_PER_PAGE;
 }
-```
-
-### Full Extraction Pipeline Integration
-
+```css
 ```typescript
 // Source: Combines patterns above with existing pipeline
 import { markAsProcessed, updateProcessingStatus } from "./dedup";

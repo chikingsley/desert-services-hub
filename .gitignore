@@ -38,6 +38,8 @@ next-env.d.ts
 *.db-shm
 *.db-wal
 data/*.db
+files-for-work-all/
+*.sqlite
 
 # IDE
 .idea/
@@ -62,6 +64,9 @@ services/monday/estimates.token-cache.json
 projects/*/data/
 services/monday/estimates/
 data/
+
+# Triage logs (personal config)
+logs/triage/
 
 # Python
 __pycache__/

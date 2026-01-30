@@ -22,10 +22,10 @@ Per WORKFLOW.md Key Principle #1:
 
 **Fix:** Upload PO document and add citations. Example format:
 
-```
+```text
 Source: po, page 1
 Quote: "PO Number: 0101-25"
-```
+```css
 
 ### 2. PO NOT UPLOADED TO FOLDER
 
@@ -48,7 +48,7 @@ Per WORKFLOW.md Step 5:
 
 **Fix:** Create reconciliation section:
 
-```
+```text
 Estimate: $8,616.56
 Delivered:
 - Site fence (stands with sandbags) - $X

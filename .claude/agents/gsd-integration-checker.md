@@ -61,11 +61,9 @@ for summary in .planning/phases/*/*-SUMMARY.md; do
   echo "=== $summary ==="
   grep -A 10 "Key Files\|Exports\|Provides" "$summary" 2>/dev/null
 done
+```text
 ```
 
-**Build provides/consumes map:**
-
-```
 Phase 1 (Auth):
   provides: getCurrentUser, AuthProvider, useAuth, /api/auth/*
   consumes: nothing (foundation)
@@ -77,14 +75,8 @@ Phase 2 (API):
 Phase 3 (Dashboard):
   provides: Dashboard, UserCard, DataList
   consumes: /api/users/*, /api/data/*, useAuth
-```
 
-## Step 2: Verify Export Usage
-
-For each phase's exports, verify they're imported and used.
-
-**Check imports:**
-
+```css
 ```bash
 check_export_used() {
   local export_name="$1"
@@ -109,21 +101,7 @@ check_export_used() {
     echo "ORPHANED (0 imports)"
   fi
 }
-```
-
-**Run for key exports:**
-
-- Auth exports (getCurrentUser, useAuth, AuthProvider)
-- Type exports (UserType, etc.)
-- Utility exports (formatDate, etc.)
-- Component exports (shared components)
-
-## Step 3: Verify API Coverage
-
-Check that API routes have consumers.
-
-**Find all API routes:**
-
+```csv
 ```bash
 # Next.js App Router
 find src/app/api -name "route.ts" 2>/dev/null | while read route; do
@@ -137,10 +115,7 @@ find src/pages/api -name "*.ts" 2>/dev/null | while read route; do
   path=$(echo "$route" | sed 's|src/pages/api||' | sed 's|\.ts||')
   echo "/api$path"
 done
-```
-
-**Check each route has consumers:**
-
+```text
 ```bash
 check_api_consumed() {
   local route="$1"
@@ -163,24 +138,14 @@ check_api_consumed() {
     echo "ORPHANED (no calls found)"
   fi
 }
-```
-
-## Step 4: Verify Auth Protection
-
-Check that routes requiring auth actually check auth.
-
-**Find protected route indicators:**
-
+```css
 ```bash
 # Routes that should be protected (dashboard, settings, user data)
 protected_patterns="dashboard|settings|profile|account|user"
 
 # Find components/pages matching these patterns
 grep -r -l "$protected_patterns" src/ --include="*.tsx" 2>/dev/null
-```
-
-**Check auth usage in protected areas:**
-
+```text
 ```bash
 check_auth_protection() {
   local file="$1"
@@ -197,16 +162,7 @@ check_auth_protection() {
     echo "UNPROTECTED"
   fi
 }
-```
-
-## Step 5: Verify E2E Flows
-
-Derive flows from milestone goals and trace through codebase.
-
-**Common flow patterns:**
-
-### Flow: User Authentication
-
+```css
 ```bash
 verify_auth_flow() {
   echo "=== Auth Flow ==="
@@ -231,10 +187,7 @@ verify_auth_flow() {
     [ -n "$redirect" ] && echo "✓ Redirects after login" || echo "✗ No redirect after login"
   fi
 }
-```
-
-### Flow: Data Display
-
+```css
 ```bash
 verify_data_flow() {
   local component="$1"
@@ -270,10 +223,7 @@ verify_data_flow() {
     [ -n "$returns_data" ] && echo "✓ API returns data" || echo "✗ API doesn't return data"
   fi
 }
-```
-
-### Flow: Form Submission
-
+```css
 ```bash
 verify_form_flow() {
   local form_component="$1"
@@ -301,14 +251,7 @@ verify_form_flow() {
     [ -n "$shows_feedback" ] && echo "✓ Shows feedback" || echo "✗ No user feedback"
   fi
 }
-```
-
-## Step 6: Compile Integration Report
-
-Structure findings for milestone auditor.
-
-**Wiring status:**
-
+```css
 ```yaml
 wiring:
   connected:
@@ -326,10 +269,7 @@ wiring:
       from: "Phase 1"
       to: "Phase 3"
       reason: "Dashboard doesn't call useAuth or check session"
-```
-
-**Flow status:**
-
+```text
 ```yaml
 flows:
   complete:
@@ -342,14 +282,7 @@ flows:
       reason: "Dashboard component doesn't fetch user data"
       steps_complete: ["Route", "Component render"]
       steps_missing: ["Fetch", "State", "Display"]
-```
-
-</verification_process>
-
-<output>
-
-Return structured report to milestone auditor:
-
+```html
 ```markdown
 ## Integration Check Complete
 

@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "workspaces": {
-    "packages": ["workers/*"],
+    "packages": ["workers/*", "apps/*"],
     "catalog": {
       "@azure/identity": "^4.13.0",
       "@microsoft/microsoft-graph-client": "^3.0.7",

@@ -31,7 +31,7 @@ Default to using **Bun** instead of Node.js.
 Prefer running actual `.ts` files with `bun` for type safety:
 
 ```bash
-bun services/contract/census/sync-all.ts
+bun services/contract/census/sync/all.ts
 ```
 
 For quick one-offs where no script exists, `bun -e` is acceptable:
@@ -371,3 +371,93 @@ Always use current model IDs. Outdated models will be blocked by a pre-tool hook
 - `gemini-2.5-flash` (Stable, performant)
 
 **NEVER use**: `gemini-1.5-*`, `gemini-1.0-*`, `gemini-pro`, `gemini-ultra`.
+
+---
+
+## Email-to-Project Linking (Domain Knowledge)
+
+This section describes how emails relate to projects and estimates at Desert Services. This knowledge is critical for associating emails with the correct projects.
+
+### Project vs Estimate vs Folder
+
+| Concept | Definition | Source |
+|---------|------------|--------|
+| **Estimate** | A bid sent to a contractor for a specific scope | Monday.com ESTIMATING board |
+| **Project** | A grouping of estimates for the same job site | Derived from estimate names |
+| **Folder** | Chi's manual organization of emails by project | Outlook `Projects/Active/` |
+
+Multiple estimates can belong to one project (e.g., different contractors bidding, or TF vs EC services).
+
+### Estimate Name Patterns
+
+Estimates follow naming conventions that indicate service lines:
+
+- `TF: PROJECT NAME` — Temp Fence estimate
+- `PT: PROJECT NAME` — Porta-Potty estimate  
+- `EC: PROJECT NAME` — Erosion Control estimate
+- `PROJECT NAME` (no prefix) — Standard SWPPP/Dust estimate
+
+**These prefixes should be stripped when matching to projects.** "TF: MODERA PV" and "MODERA PV" are the same project.
+
+### Contractor Domain Linking
+
+The most reliable way to link emails to projects:
+
+1. **Each estimate has a contractor** (e.g., "BPR Companies")
+2. **Each contractor has a domain** (e.g., "bprcompanies.com")
+3. **Emails from/to that domain relate to that contractor's estimates**
+
+```sql
+-- Find contractor for a project
+SELECT e.contractor, a.domain
+FROM estimates e
+JOIN accounts a ON LOWER(a.name) LIKE '%' || LOWER(SUBSTR(e.contractor, 1, 10)) || '%'
+WHERE e.name LIKE '%MODERA%';
+```
+
+### Conversation Threading
+
+Emails in the same conversation share a `conversation_id`. If one email is linked to a project, all emails in that conversation should be linked.
+
+```sql
+-- Expand links via conversation threads
+UPDATE emails SET project_id = ?
+WHERE conversation_id IN (
+  SELECT conversation_id FROM emails WHERE project_id = ?
+) AND project_id IS NULL;
+```
+
+### Folder Emails as Ground Truth
+
+Chi's Outlook folders (`Projects/Active/`) are manually curated. Emails in a folder ARE definitively linked to that project. Link by `internet_message_id` (RFC 2822 ID), not Graph's internal `message_id`.
+
+```sql
+-- Match folder email to DB email
+SELECT * FROM emails WHERE internet_message_id = ?;
+```
+
+### Common Matching Mistakes
+
+**DO NOT** text-search project names against email content. This causes massive false positives:
+
+- "Good 2 Go" matches any email with "good" or "go"
+- "Project N" matches any email with "project"
+- "Indian School" matches other schools, not just Goldwater
+
+**DO** use:
+
+1. Folder emails (ground truth)
+2. Contractor domain matching
+3. Conversation thread expansion
+4. Manual verification for ambiguous cases
+
+### Aliases
+
+When folder names don't exactly match estimate names, add an alias:
+
+```sql
+INSERT INTO project_aliases (project_id, alias, normalized_alias, source)
+VALUES (?, ?, ?, 'outlook_folder');
+```
+
+Example: Folder "Elanto at Prasada" → Estimate "PRASADA CLUBHOUSE"

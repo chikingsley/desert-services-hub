@@ -1,7 +1,7 @@
 /**
  * Document Collection
  *
- * Gather PDF attachments from census.db and email API,
+ * Gather PDF attachments from hub.db and email API,
  * create project folder structure for processing.
  */
 
@@ -182,11 +182,11 @@ export async function collectDocuments(
   const projectName = normalizedSubject;
   result.projectFolder = createProjectFolder(baseFolder, projectName);
 
-  // Get attachments from census.db
+  // Get attachments from hub.db
   const attachments = getContractPDFs(normalizedSubject);
 
   if (attachments.length === 0) {
-    result.errors.push("No PDF attachments found in census.db");
+    result.errors.push("No PDF attachments found in hub.db");
     result.missing.push({
       type: "contract",
       reason: "No PDFs attached to emails in this thread",
@@ -311,11 +311,10 @@ export async function collectDocuments(
  * Census stores the Graph API attachment ID.
  */
 function getAttachmentIdFromCensus(attachment: Attachment): string {
-  // The census stores attachment_id which is the Graph API attachment ID
-  const db = new Database(
-    join(import.meta.dir, "../../email/census/census.db"),
-    { readonly: true }
-  );
+  // The hub stores attachment_id which is the Graph API attachment ID
+  const db = new Database(join(import.meta.dir, "../census/hub.db"), {
+    readonly: true,
+  });
 
   try {
     const row = db

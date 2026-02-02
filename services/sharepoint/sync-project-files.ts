@@ -41,7 +41,7 @@ const RE_LEADING_TRAILING_DASHES = /^-+|-+$/g;
 // Config
 // ---------------------------------------------------------------------------
 
-const CENSUS_DB_PATH = new URL("../email/census/census.db", import.meta.url)
+const HUB_DB_PATH = new URL("../contract/census/hub.db", import.meta.url)
   .pathname;
 
 const SHAREPOINT_ROOT = "Customer Projects/Active";
@@ -165,7 +165,7 @@ if (!(notionId || projectNameQuery)) {
   process.exit(1);
 }
 
-const db = new Database(CENSUS_DB_PATH, { readonly: true });
+const db = new Database(HUB_DB_PATH, { readonly: true });
 
 // Find the project's emails and attachments
 let query: string;

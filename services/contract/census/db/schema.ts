@@ -141,6 +141,20 @@ db.run(`
 `);
 
 // ============================================
+// Schema: Company Aliases (for account name variations)
+// ============================================
+db.run(`
+  CREATE TABLE IF NOT EXISTS company_aliases (
+    id INTEGER PRIMARY KEY,
+    account_id INTEGER NOT NULL,
+    alias TEXT NOT NULL,
+    created_at TEXT DEFAULT (datetime('now')),
+    FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE,
+    UNIQUE(account_id, alias)
+  )
+`);
+
+// ============================================
 // Schema: Attachments
 // ============================================
 db.run(`
@@ -215,9 +229,12 @@ const migrations = [
   "ALTER TABLE emails ADD COLUMN original_sender_email TEXT",
   "ALTER TABLE emails ADD COLUMN original_sender_domain TEXT",
   "ALTER TABLE emails ADD COLUMN categories TEXT",
+  "ALTER TABLE emails ADD COLUMN normalized_subject TEXT",
   // Email linking additions
   "ALTER TABLE emails ADD COLUMN estimate_id INTEGER REFERENCES estimates(id)",
   "ALTER TABLE emails ADD COLUMN thread_id TEXT",
+  // Cross-mailbox matching (RFC 2822 Message-ID)
+  "ALTER TABLE emails ADD COLUMN internet_message_id TEXT",
   // Attachments table additions (legacy migration)
   "ALTER TABLE attachments ADD COLUMN storage_bucket TEXT",
   "ALTER TABLE attachments ADD COLUMN storage_path TEXT",
@@ -238,6 +255,57 @@ for (const sql of migrations) {
 }
 
 // ============================================
+// FTS5 Full-Text Search Index for Emails
+// ============================================
+
+// Create FTS5 virtual table for fast text search
+// Uses porter stemmer for better matching (run → runs, running)
+db.run(`
+  CREATE VIRTUAL TABLE IF NOT EXISTS emails_fts USING fts5(
+    email_id,
+    subject,
+    body_preview,
+    tokenize='porter ascii'
+  )
+`);
+
+// Trigger to keep FTS index in sync on INSERT
+try {
+  db.run(`
+    CREATE TRIGGER IF NOT EXISTS emails_fts_insert AFTER INSERT ON emails BEGIN
+      INSERT INTO emails_fts(email_id, subject, body_preview) 
+      VALUES (new.id, COALESCE(new.subject, ''), COALESCE(new.body_preview, ''));
+    END
+  `);
+} catch {
+  // Trigger already exists
+}
+
+// Trigger to keep FTS index in sync on DELETE
+try {
+  db.run(`
+    CREATE TRIGGER IF NOT EXISTS emails_fts_delete AFTER DELETE ON emails BEGIN
+      DELETE FROM emails_fts WHERE email_id = old.id;
+    END
+  `);
+} catch {
+  // Trigger already exists
+}
+
+// Trigger to keep FTS index in sync on UPDATE
+try {
+  db.run(`
+    CREATE TRIGGER IF NOT EXISTS emails_fts_update AFTER UPDATE OF subject, body_preview ON emails BEGIN
+      DELETE FROM emails_fts WHERE email_id = old.id;
+      INSERT INTO emails_fts(email_id, subject, body_preview) 
+      VALUES (new.id, COALESCE(new.subject, ''), COALESCE(new.body_preview, ''));
+    END
+  `);
+} catch {
+  // Trigger already exists
+}
+
+// ============================================
 // Indexes
 // ============================================
 const indexes = [
@@ -250,6 +318,7 @@ const indexes = [
   "CREATE INDEX IF NOT EXISTS idx_emails_project ON emails(project_id)",
   "CREATE INDEX IF NOT EXISTS idx_emails_estimate ON emails(estimate_id)",
   "CREATE INDEX IF NOT EXISTS idx_emails_thread ON emails(thread_id)",
+  "CREATE INDEX IF NOT EXISTS idx_emails_internet_msg_id ON emails(internet_message_id)",
   // Tasks & Entities
   "CREATE INDEX IF NOT EXISTS idx_email_tasks_email ON email_tasks(email_id)",
   "CREATE INDEX IF NOT EXISTS idx_email_entities_email ON email_entities(email_id)",
@@ -260,6 +329,11 @@ const indexes = [
   // Projects
   "CREATE INDEX IF NOT EXISTS idx_projects_account ON projects(account_id)",
   "CREATE INDEX IF NOT EXISTS idx_project_aliases_normalized ON project_aliases(normalized_alias)",
+  // Company Aliases
+  "CREATE INDEX IF NOT EXISTS idx_company_aliases_account ON company_aliases(account_id)",
+  "CREATE INDEX IF NOT EXISTS idx_company_aliases_alias ON company_aliases(alias)",
+  // Email normalized subject
+  "CREATE INDEX IF NOT EXISTS idx_emails_normalized_subject ON emails(normalized_subject)",
   // Attachments
   "CREATE INDEX IF NOT EXISTS idx_attachments_email ON attachments(email_id)",
   "CREATE INDEX IF NOT EXISTS idx_attachments_status ON attachments(extraction_status)",

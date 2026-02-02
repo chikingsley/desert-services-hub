@@ -112,10 +112,10 @@ bun install
 bun -e "import { minioClient } from './lib/minio'; const buckets = await minioClient.listBuckets(); console.log(buckets);"
 
 # Test database
-bun services/contract/census/sync-estimates.ts --stats
+bun services/contract/census/sync/estimates.ts --stats
 
 # Continue plans sync
-bun services/contract/census/sync-estimates.ts --include-plans --limit=500
+bun services/contract/census/sync/estimates.ts --include-plans --limit=500
 ```
 
 ---

@@ -1,0 +1,413 @@
+canonical_name,display_name,record_count,sources_found_in,likely_status
+ed smith,E.D. Smith Paving,36,certs_2025_all | excel_location_completed | excel_location_contract_billing | excel_location_sheet1 | excel_location_uploads | excel_rental_bv | excel_rental_swppp_numbers | excel_swppp_bv | excel_swppp_confirmed,ACTIVE
+rapi,Rapi,23,certs_2025_all | excel_location_completed | excel_rental_bv | excel_rental_items | excel_rental_swppp_numbers | excel_swppp_bv | excel_wt_sw,ACTIVE
+mt2,MT2,22,certs_2025_all | excel_location_completed | excel_location_uploads | excel_rental_bv | excel_rental_swppp_numbers | excel_swppp_bv | excel_wt_sw,ACTIVE
+robert e porter,"Robert E. Porter Construction Co., Inc.",19,certs_2025_all | excel_location_completed | excel_location_contract_billing | excel_location_sheet1 | excel_location_uploads | excel_rental_swppp_numbers | excel_swppp_bv | excel_swppp_confirmed,ACTIVE
+wp west,WP West Builders,18,certs_2025_all | certs_A | excel_location_completed | excel_rental_bv | excel_rental_swppp_numbers,ACTIVE
+street lights,Street Lights,15,certs_2025_all | excel_cp_invoices_2024 | excel_credit_memos | excel_location_completed | excel_rental_bv | excel_rental_swppp_numbers | excel_swppp_bv | excel_wt_sw,ACTIVE
+h b,H & B Builders,12,unknown,ACTIVE
+dr horton,DR Horton Inc,12,certs_2025_all | excel_cp_invoices_2024 | excel_location_completed | excel_rental_bv | excel_rental_items | excel_swppp_bv,ACTIVE
+khovanian,K.Hovanian,12,certs_2025_all | excel_cp_invoices_2024 | excel_credit_memos | excel_rental_bv | excel_rental_swppp_numbers | excel_swppp_bv | excel_wt_sw,ACTIVE
+wp west builders arizona,WP West Builders Arizona LLC,12,certs_2025_all | excel_cp_invoices_2024 | excel_location_completed | excel_location_need_start | excel_rental_swppp_numbers | excel_swppp_bv | excel_swppp_confirmed,ACTIVE
+desert mountain,Desert Mountain Club,10,certs_2025_all | certs_A | excel_location_completed | excel_rental_bv | excel_rental_swppp_numbers | excel_swppp_bv | excel_wt_sw,ACTIVE
+idm build az,"IDM Build AZ, LLC",10,certs_2025_all | excel_credit_memos | excel_location_completed | excel_location_contract_billing | excel_location_need_start | excel_location_sheet1 | excel_location_uploads | excel_rental_bv | excel_rental_swppp_numbers | excel_swppp_bv | excel_swppp_need_schedule | excel_wt_sw,ACTIVE
+j walters,J Walters Const Co,10,certs_2025_all | excel_cp_invoices_2024 | excel_credit_memos | excel_location_completed | excel_location_uploads | excel_rental_bv | excel_rental_swppp_numbers | excel_swppp_bv,ACTIVE
+3411richmond,3411/RICHMOND BUILDERS,8,aia_all | excel_location_completed | excel_location_contract_billing | excel_location_sheet1 | excel_location_uploads | excel_rental_swppp_numbers,UNKNOWN
+canyon country,"Canyon Country Contracting, INC",8,certs_2025_all | excel_location_completed | excel_rental_bv | excel_rental_items | excel_rental_swppp_numbers | excel_swppp_bv | excel_wt_sw | signs,UNKNOWN
+ngc,"NGC Group, Inc",7,certs_2025_all | excel_credit_memos | excel_rental_bv | excel_rental_swppp_numbers | excel_wt_sw,UNKNOWN
+abernathy,Abernathy Development,7,certs_2025_all | certs_A | excel_location_completed | excel_rental_bv | excel_rental_swppp_numbers,UNKNOWN
+gonzales,"Gonzales Asphalt, inc.",7,excel_location_completed | excel_location_uploads | excel_rental_bv | excel_rental_items | excel_rental_swppp_numbers | excel_swppp_bv,UNKNOWN
+new legacy,New Legacy,6,excel_credit_memos | excel_location_completed | excel_rental_bv | excel_wt_sw,UNKNOWN
+richard richard,RICHARD & RICHARD CONSTRUCTION,6,certs_2025_all | excel_location_completed | excel_location_contract_billing | excel_location_sheet1 | excel_location_uploads | excel_rental_bv | excel_rental_items | excel_rental_swppp_numbers | excel_swppp_bv,UNKNOWN
+aspire,Aspire Builders,5,aia_all | certs_2025_all | certs_A | excel_location_completed | excel_rental_bv | excel_rental_swppp_numbers | excel_swppp_bv | excel_wt_sw,UNKNOWN
+kopras homes,Kopras Homes,5,certs_2025_all | excel_cp_invoices_2024 | excel_location_completed | excel_rental_bv | excel_rental_items | excel_rental_swppp_numbers | excel_swppp_bv | excel_swppp_confirmed | excel_wt_sw,UNKNOWN
+d mccarty,D. McCarty Construction,5,certs_2025_all | excel_location_completed | excel_rental_swppp_numbers | excel_swppp_bv | excel_wt_sw,UNKNOWN
+on-site,On-site Builders,5,excel_location_completed | excel_rental_bv | excel_rental_swppp_numbers | excel_swppp_bv,UNKNOWN
+mike lanning,Mike Lanning,5,certs_2025_all | excel_location_completed | excel_location_uploads | excel_rental_items | excel_rental_swppp_numbers | excel_swppp_bv | excel_swppp_confirmed,UNKNOWN
+johnson carlier,Johnson Carlier,5,certs_2025_all | excel_location_completed | excel_location_uploads | excel_rental_bv | excel_rental_items | excel_rental_swppp_numbers | excel_swppp_bv | excel_swppp_confirmed | excel_swppp_need_schedule,UNKNOWN
+khov,KHOV,5,excel_rental_bv,UNKNOWN
+camden living,CAMDEN LIVING,5,certs_2025_all | excel_location_completed | excel_location_contract_billing | excel_location_sheet1 | excel_location_uploads | excel_rental_bv | excel_rental_items | excel_rental_swppp_numbers | excel_swppp_bv,UNKNOWN
+z-modular or mod soulutions,Z-Modular or Mod Soulutions,5,excel_wt_sw,UNKNOWN
+channen mid-western,Channen Mid-western,5,excel_location_completed | excel_rental_bv | excel_rental_swppp_numbers | excel_swppp_bv | excel_wt_sw,UNKNOWN
+l keeley,L Keeley Construction,4,certs_2025_all | excel_location_completed | excel_location_uploads | excel_rental_bv | excel_rental_swppp_numbers,UNKNOWN
+ss,S&S,4,excel_rental_bv | excel_rental_swppp_numbers | excel_wt_sw,UNKNOWN
+dan volcko,Dan  Volcko,4,excel_location_completed | excel_rental_bv | excel_rental_swppp_numbers | excel_swppp_bv,UNKNOWN
+indicap,Indicap,4,certs_2025_all | excel_location_billing_invoices | excel_location_completed | excel_location_uploads | excel_rental_bv | excel_rental_items | excel_rental_swppp_numbers | excel_swppp_bv,UNKNOWN
+wds architecture,WDS Architecture,4,certs_2025_all | excel_rental_swppp_numbers | excel_swppp_bv,UNKNOWN
+miller watkins,Miller Watkins,4,certs_2025_all | excel_location_completed | excel_location_uploads | excel_rental_bv | excel_rental_items | excel_rental_swppp_numbers | excel_swppp_bv,UNKNOWN
+headley rob,"Headley, Rob",4,excel_rental_bv | excel_rental_swppp_numbers | excel_swppp_bv,UNKNOWN
+royster equipment,Royster Equipment,4,certs_2025_all | excel_location_completed | excel_rental_bv | excel_rental_swppp_numbers | excel_swppp_bv,UNKNOWN
+mead hunt,Mead & Hunt,4,certs_2025_all | excel_rental_swppp_numbers | excel_swppp_bv,UNKNOWN
+martin harris,Martin Harris Construction,4,certs_2025_all | excel_location_completed | excel_location_need_start | excel_rental_bv | excel_rental_swppp_numbers | excel_swppp_bv,UNKNOWN
+action direct,Action Direct,4,certs_2025_all | certs_A,UNKNOWN
+arizona asphalt repair,Arizona Asphalt Repair,4,certs_2025_all | certs_A | excel_credit_memos | excel_location_completed | excel_rental_swppp_numbers,UNKNOWN
+a e,"A & E Builders, LLC",4,certs_2025_all,UNKNOWN
+adot,ADOT,4,aia_all | certs_2025_all | certs_A | excel_location_completed | excel_rental_bv | excel_rental_items | excel_rental_swppp_numbers,UNKNOWN
+greenburg,Greenburg Construction,4,excel_location_completed | excel_rental_bv | excel_rental_items | excel_rental_swppp_numbers | excel_swppp_bv | excel_wt_sw,UNKNOWN
+m j,M & J Construction,4,certs_2025_all | excel_rental_swppp_numbers | excel_swppp_bv,UNKNOWN
+ntt global data centers,NTT Global Data Centers,4,certs_2025_all | excel_location_completed | excel_location_contract_billing | excel_location_sheet1 | excel_location_uploads | excel_rental_items | excel_rental_swppp_numbers | excel_swppp_bv | excel_swppp_confirmed | excel_swppp_need_schedule,UNKNOWN
+the garrett,The Garrett Companies,4,certs_2025_all | excel_location_billing_invoices | excel_location_completed | excel_location_contract_billing | excel_location_sheet1 | excel_location_uploads | excel_rental_bv | excel_rental_items | excel_rental_swppp_numbers | excel_swppp_bv,UNKNOWN
+kcg,KCG Inc,4,certs_2025_all | excel_rental_swppp_numbers,UNKNOWN
+owner contractorlayton,OWNER/ CONTRACTOR:Layton Construction Company,4,aia_all | certs_2025_all | certs_A | excel_cp_invoices_2024 | excel_credit_memos | excel_location_billing_invoices | excel_location_completed | excel_location_contract_billing | excel_location_need_start | excel_location_sheet1 | excel_location_uploads | excel_rental_bv | excel_rental_items | excel_rental_swppp_numbers | excel_swppp_bv | excel_swppp_confirmed | excel_wt_sw | signs,UNKNOWN
+clark construction group is doing a joint venture with chasse building team,Clark Construction Group (is doing a joint venture with Chasse Building Team),4,certs_2025_all | excel_location_contract_billing | excel_location_sheet1 | excel_location_uploads | excel_rental_swppp_numbers | excel_swppp_bv,UNKNOWN
+keegan,Keegan Builders Inc,3,certs_2025_all | excel_location_completed | excel_rental_bv | excel_rental_items | excel_rental_swppp_numbers | excel_swppp_bv | excel_swppp_confirmed | excel_wt_sw,UNKNOWN
+northwind resource consulting,Northwind Resource Consulting,3,certs_2025_all | excel_credit_memos | excel_location_completed | excel_rental_bv | excel_rental_swppp_numbers,UNKNOWN
+royster,Royster,3,aia_all | certs_2025_all | excel_location_completed | excel_location_contract_billing | excel_location_sheet1 | excel_location_uploads | excel_rental_bv | excel_rental_items | excel_rental_swppp_numbers | excel_swppp_bv | excel_swppp_confirmed | excel_wt_sw,UNKNOWN
+quickbooks customer,QuickBooks Customer,3,excel_cp_invoices_2024 | excel_credit_memos,UNKNOWN
+accent,Accent,3,aia_all | certs_2025_all | certs_A | excel_rental_bv | excel_wt_sw,UNKNOWN
+stephan mackos,Stephan Mackos,3,certs_2025_all | excel_location_completed | excel_location_uploads | excel_rental_bv | excel_swppp_bv,UNKNOWN
+apache sun,Apache Sun Builders,3,excel_location_completed | excel_rental_bv | excel_rental_swppp_numbers | excel_wt_sw,UNKNOWN
+two hawks design,Two Hawks Design,3,excel_rental_bv | excel_wt_sw,UNKNOWN
+richmond,Richmond Builders,3,certs_2025_all | excel_location_billing_invoices | excel_location_completed | excel_location_uploads | excel_rental_bv | excel_rental_swppp_numbers | excel_swppp_bv,UNKNOWN
+colorado structures,Colorado Structures Inc,3,certs_2025_all | excel_location_completed | excel_rental_bv | excel_rental_swppp_numbers,UNKNOWN
+ecco equipment,Ecco Equipment Corporation,3,certs_2025_all | excel_credit_memos | excel_rental_bv | excel_rental_swppp_numbers | excel_swppp_bv,UNKNOWN
+owner contractortrue north,OWNER/ CONTRACTOR:True North Builders,3,certs_2025_all | certs_A | excel_rental_bv | excel_rental_swppp_numbers | excel_swppp_bv | excel_wt_sw,UNKNOWN
+braden bott,Braden Bott,2,certs_2025_all | excel_location_completed | excel_location_contract_billing | excel_location_uploads | excel_rental_bv | excel_rental_swppp_numbers | excel_swppp_bv,UNKNOWN
+jwalters,J.Walters,2,certs_2025_all | excel_cp_invoices_2024 | excel_credit_memos | excel_location_completed | excel_location_uploads | excel_rental_bv | excel_rental_items | excel_rental_swppp_numbers | excel_swppp_bv,UNKNOWN
+tanner leja,Tanner Leja,2,excel_rental_bv | excel_rental_swppp_numbers | excel_swppp_bv,UNKNOWN
+econolight,Econolight,2,excel_rental_bv | excel_rental_swppp_numbers,UNKNOWN
+porchlight homes of arizona,Porchlight Homes of Arizona,2,certs_2025_all | excel_rental_bv | excel_rental_swppp_numbers,UNKNOWN
+cave creek road partners,Cave Creek Road Partners,2,aia_all | certs_2025_all | excel_location_completed | excel_rental_bv | excel_rental_swppp_numbers | excel_wt_sw,UNKNOWN
+omega,Omega Services,2,excel_location_completed | excel_rental_bv | excel_rental_swppp_numbers | excel_swppp_bv | excel_wt_sw,UNKNOWN
+genova detwiler,Genova Detwiler,2,excel_rental_bv | excel_rental_swppp_numbers,UNKNOWN
+neal colby,"Neal, Colby",2,excel_location_completed | excel_rental_bv | excel_rental_swppp_numbers,UNKNOWN
+neve,"Neve, LLC",2,excel_rental_bv | excel_rental_items | excel_rental_swppp_numbers | excel_swppp_bv,UNKNOWN
+finer touch,Finer Touch,2,excel_credit_memos | excel_rental_swppp_numbers,UNKNOWN
+nlw,NLW Enterprises,2,excel_credit_memos | excel_rental_bv | excel_rental_swppp_numbers | excel_wt_sw,UNKNOWN
+whitmer thomas,"Whitmer, Thomas",2,certs_2025_all | excel_location_completed | excel_rental_bv | excel_rental_swppp_numbers | excel_swppp_bv,UNKNOWN
+gil penunuri,Gil Penunuri,2,excel_rental_bv | excel_rental_swppp_numbers,UNKNOWN
+mears,Mears Group,2,excel_location_completed | excel_rental_bv | excel_rental_swppp_numbers | excel_swppp_bv | excel_wt_sw,UNKNOWN
+scotts diversified,Scott's Diversified Construction,2,excel_location_completed | excel_rental_bv | excel_rental_swppp_numbers,UNKNOWN
+helmandollar shad,"Helmandollar, Shad",2,excel_rental_bv | excel_rental_swppp_numbers,UNKNOWN
+gj,G&J Development,2,certs_2025_all,UNKNOWN
+lang james,"Lang, James",2,certs_2025_all | excel_location_completed | excel_location_contract_billing | excel_rental_bv | excel_rental_items | excel_rental_swppp_numbers | excel_swppp_bv | excel_swppp_confirmed,UNKNOWN
+tri pointe homes maracay homes,Tri Pointe Homes (Maracay Homes),2,certs_2025_all | excel_cp_invoices_2024 | excel_wt_sw,UNKNOWN
+we oneil55 resort scottsdale,W.E. O'Neil:55 Resort Scottsdale,2,certs_2025_all | excel_cp_invoices_2024 | excel_location_completed | excel_rental_bv | excel_rental_swppp_numbers | excel_swppp_bv | excel_swppp_need_schedule,UNKNOWN
+we oneilgarfield housing ii,W.E. O'Neil:Garfield Housing II,2,certs_2025_all | excel_cp_invoices_2024 | excel_location_completed | excel_rental_bv | excel_rental_swppp_numbers,UNKNOWN
+mcgough,McGough Construction,2,excel_credit_memos | excel_rental_bv,UNKNOWN
+other customer,Other Customer,2,certs_2025_all | excel_cp_invoices_2024 | excel_credit_memos | excel_location_completed | excel_rental_bv | excel_rental_items | excel_rental_swppp_numbers | excel_swppp_bv,UNKNOWN
+mo25,MO25,2,excel_credit_memos | excel_swppp_bv,UNKNOWN
+ndccm,NDCCM,2,certs_2025_all | excel_rental_bv,UNKNOWN
+mclaughlin sons,Mclaughlin & Sons,2,certs_2025_all | excel_location_completed | excel_rental_bv,UNKNOWN
+iron clad,Iron  Clad Construction,2,certs_2025_all | excel_location_completed | excel_rental_bv | excel_rental_swppp_numbers,UNKNOWN
+monza,Monza,2,excel_location_completed | excel_rental_bv | excel_rental_swppp_numbers,UNKNOWN
+young swenson cross,Young Swenson & Cross,2,excel_rental_bv,UNKNOWN
+sun coast,Sun Coast Builders,2,certs_2025_all | excel_location_completed | excel_location_uploads | excel_rental_bv,UNKNOWN
+southwest architectual,Southwest Architectual Builders,2,certs_2025_all | excel_rental_bv | excel_rental_swppp_numbers,UNKNOWN
+ms square,MS Square,2,certs_2025_all | excel_rental_bv | excel_rental_swppp_numbers | excel_swppp_bv | excel_swppp_need_schedule,UNKNOWN
+azap general,AZAP General Contracting,2,certs_2025_all | excel_credit_memos | excel_rental_bv | excel_rental_swppp_numbers,UNKNOWN
+killian western,Killian Western,2,certs_2025_all | excel_location_completed | excel_location_uploads | excel_rental_bv | excel_rental_swppp_numbers | excel_swppp_bv | excel_wt_sw,UNKNOWN
+n e,N & E Construction,2,unknown,UNKNOWN
+auauthumkidsquareconstruction1922361,AUAUTHUMKIDSQUARECONSTRUCTION1922361,2,certs_2025_all | certs_A,UNKNOWN
+avalon,Avalon Development,2,certs_2025_all | excel_location_completed | excel_rental_bv | excel_rental_swppp_numbers | excel_swppp_bv | excel_wt_sw,UNKNOWN
+bluepoint solutions was all pro sweeping,Bluepoint Solutions (Was All Pro Sweeping),2,excel_wt_sw,UNKNOWN
+century complete need waivers,Century Complete                          (Need waivers),2,certs_2025_all | excel_credit_memos | excel_rental_swppp_numbers | excel_wt_sw,UNKNOWN
+largo concrete in need job and po than email invoice to accounting,"Largo Concrete, IN        (Need Job and PO #) *****Than email invoice to accounting*****",2,certs_2025_all | excel_wt_sw,UNKNOWN
+we oneil certified,W.E. O'Neil                                               **Certified***,2,certs_2025_all | excel_rental_bv | excel_rental_swppp_numbers,UNKNOWN
+my storge,MY STORGE GROUP,2,certs_2025_all | certs_A | excel_location_billing_invoices | excel_location_completed | excel_location_uploads | excel_rental_bv | excel_rental_swppp_numbers | excel_swppp_bv,UNKNOWN
+armays not in contract,ARMAYS Not in Contract,2,aia_all | certs_2025_all | certs_A | excel_cp_invoices_2024 | excel_credit_memos | excel_location_billing_invoices | excel_location_completed | excel_location_contract_billing | excel_location_need_start | excel_location_sheet1 | excel_location_uploads | excel_rental_bv | excel_rental_swppp_numbers | excel_swppp_bv | excel_swppp_confirmed | excel_swppp_need_schedule | excel_wt_sw,UNKNOWN
+greenway apartments,Greenway Apartments,2,certs_2025_all | excel_location_completed | excel_location_contract_billing | excel_location_sheet1 | excel_location_uploads | excel_rental_bv | excel_rental_items | excel_rental_swppp_numbers | excel_swppp_bv | excel_swppp_confirmed,UNKNOWN
+gs-sm city north owner,GS-SM City North Owner,2,aia_all | certs_2025_all | excel_location_completed | excel_location_contract_billing | excel_location_sheet1 | excel_location_uploads | excel_rental_bv | excel_rental_items | excel_rental_swppp_numbers | excel_swppp_bv,UNKNOWN
+aptitude apache,Aptitude Apache LLC,2,certs_2025_all | excel_rental_bv | excel_rental_swppp_numbers,UNKNOWN
+rdo equipment,RDO Equipment Co,2,certs_2025_all | excel_location_completed | excel_rental_bv | excel_rental_swppp_numbers | excel_swppp_bv,UNKNOWN
+idg,IDG,2,certs_2025_all | excel_rental_swppp_numbers,UNKNOWN
+germann road transfer station expansion,Germann Road Transfer Station Expansion,2,certs_2025_all | excel_location_completed | excel_rental_bv | excel_rental_swppp_numbers,UNKNOWN
+gs sm city northowner ii,GS SM City NorthOwner II,2,certs_2025_all | excel_rental_items | excel_rental_swppp_numbers,UNKNOWN
+gbfr peoriausa,GBFR PeoriaUSA Inc,2,certs_2025_all | excel_rental_swppp_numbers,UNKNOWN
+gila river indian community office of the treasurer,Gila River Indian Community Office of the Treasurer,2,certs_2025_all,UNKNOWN
+the ramson,The Ramson Group,2,certs_2025_all | excel_location_billing_invoices | excel_location_completed | excel_location_contract_billing | excel_location_sheet1 | excel_location_uploads | excel_rental_bv | excel_rental_swppp_numbers | excel_swppp_bv,UNKNOWN
+tyr tactical,Tyr Tactical,2,certs_2025_all | excel_location_completed,UNKNOWN
+tucson landing,Tucson Landing,2,certs_2025_all | excel_location_completed | excel_rental_bv | excel_rental_swppp_numbers,UNKNOWN
+tom nichols excavating,Tom Nichols Excavating,2,certs_2025_all | excel_rental_swppp_numbers | excel_swppp_bv | excel_wt_sw,UNKNOWN
+sparrow surprise,Sparrow Surprise,2,aia_all | certs_2025_all | certs_A | excel_location_completed | excel_location_contract_billing | excel_location_sheet1 | excel_location_uploads | excel_rental_bv | excel_rental_swppp_numbers | excel_swppp_bv | excel_swppp_confirmed | excel_swppp_need_schedule,UNKNOWN
+streamliner 67th avenue,STREAMLINER 67TH AVENUE,2,certs_2025_all | excel_location_completed | excel_rental_swppp_numbers | excel_swppp_bv | excel_wt_sw,UNKNOWN
+sp scottsdale,SP Scottsdale,2,aia_all | certs_2025_all | certs_A | excel_location_completed | excel_rental_bv | excel_rental_items | excel_rental_swppp_numbers | excel_swppp_bv | excel_swppp_need_schedule | excel_wt_sw,UNKNOWN
+fullmer,Fullmer Construction,2,certs_2025_all,UNKNOWN
+999 playa del norte,999 Playa del Norte,2,aia_all | certs_2025_all | excel_location_completed | excel_rental_bv | excel_rental_items | excel_rental_swppp_numbers | excel_swppp_bv | excel_wt_sw,UNKNOWN
+32nd southern apartments,32nd & Southern Apartments -,2,certs_2025_all | excel_location_billing_invoices | excel_location_completed | excel_location_contract_billing | excel_location_sheet1 | excel_location_uploads | excel_rental_bv | excel_rental_items | excel_rental_swppp_numbers | excel_swppp_bv | excel_swppp_confirmed | excel_wt_sw,UNKNOWN
+2040 az owner,2040 AZ Owner,2,certs_2025_all,UNKNOWN
+hancock,Hancock Builders,2,certs_2025_all | excel_location_completed,UNKNOWN
+hovnanian,Hovnanian Enterprises,2,certs_2025_all | excel_cp_invoices_2024 | excel_credit_memos | excel_rental_bv | excel_rental_swppp_numbers | excel_swppp_bv | excel_wt_sw,UNKNOWN
+millstone weber,Millstone Weber,2,certs_2025_all | excel_location_uploads | excel_rental_bv | excel_rental_items | excel_rental_swppp_numbers | excel_swppp_bv,UNKNOWN
+merkin vineyards,Merkin Vineyards,2,aia_all | certs_2025_all | certs_A | excel_location_completed | excel_rental_swppp_numbers,UNKNOWN
+morgan taylor homes,Morgan Taylor Homes,2,certs_2025_all | excel_location_completed | excel_rental_bv | excel_rental_items | excel_rental_swppp_numbers | excel_swppp_bv | excel_wt_sw,UNKNOWN
+mayo clinic,Mayo Clinic,2,certs_2025_all | excel_location_completed | excel_rental_bv | excel_rental_items | excel_rental_swppp_numbers | excel_swppp_bv | excel_swppp_confirmed,UNKNOWN
+mcref iii,MCREF III,2,certs_2025_all | excel_rental_swppp_numbers,UNKNOWN
+mountainside high school,Mountainside High School,2,certs_2025_all | excel_location_completed | excel_rental_bv | excel_rental_swppp_numbers | excel_swppp_bv | excel_wt_sw,UNKNOWN
+marc taylor,Marc Taylor Inc,2,certs_2025_all | excel_location_completed | excel_swppp_bv,UNKNOWN
+maracay homes,Maracay Homes,2,certs_2025_all | excel_credit_memos | excel_location_completed | excel_location_uploads | excel_rental_bv | excel_rental_swppp_numbers | excel_swppp_bv | excel_swppp_confirmed | excel_wt_sw,UNKNOWN
+costco depot expansion,Costco Depot Expansion,2,certs_2025_all | excel_location_completed | excel_rental_bv | excel_rental_swppp_numbers | excel_wt_sw,UNKNOWN
+dysart unified school district 89,Dysart Unified School District 89,2,certs_2025_all,UNKNOWN
+desert legacy,Desert Legacy Construction,2,aia_all | certs_2025_all | excel_location_completed | excel_rental_bv | excel_swppp_bv | excel_swppp_confirmed | excel_wt_sw,UNKNOWN
+dcbg of arizona,DCBG of Arizona,2,certs_2025_all | excel_location_completed | excel_rental_bv | excel_rental_swppp_numbers,UNKNOWN
+dysart west point offsite,Dysart West Point Offsite,2,certs_2025_all,UNKNOWN
+ditch witch west,Ditch Witch West,2,certs_2025_all,UNKNOWN
+vinyl tech rail expansion,VINYL TECH RAIL EXPANSION,2,aia_all | certs_2025_all | excel_location_completed | excel_location_contract_billing | excel_location_sheet1 | excel_rental_bv | excel_rental_swppp_numbers | excel_swppp_bv,UNKNOWN
+vantage data centers management,Vantage Data Centers Management Company,2,certs_2025_all | excel_location_completed | excel_rental_swppp_numbers,UNKNOWN
+viasun,ViaSun Corporation,2,certs_2025_all | excel_rental_bv,UNKNOWN
+buffalo ridge inert landfill,Buffalo Ridge Inert Landfill,2,certs_2025_all | excel_rental_swppp_numbers,UNKNOWN
+landmark title assurance agency of arizona,Landmark Title Assurance Agency of Arizona,2,certs_2025_all,UNKNOWN
+legacy traditional school san tan,Legacy Traditional School San Tan,2,certs_2025_all | excel_location_completed | excel_rental_swppp_numbers,UNKNOWN
+lake havasu city,Lake Havasu City,2,certs_2025_all,UNKNOWN
+lcg kierland,LCG Kierland,2,certs_2025_all | excel_location_completed | excel_location_contract_billing | excel_location_sheet1 | excel_location_uploads | excel_rental_bv | excel_rental_items | excel_rental_swppp_numbers | excel_swppp_bv | excel_wt_sw,UNKNOWN
+pac west rentals,Pac West Rentals,2,certs_2025_all | certs_A | excel_location_completed | excel_rental_bv | excel_rental_swppp_numbers,UNKNOWN
+paladin risk management,Paladin Risk Management,2,certs_2025_all | excel_cp_invoices_2024 | excel_location_completed | excel_swppp_bv | excel_swppp_confirmed,UNKNOWN
+wjh,WJH LLC,2,certs_2025_all,UNKNOWN
+marino lombardi,Marino Lombardi,1,excel_location_completed | excel_rental_bv | excel_rental_swppp_numbers,UNKNOWN
+rh dupper,RH Dupper,1,excel_rental_bv | excel_rental_swppp_numbers,UNKNOWN
+hamblin david,"Hamblin, David",1,excel_location_completed | excel_rental_bv | excel_rental_swppp_numbers | excel_swppp_bv,UNKNOWN
+apodaca wall systems,Apodaca Wall Systems,1,excel_rental_swppp_numbers | excel_wt_sw,UNKNOWN
+dluzan scott,"Dluzan, Scott",1,certs_2025_all | excel_location_completed | excel_location_uploads | excel_rental_bv | excel_rental_swppp_numbers | excel_swppp_bv | excel_swppp_confirmed,UNKNOWN
+emjljl,EMJ/LJL,1,excel_rental_swppp_numbers,UNKNOWN
+az painting and consulting,AZ Painting and Consulting,1,certs_2025_all | excel_rental_swppp_numbers,UNKNOWN
+mike miguire,Mike Miguire,1,excel_location_completed | excel_location_uploads | excel_rental_bv | excel_rental_swppp_numbers | excel_swppp_bv,UNKNOWN
+mckenzies midtown tavern,McKenzies Midtown tavern,1,excel_rental_swppp_numbers,UNKNOWN
+perry kelvin,"Perry, Kelvin",1,excel_location_uploads | excel_rental_swppp_numbers | excel_swppp_bv | excel_swppp_confirmed,UNKNOWN
+joe knight,Joe Knight,1,excel_rental_bv | excel_rental_swppp_numbers | excel_swppp_bv,UNKNOWN
+hoilal tom,"Hoilal, Tom",1,excel_rental_bv | excel_rental_swppp_numbers,UNKNOWN
+joshua fretwell,Joshua Fretwell,1,excel_location_completed | excel_rental_swppp_numbers,UNKNOWN
+first step demolition,First Step Demolition,1,certs_2025_all | certs_A | excel_location_completed | excel_rental_swppp_numbers | excel_swppp_bv,UNKNOWN
+void,Void,1,excel_location_completed | excel_rental_swppp_numbers | excel_swppp_bv,UNKNOWN
+1st farmer,1st & Farmer,1,certs_2025_all | excel_location_completed | excel_location_need_start | excel_rental_bv | excel_rental_items | excel_rental_swppp_numbers,UNKNOWN
+bates ken,"Bates, Ken",1,certs_2025_all | excel_location_completed | excel_location_contract_billing | excel_location_sheet1 | excel_location_uploads | excel_rental_bv | excel_rental_items | excel_rental_swppp_numbers | excel_swppp_bv,UNKNOWN
+lefc,LEFC Corp,1,excel_rental_swppp_numbers | excel_swppp_bv,UNKNOWN
+re spurr,R.E. Spurr,1,excel_rental_bv | excel_rental_swppp_numbers,UNKNOWN
+local undergound,Local Undergound Construction,1,excel_location_uploads | excel_rental_swppp_numbers | excel_swppp_bv | excel_wt_sw,UNKNOWN
+ae,A&E Builders,1,aia_all | certs_2025_all | excel_location_billing_invoices | excel_location_completed | excel_location_uploads | excel_rental_bv | excel_rental_swppp_numbers | excel_swppp_bv | excel_swppp_confirmed | excel_wt_sw,UNKNOWN
+rr,R&R Construction,1,unknown,UNKNOWN
+verde fiesta,Verde Fiesta,1,certs_2025_all | excel_location_completed | excel_location_uploads | excel_rental_bv | excel_rental_swppp_numbers | excel_swppp_bv,UNKNOWN
+drp,DRP,1,excel_credit_memos | excel_location_completed | excel_rental_bv | excel_rental_swppp_numbers,UNKNOWN
+steven leinweber,Steven Leinweber Construction,1,certs_2025_all | excel_location_billing_invoices | excel_location_completed | excel_location_uploads | excel_rental_swppp_numbers | excel_swppp_bv | excel_swppp_need_schedule | excel_wt_sw,UNKNOWN
+emj corporationchandler apts,EMJ Corporation:Chandler Apts,1,certs_2025_all | excel_cp_invoices_2024 | excel_credit_memos | excel_location_completed | excel_rental_bv | excel_rental_swppp_numbers,UNKNOWN
+george h pastor sonswhataburger- avondale,George H Pastor & Sons:Whataburger- Avondale,1,excel_cp_invoices_2024 | excel_rental_swppp_numbers,UNKNOWN
+emj corporationavondale station,EMJ Corporation:Avondale Station,1,certs_2025_all | excel_cp_invoices_2024 | excel_credit_memos | excel_rental_bv | excel_rental_swppp_numbers,UNKNOWN
+forstie david,Forstie David,1,excel_credit_memos,UNKNOWN
+airpark signs graphics,Airpark Signs & Graphics,1,excel_credit_memos | excel_location_completed | excel_rental_bv | excel_rental_swppp_numbers,UNKNOWN
+ruckman tim,"Ruckman, Tim",1,excel_credit_memos,UNKNOWN
+phoenix rising soccer complex,Phoenix Rising Soccer Complex,1,aia_all | excel_credit_memos,UNKNOWN
+rytan llc alhambra- gymnasium addition,"Rytan, LLC; Alhambra- Gymnasium Addition",1,certs_2025_all | excel_credit_memos | excel_location_completed | excel_rental_swppp_numbers | excel_swppp_bv,UNKNOWN
+park7,Park7,1,certs_2025_all | excel_credit_memos | excel_location_completed | excel_rental_bv | excel_rental_swppp_numbers | excel_swppp_bv,UNKNOWN
+ar mayes fat cats,AR Mayes: Fat Cats,1,certs_2025_all | excel_credit_memos | excel_location_completed | excel_rental_swppp_numbers,UNKNOWN
+ashley duffy 5321 s four peaks way,Ashley Duffy: 5321 S Four Peaks Way,1,excel_credit_memos,UNKNOWN
+renaisance,Renaisance,1,certs_2025_all | excel_cp_invoices_2024 | excel_credit_memos | excel_location_completed | excel_location_contract_billing | excel_location_sheet1 | excel_location_uploads | excel_rental_bv | excel_rental_items | excel_rental_swppp_numbers | excel_swppp_bv | excel_swppp_confirmed | excel_wt_sw,UNKNOWN
+concorde,Concorde,1,certs_2025_all | excel_credit_memos | excel_location_completed | excel_rental_bv | excel_rental_swppp_numbers | excel_swppp_bv,UNKNOWN
+acadia healthcare,Acadia Healthcare,1,certs_2025_all | certs_A | excel_credit_memos | excel_rental_swppp_numbers,UNKNOWN
+vollkommen,Vollkommen,1,excel_credit_memos,UNKNOWN
+mt inspira mesa gateway,MT: InspIra Mesa Gateway,1,certs_2025_all | excel_credit_memos | excel_location_completed | excel_rental_swppp_numbers | excel_swppp_bv | excel_swppp_confirmed,UNKNOWN
+turner optum rx,Turner Optum RX,1,excel_credit_memos | excel_rental_bv | excel_rental_swppp_numbers,UNKNOWN
+ecco heavy equipment rental,ECCO Heavy Equipment Rental,1,certs_2025_all | excel_credit_memos | excel_rental_bv | excel_rental_swppp_numbers,UNKNOWN
+curve south mtn,Curve South Mtn,1,certs_2025_all | excel_credit_memos | excel_location_completed | excel_rental_bv,UNKNOWN
+curve estrella,Curve Estrella,1,certs_2025_all | excel_credit_memos | excel_location_completed | excel_rental_bv | excel_rental_swppp_numbers | excel_swppp_bv,UNKNOWN
+emj chandler apts,EMJ Chandler Apts,1,aia_all | certs_2025_all | excel_cp_invoices_2024 | excel_credit_memos | excel_location_billing_invoices | excel_location_completed | excel_location_contract_billing | excel_location_sheet1 | excel_location_uploads | excel_rental_bv | excel_rental_items | excel_rental_swppp_numbers | excel_swppp_bv | excel_wt_sw,UNKNOWN
+emj avondale station,EMJ Avondale Station,1,aia_all | certs_2025_all | certs_A | excel_cp_invoices_2024 | excel_credit_memos | excel_location_billing_invoices | excel_location_completed | excel_location_uploads | excel_rental_bv | excel_rental_items | excel_rental_swppp_numbers | excel_swppp_bv | excel_wt_sw,UNKNOWN
+3411 atlas,3411: Atlas,1,aia_all | excel_credit_memos | excel_location_completed | excel_location_contract_billing | excel_location_sheet1 | excel_location_uploads | excel_rental_bv | excel_rental_items | excel_rental_swppp_numbers,UNKNOWN
+mt alexan,MT : ALEXAN,1,excel_credit_memos | excel_location_completed | excel_rental_bv | excel_swppp_bv,UNKNOWN
+innovative technology,"Innovative Technology Development Group, LLC",1,certs_2025_all | excel_location_completed | excel_rental_swppp_numbers | excel_swppp_confirmed,UNKNOWN
+better buzz coffee- queen creek,Better Buzz Coffee- Queen Creek,1,aia_all | certs_2025_all | excel_location_completed | excel_rental_bv | excel_rental_swppp_numbers,UNKNOWN
+belaflor,Belaflor,1,aia_all,UNKNOWN
+tennan,Tennan Construction,1,excel_credit_memos | excel_location_completed | excel_rental_bv | excel_rental_swppp_numbers | excel_swppp_bv | excel_swppp_confirmed,UNKNOWN
+howard wright,Howard Wright,1,excel_rental_bv | excel_swppp_bv,UNKNOWN
+bc studio,BC Studio,1,excel_rental_bv,UNKNOWN
+hayward,Hayward Builders,1,aia_all | excel_location_completed | excel_location_need_start | excel_rental_bv | excel_rental_items | excel_rental_swppp_numbers,UNKNOWN
+okanogan trail,Okanogan Trail Construction,1,certs_2025_all | excel_location_completed | excel_rental_bv | excel_rental_swppp_numbers | excel_swppp_bv,UNKNOWN
+mj manone,MJ Manone,1,excel_credit_memos | excel_location_completed | excel_rental_bv | excel_rental_swppp_numbers,UNKNOWN
+cavalia,Cavalia,1,excel_location_billing_invoices | excel_location_completed | excel_location_uploads | excel_rental_bv | excel_rental_items | excel_rental_swppp_numbers | excel_swppp_bv,UNKNOWN
+spencer manzano,Spencer Manzano,1,excel_rental_bv | excel_rental_swppp_numbers,UNKNOWN
+mary lyn hammer is taking over 7-10-13 lustig company is taking this over as of 4-22-2013 old contractor iron clad construction,Mary Lyn Hammer is taking over 7-10-13. Lustig Company is taking this over as of 4-22-2013 (old contractor Iron Clad Construction),1,excel_rental_bv,UNKNOWN
+ed west,ED West,1,certs_2025_all | excel_location_completed | excel_location_uploads | excel_rental_bv | excel_rental_swppp_numbers | excel_wt_sw,UNKNOWN
+aui,AUI,1,excel_rental_bv | excel_swppp_bv,UNKNOWN
+lps,LPS,1,excel_rental_bv | excel_rental_swppp_numbers,UNKNOWN
+select,Select Development,1,certs_2025_all | excel_rental_bv | excel_rental_swppp_numbers | excel_swppp_bv,UNKNOWN
+adam miller,Adam Miller,1,aia_all | certs_2025_all | excel_location_completed | excel_location_uploads | excel_rental_bv | excel_swppp_bv | excel_swppp_confirmed | excel_wt_sw,UNKNOWN
+kruger wes,"Kruger, Wes",1,certs_2025_all | excel_location_completed | excel_rental_bv,UNKNOWN
+schaffer,Schaffer Construction,1,excel_location_completed | excel_rental_bv | excel_rental_swppp_numbers | excel_swppp_bv | excel_swppp_confirmed | excel_wt_sw,UNKNOWN
+j kopras homes,J Kopras Homes,1,certs_2025_all | excel_rental_bv | excel_rental_swppp_numbers | excel_swppp_bv,UNKNOWN
+restore 1,Restore 1,1,certs_2025_all | certs_A | excel_rental_bv | excel_swppp_bv,UNKNOWN
+donavan john,"Donavan, John",1,excel_location_completed | excel_rental_bv | excel_swppp_bv,UNKNOWN
+anthony goldapd,"Anthony Gold/APD, Inc",1,excel_location_completed | excel_location_uploads | excel_rental_bv | excel_swppp_bv | excel_swppp_confirmed,UNKNOWN
+ics switched billing to lky real estate fund iv lp,"ICS, switched billing to LKY Real Estate Fund IV LP",1,excel_rental_bv,UNKNOWN
+je john,JE John,1,excel_location_completed | excel_location_need_start | excel_location_uploads | excel_rental_bv | excel_swppp_bv | excel_swppp_confirmed,UNKNOWN
+haworth- was bill to mhm until 8-8-16 then transferred to haworth,Haworth-  was bill to MHM until 8-8-16 then transferred to Haworth,1,excel_rental_bv | excel_wt_sw,UNKNOWN
+haworth- was bill to mhm until 10-5-16 then transferred to haworth,Haworth-  was bill to MHM until 10-5-16 then transferred to Haworth,1,excel_rental_bv | excel_wt_sw,UNKNOWN
+clg anthony gold,CLG/ Anthony Gold,1,excel_location_completed | excel_location_uploads | excel_rental_bv | excel_swppp_bv | excel_swppp_confirmed,UNKNOWN
+spurr,Spurr,1,certs_2025_all | excel_rental_bv | excel_rental_swppp_numbers,UNKNOWN
+ethos,Ethos Construction,1,excel_location_completed | excel_rental_bv | excel_rental_swppp_numbers | excel_swppp_bv,UNKNOWN
+povolny,Povolny Group,1,excel_rental_bv,UNKNOWN
+metal media,Metal Media,1,certs_2025_all | excel_location_completed | excel_rental_bv | excel_rental_swppp_numbers | excel_swppp_bv,UNKNOWN
+west glen villas,West Glen Villas,1,aia_all | certs_2025_all | certs_A | excel_location_completed | excel_rental_bv | excel_rental_swppp_numbers,UNKNOWN
+hospitality,Hospitality Builders,1,certs_2025_all | excel_rental_bv | excel_rental_swppp_numbers,UNKNOWN
+paul chavez,Paul Chavez,1,excel_location_completed | excel_location_need_start | excel_rental_bv | excel_swppp_bv | excel_swppp_need_schedule,UNKNOWN
+newman,Newman Builders,1,excel_location_uploads | excel_rental_bv | excel_rental_swppp_numbers | excel_swppp_bv,UNKNOWN
+logos,Logos,1,aia_all | excel_location_completed | excel_rental_bv | excel_rental_swppp_numbers | excel_swppp_bv,UNKNOWN
+kessler,Kessler Construction,1,certs_2025_all | excel_location_completed | excel_rental_bv | excel_rental_swppp_numbers,UNKNOWN
+valle luna,Valle Luna,1,excel_rental_bv | excel_rental_items | excel_rental_swppp_numbers | excel_swppp_bv | excel_swppp_confirmed | excel_wt_sw,UNKNOWN
+image,Image Builders,1,certs_2025_all | excel_location_completed | excel_location_need_start | excel_rental_bv | excel_rental_swppp_numbers | excel_swppp_bv,UNKNOWN
+calla,Calla Development,1,aia_all | certs_2025_all | excel_rental_bv | excel_rental_items | excel_rental_swppp_numbers,UNKNOWN
+wes laphen,Wes Laphen,1,certs_2025_all | excel_rental_bv | excel_rental_swppp_numbers | excel_swppp_bv | excel_wt_sw,UNKNOWN
+roca verde design,Roca Verde Design,1,certs_2025_all | excel_location_completed | excel_rental_bv | excel_rental_swppp_numbers,UNKNOWN
+torri,Torri,1,excel_rental_bv | excel_rental_swppp_numbers | excel_wt_sw,UNKNOWN
+arizona interior innovations,Arizona Interior Innovations,1,excel_rental_bv,UNKNOWN
+orsett properties jeff scott,Orsett Properties (Jeff Scott),1,excel_rental_bv,UNKNOWN
+rh dupper landscaping,RH Dupper Landscaping,1,certs_2025_all | excel_rental_bv | excel_rental_swppp_numbers,UNKNOWN
+syla ermal ge ventures,Syla Ermal (GE Ventures),1,excel_rental_bv,UNKNOWN
+mike maguire,Mike Maguire,1,excel_location_completed | excel_location_uploads | excel_rental_bv | excel_rental_swppp_numbers | excel_swppp_bv,UNKNOWN
+katerra now - wolff,Katerra/ Now - Wolff,1,excel_location_completed | excel_rental_bv | excel_rental_swppp_numbers,UNKNOWN
+hamblen david,"Hamblen, David",1,certs_2025_all | excel_rental_bv | excel_rental_swppp_numbers | excel_swppp_bv,UNKNOWN
+trinsic- was cm precision,Trinsic- Was CM Precision,1,excel_rental_bv | excel_rental_swppp_numbers,UNKNOWN
+hoidal tom,"Hoidal, Tom",1,excel_rental_bv | excel_rental_swppp_numbers,UNKNOWN
+dluzen scott,"Dluzen, Scott",1,certs_2025_all | excel_location_completed | excel_location_uploads | excel_rental_bv | excel_rental_swppp_numbers,UNKNOWN
+bela flor used to be billed to jn pebler construction,Bela Flor (used to be billed to J.N. Pebler Construction),1,excel_rental_bv,UNKNOWN
+41 north was ed smith paving,41 North (was ED Smith Paving),1,certs_2025_all | excel_rental_bv | excel_rental_items | excel_rental_swppp_numbers | excel_wt_sw,UNKNOWN
+northwind resource consultants,Northwind Resource Consultants,1,certs_2025_all | excel_credit_memos | excel_location_completed | excel_rental_bv | excel_rental_swppp_numbers,UNKNOWN
+penta,Penta,1,certs_2025_all | certs_A | excel_rental_bv | excel_rental_swppp_numbers | excel_wt_sw,UNKNOWN
+porter acme- was 180 degree and dwill,Porter Acme- Was 180 Degree and Dwill,1,excel_rental_bv,UNKNOWN
+primak formerly agate,Primak formerly Agate,1,excel_rental_bv,UNKNOWN
+hat trick- used to be belmont homes,Hat Trick- used to be Belmont Homes,1,excel_rental_bv,UNKNOWN
+holder was ww clyde,"Holder, Was WW Clyde",1,excel_location_completed | excel_rental_bv | excel_rental_items | excel_rental_swppp_numbers | excel_swppp_bv | excel_swppp_confirmed,UNKNOWN
+on site,On Site Builders,1,certs_2025_all | excel_credit_memos | excel_location_completed | excel_location_uploads | excel_rental_bv | excel_rental_items | excel_rental_swppp_numbers | excel_swppp_bv,UNKNOWN
+cbre- was fcl,CBRE- was FCL Builders,1,excel_rental_items,UNKNOWN
+imagine general- was eleven residential,Imagine General- Was Eleven Residential,1,certs_2025_all | excel_location_completed | excel_rental_bv | excel_rental_items | excel_rental_swppp_numbers,UNKNOWN
+desert sky apartments,Desert Sky Apartments,1,aia_all | certs_2025_all | excel_location_billing_invoices | excel_location_completed | excel_location_contract_billing | excel_location_sheet1 | excel_location_uploads | excel_rental_bv | excel_rental_items | excel_rental_swppp_numbers | excel_swppp_bv | excel_swppp_confirmed,UNKNOWN
+1st farmers,1st & Farmers,1,certs_2025_all | excel_location_need_start | excel_rental_bv | excel_rental_items | excel_rental_swppp_numbers | excel_swppp_bv,UNKNOWN
+csi- was zt 56th street,CSI- was ZT 56th Street,1,excel_rental_items | excel_rental_swppp_numbers | excel_wt_sw,UNKNOWN
+814 develoment was miller watkins,"814 Develoment, was Miller Watkins, LLC",1,excel_rental_items | excel_rental_swppp_numbers,UNKNOWN
+csi- was zt,CSI- was ZT,1,excel_rental_items,UNKNOWN
+swell steel was bleuwave,Swell Steel was Bleuwave,1,excel_location_billing_invoices | excel_location_uploads | excel_rental_items | excel_swppp_bv | excel_wt_sw,UNKNOWN
+3411 builder sw goes as cor water send to brian see notes in invoice,3411 Builder  (SW goes as COR & Water Send to Brian)  **SEE notes in invoice***,1,aia_all | excel_rental_swppp_numbers | excel_wt_sw,UNKNOWN
+3411 builder sw goes as cor water seanrandalltdc-propertiescom,3411 Builder  (SW goes as COR & Water) (Sean.Randall@tdc-properties.com),1,aia_all | excel_rental_swppp_numbers | excel_wt_sw,UNKNOWN
+abrasive blasting robert 480-392-7533,Abrasive Blasting                                           (Robert 480-392-7533),1,excel_wt_sw,UNKNOWN
+advanced drainage systems,Advanced Drainage Systems,1,excel_rental_swppp_numbers | excel_wt_sw,UNKNOWN
+afc az,AFC AZ Contracting,1,excel_wt_sw,UNKNOWN
+alexander building co need pos po 23001,Alexander Building Co                       (Need PO's) (PO#  23001),1,aia_all | certs_2025_all | certs_A | excel_location_completed | excel_rental_bv | excel_swppp_bv | excel_wt_sw,UNKNOWN
+alexander building co need pos po 23018,Alexander Building Co                       (Need PO's) (PO#  23018),1,aia_all | certs_2025_all | certs_A | excel_location_completed | excel_rental_bv | excel_swppp_bv | excel_wt_sw,UNKNOWN
+alexander building co need pos po 23036,Alexander Building Co                       (Need PO's) (PO#  23036),1,aia_all | certs_2025_all | certs_A | excel_location_completed | excel_rental_bv | excel_swppp_bv | excel_wt_sw,UNKNOWN
+alexander building co need pos po 24010,Alexander Building Co                       (Need PO's) (PO#  24010),1,aia_all | certs_2025_all | certs_A | excel_location_completed | excel_rental_bv | excel_swppp_bv | excel_wt_sw,UNKNOWN
+alexander building co need pos po 24031,Alexander Building Co                       (Need PO's) (PO# 24031 ),1,aia_all | certs_2025_all | certs_A | excel_location_completed | excel_rental_bv | excel_swppp_bv | excel_wt_sw,UNKNOWN
+alexander building co need pos po 23010 kevin 602-710-3197,Alexander Building Co                  (Need PO's)    (PO#  23010)    Kevin 602-710-3197,1,aia_all | excel_location_completed | excel_rental_bv | excel_swppp_bv | excel_wt_sw,UNKNOWN
+alexander building co need pos po 23027 jessie 623-225-4721,Alexander Building Co                (Need PO's) (PO# 23027)   Jessie 623-225-4721,1,aia_all | excel_location_completed | excel_rental_bv | excel_swppp_bv | excel_wt_sw,UNKNOWN
+alexander building co need pos po 240258 gary 909-996-9594,Alexander Building CO           (Need PO's) (PO#  240258)     Gary 909-996-9594,1,aia_all | excel_location_completed | excel_rental_bv | excel_swppp_bv | excel_wt_sw,UNKNOWN
+all utilities,All Utilities,1,excel_swppp_bv | excel_swppp_confirmed | excel_wt_sw,UNKNOWN
+az grading underground,AZ Grading & Underground,1,excel_wt_sw,UNKNOWN
+b f contracting inc need po numbers,"B & F Contracting, Inc                  ***Need PO Numbers******",1,certs_2025_all | excel_wt_sw,UNKNOWN
+bcc contracting inc shane 480-352-2992,"BCC Contracting , Inc                               (Shane  480-352-2992)",1,certs_2025_all | excel_rental_bv | excel_rental_swppp_numbers | excel_swppp_bv | excel_wt_sw,UNKNOWN
+beckshar diamond commercial,BeckShar Diamond Commercial,1,excel_location_billing_invoices | excel_location_uploads | excel_rental_items | excel_rental_swppp_numbers | excel_wt_sw,UNKNOWN
+bfl email tickets,BFL                                                         *****Email tickets*****,1,excel_rental_swppp_numbers | excel_swppp_bv | excel_wt_sw,UNKNOWN
+bpr job 1-23-016,BPR                                         (Job 1-23-016),1,aia_all | excel_rental_swppp_numbers | excel_swppp_bv | excel_swppp_need_schedule | excel_wt_sw,UNKNOWN
+brinshore,Brinshore,1,certs_2025_all | excel_location_contract_billing | excel_location_sheet1 | excel_location_uploads | excel_rental_swppp_numbers | excel_swppp_bv | excel_wt_sw,UNKNOWN
+buckles associates,Buckles & Associates,1,certs_2025_all | certs_A | excel_location_completed | excel_rental_bv | excel_rental_swppp_numbers | excel_swppp_bv | excel_wt_sw,UNKNOWN
+century complete rocky 480-201-0397,Century Complete                                (Rocky 480-201-0397),1,certs_2025_all | excel_rental_swppp_numbers | excel_wt_sw,UNKNOWN
+clark construction group job 24009b1 submitted in textura,Clark Construction Group              (Job # 24009B1) Submitted in Textura,1,certs_2025_all | excel_location_contract_billing | excel_location_sheet1 | excel_location_uploads | excel_rental_swppp_numbers | excel_wt_sw,UNKNOWN
+cunningham,Cunningham Construction LLC,1,excel_location_completed | excel_rental_bv | excel_rental_swppp_numbers | excel_swppp_bv | excel_swppp_confirmed | excel_swppp_need_schedule | excel_wt_sw,UNKNOWN
+dbm,DBM Contracting,1,excel_rental_bv | excel_rental_swppp_numbers | excel_swppp_bv | excel_swppp_confirmed | excel_wt_sw,UNKNOWN
+f roberts construction wants villa and hotel billed separate per shawn,F Roberts Construction          (Wants Villa and Hotel billed separate per Shawn),1,certs_2025_all | excel_rental_swppp_numbers | excel_wt_sw,UNKNOWN
+fnf leander 602-619-1169,FNF                               (Leander 602-619-1169),1,excel_wt_sw,UNKNOWN
+g force,G Force,1,excel_rental_bv | excel_wt_sw,UNKNOWN
+grant lord,Grant Lord,1,excel_location_completed | excel_wt_sw,UNKNOWN
+hash knife need pos,Hash Knife                                     Need PO's,1,unknown,UNKNOWN
+holcim,Holcim,1,certs_2025_all | excel_wt_sw,UNKNOWN
+k hovnanian homes land if requested for travis land,"K. Hovnanian Homes             (Land) (If requested for Travis ""Land"")",1,excel_wt_sw,UNKNOWN
+largo concrete inc job l1390 email cmoritzlargoconcretecom for po,"Largo Concrete, INC         (Job L1390) ***Email cmoritz@largoconcrete.com for PO****",1,certs_2025_all | excel_wt_sw,UNKNOWN
+layton job 219020andrew 602-989-2319,Layton                                                    (Job# 219020)(Andrew 602-989-2319),1,excel_location_completed | excel_rental_bv | excel_rental_items | excel_rental_swppp_numbers | excel_swppp_bv | excel_wt_sw,UNKNOWN
+layton jake requesting water trucks 1112025,Layton                                 Jake requesting Water Trucks 11/1/2025,1,excel_location_completed | excel_rental_bv | excel_rental_items | excel_rental_swppp_numbers | excel_swppp_bv | excel_wt_sw,UNKNOWN
+layton job 229012 justin 602-316-0024,Layton                     (Job#  229012)      (Justin 602-316-0024),1,excel_location_completed | excel_rental_bv | excel_rental_items | excel_rental_swppp_numbers | excel_swppp_bv | excel_wt_sw,UNKNOWN
+layton aaron 480-737-7532 job 257001,Layton                 Aaron 480-737-7532     (Job# 257001  ),1,excel_location_completed | excel_rental_bv | excel_rental_items | excel_rental_swppp_numbers | excel_swppp_bv | excel_wt_sw,UNKNOWN
+layton job 2475504 billing in textura when out of money send to seth dan cor,"Layton           (Job#  2475504) Billing in Textura, when out of money send to Seth / Dan COR)",1,excel_location_completed | excel_rental_bv | excel_rental_items | excel_rental_swppp_numbers | excel_swppp_bv | excel_wt_sw,UNKNOWN
+m brothers 67th ave,M Brothers 67th Ave LLC,1,certs_2025_all | excel_location_completed | excel_wt_sw,UNKNOWN
+mcshane constuction send cor to ed jack abby,"McShane Constuction   (Send COR to Ed & Jack, Abby)",1,certs_2025_all | excel_cp_invoices_2024 | excel_location_completed | excel_rental_bv | excel_rental_items | excel_rental_swppp_numbers | excel_swppp_bv | excel_wt_sw,UNKNOWN
+metro north monthly billing,Metro North                             MONTHLY BILLING,1,excel_wt_sw,UNKNOWN
+pcdm,PCDM,1,excel_wt_sw,UNKNOWN
+pro low job 22190 migel 602-702-0517,Pro Low                      (Job # 22190)              Migel 602-702-0517,1,excel_wt_sw,UNKNOWN
+pro low job 24120 migel 602-702-0517,Pro Low                      (Job # 24120)              Migel 602-702-0517,1,excel_wt_sw,UNKNOWN
+pro low job 24200 migel 602-702-0517,Pro Low                      (Job # 24200)              Migel 602-702-0517,1,excel_wt_sw,UNKNOWN
+pro low job 22210 james 480-431-1656 jweldonpro-lowcom,Pro Low                  (Job #22210)       James 480-431-1656 (jweldon@pro-low.com),1,excel_wt_sw,UNKNOWN
+pro low job 23070 james 480-431-1656,Pro Low                  (Job #23070)       James 480-431-1656,1,excel_wt_sw,UNKNOWN
+pro low job 22310 billy 602-689-0619,Pro Low                (Job # 22310)       (Billy 602-689-0619),1,excel_wt_sw,UNKNOWN
+pro low job 239012 jorge 602-737-7815 - jchaparropro-lowcom,Pro Low                (Job # 239012)    Jorge 602-737-7815 - jchaparro@pro-low.com,1,excel_wt_sw,UNKNOWN
+pro low job 22060 jorge 602-737-7815 - jchaparropro-lowcom,Pro Low                (Job #22060)    Jorge 602-737-7815 - jchaparro@pro-low.com,1,excel_wt_sw,UNKNOWN
+pro low job 23150 carlos - cacostapro-lowcom,Pro Low                (Job #23150)      (Carlos - cacosta@pro-low.com),1,excel_wt_sw,UNKNOWN
+pro low job 24060 carlos - 480-487-0687,Pro Low                (Job #24060)      (Carlos -  480-487-0687),1,excel_wt_sw,UNKNOWN
+pro low job 24070 jorge 602-737-7815 - jchaparropro-lowcom,Pro Low                (Job #24070)    Jorge 602-737-7815 - jchaparro@pro-low.com,1,excel_wt_sw,UNKNOWN
+pro low job 25230 carlos - 480-487-0687,Pro Low                (Job #25230)      (Carlos -  480-487-0687),1,excel_wt_sw,UNKNOWN
+pro low need project name job 23240,Pro Low                (NEED PROJECT NAME)     (Job #23240),1,excel_wt_sw,UNKNOWN
+pro low need project name job 22250,Pro Low                (NEED PROJECT NAME)   (Job # 22250),1,excel_wt_sw,UNKNOWN
+pro low job 24070 joe - jbustamantepro-lowcom,Pro Low               (Job # 24070) (Joe - jbustamante@pro-low.com),1,excel_wt_sw,UNKNOWN
+pro low job 23060 joe - jbustamantepro-lowcom,Pro Low               (Job #23060) (Joe - jbustamante@pro-low.com),1,excel_wt_sw,UNKNOWN
+quest development po 1254 requested by rob,Quest Development                          (PO 1254)  Requested by Rob,1,certs_2025_all | excel_location_completed | excel_rental_swppp_numbers | excel_wt_sw,UNKNOWN
+quest development po 1255- hamton requested by eric,Quest Development                         (PO 1255- Hamton)   Requested by Eric,1,excel_location_completed | excel_rental_swppp_numbers | excel_wt_sw,UNKNOWN
+r r,R & R Construction,1,unknown,UNKNOWN
+rapi dont need job name or,Rapi                                            (Don't need job name or #),1,certs_2025_all | excel_wt_sw,UNKNOWN
+rew kcg monthly billing,REW (KCG)                           MONTHLY BILLING,1,excel_wt_sw,UNKNOWN
+rhino job need need job and po numbers,Rhino                          (Job # need)     (Need job and PO numbers),1,excel_wt_sw,UNKNOWN
+roers put all on one cor,Roers                          (Put all on one COR),1,excel_rental_bv | excel_rental_swppp_numbers | excel_wt_sw,UNKNOWN
+rytan job 22-100-11wants job name address on invoice,Rytan                             (Job 22-100-11)(Wants Job # / Name & Address on invoice),1,certs_2025_all | excel_location_completed | excel_rental_swppp_numbers | excel_swppp_bv | excel_wt_sw,UNKNOWN
+rytan job 23112-12wants job name address on invoice,Rytan                             (Job 23112-12)(Wants Job # / Name & Address on invoice),1,certs_2025_all | excel_location_completed | excel_rental_swppp_numbers | excel_swppp_bv | excel_wt_sw,UNKNOWN
+rytan job 2322211wants job name address on invoice,Rytan                             (Job 2322211)(Wants Job # / Name & Address on invoice),1,certs_2025_all | excel_location_completed | excel_rental_swppp_numbers | excel_swppp_bv | excel_wt_sw,UNKNOWN
+rytan job 24-204 name address on invoice,Rytan                  (Job 24-204 / Name & Address on invoice),1,certs_2025_all | excel_location_completed | excel_rental_swppp_numbers | excel_swppp_bv | excel_wt_sw,UNKNOWN
+stickelmyer steve 605-228-3249,"Stickelmyer, Steve                                              605-228-3249",1,unknown,UNKNOWN
+sun land asphalt po 37457 angel 602-540-5374,Sun Land Asphalt             (PO 37457)  Angel 602-540-5374,1,excel_wt_sw,UNKNOWN
+the whiting turner email cor to jjsellnerwhiting-turnercom,The Whiting Turner                 (Email COR to JJ.Sellner@whiting-turner.com),1,certs_2025_all | excel_rental_bv | excel_wt_sw,UNKNOWN
+the whiting turner send cor to alec - alecdominguezwhiting-turnercom,The Whiting Turner          (Send COR to Alec - alec.dominguez@whiting-turner.com,1,excel_rental_bv | excel_wt_sw,UNKNOWN
+torrent frankie 480-340-0916,Torrent                                                  (Frankie 480-340-0916),1,excel_rental_bv | excel_rental_swppp_numbers | excel_wt_sw,UNKNOWN
+torrent joe 623-203-0797,Torrent                                                  (Joe 623-203-0797),1,excel_rental_bv | excel_rental_swppp_numbers | excel_wt_sw,UNKNOWN
+we oneil send cor to mwalshweoneilcombmooreweoneilcom,W.E. O'Neil                                       (Send COR to mwalsh@weoneil.com;bmoore@weoneil.com),1,certs_2025_all | excel_rental_bv | excel_rental_swppp_numbers | excel_wt_sw,UNKNOWN
+project cactus,PROJECT CACTUS,1,certs_2025_all | excel_location_completed | excel_rental_bv | excel_rental_items | excel_rental_swppp_numbers | excel_swppp_bv | excel_swppp_confirmed,UNKNOWN
+z zone,Z ZONE CONSTRUCTION,1,excel_location_completed | excel_rental_bv | excel_rental_swppp_numbers,UNKNOWN
+next gen,NEXT GEN,1,excel_location_completed | excel_rental_bv | excel_rental_items | excel_rental_swppp_numbers | excel_swppp_bv,UNKNOWN
+armays inspection not estimated,ARMAYS Inspection not Estimated,1,excel_location_billing_invoices | excel_location_completed | excel_location_contract_billing | excel_location_sheet1 | excel_location_uploads,UNKNOWN
+re spur,R.E. SPUR CONSTRUCTION,1,excel_location_completed | excel_rental_bv | excel_rental_swppp_numbers,UNKNOWN
+we oneil not in contract,W.E ONEIL  Not in Contract,1,certs_2025_all | certs_A | excel_location_completed | excel_location_need_start | excel_rental_bv | excel_rental_swppp_numbers | excel_swppp_bv | excel_swppp_confirmed | excel_wt_sw,UNKNOWN
+richmondbuilders1922147,RichmondBuilders1922147,1,certs_2025_all | certs_A | excel_location_completed | excel_location_contract_billing | excel_location_sheet1 | excel_location_uploads | excel_wt_sw,UNKNOWN
+richmondbuildersinc1922109,RichmondBuildersInc1922109,1,certs_2025_all | excel_location_completed | excel_location_contract_billing | excel_location_sheet1 | excel_location_uploads,UNKNOWN
+unboundphase1propertyownerllc1922152,UnboundPhase1PropertyOwnerLLC1922152,1,certs_2025_all | excel_rental_bv,UNKNOWN
+gs peoria residential owner,GS Peoria Residential Owner,1,certs_2025_all | excel_cp_invoices_2024 | excel_credit_memos | excel_location_completed | excel_rental_bv | excel_rental_swppp_numbers | excel_swppp_bv | excel_wt_sw,UNKNOWN
+gbfrpeoriaplacellccomarshusa,GBFRPeoriaPlaceLLCcoMarshUSAInc,1,certs_2025_all,UNKNOWN
+gs-sm album surprise owner,GS-SM Album Surprise Owner,1,certs_2025_all | excel_location_completed | excel_location_contract_billing | excel_location_sheet1 | excel_location_uploads | excel_rental_bv | excel_rental_swppp_numbers | excel_swppp_bv,UNKNOWN
+gilbert baseline owner,Gilbert & Baseline Owner,1,certs_2025_all | excel_location_completed | excel_rental_bv | excel_rental_swppp_numbers | excel_swppp_bv | excel_wt_sw,UNKNOWN
+tempe206sfarmeravellccomarshmclennan1922150,Tempe206SFarmerAveLLCcoMarshMcLennan1922150,1,certs_2025_all,UNKNOWN
+the ideal company-clayton,The Ideal Company-Clayton Group,1,certs_2025_all | excel_rental_bv | excel_rental_swppp_numbers,UNKNOWN
+stine,Stine Enterprises,1,certs_2025_all | excel_location_completed | excel_location_uploads | excel_rental_bv | excel_rental_items | excel_rental_swppp_numbers | excel_swppp_bv | excel_swppp_confirmed,UNKNOWN
+sdc technology,SDC Technology Services,1,certs_2025_all | excel_location_completed | excel_rental_swppp_numbers,UNKNOWN
+axis pointe,Axis Pointe,1,certs_2025_all | excel_location_completed | excel_location_uploads | excel_rental_bv | excel_rental_swppp_numbers | excel_swppp_bv,UNKNOWN
+aon risk services centra l,Aon Risk Services Centra lInc,1,certs_2025_all | excel_location_completed,UNKNOWN
+8th farmer,8th & Farmer LLC,1,certs_2025_all | excel_location_completed | excel_location_contract_billing | excel_location_need_start | excel_location_sheet1 | excel_location_uploads | excel_rental_bv | excel_rental_items | excel_rental_swppp_numbers,UNKNOWN
+higley road apartments owner,Higley Road Apartments Owner,1,certs_2025_all | excel_location_completed | excel_location_contract_billing | excel_location_need_start | excel_location_sheet1 | excel_location_uploads | excel_rental_bv | excel_rental_items | excel_rental_swppp_numbers | excel_swppp_bv | excel_wt_sw,UNKNOWN
+hardy rio,Hardy Rio Holdings,1,certs_2025_all | excel_location_completed | excel_rental_bv | excel_rental_swppp_numbers | excel_swppp_bv,UNKNOWN
+monterey ridge condominium association,Monterey Ridge Condominium Association,1,certs_2025_all | excel_rental_bv | excel_rental_swppp_numbers,UNKNOWN
+mcrefiiikierlandapartmentsllccomarshusainc1922144,MCREFIIIKierlandApartmentsLLCcoMarshUSAInc1922144,1,certs_2025_all,UNKNOWN
+mattamy homes,Mattamy Homes Corporation,1,aia_all | certs_2025_all | excel_credit_memos | excel_location_completed | excel_location_contract_billing | excel_rental_bv | excel_rental_swppp_numbers | excel_swppp_bv | excel_wt_sw,UNKNOWN
+cm bowen,CM Bowen Contracting LLC,1,certs_2025_all | excel_location_completed | excel_location_uploads | excel_swppp_bv,UNKNOWN
+calbenuscorporationinsurancecompliance1922099,CalbenUSCorporationInsuranceCompliance1922099,1,certs_2025_all,UNKNOWN
+city of phoenix housing department,City of Phoenix Housing Department,1,certs_2025_all | excel_swppp_bv,UNKNOWN
+dr horton inc its affiliates and subsidiaries,DR Horton Inc its affiliates and subsidiaries,1,certs_2025_all | excel_rental_bv,UNKNOWN
+devco preservation,DevCo Preservation,1,certs_2025_all | excel_credit_memos | excel_location_completed | excel_rental_bv | excel_rental_items | excel_rental_swppp_numbers,UNKNOWN
+devco u s,DevCo U S Construction,1,certs_2025_all | excel_location_contract_billing | excel_location_sheet1 | excel_location_uploads | excel_rental_bv | excel_rental_items | excel_rental_swppp_numbers | excel_swppp_bv | excel_wt_sw,UNKNOWN
+econosmart property,Econosmart Property Services LLC,1,certs_2025_all | excel_location_contract_billing | excel_location_sheet1 | excel_location_uploads,UNKNOWN
+k hovannian,K Hovannian,1,certs_2025_all | excel_cp_invoices_2024 | excel_credit_memos | excel_rental_bv | excel_rental_items | excel_rental_swppp_numbers | excel_swppp_bv | excel_wt_sw,UNKNOWN
+industrial metal supply,Industrial Metal Supply,1,aia_all | certs_2025_all | certs_A | excel_location_completed | excel_rental_swppp_numbers,UNKNOWN
+idmbuildsazllc1922374,IDMBuildsAZLLC1922374,1,certs_2025_all | excel_location_completed | excel_location_need_start | excel_location_sheet1 | excel_location_uploads | excel_rental_swppp_numbers | excel_swppp_bv | excel_wt_sw,UNKNOWN
+industria lmetal supply,Industria lMetal Supply,1,aia_all | certs_2025_all | certs_A | excel_location_completed | excel_rental_swppp_numbers,UNKNOWN
+green valleyf irestation 15,GREEN VALLEYF IRESTATION #15,1,certs_2025_all | excel_location_completed | excel_rental_bv | excel_rental_swppp_numbers | excel_swppp_bv | excel_swppp_confirmed,UNKNOWN
+green valleyf irestation 152,GREEN VALLEYF IRESTATION #152,1,certs_2025_all | excel_location_completed | excel_rental_bv | excel_rental_swppp_numbers | excel_swppp_bv | excel_swppp_confirmed,UNKNOWN
+tdcproperties1922309,TDCProperties1922309,1,certs_2025_all | excel_rental_bv | excel_rental_swppp_numbers,UNKNOWN
+tsg constructors -wickenburg truck barn,TSG Constructors -Wickenburg Truck Barn,1,certs_2025_all | excel_location_completed | excel_rental_swppp_numbers,UNKNOWN
+spitfire,Spitfire Builders,1,certs_2025_all | excel_rental_swppp_numbers,UNKNOWN
+smoke tree resort and bungalows,Smoke Tree Resort and Bungalows,1,certs_2025_all | excel_rental_swppp_numbers,UNKNOWN
+sachse,Sachse Construction,1,certs_2025_all | excel_location_completed | excel_rental_bv | excel_rental_swppp_numbers | excel_swppp_bv,UNKNOWN
+schoolhhouse,Schoolhhouse Development,1,certs_2025_all | excel_rental_bv | excel_rental_swppp_numbers | excel_swppp_bv,UNKNOWN
+finishing consultants,Finishing Consultants,1,certs_2025_all,UNKNOWN
+microsoft,Microsoft Corp,1,certs_2025_all | excel_location_completed | excel_rental_bv,UNKNOWN
+microsoft corp- phx 7,Microsoft Corp- PHX 7,1,certs_2025_all | excel_location_completed | excel_rental_bv | excel_rental_swppp_numbers,UNKNOWN
+m greenberg,M Greenberg Construction,1,certs_2025_all | excel_credit_memos | excel_location_completed | excel_location_uploads | excel_rental_items | excel_rental_swppp_numbers | excel_swppp_bv | excel_swppp_confirmed,UNKNOWN
+cityofmesaparksandrecreationdepartment1922370,CityofMesaParksandRecreationDepartment1922370,1,certs_2025_all,UNKNOWN
+bowman consulting,Bowman Consulting,1,aia_all | certs_2025_all | certs_A | excel_credit_memos | excel_location_billing_invoices | excel_location_completed | excel_location_contract_billing | excel_location_need_start | excel_location_sheet1 | excel_location_uploads | excel_rental_bv | excel_rental_items | excel_rental_swppp_numbers | excel_swppp_bv | excel_swppp_confirmed | excel_wt_sw | signs,UNKNOWN
+krb,KRB Development,1,certs_2025_all | excel_rental_swppp_numbers,UNKNOWN
+k2k,K2K LLC,1,certs_2025_all,UNKNOWN
+lattitude 33,Lattitude 33 Contracting,1,certs_2025_all | excel_rental_bv,UNKNOWN
+paccar financial,Paccar Financial Corp,1,certs_2025_all,UNKNOWN
+engelwood,"Engelwood Construction, Inc.",1,certs_2025_all | excel_location_completed | excel_rental_swppp_numbers | excel_swppp_bv,UNKNOWN
+stevens lein weber,Stevens Lein Weber Inc.,1,certs_2025_all | excel_location_billing_invoices | excel_location_completed | excel_location_uploads | excel_rental_swppp_numbers | excel_swppp_bv | excel_swppp_need_schedule,UNKNOWN
+kopras home,"Kopras Home, LLC",1,certs_2025_all | excel_location_uploads | excel_rental_bv | excel_rental_swppp_numbers | excel_swppp_bv | excel_swppp_confirmed,UNKNOWN
+porter acme- was dwill-mast,Porter Acme- was Dwill-Mast Construction LLC,1,excel_rental_bv | excel_swppp_bv,UNKNOWN
+e-,E-Corp,1,excel_swppp_need_schedule,UNKNOWN
+hoffman,HOFFMAN CONSTRUCTION COMPANY,1,excel_location_completed | excel_location_uploads | excel_rental_bv | excel_rental_swppp_numbers | excel_swppp_bv,UNKNOWN
+fairway,FAIRWAY BUILDERS,1,aia_all | certs_2025_all | excel_location_billing_invoices | excel_location_completed | excel_location_contract_billing | excel_location_sheet1 | excel_location_uploads | excel_rental_bv | excel_rental_swppp_numbers | excel_swppp_bv | excel_wt_sw,UNKNOWN

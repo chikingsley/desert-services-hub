@@ -1,16 +1,23 @@
 /**
- * Census Database Connection
+ * Hub Database Connection
  *
- * Single database connection for all census operations.
+ * Single database connection for all hub operations.
  * All modules should import the db instance from here.
+ *
+ * Note: Previously named "census.db", renamed to "hub.db" as part of
+ * consolidation effort (2026-01-30).
  */
 import { Database } from "bun:sqlite";
 import { existsSync, mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 
 // Default path is next to the db/ folder (in census/)
-const defaultPath = join(import.meta.dir, "..", "census.db");
-const dbPath = process.env.CENSUS_DATABASE_PATH ?? defaultPath;
+// Supports both old (CENSUS_DATABASE_PATH) and new (HUB_DATABASE_PATH) env vars
+const defaultPath = join(import.meta.dir, "..", "hub.db");
+const dbPath =
+  process.env.HUB_DATABASE_PATH ??
+  process.env.CENSUS_DATABASE_PATH ??
+  defaultPath;
 
 // Ensure the directory exists
 const dbDir = dirname(dbPath);

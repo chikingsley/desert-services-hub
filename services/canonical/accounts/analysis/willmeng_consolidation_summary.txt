@@ -1,0 +1,120 @@
+WILLMENG CONTRACTOR CONSOLIDATION ANALYSIS
+============================================
+
+OVERVIEW
+--------
+Total Records Found: 797
+Unique Spellings: 141
+Files Containing Willmeng: 16
+
+CONSOLIDATION STRATEGY
+----------------------
+
+PRIMARY CANONICAL FORMS
+=======================
+
+1. WILLMENG (Simple Name)
+   - Records to consolidate: 358
+   - Source variants:
+     * Willmeng (247 records) - PRIMARY
+     * WILLMENG (93 records) - normalize to title case
+     * WILLMENG Canceled (2 records) - extract status note
+     * WILLMENG Doing own inspections (2 records) - extract note
+     * WILLMENG.COM (6 records) - extract to contact
+     * Other misc WILLMENG variants (8 records)
+   - Action: Merge all to "Willmeng"
+
+2. WILLMENG CONSTRUCTION (Full Legal Name)
+   - Records to consolidate: 337
+   - Source variants:
+     * Willmeng Construction (224 records) - PRIMARY
+     * WILLMENG CONSTRUCTION INC (29 records) - normalize
+     * Willmeng Construction Inc (4 records) - standardize
+     * WILLMENG CONSTRUCTION (2 records) - normalize
+     * Willmeng Construction Inc.pdf variants (70+ records) - extract to separate field
+     * Other construction variants (8 records)
+   - Action: Merge all to "Willmeng Construction"
+
+CONTACT INFORMATION (DO NOT MERGE)
+===================================
+Records: 56 (extract as separate fields)
+- willmeng.com (19 records)
+- willmeng.com with email lists (37 records)
+- Phone numbers: 520-249-0734 (Willmeng main), 864-650-6767 (Avanash contact)
+Action: Create separate contact_info field, extract emails/phones
+
+METADATA & NOTES (PARTIAL MERGE)
+=================================
+Records: 46 (extract notes to separate field)
+- Job numbers: (Job #22-02-3554), (Job # 24-02-3897), etc.
+- COR info: (COR to mnasiri@willmeng.com), (Send COR to bbaker@willmeng.com)
+- Status: (Need Job #), (Invoice for contract billing), (Canceled), etc.
+- Phone: 520-249-0734, 864-650-6767
+Action: Extract job#/COR/status info to notes field
+
+DATA QUALITY ISSUES FOUND
+==========================
+1. Inconsistent capitalization (all-caps variants exist)
+2. Contact info embedded in contractor name field
+3. Job numbers and internal notes mixed into contractor field
+4. Phone numbers in contractor name field
+5. Status information embedded in name (Canceled, Doing own inspections)
+6. PDF document names treated as contractor variants
+
+SOURCE FILES WITH WILLMENG
+===========================
+1. excel_location_sheet1.csv - 52 records
+2. excel_location_completed.csv - 98 records
+3. excel_location_contract_billing.csv - 45 records
+4. excel_location_billing_invoices.csv - 46 records
+5. excel_location_uploads.csv - 45 records
+6. excel_wt_sw.csv - 76 records
+7. excel_swppp_confirmed.csv - 42 records
+8. excel_swppp_bv.csv - 35 records
+9. excel_swppp_need_schedule.csv - 21 records
+10. excel_rental_swppp_numbers.csv - 57 records
+11. excel_rental_items.csv - 88 records
+12. excel_rental_bv.csv - 66 records
+13. excel_credit_memos.csv - 76 records
+14. excel_cp_invoices_2024.csv - 53 records
+15. excel_cp_invoices_2025.csv - 57 records
+16. certs_2025_all.csv - 39 records
+
+CONSOLIDATION SUMMARY
+=====================
+YES - Direct merge: 695 records
+  Target "Willmeng": 358 records
+  Target "Willmeng Construction": 337 records
+
+PARTIAL - Extract metadata: 46 records
+  Extract job#/COR/status to notes field
+  Extract phone to contact field
+
+NO - Extract separately: 56 records
+  Extract email/website to contact field
+
+IMPLEMENTATION RECOMMENDATIONS
+===============================
+1. Create mapping file: willmeng_canonical_map.csv
+2. Add data extraction script to parse embedded metadata
+3. Normalize all variants in raw data to either:
+   - "Willmeng" (simple references)
+   - "Willmeng Construction" (formal references)
+4. Create separate contact_info field for emails/phones
+5. Create notes field for job numbers and internal comments
+6. Document any status information separately
+
+ESTIMATED EFFORT
+================
+- Manual data review/validation: 2-3 hours
+- Script creation for bulk updates: 2-3 hours
+- Testing and QA: 1-2 hours
+- Total: 5-8 hours
+
+NEXT STEPS
+==========
+1. Review willmeng_variants_detailed.csv for any edge cases
+2. Run data extraction script on raw files
+3. Create unified contractor record in system
+4. Test deduplication logic
+5. Update all related records to point to canonical form

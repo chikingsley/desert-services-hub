@@ -17,6 +17,7 @@ export function parseEmailRow(row: Record<string, unknown>): Email {
   return {
     id: row.id as number,
     messageId: row.message_id as string,
+    internetMessageId: row.internet_message_id as string | null,
     mailboxId: row.mailbox_id as number,
     conversationId: row.conversation_id as string | null,
     subject: row.subject as string | null,
@@ -72,11 +73,12 @@ export function insertEmail(data: InsertEmailData): number {
 
   db.run(
     `INSERT INTO emails (
-      message_id, mailbox_id, conversation_id, subject, normalized_subject, from_email, from_name,
+      message_id, internet_message_id, mailbox_id, conversation_id, subject, normalized_subject, from_email, from_name,
       to_emails, cc_emails, received_at, has_attachments, attachment_names,
       body_preview, body_full, body_html, web_url, categories
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(message_id) DO UPDATE SET
+      internet_message_id = excluded.internet_message_id,
       subject = excluded.subject,
       normalized_subject = excluded.normalized_subject,
       from_email = excluded.from_email,
@@ -91,6 +93,7 @@ export function insertEmail(data: InsertEmailData): number {
       categories = excluded.categories`,
     [
       data.messageId,
+      data.internetMessageId ?? null,
       data.mailboxId,
       data.conversationId ?? null,
       data.subject ?? null,

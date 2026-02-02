@@ -9,7 +9,7 @@ import { parseArgs } from "node:util";
 import { getFile } from "../../lib/minio";
 import { SharePointClient } from "./client";
 
-const CENSUS_DB_PATH = new URL("../email/census/census.db", import.meta.url)
+const HUB_DB_PATH = new URL("../contract/census/hub.db", import.meta.url)
   .pathname;
 const SHAREPOINT_ROOT = "Customer Projects/Active";
 const SUBFOLDERS = [
@@ -209,7 +209,7 @@ const sp = new SharePointClient({
   azureClientSecret: process.env.AZURE_CLIENT_SECRET ?? "",
 });
 
-const db = new Database(CENSUS_DB_PATH, { readonly: true });
+const db = new Database(HUB_DB_PATH, { readonly: true });
 
 // Exclude already-synced projects (Verge + Symbiont)
 const EXCLUDE_IDS = [

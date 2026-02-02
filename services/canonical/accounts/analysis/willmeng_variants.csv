@@ -1,0 +1,7 @@
+raw_spelling,record_count,source_files,should_merge,canonical_form,notes
+Willmeng Construction,224,1,YES,Willmeng Construction,Most common spelling for full company name (224 records)
+Willmeng,247,1,YES,Willmeng,Canonical simple name (247 records)
+WILLMENG,93,1,YES,Willmeng,All caps variant (93 records) - normalize to title case
+WILLMENG CONSTRUCTION INC,31,2,YES,Willmeng Construction,All caps full name variant with INC suffix (31 records) - normalize
+willmeng.com (and variants),46,30,NO,Contact info - extract separately,"Website and email references - should extract as contact data, not merge"
+Willmeng with job notes,48,21,PARTIAL,Willmeng - extract notes to separate field,21 variants with embedded job numbers/notes (27 total records)

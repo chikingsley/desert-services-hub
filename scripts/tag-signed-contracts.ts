@@ -18,8 +18,8 @@ const CONTRACTS_MAILBOX = "contracts@desertservices.net";
 
 const applyMode = process.argv.includes("--apply");
 
-// Open census DB
-const dbPath = join(import.meta.dir, "../services/email/census/census.db");
+// Open hub DB
+const dbPath = join(import.meta.dir, "../services/contract/census/hub.db");
 const db = new Database(dbPath, { readonly: true });
 
 // Projects confirmed signed from triage report (.planning/CONTRACT-TRIAGE.md)

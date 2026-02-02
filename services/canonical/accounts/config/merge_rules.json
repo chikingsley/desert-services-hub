@@ -1,0 +1,575 @@
+{
+  "version": "1.0",
+  "description": "Merge rules for contractor data deduplication and normalization",
+  "metadata": {
+    "created": "2026-01-20",
+    "last_updated": "2026-01-20",
+    "purpose": "Automatically identify and merge duplicate contractor entries across multiple data sources",
+    "data_sources": [
+      "AIA Hunter records",
+      "Certificate files",
+      "Excel rental/billing/swppp sheets",
+      "Monday CRM",
+      "QuickBooks exports",
+      "SharePoint documents"
+    ]
+  },
+  "suffix_rules": [
+    {
+      "pattern": "X",
+      "equivalents": ["X Inc", "X Inc.", "X LLC", "X LLC.", "X L.L.C.", "X Corp", "Corp.", "X Co", "X Co.", "X Company", "X Corporation"],
+      "description": "Legal entity suffixes are interchangeable for matching purposes",
+      "priority": "high"
+    },
+    {
+      "pattern": "X",
+      "equivalents": ["X Construction", "X Contractors", "X Contractor", "X Builders", "X Builder", "X Building", "X General Contracting", "X General Contractors"],
+      "description": "Industry-specific suffixes that indicate same company",
+      "priority": "high"
+    },
+    {
+      "pattern": "X",
+      "equivalents": ["X Development", "X Enterprises", "X Services", "X Group", "X Holdings"],
+      "description": "Generic corporate suffixes",
+      "priority": "medium"
+    }
+  ],
+  "typo_rules": {
+    "common_construction_misspellings": [
+      {
+        "misspelling": "contruction",
+        "correct": "construction",
+        "frequency": "high",
+        "examples": []
+      },
+      {
+        "misspelling": "constuction",
+        "correct": "construction",
+        "frequency": "high",
+        "examples": []
+      },
+      {
+        "misspelling": "constraction",
+        "correct": "construction",
+        "frequency": "medium",
+        "examples": []
+      },
+      {
+        "misspelling": "constrauction",
+        "correct": "construction",
+        "frequency": "low",
+        "examples": []
+      },
+      {
+        "misspelling": "contracters",
+        "correct": "contractors",
+        "frequency": "medium",
+        "examples": []
+      },
+      {
+        "misspelling": "buildes",
+        "correct": "builders",
+        "frequency": "low",
+        "examples": []
+      },
+      {
+        "misspelling": "buidlers",
+        "correct": "builders",
+        "frequency": "low",
+        "examples": []
+      },
+      {
+        "misspelling": "contracting",
+        "correct": "contracting",
+        "frequency": "high",
+        "examples": []
+      }
+    ],
+    "company_name_misspellings": [
+      {
+        "misspelling": "Mccarthy",
+        "correct": "McCarthy",
+        "company": "McCarthy Building Companies",
+        "frequency": "high"
+      },
+      {
+        "misspelling": "Mayes",
+        "correct": "Mays",
+        "company": "AR Mays",
+        "frequency": "low"
+      },
+      {
+        "misspelling": "Laytom",
+        "correct": "Layton",
+        "company": "Layton Construction",
+        "frequency": "low"
+      }
+    ]
+  },
+  "known_aliases": {
+    "comprehensive_list": [
+      {
+        "canonical": "AR Mays",
+        "display_name": "AR Mays",
+        "aliases": ["armays", "ARMAYS", "AR MAYS", "A.R. Mays", "A.R. MAYS", "A.R. May", "Ar Mays"],
+        "variations": ["AR Mays Construction", "AR Mays Inc", "AR Mays LLC"],
+        "record_count": 237,
+        "source_count": 6,
+        "confidence": "very_high"
+      },
+      {
+        "canonical": "Willmeng",
+        "display_name": "Willmeng",
+        "aliases": ["WILLMENG", "willmeng", "Willmeng Construction"],
+        "variations": ["WILLMENG CONSTRUCTION INC", "Willmeng Construction Inc", "Willmeng LLC"],
+        "record_count": 172,
+        "source_count": 11,
+        "confidence": "very_high"
+      },
+      {
+        "canonical": "Chasse Building Team",
+        "display_name": "Chasse Building Team",
+        "aliases": ["Chasse", "CHASSE", "chasse building", "Chasse Building"],
+        "variations": ["Chasse Building Team Inc", "Chasse Building Team LLC", "Chasse Builders"],
+        "record_count": 205,
+        "source_count": 9,
+        "confidence": "very_high"
+      },
+      {
+        "canonical": "LGE Design Build",
+        "display_name": "LGE Design Build",
+        "aliases": ["LGE", "lge", "LGE Design", "lge design build"],
+        "variations": ["LGE Design Build Inc", "LGE Design Build LLC"],
+        "record_count": 146,
+        "source_count": 10,
+        "confidence": "very_high"
+      },
+      {
+        "canonical": "McCarthy Building Companies",
+        "display_name": "McCarthy Building Companies",
+        "aliases": ["McCarthy", "Mccarthy", "MCCARTHY", "mccarthy building companies"],
+        "variations": ["McCarthy Building Companies Inc", "McCarthy Builders"],
+        "record_count": 51,
+        "source_count": 1,
+        "confidence": "very_high"
+      },
+      {
+        "canonical": "Layton Construction Company",
+        "display_name": "Layton Construction Company",
+        "aliases": ["Layton", "LAYTON", "layton construction", "Layton Construction"],
+        "variations": ["Layton Construction Inc", "Layton Builders", "Layton General Contracting"],
+        "record_count": 225,
+        "source_count": 14,
+        "confidence": "very_high"
+      },
+      {
+        "canonical": "Core Construction",
+        "display_name": "Core Construction",
+        "aliases": ["CORE", "Core", "core construction"],
+        "variations": ["Core Construction Inc", "Core Builders", "Core General Contracting"],
+        "record_count": 187,
+        "source_count": 11,
+        "confidence": "very_high"
+      },
+      {
+        "canonical": "Haydon Building Corp",
+        "display_name": "Haydon Building Corp",
+        "aliases": ["Haydon", "HAYDON", "haydon building"],
+        "variations": ["Haydon Building Company", "Haydon Builders", "Haydon Building Corporation"],
+        "record_count": 112,
+        "source_count": 9,
+        "confidence": "very_high"
+      },
+      {
+        "canonical": "WE ONeil",
+        "display_name": "WE ONeil",
+        "aliases": ["WE O'Neil", "WE ONEIL", "W.E. ONeil", "we oneil"],
+        "variations": ["WE ONeil Construction", "WE ONeil Inc", "WE ONeil LLC"],
+        "record_count": 51,
+        "source_count": 10,
+        "confidence": "high"
+      },
+      {
+        "canonical": "MT Builders",
+        "display_name": "MT Builders",
+        "aliases": ["MT", "MTBUILDERS", "MTBuilders", "mt builders", "mtbuilders"],
+        "variations": ["MT Builders LLC", "MT Builders Inc", "MT Builders Construction"],
+        "record_count": 161,
+        "source_count": 12,
+        "confidence": "very_high"
+      },
+      {
+        "canonical": "Ryan Companies",
+        "display_name": "Ryan Companies",
+        "aliases": ["Ryan", "RYAN", "ryan companies", "Ryan Companies US"],
+        "variations": ["Ryan Companies Inc", "Ryan Companies LLC", "Ryan Builders"],
+        "record_count": 137,
+        "source_count": 10,
+        "confidence": "very_high"
+      },
+      {
+        "canonical": "Double AA Builders",
+        "display_name": "Double AA Builders",
+        "aliases": ["Double AA", "DOUBLE AA", "double aa builders", "double aa builders ltd"],
+        "variations": ["Double AA Builders LLC", "Double AA Builders Inc", "Double AA Builders, LTD"],
+        "record_count": 46,
+        "source_count": 7,
+        "confidence": "very_high"
+      },
+      {
+        "canonical": "Wespac Construction",
+        "display_name": "Wespac Construction",
+        "aliases": ["Wespac", "WESPAC", "wespac construction"],
+        "variations": ["Wespac Construction Inc", "Wespac Builders", "Wespac Building Co"],
+        "record_count": 59,
+        "source_count": 6,
+        "confidence": "very_high"
+      },
+      {
+        "canonical": "Greystar Development & Construction",
+        "display_name": "Greystar Development & Construction",
+        "aliases": ["Greystar", "GREYSTAR", "greystar development"],
+        "variations": ["Greystar Development Construction", "Greystar Builders", "Greystar Development and Construction"],
+        "record_count": 42,
+        "source_count": 9,
+        "confidence": "very_high"
+      },
+      {
+        "canonical": "Clayco",
+        "display_name": "Clayco Inc",
+        "aliases": ["Clay", "CLAY", "CLAYCO", "clayco"],
+        "variations": ["Clayco Inc", "Clayco LLC", "Clayco Construction"],
+        "record_count": 95,
+        "source_count": 12,
+        "confidence": "very_high"
+      },
+      {
+        "canonical": "Brycon",
+        "display_name": "Brycon",
+        "aliases": ["BRYCON", "brycon"],
+        "variations": ["Brycon Inc", "Brycon LLC", "Brycon Construction"],
+        "record_count": 153,
+        "source_count": 7,
+        "confidence": "very_high"
+      },
+      {
+        "canonical": "FCL Builders",
+        "display_name": "FCL Builders",
+        "aliases": ["FCL", "fcl builders", "fcl builders arizona"],
+        "variations": ["FCL Builders Inc", "FCL Builders LLC", "FCL Builders Arizona"],
+        "record_count": 135,
+        "source_count": 11,
+        "confidence": "very_high"
+      },
+      {
+        "canonical": "GCON",
+        "display_name": "GCON",
+        "aliases": ["gcon", "G-CON", "G CON"],
+        "variations": ["GCON Inc", "GCON LLC", "GCON Construction"],
+        "record_count": 130,
+        "source_count": 11,
+        "confidence": "high"
+      },
+      {
+        "canonical": "Roers General Contracting",
+        "display_name": "Roers General Contracting LLC",
+        "aliases": ["Roers", "ROERS", "roers general contracting"],
+        "variations": ["Roers General Contracting LLC", "Roers Builders", "Roers Construction"],
+        "record_count": 62,
+        "source_count": 6,
+        "confidence": "very_high"
+      },
+      {
+        "canonical": "Alexander Building",
+        "display_name": "Alexander Building Co",
+        "aliases": ["Alexander", "ALEXANDER", "alexander building"],
+        "variations": ["Alexander Building Co", "Alexander Building Inc", "Alexander Builders"],
+        "record_count": 167,
+        "source_count": 4,
+        "confidence": "very_high"
+      },
+      {
+        "canonical": "WD Construction",
+        "display_name": "WD Construction LLC (Weis Builders)",
+        "aliases": ["Weis Builders", "WD", "wd construction", "weis builders"],
+        "variations": ["WD Construction LLC", "WD Construction Inc", "WD Builders"],
+        "record_count": 134,
+        "source_count": 2,
+        "confidence": "very_high"
+      }
+    ]
+  },
+  "case_sensitivity_rules": {
+    "description": "Rules for handling case variations in contractor names",
+    "rules": [
+      {
+        "rule": "normalize_to_title_case",
+        "description": "Convert all-caps variants to title case for matching",
+        "examples": ["WILLMENG -> Willmeng", "AR MAYS -> AR Mays"]
+      },
+      {
+        "rule": "preserve_acronyms",
+        "description": "Preserve proper acronyms during case normalization",
+        "examples": ["GCON -> GCON", "FCL -> FCL", "LGE -> LGE"],
+        "acronyms": ["GC", "LGE", "DPR", "AR", "FCL", "LLC", "Inc", "CSI", "MTI", "PWI", "IDM", "BPR"]
+      },
+      {
+        "rule": "handle_mixed_case",
+        "description": "Treat mixed case variations as equivalents",
+        "examples": ["AR MAys -> AR Mays", "McShane -> McShane"]
+      }
+    ]
+  },
+  "punctuation_normalization": {
+    "description": "Rules for handling punctuation variations",
+    "rules": [
+      {
+        "pattern": "dots_in_abbreviations",
+        "description": "Dots in abbreviations are optional",
+        "examples": ["A.R. Mays = AR Mays", "L.L.C. = LLC", "Corp. = Corp"],
+        "normalize_to": "without_dots"
+      },
+      {
+        "pattern": "ampersand_vs_and",
+        "description": "Ampersand and 'and' are equivalent",
+        "examples": ["Adolfson & Peterson = Adolfson and Peterson"],
+        "normalize_to": "ampersand"
+      },
+      {
+        "pattern": "hyphens_and_spaces",
+        "description": "Hyphens and spaces are interchangeable in company names",
+        "examples": ["Big-D = Big D", "MTI-Mitchell = MTI Mitchell"],
+        "normalize_to": "hyphens"
+      },
+      {
+        "pattern": "commas_in_names",
+        "description": "Commas at end of entity names are ignored",
+        "examples": ["Double AA Builders, LTD = Double AA Builders LTD"],
+        "normalize_to": "without_commas"
+      }
+    ]
+  },
+  "spacing_and_formatting": {
+    "description": "Rules for handling spacing and formatting variations",
+    "rules": [
+      {
+        "rule": "collapse_multiple_spaces",
+        "description": "Multiple spaces collapse to single space",
+        "examples": ["Suntec  Concrete = Suntec Concrete"],
+        "apply": true
+      },
+      {
+        "rule": "trim_leading_trailing",
+        "description": "Remove leading and trailing whitespace",
+        "apply": true
+      },
+      {
+        "rule": "no_spaces_before_punctuation",
+        "description": "No space before punctuation marks",
+        "examples": ["Company Inc . = Company Inc."],
+        "apply": true
+      }
+    ]
+  },
+  "name_order_variations": {
+    "description": "Rules for variations in word order",
+    "rules": [
+      {
+        "pattern": "suffix_at_beginning",
+        "description": "Some data may have suffixes at beginning instead of end",
+        "example": "Inc Willmeng = Willmeng Inc",
+        "frequency": "very_low",
+        "confidence": "medium"
+      },
+      {
+        "pattern": "abbreviated_vs_full",
+        "description": "Full names can be abbreviated",
+        "examples": ["McCarthy Building Companies -> McCarthy", "Willmeng Construction -> Willmeng"],
+        "direction": "both"
+      }
+    ]
+  },
+  "exclude_patterns": {
+    "description": "Things that look similar but are actually different companies",
+    "patterns": [
+      {
+        "pattern": "Core Construction vs Hardcore",
+        "reason": "completely different companies",
+        "rule": "require_exact_word_boundary_match",
+        "example": "dont match 'core' in 'hardcore construction'"
+      },
+      {
+        "pattern": "Clayco vs Clay",
+        "reason": "Clayco is the full name, Clay is just short",
+        "rule": "require_minimum_name_length",
+        "example": "names under 4 chars are typically abbreviations, not standalone companies"
+      },
+      {
+        "pattern": "Hunter vs Hunter Group vs Hunter Construction",
+        "reason": "may be different entities",
+        "rule": "require_additional_context",
+        "example": "single-word names need additional context before merging"
+      },
+      {
+        "pattern": "Desert, Phoenix, Arizona prefixes",
+        "reason": "too generic, many unrelated companies use these",
+        "rule": "require_specific_suffixes_or_context",
+        "example": "dont merge 'Desert Construction' with 'Builders' based on Desert prefix alone"
+      },
+      {
+        "pattern": "Big-D vs Big Dig",
+        "reason": "similar but potentially different companies",
+        "rule": "exact_match_only_after_normalization",
+        "confidence": "high"
+      },
+      {
+        "pattern": "TLW vs T.L.W.",
+        "reason": "same company, different punctuation",
+        "rule": "merge_these",
+        "confidence": "very_high"
+      }
+    ]
+  },
+  "embedded_content_rules": {
+    "description": "Rules for handling contractor names with embedded extra information",
+    "rules": [
+      {
+        "pattern": "job_numbers_in_name",
+        "description": "Job numbers/references embedded in contractor field",
+        "examples": ["Willmeng (Job 12345)", "Willmeng #JB-456", "Willmeng - SWPPP #123"],
+        "action": "extract_to_separate_field",
+        "canonical": "Willmeng"
+      },
+      {
+        "pattern": "contact_info_in_name",
+        "description": "Email, phone, or website in contractor field",
+        "examples": ["willmeng@willmeng.com", "Willmeng (555-1234)", "Willmeng - www.willmeng.com"],
+        "action": "extract_to_separate_field",
+        "canonical": "Willmeng"
+      },
+      {
+        "pattern": "notes_appended",
+        "description": "Notes or descriptions after contractor name",
+        "examples": ["Willmeng (Need PO #)", "Willmeng - TBD", "Willmeng (Pending)"],
+        "action": "extract_to_notes_field",
+        "canonical": "Willmeng"
+      }
+    ]
+  },
+  "regional_variations": {
+    "description": "Handle regional office variations of same company",
+    "rules": [
+      {
+        "pattern": "geographic_suffixes",
+        "description": "Regional offices should merge with parent company",
+        "examples": ["FCL Builders = FCL Builders Arizona", "Layton = Layton Arizona"],
+        "rule": "merge_with_parent",
+        "confidence": "high"
+      }
+    ]
+  },
+  "merge_strategy": {
+    "description": "How to apply these rules when merging contractor records",
+    "steps": [
+      {
+        "step": 1,
+        "action": "normalize_whitespace",
+        "description": "Trim, collapse multiple spaces"
+      },
+      {
+        "step": 2,
+        "action": "normalize_case",
+        "description": "Convert to lowercase for comparison, preserve title case for display"
+      },
+      {
+        "step": 3,
+        "action": "remove_punctuation",
+        "description": "Remove dots, commas, hyphens except where they're core to name"
+      },
+      {
+        "step": 4,
+        "action": "remove_suffixes",
+        "description": "Remove common suffixes (Inc, LLC, Corp, etc.)"
+      },
+      {
+        "step": 5,
+        "action": "extract_embedded_content",
+        "description": "Extract job numbers, contact info, notes to separate fields"
+      },
+      {
+        "step": 6,
+        "action": "check_against_exclude_patterns",
+        "description": "Verify not on exclude list"
+      },
+      {
+        "step": 7,
+        "action": "apply_known_aliases",
+        "description": "Check against comprehensive known_aliases list"
+      },
+      {
+        "step": 8,
+        "action": "fuzzy_match_if_needed",
+        "description": "If not in known_aliases, use fuzzy matching with high confidence threshold"
+      },
+      {
+        "step": 9,
+        "action": "select_canonical_form",
+        "description": "Choose most common variant as canonical name"
+      },
+      {
+        "step": 10,
+        "action": "merge_records",
+        "description": "Combine all duplicate records under canonical name"
+      }
+    ]
+  },
+  "confidence_levels": {
+    "very_high": {
+      "description": "Automatic merge without review",
+      "threshold": 0.95,
+      "examples": [
+        "exact match after normalization",
+        "name in known_aliases list",
+        "obvious typo corrections",
+        "suffix variations"
+      ]
+    },
+    "high": {
+      "description": "Merge with light review",
+      "threshold": 0.85,
+      "examples": [
+        "substring matching with word boundary",
+        "known company with multiple sources",
+        "acronym expansion matches"
+      ]
+    },
+    "medium": {
+      "description": "Flag for manual review before merge",
+      "threshold": 0.70,
+      "examples": [
+        "fuzzy match above 70%",
+        "single source entries",
+        "potential name conflicts"
+      ]
+    },
+    "low": {
+      "description": "Do not merge automatically",
+      "threshold": 0.0,
+      "examples": [
+        "generic single words",
+        "potential homonyms",
+        "regional variants without confirmation"
+      ]
+    }
+  },
+  "implementation_notes": {
+    "note_1": "This file should be used by automated merge scripts to reduce manual data entry",
+    "note_2": "The known_aliases list should be expanded as new contractors are encountered",
+    "note_3": "Records merged should maintain audit trail showing original variants",
+    "note_4": "Display name should be the most common variant in the dataset",
+    "note_5": "For ambiguous cases, default to no merge rather than over-merging",
+    "note_6": "Embedded content (job numbers, etc.) should be extracted to separate fields before merge",
+    "note_7": "Very short names (< 4 characters) require additional context before merging",
+    "note_8": "When applying fuzzy matching, require word boundary matches, not substring anywhere"
+  }
+}

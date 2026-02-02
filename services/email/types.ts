@@ -40,6 +40,8 @@ export interface Recipient {
 export interface EmailMessage {
   /** Unique Microsoft Graph message ID */
   id: string;
+  /** RFC 2822 Message-ID - same across all mailboxes for cross-mailbox matching */
+  internetMessageId?: string;
   /** Email subject line */
   subject: string;
   /** Timestamp when the email was received */

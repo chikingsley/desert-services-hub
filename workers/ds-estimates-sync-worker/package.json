@@ -7,16 +7,14 @@
     "check": "bunx ultracite check",
     "fix": "bunx ultracite fix"
   },
-  "devDependencies": {
-    "@biomejs/biome": "^2.3.13",
-    "@types/bun": "latest",
-    "ultracite": "^7.1.1"
-  },
-  "peerDependencies": {
-    "typescript": "^5"
-  },
   "dependencies": {
-    "@azure/identity": "^4.13.0",
-    "@microsoft/microsoft-graph-client": "^3.0.7"
+    "@azure/identity": "catalog:",
+    "@microsoft/microsoft-graph-client": "catalog:"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "catalog:",
+    "@types/bun": "catalog:",
+    "typescript": "catalog:",
+    "ultracite": "catalog:"
   }
 }

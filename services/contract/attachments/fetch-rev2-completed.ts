@@ -16,7 +16,7 @@ const OUTPUT_DIR = import.meta.dir;
 
 async function main() {
   // Connect to database
-  const db = new Database(join(import.meta.dir, "../census/census.db"));
+  const db = new Database(join(import.meta.dir, "../census/hub.db"));
 
   // Get email details
   const email = db

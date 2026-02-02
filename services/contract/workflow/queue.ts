@@ -1,7 +1,7 @@
 /**
  * Contract Queue
  *
- * Query census.db for contracts@ emails with attachments,
+ * Query hub.db for contracts@ emails with attachments,
  * show pending contracts for processing.
  *
  * This is the entry point for the contract processing workflow.
@@ -70,9 +70,9 @@ export interface Attachment {
 // ============================================
 
 function getDatabase(): Database {
-  // Default path relative to census module
-  const defaultPath = join(import.meta.dir, "../../email/census/census.db");
-  const dbPath = process.env.CENSUS_DATABASE_PATH ?? defaultPath;
+  // Default path relative to hub module
+  const defaultPath = join(import.meta.dir, "../census/hub.db");
+  const dbPath = process.env.HUB_DATABASE_PATH ?? defaultPath;
 
   if (!existsSync(dbPath)) {
     throw new Error(`Census database not found at: ${dbPath}`);
@@ -101,7 +101,7 @@ export function getContractQueue(): QueuedContract[] {
       .get();
 
     if (!mailbox) {
-      console.warn("No contracts@ mailbox found in census.db");
+      console.warn("No contracts@ mailbox found in hub.db");
       return [];
     }
 

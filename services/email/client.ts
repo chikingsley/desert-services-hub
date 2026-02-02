@@ -327,7 +327,7 @@ export class GraphEmailClient {
         .orderby("receivedDateTime desc")
         .top(effectiveLimit)
         .select(
-          "id,subject,receivedDateTime,from,toRecipients,ccRecipients,body,categories"
+          "id,internetMessageId,subject,receivedDateTime,from,toRecipients,ccRecipients,body,categories"
         )
         .get();
 
@@ -401,7 +401,7 @@ export class GraphEmailClient {
         .orderby("receivedDateTime desc")
         .top(Math.min(batchSize, maxEmails))
         .select(
-          "id,subject,receivedDateTime,from,toRecipients,ccRecipients,body,hasAttachments,conversationId,categories"
+          "id,internetMessageId,subject,receivedDateTime,from,toRecipients,ccRecipients,body,hasAttachments,conversationId,categories"
         )
         .get();
 
@@ -482,7 +482,7 @@ export class GraphEmailClient {
         .orderby("receivedDateTime desc")
         .top(Math.min(batchSize, maxEmails))
         .select(
-          "id,subject,receivedDateTime,from,toRecipients,ccRecipients,body,hasAttachments,conversationId,categories"
+          "id,internetMessageId,subject,receivedDateTime,from,toRecipients,ccRecipients,body,hasAttachments,conversationId,categories"
         )
         .get();
 
@@ -553,6 +553,7 @@ export class GraphEmailClient {
 
       return {
         id: (msg.id as string) ?? "",
+        internetMessageId: (msg.internetMessageId as string) ?? undefined,
         subject: (msg.subject as string) ?? "",
         receivedDateTime: msg.receivedDateTime
           ? new Date(msg.receivedDateTime as string)
@@ -698,7 +699,7 @@ export class GraphEmailClient {
         .search(`"${options.query}"`)
         .top(fetchLimit)
         .select(
-          "id,subject,receivedDateTime,from,toRecipients,ccRecipients,body,hasAttachments,conversationId,categories"
+          "id,internetMessageId,subject,receivedDateTime,from,toRecipients,ccRecipients,body,hasAttachments,conversationId,categories"
         )
         .get();
 
@@ -781,7 +782,7 @@ export class GraphEmailClient {
         .filter(options.filter)
         .top(limit)
         .select(
-          "id,subject,receivedDateTime,from,toRecipients,ccRecipients,body,hasAttachments,conversationId,categories"
+          "id,internetMessageId,subject,receivedDateTime,from,toRecipients,ccRecipients,body,hasAttachments,conversationId,categories"
         )
         .get();
 
@@ -820,7 +821,7 @@ export class GraphEmailClient {
       const msg = await client
         .api(`${basePath}/messages/${messageId}`)
         .select(
-          "id,subject,receivedDateTime,from,toRecipients,ccRecipients,body,hasAttachments,conversationId,categories"
+          "id,internetMessageId,subject,receivedDateTime,from,toRecipients,ccRecipients,body,hasAttachments,conversationId,categories"
         )
         .get();
 
@@ -1151,7 +1152,7 @@ export class GraphEmailClient {
         .orderby("receivedDateTime desc")
         .top(limit)
         .select(
-          "id,subject,receivedDateTime,from,toRecipients,ccRecipients,body,hasAttachments,conversationId,categories"
+          "id,internetMessageId,subject,receivedDateTime,from,toRecipients,ccRecipients,body,hasAttachments,conversationId,categories"
         )
         .get();
 
@@ -1213,7 +1214,7 @@ export class GraphEmailClient {
         .search(`"${options.query}"`)
         .top(fetchLimit)
         .select(
-          "id,subject,receivedDateTime,from,toRecipients,ccRecipients,body,hasAttachments,conversationId,categories"
+          "id,internetMessageId,subject,receivedDateTime,from,toRecipients,ccRecipients,body,hasAttachments,conversationId,categories"
         )
         .get();
 
@@ -1279,7 +1280,7 @@ export class GraphEmailClient {
         .filter(options.filter)
         .top(limit)
         .select(
-          "id,subject,receivedDateTime,from,toRecipients,ccRecipients,body,hasAttachments,conversationId,categories"
+          "id,internetMessageId,subject,receivedDateTime,from,toRecipients,ccRecipients,body,hasAttachments,conversationId,categories"
         )
         .get();
 
@@ -1317,7 +1318,7 @@ export class GraphEmailClient {
       const msg = await client
         .api(`/me/messages/${messageId}`)
         .select(
-          "id,subject,receivedDateTime,from,toRecipients,ccRecipients,body,hasAttachments,conversationId,categories"
+          "id,internetMessageId,subject,receivedDateTime,from,toRecipients,ccRecipients,body,hasAttachments,conversationId,categories"
         )
         .get();
 
@@ -1670,7 +1671,7 @@ export class GraphEmailClient {
         .api(messagesPath)
         .filter(`conversationId eq '${conversationId}'`)
         .select(
-          "id,subject,receivedDateTime,from,toRecipients,ccRecipients,body,hasAttachments,conversationId,categories"
+          "id,internetMessageId,subject,receivedDateTime,from,toRecipients,ccRecipients,body,hasAttachments,conversationId,categories"
         )
         .get();
 

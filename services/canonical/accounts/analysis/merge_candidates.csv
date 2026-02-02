@@ -1,0 +1,530 @@
+name_a,name_b,records_a,records_b,total_records,merge_reason,confidence
+ar mays,armays,371,22,393,spelling_variation,HIGH
+ar mayes,ar mays,1,371,372,spelling_variation,HIGH
+wd construction llc weis builders,wd construction weis builders,134,9,143,spelling_variation,HIGH
+big d,big-d,19,98,117,exact_match_after_normalization,HIGH
+greystar,greystar development,45,56,101,exact_match_after_normalization,HIGH
+mti- mitchell,mti-mitchell,40,37,77,exact_match_after_normalization,HIGH
+the whiting turner,whiting turner,24,52,76,exact_match_after_normalization,HIGH
+renaisance,renaissance,1,70,71,spelling_variation,HIGH
+the weitz,weitz,14,56,70,exact_match_after_normalization,HIGH
+roers,roers general,3,62,65,exact_match_after_normalization,HIGH
+khovanian,khovnanian,12,44,56,spelling_variation,HIGH
+bleu wave,bleuwave,1,54,55,spelling_variation,HIGH
+concord,concord general,7,43,50,exact_match_after_normalization,HIGH
+hovnanian,khovnanian,2,44,46,spelling_variation,HIGH
+brinkman constructors,brinkmann constructors,34,10,44,spelling_variation,HIGH
+concord general,concrod general,43,1,44,spelling_variation,HIGH
+mill creek residential,millcreek residential,39,2,41,spelling_variation,HIGH
+mill creek residential,millcreekresidential,39,2,41,spelling_variation,HIGH
+abernathey,abernathy,31,7,38,spelling_variation,HIGH
+brinkman constructors,brinkmann contructors,34,4,38,spelling_variation,HIGH
+nitti dac,nittidac,16,15,31,spelling_variation,HIGH
+the whiting turner,thewhitingturner,24,7,31,spelling_variation,HIGH
+street lights,streetlights,15,14,29,spelling_variation,HIGH
+arco murray,arcomurray,27,1,28,spelling_variation,HIGH
+garrett,the garrett,23,4,27,exact_match_after_normalization,HIGH
+brinkman,brinkmann,4,17,21,spelling_variation,HIGH
+johansen interiors,johanson interiors,18,3,21,spelling_variation,HIGH
+chanen,channen,17,3,20,spelling_variation,HIGH
+near cal,near-cal,6,14,20,exact_match_after_normalization,HIGH
+kraus anderson,krause anderson,4,14,18,spelling_variation,HIGH
+niti dac,nitti dac,2,16,18,spelling_variation,HIGH
+us,us development,6,12,18,exact_match_after_normalization,HIGH
+w w clyde,ww clyde,1,17,18,spelling_variation,HIGH
+180 degree,180 degrees,3,14,17,spelling_variation,HIGH
+near - cal,near-cal,3,14,17,exact_match_after_normalization,HIGH
+pwi residental,pwi residential,1,16,17,spelling_variation,HIGH
+big d construction southwest,big-d construction southwest,8,7,15,exact_match_after_normalization,HIGH
+k hovanian,khovanian,3,12,15,spelling_variation,HIGH
+next gen,nextgen,1,14,15,spelling_variation,HIGH
+bellmont homes,belmont homes,2,12,14,spelling_variation,HIGH
+brinkmann constructors,brinkmann contructors,10,4,14,spelling_variation,HIGH
+harris assocciates,harris associates,1,12,13,spelling_variation,HIGH
+j walters,jwalters,10,2,12,spelling_variation,HIGH
+penta building,the penta building,7,5,12,exact_match_after_normalization,HIGH
+sonora west,sonoran west,11,1,12,spelling_variation,HIGH
+stevens leinweber,stevens-leinweber,10,2,12,exact_match_after_normalization,HIGH
+kraus anderson,kraus-anderson,4,7,11,exact_match_after_normalization,HIGH
+mtv,mtv general,6,5,11,exact_match_after_normalization,HIGH
+steven leinweber,stevens leinweber,1,10,11,spelling_variation,HIGH
+stevens lein weber,stevens leinweber,1,10,11,spelling_variation,HIGH
+crossland,crosslands,8,2,10,spelling_variation,HIGH
+devco u s,devco us,1,9,10,spelling_variation,HIGH
+haskell,the haskell,9,1,10,exact_match_after_normalization,HIGH
+pro-low,prolow,8,2,10,spelling_variation,HIGH
+terra nova,terra-nova,9,1,10,exact_match_after_normalization,HIGH
+alliance residentail,alliance residential,2,7,9,spelling_variation,HIGH
+beck build,beck builds,8,1,9,spelling_variation,HIGH
+david weekley homes,david weekly homes,8,1,9,spelling_variation,HIGH
+near - cal,near cal,3,6,9,exact_match_after_normalization,HIGH
+arizona specialty demolition,arizona specialy demolition,4,4,8,spelling_variation,HIGH
+common wealth,commonwealth,1,7,8,spelling_variation,HIGH
+concord,concorde,7,1,8,spelling_variation,HIGH
+kitchell contractors,mitchell contractors,5,3,8,spelling_variation,HIGH
+kraus - anderson,kraus-anderson,1,7,8,exact_match_after_normalization,HIGH
+my storage,my storge,6,2,8,spelling_variation,HIGH
+sj anderson,the sj anderson,3,5,8,exact_match_after_normalization,HIGH
+willmeng need job,willmeng need jobs,7,1,8,spelling_variation,HIGH
+menlo equities,menlo equties,1,6,7,spelling_variation,HIGH
+path constrution,path contruction,6,1,7,spelling_variation,HIGH
+soil works,soilworks,3,4,7,spelling_variation,HIGH
+southwest earthwork,southwest earthworks,6,1,7,spelling_variation,HIGH
+tdc properties,tdcproperties,6,1,7,spelling_variation,HIGH
+a finer touch,finer touch,4,2,6,exact_match_after_normalization,HIGH
+j kopras homes,kopras homes,1,5,6,spelling_variation,HIGH
+kopras home,kopras homes,1,5,6,spelling_variation,HIGH
+on site,on-site,1,5,6,exact_match_after_normalization,HIGH
+pro steel,prosteel,3,3,6,spelling_variation,HIGH
+way,way construction,3,3,6,exact_match_after_normalization,HIGH
+a e,e-,4,1,5,exact_match_after_normalization,HIGH
+builders guide,builders guild,1,4,5,spelling_variation,HIGH
+kraus - anderson,kraus anderson,1,4,5,exact_match_after_normalization,HIGH
+parkway construction and associates,parkway construction associates,2,3,5,spelling_variation,HIGH
+radius constractors,radius contractors,1,4,5,spelling_variation,HIGH
+rouser concrete,rouser conrete,2,3,5,spelling_variation,HIGH
+s s paving,ss paving,2,3,5,spelling_variation,HIGH
+soilwork,soilworks,1,4,5,spelling_variation,HIGH
+agate - now primak,agate now primak,1,3,4,exact_match_after_normalization,HIGH
+core construction job 23-01-016,core construction job 2301013,2,2,4,spelling_variation,HIGH
+k hovanian,k hovannian,3,1,4,spelling_variation,HIGH
+lott brother,lott brothers,2,2,4,spelling_variation,HIGH
+m anderson,manderson,3,1,4,spelling_variation,HIGH
+mc construction management,ogc construction management,3,1,4,spelling_variation,HIGH
+millcreek residential,millcreekresidential,2,2,4,spelling_variation,HIGH
+quest,quest development,3,1,4,exact_match_after_normalization,HIGH
+baker,baker construction,1,2,3,exact_match_after_normalization,HIGH
+bell building,bell buildinig,2,1,3,spelling_variation,HIGH
+core construction job 1-23-01-019,core construction job 23-01-016,1,2,3,spelling_variation,HIGH
+core construction job 23-01-006,core construction job 23-01-016,1,2,3,spelling_variation,HIGH
+core construction job 23-01-016,core construction job 23-01-017,2,1,3,spelling_variation,HIGH
+core construction job 23-01-016,core construction job 23-01-022,2,1,3,spelling_variation,HIGH
+core construction job 23-01-016,core construction job 23-01-027,2,1,3,spelling_variation,HIGH
+core construction job 23-01-016,core construction job 23-02-001,2,1,3,spelling_variation,HIGH
+core construction job 23-01-016,core construction job 24-01-012,2,1,3,spelling_variation,HIGH
+core construction job 23-01-016,core construction job 24-01-016,2,1,3,spelling_variation,HIGH
+core construction job 23-01-016,core construction job 24-01-017,2,1,3,spelling_variation,HIGH
+core construction job 23-01-016,core construction job 24-01-026,2,1,3,spelling_variation,HIGH
+core construction job 23-01-016,core construction job 25-01-010,2,1,3,spelling_variation,HIGH
+core construction job 23-01-016,core construction job 25-01-019,2,1,3,spelling_variation,HIGH
+core construction job 23-01-017,core construction job 2301013,1,2,3,spelling_variation,HIGH
+core construction job 2301013,core construction job 2301025,2,1,3,spelling_variation,HIGH
+core construction job 24-01-016,core construction job 24-04-168,1,2,3,spelling_variation,HIGH
+core construction job 24-04-168,core construction job 24-04-168005,2,1,3,spelling_variation,HIGH
+guardian civil contracting llc po 25002-01-09,guardian civil contracting llc po 2500201,2,1,3,spelling_variation,HIGH
+remson,the remson,1,2,3,exact_match_after_normalization,HIGH
+soilswork,soilwork,2,1,3,spelling_variation,HIGH
+1st farmer,1st farmers,1,1,2,spelling_variation,HIGH
+alexander building co need pos po 23001,alexander building co need pos po 23018,1,1,2,spelling_variation,HIGH
+alexander building co need pos po 23001,alexander building co need pos po 23036,1,1,2,spelling_variation,HIGH
+alexander building co need pos po 23001,alexander building co need pos po 24010,1,1,2,spelling_variation,HIGH
+alexander building co need pos po 23001,alexander building co need pos po 24031,1,1,2,spelling_variation,HIGH
+alexander building co need pos po 23018,alexander building co need pos po 23036,1,1,2,spelling_variation,HIGH
+alexander building co need pos po 23018,alexander building co need pos po 24010,1,1,2,spelling_variation,HIGH
+alexander building co need pos po 23018,alexander building co need pos po 24031,1,1,2,spelling_variation,HIGH
+alexander building co need pos po 23036,alexander building co need pos po 24010,1,1,2,spelling_variation,HIGH
+alexander building co need pos po 23036,alexander building co need pos po 24031,1,1,2,spelling_variation,HIGH
+alexander building co need pos po 24010,alexander building co need pos po 24031,1,1,2,spelling_variation,HIGH
+blucor apj-0218t send ticketscertified,blucor apj-219t send ticketscertified,1,1,2,spelling_variation,HIGH
+buesing job 124016,buesing job 124017,1,1,2,spelling_variation,HIGH
+buesing pojob 124007,buesing pojob 124009,1,1,2,spelling_variation,HIGH
+caliente construction job 220056,caliente construction job 220075,1,1,2,spelling_variation,HIGH
+caliente construction job 220056,caliente construction job 230075,1,1,2,spelling_variation,HIGH
+caliente construction job 220056,caliente construction job 240045,1,1,2,spelling_variation,HIGH
+caliente construction job 220075,caliente construction job 230075,1,1,2,spelling_variation,HIGH
+caliente construction job 220075,caliente construction job 240045,1,1,2,spelling_variation,HIGH
+caliente construction job 230075,caliente construction job 240045,1,1,2,spelling_variation,HIGH
+caliente construction job 240019,caliente construction job 240045,1,1,2,spelling_variation,HIGH
+clayco job 10-10-7074,clayco job 10107074,1,1,2,spelling_variation,HIGH
+core construction job 1-23-01-019,core construction job 1-23-01-181,1,1,2,spelling_variation,HIGH
+core construction job 1-23-01-019,core construction job 23-01-017,1,1,2,spelling_variation,HIGH
+core construction job 1-23-01-019,core construction job 25-01-019,1,1,2,spelling_variation,HIGH
+core construction job 22-01-004,core construction job 22-01-009,1,1,2,spelling_variation,HIGH
+core construction job 22-01-004,core construction job 22-01-022,1,1,2,spelling_variation,HIGH
+core construction job 22-01-004,core construction job 22-01-023,1,1,2,spelling_variation,HIGH
+core construction job 22-01-004,core construction job 22-01-030,1,1,2,spelling_variation,HIGH
+core construction job 22-01-004,core construction job 23-01-006,1,1,2,spelling_variation,HIGH
+core construction job 22-01-004,core construction job 24-01-004,1,1,2,spelling_variation,HIGH
+core construction job 22-01-004,core construction job 25-01-002,1,1,2,spelling_variation,HIGH
+core construction job 22-01-004,core construction job 25-01-010,1,1,2,spelling_variation,HIGH
+core construction job 22-01-004,core construction job 32-01-020,1,1,2,spelling_variation,HIGH
+core construction job 22-01-009,core construction job 22-01-022,1,1,2,spelling_variation,HIGH
+core construction job 22-01-009,core construction job 22-01-023,1,1,2,spelling_variation,HIGH
+core construction job 22-01-009,core construction job 22-01-030,1,1,2,spelling_variation,HIGH
+core construction job 22-01-009,core construction job 23-01-006,1,1,2,spelling_variation,HIGH
+core construction job 22-01-009,core construction job 24-01-004,1,1,2,spelling_variation,HIGH
+core construction job 22-01-009,core construction job 25-01-002,1,1,2,spelling_variation,HIGH
+core construction job 22-01-009,core construction job 25-01-010,1,1,2,spelling_variation,HIGH
+core construction job 22-01-009,core construction job 25-01-019,1,1,2,spelling_variation,HIGH
+core construction job 22-01-009,core construction job 32-01-020,1,1,2,spelling_variation,HIGH
+core construction job 22-01-022,core construction job 22-01-023,1,1,2,spelling_variation,HIGH
+core construction job 22-01-022,core construction job 22-01-030,1,1,2,spelling_variation,HIGH
+core construction job 22-01-022,core construction job 22-04-222,1,1,2,spelling_variation,HIGH
+core construction job 22-01-022,core construction job 23-01-022,1,1,2,spelling_variation,HIGH
+core construction job 22-01-022,core construction job 23-01-027,1,1,2,spelling_variation,HIGH
+core construction job 22-01-022,core construction job 24-01-012,1,1,2,spelling_variation,HIGH
+core construction job 22-01-022,core construction job 24-01-026,1,1,2,spelling_variation,HIGH
+core construction job 22-01-022,core construction job 25-01-002,1,1,2,spelling_variation,HIGH
+core construction job 22-01-022,core construction job 32-01-020,1,1,2,spelling_variation,HIGH
+core construction job 22-01-023,core construction job 22-01-030,1,1,2,spelling_variation,HIGH
+core construction job 22-01-023,core construction job 23-01-022,1,1,2,spelling_variation,HIGH
+core construction job 22-01-023,core construction job 23-01-027,1,1,2,spelling_variation,HIGH
+core construction job 22-01-023,core construction job 24-01-012,1,1,2,spelling_variation,HIGH
+core construction job 22-01-023,core construction job 24-01-026,1,1,2,spelling_variation,HIGH
+core construction job 22-01-023,core construction job 25-01-002,1,1,2,spelling_variation,HIGH
+core construction job 22-01-023,core construction job 32-01-020,1,1,2,spelling_variation,HIGH
+core construction job 22-01-030,core construction job 23-01-006,1,1,2,spelling_variation,HIGH
+core construction job 22-01-030,core construction job 24-01-004,1,1,2,spelling_variation,HIGH
+core construction job 22-01-030,core construction job 25-01-002,1,1,2,spelling_variation,HIGH
+core construction job 22-01-030,core construction job 25-01-010,1,1,2,spelling_variation,HIGH
+core construction job 22-01-030,core construction job 32-01-020,1,1,2,spelling_variation,HIGH
+core construction job 23-01-006,core construction job 23-01-017,1,1,2,spelling_variation,HIGH
+core construction job 23-01-006,core construction job 23-01-022,1,1,2,spelling_variation,HIGH
+core construction job 23-01-006,core construction job 23-01-027,1,1,2,spelling_variation,HIGH
+core construction job 23-01-006,core construction job 23-02-001,1,1,2,spelling_variation,HIGH
+core construction job 23-01-006,core construction job 24-01-004,1,1,2,spelling_variation,HIGH
+core construction job 23-01-006,core construction job 24-01-016,1,1,2,spelling_variation,HIGH
+core construction job 23-01-006,core construction job 24-01-026,1,1,2,spelling_variation,HIGH
+core construction job 23-01-006,core construction job 25-01-002,1,1,2,spelling_variation,HIGH
+core construction job 23-01-006,core construction job 25-01-010,1,1,2,spelling_variation,HIGH
+core construction job 23-01-006,core construction job 32-01-020,1,1,2,spelling_variation,HIGH
+core construction job 23-01-017,core construction job 23-01-022,1,1,2,spelling_variation,HIGH
+core construction job 23-01-017,core construction job 23-01-027,1,1,2,spelling_variation,HIGH
+core construction job 23-01-017,core construction job 23-02-001,1,1,2,spelling_variation,HIGH
+core construction job 23-01-017,core construction job 24-01-012,1,1,2,spelling_variation,HIGH
+core construction job 23-01-017,core construction job 24-01-016,1,1,2,spelling_variation,HIGH
+core construction job 23-01-017,core construction job 24-01-017,1,1,2,spelling_variation,HIGH
+core construction job 23-01-017,core construction job 25-01-010,1,1,2,spelling_variation,HIGH
+core construction job 23-01-017,core construction job 25-01-019,1,1,2,spelling_variation,HIGH
+core construction job 23-01-022,core construction job 23-01-027,1,1,2,spelling_variation,HIGH
+core construction job 23-01-022,core construction job 2301025,1,1,2,spelling_variation,HIGH
+core construction job 23-01-022,core construction job 24-01-012,1,1,2,spelling_variation,HIGH
+core construction job 23-01-022,core construction job 24-01-026,1,1,2,spelling_variation,HIGH
+core construction job 23-01-022,core construction job 25-01-002,1,1,2,spelling_variation,HIGH
+core construction job 23-01-022,core construction job 32-01-020,1,1,2,spelling_variation,HIGH
+core construction job 23-01-027,core construction job 2301025,1,1,2,spelling_variation,HIGH
+core construction job 23-01-027,core construction job 24-01-012,1,1,2,spelling_variation,HIGH
+core construction job 23-01-027,core construction job 24-01-017,1,1,2,spelling_variation,HIGH
+core construction job 23-01-027,core construction job 24-01-026,1,1,2,spelling_variation,HIGH
+core construction job 23-01-027,core construction job 25-01-002,1,1,2,spelling_variation,HIGH
+core construction job 23-01-027,core construction job 32-01-020,1,1,2,spelling_variation,HIGH
+core construction job 23-02-001,core construction job 24-02-001,1,1,2,spelling_variation,HIGH
+core construction job 24-01-004,core construction job 24-01-012,1,1,2,spelling_variation,HIGH
+core construction job 24-01-004,core construction job 24-01-016,1,1,2,spelling_variation,HIGH
+core construction job 24-01-004,core construction job 24-01-017,1,1,2,spelling_variation,HIGH
+core construction job 24-01-004,core construction job 24-01-026,1,1,2,spelling_variation,HIGH
+core construction job 24-01-004,core construction job 24-02-001,1,1,2,spelling_variation,HIGH
+core construction job 24-01-004,core construction job 25-01-002,1,1,2,spelling_variation,HIGH
+core construction job 24-01-004,core construction job 25-01-010,1,1,2,spelling_variation,HIGH
+core construction job 24-01-004,core construction job 32-01-020,1,1,2,spelling_variation,HIGH
+core construction job 24-01-012,core construction job 24-01-016,1,1,2,spelling_variation,HIGH
+core construction job 24-01-012,core construction job 24-01-017,1,1,2,spelling_variation,HIGH
+core construction job 24-01-012,core construction job 24-01-026,1,1,2,spelling_variation,HIGH
+core construction job 24-01-012,core construction job 24-02-001,1,1,2,spelling_variation,HIGH
+core construction job 24-01-012,core construction job 25-01-002,1,1,2,spelling_variation,HIGH
+core construction job 24-01-012,core construction job 25-01-010,1,1,2,spelling_variation,HIGH
+core construction job 24-01-012,core construction job 25-01-019,1,1,2,spelling_variation,HIGH
+core construction job 24-01-012,core construction job 32-01-020,1,1,2,spelling_variation,HIGH
+core construction job 24-01-016,core construction job 24-01-017,1,1,2,spelling_variation,HIGH
+core construction job 24-01-016,core construction job 24-01-026,1,1,2,spelling_variation,HIGH
+core construction job 24-01-016,core construction job 24-02-001,1,1,2,spelling_variation,HIGH
+core construction job 24-01-016,core construction job 25-01-010,1,1,2,spelling_variation,HIGH
+core construction job 24-01-016,core construction job 25-01-019,1,1,2,spelling_variation,HIGH
+core construction job 24-01-017,core construction job 24-01-026,1,1,2,spelling_variation,HIGH
+core construction job 24-01-017,core construction job 24-02-001,1,1,2,spelling_variation,HIGH
+core construction job 24-01-017,core construction job 25-01-010,1,1,2,spelling_variation,HIGH
+core construction job 24-01-017,core construction job 25-01-019,1,1,2,spelling_variation,HIGH
+core construction job 24-01-026,core construction job 25-01-002,1,1,2,spelling_variation,HIGH
+core construction job 24-01-026,core construction job 32-01-020,1,1,2,spelling_variation,HIGH
+core construction job 24-04-168005,core construction job 25-04-005,1,1,2,spelling_variation,HIGH
+core construction job 2404083,core construction job 2404209,1,1,2,spelling_variation,HIGH
+core construction job 25-01-002,core construction job 25-01-010,1,1,2,spelling_variation,HIGH
+core construction job 25-01-002,core construction job 25-01-019,1,1,2,spelling_variation,HIGH
+core construction job 25-01-002,core construction job 25-04-005,1,1,2,spelling_variation,HIGH
+core construction job 25-01-002,core construction job 32-01-020,1,1,2,spelling_variation,HIGH
+core construction job 25-01-010,core construction job 25-01-019,1,1,2,spelling_variation,HIGH
+core construction job 25-01-010,core construction job 25-04-005,1,1,2,spelling_variation,HIGH
+core construction job 25-01-010,core construction job 32-01-020,1,1,2,spelling_variation,HIGH
+fairmont princes,fairmont princess,1,1,2,spelling_variation,HIGH
+green valleyf irestation 15,green valleyf irestation 152,1,1,2,spelling_variation,HIGH
+guardian civil contracting llc po 23003-05,guardian civil contracting llc po 23008-07,1,1,2,spelling_variation,HIGH
+guardian civil contracting llc po 23003-05,guardian civil contracting llc po 24008-07,1,1,2,spelling_variation,HIGH
+guardian civil contracting llc po 23003-05,guardian civil contracting llc po 24011-05,1,1,2,spelling_variation,HIGH
+guardian civil contracting llc po 23003-05,guardian civil contracting llc pos 23003-05,1,1,2,spelling_variation,HIGH
+guardian civil contracting llc po 23008-07,guardian civil contracting llc po 23018-11,1,1,2,spelling_variation,HIGH
+guardian civil contracting llc po 23008-07,guardian civil contracting llc po 24008-07,1,1,2,spelling_variation,HIGH
+guardian civil contracting llc po 23008-07,guardian civil contracting llc pos 23003-05,1,1,2,spelling_variation,HIGH
+guardian civil contracting llc po 24008-07,guardian civil contracting llc po 24011-05,1,1,2,spelling_variation,HIGH
+hamblen david,hamblin david,1,1,2,spelling_variation,HIGH
+haworth- was bill to mhm until 10-5-16 then transferred to haworth,haworth- was bill to mhm until 8-8-16 then transferred to haworth,1,1,2,spelling_variation,HIGH
+industria lmetal supply,industrial metal supply,1,1,2,spelling_variation,HIGH
+iron mark buiding,iron mark building,1,1,2,spelling_variation,HIGH
+latitude 33,lattitude 33,1,1,2,spelling_variation,HIGH
+markham contracting job 4669,markham contracting job 4862,1,1,2,spelling_variation,HIGH
+mortenson construction job 23149006,mortenson construction job 24149010,1,1,2,spelling_variation,HIGH
+okland construction job 2253,okland construction job 2329,1,1,2,spelling_variation,HIGH
+pro low job 22060 jorge 602-737-7815 - jchaparropro-lowcom,pro low job 239012 jorge 602-737-7815 - jchaparropro-lowcom,1,1,2,spelling_variation,HIGH
+pro low job 22060 jorge 602-737-7815 - jchaparropro-lowcom,pro low job 24070 jorge 602-737-7815 - jchaparropro-lowcom,1,1,2,spelling_variation,HIGH
+pro low job 22190 migel 602-702-0517,pro low job 24120 migel 602-702-0517,1,1,2,spelling_variation,HIGH
+pro low job 22190 migel 602-702-0517,pro low job 24200 migel 602-702-0517,1,1,2,spelling_variation,HIGH
+pro low job 23060 joe - jbustamantepro-lowcom,pro low job 24070 joe - jbustamantepro-lowcom,1,1,2,spelling_variation,HIGH
+pro low job 239012 jorge 602-737-7815 - jchaparropro-lowcom,pro low job 24070 jorge 602-737-7815 - jchaparropro-lowcom,1,1,2,spelling_variation,HIGH
+pro low job 24060 carlos - 480-487-0687,pro low job 25230 carlos - 480-487-0687,1,1,2,spelling_variation,HIGH
+pro low job 24120 migel 602-702-0517,pro low job 24200 migel 602-702-0517,1,1,2,spelling_variation,HIGH
+pro low need project name job 22250,pro low need project name job 23240,1,1,2,spelling_variation,HIGH
+re spur,re spurr,1,1,2,spelling_variation,HIGH
+rytan job 22-100-11wants job name address on invoice,rytan job 2322211wants job name address on invoice,1,1,2,spelling_variation,HIGH
+rytan job 23112-12wants job name address on invoice,rytan job 2322211wants job name address on invoice,1,1,2,spelling_variation,HIGH
+school,the school,1,1,2,exact_match_after_normalization,HIGH
+schoolhhouse,schoolhouse,1,1,2,spelling_variation,HIGH
+sportsman concrete,sportsmans concrete,1,1,2,spelling_variation,HIGH
+steven leinweber,stevens lein weber,1,1,2,spelling_variation,HIGH
+sun land asphalt po 35671,sun land asphalt po 3569901,1,1,2,spelling_variation,HIGH
+sun land asphalt po 36337,sun land asphalt po 38637,1,1,2,spelling_variation,HIGH
+sun land asphalt po 39445,sun land asphalt po 39447,1,1,2,spelling_variation,HIGH
+waste management phoenix hauling north,waste management phoenix hauling south,1,1,2,spelling_variation,HIGH
+z modular,z- modular,1,1,2,exact_match_after_normalization,HIGH
+k hovanian,khovnanian,3,44,47,high_similarity,MEDIUM
+ryan,rytan,13,22,35,high_similarity,MEDIUM
+ma mortenson,mortenson,3,27,30,with_without_suffix,MEDIUM
+pacific,pacificap,3,27,30,with_without_suffix,MEDIUM
+greenberg,greenburg,21,4,25,high_similarity,MEDIUM
+greenberg,m greenberg,21,1,22,with_without_suffix,MEDIUM
+kraus-anderson,krause anderson,7,14,21,abbreviation_variation,MEDIUM
+sub 4,sub4,19,1,20,high_similarity,MEDIUM
+ameri,ameris,4,15,19,abbreviation_variation,MEDIUM
+new generation,ngc new generation construction,17,1,18,with_without_suffix,MEDIUM
+renaissancecompanies,the renaissance companies,8,8,16,abbreviation_variation,MEDIUM
+kraus - anderson,krause anderson,1,14,15,abbreviation_variation,MEDIUM
+abc asphalt,ace asphalt,6,8,14,abbreviation_variation,MEDIUM
+arc,arco,4,10,14,with_without_suffix,MEDIUM
+hovnanian,khovanian,2,12,14,high_similarity,MEDIUM
+k hovannian,khovanian,1,12,13,high_similarity,MEDIUM
+quest development,us development,1,12,13,high_similarity,MEDIUM
+engineered structures,esi engineered structures inc,9,3,12,with_without_suffix,MEDIUM
+baker,barker,1,10,11,abbreviation_variation,MEDIUM
+calcon constructors,colton constructors,3,8,11,high_similarity,MEDIUM
+engelwood,englewood,1,8,9,high_similarity,MEDIUM
+f1 paving and grading,f1 paving grading,1,6,7,high_similarity,MEDIUM
+swb paving,swp paving,6,1,7,high_similarity,MEDIUM
+weitz constructions,west construction,5,2,7,high_similarity,MEDIUM
+dickens quality demolition bill 602-653-7015 need tickets pos,dickens quality demolition mike 602-653-5358 need tickets pos,3,3,6,abbreviation_variation,MEDIUM
+k2 electric,k2 electrical,4,2,6,abbreviation_variation,MEDIUM
+soilswork,soilworks,2,4,6,high_similarity,MEDIUM
+z zone,zzone,1,5,6,abbreviation_variation,MEDIUM
+accent contruction,ascent constuction,1,4,5,high_similarity,MEDIUM
+arizona specialty demo,arizona specialty demolition,1,4,5,with_without_suffix,MEDIUM
+dcb,dcbg,2,3,5,with_without_suffix,MEDIUM
+jacobs,jacobsen,1,4,5,with_without_suffix,MEDIUM
+owner contractorclay,owner contractorlayton,1,4,5,abbreviation_variation,MEDIUM
+core construction job 23-01-016,core construction job 24-04-168,2,2,4,abbreviation_variation,MEDIUM
+gs sm city northowner ii,gs-sm city north owner,2,2,4,abbreviation_variation,MEDIUM
+northwind resource consultants,northwind resource consulting,1,3,4,abbreviation_variation,MEDIUM
+park 7,park7,3,1,4,abbreviation_variation,MEDIUM
+soil works,soilwork,3,1,4,high_similarity,MEDIUM
+the ramson,the remson,2,2,4,high_similarity,MEDIUM
+clune construction company lp,clune construction sompany,2,1,3,abbreviation_variation,MEDIUM
+core construction job 1-23-01-019,core construction job 2301013,1,2,3,abbreviation_variation,MEDIUM
+core construction job 1-23-01-181,core construction job 23-01-016,1,2,3,abbreviation_variation,MEDIUM
+core construction job 22-01-004,core construction job 23-01-016,1,2,3,abbreviation_variation,MEDIUM
+core construction job 22-01-009,core construction job 23-01-016,1,2,3,abbreviation_variation,MEDIUM
+core construction job 22-01-022,core construction job 23-01-016,1,2,3,abbreviation_variation,MEDIUM
+core construction job 22-01-023,core construction job 23-01-016,1,2,3,abbreviation_variation,MEDIUM
+core construction job 22-01-023,core construction job 2301013,1,2,3,high_similarity,MEDIUM
+core construction job 22-01-030,core construction job 23-01-016,1,2,3,abbreviation_variation,MEDIUM
+core construction job 22-01-030,core construction job 2301013,1,2,3,high_similarity,MEDIUM
+core construction job 23-01-006,core construction job 2301013,1,2,3,high_similarity,MEDIUM
+core construction job 23-01-016,core construction job 2301025,2,1,3,high_similarity,MEDIUM
+core construction job 23-01-016,core construction job 24-01-004,2,1,3,abbreviation_variation,MEDIUM
+core construction job 23-01-016,core construction job 24-02-001,2,1,3,abbreviation_variation,MEDIUM
+core construction job 23-01-016,core construction job 25-01-002,2,1,3,abbreviation_variation,MEDIUM
+core construction job 23-01-016,core construction job 32-01-020,2,1,3,abbreviation_variation,MEDIUM
+core construction job 23-01-022,core construction job 2301013,1,2,3,high_similarity,MEDIUM
+core construction job 23-01-027,core construction job 2301013,1,2,3,high_similarity,MEDIUM
+core construction job 2301013,core construction job 24-01-012,2,1,3,high_similarity,MEDIUM
+core construction job 2301013,core construction job 24-01-016,2,1,3,high_similarity,MEDIUM
+core construction job 2301013,core construction job 24-01-017,2,1,3,high_similarity,MEDIUM
+core construction job 2301013,core construction job 25-01-019,2,1,3,high_similarity,MEDIUM
+core construction job 24-01-026,core construction job 24-04-168,1,2,3,abbreviation_variation,MEDIUM
+core construction job 24-02-001,core construction job 24-04-168,1,2,3,abbreviation_variation,MEDIUM
+core construction job 24-04-168,core construction job 2404083,2,1,3,high_similarity,MEDIUM
+guardian civil contracting llc po 23003-05,guardian civil contracting llc po 25002-01-09,1,2,3,high_similarity,MEDIUM
+guardian civil contracting llc po 23008-07,guardian civil contracting llc po 25002-01-09,1,2,3,high_similarity,MEDIUM
+guardian civil contracting llc po 24008-07,guardian civil contracting llc po 25002-01-09,1,2,3,high_similarity,MEDIUM
+guardian civil contracting llc po 24011-05,guardian civil contracting llc po 25002-01-09,1,2,3,high_similarity,MEDIUM
+guardian civil contracting llc po 25002-01-09,guardian civil contracting llc pos 23003-05,2,1,3,high_similarity,MEDIUM
+steven leinweber,stevens-leinweber,1,2,3,abbreviation_variation,MEDIUM
+stevens lein weber,stevens-leinweber,1,2,3,abbreviation_variation,MEDIUM
+sun land asphalt po 31082,sun land asphalt po 38812,1,2,3,abbreviation_variation,MEDIUM
+sun land asphalt po 38812,sun land asphalt po 39871,2,1,3,abbreviation_variation,MEDIUM
+bcc constracting,bcc contraction,1,1,2,abbreviation_variation,MEDIUM
+buesing job 124017,buesing pojob 124007,1,1,2,high_similarity,MEDIUM
+caliente construction job 220056,caliente construction job 240019,1,1,2,abbreviation_variation,MEDIUM
+caliente construction job 220075,caliente construction job 240019,1,1,2,abbreviation_variation,MEDIUM
+caliente construction job 230075,caliente construction job 240019,1,1,2,abbreviation_variation,MEDIUM
+clayco job 10106073,clayco job 10107074,1,1,2,high_similarity,MEDIUM
+core construction 23-01-023,core construction job 22-01-023,1,1,2,high_similarity,MEDIUM
+core construction 23-01-023,core construction job 23-01-022,1,1,2,high_similarity,MEDIUM
+core construction 23-01-023,core construction job 23-01-027,1,1,2,high_similarity,MEDIUM
+core construction job 1-23-01-019,core construction job 22-01-009,1,1,2,abbreviation_variation,MEDIUM
+core construction job 1-23-01-019,core construction job 23-01-006,1,1,2,abbreviation_variation,MEDIUM
+core construction job 1-23-01-019,core construction job 23-01-022,1,1,2,abbreviation_variation,MEDIUM
+core construction job 1-23-01-019,core construction job 23-01-027,1,1,2,abbreviation_variation,MEDIUM
+core construction job 1-23-01-019,core construction job 23-02-001,1,1,2,abbreviation_variation,MEDIUM
+core construction job 1-23-01-019,core construction job 24-01-012,1,1,2,abbreviation_variation,MEDIUM
+core construction job 1-23-01-019,core construction job 24-01-016,1,1,2,abbreviation_variation,MEDIUM
+core construction job 1-23-01-019,core construction job 24-01-017,1,1,2,abbreviation_variation,MEDIUM
+core construction job 1-23-01-019,core construction job 25-01-010,1,1,2,abbreviation_variation,MEDIUM
+core construction job 1-23-01-181,core construction job 23-01-017,1,1,2,abbreviation_variation,MEDIUM
+core construction job 22-01-004,core construction job 23-01-017,1,1,2,abbreviation_variation,MEDIUM
+core construction job 22-01-004,core construction job 23-01-022,1,1,2,abbreviation_variation,MEDIUM
+core construction job 22-01-004,core construction job 23-01-027,1,1,2,abbreviation_variation,MEDIUM
+core construction job 22-01-004,core construction job 24-01-012,1,1,2,abbreviation_variation,MEDIUM
+core construction job 22-01-004,core construction job 24-01-016,1,1,2,abbreviation_variation,MEDIUM
+core construction job 22-01-004,core construction job 24-01-017,1,1,2,abbreviation_variation,MEDIUM
+core construction job 22-01-004,core construction job 24-01-026,1,1,2,abbreviation_variation,MEDIUM
+core construction job 22-01-004,core construction job 25-01-019,1,1,2,abbreviation_variation,MEDIUM
+core construction job 22-01-004,core construction job 25-04-005,1,1,2,abbreviation_variation,MEDIUM
+core construction job 22-01-009,core construction job 23-01-017,1,1,2,abbreviation_variation,MEDIUM
+core construction job 22-01-009,core construction job 23-01-022,1,1,2,abbreviation_variation,MEDIUM
+core construction job 22-01-009,core construction job 23-01-027,1,1,2,abbreviation_variation,MEDIUM
+core construction job 22-01-009,core construction job 24-01-012,1,1,2,abbreviation_variation,MEDIUM
+core construction job 22-01-009,core construction job 24-01-016,1,1,2,abbreviation_variation,MEDIUM
+core construction job 22-01-009,core construction job 24-01-017,1,1,2,abbreviation_variation,MEDIUM
+core construction job 22-01-009,core construction job 24-01-026,1,1,2,abbreviation_variation,MEDIUM
+core construction job 22-01-009,core construction job 25-04-005,1,1,2,abbreviation_variation,MEDIUM
+core construction job 22-01-022,core construction job 23-01-006,1,1,2,abbreviation_variation,MEDIUM
+core construction job 22-01-022,core construction job 23-01-017,1,1,2,abbreviation_variation,MEDIUM
+core construction job 22-01-022,core construction job 2301025,1,1,2,high_similarity,MEDIUM
+core construction job 22-01-022,core construction job 24-01-004,1,1,2,abbreviation_variation,MEDIUM
+core construction job 22-01-022,core construction job 24-01-016,1,1,2,abbreviation_variation,MEDIUM
+core construction job 22-01-022,core construction job 24-01-017,1,1,2,abbreviation_variation,MEDIUM
+core construction job 22-01-022,core construction job 25-01-010,1,1,2,abbreviation_variation,MEDIUM
+core construction job 22-01-022,core construction job 25-01-019,1,1,2,abbreviation_variation,MEDIUM
+core construction job 22-01-023,core construction job 22-04-222,1,1,2,abbreviation_variation,MEDIUM
+core construction job 22-01-023,core construction job 23-01-006,1,1,2,abbreviation_variation,MEDIUM
+core construction job 22-01-023,core construction job 23-01-017,1,1,2,abbreviation_variation,MEDIUM
+core construction job 22-01-023,core construction job 2301025,1,1,2,high_similarity,MEDIUM
+core construction job 22-01-023,core construction job 24-01-004,1,1,2,abbreviation_variation,MEDIUM
+core construction job 22-01-023,core construction job 24-01-016,1,1,2,abbreviation_variation,MEDIUM
+core construction job 22-01-023,core construction job 24-01-017,1,1,2,abbreviation_variation,MEDIUM
+core construction job 22-01-023,core construction job 25-01-010,1,1,2,abbreviation_variation,MEDIUM
+core construction job 22-01-023,core construction job 25-01-019,1,1,2,abbreviation_variation,MEDIUM
+core construction job 22-01-030,core construction job 23-01-017,1,1,2,abbreviation_variation,MEDIUM
+core construction job 22-01-030,core construction job 23-01-022,1,1,2,abbreviation_variation,MEDIUM
+core construction job 22-01-030,core construction job 23-01-027,1,1,2,abbreviation_variation,MEDIUM
+core construction job 22-01-030,core construction job 24-01-012,1,1,2,abbreviation_variation,MEDIUM
+core construction job 22-01-030,core construction job 24-01-016,1,1,2,abbreviation_variation,MEDIUM
+core construction job 22-01-030,core construction job 24-01-017,1,1,2,abbreviation_variation,MEDIUM
+core construction job 22-01-030,core construction job 24-01-026,1,1,2,abbreviation_variation,MEDIUM
+core construction job 22-01-030,core construction job 25-01-019,1,1,2,abbreviation_variation,MEDIUM
+core construction job 22-01-030,core construction job 25-04-005,1,1,2,abbreviation_variation,MEDIUM
+core construction job 22-04-222,core construction job 23-01-022,1,1,2,abbreviation_variation,MEDIUM
+core construction job 23-01-006,core construction job 2301025,1,1,2,high_similarity,MEDIUM
+core construction job 23-01-006,core construction job 24-01-012,1,1,2,abbreviation_variation,MEDIUM
+core construction job 23-01-006,core construction job 24-01-017,1,1,2,abbreviation_variation,MEDIUM
+core construction job 23-01-006,core construction job 24-02-001,1,1,2,abbreviation_variation,MEDIUM
+core construction job 23-01-006,core construction job 25-01-019,1,1,2,abbreviation_variation,MEDIUM
+core construction job 23-01-006,core construction job 25-04-005,1,1,2,abbreviation_variation,MEDIUM
+core construction job 23-01-017,core construction job 2301025,1,1,2,high_similarity,MEDIUM
+core construction job 23-01-017,core construction job 24-01-004,1,1,2,abbreviation_variation,MEDIUM
+core construction job 23-01-017,core construction job 24-01-026,1,1,2,abbreviation_variation,MEDIUM
+core construction job 23-01-017,core construction job 24-02-001,1,1,2,abbreviation_variation,MEDIUM
+core construction job 23-01-017,core construction job 25-01-002,1,1,2,abbreviation_variation,MEDIUM
+core construction job 23-01-017,core construction job 32-01-020,1,1,2,abbreviation_variation,MEDIUM
+core construction job 23-01-022,core construction job 23-02-001,1,1,2,abbreviation_variation,MEDIUM
+core construction job 23-01-022,core construction job 24-01-004,1,1,2,abbreviation_variation,MEDIUM
+core construction job 23-01-022,core construction job 24-01-016,1,1,2,abbreviation_variation,MEDIUM
+core construction job 23-01-022,core construction job 24-01-017,1,1,2,abbreviation_variation,MEDIUM
+core construction job 23-01-022,core construction job 25-01-010,1,1,2,abbreviation_variation,MEDIUM
+core construction job 23-01-022,core construction job 25-01-019,1,1,2,abbreviation_variation,MEDIUM
+core construction job 23-01-027,core construction job 23-02-001,1,1,2,abbreviation_variation,MEDIUM
+core construction job 23-01-027,core construction job 24-01-004,1,1,2,abbreviation_variation,MEDIUM
+core construction job 23-01-027,core construction job 24-01-016,1,1,2,abbreviation_variation,MEDIUM
+core construction job 23-01-027,core construction job 25-01-010,1,1,2,abbreviation_variation,MEDIUM
+core construction job 23-01-027,core construction job 25-01-019,1,1,2,abbreviation_variation,MEDIUM
+core construction job 23-02-001,core construction job 24-01-004,1,1,2,abbreviation_variation,MEDIUM
+core construction job 23-02-001,core construction job 24-01-012,1,1,2,abbreviation_variation,MEDIUM
+core construction job 23-02-001,core construction job 24-01-016,1,1,2,abbreviation_variation,MEDIUM
+core construction job 23-02-001,core construction job 24-01-017,1,1,2,abbreviation_variation,MEDIUM
+core construction job 23-02-001,core construction job 25-01-002,1,1,2,abbreviation_variation,MEDIUM
+core construction job 23-02-001,core construction job 25-01-010,1,1,2,abbreviation_variation,MEDIUM
+core construction job 23-02-001,core construction job 25-01-019,1,1,2,abbreviation_variation,MEDIUM
+core construction job 23-02-001,core construction job 25-04-005,1,1,2,abbreviation_variation,MEDIUM
+core construction job 2301025,core construction job 24-01-012,1,1,2,high_similarity,MEDIUM
+core construction job 2301025,core construction job 24-01-026,1,1,2,high_similarity,MEDIUM
+core construction job 2301025,core construction job 25-01-002,1,1,2,high_similarity,MEDIUM
+core construction job 2301025,core construction job 32-01-020,1,1,2,high_similarity,MEDIUM
+core construction job 24-01-004,core construction job 24-04-168005,1,1,2,high_similarity,MEDIUM
+core construction job 24-01-004,core construction job 25-01-019,1,1,2,abbreviation_variation,MEDIUM
+core construction job 24-01-016,core construction job 24-04-168005,1,1,2,high_similarity,MEDIUM
+core construction job 24-01-016,core construction job 25-01-002,1,1,2,abbreviation_variation,MEDIUM
+core construction job 24-01-016,core construction job 32-01-020,1,1,2,abbreviation_variation,MEDIUM
+core construction job 24-01-017,core construction job 25-01-002,1,1,2,abbreviation_variation,MEDIUM
+core construction job 24-01-017,core construction job 32-01-020,1,1,2,abbreviation_variation,MEDIUM
+core construction job 24-01-026,core construction job 24-02-001,1,1,2,abbreviation_variation,MEDIUM
+core construction job 24-01-026,core construction job 25-01-010,1,1,2,abbreviation_variation,MEDIUM
+core construction job 24-01-026,core construction job 25-01-019,1,1,2,abbreviation_variation,MEDIUM
+core construction job 24-02-001,core construction job 24-04-168005,1,1,2,high_similarity,MEDIUM
+core construction job 24-02-001,core construction job 2404209,1,1,2,high_similarity,MEDIUM
+core construction job 24-02-001,core construction job 25-01-002,1,1,2,abbreviation_variation,MEDIUM
+core construction job 24-02-001,core construction job 25-01-010,1,1,2,abbreviation_variation,MEDIUM
+core construction job 24-02-001,core construction job 25-01-019,1,1,2,abbreviation_variation,MEDIUM
+core construction job 25-01-019,core construction job 25-04-005,1,1,2,abbreviation_variation,MEDIUM
+core construction job 25-01-019,core construction job 32-01-020,1,1,2,abbreviation_variation,MEDIUM
+core construction job 25-04-005,core construction job 32-01-020,1,1,2,abbreviation_variation,MEDIUM
+dluzan scott,dluzen scott,1,1,2,abbreviation_variation,MEDIUM
+fpem inc first priority po 120001mg06000070,fpem inc first priority po 140064mg06000098,1,1,2,high_similarity,MEDIUM
+guardian civil contracting llc po 23003-05,guardian civil contracting llc po 23018-11,1,1,2,abbreviation_variation,MEDIUM
+guardian civil contracting llc po 23003-05,guardian civil contracting llc po 2500201,1,1,2,abbreviation_variation,MEDIUM
+guardian civil contracting llc po 23008-07,guardian civil contracting llc po 24011-05,1,1,2,abbreviation_variation,MEDIUM
+guardian civil contracting llc po 23008-07,guardian civil contracting llc po 2500201,1,1,2,abbreviation_variation,MEDIUM
+guardian civil contracting llc po 23018-11,guardian civil contracting llc po 24008-07,1,1,2,abbreviation_variation,MEDIUM
+guardian civil contracting llc po 23018-11,guardian civil contracting llc po 24011-05,1,1,2,abbreviation_variation,MEDIUM
+guardian civil contracting llc po 23018-11,guardian civil contracting llc po 2500201,1,1,2,high_similarity,MEDIUM
+guardian civil contracting llc po 23018-11,guardian civil contracting llc pos 23003-05,1,1,2,high_similarity,MEDIUM
+guardian civil contracting llc po 24008-07,guardian civil contracting llc po 2500201,1,1,2,abbreviation_variation,MEDIUM
+guardian civil contracting llc po 24008-07,guardian civil contracting llc pos 23003-05,1,1,2,abbreviation_variation,MEDIUM
+guardian civil contracting llc po 24011-05,guardian civil contracting llc po 2500201,1,1,2,high_similarity,MEDIUM
+guardian civil contracting llc po 24011-05,guardian civil contracting llc pos 23003-05,1,1,2,abbreviation_variation,MEDIUM
+guardian civil contracting llc po 2500201,guardian civil contracting llc pos 23003-05,1,1,2,abbreviation_variation,MEDIUM
+haydon building corp job 50-0090-00,haydon building corp job 50-0102-01,1,1,2,abbreviation_variation,MEDIUM
+hoidal tom,hoilal tom,1,1,2,high_similarity,MEDIUM
+j kopras homes,kopras home,1,1,2,with_without_suffix,MEDIUM
+markham contracting job 4669,markham contracting job 90691,1,1,2,abbreviation_variation,MEDIUM
+markham contracting job 4669,markham contracting job 94673,1,1,2,abbreviation_variation,MEDIUM
+markham contracting job 4862,markham contracting job 94673,1,1,2,abbreviation_variation,MEDIUM
+markham contracting job 4862,markham contracting job 95442,1,1,2,abbreviation_variation,MEDIUM
+markham contracting job 90691,markham contracting job 94673,1,1,2,high_similarity,MEDIUM
+markham contracting job 94673,markham contracting job 95442,1,1,2,high_similarity,MEDIUM
+mike maguire,mike miguire,1,1,2,abbreviation_variation,MEDIUM
+rytan job 22-100-11wants job name address on invoice,rytan job 23112-12wants job name address on invoice,1,1,2,abbreviation_variation,MEDIUM
+sun land asphalt po 203144,sun land asphalt po 39140,1,1,2,abbreviation_variation,MEDIUM
+sun land asphalt po 203144,sun land asphalt po 39445,1,1,2,abbreviation_variation,MEDIUM
+sun land asphalt po 203144,sun land asphalt po 39447,1,1,2,abbreviation_variation,MEDIUM
+sun land asphalt po 31082,sun land asphalt po 39140,1,1,2,abbreviation_variation,MEDIUM
+sun land asphalt po 35671,sun land asphalt po 36337,1,1,2,abbreviation_variation,MEDIUM
+sun land asphalt po 35671,sun land asphalt po 38637,1,1,2,abbreviation_variation,MEDIUM
+sun land asphalt po 35671,sun land asphalt po 39871,1,1,2,abbreviation_variation,MEDIUM
+sun land asphalt po 3569901,sun land asphalt po 36492,1,1,2,high_similarity,MEDIUM
+sun land asphalt po 3569901,sun land asphalt po 37592,1,1,2,high_similarity,MEDIUM
+sun land asphalt po 3569901,sun land asphalt po 38050,1,1,2,high_similarity,MEDIUM
+sun land asphalt po 3569901,sun land asphalt po 39140,1,1,2,high_similarity,MEDIUM
+sun land asphalt po 3569901,sun land asphalt po 39871,1,1,2,high_similarity,MEDIUM
+sun land asphalt po 36492,sun land asphalt po 37592,1,1,2,abbreviation_variation,MEDIUM
+sun land asphalt po 38637,sun land asphalt po 39871,1,1,2,abbreviation_variation,MEDIUM
+sun land asphalt po 39140,sun land asphalt po 39445,1,1,2,abbreviation_variation,MEDIUM
+sun land asphalt po 39140,sun land asphalt po 39447,1,1,2,abbreviation_variation,MEDIUM
+sun land asphalt po 39140,sun land asphalt po 39871,1,1,2,abbreviation_variation,MEDIUM
+sun land asphalt po 39140,sun land asphalt po 8283401,1,1,2,high_similarity,MEDIUM
+sun land asphalt po 39447,sun land asphalt po 39871,1,1,2,abbreviation_variation,MEDIUM
+sun land asphalt po 41099,sun land asphalt po 41520,1,1,2,abbreviation_variation,MEDIUM
+tlw construction cor to enriqutlwconstructioncom,tlw construction cor to troytlwconstructioncom,1,1,2,abbreviation_variation,MEDIUM
+tlw construction cor to enriqutlwconstructioncom,tlw construction job 23-146 cor to enriquetlwconstructioncom,1,1,2,high_similarity,MEDIUM
+wespac construction job 1-21az01-089,wespac construction job 1-25az01-027,1,1,2,abbreviation_variation,MEDIUM
+willmeng job 23-03-3721,willmeng job 23-07-3727,1,1,2,abbreviation_variation,MEDIUM
+willmeng job 24-01-3857,willmeng job 24-02-3853,1,1,2,abbreviation_variation,MEDIUM
+willmeng job 24-01-3857,willmeng job 24-02-3897,1,1,2,abbreviation_variation,MEDIUM
+willmeng job 24-02-3853,willmeng job 24-02-3897,1,1,2,abbreviation_variation,MEDIUM
+willmeng job 25-03-3931,willmeng job 25-03-3950,1,1,2,abbreviation_variation,MEDIUM
+willmeng job 25-03-3950,willmeng job 25-07-3920,1,1,2,abbreviation_variation,MEDIUM

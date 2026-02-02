@@ -61,6 +61,9 @@ const SPAM_SUBJECT_PATTERNS = [
   /🧶|🎁|💖|🛒|🛍️/, // Shopping emojis in subject
 ];
 
+// Regex to extract domain from email address
+const RE_EMAIL_DOMAIN = /@([^>]+)/;
+
 // Legitimate senders that might match patterns but should be allowed
 const ALLOWLIST_DOMAINS = [
   "buildingconnected.com",
@@ -76,6 +79,7 @@ const ALLOWLIST_DOMAINS = [
   "pointandpay.com", // Payment processing
   "indeed.com", // Job postings might be relevant
   "linkedin.com", // Business networking
+  "hellosign.com", // Contract signatures (Dropbox Sign)
 ];
 
 export interface SpamCheckResult {
@@ -98,7 +102,7 @@ export function isSpam(
   const subj = subject?.toLowerCase() || "";
 
   // Extract domain from email
-  const domainMatch = email.match(/@([^>]+)/);
+  const domainMatch = email.match(RE_EMAIL_DOMAIN);
   const domain = domainMatch ? domainMatch[1] : "";
 
   // Check allowlist first

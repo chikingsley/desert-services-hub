@@ -1,0 +1,485 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Contractor Merge Rules Schema",
+  "description": "JSON Schema for validating contractor merge rules configuration",
+  "type": "object",
+  "required": [
+    "version",
+    "description",
+    "suffix_rules",
+    "typo_rules",
+    "known_aliases",
+    "exclude_patterns",
+    "merge_strategy",
+    "confidence_levels"
+  ],
+  "properties": {
+    "version": {
+      "type": "string",
+      "description": "Version number of the rules file",
+      "pattern": "^\\d+\\.\\d+$"
+    },
+    "description": {
+      "type": "string",
+      "description": "Human-readable description of this rules file"
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Metadata about the rules",
+      "properties": {
+        "created": {
+          "type": "string",
+          "format": "date"
+        },
+        "last_updated": {
+          "type": "string",
+          "format": "date"
+        },
+        "purpose": {
+          "type": "string"
+        },
+        "data_sources": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "suffix_rules": {
+      "type": "array",
+      "description": "Rules for matching various suffix patterns",
+      "items": {
+        "type": "object",
+        "required": ["pattern", "equivalents", "description"],
+        "properties": {
+          "pattern": {
+            "type": "string",
+            "description": "The base pattern (usually 'X' as placeholder)"
+          },
+          "equivalents": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "List of equivalent suffixes"
+          },
+          "description": {
+            "type": "string",
+            "description": "Human-readable description of this rule"
+          },
+          "priority": {
+            "type": "string",
+            "enum": ["low", "medium", "high"],
+            "default": "medium"
+          }
+        }
+      }
+    },
+    "typo_rules": {
+      "type": "object",
+      "description": "Rules for handling typos and misspellings",
+      "properties": {
+        "common_construction_misspellings": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["misspelling", "correct"],
+            "properties": {
+              "misspelling": {
+                "type": "string"
+              },
+              "correct": {
+                "type": "string"
+              },
+              "frequency": {
+                "type": "string",
+                "enum": ["low", "medium", "high"]
+              },
+              "examples": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "company_name_misspellings": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["misspelling", "correct", "company"],
+            "properties": {
+              "misspelling": {
+                "type": "string"
+              },
+              "correct": {
+                "type": "string"
+              },
+              "company": {
+                "type": "string"
+              },
+              "frequency": {
+                "type": "string",
+                "enum": ["low", "medium", "high"]
+              }
+            }
+          }
+        }
+      }
+    },
+    "known_aliases": {
+      "type": "object",
+      "properties": {
+        "comprehensive_list": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "canonical",
+              "display_name",
+              "aliases",
+              "variations",
+              "record_count",
+              "source_count",
+              "confidence"
+            ],
+            "properties": {
+              "canonical": {
+                "type": "string",
+                "description": "The canonical (authoritative) name for this contractor"
+              },
+              "display_name": {
+                "type": "string",
+                "description": "Name to display to users (often most common variant)"
+              },
+              "aliases": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Alternative names/spellings that match this contractor"
+              },
+              "variations": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Suffix variations"
+              },
+              "record_count": {
+                "type": "integer",
+                "description": "Total records under this contractor"
+              },
+              "source_count": {
+                "type": "integer",
+                "description": "Number of different data sources this appears in"
+              },
+              "confidence": {
+                "type": "string",
+                "enum": ["low", "medium", "high", "very_high"],
+                "description": "Confidence level for auto-merging"
+              }
+            }
+          }
+        }
+      }
+    },
+    "case_sensitivity_rules": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "rules": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["rule", "description"],
+            "properties": {
+              "rule": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "examples": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "acronyms": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "punctuation_normalization": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "rules": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["pattern", "description", "normalize_to"],
+            "properties": {
+              "pattern": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "examples": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "normalize_to": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "spacing_and_formatting": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "rules": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["rule", "description"],
+            "properties": {
+              "rule": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "examples": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "apply": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    },
+    "name_order_variations": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "rules": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "pattern": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "example": {
+                "type": "string"
+              },
+              "frequency": {
+                "type": "string"
+              },
+              "confidence": {
+                "type": "string"
+              },
+              "direction": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "exclude_patterns": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "patterns": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["pattern", "reason", "rule"],
+            "properties": {
+              "pattern": {
+                "type": "string",
+                "description": "Description of the pattern to exclude"
+              },
+              "reason": {
+                "type": "string",
+                "description": "Why this should not be merged"
+              },
+              "rule": {
+                "type": "string",
+                "description": "Rule to apply to prevent false merges"
+              },
+              "example": {
+                "type": "string"
+              },
+              "confidence": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "embedded_content_rules": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "rules": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["pattern", "description", "action"],
+            "properties": {
+              "pattern": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "examples": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "action": {
+                "type": "string",
+                "enum": ["extract_to_separate_field", "extract_to_notes_field"]
+              },
+              "canonical": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "regional_variations": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "rules": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "pattern": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "examples": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "rule": {
+                "type": "string"
+              },
+              "confidence": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "merge_strategy": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "steps": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["step", "action", "description"],
+            "properties": {
+              "step": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 10
+              },
+              "action": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "confidence_levels": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["description", "threshold"],
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "threshold": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "examples": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "implementation_notes": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    }
+  }
+}

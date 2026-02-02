@@ -1,24 +1,8 @@
 {
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "target": "ESNext",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "lib": ["ESNext"],
-    "types": ["@cloudflare/workers-types", "bun-types"],
-    "strict": true,
-    "noEmit": true,
-    "skipLibCheck": true,
-    "isolatedModules": true,
-    "resolveJsonModule": true,
-    "allowSyntheticDefaultImports": true,
-    "forceConsistentCasingInFileNames": true,
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["src/*"],
-      "@scripts/*": ["scripts/*"],
-      "@sharepoint/*": ["sharepoint-inspections-folders-sync/*"]
-    }
+    "types": ["@cloudflare/workers-types", "@types/bun"]
   },
-  "include": ["src/**/*", "scripts/**/*", "sharepoint-inspections-folders-sync/**/*"],
+  "include": ["src/**/*.ts", "scripts/**/*.ts"],
   "exclude": ["node_modules"]
 }

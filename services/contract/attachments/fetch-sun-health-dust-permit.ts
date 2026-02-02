@@ -15,7 +15,7 @@ const PROJECT_FOLDER = join(
 
 async function main() {
   // Connect to database
-  const db = new Database(join(import.meta.dir, "../census/census.db"));
+  const db = new Database(join(import.meta.dir, "../census/hub.db"));
 
   console.log("Fetching Sun Health RGS Dust Control Permit documents...\n");
 

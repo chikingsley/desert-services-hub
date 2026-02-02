@@ -16,7 +16,7 @@ Process your inbox efficiently: scan, score urgency, work through emails one at 
 
 ## Prerequisites
 
-- Census DB synced (`bun services/contract/census/sync-all.ts`)
+- Hub DB synced (`bun services/contract/census/sync/all.ts`)
 - For write operations (archive, move, categorize): Outlook MCP configured
 
 ## Workflow

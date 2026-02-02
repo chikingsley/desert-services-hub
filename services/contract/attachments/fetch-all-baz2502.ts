@@ -12,7 +12,7 @@ const PROJECT_FOLDER = join(import.meta.dir, "BAZ2502-Cambridge-Construction");
 
 async function main() {
   // Connect to database
-  const db = new Database(join(import.meta.dir, "../census/census.db"));
+  const db = new Database(join(import.meta.dir, "../census/hub.db"));
 
   console.log("Fetching all BAZ2502 project documents...\n");
 

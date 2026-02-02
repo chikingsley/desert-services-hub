@@ -6,7 +6,7 @@
  */
 import { describe, expect, test } from "bun:test";
 import { db } from "../db/connection";
-import { normalizeEstimateName } from "../link-estimates-to-projects";
+import { normalizeEstimateName } from "../link/estimates-to-projects";
 
 describe("Estimate Name Normalization", () => {
   test("strips TF: prefix", () => {
@@ -46,9 +46,9 @@ describe("Real Database - Estimates Table", () => {
       .get();
 
     expect(count).toBeDefined();
-    expect(count!.count).toBeGreaterThan(0);
+    expect(count?.count).toBeGreaterThan(0);
     console.log(
-      `  → Found ${count!.count.toLocaleString()} estimates in database`
+      `  → Found ${count?.count.toLocaleString()} estimates in database`
     );
   });
 
@@ -78,13 +78,16 @@ describe("Real Database - Estimates Table", () => {
       .get();
 
     expect(stats).toBeDefined();
-    const pct = ((stats!.linked / stats!.total) * 100).toFixed(1);
+    if (!stats) {
+      throw new Error("stats should be defined");
+    }
+    const pct = ((stats.linked / stats.total) * 100).toFixed(1);
     console.log(
-      `  → ${stats!.linked.toLocaleString()}/${stats!.total.toLocaleString()} estimates linked (${pct}%)`
+      `  → ${stats.linked.toLocaleString()}/${stats.total.toLocaleString()} estimates linked (${pct}%)`
     );
 
     // Should be > 95% linked
-    expect(stats!.linked / stats!.total).toBeGreaterThan(0.95);
+    expect(stats.linked / stats.total).toBeGreaterThan(0.95);
   });
 });
 
@@ -95,9 +98,9 @@ describe("Real Database - Projects Table", () => {
       .get();
 
     expect(count).toBeDefined();
-    expect(count!.count).toBeGreaterThan(0);
+    expect(count?.count).toBeGreaterThan(0);
     console.log(
-      `  → Found ${count!.count.toLocaleString()} projects in database`
+      `  → Found ${count?.count.toLocaleString()} projects in database`
     );
   });
 
@@ -144,9 +147,9 @@ describe("Real Database - Emails Table", () => {
       .get();
 
     expect(count).toBeDefined();
-    expect(count!.count).toBeGreaterThan(0);
+    expect(count?.count).toBeGreaterThan(0);
     console.log(
-      `  → Found ${count!.count.toLocaleString()} emails in database`
+      `  → Found ${count?.count.toLocaleString()} emails in database`
     );
   });
 
@@ -161,13 +164,16 @@ describe("Real Database - Emails Table", () => {
       .get();
 
     expect(stats).toBeDefined();
-    const pct = ((stats!.linked / stats!.total) * 100).toFixed(1);
+    if (!stats) {
+      throw new Error("stats should be defined");
+    }
+    const pct = ((stats.linked / stats.total) * 100).toFixed(1);
     console.log(
-      `  → ${stats!.linked.toLocaleString()}/${stats!.total.toLocaleString()} emails linked (${pct}%)`
+      `  → ${stats.linked.toLocaleString()}/${stats.total.toLocaleString()} emails linked (${pct}%)`
     );
 
     // At least some emails should be linked
-    expect(stats!.linked).toBeGreaterThan(0);
+    expect(stats?.linked).toBeGreaterThan(0);
   });
 
   test("linked emails have valid project references", () => {
@@ -181,7 +187,7 @@ describe("Real Database - Emails Table", () => {
       .get();
 
     expect(orphans).toBeDefined();
-    expect(orphans!.count).toBe(0);
+    expect(orphans?.count).toBe(0);
     console.log("  → No orphan project references found");
   });
 });
@@ -195,7 +201,7 @@ describe("Real Database - Project Aliases", () => {
       .get();
 
     expect(count).toBeDefined();
-    console.log(`  → Found ${count!.count.toLocaleString()} project aliases`);
+    console.log(`  → Found ${count?.count.toLocaleString()} project aliases`);
   });
 
   test("aliases point to valid projects", () => {
@@ -208,7 +214,7 @@ describe("Real Database - Project Aliases", () => {
       .get();
 
     expect(orphans).toBeDefined();
-    expect(orphans!.count).toBe(0);
+    expect(orphans?.count).toBe(0);
   });
 });
 
@@ -222,17 +228,20 @@ describe("End-to-End: Estimate → Project Linking", () => {
       .get();
 
     expect(estimate).toBeDefined();
+    if (!estimate) {
+      throw new Error("estimate should be defined");
+    }
 
     // Verify the project exists
     const project = db
       .query<{ id: number; name: string }, [number]>(
         "SELECT id, name FROM projects WHERE id = ?"
       )
-      .get(estimate!.project_id);
+      .get(estimate.project_id);
 
     expect(project).toBeDefined();
     console.log(
-      `  → Estimate "${estimate!.name}" → Project "${project!.name}"`
+      `  → Estimate "${estimate?.name}" → Project "${project?.name}"`
     );
   });
 

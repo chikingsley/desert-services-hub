@@ -1,0 +1,11 @@
+raw_value,canonical_value,record_count,merge_type,priority,notes
+Willmeng,Willmeng,247,Direct,1,Primary simple name - already correct
+Willmeng Construction,Willmeng Construction,224,Direct,1,Primary full legal name - already correct
+WILLMENG,Willmeng,93,Normalize,2,All caps - normalize to title case
+WILLMENG CONSTRUCTION INC,Willmeng Construction,29,Normalize,2,All caps with INC - normalize
+Willmeng Construction Inc,Willmeng Construction,4,Standardize,3,Mixed case with Inc - standardize
+WILLMENG CONSTRUCTION,Willmeng Construction,2,Normalize,2,All caps - normalize
+WILLMENG.COM,Willmeng,6,Extract contact,4,Extract to contact_info field
+Willmeng (with job notes),Willmeng,27,Extract notes,4,Extract job#/COR/status to notes field
+Willmeng (with phone),Willmeng,6,Extract contact,4,Extract phone (520-249-0734) to contact_info
+willmeng.com (various),N/A,50,No merge,5,Extract website and emails to separate contact_info field

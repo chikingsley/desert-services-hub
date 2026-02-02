@@ -75,6 +75,7 @@ export interface Mailbox {
 export interface Email {
   id: number;
   messageId: string;
+  internetMessageId: string | null; // RFC 2822 Message-ID for cross-mailbox matching
   mailboxId: number;
   conversationId: string | null;
   subject: string | null;
@@ -174,6 +175,7 @@ export interface Estimate {
 
 export interface InsertEmailData {
   messageId: string;
+  internetMessageId?: string | null; // RFC 2822 Message-ID for cross-mailbox matching
   mailboxId: number;
   conversationId?: string | null;
   subject?: string | null;

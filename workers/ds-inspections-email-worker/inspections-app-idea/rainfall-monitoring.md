@@ -27,7 +27,7 @@ A comprehensive construction site inspection management platform that automates 
 ## Market Research: Existing Solutions
 
 | Platform | Pricing | Key Features | Limitations |
-|----------|---------|--------------|-------------|
+| ---------- | --------- | -------------- | ------------- |
 | **ComplianceGo** | $5/site/mo for rain alerts | 1.47M+ inspections, 48 states, mobile app | Expensive at scale, generic |
 | **EnviroReport** | Free (5 sites), $15/site/mo | Automated CGP scheduling, PDF reports | Limited rain gauge accuracy |
 | **Comply26** | Contact for pricing | NPDES compliance, weather integration | No Arizona-specific integrations |
@@ -43,7 +43,7 @@ A comprehensive construction site inspection management platform that automates 
 Sites must choose ONE of these schedules:
 
 | Schedule | Regular Inspection | Rain-Triggered Inspection |
-|----------|-------------------|--------------------------|
+| ---------- | ------------------- | -------------------------- |
 | **Option A** | Every 7 days | None required |
 | **Option B** | Every 14 days | Within 24 hours of ≥0.5" in 24hr |
 | **Option C** | Monthly | Within 24 hours of ≥0.25" in 24hr |
@@ -104,7 +104,7 @@ Most construction sites use **Option B** for the balance of reduced routine insp
 #### Primary: Physical Rain Gauges
 
 | Source | Coverage | Stations | Update Freq | URL |
-|--------|----------|----------|-------------|-----|
+| -------- | ---------- | ---------- | ------------- | ----- |
 | **Maricopa FCD** | Phoenix metro | 545+ | ~5 min | `alert.fcd.maricopa.gov` |
 | **Pima RFCD** | Tucson, Marana | 113+ | ~5 min | `alertmap.rfcd.pima.gov` |
 
@@ -517,7 +517,7 @@ Parse `Rw.Location.Upload - Main Master.xlsx` to:
 ### Current Competitor Costs
 
 | Sites | ComplianceGo | EnviroReport | Our Solution |
-|-------|--------------|--------------|--------------|
+| ------- | -------------- | -------------- | -------------- |
 | 50 | $250/mo | $750/mo | $0 (self-hosted) |
 | 100 | $500/mo | $1,500/mo | $0 (self-hosted) |
 | 200 | $1,000/mo | $3,000/mo | $0 (self-hosted) |
@@ -525,7 +525,7 @@ Parse `Rw.Location.Upload - Main Master.xlsx` to:
 ### Our Infrastructure Costs
 
 | Service | Cost | Notes |
-|---------|------|-------|
+| --------- | ------ | ------- |
 | Cloudflare Workers | Free | 100k requests/day free tier |
 | Maricopa FCD Data | Free | Public data |
 | Pima RFCD Data | Free | Public data |
@@ -540,7 +540,7 @@ Parse `Rw.Location.Upload - Main Master.xlsx` to:
 ## Risk Mitigation
 
 | Risk | Mitigation |
-|------|------------|
+| ------ | ------------ |
 | FCD website changes format | Multiple parsers, fallback to Open-Meteo |
 | Gauge goes offline | Open-Meteo fallback, alert on missing data |
 | Site outside gauge coverage | Open-Meteo with adjusted threshold (0.4") |

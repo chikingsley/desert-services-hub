@@ -34,7 +34,7 @@ items = items.filter((item) => !SKIP_GROUPS.includes(item.groupTitle));
 The Estimating board has THREE ways to get account info:
 
 | Column | ID | Type | What it provides |
-|--------|-----|------|------------------|
+| -------- | ----- | ------ | ------------------ |
 | ACCOUNTS | `board_relation_mkzdd0r4` | `board_relation` | **Direct link** - use `linkedItemIds` |
 | CONTACTS | `deal_contact` | `board_relation` | Fallback - contacts link to accounts |
 | CONTRACTOR | `deal_account` | `mirror` | **Display only** - no IDs, just text |
@@ -138,16 +138,18 @@ const STATUS_MAP = {
 Some items have prefixes indicating they're variants of a main project. These should be consolidated into the same SharePoint folder as the base project.
 
 | Prefix | Meaning | Example |
-|--------|---------|---------|
+| -------- | --------- | --------- |
 | **TF** | Temp Fence | `TF: ECHO CANYON` |
 | **PJ** | Porta John (portable toilets) | `PJ: SIGNATURE` |
-| **RO** | Rough Grade Only | `RO: CRASH CHAMPIONS` |
+| **RO** | Roll Off (garbage containers) | `RO: CRASH CHAMPIONS` |
 | **REBID** | Re-bid of existing project | `REBID: QTS PHX3` |
 
 **NOT consolidated (standalone items):**
+
 - **MISC** - Miscellaneous estimates with no matching base project
 
 **How consolidation works:**
+
 1. Strip variant prefix from folder name: `TF: ECHO CANYON` → folder `ECHO CANYON/`
 2. Add suffix to uploaded files: `estimate.pdf` → `estimate-TF.pdf` (or `-PJ`, `-REBID`)
 3. Delete old variant folder after consolidation
@@ -179,7 +181,7 @@ const variantMatch = name.match(/^(TF|PJ|RO|REBID)[\s\-_:]+(.+)$/i);
 ## Scripts
 
 | Script | Purpose |
-|--------|---------|
+| -------- | --------- |
 | `sync-estimates.ts` | Main sync (use `--dry-run` first!) |
 | `validate-sharepoint.ts` | Check folder structure |
 

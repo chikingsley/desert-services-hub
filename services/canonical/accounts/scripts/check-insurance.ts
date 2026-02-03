@@ -12,7 +12,7 @@ import {
   type ContractRequirements,
   checkCoverage,
   printComparisonResult,
-} from "../../lib/db/insurance";
+} from "@lib/db/insurance";
 
 // Common GC insurance requirement templates
 export const REQUIREMENT_TEMPLATES = {

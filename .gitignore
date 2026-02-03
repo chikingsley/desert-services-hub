@@ -56,6 +56,7 @@ coverage/
 # temp files
 *.tmp
 *.temp
+.tmp/
 
 # Monday estimates
 services/monday/estimates.token-cache.json

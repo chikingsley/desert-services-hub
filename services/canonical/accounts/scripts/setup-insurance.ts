@@ -10,7 +10,7 @@
 import {
   getCompanyInsurance,
   updateCompanyInsurance,
-} from "../lib/db/insurance";
+} from "@lib/db/insurance";
 
 // Desert Services current coverage (as of Jan 2026)
 // Source: WTW / Katie Beck confirmation

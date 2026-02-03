@@ -4,8 +4,8 @@ import {
   getSyncStatus,
   listBoards,
   search,
-} from "../lib/monday-search";
-import { BOARD_IDS } from "../services/monday/types";
+} from "@lib/monday-search";
+import { BOARD_IDS } from "@services/monday/types";
 
 /**
  * Monday.com Local Search CLI

@@ -144,7 +144,7 @@ For ad-hoc searches/updates, inline scripts are acceptable:
 
 ```bash
 bun -e '
-import { query } from "./monday/client";
+import { query } from "@services/monday/client";
 const result = await query(`query { boards(ids: 7943937851) { items_page(limit: 100, query_params: { rules: [{column_id: "name", compare_value: ["TF"], operator: contains_text}] }) { items { id name } } } }`);
 console.log(result.boards[0].items_page.items);
 '
@@ -318,7 +318,7 @@ bun sync-estimates.ts
 ## Key Files
 
 1. `sync-estimates.ts` - Main sync logic with account resolution, TF consolidation, status folder moves
-2. `monday/client.ts` - Monday API with retry logic, `getItemsRich()`, `getItemNames()` batch lookup
+2. `services/monday/client.ts` - Monday API with retry logic, `getItemsRich()`, `getItemNames()` batch lookup
 3. `client.ts` - SharePoint Graph API client
 4. `validate-sharepoint.ts` - Folder structure validation utility
 

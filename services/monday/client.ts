@@ -25,32 +25,85 @@ function getApiKey(): string {
   return key;
 }
 
+const MAX_RETRIES = 5;
+const RETRY_DELAY_MS = 3000;
+
 /**
- * Execute a GraphQL query against Monday.com API
+ * Execute a GraphQL query against Monday.com API with retry logic
  */
 export async function query<T>(graphqlQuery: string): Promise<T> {
-  const response = await fetch(API_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: getApiKey(),
-      "API-Version": "2024-01",
-    },
-    body: JSON.stringify({ query: graphqlQuery }),
-  });
+  let lastError: Error | null = null;
 
-  const result = (await response.json()) as GraphQLResponse<T>;
-  const firstError = result.errors?.[0];
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      const response = await fetch(API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: getApiKey(),
+          "API-Version": "2026-01",
+        },
+        body: JSON.stringify({ query: graphqlQuery }),
+      });
 
-  if (firstError) {
-    throw new Error(`Monday API error: ${firstError.message}`);
+      let result: GraphQLResponse<T>;
+      try {
+        result = (await response.json()) as GraphQLResponse<T>;
+      } catch (parseError) {
+        // JSON parse failed - likely a timeout or rate limit response
+        if (attempt < MAX_RETRIES) {
+          await new Promise((r) => setTimeout(r, RETRY_DELAY_MS * attempt));
+          continue;
+        }
+        throw new Error(
+          `Monday API returned invalid JSON (status ${response.status})`
+        );
+      }
+      const firstError = result.errors?.[0];
+
+      if (firstError) {
+        const errorMsg = firstError.message.toLowerCase();
+        const isRetryable =
+          errorMsg.includes("timeout") ||
+          errorMsg.includes("internal server") ||
+          errorMsg.includes("rate limit") ||
+          errorMsg.includes("429") ||
+          errorMsg.includes("503") ||
+          errorMsg.includes("504");
+
+        if (isRetryable && attempt < MAX_RETRIES) {
+          lastError = new Error(`Monday API error: ${firstError.message}`);
+          await new Promise((r) => setTimeout(r, RETRY_DELAY_MS * attempt));
+          continue;
+        }
+        throw new Error(`Monday API error: ${firstError.message}`);
+      }
+
+      if (!result.data) {
+        throw new Error("Monday API returned no data");
+      }
+
+      return result.data;
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+
+      // Retry on network errors
+      const errorMsg = lastError.message.toLowerCase();
+      const isRetryable =
+        errorMsg.includes("timeout") ||
+        errorMsg.includes("network") ||
+        errorMsg.includes("fetch failed") ||
+        errorMsg.includes("econnreset");
+
+      if (isRetryable && attempt < MAX_RETRIES) {
+        await new Promise((r) => setTimeout(r, RETRY_DELAY_MS * attempt));
+        continue;
+      }
+      throw lastError;
+    }
   }
 
-  if (!result.data) {
-    throw new Error("Monday API returned no data");
-  }
-
-  return result.data;
+  throw lastError ?? new Error("Query failed after retries");
 }
 
 // ============================================================================
@@ -249,6 +302,41 @@ export async function getItem(itemId: string): Promise<MondayItem | null> {
       item.column_values.map((col) => [col.id, col.text])
     ),
   };
+}
+
+/**
+ * Get item names by IDs (for batch lookups)
+ */
+export async function getItemNames(
+  itemIds: string[]
+): Promise<Map<string, string>> {
+  if (itemIds.length === 0) return new Map();
+
+  // Use smaller batches for reliability
+  const BATCH_SIZE = 50;
+  const nameMap = new Map<string, string>();
+
+  for (let i = 0; i < itemIds.length; i += BATCH_SIZE) {
+    const batch = itemIds.slice(i, i + BATCH_SIZE);
+    const idsStr = batch.join(",");
+
+    const result = await query<{
+      items: Array<{ id: string; name: string }>;
+    }>(`
+      query {
+        items(ids: [${idsStr}]) {
+          id
+          name
+        }
+      }
+    `);
+
+    for (const item of result.items) {
+      nameMap.set(item.id, item.name);
+    }
+  }
+
+  return nameMap;
 }
 
 const DEFAULT_EXCLUDED_GROUPS = ["shell estimates"];

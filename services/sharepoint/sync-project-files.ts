@@ -26,7 +26,7 @@
 
 import { Database } from "bun:sqlite";
 import { parseArgs } from "node:util";
-import { getFile } from "../../lib/minio";
+import { getFile } from "@lib/minio";
 import { SharePointClient } from "./client";
 
 // Regex patterns for filename sanitization (module-level for performance)

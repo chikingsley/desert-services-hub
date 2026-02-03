@@ -11,7 +11,7 @@
  *   bun backfill-direct-relations.ts --limit=100  # Limit items processed
  */
 
-import { query } from "../monday/client";
+import { query } from "@services/monday/client";
 
 const BOARD_IDS = {
   ESTIMATING: "7943937851",

@@ -6,7 +6,7 @@
  */
 import { Database } from "bun:sqlite";
 import { parseArgs } from "node:util";
-import { getFile } from "../../lib/minio";
+import { getFile } from "@lib/minio";
 import { SharePointClient } from "./client";
 
 const HUB_DB_PATH = new URL("../contract/census/hub.db", import.meta.url)

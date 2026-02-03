@@ -16,18 +16,18 @@
  *   --dry-run          Preview actions without creating/uploading
  */
 import { SharePointClient } from "../client";
-import type { MondayColumnValue } from "../monday/client";
 import {
   getItemNames,
   getItemsRich,
   query,
   updateItem,
-} from "../monday/client";
+  type MondayColumnValue,
+} from "@services/monday/client";
 import {
   BOARD_IDS,
   CONTACTS_COLUMNS,
   ESTIMATING_COLUMNS,
-} from "../monday/types";
+} from "@services/monday/types";
 
 // ============================================
 // Constants

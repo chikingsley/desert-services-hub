@@ -1,0 +1,70 @@
+
+import { Project, TaskType, PermitStage } from './types';
+
+export const INITIAL_PROJECTS: Project[] = [
+  {
+    id: 'P-001',
+    name: 'Skyline Heights Phase I',
+    client: 'Apex Development Group',
+    contractNumber: 'C-2024-001',
+    status: 'Active',
+    tasks: [
+      { 
+        id: 't1', 
+        name: 'Contract', 
+        type: TaskType.BINARY, 
+        status: true, 
+        isRequired: true, 
+        lastUpdated: '2024-01-15', 
+        category: 'Document',
+        checkpoints: [
+          { id: 'c1', label: 'Email client immediately', isCompleted: true },
+          { id: 'c2', label: 'Upload to Monday', isCompleted: true },
+          { id: 'c3', label: 'Check for Red Flags', isCompleted: true },
+          { id: 'c4', label: 'Redline if needed', isCompleted: false }
+        ]
+      },
+      { 
+        id: 't2', 
+        name: 'Dust Permit', 
+        type: TaskType.STAGED, 
+        status: PermitStage.FILED, 
+        isRequired: true, 
+        lastUpdated: '2024-02-10', 
+        category: 'Permit',
+        checkpoints: [
+          { id: 'c5', label: 'Address / APN Number', isCompleted: true },
+          { id: 'c6', label: 'NOI Received', isCompleted: true },
+          { id: 'c7', label: 'Drainage Plan', isCompleted: true },
+          { id: 'c8', label: 'Site Acreage', isCompleted: false },
+          { id: 'c9', label: 'Contractor Info', isCompleted: false }
+        ]
+      },
+      { id: 't3', name: 'Fire Sign', type: TaskType.BINARY, status: false, isRequired: true, lastUpdated: '2024-02-15', category: 'Signage', checkpoints: [] }
+    ]
+  },
+  {
+    id: 'P-002',
+    name: 'Riverfront Plaza',
+    client: 'AquaCorp Properties',
+    contractNumber: 'C-2024-005',
+    status: 'Active',
+    tasks: [
+      { 
+        id: 't6', 
+        name: 'Contract', 
+        type: TaskType.BINARY, 
+        status: false, 
+        isRequired: true, 
+        lastUpdated: '2024-02-20', 
+        category: 'Document',
+        checkpoints: [
+          { id: 'c10', label: 'Email client immediately', isCompleted: false },
+          { id: 'c11', label: 'Check Red Flags', isCompleted: false }
+        ]
+      },
+      { id: 't7', name: 'Dust Permit', type: TaskType.STAGED, status: PermitStage.NOT_STARTED, isRequired: false, lastUpdated: '2024-02-21', category: 'Permit', checkpoints: [] },
+      { id: 't8', name: 'SWPPP Narrative', type: TaskType.NARRATIVE, status: 'Waiting on engineer feedback', isRequired: true, lastUpdated: '2024-02-22', category: 'Narrative', checkpoints: [] }
+    ]
+  }
+];

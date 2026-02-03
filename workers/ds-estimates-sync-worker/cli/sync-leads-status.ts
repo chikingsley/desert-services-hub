@@ -11,7 +11,7 @@
  *   bun sync-leads-status.ts              # Execute changes
  */
 
-import { query } from "../monday/client";
+import { query } from "@services/monday/client";
 
 const LEADS_BOARD = "7943937841";
 const ESTIMATING_BOARD = "7943937851";

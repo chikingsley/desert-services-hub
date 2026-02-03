@@ -2,8 +2,6 @@ import type { ColumnDef } from "@tanstack/react-table";
 import {
   ArrowUpDown,
   CheckCircle2,
-  ChevronDown,
-  ChevronRight,
   Circle,
   ExternalLink,
   XCircle,
@@ -35,18 +33,6 @@ export type Project = {
   insurance_verified: number;
 };
 
-function formatCurrency(value: number | null): string {
-  if (value === null || value === undefined) {
-    return "-";
-  }
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(value);
-}
-
 export const statuses = [
   { value: "active", label: "Active", icon: CheckCircle2 },
   { value: "open", label: "Open", icon: Circle },
@@ -68,128 +54,7 @@ function statusClass(status: string) {
   }
 }
 
-// Checklist item pill component
-type PillState = "done" | "pending" | "none";
-
-function ChecklistPill({
-  label,
-  state,
-}: {
-  label: string;
-  state: PillState;
-}) {
-  if (state === "none") return null;
-
-  const classes =
-    state === "done"
-      ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-      : "border-amber-200 bg-amber-50 text-amber-700";
-
-  const icon = state === "done" ? "✓" : "○";
-
-  return (
-    <span
-      className={cn(
-        "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs",
-        classes
-      )}
-    >
-      <span className="text-[10px]">{icon}</span>
-      {label}
-    </span>
-  );
-}
-
-// Get checklist items for a project row
-function getChecklistItems(row: Project) {
-  const items: { label: string; state: PillState }[] = [];
-
-  // Contract - always show for active projects
-  if (row.status === "active") {
-    if (row.contract_signed) {
-      items.push({ label: "Contract", state: "done" });
-    } else if (row.has_contract) {
-      items.push({ label: "Contract", state: "pending" });
-    } else {
-      items.push({ label: "Contract", state: "pending" });
-    }
-  }
-
-  // Dust Permit - only if needed
-  if (row.needs_dust_permit) {
-    items.push({
-      label: "Dust",
-      state: row.dust_permit_filed ? "done" : "pending",
-    });
-  }
-
-  // NOI - only if needed
-  if (row.needs_noi) {
-    items.push({
-      label: "NOI",
-      state: row.noi_filed ? "done" : "pending",
-    });
-  }
-
-  // SWPPP - only if needed
-  if (row.needs_swppp) {
-    items.push({
-      label: "SWPPP",
-      state: row.swppp_plan_received ? "done" : "pending",
-    });
-  }
-
-  // Certified Payroll - only if required
-  if (row.certified_payroll_required) {
-    items.push({ label: "Cert Pay", state: "pending" });
-  }
-
-  // Insurance - only show if verified
-  if (row.insurance_verified) {
-    items.push({ label: "Insurance", state: "done" });
-  }
-
-  return items;
-}
-
-// Filter options for checklist items
-export const checklistFilters = [
-  { value: "missing_contract", label: "Missing Contract" },
-  { value: "needs_dust", label: "Needs Dust Permit" },
-  { value: "needs_noi", label: "Needs NOI" },
-  { value: "needs_swppp", label: "Needs SWPPP" },
-  { value: "certified_payroll", label: "Certified Payroll" },
-  { value: "unverified_insurance", label: "Unverified Insurance" },
-];
-
 export const columns: ColumnDef<Project>[] = [
-  // Expand/collapse column
-  {
-    id: "expand",
-    header: () => null,
-    cell: ({ row }) => {
-      if (!row.getCanExpand()) {
-        return null;
-      }
-      return (
-        <Button
-          className="h-6 w-6 p-0"
-          onClick={(e) => {
-            e.stopPropagation();
-            row.toggleExpanded();
-          }}
-          variant="ghost"
-        >
-          {row.getIsExpanded() ? (
-            <ChevronDown className="h-4 w-4" />
-          ) : (
-            <ChevronRight className="h-4 w-4" />
-          )}
-        </Button>
-      );
-    },
-    size: 40,
-  },
   {
     accessorKey: "status",
     header: ({ column }) => (
@@ -270,77 +135,6 @@ export const columns: ColumnDef<Project>[] = [
           {contractor ?? <span className="text-muted-foreground">-</span>}
         </span>
       );
-    },
-  },
-  {
-    accessorKey: "awarded_value",
-    header: ({ column }) => (
-      <Button
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        variant="ghost"
-      >
-        Value
-        <ArrowUpDown className="ml-2 h-4 w-4" />
-      </Button>
-    ),
-    cell: ({ row }) => {
-      const value = row.getValue("awarded_value") as number | null;
-      return (
-        <div className="text-right tabular-nums">{formatCurrency(value)}</div>
-      );
-    },
-  },
-  // Checklist pills column
-  {
-    id: "checklist",
-    header: "Checklist",
-    cell: ({ row }) => {
-      const items = getChecklistItems(row.original);
-      if (items.length === 0) {
-        return <span className="text-muted-foreground text-xs">-</span>;
-      }
-      return (
-        <div className="flex flex-wrap gap-1">
-          {items.map((item) => (
-            <ChecklistPill
-              key={item.label}
-              label={item.label}
-              state={item.state}
-            />
-          ))}
-        </div>
-      );
-    },
-    // Custom filter function for checklist items
-    filterFn: (row, _id, value: string[]) => {
-      if (!value || value.length === 0) return true;
-
-      const data = row.original;
-
-      for (const filter of value) {
-        switch (filter) {
-          case "missing_contract":
-            if (data.status === "active" && !data.contract_signed) return true;
-            break;
-          case "needs_dust":
-            if (data.needs_dust_permit && !data.dust_permit_filed) return true;
-            break;
-          case "needs_noi":
-            if (data.needs_noi && !data.noi_filed) return true;
-            break;
-          case "needs_swppp":
-            if (data.needs_swppp && !data.swppp_plan_received) return true;
-            break;
-          case "certified_payroll":
-            if (data.certified_payroll_required) return true;
-            break;
-          case "unverified_insurance":
-            if (data.status === "active" && !data.insurance_verified)
-              return true;
-            break;
-        }
-      }
-      return false;
     },
   },
 ];

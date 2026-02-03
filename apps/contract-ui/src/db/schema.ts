@@ -1,16 +1,10 @@
 /**
  * Project Tracking Schema
  *
- * Extends the census hub.db with project tracking fields.
+ * Extends the hub.db with project tracking fields.
  * This is the "checklist" layer on top of the raw project/estimate data.
  */
-import { Database } from "bun:sqlite";
-import { join } from "node:path";
-
-// Use the hub.db that has all the census data
-const DB_PATH = join(import.meta.dir, "../../contract/census/hub.db");
-
-export const db = new Database(DB_PATH);
+import { db } from "@contract/db/connection";
 
 // ============================================
 // Schema: Project Tracking (overlay on estimates)

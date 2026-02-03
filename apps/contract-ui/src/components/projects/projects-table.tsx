@@ -24,7 +24,6 @@ import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { columns, type Project, statuses } from "./columns";
 import { DataTable } from "./data-table";
-import { ProjectDetail } from "./project-detail";
 
 type FacetedFilterOption = {
   label: string;
@@ -36,13 +35,16 @@ function DataTableFacetedFilter<TData>({
   column,
   title,
   options,
+  showCounts = true,
 }: {
   column?: Column<TData, unknown>;
   title?: string;
   options: FacetedFilterOption[];
+  showCounts?: boolean;
 }) {
-  const facets = column?.getFacetedUniqueValues();
-  const selectedValues = new Set(column?.getFilterValue() as string[]);
+  const facets = showCounts ? column?.getFacetedUniqueValues() : undefined;
+  const filterValue = column?.getFilterValue();
+  const selectedValues = new Set(Array.isArray(filterValue) ? filterValue : []);
 
   return (
     <Popover>
@@ -122,7 +124,7 @@ function DataTableFacetedFilter<TData>({
                       <option.icon className="mr-2 h-4 w-4 text-muted-foreground" />
                     )}
                     <span>{option.label}</span>
-                    {facets?.get(option.value) && (
+                    {facets && facets.get(option.value) !== undefined && (
                       <span className="ml-auto flex h-4 w-4 items-center justify-center font-mono text-xs">
                         {facets.get(option.value)}
                       </span>
@@ -156,7 +158,7 @@ function DataTableToolbar({ table }: { table: Table<Project> }) {
 
   return (
     <div className="flex items-center justify-between">
-      <div className="flex flex-1 items-center space-x-2">
+      <div className="flex flex-1 flex-wrap items-center gap-2">
         <Input
           className="h-8 w-[150px] lg:w-[250px]"
           onChange={(event) =>
@@ -191,13 +193,9 @@ export function ProjectsTable() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedProjectId, setSelectedProjectId] = useState<number | null>(
-    null
-  );
 
   const fetchProjects = useCallback(async () => {
     try {
-      // Fetch ALL projects - filtering happens client-side now
       const response = await fetch("/api/projects?status=all");
       if (!response.ok) {
         throw new Error("Failed to fetch projects");
@@ -233,25 +231,13 @@ export function ProjectsTable() {
   }
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[1fr,400px]">
-      <div className="space-y-4">
-        <DataTable
-          columns={columns}
-          data={projects}
-          initialFilters={[{ id: "status", value: ["active"] }]}
-          onRowClick={(row) => setSelectedProjectId(row.original.id)}
-          rowClassName={(row) =>
-            cn(
-              "cursor-pointer",
-              row.original.id === selectedProjectId && "bg-muted/50"
-            )
-          }
-          toolbar={(table) => <DataTableToolbar table={table} />}
-        />
-      </div>
-      <div className="lg:sticky lg:top-4 lg:h-fit">
-        <ProjectDetail projectId={selectedProjectId} />
-      </div>
+    <div className="space-y-4">
+      <DataTable
+        columns={columns}
+        data={projects}
+        initialFilters={[{ id: "status", value: ["active"] }]}
+        toolbar={(table) => <DataTableToolbar table={table} />}
+      />
     </div>
   );
 }

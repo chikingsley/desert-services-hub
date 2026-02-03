@@ -23,7 +23,7 @@ import { useSettings } from "@/hooks/use-settings";
 import { generatePDFBlob } from "@/lib/pdf/generate-client";
 import type { GeneratePDFOptions } from "@/lib/pdf/pdf-builder";
 import type { EditorQuote } from "@/lib/types";
-import { catalog } from "@/services/quoting/catalog";
+import { catalog } from "@/apps/quoting/catalog";
 import { FloatingPdfOptions } from "./floating-pdf-options";
 import { InlineQuoteEditor } from "./inline-quote-editor";
 

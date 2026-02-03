@@ -14,6 +14,7 @@ import { useCallback, useEffect, useState } from "react";
 import { ContractDetailPanel } from "@/apps/web/frontend/components/contracts/contract-detail-panel";
 import { PipelineBoard } from "@/apps/web/frontend/components/contracts/pipeline-board";
 import { PipelineStats } from "@/apps/web/frontend/components/contracts/pipeline-stats";
+import { ContractsTable } from "@/apps/web/frontend/components/contracts/contracts-table";
 import { SAMPLE_CONTRACTS } from "@/apps/web/frontend/components/contracts/sample-data";
 import type {
   PipelineContract,
@@ -22,6 +23,12 @@ import type {
 import { PIPELINE_STAGES } from "@/apps/web/frontend/components/contracts/types";
 import { PageHeader } from "@/apps/web/frontend/components/page-header";
 import { Button } from "@/apps/web/frontend/components/ui/button";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/apps/web/frontend/components/ui/tabs";
 
 // TODO: Replace with real API loader when backend endpoint exists
 export function contractsLoader(): PipelineContract[] {
@@ -131,12 +138,33 @@ export function ContractsPage() {
           {/* Stats bar */}
           <PipelineStats contracts={contracts} />
 
-          {/* Pipeline board */}
-          <PipelineBoard
-            contracts={contracts}
-            onAdvanceContract={handleAdvance}
-            onSelectContract={handleSelect}
-          />
+          <Tabs defaultValue="pipeline" className="flex flex-col gap-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <TabsList>
+                <TabsTrigger value="pipeline">Pipeline</TabsTrigger>
+                <TabsTrigger value="table">Table</TabsTrigger>
+              </TabsList>
+              <div className="text-muted-foreground text-sm">
+                {contracts.length} contracts
+              </div>
+            </div>
+
+            <TabsContent value="pipeline">
+              <PipelineBoard
+                contracts={contracts}
+                onAdvanceContract={handleAdvance}
+                onSelectContract={handleSelect}
+              />
+            </TabsContent>
+
+            <TabsContent value="table">
+              <ContractsTable
+                contracts={contracts}
+                onSelect={handleSelect}
+                selectedId={selectedContract?.id}
+              />
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
 

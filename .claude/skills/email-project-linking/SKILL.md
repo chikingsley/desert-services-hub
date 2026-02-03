@@ -1,18 +1,90 @@
 ---
 name: email-project-linking
-description: Links emails to projects using folder ground truth, contractor domains, and conversation threading. Use when asked to "link emails to projects", "find all emails for a project", "associate emails", "match folder emails", or "connect emails to estimates".
+description: Links emails to projects and estimates. Use when asked to "link emails", "find emails for estimate", "show estimate history", "associate emails", or "connect emails to projects/estimates".
 ---
 
 # Email-Project Linking
 
-Link emails to projects accurately using a three-tier approach.
+Link emails to projects and estimates. Two systems exist:
 
-## When to Use
+1. **Project-level**: `emails.project_id` - links emails to projects (folder-based)
+2. **Estimate-level**: `estimate_emails` table - pre-computed links to estimates (automated sync)
 
-- User asks to link emails to a project
-- User wants to find all emails for a project/estimate
-- User asks to match Outlook folder emails to database
-- User needs to verify email-project associations
+## Quick Start: Find Emails for an Estimate
+
+```sql
+-- Check if estimate has pre-computed emails
+SELECT e.subject, e.from_email, e.received_at, ee.match_type
+FROM estimate_emails ee
+JOIN emails e ON e.id = ee.email_id
+WHERE ee.estimate_id = (SELECT id FROM estimates WHERE estimate_number = 'EST-12345')
+ORDER BY e.received_at DESC;
+```
+
+If empty, run manual research (see "Manual Linking" below).
+
+## Current Coverage (as of Feb 2026)
+
+| Source | Coverage |
+|--------|----------|
+| Building Connected | 70% |
+| PlanHub | 39% |
+| Email/Direct/Same Day | 25-30% |
+
+Total: 1,236 of 4,781 estimates have pre-computed email links.
+
+## Re-running the Sync
+
+To refresh all estimate-email links:
+
+```bash
+cd services/contract/census
+bun sync/estimate-emails.ts
+```
+
+This takes ~1 minute and:
+
+- Matches platform emails by contractor + name tokens
+- Matches direct emails by contractor domain + name tokens  
+- Expands via conversation threads
+
+## Manual Linking (for gaps)
+
+When automated sync misses an estimate, manually link:
+
+```typescript
+import { linkEmailToEstimate, findEstimate, findEmail } from "./db/repositories/estimate-email"
+
+// Find the estimate
+const estimate = findEstimate("EST-12345") // by estimate_number
+// Or: findEstimate(138) // by id
+
+// Find relevant emails
+const emails = db.query(`
+  SELECT id, subject FROM emails 
+  WHERE subject LIKE '%project name%'
+`).all()
+
+// Link them
+for (const email of emails) {
+  linkEmailToEstimate(estimate.id, email.id, "manual", "agent research")
+}
+```
+
+## When to Use Each Approach
+
+| Situation | Action |
+|-----------|--------|
+| User asks for estimate email history | Query `estimate_emails` first |
+| `estimate_emails` is empty | Run manual research, then link |
+| Need to refresh all links | Run `sync/estimate-emails.ts` |
+| Linking folder emails to project | Use Tier 1-3 approach below |
+
+---
+
+# Project-Level Linking (Tier Approach)
+
+For linking emails directly to projects (not estimates):
 
 ## The Three-Tier Approach
 
@@ -124,3 +196,44 @@ If any email looks unrelated, the linking is wrong. Clear and retry with stricte
 
 - [patterns.md](references/patterns.md) - Common matching patterns and edge cases
 - [validation.md](references/validation.md) - How to verify linking quality
+
+---
+
+# Repository API (estimate-email.ts)
+
+Location: `services/contract/census/db/repositories/estimate-email.ts`
+
+```typescript
+// Link an email to an estimate
+linkEmailToEstimate(estimateId: number, emailId: number, matchType: string, matchDetail: string)
+
+// Remove a link
+unlinkEmailFromEstimate(estimateId: number, emailId: number)
+
+// Get all emails for an estimate
+getEstimateEmails(estimateId: number): Email[]
+
+// Get all estimates for an email
+getEmailEstimates(emailId: number): Estimate[]
+
+// Find estimate by ID or estimate_number
+findEstimate(idOrNumber: number | string): Estimate | null
+
+// Find email by ID or internet_message_id
+findEmail(idOrMessageId: number | string): Email | null
+```
+
+## Database Schema
+
+```sql
+-- estimate_emails table (many-to-many)
+CREATE TABLE estimate_emails (
+  id INTEGER PRIMARY KEY,
+  estimate_id INTEGER NOT NULL,
+  email_id INTEGER NOT NULL,
+  match_type TEXT NOT NULL,  -- 'contractor', 'direct', 'thread', 'manual'
+  match_detail TEXT,         -- e.g., 'token:millennium', 'domain:chasse.com'
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(estimate_id, email_id)
+);
+```

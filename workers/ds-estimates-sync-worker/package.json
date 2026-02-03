@@ -2,10 +2,20 @@
   "name": "ds-estimates-sync-worker",
   "private": true,
   "scripts": {
-    "sync": "bun sync-estimates.ts",
-    "sync:dry": "bun sync-estimates.ts --dry-run",
+    "dev": "wrangler dev --remote",
+    "deploy": "wrangler deploy",
+    "tail": "wrangler tail",
+    "sync": "bun cli/sync-estimates.ts",
+    "sync:dry": "bun cli/sync-estimates.ts --dry-run",
+    "sync:limit": "bun cli/sync-estimates.ts --limit",
+    "quick": "bun cli/quick-sync.ts",
+    "validate": "bun cli/validate-sharepoint.ts",
+    "backfill": "bun cli/backfill-direct-relations.ts",
+    "leads": "bun cli/sync-leads-status.ts",
     "check": "bunx ultracite check",
-    "fix": "bunx ultracite fix"
+    "fix": "bunx ultracite fix",
+    "typecheck": "bunx tsc --noEmit",
+    "typecheck:cli": "bunx tsc --noEmit -p tsconfig.cli.json"
   },
   "dependencies": {
     "@azure/identity": "catalog:",
@@ -13,8 +23,10 @@
   },
   "devDependencies": {
     "@biomejs/biome": "catalog:",
+    "@cloudflare/workers-types": "catalog:",
     "@types/bun": "catalog:",
     "typescript": "catalog:",
-    "ultracite": "catalog:"
+    "ultracite": "catalog:",
+    "wrangler": "catalog:"
   }
 }

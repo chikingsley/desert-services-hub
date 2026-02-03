@@ -1,21 +1,44 @@
 {
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
     "jsx": "react-jsx",
     "incremental": true,
     "noUncheckedIndexedAccess": false,
     "noPropertyAccessFromIndexSignature": false,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./*"],
-      "@/components/*": ["apps/web/frontend/components/*"],
-      "@/pages/*": ["apps/web/frontend/pages/*"],
-      "@/lib/*": ["./lib/*"],
-      "@/api/*": ["apps/web/api/*"]
+      "@/*": [
+        "./*"
+      ],
+      "@contract/*": [
+        "apps/contract-ui/contract/*"
+      ],
+      "@services/*": [
+        "services/*"
+      ],
+      "@lib/*": [
+        "lib/*"
+      ],
+      "@/components/*": [
+        "apps/web/frontend/components/*"
+      ],
+      "@/pages/*": [
+        "apps/web/frontend/pages/*"
+      ],
+      "@/api/*": [
+        "apps/web/api/*"
+      ]
     }
   },
-  "include": ["**/*.ts", "**/*.tsx"],
+  "include": [
+    "**/*.ts",
+    "**/*.tsx"
+  ],
   "exclude": [
     "node_modules",
     "workers",

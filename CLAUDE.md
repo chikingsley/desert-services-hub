@@ -40,6 +40,24 @@ For quick one-offs where no script exists, `bun -e` is acceptable:
 bun -e "import { searchItems } from './services/monday/client'; console.log(await searchItems('7943937855', 'SearchTerm'))"
 ```
 
+**Monday GraphQL one-offs** (for bulk searches/updates in `workers/ds-estimates-sync-worker/`):
+
+```bash
+cd workers/ds-estimates-sync-worker && bun -e '
+import { query } from "./monday/client";
+const result = await query(`
+  query {
+    boards(ids: 7943937851) {
+      items_page(limit: 100, query_params: {
+        rules: [{column_id: "name", compare_value: ["TF"], operator: contains_text}]
+      }) { items { id name } }
+    }
+  }
+`);
+console.log(result.boards[0].items_page.items);
+'
+```
+
 **Shell gotcha**: avoid `!` in inline scripts (interprets as history expansion). Use `myBool === false` instead of `!myBool`.
 
 ### Querying SQLite Databases
@@ -271,6 +289,85 @@ const attachments = db
 
 ---
 
+## OCR & Document Processing
+
+### Gemini 3 Flash OCR (plan-analysis/)
+
+All OCR is handled by the **plan-analysis** Python package using Gemini 3 Flash. This provides better accuracy than traditional OCR, especially for construction documents with technical drawings.
+
+**Location:** `plan-analysis/` directory
+
+**Basic OCR:**
+
+```bash
+cd plan-analysis/
+just ocr "/path/to/document.pdf"
+# Creates: /path/to/document.gemini.md
+```
+
+**With page limit (for testing):**
+
+```bash
+just ocr-limit "/path/to/document.pdf" 5
+```
+
+**Read the output:**
+
+```bash
+Read "/path/to/document.gemini.md"
+```
+
+### Agentic Vision (Detailed Inspection)
+
+For construction plans requiring detailed analysis (counting, measuring, verification):
+
+```python
+from plan_analysis import PlanAnalyzer
+
+analyzer = PlanAnalyzer()
+
+# Agentic vision with zoom and code execution
+result = analyzer.detailed_inspection(
+    image_path="./plan.pdf",
+    inspection_prompt="Count all sediment basins and measure their volume"
+)
+
+# Returns structured data:
+# - inspected_areas: list of examined regions with coordinates
+# - findings: detailed observations per area  
+# - measurements: calculated values
+# - compliance_status: pass/fail per item
+```
+
+**What agentic vision does:**
+
+1. **Think**: Analyzes the plan and inspection prompt
+2. **Act**: Generates Python code to crop/zoom specific areas
+3. **Observe**: Re-analyzes cropped sections with fresh context
+4. **Report**: Returns structured findings
+
+**When to use:**
+
+- Verifying critical values from OCR
+- Counting elements (basins, inlets, structures)
+- Extracting measurements from drawings
+- Cross-referencing text with visual elements
+
+### OCR Quality
+
+**Gemini 3 Flash vs Traditional OCR:**
+
+| Issue | Traditional OCR | Gemini 3 Flash |
+|-------|----------------|----------------|
+| "BUILDING CODE" | "MILKING CODE" | ✓ Correct |
+| Repeated garbage | "DIMENSIONS ARE INCREASED" ×17 | ✓ Clean output |
+| Technical drawings | Garbled | ✓ Structured data |
+| Measurements | Missed | ✓ Extracted with units |
+
+**All documents** (contracts, plans, drawings) should use the plan-analysis OCR.
+
+---
+
 ## Services & APIs
 
 ### Microsoft Graph / Email (`services/email`)
@@ -309,9 +406,44 @@ WHERE m.email = 'contracts@desertservices.net';
 
 - **Board IDs**: `ESTIMATING`, `LEADS`, `CONTRACTORS`, `CONTACTS`, `PROJECTS`, `DUST_PERMITS`, etc.
 - **Methods**: `searchItems`, `getItems`, `getItem`, `createItem`, `updateItem`.
-- All searches auto-paginate and exclude "Shell Estimates" by default.
+- All searches auto-paginate and exclude "Shell Estimates" and "Sales Team Estimates" by default.
 - **Monday URL format**: `https://desert-services-company.monday.com/boards/{boardId}/pulses/{itemId}` — NOT `monday.com/boards/...`. The subdomain is required.
 - **When marking Won**: Also mark competing estimates (same project, different GC or earlier bids) as "GC Not Awarded".
+
+#### Efficient GraphQL Queries
+
+For large-scale searches or batch updates, use `query_params` with `contains_text` operator:
+
+```typescript
+// Search items containing "TF" in name - much faster than fetching all
+query {
+  boards(ids: ${BOARD_ID}) {
+    items_page(limit: 500, query_params: {
+      rules: [{column_id: "name", compare_value: ["TF"], operator: contains_text}]
+    }) {
+      cursor
+      items { id name group { title } }
+    }
+  }
+}
+
+// Update item name
+mutation {
+  change_simple_column_value(
+    board_id: ${BOARD_ID}
+    item_id: ${itemId}
+    column_id: "name"
+    value: "${escapedName}"
+  ) { id }
+}
+```
+
+**For detailed patterns**, see `workers/ds-estimates-sync-worker/SYNC-KNOWLEDGE.md` which documents:
+
+- Cursor-based pagination with filtering
+- Standard item name prefixes (TF, PJ, CFS, MISC, etc.)
+- Board relation vs mirror column handling
+- Retry logic for API flakiness
 
 ### SharePoint (`services/sharepoint`)
 
@@ -461,3 +593,46 @@ VALUES (?, ?, ?, 'outlook_folder');
 ```
 
 Example: Folder "Elanto at Prasada" → Estimate "PRASADA CLUBHOUSE"
+
+---
+
+## Estimate Email History (Pre-computed)
+
+**IMPORTANT:** Before manually searching for estimate emails, check the pre-computed `estimate_emails` table first.
+
+### Quick Query
+
+```sql
+-- Get emails for an estimate
+SELECT e.subject, e.from_email, e.received_at, ee.match_type
+FROM estimate_emails ee
+JOIN emails e ON e.id = ee.email_id
+WHERE ee.estimate_id = (SELECT id FROM estimates WHERE estimate_number = 'EST-12345')
+ORDER BY e.received_at DESC;
+```
+
+### Coverage Stats (Feb 2026)
+
+| Source | Coverage |
+|--------|----------|
+| Building Connected | 70% |
+| PlanHub | 39% |
+| Email/Direct/Same Day | 25-30% |
+
+1,236 of 4,781 estimates have pre-computed email links.
+
+### If estimate_emails is empty
+
+1. **Run manual research** - search emails by contractor domain + project name tokens
+2. **Link using repository**: `services/contract/census/db/repositories/estimate-email.ts`
+   - `linkEmailToEstimate(estimateId, emailId, "manual", "agent research")`
+   - `findEstimate("search")` - find by estimate_number or name
+   - `getEstimateEmails(estimateId)` - get all linked emails
+
+### Re-sync all estimate emails
+
+```bash
+bun services/contract/census/sync/estimate-emails.ts
+```
+
+Takes ~1 min. Matches by contractor + name tokens, expands via threads.

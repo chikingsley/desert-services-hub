@@ -258,7 +258,7 @@ const tools = [
   {
     name: "search_items",
     description:
-      "Search items by name within a board. Excludes 'Shell Estimates' group by default.",
+      "Search items by name within a board. Excludes 'Shell Estimates' and 'Sales Team Estimates' groups by default.",
     inputSchema: {
       type: "object" as const,
       properties: {
@@ -271,7 +271,7 @@ const tools = [
           type: "array",
           items: { type: "string" },
           description:
-            "Groups to exclude from search (default: ['shell estimates'])",
+            "Groups to exclude from search (default: ['Shell Estimates ( Do Not Move)', 'Sales Team Estimates'])",
         },
       },
       required: ["boardId", "searchTerm"],

@@ -55,7 +55,9 @@ export async function query<T>(graphqlQuery: string): Promise<T> {
           await new Promise((r) => setTimeout(r, RETRY_DELAY_MS * attempt));
           continue;
         }
-        throw new Error(`Monday API returned invalid JSON (status ${response.status})`);
+        throw new Error(
+          `Monday API returned invalid JSON (status ${response.status})`
+        );
       }
       const firstError = result.errors?.[0];
 

@@ -1,0 +1,19 @@
+{
+  "name": "ds-gc-cleanup-worker",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "wrangler dev --remote",
+    "deploy": "wrangler deploy",
+    "tail": "wrangler tail",
+    "test": "bun test"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260131.0",
+    "@types/bun": "catalog:",
+    "typescript": "^5.9.3",
+    "wrangler": "catalog:"
+  },
+  "module": "src/index.ts",
+  "type": "module"
+}

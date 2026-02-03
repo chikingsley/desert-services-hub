@@ -81,6 +81,10 @@ Key relationships:
 - API routes in `app/api/` use the db directly
 - Client components use fetch to API routes
 
+## Dev Server Policy
+
+**Do NOT run dev servers** (mobile, web, or any other) to test changes unless explicitly asked. Running tests (`bun test`) is fine, but don't start `bun run dev`, `expo start`, or similar commands to verify changes.
+
 ## Code Standards (Ultracite)
 
 This project uses Ultracite, a zero-config Biome preset. Run `bun x ultracite fix` before committing.

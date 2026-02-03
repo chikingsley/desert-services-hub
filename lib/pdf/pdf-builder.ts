@@ -8,7 +8,7 @@ import type {
   TDocumentDefinitions,
 } from "pdfmake/interfaces";
 import type { EditorLineItem, EditorQuote, EditorSection } from "@/lib/types";
-import { findItem } from "@/services/quoting/catalog";
+import { findItem } from "@/apps/quoting/catalog";
 
 // Formatting helpers
 function formatCurrency(value: number): string {

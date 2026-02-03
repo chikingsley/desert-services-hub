@@ -17,6 +17,7 @@ from typing import TYPE_CHECKING
 
 from mistral_mcp.client import MistralClient
 from mistral_mcp.pdf_utils import get_pdf_info, split_pdf
+from mistral_mcp.types import TableFormat
 
 if TYPE_CHECKING:
     from mistral_mcp.types import PDFChunk
@@ -44,6 +45,10 @@ async def split_and_ocr(
     *,
     max_concurrent: int = 5,
     client: MistralClient | None = None,
+    table_format: TableFormat | None = None,
+    extract_header: bool = False,
+    extract_footer: bool = False,
+    include_images: bool = False,
 ) -> SplitOCRResult:
     """
     Split a PDF into pages, OCR each, and save to a single markdown file.
@@ -57,6 +62,10 @@ async def split_and_ocr(
         output_path: Path for the combined markdown output file.
         max_concurrent: Max concurrent OCR requests (default: 5).
         client: Optional MistralClient instance.
+        table_format: How to format extracted tables (inline, markdown, html).
+        extract_header: Whether to extract page headers.
+        extract_footer: Whether to extract page footers.
+        include_images: Whether to include base64 images in output.
 
     Returns:
         SplitOCRResult with processing stats.
@@ -108,7 +117,8 @@ async def split_and_ocr(
 
         # Filter to only pages we haven't done yet
         chunks_to_process = [
-            chunk for chunk in split_result.chunks
+            chunk
+            for chunk in split_result.chunks
             if chunk.start_page not in completed_pages
         ]
 
@@ -133,7 +143,13 @@ async def split_and_ocr(
         async def ocr_chunk(chunk: PDFChunk) -> tuple[int, str]:
             async with semaphore:
                 logger.debug(f"OCR page {chunk.start_page}")
-                result = await client.ocr_from_file(chunk.file_path)
+                result = await client.ocr_from_file(
+                    chunk.file_path,
+                    table_format=table_format,
+                    extract_header=extract_header,
+                    extract_footer=extract_footer,
+                    include_images=include_images,
+                )
                 markdown = result.full_text if result.pages else ""
                 return chunk.start_page, markdown
 

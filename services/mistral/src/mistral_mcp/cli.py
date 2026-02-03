@@ -38,6 +38,7 @@ from pathlib import Path
 from mistral_mcp.client import MistralClient
 from mistral_mcp.pdf_utils import extract_pages, get_pdf_info
 from mistral_mcp.split_ocr import split_and_ocr
+from mistral_mcp.types import TableFormat
 
 
 def cmd_serve(_args: argparse.Namespace) -> None:
@@ -52,10 +53,22 @@ async def cmd_ocr_async(args: argparse.Namespace) -> None:
     source = Path(args.file)
     output = Path(args.output) if args.output else source.with_suffix(".md")
 
+    # Parse table format
+    table_format = None
+    if args.table_format:
+        try:
+            table_format = TableFormat(args.table_format)
+        except ValueError:
+            print(f"Warning: Invalid table format '{args.table_format}', using default")
+
     result = await split_and_ocr(
         str(source),
         str(output),
         max_concurrent=args.concurrent,
+        table_format=table_format,
+        extract_header=args.extract_header,
+        extract_footer=args.extract_footer,
+        include_images=args.include_images,
     )
 
     if result.resumed_from > 0:
@@ -259,6 +272,27 @@ def main() -> None:
         "output",
         nargs="?",
         help="Output markdown file (default: same dir, .md extension)",
+    )
+    ocr_parser.add_argument(
+        "--table-format",
+        choices=["inline", "markdown", "html"],
+        default=None,
+        help="Format for extracted tables (default: inline)",
+    )
+    ocr_parser.add_argument(
+        "--extract-header",
+        action="store_true",
+        help="Extract page headers (sheet numbers, dates, etc.)",
+    )
+    ocr_parser.add_argument(
+        "--extract-footer",
+        action="store_true",
+        help="Extract page footers (document control info)",
+    )
+    ocr_parser.add_argument(
+        "--include-images",
+        action="store_true",
+        help="Include base64-encoded images in output",
     )
     ocr_parser.add_argument(
         "--concurrent",

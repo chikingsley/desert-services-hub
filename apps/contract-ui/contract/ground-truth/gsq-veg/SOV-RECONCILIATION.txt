@@ -1,0 +1,53 @@
+SOV Reconciliation - GSQ VEG
+=============================
+Estimate #: 12172501
+NTA Date: 2026-01-15
+NTA Value: $17,440.00 ("carried your full proposal")
+
+Scope Change: 2026-01-28
+Per Rick/Denise - BPR wants everything EXCEPT filter sock (waddles)
+
+SCHEDULE OF VALUES (as adjusted):
+----------------------------------
+REQUIRED ITEMS:
+  SWPPP Narrative                    $1,350.00
+  SWPPP Sign                           $275.00
+  Spill Kit                            $345.00
+  Fire Access Sign                     $675.00
+  Textura/Procore/GCPay fees           $100.00
+  CCIP/OCIP/Insurance portal fees      $250.00
+  Inspections (21 @ $195)            $4,095.00
+  Dust Permit ($500 filing + $1,130)  $1,630.00
+  Mobilization (2 @ $255)              $510.00
+  ------------------------------------------
+  Subtotal Required:                 $9,230.00
+
+PHASE 1:
+  Compost Filter Sock (REMOVED)           $0.00  [was $4,290 - 1,560 LF @ $2.75]
+  Rock Entrance                       $2,475.00
+  Curb Inlet Protection (3 @ $375)    $1,125.00
+  Concrete Rolloff                      $725.00
+  ------------------------------------------
+  Subtotal Phase 1:                   $4,325.00
+
+PHASE 2:
+  Drop Inlet Protection (7 @ $175)    $1,225.00
+  ------------------------------------------
+  Subtotal Phase 2:                   $1,225.00
+
+TOTALS:
+  Original Estimate Total:           $17,440.00
+  Filter Sock Removed:               -$4,290.00
+  Adjusted Scope Total:              $13,150.00
+
+RECONCILIATION STATUS:
+  NTA Value:                         $17,440.00
+  Actual Scope Value:                $13,150.00
+  Difference:                        +$4,290.00 (in Desert's favor if not adjusted)
+
+ACTION NEEDED:
+  When subcontract arrives, verify contract value matches scope.
+  Options:
+    1. Contract at $17,440 with reduced scope (favorable)
+    2. Contract adjusted to $13,150 (scope-matched)
+    3. Contract at $17,440 with scope restored later

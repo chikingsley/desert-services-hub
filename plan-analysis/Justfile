@@ -1,0 +1,26 @@
+# Justfile for Plan Analysis
+# Essential commands only
+
+# Default: show available commands
+default:
+    @just --list
+
+# OCR a PDF with Gemini 3 Flash
+ocr pdf_path:
+    uv run plan-ocr gemini-ocr {{pdf_path}}
+
+# OCR with page limit
+ocr-limit pdf_path max_pages:
+    uv run plan-ocr gemini-ocr {{pdf_path}} --max-pages {{max_pages}}
+
+# Run lint check
+check:
+    uv run ruff check src/
+
+# Fix lint issues
+fix:
+    uv run ruff check --fix src/
+
+# Format code
+fmt:
+    uv run ruff format src/

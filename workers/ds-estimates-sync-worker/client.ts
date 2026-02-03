@@ -475,7 +475,7 @@ export class SharePointClient {
 
       // Final chunk returns the completed item
       if (end === fileSize) {
-        const data = await response.json();
+        const data = (await response.json()) as Record<string, unknown>;
         result = this.parseItem(data);
       }
 

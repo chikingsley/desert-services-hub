@@ -1,0 +1,17 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "types": ["bun"],
+    "skipLibCheck": true
+  },
+  "include": [
+    "cli/sync-estimates.ts",
+    "cli/validate-sharepoint.ts",
+    "cli/quick-sync.ts",
+    "client.ts",
+    "types.ts",
+    "monday/client.ts",
+    "monday/types.ts"
+  ],
+  "exclude": ["node_modules", "src/**/*"]
+}

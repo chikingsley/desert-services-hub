@@ -2,6 +2,15 @@
 
 Syncs Monday.com Estimating board items to SharePoint folder structure.
 
+## Architecture
+
+This package has **two** components:
+
+1. **Cloudflare Worker** (`src/index.ts`) - Runs on Cloudflare's edge, uses raw `fetch()` for Graph API
+2. **CLI Scripts** (`cli/`) - Run locally with Bun, uses `@azure/identity` SDK for richer SharePoint operations
+
+Both sync the same data, but the Worker is for automated hourly syncs while CLI is for manual operations and debugging.
+
 ## Quick Start
 
 ```bash
@@ -9,20 +18,43 @@ Syncs Monday.com Estimating board items to SharePoint folder structure.
 bun install
 
 # Dry run first (always!)
-bun sync-estimates.ts --dry-run --limit=100
+bun run sync:dry --limit=100
 
 # Real sync (limited)
-bun sync-estimates.ts --limit=500
+bun run sync --limit=500
 
 # Full sync
-bun sync-estimates.ts
+bun run sync
 ```
 
-## Important Documentation
+## Scripts
 
-**Before making changes, read [SYNC-KNOWLEDGE.md](./SYNC-KNOWLEDGE.md)** - contains critical knowledge about Monday.com API gotchas, board relations, and common mistakes.
+| Script | Command | Description |
+|--------|---------|-------------|
+| `sync` | `bun run sync` | Full sync to SharePoint |
+| `sync:dry` | `bun run sync:dry` | Preview sync (no changes) |
+| `sync:limit` | `bun run sync:limit 100` | Sync with item limit |
+| `quick` | `bun run quick` | Quick sync for specific items |
+| `validate` | `bun run validate` | Validate SharePoint folder structure |
+| `backfill` | `bun run backfill` | Backfill direct account relations |
+| `leads` | `bun run leads` | Sync leads status |
+
+## Worker Commands
+
+```bash
+# Local dev (connects to remote services)
+bun run dev
+
+# Deploy to Cloudflare
+bun run deploy
+
+# View logs
+bun run tail
+```
 
 ## Environment Variables
+
+Create a `.env` file or set these via `wrangler secret put`:
 
 ```bash
 MONDAY_API_KEY=<your-monday-api-key>
@@ -30,14 +62,6 @@ AZURE_TENANT_ID=<azure-tenant-id>
 AZURE_CLIENT_ID=<azure-client-id>
 AZURE_CLIENT_SECRET=<azure-client-secret>
 ```
-
-## Scripts
-
-| Script | Description |
-|--------|-------------|
-| `sync-estimates.ts` | Main sync script |
-| `validate-sharepoint.ts` | Validate SharePoint folder structure |
-| `cleanup-sharepoint.ts` | Fix bad folders |
 
 ## Folder Structure
 
@@ -56,8 +80,31 @@ Customer Projects/
                 └── NOI/
 ```
 
-## Tech Stack
+## Worker vs CLI
 
-- **Runtime**: Bun
-- **Monday API**: GraphQL with board relations
-- **SharePoint**: Microsoft Graph API
+| Feature | Worker (`src/`) | CLI (`cli/`) |
+|---------|-----------------|--------------|
+| Runtime | Cloudflare Workers | Bun |
+| Graph API | Raw `fetch()` | `@microsoft/microsoft-graph-client` SDK |
+| Auth | OAuth2 client credentials | `@azure/identity` SDK |
+| Triggers | Cron (hourly), HTTP | Manual |
+| Use Case | Automated background sync | Manual operations, debugging |
+
+## Important Documentation
+
+**Read [SYNC-KNOWLEDGE.md](./SYNC-KNOWLEDGE.md)** before making changes - contains critical knowledge about Monday.com API gotchas, board relations, and common mistakes.
+
+## TypeScript
+
+Two separate tsconfigs to handle the runtime differences:
+
+- `tsconfig.json` - Worker (Cloudflare Workers types)
+- `tsconfig.cli.json` - CLI scripts (Bun types)
+
+```bash
+# Check worker types
+bun run typecheck
+
+# Check CLI types
+bun run typecheck:cli
+```

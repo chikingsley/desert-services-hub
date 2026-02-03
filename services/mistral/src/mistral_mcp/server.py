@@ -27,6 +27,7 @@ from mcp.server.fastmcp import Context, FastMCP
 from mistral_mcp.client import MistralClient
 from mistral_mcp.pdf_utils import extract_pages, get_pdf_info
 from mistral_mcp.split_ocr import split_and_ocr
+from mistral_mcp.types import TableFormat
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator
@@ -85,6 +86,10 @@ async def ocr(
     file_path: str,
     output_path: str | None = None,
     max_concurrent: int = 5,
+    table_format: TableFormat | None = None,
+    extract_header: bool = False,
+    extract_footer: bool = False,
+    include_images: bool = False,
 ) -> str:
     """
     OCR a PDF document.
@@ -100,6 +105,10 @@ async def ocr(
         file_path: Path to the PDF file
         output_path: Custom output path (default: same dir, .md extension)
         max_concurrent: Max concurrent OCR requests (default: 5)
+        table_format: How to format extracted tables. Options: "inline", "markdown", "html"
+        extract_header: Whether to extract page headers (useful for sheet numbers, dates)
+        extract_footer: Whether to extract page footers (useful for document control)
+        include_images: Whether to include base64-encoded images in the output
 
     Returns:
         The extracted text in markdown format
@@ -107,6 +116,9 @@ async def ocr(
     Example:
         ocr("/path/to/contract.pdf")
         # Creates /path/to/contract.md and returns the text
+
+        ocr("/path/to/plan.pdf", table_format="markdown", extract_header=True, extract_footer=True)
+        # Better for construction documents with headers/footers and tables
     """
     source = Path(file_path)
     client = get_client(ctx)
@@ -119,6 +131,10 @@ async def ocr(
         str(output),
         max_concurrent=max_concurrent,
         client=client,
+        table_format=table_format,
+        extract_header=extract_header,
+        extract_footer=extract_footer,
+        include_images=include_images,
     )
 
     # Read and return the content

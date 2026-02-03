@@ -2,7 +2,7 @@
 // Uses max catalog items to test multipage layouts
 
 import type { EditorQuote, EditorSection } from "@/lib/types";
-import { createLineItems } from "@/services/quoting/catalog";
+import { createLineItems } from "@/apps/quoting/catalog";
 
 // Create line items using actual catalog codes (max coverage)
 const catalogLineItems = createLineItems([

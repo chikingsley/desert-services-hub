@@ -248,7 +248,11 @@ export class GraphEmailClient {
     this.client = Client.initWithMiddleware({ authProvider });
   }
 
-  private getClient(): Client {
+  /**
+   * Get the initialized Microsoft Graph Client instance.
+   * Initializes auth if necessary.
+   */
+  public getClient(): Client {
     if (!this.client) {
       if (!this.credential) {
         this.initAppAuth();
@@ -562,13 +566,13 @@ export class GraphEmailClient {
         fromEmail: from?.emailAddress?.address ?? "",
         toRecipients: this.parseRecipients(
           msg.toRecipients as
-            | Array<{ emailAddress?: { address?: string; name?: string } }>
-            | undefined
+          | Array<{ emailAddress?: { address?: string; name?: string } }>
+          | undefined
         ),
         ccRecipients: this.parseRecipients(
           msg.ccRecipients as
-            | Array<{ emailAddress?: { address?: string; name?: string } }>
-            | undefined
+          | Array<{ emailAddress?: { address?: string; name?: string } }>
+          | undefined
         ),
         bodyContent: body?.content ?? "",
         bodyType: body?.contentType === "html" ? "html" : "text",

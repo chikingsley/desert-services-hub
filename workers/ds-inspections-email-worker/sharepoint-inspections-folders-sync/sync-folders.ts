@@ -11,6 +11,11 @@ import { SharePointClient } from "./client";
 
 const DB_PATH = "inspections.db";
 
+// Top-level regex patterns
+const RAIN_REGEX = /rain/i;
+const DATE_PATTERN_REGEX = /(\d{2})\.(\d{2})\.(\d{2})/;
+const YEAR_FOLDER_PATTERN = /^\d{4}$/;
+
 // Initialize database schema
 function initDb(db: Database): void {
   db.run(`
@@ -70,10 +75,10 @@ function parseInspectionFilename(filename: string): {
   year: number | null;
   isRain: boolean;
 } {
-  const isRain = /rain/i.test(filename);
+  const isRain = RAIN_REGEX.test(filename);
 
   // Match date pattern: MM.DD.YY
-  const dateMatch = filename.match(/(\d{2})\.(\d{2})\.(\d{2})/);
+  const dateMatch = filename.match(DATE_PATTERN_REGEX);
   if (!dateMatch) {
     return { date: null, year: null, isRain };
   }
@@ -92,10 +97,18 @@ async function syncFolders(): Promise<void> {
   const db = new Database(DB_PATH);
   initDb(db);
 
+  const azureTenantId = process.env.AZURE_TENANT_ID;
+  const azureClientId = process.env.AZURE_CLIENT_ID;
+  const azureClientSecret = process.env.AZURE_CLIENT_SECRET;
+
+  if (!(azureTenantId && azureClientId && azureClientSecret)) {
+    throw new Error("Missing required Azure credentials");
+  }
+
   const client = new SharePointClient({
-    azureTenantId: process.env.AZURE_TENANT_ID!,
-    azureClientId: process.env.AZURE_CLIENT_ID!,
-    azureClientSecret: process.env.AZURE_CLIENT_SECRET!,
+    azureTenantId,
+    azureClientId,
+    azureClientSecret,
   });
 
   const AM_PATH = "SWPPP/INSPECTIONS/PROJECTS/PROJECTS A-M";
@@ -175,7 +188,7 @@ async function syncFolders(): Promise<void> {
 
               // Process files at project level and in year subfolders
               const yearFolders = projectItems.filter(
-                (item) => item.folder && /^\d{4}$/.test(item.name)
+                (item) => item.folder && YEAR_FOLDER_PATTERN.test(item.name)
               );
               const rootFiles = projectItems.filter(
                 (item) => item.file && item.name.endsWith(".pdf")

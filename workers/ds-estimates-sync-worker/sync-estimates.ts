@@ -15,19 +15,20 @@
  *   --limit=<n>        Max items to sync (default: all)
  *   --dry-run          Preview actions without creating/uploading
  */
-import { SharePointClient } from "./client";
+
 import {
   getItemNames,
   getItemsRich,
+  type MondayColumnValue,
   query,
   updateItem,
-  type MondayColumnValue,
 } from "@services/monday/client";
 import {
   BOARD_IDS,
   CONTACTS_COLUMNS,
   ESTIMATING_COLUMNS,
 } from "@services/monday/types";
+import { SharePointClient } from "./client";
 
 // ============================================
 // Constants
@@ -63,6 +64,10 @@ const VALID_STATUSES = new Set(["Submitted", "Active", "Lost", "Finished"]);
 
 const ILLEGAL_CHARS_REGEX = /["*:<>?/\\|#%~{}]/g;
 const URL_REGEX = /https?:\/\/\S+/;
+const TRAILING_PERIODS_REGEX = /\.+$/;
+const VARIANT_PREFIX_REGEX = /^(TF|PJ|RO|REBID)[\s\-_:]+(.+)$/i;
+const VARIANT_FOLDER_REGEX = /\/(TF|PJ|RO|REBID)[\s\-_:]/i;
+const CUSTOMER_PROJECTS_PATH_REGEX = /Customer Projects\/(.+)$/;
 
 // ============================================
 // Types
@@ -130,7 +135,7 @@ function sanitizeFolderName(name: string): string {
     .replace(/[\r\n]+/g, " ") // Replace newlines with spaces
     .replace(ILLEGAL_CHARS_REGEX, "")
     .trim()
-    .replace(/\.+$/, ""); // Remove trailing periods (SharePoint doesn't allow them)
+    .replace(TRAILING_PERIODS_REGEX, ""); // Remove trailing periods (SharePoint doesn't allow them)
 }
 
 /**
@@ -153,15 +158,19 @@ function sanitizeFolderName(name: string): string {
  *   "REBID: QTS PHX3" -> { isVariant: true, baseName: "QTS PHX3", suffix: "REBID" }
  *   "ECHO CANYON" -> { isVariant: false, baseName: "ECHO CANYON", suffix: null }
  */
-function parseVariantPrefix(name: string): { isVariant: boolean; baseName: string; suffix: string | null } {
+function parseVariantPrefix(name: string): {
+  isVariant: boolean;
+  baseName: string;
+  suffix: string | null;
+} {
   const trimmed = name.trim();
   // Match TF (Temp Fence), PJ (Porta John), RO (Rough Grade Only), or REBID prefix
-  const variantMatch = trimmed.match(/^(TF|PJ|RO|REBID)[\s\-_:]+(.+)$/i);
+  const variantMatch = trimmed.match(VARIANT_PREFIX_REGEX);
   if (variantMatch) {
-    return { 
-      isVariant: true, 
+    return {
+      isVariant: true,
       baseName: variantMatch[2].trim(),
-      suffix: variantMatch[1].toUpperCase()
+      suffix: variantMatch[1].toUpperCase(),
     };
   }
   return { isVariant: false, baseName: trimmed, suffix: null };
@@ -320,7 +329,10 @@ async function resolveAccountNames(
       ESTIMATING_COLUMNS.ACCOUNTS.id
     );
     if (accountIds.length > 0 && accountNames.has(accountIds[0])) {
-      accountNameMap.set(item.id, accountNames.get(accountIds[0])!);
+      const accountName = accountNames.get(accountIds[0]);
+      if (accountName) {
+        accountNameMap.set(item.id, accountName);
+      }
     }
   }
 
@@ -331,7 +343,9 @@ async function resolveAccountNames(
     const contactAccountMap = await lookupContactAccounts(contactIdsArray);
 
     for (const item of items) {
-      if (accountNameMap.has(item.id)) continue; // Already resolved
+      if (accountNameMap.has(item.id)) {
+        continue; // Already resolved
+      }
 
       const contactIdList = getLinkedIds(
         item.columnValues,
@@ -348,7 +362,9 @@ async function resolveAccountNames(
 
   // Fall back to CONTRACTOR mirror column for any remaining items
   for (const item of items) {
-    if (accountNameMap.has(item.id)) continue;
+    if (accountNameMap.has(item.id)) {
+      continue;
+    }
 
     // Mirror columns have display_value, not text - check columnValues
     const mirrorCol = item.columnValues.find(
@@ -369,7 +385,9 @@ async function resolveAccountNames(
 async function lookupContactAccounts(
   contactIds: string[]
 ): Promise<Map<string, string>> {
-  if (contactIds.length === 0) return new Map();
+  if (contactIds.length === 0) {
+    return new Map();
+  }
 
   const contactAccountMap = new Map<string, string>();
   const accountIdsToLookup = new Set<string>();
@@ -443,7 +461,11 @@ function mapEstimate(
   accountName: string | undefined
 ): EstimateProject {
   const bidStatus = item.columns[ESTIMATING_COLUMNS.BID_STATUS.id] ?? null;
-  const { isVariant, baseName, suffix: variantSuffix } = parseVariantPrefix(item.name);
+  const {
+    isVariant,
+    baseName,
+    suffix: variantSuffix,
+  } = parseVariantPrefix(item.name);
 
   if (!accountName) {
     return {
@@ -483,12 +505,13 @@ function mapEstimate(
 
     // For variant items (TF, PJ, RO, REBID), if existing URL points to a variant-prefixed folder,
     // we need to recreate in the base folder (consolidation)
-    const urlHasVariantFolder = isVariant && /\/(TF|PJ|RO|REBID)[\s\-_:]/i.test(decodedUrl);
+    const urlHasVariantFolder =
+      isVariant && VARIANT_FOLDER_REGEX.test(decodedUrl);
     if (urlHasVariantFolder) {
       // Variant item currently in separate folder - need to recreate in base folder
       action = "create";
       // Extract old variant folder path from URL for deletion after consolidation
-      const pathMatch = decodedUrl.match(/Customer Projects\/(.+)$/);
+      const pathMatch = decodedUrl.match(CUSTOMER_PROJECTS_PATH_REGEX);
       if (pathMatch) {
         oldVariantFolderPath = `Customer Projects/${pathMatch[1]}`;
       }
@@ -647,7 +670,8 @@ async function uploadFilesForProject(
             // Capture full error details - don't allow empty messages
             let msg: string;
             if (result.reason instanceof Error) {
-              msg = result.reason.message || result.reason.name || "Unknown Error";
+              msg =
+                result.reason.message || result.reason.name || "Unknown Error";
               if (result.reason.stack) {
                 // Include first line of stack for debugging
                 const stackLine = result.reason.stack.split("\n")[1]?.trim();
@@ -780,7 +804,9 @@ async function processMove(
     if (msg.includes("could not be found") || msg.includes("does not exist")) {
       return processCreate(sp, project, result);
     }
-    throw new Error(`Failed to move folder for "${project.projectName}": ${msg}`);
+    throw new Error(
+      `Failed to move folder for "${project.projectName}": ${msg}`
+    );
   }
   const uploaded = await uploadFilesForProject(sp, project, result.errors);
   result.filesUploaded += uploaded;

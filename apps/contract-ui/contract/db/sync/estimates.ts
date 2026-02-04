@@ -14,13 +14,7 @@
  *   --include-plans    Also download plan files (future)
  *   --include-contracts Also download contract files (future)
  */
-import { BUCKETS, fileExists, uploadFile } from "@lib/minio";
-import {
-  getItemsRich,
-  type MondayItemRich,
-  query,
-} from "@services/monday/client";
-import { BOARD_IDS, ESTIMATING_COLUMNS } from "@services/monday/types";
+
 import {
   getEstimateByMondayId,
   getEstimateStats,
@@ -30,6 +24,13 @@ import {
 } from "@contract/db";
 import { createProgressBar } from "@contract/db/lib/progress";
 import type { UpsertEstimateData } from "@contract/db/types";
+import { BUCKETS, fileExists, uploadFile } from "@lib/minio";
+import {
+  getItemsRich,
+  type MondayItemRich,
+  query,
+} from "@services/monday/client";
+import { BOARD_IDS, ESTIMATING_COLUMNS } from "@services/monday/types";
 
 // ============================================
 // Types
@@ -554,7 +555,7 @@ if (import.meta.main) {
       }
     },
   })
-    .then(async (result) => {
+    .then((result) => {
       console.log(`\n${"=".repeat(50)}`);
       console.log("SYNC COMPLETE");
       console.log("=".repeat(50));

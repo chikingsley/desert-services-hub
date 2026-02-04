@@ -38,7 +38,14 @@
       "!bun-init",
       "!bun-example",
       "!components",
-      "!services/file-automation/_reference"
+      "!services/file-automation/_reference",
+      "!**/.wrangler",
+      "!**/.cursor",
+      "!**/inspections-app-idea",
+      "!services/canonical/accounts/archive",
+      "!services/canonical/accounts/scripts",
+      "!apps/contract-ui/build.ts",
+      "!apps/contract-ui/sample-apps"
     ]
   },
   "overrides": [
@@ -101,7 +108,7 @@
       }
     },
     {
-      "includes": ["src/frontend/App.tsx"],
+      "includes": ["src/frontend/App.tsx", "apps/web/frontend/App.tsx"],
       "linter": {
         "rules": {
           "style": {
@@ -207,6 +214,59 @@
           },
           "suspicious": {
             "noAssignInExpressions": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["apps/web/frontend/components/ui/**/*"],
+      "linter": {
+        "rules": {
+          "performance": {
+            "noNamespaceImport": "off"
+          },
+          "correctness": {
+            "noNestedComponentDefinitions": "off"
+          },
+          "a11y": {
+            "useSemanticElements": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": [
+        "apps/web/frontend/components/catalog/catalog-category-card.tsx",
+        "apps/web/frontend/components/takeoffs/takeoff-viewer.tsx"
+      ],
+      "linter": {
+        "rules": {
+          "a11y": {
+            "useSemanticElements": "off",
+            "noNoninteractiveElementInteractions": "off",
+            "useKeyWithClickEvents": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": [
+        "apps/web/frontend/components/takeoffs/new-takeoff-dialog.tsx"
+      ],
+      "linter": {
+        "rules": {
+          "a11y": {
+            "noNoninteractiveElementInteractions": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["apps/quoting/mcp-server.ts"],
+      "linter": {
+        "rules": {
+          "performance": {
+            "noNamespaceImport": "off"
           }
         }
       }

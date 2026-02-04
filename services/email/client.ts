@@ -252,7 +252,7 @@ export class GraphEmailClient {
    * Get the initialized Microsoft Graph Client instance.
    * Initializes auth if necessary.
    */
-  public getClient(): Client {
+  getClient(): Client {
     if (!this.client) {
       if (!this.credential) {
         this.initAppAuth();
@@ -566,13 +566,13 @@ export class GraphEmailClient {
         fromEmail: from?.emailAddress?.address ?? "",
         toRecipients: this.parseRecipients(
           msg.toRecipients as
-          | Array<{ emailAddress?: { address?: string; name?: string } }>
-          | undefined
+            | Array<{ emailAddress?: { address?: string; name?: string } }>
+            | undefined
         ),
         ccRecipients: this.parseRecipients(
           msg.ccRecipients as
-          | Array<{ emailAddress?: { address?: string; name?: string } }>
-          | undefined
+            | Array<{ emailAddress?: { address?: string; name?: string } }>
+            | undefined
         ),
         bodyContent: body?.content ?? "",
         bodyType: body?.contentType === "html" ? "html" : "text",
@@ -2308,11 +2308,16 @@ export class GraphEmailClient {
   /**
    * Create a draft email (not sent).
    *
+   * Automatically adds a signature and company logo unless skipSignature is true.
+   *
    * @param options - Draft configuration
    * @param options.subject - Email subject line
    * @param options.body - Email body content
    * @param options.bodyType - Body format: 'text' or 'html' (default: 'text')
    * @param options.to - Optional array of recipients
+   * @param options.cc - Optional array of CC recipients
+   * @param options.attachments - Optional array of attachments
+   * @param options.skipSignature - Skip automatic signature and logo (default: false)
    * @param options.userId - Email address of the mailbox (required for app auth)
    * @returns Promise resolving to object with draft id and subject
    *
@@ -2338,16 +2343,48 @@ export class GraphEmailClient {
       contentId?: string;
       isInline?: boolean;
     }>;
+    skipSignature?: boolean;
     userId?: string;
   }): Promise<{ id: string; subject: string }> {
     const client = this.getClient();
     const basePath = this.getBasePath(options.userId);
 
+    // Auto-wrap with signature unless explicitly skipped
+    let body = options.body;
+    let bodyType = options.bodyType ?? "text";
+    const attachmentsToAdd: Array<{
+      name: string;
+      contentType: string;
+      contentBytes: string;
+      contentId?: string;
+      isInline?: boolean;
+    }> = [];
+
+    if (options.skipSignature !== true) {
+      body = await wrapWithSignature(options.body);
+      bodyType = "html";
+
+      // Add logo attachment for signature
+      const logo = await getLogoAttachment();
+      attachmentsToAdd.push({
+        name: logo.name,
+        contentType: logo.contentType,
+        contentBytes: logo.contentBytes,
+        contentId: logo.contentId,
+        isInline: logo.isInline,
+      });
+    }
+
+    // Add user-provided attachments
+    if (options.attachments?.length) {
+      attachmentsToAdd.push(...options.attachments);
+    }
+
     const message: Record<string, unknown> = {
       subject: options.subject,
       body: {
-        contentType: options.bodyType ?? "text",
-        content: options.body,
+        contentType: bodyType,
+        content: body,
       },
     };
 
@@ -2367,8 +2404,8 @@ export class GraphEmailClient {
       const response = await client.api(`${basePath}/messages`).post(message);
       const draftId = response.id as string;
 
-      if (options.attachments?.length) {
-        for (const att of options.attachments) {
+      if (attachmentsToAdd.length > 0) {
+        for (const att of attachmentsToAdd) {
           await client.api(`${basePath}/messages/${draftId}/attachments`).post({
             "@odata.type": "#microsoft.graph.fileAttachment",
             name: att.name,

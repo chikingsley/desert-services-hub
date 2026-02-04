@@ -18,6 +18,10 @@ import {
 
 const DB_PATH = "./sharepoint-inspections-folders-sync/inspections.db";
 
+// Top-level regex patterns
+const YEAR_FOLDER_REGEX = /\/\d{4}$/;
+const STARTS_WITH_DIGIT_REGEX = /^\d/;
+
 interface ProjectRow {
   contractor: string;
   project: string;
@@ -36,9 +40,11 @@ function buildSiteName(contractor: string, project: string): string {
  * Extract expected base path (without year suffix) from siteNameToSharePointPath result
  */
 function getBasePathFromGenerated(generatedPath: string | null): string | null {
-  if (!generatedPath) return null;
+  if (!generatedPath) {
+    return null;
+  }
   // Remove trailing year folder (e.g., /2026)
-  return generatedPath.replace(/\/\d{4}$/, "");
+  return generatedPath.replace(YEAR_FOLDER_REGEX, "");
 }
 
 describe("SharePoint Path Validation", () => {
@@ -238,7 +244,7 @@ describe("SharePoint Path Validation", () => {
 
     // Find contractors starting with numbers
     const numericContractors = activeProjects.filter((p) =>
-      /^\d/.test(p.contractor)
+      STARTS_WITH_DIGIT_REGEX.test(p.contractor)
     );
 
     it(`should handle ${numericContractors.length} projects with numeric contractor names`, () => {

@@ -294,11 +294,11 @@ function isRateLimitError(error: Error): boolean {
  */
 function getBackoffDelay(attempt: number, isRateLimit: boolean): number {
   // Longer base delay for rate limit errors
-  const baseDelay = isRateLimit ? 10_000 : 3_000;
+  const baseDelay = isRateLimit ? 10_000 : 3000;
   const maxDelay = 60_000;
 
   // Exponential backoff: base * 2^(attempt-1)
-  const exponentialDelay = baseDelay * Math.pow(2, attempt - 1);
+  const exponentialDelay = baseDelay * 2 ** (attempt - 1);
 
   // Add jitter (±20%) to prevent all retries hitting at same time
   const jitter = exponentialDelay * 0.2 * (Math.random() * 2 - 1);
@@ -313,7 +313,9 @@ async function generatePdf(env: Env, url: string): Promise<Uint8Array> {
   for (let attempt = 1; attempt <= MAX_PDF_RETRIES; attempt++) {
     try {
       // Browser launch is now inside try-catch to handle 503/429 errors
-      console.log(`[Worker] PDF attempt ${attempt}/${MAX_PDF_RETRIES} - launching browser...`);
+      console.log(
+        `[Worker] PDF attempt ${attempt}/${MAX_PDF_RETRIES} - launching browser...`
+      );
       browser = await puppeteer.launch(env.BROWSER);
 
       const page = await browser.newPage();
@@ -350,17 +352,23 @@ async function generatePdf(env: Env, url: string): Promise<Uint8Array> {
 
       console.error(
         `[Worker] PDF attempt ${attempt}/${MAX_PDF_RETRIES} failed: ${lastError.message}` +
-          (isRateLimit ? " (rate limit/availability error - will use longer backoff)" : "")
+          (isRateLimit
+            ? " (rate limit/availability error - will use longer backoff)"
+            : "")
       );
 
       if (attempt < MAX_PDF_RETRIES) {
         const delay = getBackoffDelay(attempt, isRateLimit);
-        console.log(`[Worker] Waiting ${Math.round(delay / 1000)}s before retry...`);
+        console.log(
+          `[Worker] Waiting ${Math.round(delay / 1000)}s before retry...`
+        );
         await new Promise((resolve) => setTimeout(resolve, delay));
       }
     } finally {
       if (browser) {
-        await browser.close().catch(() => {}); // Ignore close errors
+        await browser.close().catch(() => {
+          /* intentionally ignore close errors */
+        });
         browser = null;
       }
     }

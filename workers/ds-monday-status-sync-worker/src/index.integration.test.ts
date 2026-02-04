@@ -20,7 +20,8 @@ const OVERALL_STATUS_COL = "color_mm068kjz";
 const ESTIMATE_LINK_COL = "board_relation_mktg3z60";
 
 const TEST_PREFIX = "_TEST_DELETE_ME_";
-const hasCredentials = Boolean(process.env.MONDAY_API_KEY);
+const mondayApiKey = process.env.MONDAY_API_KEY ?? "";
+const hasCredentials = Boolean(mondayApiKey);
 
 // Helper: Monday API query
 async function mondayQuery<T>(queryStr: string): Promise<T> {
@@ -28,7 +29,7 @@ async function mondayQuery<T>(queryStr: string): Promise<T> {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: process.env.MONDAY_API_KEY!,
+      Authorization: mondayApiKey,
       "API-Version": "2026-01",
     },
     body: JSON.stringify({ query: queryStr }),
@@ -38,7 +39,10 @@ async function mondayQuery<T>(queryStr: string): Promise<T> {
   if (json.errors) {
     throw new Error(`Monday API error: ${JSON.stringify(json.errors)}`);
   }
-  return json.data!;
+  if (!json.data) {
+    throw new Error("Monday API returned no data");
+  }
+  return json.data;
 }
 
 // Helper: Create item
@@ -103,7 +107,7 @@ async function linkItems(
 
 // Helper: Get item column value
 async function getItemStatus(
-  boardId: string,
+  _boardId: string,
   itemId: string,
   columnId: string
 ): Promise<string | null> {
@@ -150,7 +154,9 @@ async function syncLeadFromEstimate(
   };
 
   const newStatus = bidStatus ? STATUS_MAP[bidStatus] : null;
-  if (!newStatus) return null;
+  if (!newStatus) {
+    return null;
+  }
 
   // Update lead
   await updateColumn(LEADS_BOARD_ID, leadId, OVERALL_STATUS_COL, newStatus);

@@ -32,7 +32,7 @@ Use the Read tool to read the contract PDF. Extract these key fields:
 Search the local hub.db which has all estimates synced from Monday:
 
 ```bash
-sqlite3 /Users/chiejimofor/Documents/Github/desert-services-hub/apps/contract-ui/contract/hub.db ".mode column" ".headers on" "
+sqlite3 /Users/chiejimofor/Documents/Github/desert-services-hub/apps/contract/hub.db ".mode column" ".headers on" "
 SELECT id, monday_item_id, name, contractor, bid_value, bid_status 
 FROM estimates 
 WHERE name LIKE '%PROJECT_NAME%' 
@@ -45,21 +45,25 @@ LIMIT 20;
 Multiple search strategies:
 
 **Strategy 1: Project name search**
+
 ```bash
 sqlite3 hub.db "SELECT id, monday_item_id, name, contractor, bid_value FROM estimates WHERE name LIKE '%PROJECT_NAME%' LIMIT 10;"
 ```
 
 **Strategy 2: Contractor/account search**
+
 ```bash
 sqlite3 hub.db "SELECT id, monday_item_id, name, contractor, bid_value FROM estimates WHERE contractor LIKE '%CONTRACTOR_NAME%' LIMIT 10;"
 ```
 
 **Strategy 3: Address search (if available)**
+
 ```bash
 sqlite3 hub.db "SELECT id, monday_item_id, name, contractor, bid_value FROM estimates WHERE name LIKE '%STREET%' OR name LIKE '%CITY%' LIMIT 10;"
 ```
 
 **Strategy 4: Job number search**
+
 ```bash
 sqlite3 hub.db "SELECT id, monday_item_id, name, contractor, bid_value FROM estimates WHERE name LIKE '%JOB_NUMBER%' LIMIT 10;"
 ```
@@ -78,6 +82,7 @@ bun -e "import { searchItems } from './services/monday/client'; console.log(awai
 **Input:** Contract PDF for "AMS Mesa" with BC Construction Group, $17,845
 
 **Searches run:**
+
 1. `hub.db LIKE '%AMS Mesa%'`
 2. `hub.db LIKE '%BC Construction%'`
 3. `hub.db LIKE '%Mesa%'`

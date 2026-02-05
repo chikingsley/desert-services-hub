@@ -50,6 +50,85 @@ const MAX_EMAILS_DEFAULT = 500;
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
 /**
+ * Rate Limiter for Microsoft Graph API
+ *
+ * Enforces proactive rate limiting to avoid 429 errors.
+ * Limits: 10,000 requests per 10 minutes per mailbox (~16.67/sec)
+ *
+ * Uses a sliding window token bucket algorithm.
+ *
+ * References:
+ * - https://learn.microsoft.com/en-us/graph/throttling
+ * - https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/
+ */
+class RateLimiter {
+  // Graph API limit: 10,000 requests per 10 minutes = ~16.67/sec
+  // We use 15/sec (90% of limit) - leaves some headroom
+  private readonly maxRequestsPerSecond = 15;
+  private readonly windowMs = 1000; // 1 second window
+  private requestTimestamps: number[] = [];
+
+  /**
+   * Wait if necessary to respect rate limits
+   */
+  async throttle(): Promise<void> {
+    const now = Date.now();
+    const windowStart = now - this.windowMs;
+
+    // Remove timestamps outside the window
+    this.requestTimestamps = this.requestTimestamps.filter(
+      (t) => t > windowStart
+    );
+
+    // If at limit, wait until oldest request falls outside window
+    if (this.requestTimestamps.length >= this.maxRequestsPerSecond) {
+      const oldestInWindow = this.requestTimestamps[0];
+      const waitTime = oldestInWindow + this.windowMs - now + 10; // +10ms buffer
+      if (waitTime > 0) {
+        await this.sleep(waitTime);
+      }
+    }
+
+    // Record this request
+    this.requestTimestamps.push(Date.now());
+  }
+
+  private sleep(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  /**
+   * Calculate exponential backoff delay with full jitter
+   *
+   * Formula: delay = random(0, min(cap, base * 2^attempt))
+   *
+   * @param attempt - Retry attempt number (0-indexed)
+   * @param retryAfterMs - Optional Retry-After header value in ms (takes precedence)
+   * @returns Delay in milliseconds
+   */
+  static calculateBackoff(attempt: number, retryAfterMs?: number): number {
+    // If server provided Retry-After, use it with small jitter
+    if (retryAfterMs && retryAfterMs > 0) {
+      // Add 0-10% jitter to Retry-After to prevent thundering herd
+      const jitter = Math.random() * retryAfterMs * 0.1;
+      return retryAfterMs + jitter;
+    }
+
+    // Exponential backoff with full jitter
+    // Base: 1000ms, Factor: 2, Cap: 60000ms (60 seconds)
+    const BASE_DELAY_MS = 1000;
+    const FACTOR = 2;
+    const MAX_DELAY_MS = 60_000;
+
+    const exponentialDelay = BASE_DELAY_MS * FACTOR ** attempt;
+    const cappedDelay = Math.min(exponentialDelay, MAX_DELAY_MS);
+
+    // Full jitter: random value between 0 and cappedDelay
+    return Math.random() * cappedDelay;
+  }
+}
+
+/**
  * Microsoft Graph API client for email operations.
  *
  * Supports two authentication modes:
@@ -79,6 +158,7 @@ export class GraphEmailClient {
   private credential: TokenCredential | null = null;
   private msalClient: PublicClientApplication | null = null;
   private activeMailboxCache: string[] | null = null;
+  private readonly rateLimiter = new RateLimiter();
 
   /**
    * Create a new GraphEmailClient instance.
@@ -493,6 +573,9 @@ export class GraphEmailClient {
       : "id,internetMessageId,subject,receivedDateTime,from,toRecipients,ccRecipients,hasAttachments,conversationId,categories,bodyPreview";
 
     try {
+      // Proactive rate limiting
+      await this.rateLimiter.throttle();
+
       let response = await client
         .api(messagesPath)
         .filter(dateFilter)
@@ -510,6 +593,9 @@ export class GraphEmailClient {
         if (allEmails.length >= maxEmails || !nextLink) {
           break;
         }
+
+        // Rate limit before next page
+        await this.rateLimiter.throttle();
         response = await client.api(nextLink).get();
       }
 
@@ -559,6 +645,9 @@ export class GraphEmailClient {
 
       while (!success && retries < MAX_RETRIES) {
         try {
+          // Proactive rate limiting - wait if needed before making request
+          await this.rateLimiter.throttle();
+
           const batchResponse = await client.api("/$batch").post({
             requests: batchRequests,
           });
@@ -586,20 +675,20 @@ export class GraphEmailClient {
 
           // Check if it's a rate limit error (429)
           if (graphError.statusCode === 429) {
-            retries++;
-            // Extract Retry-After header, default to exponential backoff
-            let retryAfterMs = Math.min(30_000 * 2 ** retries, 120_000); // 30s, 60s, 120s max
-
-            // Try to get Retry-After from headers
+            // Extract Retry-After header (in seconds)
             const retryAfterHeader = graphError.headers?.get?.("Retry-After");
-            if (retryAfterHeader) {
-              retryAfterMs = Number.parseInt(retryAfterHeader, 10) * 1000;
-            }
+            const retryAfterMs = retryAfterHeader
+              ? Number.parseInt(retryAfterHeader, 10) * 1000
+              : undefined;
+
+            // Calculate backoff with jitter (uses Retry-After if provided)
+            const delayMs = RateLimiter.calculateBackoff(retries, retryAfterMs);
 
             console.error(
-              `[Batch ${Math.floor(i / BATCH_SIZE)}] Rate limited (429), retry ${retries}/${MAX_RETRIES} in ${retryAfterMs / 1000}s...`
+              `[Batch ${Math.floor(i / BATCH_SIZE)}] Rate limited (429), retry ${retries + 1}/${MAX_RETRIES} in ${(delayMs / 1000).toFixed(1)}s...`
             );
-            await this.sleep(retryAfterMs);
+            await this.sleep(delayMs);
+            retries++;
           } else {
             console.error(
               `Batch body fetch failed for batch ${Math.floor(i / BATCH_SIZE)}:`,
@@ -983,6 +1072,9 @@ export class GraphEmailClient {
 
     for (let retries = 0; retries < MAX_RETRIES; retries++) {
       try {
+        // Proactive rate limiting
+        await this.rateLimiter.throttle();
+
         const response = await client
           .api(`${basePath}/messages/${messageId}/attachments`)
           .get();
@@ -1005,17 +1097,19 @@ export class GraphEmailClient {
         };
 
         if (graphError.statusCode === 429) {
-          // Rate limited - extract Retry-After or use exponential backoff
-          let retryAfterMs = Math.min(30_000 * 2 ** retries, 120_000);
+          // Extract Retry-After header (in seconds)
           const retryAfterHeader = graphError.headers?.get?.("Retry-After");
-          if (retryAfterHeader) {
-            retryAfterMs = Number.parseInt(retryAfterHeader, 10) * 1000;
-          }
+          const retryAfterMs = retryAfterHeader
+            ? Number.parseInt(retryAfterHeader, 10) * 1000
+            : undefined;
+
+          // Calculate backoff with jitter (uses Retry-After if provided)
+          const delayMs = RateLimiter.calculateBackoff(retries, retryAfterMs);
 
           console.error(
-            `[getAttachments] Rate limited (429), retry ${retries + 1}/${MAX_RETRIES} in ${retryAfterMs / 1000}s...`
+            `[getAttachments] Rate limited (429), retry ${retries + 1}/${MAX_RETRIES} in ${(delayMs / 1000).toFixed(1)}s...`
           );
-          await this.sleep(retryAfterMs);
+          await this.sleep(delayMs);
           continue;
         }
 

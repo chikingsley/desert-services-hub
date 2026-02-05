@@ -24,8 +24,8 @@
  *     07-Closeout/
  */
 
-import { Database } from "bun:sqlite";
 import { parseArgs } from "node:util";
+import { db } from "@contract/db/connection";
 import { getFile } from "@lib/minio";
 import { SharePointClient } from "./client";
 
@@ -36,15 +36,6 @@ const RE_RE_PREFIX = /^RE-\s*/i;
 const RE_FW_PREFIX = /^FW-\s*/i;
 const RE_MULTIPLE_DASHES = /-{2,}/g;
 const RE_LEADING_TRAILING_DASHES = /^-+|-+$/g;
-
-// ---------------------------------------------------------------------------
-// Config
-// ---------------------------------------------------------------------------
-
-const HUB_DB_PATH = new URL(
-  "../../apps/contract-ui/contract/hub.db",
-  import.meta.url
-).pathname;
 
 const SHAREPOINT_ROOT = "Customer Projects/Active";
 
@@ -166,8 +157,6 @@ if (!(notionId || projectNameQuery)) {
   );
   process.exit(1);
 }
-
-const db = new Database(HUB_DB_PATH, { readonly: true });
 
 // Find the project's emails and attachments
 let query: string;

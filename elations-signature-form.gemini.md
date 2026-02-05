@@ -58,6 +58,7 @@
 # Document Extraction: Desert Services Authorization Form
 
 ## Header
+
 **DESERT SERVICES**  
 *The Ultimate Construction Services*
 
@@ -66,6 +67,7 @@ Elation Systems Customer Support Fax (925) 924-0387 [Support@elationsystems.com]
 ---
 
 ## Section A
+
 **(Note: If you are an officer of the company, you may proceed directly to Section B)**
 
 **Date:** 3-30-22
@@ -82,6 +84,7 @@ Regards,
 ---
 
 ## Section B
+
 **(Note: Section A needs to be completed if the person in this section is not an officer of the respective company)**
 
 **Date:** 3-30-22
@@ -100,5 +103,6 @@ Sincerely,
 ---
 
 ## Footer
+
 P.O. Box 14695 Scottsdale, AZ 85267  
 PH: 480-513-8986 Fax: 480-657-2057

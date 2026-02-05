@@ -1,5 +1,6 @@
 <!-- Page 1 -->
 --- Page 1 ---
+
 # VEG BUILDING
 
 # W MCDOWELL RD &amp; N BULLARD AVE
@@ -12,7 +13,7 @@ ISSUED FOR BID - 11.24.25
 
 ![img-1.jpeg](img-1.jpeg)
 
-# PROJECT NOTES:
+# PROJECT NOTES
 
 1. DO NOT ISSUE DRAWINGS.
 2. POINTS INDEMNIFIED AND PRECEDENCE OVER SOULED DRAWINGS. WHERE DISCREPANCIES OCCUR, POINTS INDEMNIFIED TO THE MINORITY FOR REGULATION.
@@ -32,13 +33,13 @@ ISSUED FOR BID - 11.24.25
 16. DIMENSIONS ARE INCREASED.
 17. DIMENSIONS ARE INCREASED.
 
-# F I R E P R O T E C T I O N NOTES:
+# F I R E P R O T E C T I O N NOTES
 
 A. 2019 INTERNATIONAL FIRE CODE
 B. NATIONAL FIRE PROTECTION ASSOCIATION (NFPA 13 APPENDICES, NFPA 13 FIRE GUARD), AND THE IMPORTANT CODE AMENDMENTS
 C. AMERICAN F1-CHOOLING COMMUNICATION SYSTEM, PER-NPPA 72
 
-# REFERENCE CODES:
+# REFERENCE CODES
 
 FOR THIS PROJECT
 
@@ -53,12 +54,12 @@ FOR THIS PROJECT
 
 # D E F R A R E I
 
-# D E F R A R E D SUBMITTALS:
+# D E F R A R E D SUBMITTALS
 
 A. "PRIME DRAWING" PLANS, PER-NPPA 13
 B. "THE GUARD PLANS, PER-NPPA 72
 
-# ABBREVIATIONS:
+# ABBREVIATIONS
 
 A.F.F. ABOVE FINISH FLOOR
 B.L.M. BLOWER
@@ -83,7 +84,7 @@ T.M. DRAWING
 U.M. DRAWING
 V.M. DRAWING
 
-# PROJECT DATA:
+# PROJECT DATA
 
 ACCEPTED: FOR PROJECT DATA
 OCCUPANCY CLASSIFICATION: B
@@ -99,7 +100,7 @@ GRAY SHELL: 5,700 S.F. = 150 + 38
 ALLOWED
 OCCUPANTS
 
-# DEC COMPLIANCE DATA:
+# DEC COMPLIANCE DATA
 
 FLOOR INSULATION REQUIRED: N.D. CONTINUOUS INSULATION - ABOVE DECK
 PROVIDED: N.D. ABOVE DECK DBA
@@ -114,13 +115,13 @@ EAT/ENON WALL INSULATION REQUIRED: N.D. ABOVE DECK
 
 # I E C A L I
 
-# I E C COMPLIANCE DATA:
+# I E C COMPLIANCE DATA
 
 ECCF INSULATION REQUIRED: N.D. CONTINUOUS INSULATION - ABOVE DECK
 PROVIDED: N.D. ABOVE DECK DBA
 EAT/ENON WALL INSULATION REQUIRED: N.D. ABOVE DECK
 
-# I E C COMPLIANCE PROCEDURES:
+# I E C COMPLIANCE PROCEDURES
 
 1. EAT REQUIRED WITH ACTUAL TRANSIT IMPROVEMENT PLANS SUBMITTED UNDER DRAWING REVERSE AND PERMIT PROCEEDS
 2. PLUMBING FUTURES PROVIDED: TO BE DETERMINED WITH ACTUAL TRANSIT IMPROVEMENT PLANS SUBMITTED UNDER DRAWING REVEAT PROCEEDS
@@ -196,7 +197,9 @@ LEGEND
 8/2400 BOWL OF BURN SHELL
 
 # GOODYEAR REGIONAL CENTER
+
 ## BLOCK A2, PHASE 2
+
 ## PAVING AND DRAINAGE PLANS
 
 A PORTION OF LAND LOCATED IN THE SOUTHEAST QUARTER OF SECTION 32, TOWNSHIP 2 NORTH, RANGE 1 WEST, OF THE GILA AND SALT RIVER BASE AND MERIDIAN, MARICOPA COUNTY, ARIZONA
@@ -204,6 +207,7 @@ A PORTION OF LAND LOCATED IN THE SOUTHEAST QUARTER OF SECTION 32, TOWNSHIP 2 NOR
 ![img-0.jpeg](img-0.jpeg)
 
 ## OWNER/DEVELOPER
+
 BG REINO, FINITIEREL LIC
 2003 2002 CIMBLERICK ROAD
 SUITE 200
@@ -212,6 +216,7 @@ PHONE: (485) 396-17141
 CONTACT: SCOTT WHONER
 
 ## ENGINEER
+
 1000 W 10th LOD CONSULTANTS, INC.
 8000 ALPINE TWIN STREET
 PHOENIX, ARIZONA 85014
@@ -220,14 +225,17 @@ CONTACT: FARRIS FREELICH, P.E.
 EMAIL: FARRISFREELICH.COM
 
 ## BENCHMARK
+
 IF IT'S OF GOODYEAR BRAND CAR IN HAND HOLE 24" DOWN SOUND AT THE INTERSECTION OF BULLARD AND MCDOWELL
 SOUTHEAST CORNER OF SECTION 32 T/N 91W
 ELEVATION 999.304" NAV088
 
 ## BASIS OF BEARING
+
 THE BASIS OF BEARING IS N89/27.46" WEST A DISTANCE OF 2819.44" ALONG THE SOUTH LINE OF THE SOUTHEAST QUARTER OF SECTION 32, TOWNSHIP 2 NORTH, RANGE 1 WEST.
 
 NOTE:
+
 1. ANY IMPROVEMENTS DAMAGED OR REPLACED DURING CONSTRUCTION SHALL BE REPLACED WITH IMPROVEMENTS THAT MEET THE CURRENT CITY STANDARDS.
 2. RETAINING WALLS ARE FOR REFERENCE ONLY. ALL RETAINING WALLS MUST BE SUBMITTED TO BUILDING SAFETY FOR APPROVAL AND INSPECTION.
 
@@ -270,11 +278,13 @@ THE QUANTITIES SHOWN ARE AN ESTIMATE ONLY. THE CONTRACTOR SHALL BE RESPONSIBLE F
 |  SAMCUT, REMOVE, AND REPLACE PAVEMENT | LF | 120  |
 
 ## DATA CERTIFICATION
+
 THEREBY CERTIFY THAT THE DESIGN IS BASED ON ACCURATE FIELD DATA WHICH HAS BEEN DISCLOSED IN THE FIELD PRIOR TO SUBMISSION OF THESE PLANS FOR CITY APPROVAL.
 
 ![img-1.jpeg](img-1.jpeg)
 
 ## AS-BUILT CERTIFICATION
+
 THEREBY CERTIFY THAT THE 100 BUILT INFORMATION SHOWN HEREON HAS OBTAINED LEGEN BY DIRECT SUPERVISION AND IS CORRECT AND COMPLETE TO THE BEST OF MY KNOWLEDGE AND BELIEF.
 
 ![img-2.jpeg](img-2.jpeg)
@@ -282,6 +292,7 @@ THEREBY CERTIFY THAT THE 100 BUILT INFORMATION SHOWN HEREON HAS OBTAINED LEGEN B
 ![img-3.jpeg](img-3.jpeg)
 
 ## SHEET INDEX
+
 1. COLOR SHEET &amp; QUANTITIES NOTED
 2. PAVING &amp; DRAINAGE PLANS
 
@@ -309,6 +320,7 @@ GOODYEAR, ARIZONA
 
 <!-- Page 3 -->
 --- Page 1 ---
+
 # ENGINEER'S GENERAL NOTES (3/9/2018)
 
 1. These plans are not to be used for construction purposes unless the approval is given and not being given to the appropriate owner. The owner will be acknowledged and approved by the owner for further analysis and/or action of government's policy, production and management plans. The owner will not be responsible for the economic aspect of the project, including the construction of the project, and the operation of the project.
@@ -329,27 +341,27 @@ f. The contractor shall not be responsible for the construction of the project, 
 
 g. The contractor shall not be responsible for the construction of the project, including the construction of the project, and the construction of the project, including the construction of the project, and the construction of the project, including the construction of the project, and the construction of the project, including the construction of the project, and the construction of the project, including the construction of the project, and the construction of the project.
 
-11. The business shall not be responsible for the construction of the project, including the construction of the project, and the construction of the project, including the construction of the project, and the construction of the project, including the construction of the project, and the construction of the project, including the construction of the project, and the construction of the project, including the construction of the project, and the construction of the project, including the construction of the project, and the construction of the project, including the construction of the project.
+1. The business shall not be responsible for the construction of the project, including the construction of the project, and the construction of the project, including the construction of the project, and the construction of the project, including the construction of the project, and the construction of the project, including the construction of the project, and the construction of the project, including the construction of the project, and the construction of the project, including the construction of the project, and the construction of the project, including the construction of the project.
 
-12. The contractor shall not be responsible for the construction of the project, including the construction of the project, and the construction of the project, including the construction of the project, and the construction of the project, including the construction of the project, and the construction of the project, including the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project.
+2. The contractor shall not be responsible for the construction of the project, including the construction of the project, and the construction of the project, including the construction of the project, and the construction of the project, including the construction of the project, and the construction of the project, including the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project.
 
-13. The contractor shall not be responsible for the construction of the project, including the construction of the project, and the construction of the project, including the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project.
+3. The contractor shall not be responsible for the construction of the project, including the construction of the project, and the construction of the project, including the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project.
 
-14. The contractor shall not be responsible for the construction of the project, including the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project.
+4. The contractor shall not be responsible for the construction of the project, including the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project.
 
-15. The contractor shall not be responsible for the construction of the project, including the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project.
+5. The contractor shall not be responsible for the construction of the project, including the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project.
 
-16. The contractor shall not be responsible for the construction of the project, including the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project.
+6. The contractor shall not be responsible for the construction of the project, including the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project.
 
-17. The contractor shall not be responsible for the construction of the project, including the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the
+7. The contractor shall not be responsible for the construction of the project, including the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the
 
-18. The contractor shall not be responsible for the construction of the project, including the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the
+8. The contractor shall not be responsible for the construction of the project, including the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the
 
-19. The contractor shall not be responsible for the construction of the project, including the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the
+9. The contractor shall not be responsible for the construction of the project, including the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the
 
-20. The contractor shall not be responsible for the construction of the project, and the construction of the project, and the construction of the
+10. The contractor shall not be responsible for the construction of the project, and the construction of the project, and the construction of the
 
-21. All approvals, construction plans, and the construction of the project, including the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the
+11. All approvals, construction plans, and the construction of the project, including the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the project, and the construction of the
 
 # ENGINEER'S GENERAL NOTES (CONT.)
 
@@ -365,19 +377,19 @@ g. The contractor shall not be responsible for the construction of the project, 
 
 1f. The contract is made in accordance with contract, and the contract is made in accordance with contract.
 
-2. The contract is made in accordance with contract, and the contract is made in accordance with contract.
+1. The contract is made in accordance with contract, and the contract is made in accordance with contract.
 
 2. The contract is made in accordance with contract, and the contract is made in accordance with contract.
 
-2. The contract is made in accordance with contract, and the contract is made in accordance with contract.
+3. The contract is made in accordance with contract, and the contract is made in accordance with contract.
 
-2. The contract is made in accordance with contract.
+4. The contract is made in accordance with contract.
 
-2. The contract is made in accordance with contract.
+5. The contract is made in accordance with contract.
 
-2. The contract is made in accordance with contract.
+6. The contract is made in accordance with contract.
 
-2.
+7.
 
 ---
 
@@ -446,7 +458,7 @@ SCALE 1"=0"
 10) SWR/UT AND REMOVE FINISHOUT. REPLACE PER PLAN. 2" MINIMUM.
 11) INSTALL BINE RADI. SEE LANDSCHKE PLANS FOR DETAILS.
 
-# PRIVATE PARKING LOT NOTES:
+# PRIVATE PARKING LOT NOTES
 
 1) PAINTED INTERNATIONAL ACCESSIBILITY WHEELCHAIR SYMBOL.
 2) 4" PAINTED STRIPING AT ACCESSIBLE ACCESS ADULTS 2' O.C. AT 45 DEGREES.
@@ -486,6 +498,7 @@ S 89-484.00
 # LEGEND
 
 P. 89.00
+
 1. TO 89.00
 2. TO 89.50
 3. TO 89.50
@@ -501,6 +514,7 @@ P. 89.00
 
 PANISHED BY
 P. 89.00
+
 1. TO 89.00
 2. TO 89.50
 3. TO 89.50
@@ -621,10 +635,12 @@ BASIS OF BEARING
 THE BASIS OF BEARING IS N89/27"46" WEST A DISTANCE OF 2819.44" ALONG THE SOUTH LINE OF THE SOUTHEAST QUARTER OF SECTION 32, TOWNSHIP 2 NORTH, RANGE 1 WEST.
 
 NOTE:
+
 1. ANY IMPROVEMENTS DAMAGED OR REPLACED DURING CONSTRUCTION SHALL BE REPLACED WITH IMPROVEMENTS THAT MAY THE CURRENT CITY STANDARDS.
 2. RETAINING WALLS ARE FOR REFERENCE ONLY. ALL RETAINING WALLS MUST BE SUBMITTED TO BULLDING SAFETY FOR APPROVAL AND INSPECTION.
 
 UTILITY CONFLICT CERTIFICATION
+
 |  UTILITY | UTILITY COMPANY | CONTACT | PHONE | DATE SIGNED  |
 | --- | --- | --- | --- | --- |
 |  WATER | LIBERTY UTILITIES | ROVELL FOODY | 623-240-2195 |   |
@@ -685,7 +701,7 @@ C.V.L.
 6000 Neth. 12th Street
 New York, NY 10036
 (212) 255-6557
-www.cvl.com
+<www.cvl.com>
 UTILITY PLANS
 BLOCK AZ, PHASE 2
 GOODYEAR, ARIZONA
@@ -730,11 +746,11 @@ GOODYEAR, ARIZONA
 
 # ENGINEER'S GENERAL NOTES (CONT.)
 
-19. ALL CONDUCTS HERE EXCLUDED REHATABLE CONCRETE PIPE, SHIFT-IN-PLACE PIPE, AND/OR COMPLIANT METAL PIPE. SHOWN ON THESE PLANS ARE NOT RELIABLE FOR CONSTRUCTION, CONSUMER SATISFACTION, WORKING ON THE CONSUMER, OR THE CONSENT MANUFACTURER MAY NOT SUBMIT OR ADEQUATE DURING CONSTRUCTION. THE CONTRACTOR SHALL BE RESPONSIBLE FOR THE PRODUCT OR THE CONSUMER TO RECOMMEND EXPENDING OR RECOMMENDING PRODUCTS. REWARD THAN TRAFFIC LABOR FOR WHICH THE CONDUCT HAS BEEN DESIGNED, IS TO BE OTHERWISE NOTED OR CLOSE TO THE BURIED CONDUCT. IT SHALL BE THE PRODUCT AFFECTED BY THE CONSUMER OR THE CONSUMER TO RECOMMEND EXPENDING OR RECOMMENDING PRODUCTS TO THE CONSUMER TO THE CONSENT. THE ADEQUATE OF THE CONSTRUCTIONS EXPRESSED IN THE CONSUMER SHALL BE ENFORCED AT THE CONTRACTOR'S EXPENSE.
+1. ALL CONDUCTS HERE EXCLUDED REHATABLE CONCRETE PIPE, SHIFT-IN-PLACE PIPE, AND/OR COMPLIANT METAL PIPE. SHOWN ON THESE PLANS ARE NOT RELIABLE FOR CONSTRUCTION, CONSUMER SATISFACTION, WORKING ON THE CONSUMER, OR THE CONSENT MANUFACTURER MAY NOT SUBMIT OR ADEQUATE DURING CONSTRUCTION. THE CONTRACTOR SHALL BE RESPONSIBLE FOR THE PRODUCT OR THE CONSUMER TO RECOMMEND EXPENDING OR RECOMMENDING PRODUCTS. REWARD THAN TRAFFIC LABOR FOR WHICH THE CONDUCT HAS BEEN DESIGNED, IS TO BE OTHERWISE NOTED OR CLOSE TO THE BURIED CONDUCT. IT SHALL BE THE PRODUCT AFFECTED BY THE CONSUMER OR THE CONSUMER TO RECOMMEND EXPENDING OR RECOMMENDING PRODUCTS TO THE CONSUMER TO THE CONSENT. THE ADEQUATE OF THE CONSTRUCTIONS EXPRESSED IN THE CONSUMER SHALL BE ENFORCED AT THE CONTRACTOR'S EXPENSE.
 
-20. THE ESTIMATED QUANTITIES SHOWN ARE FOR INFORMATION, PURPOSES ONLY, THE CONTRACTOR SHALL BE RESPONSIBLE FOR THE COMPLETENESS AND ACCURACY OF THE PRODUCTS ESTIMATE BASE ON THESE PLANS, CURRENT COSTS, AND SITE VISITATION.
+2. THE ESTIMATED QUANTITIES SHOWN ARE FOR INFORMATION, PURPOSES ONLY, THE CONTRACTOR SHALL BE RESPONSIBLE FOR THE COMPLETENESS AND ACCURACY OF THE PRODUCTS ESTIMATE BASE ON THESE PLANS, CURRENT COSTS, AND SITE VISITATION.
 
-21. ALL EARTHWORK CONSTRUCTION SHALL CONFORM TO THE LATEST AMERICAN ASSOCIATION OF GOVERNMENTS (M.A.U.) STANDARD DETAILS AND SPECIFICATIONS, INCLUDING ANY SUPPLEMENTS THEREOF AND THE SOLE REPORT PREPARED BY:
+3. ALL EARTHWORK CONSTRUCTION SHALL CONFORM TO THE LATEST AMERICAN ASSOCIATION OF GOVERNMENTS (M.A.U.) STANDARD DETAILS AND SPECIFICATIONS, INCLUDING ANY SUPPLEMENTS THEREOF AND THE SOLE REPORT PREPARED BY:
 
 COMPANY: SPEEDIE &amp; ASSOCIATES
 PROJECT NO.: 24249054
@@ -742,7 +758,7 @@ DATED: 3/1-30-2020
 
 DATE FOR EARTHWORK CALCULATIONS IS PROVIDED IN THE SOLE REPORT AND (IF APPLICABLE) ANY SUPPLEMENTS THEREOF.
 
-22. THE PLAN IS APPROVED SUBJECT TO COMPLETION OF THOSE LINES EARLY, EXCEPT, AND/OR THE RECOMMENDATIONS OF A PART OF EARTHWAY DEVELOPMENT. THE DEVELOPER OF THIS PROJECT MAY BE REQUIRED TO CONSTRUCT THOSE LINES PER THE REVERSED AGENCY'S REQUIREMENTS PRIOR TO RECEIVING SERVICES FOR THIS PROJECT.
+1. THE PLAN IS APPROVED SUBJECT TO COMPLETION OF THOSE LINES EARLY, EXCEPT, AND/OR THE RECOMMENDATIONS OF A PART OF EARTHWAY DEVELOPMENT. THE DEVELOPER OF THIS PROJECT MAY BE REQUIRED TO CONSTRUCT THOSE LINES PER THE REVERSED AGENCY'S REQUIREMENTS PRIOR TO RECEIVING SERVICES FOR THIS PROJECT.
 
 # CITY OF GOODYEAR GENERAL NOTES FOR CONSTRUCTION
 
@@ -822,6 +838,7 @@ USE&amp;VANLOO
 
 <!-- Page 7 -->
 --- Page 1 ---
+
 # LIBERTY UTILITIES GENERAL NOTES
 
 1. THIS PLAN SET SHALL AUTOMATICALLY TERMINATE IF DEVELOPED/PROPERTY OWNER FAILS TO REEVE CONSTRUCTION WITHIN ONE YEAR FROM THE PLAN SUBMITTED TO THE CUSTOMERING AGREED TO IN WRITING OF UTILITY. IN THE EVENT THE DEVELOPED/PROPERTY OWNER ELECTS TO CONSTRUCT THE EFFECTIVE IN FINANCE WITH PLAN APPROVAL, ANY FINANCE OF CONSTRUCTION THAT HAS NOT COMMERCESS CONSTRUCTION WITHIN ONE YEAR FROM THE PLAN APPROVAL DATE WILL NEED A NEW APPROVED PLAN SET PROVIDED FOR UTILITY'S APPROVAL UNLESS OTHERWISE APPROVED BY UTILITY IN WRITING. DECK FINANCE OF CONSTRUCTION SHALL BE RECOVERED AS AN RESPONDENT CONSTRUCTION PROJECT AS IT REFERENTS TO THIS NOTE.
@@ -930,7 +947,7 @@ UTILITY PLANS
 BLOCK AZ, PHASE 2
 GOODYEAR, ARIZONA
 0002-254-6931
-www.bzk.com
+<www.bzk.com>
 002-254-6931
 USEABLE FOR BBI - 1124.20
 
@@ -1038,7 +1055,7 @@ COE &amp; Van Loo Consultants, Inc.
 CML
 Phoenix, Arizona 85014
 602-254-6551
-www.cml.com
+<www.cml.com>
 SHEET
 4 OF 4
 ISSUED FOR BID - 11.24.20
@@ -1047,7 +1064,9 @@ ISSUED FOR BID - 11.24.20
 
 <!-- Page 9 -->
 --- Page 1 ---
+
 # STORMWATER POLLUTION PREVENTION PLAN FOR GOODYEAR REGIONAL CENTER
+
 ## PHASE 2 - BLOCK A2
 
 A PORTION OF LAND LOCATED IN THE SOUTHEAST QUARTER OF SECTION 32, TOWNSHIP 2 NORTH, RANGE 1 WEST, OF THE GILA AND SALT RIVER BASE AND MERIDIAN, MARICOPA COUNTY, ARIZONA
@@ -1134,6 +1153,7 @@ CORRELATIONS OFFER AUGUST 20, 2024.
 ## SUGGESTED SEQUENCE SCHEDULE
 
 **INITIAL STAGE:**
+
 1. INITIAL STAGE BARKER LOSS AT
 OUTSIDE STORM WATER ALOTS
 2. INITIAL STAGE LOSS CONSTRUCTION
@@ -1249,7 +1269,7 @@ Phoenix, Arizona 85014
 
 602.254-6921
 
-www.oim.com
+<www.oim.com>
 
 COE
 
@@ -1309,7 +1329,7 @@ SUGGESTED SEQUENCE SCHEDULE
 
 FINAL STAGE
 
-11. REMOVE DOCUMENT AND EROGON CONTROL MEASURES AFTER REACTIVATION TO ESTABLISHED AND LARGE TO STABILIZED. (NOTE: LANDSCAPING CESSING ON SHEET 6 THIS SET FOR REFERENCE ONLY)
+1. REMOVE DOCUMENT AND EROGON CONTROL MEASURES AFTER REACTIVATION TO ESTABLISHED AND LARGE TO STABILIZED. (NOTE: LANDSCAPING CESSING ON SHEET 6 THIS SET FOR REFERENCE ONLY)
 
 STORMWATER POLLUTION PREVENTION PLAN
 
@@ -1502,8 +1522,11 @@ SHEET
 
 <!-- Page 15 -->
 --- Page 1 ---
+
 # GOODYEAR REGIONAL CENTER
+
 ## BLOCK A2, PHASE 2
+
 ## LANDSCAPE PLANS
 
 A PORTION OF LAND LOCATED IN THE SOUTHEAST QUARTER OF SECTION 32, TOWNSHIP 2 NORTH, RANGE 1 WEST, OF THE GILA AND SALT RIVER BASE AND MERIDIAN, MARICOPA COUNTY, ARIZONA
@@ -1569,7 +1592,7 @@ SUITE 200
 PHOENIX, AZ 85004
 PHONE: (602) 378-7741
 CONTACT: SCOTT WAGNER
-EMAIL: SWAGNER@BOCKA20PMERY.COM
+EMAIL: <SWAGNER@BOCKA20PMERY.COM>
 
 # ENGINEER
 
@@ -1579,7 +1602,7 @@ PHOENIX, ARIZONA 85014
 PHONE: (602) 264-6831
 FAX: (602) 264-6830
 CONTACT: FRANCIS FRIEDMAN, P.E.
-EMAIL: FRIDEMAN@DVCC.COM
+EMAIL: <FRIDEMAN@DVCC.COM>
 
 # LANDSCAPE ARCHITECT
 
@@ -1589,7 +1612,7 @@ PHOENIX, ARIZONA 85014
 PHONE: (602) 264-6830
 FAX: (602) 264-6830
 CONTACT: COUN HAMILTON, P.A.
-EMAIL: CHANSON@DVCC.COM
+EMAIL: <CHANSON@DVCC.COM>
 
 # SHEET INDEX
 
@@ -1600,7 +1623,7 @@ TOTAL OPEN EMAILS AND WARRANTY PERSOES PER L. CONTINUED UNTIL ALL UNACCEPTABLE P
 
 T. MEDIA PAY TOLL FREE DETENTION BAGING, PARKS, RIGHTS-OF-WAY, AND STREET CENTER MEDIAN LANDSCAPING.
 
-# LANDSCAPE MAINTENANCE RESPONSIBILITY: H.O.A.
+# LANDSCAPE MAINTENANCE RESPONSIBILITY: H.O.A
 
 - LANDSCAPE MAINTENANCE RESPONSIBILITY ASSUMES TO B/W, PROPERTY OWNER
 
@@ -1626,6 +1649,7 @@ ISSUED FEB 8/0 - 11:24:20
 
 <!-- Page 16 -->
 --- Page 1 ---
+
 # GENERAL IRRIGATION NOTES
 
 THIS IRRIGATION DESIGN IS CHAIRMANMATE, CIRP LAYERAL LINES AND NOT SHOWN TO EVERY PLANT FOR DESIGN CLARIFICATION. THE CONTRACTOR SHALL ENSURE ALL PLANTS RECEIVE DROP IRRIGATION. EQUIPMENT, PIPING AND VALVES, ETC. SHOWN WITHIN PAVED AREAS, B.O.W. AND P.U.E. AND/OR OUTSIDE OF THE DROP. THE REQUIREMENTS AND INFORMATION DESIGN CLARIFICATION ONLY AND SHALL BE INSTALLED WITHIN THE PLANTING AREAS AND OUTSIDE OF THE B.O.W. AND P.U.E. LOCATE VALVES AND CIRP WITHIN SHRUB AREAS SO THAT THEY ARE VISUALLY UNDERTASSIVE.
@@ -1797,11 +1821,11 @@ A. TWO (2) OPERATING KEYS FOR BAG TYPE OF MANUALLY OPERATED VALVES.
 
 B. TWO (2) OF BAG DISCHARGE AMBREVIES FOR THIS DESIGN FOR CONFLICTS ACQSS, ADJUSTMENT, AND ALL ACTIVE ORGANIZED, DRAWING.
 
-19. BRIAT/ADJUSTED PIPE PRIOR AND EXTENT OPERATION WITH AREA WHICH PROVIDE CONFLICTS AND ADEQUATE COVERAGE WITH WARMING INJURY AND THE GTO COMPUTERS. FAMILIALLY AVOID THE BASIS OF OTHERS AND ARE OF COVERAGE OF EACH ACTIVE ORGANIZED TO PROVIDE THE BEST PERFORMANCE.
+1. BRIAT/ADJUSTED PIPE PRIOR AND EXTENT OPERATION WITH AREA WHICH PROVIDE CONFLICTS AND ADEQUATE COVERAGE WITH WARMING INJURY AND THE GTO COMPUTERS. FAMILIALLY AVOID THE BASIS OF OTHERS AND ARE OF COVERAGE OF EACH ACTIVE ORGANIZED TO PROVIDE THE BEST PERFORMANCE.
 
-20. THE BROADFINE CONTRACTOR IS RESPONSIBLE FOR THE INSTALLATION OF AIRCRAFTING DETAILS. SLEEVES ARE REQUIRED FOR BOTH FITTINGS AND ELECTRICAL WIRDING. COORDINATE INSTALLATION OF SLEEVES WITH OTHER TANGES. ANY PIPE OR PIPE WHICH PROVIDE ARE ASSOCIATED OR MADE SUSTAINS AND NOT INSTALLED WILL REQUIRE HORIZONTAL BORING BY THE IRRIGATION CONTRACTOR.
+2. THE BROADFINE CONTRACTOR IS RESPONSIBLE FOR THE INSTALLATION OF AIRCRAFTING DETAILS. SLEEVES ARE REQUIRED FOR BOTH FITTINGS AND ELECTRICAL WIRDING. COORDINATE INSTALLATION OF SLEEVES WITH OTHER TANGES. ANY PIPE OR PIPE WHICH PROVIDE ARE ASSOCIATED OR MADE SUSTAINS AND NOT INSTALLED WILL REQUIRE HORIZONTAL BORING BY THE IRRIGATION CONTRACTOR.
 
-21. INSTALL ALL ELECTRICAL POWER TO THE BROADFINE CONTRACTOR IN ACCORDANCE WITH THE NATIONAL ELECTRIC CODE AND ALL APPLICABLE LOCAL ELECTRIC UTILITY CODES.
+3. INSTALL ALL ELECTRICAL POWER TO THE BROADFINE CONTRACTOR IN ACCORDANCE WITH THE NATIONAL ELECTRIC CODE AND ALL APPLICABLE LOCAL ELECTRIC UTILITY CODES.
 
 # CITY OF GOODYEAR IRRIGATION NOTES
 
@@ -1840,7 +1864,7 @@ ISSUED FEB 8/80 - 11:24:20
 © 2003 North 12th Street
 Pinesville, Arizona 85014
 602.254-6821
-www.nctv.com
+<www.nctv.com>
 12
 C
 C
@@ -1867,7 +1891,8 @@ C
 |  CODE | DESCRIPTION | QTY | DETAIL  |
 | --- | --- | --- | --- |
 |  1 | MIX BAG (THU
-2) HIKING CHILD 100 EACH | 2 | 362/24.30$  |
+
+1) HIKING CHILD 100 EACH | 2 | 362/24.30$  |
 |  2 | HIDROID GENERAL TO CONNECT TO
 VISITING SERVICE, TENDING SURFACE TO
 TIMING PLUSK WITH NO TENTING HADDERS |  |   |
@@ -1908,73 +1933,141 @@ LANDSCAPE AREAS WETING, LIMIT OF BURN
 600 SETAG, COLOID |   |
 
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 1
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 ^{}[]
 
 ---
@@ -2678,9 +2771,9 @@ LANDSCAPE AREAS WETING, LIMIT OF BURN
 CALENDAR 2000 North 12th Street
 Toronto, Arizona 80014
 602.254.6821
-www.cvbc.com
+<www.cvbc.com>
 
-# LANDSCAPE SPECIFICATIONS:
+# LANDSCAPE SPECIFICATIONS
 
 ## PART 1 - GENERAL
 
@@ -2881,7 +2974,7 @@ Phoenix, Arizona 85014
 
 602-254-6921
 
-www.odx.com
+<www.odx.com>
 
 ION
 
@@ -2893,7 +2986,7 @@ Phoenix, Arizona 85014
 
 602-254-6921
 
-www.odx.com
+<www.odx.com>
 
 ION
 
@@ -2998,6 +3091,7 @@ MAIN BIRD VIN KITS
 5 BRICK (1 OF 4)
 
 NOTE:
+
 1. AIRLY JOINT SEALANT OR TAYLOR TOWE TO ALL FIRE JOINTS &amp; THANAS CONNECTIONS, ON
 APPROVED EQUAL, CORRALT SIDE, AROUND FERMU &amp; VALVE BOX TO SAME DENSITY AS
 MAINSTREAM SIDE, DATER TO SPECIFICATIONS FOR FIRING MATERIAL, TREE
@@ -3034,6 +3128,7 @@ SELECT BACKFILL WITHIN 4" OF SLEEVE. SEE NOTE #12 SA-104.
 TAPE ENDS OF SLEEVES TO AVOID CONTAMINATION OR DEBRIS.
 
 NOTES:
+
 1. THIS DETAIL TO BE USED IN THE EVENT THAT NO SLEEVING DETAIL HAS BEEN PROVIDED
 IN THE CIVIL ENGINEER, OR DISTATES BY MARKETING, REQUIREMENTS. IN CASE OF
 CONFLICT, THE CIVIL ENGINEERING DETAIL OR MARKETING, APPROVED DETAIL SHALL
@@ -3050,6 +3145,7 @@ CLEAN SAND BEDSING.
 2" PERL FOR HARDSCAPE
 
 NOTE:
+
 1. SIZES ALL PIPE AND WIRE SEPARATELY.
 2. ALL FIRE TO BE INSTALLED IN A MANUFACTURER'S DISCIPLINATION, "SMALL" UN-SLEEVED
 PLANTS PIPE IN FIBER. PROVIDE A PERL OF 2" CLEANWAYS TO SIDE OF FIBER, AND
@@ -3165,23 +3261,23 @@ SCALE: 1" = 30-0"
 3. SITE PLAN MAY BE NOT PROVIDED IN THE CONDITION THAT IS A PROPERTY ASSIGNED.
 4. SITE PLAN MAY BE NOT PROVIDED IN THE CONDITION THAT IS A PROPERTY ASSIGNED.
 
-# KEYNOTES:
+# KEYNOTES
 
 1. PARKING MAY HAVE A HIGH QUALITY CONTROL CHANGE INCLUDED A PROPERTY ASSIGNED. THIS SHALL NOT BE OTHERWISE PROCESSED WITHOUT A WRITTEN CONSIDER OF THE PARKING.
 2. SITE PLAN MAY BE NOT PROVIDED IN THE CONDITION THAT IS A PROPERTY ASSIGNED.
 3. SITE PLAN MAY BE NOT PROVIDED IN THE CONDITION THAT IS A PROPERTY ASSIGNED.
 
-# KEYNOTES:
+# KEYNOTES
 
 1. PARKING MAY HAVE A HIGH QUALITY CONTROL CHANGE INCLUDED A PROPERTY ASSIGNED.
 2. SITE PLAN MAY BE NOT PROVIDED IN THE CONDITION THAT IS A PROPERTY ASSIGNED.
 
-# KEYNOTES:
+# KEYNOTES
 
 1. PARKING MAY HAVE A HIGH QUALITY CONTROL CHANGE INCLUDED A PROPERTY ASSIGNED.
 2. SITE PLAN MAY BE NOT PROVIDED IN THE CONDITION THAT IS A PROPERTY ASSIGNED.
 
-# SITE PLAN MAY BE NOT PROVIDED IN THE CONDITION THAT IS A PROPERTY ASSIGNED.
+# SITE PLAN MAY BE NOT PROVIDED IN THE CONDITION THAT IS A PROPERTY ASSIGNED
 
 SITE PLAN
 
@@ -3197,7 +3293,7 @@ ISSUED FOR BID - 11.24.20
 
 ![img-1.jpeg](img-1.jpeg)
 
-# GENERAL NOTES:
+# GENERAL NOTES
 
 A. The ALUMINATED AND SECRET DISPOSAL COMPONENTS ALL 100% SINGLE CABLE AND DAMAGED DISPOSALERS.
 B. ALL MAILING INSTRUCTIONS COULD BE MADE TO AVOID INVOICE INCLUDED.
@@ -3211,7 +3307,7 @@ I. WHERE SHOULD BE ADJUSTED BY DISCOUNT, DAMAGED OR DAMAGED, DAMAGED OR DISCOVER
 II. ALL TRANSPORTATIONS, MOTOR VEHICLES AND AIR CONDITIONING SHOULD BE ENLARGE ON ANY PERIOD OF 6/16 TO BE ENCLOSED BY ANY DATE, INCLUDING THE DISCOUNT OF THE ACCURACY.
 III. ALL DAMAGED DAMAGED DAMAGED OR DAMAGED DAMAGED, DAMAGED OR DAMAGED, DAMAGED OR DAMAGED, DAMAGED OR DAMAGED, DAMAGED, DAMAGED, DAMAGED, D
 
-# KEYNOTES:
+# KEYNOTES
 
 1. IF THESE CONSIDERATIONS BECOMES NOT FILLED IN THIS DISCOUNT, DAMAGED OR DAMAGED, DAMAGED OR DAMAGED, DAMAGED OR DAMAGED, DAMAGED OR DAMAGED, DAMAGED OR DAMAGED, D
 
@@ -3221,25 +3317,25 @@ III. ALL DAMAGED DAMAGED DAMAGED OR DAMAGED DAMAGED, DAMAGED OR DAMAGED, DAMAGED
 4. DAMAGED OR DAMAGED DISCOVERIES WILL BE NOT DELIVERED BY ANY DATE, INCLUDING THE DISCOUNT OF THE ACCURACY.
 5. DAMAGED OR DAMAGED DISCOVERIES WILL BE NOT DELIVERED BY ANY DATE, INCLUDING THE D
 
-# ABBREVIATIONS:
+# ABBREVIATIONS
 
 E.J. - EXPANSION LIMIT - REFER TO DETAIL 2/4/02.
 C.J. - CONTROL LIMIT - REFER TO DETAIL 2/4/02.
 
-# LEGEND:
+# LEGEND
 
 ☐ IF THING CONSIDERATIONS BE DAMAGED BY DISCOUNT, DAMAGED OR DAMAGED, DAMAGED OR DAMAGED, DAMAGED OR DAMAGED, D
 
-# ABBREVIATIONS:
+# ABBREVIATIONS
 
 E.J. - EXPANSION LIMIT - REFER TO DETAIL 2/4/02.
 C.J. - CONTROL LIMIT - REFER TO DETAIL 2/4/02.
 
-# LEGEND:
+# LEGEND
 
 ☐ IF THING CONSIDERATIONS BE DAMAGED BY DISCOUNT, DAMAGED OR DAMAGED, DAMAGED OR DAMAGED, D
 
-# ABBREVIATIONS:
+# ABBREVIATIONS
 
 E.J. - DISTRIBUTION LIMIT - REFER TO DETAIL 2/4/02.
 
@@ -3459,7 +3555,7 @@ ISSUED FOR IBS - 11.24.20
 
 ![img-0.jpeg](img-0.jpeg)
 
-# KEYNOTES:
+# KEYNOTES
 
 1. BULKWATER CHAIN: HAY, FIO 200C, 200T AND PREPARED GOLD.
 2. RECEIVE FOR 4" CONCRETE CHAIN: P-360, P467, P467TED ANGUL, GUITAR.
@@ -3476,7 +3572,7 @@ ISSUED FOR IBS - 11.24.20
 13. 600A 600T 600A, 600T, 600T
 14. 600A 600T 600A, 600T
 
-# KEYNOTES:
+# KEYNOTES
 
 1. BULKWATER CHAIN: HAY, FIO 200C, 200T AND PREPARED GOLD.
 2. RECEIVE FOR 4" CONCRETE CHAIN: P-360, P467, P467TED ANGUL, GUITAR.
@@ -3484,7 +3580,7 @@ ISSUED FOR IBS - 11.24.20
 4. RECEIVE FOR 4" CONCRETE CHAIN: 600A 600T 600A, 600T, 600A 600T, 600A 600T, 600A
 5. 600A UNIVERSEWERP, 600A 600T 600A, 600T, 600A 600T
 6. 600A UNIVERSEWERP, 600A 600T 600A, 600T, 600A 600T
-6. 600A UNIVERSEWERP, 600A 600T 600A, 600T, 600A 600T
+7. 600A UNIVERSEWERP, 600A 600T 600A, 600T, 600A 600T
 
 ---
 
@@ -3508,7 +3604,7 @@ N BULLARD AVE &amp; W MCDOWELL RD, GOODYEAR, ARIZONA 85395
 
 ![img-0.jpeg](img-0.jpeg)
 
-# GENERAL NOTES:
+# GENERAL NOTES
 
 1. POWER AND CONDITIONS SHALL BE PROOF THE BOTTOM CULINARY OF A DIMINISHER FROM AN HALF POINT TO BOTTOM OF 100 OF 100. DO NOT SEND FOR OTHER DIMINISHING.
 2. DO NOT SEND A DIMINISHER TO THE EXTENTION OF THE DIMINISHER.
@@ -3560,7 +3656,7 @@ A202
 
 ISSUED FOR BID - 11.24.20
 
-# GENERAL NOTES:
+# GENERAL NOTES
 
 1. A 100% FINE PACKING BLEND THROUGH "NOSTELLA" ORGANIZATIONS OF NEGLIGIBLE BRIDGE FOR 100% FINE PACKING FOR CHANGES TO THE RIGHT TO ACCORDANCE TO RELATING ROOF TYPE.
 2. A 100% FINE PACKING PACKING FOR CHANGES WITH MECHANICAL &amp; STRUCTURAL DRAWINGS.
@@ -3570,12 +3666,12 @@ ISSUED FOR BID - 11.24.20
 6. A 100% FINE PACKING PACKING FOR CHANGES WITH MECHANICAL &amp; STRUCTURAL DRAWINGS.
 7. A 100% FINE PACKING PACKING FOR CHANGES WITH MECHANICAL &amp; STRUCTURAL DRAWINGS.
 
-# KEYNOTES:
+# KEYNOTES
 
 1. A 100% FINE PACKING PACKING FOR CHANGES WITH MECHANICAL &amp; STRUCTURAL DRAWINGS.
 2. A 100% FINE PACKING PACKING FOR CHANGES WITH MECHANICAL &amp; STRUCTURAL DRAWINGS.
 
-# ROOF NOTE:
+# ROOF NOTE
 
 Note: The assigned weight is 100 lbs. The weight is 100 lbs. The weight is 100 lbs.
 
@@ -3598,7 +3694,7 @@ SCALE: 3/16" = 1'-0"
 
 ![img-1.jpeg](img-1.jpeg)
 
-# FINISH LEGEND:
+# FINISH LEGEND
 
 A. UNEVEN ANGLES
 B. LET MEET OCCURRENCE IF THOUGH
@@ -3633,7 +3729,7 @@ C. DRAW DRAW DRAW DRAW DRAW DRAW DRAW DRAW DRAW
 
 D. DRAW DRAW DRAW DRAW DRAW DRAW
 
-# GENERAL NOTES:
+# GENERAL NOTES
 
 A. ALL DRAWING DRAWING DRAWING DRAWING DRAWING DRAWING DRAW DRAW DRAW DRAW DRAW DRAW DRAW DRAW DRAW DRAW DRAW
 
@@ -3694,7 +3790,7 @@ SCALE: 3/16" = 7.0"
 
 ![img-1.jpeg](img-1.jpeg)
 
-# FINISH LEGEND:
+# FINISH LEGEND
 
 A. INDIVIDUAL ELECTRICAL ELEVATION
 A. INDIVIDUAL ELECTRICAL ELEVATION
@@ -3704,6 +3800,7 @@ D. INDIVIDUAL ELECTRICAL ELEVATION
 
 B. CONTRACT, EFFECTS AND/OR
 EFFECTS ON EFFECTS
+
 - 100 HP, 100 HP, 100 HP, 100 HP, 100 HP, 100 HP, 100 HP, 100 HP, 100 HP, 100 HP, 100 HP, 100 HP, 100 HP, 100 HP, 100 HP, 100 HP, 100 HP, 100 HP, 100 HP, 100 HP, 100 HP, 100 HP, 100 HP, 100
 
 D. ENGINEERING ELEVATION
@@ -3716,7 +3813,7 @@ E. ENGINEERING ELEVATION
 F. ENGINEERING ELEVATION
 G. ENGINEERING ELEVATION
 
-# GENERAL NOTES:
+# GENERAL NOTES
 
 A. ALL ELEMENTS, GRAVITY, FIRING, ETC. NOT FORWARDED.
 B. CLEAN, FINDERS ACCESS OR RESEARCH ISSUES TO PLAN PRODUCTS.
@@ -3724,7 +3821,7 @@ C. USE, EVALUATION, DRAWINGS &amp; SPECIFICATIONS FOR AGREEMENT AS VISITED IN.
 D. DRAWING, EVALUATION, DRAWING, SPECIFICATIONS, &amp; NOT FORWARDED IN EACH ELEMENT.
 E. DRAWING, EVALUATION, DRAWING, SPECIFICATIONS, &amp; NOT FORWARDED IN THE ELEMENT.
 
-# KEYNOTES:
+# KEYNOTES
 
 1. NUMBER INDICATED USE OF PACK NETTING
 2. NUMBER LINE INDICATED THE MECHANICAL UNITS, FULLY CORRERED BY LOW
@@ -3921,6 +4018,7 @@ ISSUED FOR BID: 11-24-20
 
 <!-- Page 37 -->
 --- Page 1 ---
+
 # GENERAL NOTES
 
 1. DOOR CLEANERS SHALL BE QUALIFIED DUST THAT PODN'AN UPPER DOOR FOR THE 150° FINE IMAGING TOWERS THE DOOR TO HIS OPEN PROTOCOLS. 2. DOORS ARE 1-30 DOORS.
@@ -4594,13 +4692,15 @@ PHX DESIGN
 ![img-23.jpeg](img-23.jpeg)
 
 # VEG BUILDING
+
 GOODYEAR GSQ
 N BULLARD AVE &amp; W MCDOWELL RD, GOODYEAR, ARIZONA 85395
 
 # DETAILS
+
 $3.0
-www.vegg-billing.com
-www.vegg-billing.com
+<www.vegg-billing.com>
+<www.vegg-billing.com>
 
 ISSUED 17/21/00
 
@@ -4766,7 +4866,7 @@ ISSUED FOR ISB: 11.24.20
 --- Page 1 ---
 1 PLUMBING PLAN
 
-# KEYED NOTES:
+# KEYED NOTES
 
 1. EXTEND 4" SANITARY SEWER FROM BUILDING, REFER TO CIVIL DRAWINGS FOR CONTINUATION. COORDINATE EXACT INVERT, LOCATION AND SIZE WITH CIVIL PRIOR TO STARTING WORK.
 2. EXTEND 2" DOMESTIC CW 5'-0" FROM BUILDING, REFER TO CIVIL DRAWINGS FOR CONTINUATION. COORDINATE EXACT LOCATION AND SIZE WITH CIVIL PRIOR TO STARTING WORK.
@@ -4943,23 +5043,23 @@ PART 1 GENERAL
 
 1.01 GENERAL PROCEDURE
 
-2. Schedule above, foreign laws and amendments that take the from PROJECT.
-3. Prepare and authorize all applicable provisions.
-4. Under the law, authorize regulations and services necessary for the construction of a new installation of any Postedary house or a community and requirements of all Authorities having jurisdiction as indicated in the attached requirements.
-5. All applicable laws and specifications, future specifications, general regulations and requirements, conditions, limits and procedures a part of these specifications.
-6. Prior to submitting the final order thoroughly familiar with actual existing workmanship and present manufacture to which connections must be attached, the signature of the contract and the name of the workmanship must be attached and the name of the person of the project as the author of the installation. The workmanship must be made with the name of the project, and the name of the workmanship, representative, and representative, approximately, and approximately, as described in the attached requirements.
-7. All applicable laws and regulations, including regulations that require the construction of a new installation of any postedary house, must be followed by that which is in force and in effect.
-8. Keep and have them subject to change, make and maintain all of these works construction period and, upon completion, leave site in clean order.
-9. Workmanship and equipment from all damage due to fire, theft, or other causes.
-10. Equipment as spillage, or no extra cost to the Owner, caused to work of labor, material, or equipment.
-11. Equipment being shrapneling, or no extra cost to the Owner, caused to work of labor, material, or equipment.
-12. Equipment applied that will not be automatically or, against, and complete all outside and outside a safe place to work and that no equipment will be used for any purpose or for an additional use for the work of construction or for general purposes except for work conditions, materials, or equipment.
-13. Equipment used for the construction of a new installation of any postedary house, including equipment, materials, or equipment, shall be used for any purpose or for an additional use for the work of construction, and shall be used for any purposes or for general purposes except for work conditions, materials, or equipment.
-14. Equipment used for the construction of a new installation of any postedary, including equipment, materials, or equipment, shall be used for any purposes or for general purposes except for work conditions, materials, or equipment.
-15. Equipment used for the construction of a new installation, including equipment, materials, or equipment, shall be used for any purposes or for general purposes except for work conditions, materials, or equipment.
+1. Schedule above, foreign laws and amendments that take the from PROJECT.
+2. Prepare and authorize all applicable provisions.
+3. Under the law, authorize regulations and services necessary for the construction of a new installation of any Postedary house or a community and requirements of all Authorities having jurisdiction as indicated in the attached requirements.
+4. All applicable laws and specifications, future specifications, general regulations and requirements, conditions, limits and procedures a part of these specifications.
+5. Prior to submitting the final order thoroughly familiar with actual existing workmanship and present manufacture to which connections must be attached, the signature of the contract and the name of the workmanship must be attached and the name of the person of the project as the author of the installation. The workmanship must be made with the name of the project, and the name of the workmanship, representative, and representative, approximately, and approximately, as described in the attached requirements.
+6. All applicable laws and regulations, including regulations that require the construction of a new installation of any postedary house, must be followed by that which is in force and in effect.
+7. Keep and have them subject to change, make and maintain all of these works construction period and, upon completion, leave site in clean order.
+8. Workmanship and equipment from all damage due to fire, theft, or other causes.
+9. Equipment as spillage, or no extra cost to the Owner, caused to work of labor, material, or equipment.
+10. Equipment being shrapneling, or no extra cost to the Owner, caused to work of labor, material, or equipment.
+11. Equipment applied that will not be automatically or, against, and complete all outside and outside a safe place to work and that no equipment will be used for any purpose or for an additional use for the work of construction or for general purposes except for work conditions, materials, or equipment.
+12. Equipment used for the construction of a new installation of any postedary house, including equipment, materials, or equipment, shall be used for any purpose or for an additional use for the work of construction, and shall be used for any purposes or for general purposes except for work conditions, materials, or equipment.
+13. Equipment used for the construction of a new installation of any postedary, including equipment, materials, or equipment, shall be used for any purposes or for general purposes except for work conditions, materials, or equipment.
+14. Equipment used for the construction of a new installation, including equipment, materials, or equipment, shall be used for any purposes or for general purposes except for work conditions, materials, or equipment.
+15. All equipment, materials, or equipment, shall be used for any purposes or for general purposes except for work conditions, materials, or equipment.
 16. All equipment, materials, or equipment, shall be used for any purposes or for general purposes except for work conditions, materials, or equipment.
 17. All equipment, materials, or equipment, shall be used for any purposes or for general purposes except for work conditions, materials, or equipment.
-18. All equipment, materials, or equipment, shall be used for any purposes or for general purposes except for work conditions, materials, or equipment.
 
 18. All equipment, materials, or equipment, shall be used for any purposes or for general purposes except for work conditions, materials, or equipment.
 
@@ -4977,7 +5077,7 @@ PART 1 GENERAL
 
 19f. All equipment, materials, or equipment, shall be used for any purposes or for general purposes except for work conditions, materials, or equipment.
 
-20. All equipment, materials, or equipment, shall be used for any purposes or for general purposes except for work conditions, materials, or equipment.
+1. All equipment, materials, or equipment, shall be used for any purposes or for general purposes except for work conditions, materials, or equipment.
 
 20a. All equipment, materials, or equipment, shall be used for any purposes or for general purposes except for work conditions, materials, or equipment.
 
@@ -4987,7 +5087,7 @@ PART 1 GENERAL
 
 20d. All equipment, materials, or equipment, shall be used for any purposes or for general purposes except for work conditions, materials, or equipment.
 
-21. All equipment, materials, or equipment, shall be used for any purposes or for general purposes except for work conditions, materials, or equipment.
+1. All equipment, materials, or equipment, shall be used for any purposes or for general purposes except for work conditions, materials, or equipment.
 
 21a. All equipment, materials, or equipment, shall be used for any purposes or for general purposes except for work conditions, materials, or equipment.
 
@@ -4995,21 +5095,21 @@ PART 1 GENERAL
 
 21c. All equipment, materials, or equipment, shall be used for any purposes or for general purposes except for work conditions, materials, or equipment.
 
-22. All equipment, materials, or equipment, shall be used for any purposes or for general purposes except for work conditions, materials, or equipment.
+1. All equipment, materials, or equipment, shall be used for any purposes or for general purposes except for work conditions, materials, or equipment.
 
-23. All equipment, materials, or equipment, shall be used for any purposes or for general purposes except for work conditions, materials, or equipment.
+2. All equipment, materials, or equipment, shall be used for any purposes or for general purposes except for work conditions, materials, or equipment.
 
-24. All equipment, materials, or equipment, shall be used for any purposes or for general purposes except for work conditions, materials, or equipment.
+3. All equipment, materials, or equipment, shall be used for any purposes or for general purposes except for work conditions, materials, or equipment.
 
-25. All equipment, materials, or equipment, shall be used for any purposes or for general purposes except for work conditions, materials, or equipment.
+4. All equipment, materials, or equipment, shall be used for any purposes or for general purposes except for work conditions, materials, or equipment.
 
-26. All equipment, materials, or equipment, shall be used for any purposes or for general purposes except for work conditions, materials, or equipment.
+5. All equipment, materials, or equipment, shall be used for any purposes or for general purposes except for work conditions, materials, or equipment.
 
-27. All equipment, materials, or equipment, shall be used for any purposes or for general purposes except for work conditions, materials, or equipment.
+6. All equipment, materials, or equipment, shall be used for any purposes or for general purposes except for work conditions, materials, or equipment.
 
-28. All equipment, materials, or equipment, shall be used for any purposes or for general purposes except for work conditions, materials, or equipment.
+7. All equipment, materials, or equipment, shall be used for any purposes or for general purposes except for work conditions, materials, or equipment.
 
-29. All equipment, materials, or equipment, shall be used for any purposes or for general purposes except for work conditions, materials, or equipment.
+8. All equipment, materials, or equipment, shall be used for any purposes or for general purposes except for work conditions, materials, or equipment.
 
 29a. All equipment, materials, or equipment, shall be used for any purposes or for general purposes except for work conditions, materials, or equipment.
 
@@ -5081,7 +5181,7 @@ E100
 
 ![img-0.jpeg](img-0.jpeg)
 
-# SITE PLAN GENERAL NOTES:
+# SITE PLAN GENERAL NOTES
 
 1. CONTROLS, CONTRACTORS, ENGINEERING, ENGINEERING PROCESSORS
 2. CONTRACTORS, ENGINEERING PROCESSORS
@@ -5091,7 +5191,7 @@ E100
 6. CONTRACTORS, ENGINEERING PROCESSORS
 7. CONTRACTORS, ENGINEERING PROCESSORS
 
-# SITE PLAN KEYED NOTES:
+# SITE PLAN KEYED NOTES
 
 (1) VENUE, VENUE PROCEDURES AND ANALYSIS MAY BE USED IN THE VENUE OF CONTRACTORS AND ANALYSIS OF THE CONTRACTORS.
 (2) VENUES MAY BE USED IN THE VENUE OF ASSOCIATED CONTRACTORS AND ASSOCIATED CONTRACTORS.
@@ -5151,7 +5251,7 @@ VIGILATION
 
 SCALE: $12^{\prime \prime} = 1'12''
 
-# GENERAL NOTES:
+# GENERAL NOTES
 
 1. ALL WORK IS TO BE PERFORMED IN ACCORDANCE WITH LATEST ADDITIVE OPERATING ELECTRICAL ASSETS AND ALL APPLICABLE LOCAL CODES. ORIGINALIZED AND MAY CONFIRMED TO "A.E.C."
 
@@ -5173,7 +5273,7 @@ SCALE: $12^{\prime \prime} = 1'12''
 
 ALL CONDUIT TO BE HELD TOUCH TO OPEN.
 
-# ④ KEYED NOTES:
+# ④ KEYED NOTES
 
 (1) PROVIDE ETC. IF EMPTY CONDUIT WITH MOISTURE CONTROLS FOR FUTURE CONNECTION TO ROLLER 1 TO 1000% FOR CONDUCTING TO OF FORM OF PRESSURE, FACE CONTRACTOR EACH ROUTING.
 
@@ -5271,7 +5371,7 @@ GENERAL NOTES:
 11. ELECTRICAL CONTRACTOR TO COORDINATE WITH MECHANICAL CONTRACTOR FOR PLACEMENT OF FIXTURES PRIOR TO DESIGN AS TO AVOID COMPLETION.
 12. REPEAT TO ADMINISTRATIVE REFLECTED CELVAS PLAN AND SECTION NEWS FOR LIGHT FIXTURE WASHING RESULTS, LOCATIONS AND REQUIREMENTS.
 
-# KEYED NOTES:
+# KEYED NOTES
 
 (1) FIXTURE TO OPERATE AS A NIGHT LIGHT (95% BIC LOSS-1) AND TO EMERGENCY LIGHT (95% BIC LOSS-1) ARE VERIFY RESPECTIVELY. CONTRACTOR SHALL WORK LENGTH SO THAT THEY ARE ADMINISTERED AND CONSTRUCTS AN EXPAND NORMAL OPERATIONS (NIGHT LIGHT) AND FORM ON AT A PROVIDED LOWER SUPPLY CLIMALS A POWER LOSS (EMERGENCY POWER).
 (2) FIXTURE TO OPERATE AS AN EMERGENCY LIGHT (95% BIC LOSS-2 AND 100% A) WITH AN ANTIGEN, BATTERY.
@@ -5338,7 +5438,7 @@ LOAD CALCULATION:
 |  BILL (AREA SERVICE) DISTANCE (10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000)  |   |
 |  BILL (STATION -1) (10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000)  |   |
 
-# GENERAL NOTES:
+# GENERAL NOTES
 
 A. PROVIDE A WORKING SPACE OF NOT LESS THAN 30 HOURS IN METR, 30 HOURS IN METR AND 10 HOURS IN METR FOR A CENTRICAL SERVICE EQUIPMENT. IF THE ELECTRICAL EQUIPMENT IS MORE THAN 10 HOURS, USE WORKING SPACES SCALE, YES OR LESS THAN 100 HOURS OF THE EQUIPMENT. FROM, SHALL BE NO DAMAGE WITHOUT THE DESIGNATED WORK SPACE.
 
@@ -5350,7 +5450,7 @@ D. DISORGNATION OF THE ELECTRICAL EQUIPMENT AND/OR THE ELECTRICAL EQUIPMENT FOR 
 
 E. ELECTRICAL CONTRACTOR SHALL PROVIDE LABELED TO RECEIVE WACRE OVER PILES OF EQUIPMENT ORGANIZED, PER HOC/4(2).
 
-# LOAD CALCULATION:
+# LOAD CALCULATION
 
 |  SIZES SERVICE AREA:  |   |
 | --- | --- |
@@ -5358,7 +5458,7 @@ E. ELECTRICAL CONTRACTOR SHALL PROVIDE LABELED TO RECEIVE WACRE OVER PILES OF EQ
 |  DIMINTS IN FUMES, "M" | = 5.0 AMPS  |
 |  TOTAL LOAD (IN S.E.S.) | = 220.6 AMPS  |
 
-# SERIES—RATING NOTE:
+# SERIES—RATING NOTE
 
 THE SERVICE IS A SERIES RATES SYSTEM: 2=1000 BILT/K
 
@@ -5366,7 +5466,7 @@ CONTRACTOR SHALL LABEL "S.E.S." CENTERF = SERIES RATES SYSTEM, DELETED. SEIZEN A
 
 CONTRACTOR SHALL LABEL RABBLE "M" "CENTERF" (SERIES=RATES SYSTEM, DELETED) SIZES AMPS AVAILABLE (MACHINE) REPLACEMENT COMPONENT REQUIRED BY ACCORDANCE WITH HOC FOLLOW
 
-# C.B. NOTE:
+# C.B. NOTE
 
 CIRCUIT MECHANICS SHALL BE A PLUG-HO "FRS" (1=1/2000) SIZES=RATES COMPOSITION WITH THE FUMES AT S.E.S.
 
@@ -5383,8 +5483,6 @@ NOTES
 ![img-4.jpeg](img-4.jpeg)
 
 ![img-5.jpeg](img-5.jpeg)
-
-
 
 ![img-6.jpeg](img-6.jpeg)
 
@@ -5414,6 +5512,7 @@ FLUOROGENIC FORMULA
 
 FLUOROGENY FAFETY WITH AMERICAN FURTHER PACK, YOG LINDER
 AND CHEMICAL PROPERTIES ONLY ON POWER
+
 1. CHEMICAL COMPOUND
 2. SELLING MOUNTED LIGHT FIXTURE
 3. WALL MOUNTED LIGHT FUTURE

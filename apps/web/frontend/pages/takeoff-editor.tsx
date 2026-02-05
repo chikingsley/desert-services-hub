@@ -18,11 +18,14 @@ import { PageHeader } from "@/apps/web/frontend/components/page-header";
 import { FloatingTools } from "@/apps/web/frontend/components/takeoffs/floating-tools";
 import { Button } from "@/apps/web/frontend/components/ui/button";
 import { Spinner } from "@/apps/web/frontend/components/ui/spinner";
-import type { TakeoffAnnotation, TakeoffToolType } from "@/lib/pdf-takeoff";
+import type {
+  TakeoffAnnotation,
+  TakeoffToolType,
+} from "@/lib/takeoff/pdf-takeoff";
 import {
   aggregateTakeoffAnnotations,
   type TakeoffCatalogItem,
-} from "@/lib/takeoff-to-quote";
+} from "@/lib/takeoff/takeoff-to-quote";
 
 type SaveStatus = "saved" | "saving" | "unsaved";
 

@@ -44,16 +44,21 @@ result = analyzer.detailed_inspection(
 )
 # Returns structured data with findings, measurements, coordinates
 ```
+
 ```bash
 bun run services/contract/workflow/queue.ts search "project name"
 ```
+
 ```bash
 bun run services/contract/workflow/collect.ts collect "normalized subject"
 ```
+
 csv
+
 ```bash
 bun run services/contract/workflow/extract.ts ocr "/full/path/to/file.pdf"
 ```
+
 ```bash
 Read("/full/path/to/file.md")
 ```

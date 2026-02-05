@@ -3,15 +3,15 @@
 import { Mountain } from "lucide-react";
 import { useMemo } from "react";
 import type {
+  Estimate,
   EstimateLineItem,
   EstimateSection,
   EstimateVersion,
-  Quote,
 } from "@/lib/types";
 import { cn, formatCurrency, formatDate } from "@/lib/utils";
 
 interface QuotePDFPreviewProps {
-  quote: Quote;
+  quote: Estimate;
   version: EstimateVersion;
   sections: EstimateSection[];
   lineItems: EstimateLineItem[];

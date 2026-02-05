@@ -12,8 +12,8 @@ Write all Convex functions to pass @convex-dev/eslint-plugin. These rules preven
 
 ## Documentation Sources
 
-- https://docs.convex.dev/eslint
-- https://www.npmjs.com/package/@convex-dev/eslint-plugin
+- <https://docs.convex.dev/eslint>
+- <https://www.npmjs.com/package/@convex-dev/eslint-plugin>
 
 ## Setup
 

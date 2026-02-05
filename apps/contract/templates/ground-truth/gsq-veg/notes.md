@@ -35,11 +35,11 @@ Per PROJECT.md stages:
 
 | Role | Name | Phone | Email | Source |
 |------|------|-------|-------|--------|
-| PM | Nick Carroll | 602-760-9501 | nickjc@bprcompanies.com | NTA email |
-| Super | Cameron Brown | — | cameronb@bprcompanies.com | NTA cc |
-| Coordinator | Joshua Wills | 602-550-2114 | joshuaw@bprcompanies.com | NTA cc |
-| PM | Ryan Rodriguez | — | ryanr@bprcompanies.com | NTA cc |
-| PM | Michael Carli | — | mikec@bprcompanies.com | NTA cc |
+| PM | Nick Carroll | 602-760-9501 | <nickjc@bprcompanies.com> | NTA email |
+| Super | Cameron Brown | — | <cameronb@bprcompanies.com> | NTA cc |
+| Coordinator | Joshua Wills | 602-550-2114 | <joshuaw@bprcompanies.com> | NTA cc |
+| PM | Ryan Rodriguez | — | <ryanr@bprcompanies.com> | NTA cc |
+| PM | Michael Carli | — | <mikec@bprcompanies.com> | NTA cc |
 
 ---
 
@@ -107,12 +107,12 @@ Per PROJECT.md stages:
 |------|------|---------|-------|
 | 2025-12-17 | Jeff Gardner | (estimate created) | Estimate #12172501 |
 | 2025-12-18 | Building Connected | Bid delivered: GSQ VEG | Submitted to BPR, CSI, Rafael |
-| 2026-01-15 | nickjc@bprcompanies.com | GSQ VEG - Notice of Award/Notice to Proceed | BPR won, awarded DS for $17,440 |
-| 2026-01-16 | Jared@desertservices.net | FW: GSQ VEG - Notice of Award | Forwarded internally |
-| 2026-01-25 | David.Malia@RafaelCompanies.com | RE: Project Updates | Rafael confirms lost (2nd by <5%) |
-| 2026-01-28 | rick@desertservices.net | GSQ VEG | Scope change: everything except waddles |
-| 2026-01-28 | denise@desertservices.net | RE: GSQ VEG | Pulled filter sock, moved to Pending Won |
-| 2026-01-31 | rick@desertservices.net | Fw: Sewer Hydrant | Need to order dust permit |
+| 2026-01-15 | <nickjc@bprcompanies.com> | GSQ VEG - Notice of Award/Notice to Proceed | BPR won, awarded DS for $17,440 |
+| 2026-01-16 | <Jared@desertservices.net> | FW: GSQ VEG - Notice of Award | Forwarded internally |
+| 2026-01-25 | <David.Malia@RafaelCompanies.com> | RE: Project Updates | Rafael confirms lost (2nd by <5%) |
+| 2026-01-28 | <rick@desertservices.net> | GSQ VEG | Scope change: everything except waddles |
+| 2026-01-28 | <denise@desertservices.net> | RE: GSQ VEG | Pulled filter sock, moved to Pending Won |
+| 2026-01-31 | <rick@desertservices.net> | Fw: Sewer Hydrant | Need to order dust permit |
 
 ---
 

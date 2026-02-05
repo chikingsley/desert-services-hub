@@ -14,6 +14,7 @@ Feature creep kills products. It delays launches, burns budgets, exhausts teams,
 Feature creep is the gradual accumulation of features beyond what your product needs to deliver value. It happens slowly, then all at once.
 
 **Warning signs you're in trouble:**
+
 - Release scope keeps growing without clear user value
 - You're copying competitor features without validating need
 - Stakeholders keep adding "just one more thing"
@@ -22,6 +23,7 @@ Feature creep is the gradual accumulation of features beyond what your product n
 - You haven't shipped in months
 
 **What it costs:**
+
 - Development time on features 80% of users never touch
 - Increased bug surface area
 - Team burnout and context switching
@@ -135,6 +137,7 @@ Saying no to features is a skill. Here are templates:
 > "Stop. Before we add this feature, answer: Does this solve the core user problem we defined at the start of this session? If not, add it to a DEFERRED.md file and stay focused on the current scope."
 
 When working with AI coding agents:
+
 - State your scope constraints at the start of every session
 - Agents will suggest improvements. Most are out of scope.
 - Treat agent suggestions like stakeholder requests: apply the 48-hour rule
@@ -145,18 +148,21 @@ When working with AI coding agents:
 When building AI-powered products, feature creep has extra risks:
 
 **AI Feature Creep Red Flags:**
+
 - Adding AI because "everyone else is"
 - Building AI summaries without validating users want them
 - Multiple AI features without clear differentiation
 - AI capabilities that don't connect to core user workflows
 
 **AI Feature Discipline:**
+
 1. One AI feature at a time
 2. Validate the use case with users first
 3. Measure actual usage, not just availability
 4. Question: "Does the AI make the core task faster or better?"
 
 **Before adding any AI feature, answer:**
+
 - What specific task does this automate?
 - How is this better than the non-AI alternative?
 - What happens when the AI is wrong?
@@ -167,6 +173,7 @@ When building AI-powered products, feature creep has extra risks:
 A messy backlog enables feature creep. Clean it ruthlessly.
 
 **Monthly Backlog Audit:**
+
 ```
 For each item older than 30 days:
 1. Has anyone asked about this since it was added?
@@ -177,6 +184,7 @@ If the answer to all three is "no" → Delete it.
 ```
 
 **Priority Framework (MoSCoW):**
+
 - **Must Have**: Product doesn't work without it
 - **Should Have**: Important but not critical for launch
 - **Could Have**: Nice but can wait
@@ -188,6 +196,7 @@ Be honest: Most "Should Haves" are actually "Could Haves" in disguise.
 
 **Session Start Check:**
 Before coding with any AI assistant (Claude, Cursor, OpenCode), state:
+
 - What specific feature you're building
 - What's explicitly out of scope for this session
 - When you'll stop and ship
@@ -200,12 +209,14 @@ If the answer is "adding scope," stop. Commit what you have. Start fresh.
 
 **Session End Check:**
 Before closing an AI coding session:
+
 - What did we actually build vs. what we planned?
 - Did scope expand? Why?
 - What should we defer to the next session?
 
 **Daily AI Check:**
 At the end of each day working with AI assistants:
+
 ```
 1. Features completed today: [list]
 2. Scope additions today: [list]  
@@ -214,6 +225,7 @@ At the end of each day working with AI assistants:
 ```
 
 **Sprint Planning Guard Rails:**
+
 - No new features mid-sprint without removing something
 - Capacity for bug fixes and debt paydown (20% minimum)
 - Clear definition of done for each item
@@ -241,6 +253,7 @@ AI coding agents are now stakeholders in your project. They have opinions. They 
 - **"The agent suggested it" is not a valid reason** to add a feature
 
 Common agent-driven scope creep patterns:
+
 - "Let me also add error handling for edge cases you haven't hit yet"
 - "This would be cleaner with a refactor"
 - "You should probably add tests for this"
@@ -253,22 +266,26 @@ Each of these might be good ideas. None of them are your current scope unless yo
 If feature creep has already happened:
 
 **Step 1: Audit Current Features**
+
 - List every feature
 - Check usage data for each
 - Identify features with <5% engagement
 
 **Step 2: Categorize**
+
 - Core: Users can't accomplish their goal without it
 - Supporting: Makes core better
 - Peripheral: Nice but not necessary
 - Bloat: Nobody uses it
 
 **Step 3: Remove or Hide**
+
 - Deprecate bloat with warning period
 - Move peripheral features behind advanced settings
 - Communicate changes clearly to users
 
 **Step 4: Prevent Recurrence**
+
 - Add feature creep checks to your PR/code review process
 - Require usage metrics before features graduate from beta
 - Build feature flags so you can easily remove experiments
@@ -294,6 +311,7 @@ If you can't answer these clearly → Do not proceed.
 Users don't remember features. They remember whether your product solved their problem.
 
 Every feature you don't build is:
+
 - Time you get back
 - Bugs you don't have to fix
 - Documentation you don't have to write

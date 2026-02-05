@@ -5,6 +5,7 @@ A powerful utility for analyzing civil engineering plans (grading, drainage, SWP
 ## 🎯 What It Does
 
 This utility leverages Gemini 3 Flash's **Agentic Vision** to:
+
 - **Think → Act → Observe**: Multi-step image analysis with code execution
 - **Zoom & Inspect**: Automatically crop and examine specific plan areas
 - **Count & Measure**: Accurate element counting and measurement extraction
@@ -34,6 +35,7 @@ just plan-install
 ```
 
 Or manually:
+
 ```bash
 cd plan-analysis
 uv sync
@@ -87,6 +89,7 @@ inspection = analyzer.detailed_inspection(
 ## 🔍 Plan Types Supported
 
 ### SWPPP Plans
+
 - Sediment basins/traps identification
 - Silt fences and barriers
 - Inlet protection
@@ -95,6 +98,7 @@ inspection = analyzer.detailed_inspection(
 - Compliance verification
 
 ### Grading Plans
+
 - Contour line analysis
 - Cut and fill areas
 - Slope calculations
@@ -103,6 +107,7 @@ inspection = analyzer.detailed_inspection(
 - Utility clearances
 
 ### Drainage Plans
+
 - Pipe infrastructure
 - Inlet and manhole locations
 - Flow directions
@@ -230,6 +235,7 @@ Gemini 3 Flash's agentic vision uses a **Think → Act → Observe** loop:
 4. **Report**: Generates structured findings with confidence scores
 
 Example of code execution:
+
 ```python
 # Gemini generates code like this:
 from PIL import Image
@@ -257,7 +263,7 @@ count = len(detect_sediment_basins(basin_area))
 |----------|-------------|----------|
 | `GEMINI_API_KEY` | Google Gemini API key | Yes |
 
-Get your API key at: https://ai.google.dev/
+Get your API key at: <https://ai.google.dev/>
 
 ## 📚 Resources
 

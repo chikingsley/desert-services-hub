@@ -4,13 +4,13 @@
 
 import { db } from "./schema";
 
-type MondayColumnSeed = {
+interface MondayColumnSeed {
   column_name: string;
   monday_id: string | null;
   monday_type: string | null;
   action: "keep" | "delete" | "add" | "copy_at_creation";
   notes: string;
-};
+}
 
 const columns: MondayColumnSeed[] = [
   // === KEEP AS-IS ===

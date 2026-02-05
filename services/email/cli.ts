@@ -293,6 +293,8 @@ function getGroupsClient(): GraphGroupsClient {
  * // CLI: bun services/email/cli.ts search "invoice" --user contracts@desertservices.net
  * await searchCommand("invoice", "contracts@desertservices.net", 10);
  */
+type MailFolder = "inbox" | "sentitems" | "drafts" | "deleteditems";
+
 async function searchCommand(
   query: string,
   userId: string,
@@ -300,7 +302,13 @@ async function searchCommand(
   folder?: string
 ) {
   const client = getAppClient();
-  const emails = await client.searchEmails({ query, userId, limit, folder });
+  const validFolder = folder as MailFolder | undefined;
+  const emails = await client.searchEmails({
+    query,
+    userId,
+    limit,
+    folder: validFolder,
+  });
 
   if (emails.length === 0) {
     console.log("No emails found.");

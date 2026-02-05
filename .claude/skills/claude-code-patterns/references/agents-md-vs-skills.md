@@ -16,6 +16,7 @@ Vercel ran evaluations comparing approaches for providing documentation to AI co
 **In 56% of cases, skills were never invoked.**
 
 The agent has to make a decision: "Do I need to look up docs?" This decision often doesn't happen because:
+
 1. The agent doesn't recognize it needs help
 2. It proceeds with pre-training knowledge instead
 3. By the time it realizes, it's committed to a path
@@ -42,6 +43,7 @@ Vercel compresses docs from 40KB to 8KB (80% reduction):
 ```
 
 Key elements:
+
 - **HTML comment markers** for idempotent updates
 - **Pipe separators** for compact delimiting
 - **Root path** pointing to docs directory

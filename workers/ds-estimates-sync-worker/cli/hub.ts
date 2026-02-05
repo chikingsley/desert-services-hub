@@ -28,7 +28,7 @@ import { syncEstimates } from "./sync/estimates";
 import { showStats } from "./sync/stats";
 
 const HUB_DB_PATH =
-  "/Users/chiejimofor/Documents/Github/desert-services-hub/apps/contract-ui/contract/hub.db";
+  "/Users/chiejimofor/Documents/Github/desert-services-hub/apps/contract/hub.db";
 
 // Contact board groups
 const CONTACT_GROUPS = {

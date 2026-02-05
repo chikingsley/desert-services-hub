@@ -7,7 +7,7 @@
  * - Tax calculation
  * - Total extraction
  *
- * Run with: bun test apps/contract-ui/contract/tests/extract-estimate.test.ts
+ * Run with: bun test apps/contract/tests/extract-estimate.test.ts
  */
 import { describe, expect, test } from "bun:test";
 import { join } from "node:path";

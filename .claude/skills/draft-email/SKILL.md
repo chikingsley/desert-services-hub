@@ -45,6 +45,7 @@ bun services/email/cli.ts draft \
 **ALWAYS use the CLI. NEVER use MCP tools or `bun -e` for email.**
 
 After creating the draft, tell the user:
+
 - Draft created in Outlook
 - Subject line
 - One sentence summary of what the email says

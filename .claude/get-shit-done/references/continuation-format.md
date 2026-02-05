@@ -1,4 +1,5 @@
 # Continuation FormatStandard format for presenting next steps after completing a command or workflow.## Core Structure```html```csv
+
 ```html```bash
 ```html```bash
 ```html```bash
@@ -10,4 +11,5 @@
 ```css```markdown
 ```css```text
 ```text```text
+
 ```Fenced blocks inside templates create nesting ambiguity. Use inline backticks instead.

@@ -9,6 +9,7 @@
 The Mistral OCR MCP has no quality validation on output. When processing architectural drawings (CAD-based PDFs, compressed images), the OCR model hallucinates badly:
 
 **Example garbage output:**
+
 ```text
 "ALL REGIONS AND CONSTRUCTION IS ADMINISTERED BY THE EARNED THE ARCHITECT EMOLEVANT BE CONFISCED"
 "EACH EACH EACH EACH AND LOCAL EACH EACH EACH"
@@ -16,6 +17,7 @@ The Mistral OCR MCP has no quality validation on output. When processing archite
 ```
 
 **Repetitive garbage:**
+
 ```text
 W12
 W12
@@ -34,7 +36,9 @@ W12
 ## Proposed Solutions
 
 ### 1. Repetition Detection
+
 Flag pages with high word/phrase repetition:
+
 ```python
 def detect_repetition(text: str, threshold: float = 0.3) -> bool:
     words = text.split()
@@ -43,7 +47,9 @@ def detect_repetition(text: str, threshold: float = 0.3) -> bool:
 ```
 
 ### 2. Entropy Scoring
+
 Low-entropy pages (W12 W12 W12) indicate garbage:
+
 ```python
 import math
 from collections import Counter
@@ -55,14 +61,18 @@ def text_entropy(text: str) -> float:
 ```
 
 ### 3. Hallucination Pattern Detection
+
 Common patterns:
+
 - Repeated words with slight variations
 - Nonsense legal/technical text
 - Words that don't exist in dictionaries
 - Unusually long "words" (garbled text)
 
 ### 4. Page-Level Quality Scores
+
 Return confidence per page, let caller decide threshold:
+
 ```python
 @dataclass
 class PageQuality:
@@ -74,7 +84,9 @@ class PageQuality:
 ```
 
 ### 5. Document Type Awareness
+
 Architectural drawings are known-bad for OCR. Could:
+
 - Warn user upfront
 - Use different processing (skip tables, extract only headers)
 - Fall back to image-based extraction

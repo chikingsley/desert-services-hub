@@ -10,6 +10,7 @@
 ## Project Overview
 
 This is actually **TWO SITES** being managed as one project:
+
 - **Edison Park Improvements** - 901 N 19th Street, Phoenix, AZ 85006
 - **Linear Park Improvement** - 1940 E Villa Street, Phoenix, AZ 85006
 
@@ -57,6 +58,7 @@ The two parks are approximately 100 feet apart. Low Mountain filed two separate 
 ## Current Status
 
 ### Completed
+
 - [x] Estimate created (11042501 - Edison Park, $19,140)
 - [x] Contract package received from Low Mountain
 - [x] NOIs received for both sites (114201 Edison, 114194 Linear)
@@ -68,6 +70,7 @@ The two parks are approximately 100 feet apart. Low Mountain filed two separate 
 - [x] Precon meeting scheduled (Jan 29)
 
 ### Pending/Action Items
+
 - [ ] **CONTRACT NOT SIGNED** - Tyra sent reminder Jan 28, contract was due Jan 19
 - [ ] Two separate SWPPP plans needed (one per site/NOI)
 - [ ] Mark estimate 11042501 as Won in Monday
@@ -97,13 +100,15 @@ The two parks are approximately 100 feet apart. Low Mountain filed two separate 
 ## Key Contacts
 
 **Low Mountain Construction:**
-- Angela Kamis (PM): akamis@lowmountain.com, 602-810-4787
-- Julie Conover (PE): jconover@lowmountain.com, 602-457-5916
-- Chris Zollinger (Super): czollinger@lowmountain.com, 602-615-3140
-- Tyra Renshaw (Contracts): trenshaw@lowmountain.com, 602-265-2201 x119
-- Aimee Patton (Accounting): apatton@lowmountain.com
+
+- Angela Kamis (PM): <akamis@lowmountain.com>, 602-810-4787
+- Julie Conover (PE): <jconover@lowmountain.com>, 602-457-5916
+- Chris Zollinger (Super): <czollinger@lowmountain.com>, 602-615-3140
+- Tyra Renshaw (Contracts): <trenshaw@lowmountain.com>, 602-265-2201 x119
+- Aimee Patton (Accounting): <apatton@lowmountain.com>
 
 **Desert Services:**
+
 - Dawn Wagner (primary contact for Low Mountain)
 - Jayson Roti (SWPPP)
 - Eva Mendoza (submittals)

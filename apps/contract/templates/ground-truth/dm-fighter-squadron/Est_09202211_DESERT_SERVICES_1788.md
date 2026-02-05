@@ -40,7 +40,7 @@ Print Name: _____________________________ Signature: ___________________________
 |  Po Box: 14695, Scottsdale, AZ 85267  |   |
 | --- | --- |
 |  Phone: 480-513-8986 | Fax: 480-657-2057  |
-|  ROC 258214 | Email: Jeff@desertservices.net  |
+|  ROC 258214 | Email: <Jeff@desertservices.net>  |
 
 ---
 
@@ -88,6 +88,6 @@ Print Name: ___________________________ Signature: ___________________________
 |  Po Box: 14695, Scottsdale, AZ 85267  |   |
 | --- | --- |
 |  Phone: 480-513-8986 | Fax: 480-657-2057  |
-|  ROC 258214 | Email: Jeff@desertservices.net  |
+|  ROC 258214 | Email: <Jeff@desertservices.net>  |
 
 Page 2

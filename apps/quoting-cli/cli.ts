@@ -34,7 +34,6 @@ import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { findItem } from "../../lib/catalog";
-import { generatePDF, getPDFFilename } from "../../lib/pdf/generate-pdf";
 import {
   applyLineItemChanges,
   type CreateEstimateInput,
@@ -48,7 +47,8 @@ import {
   type LineItemChange,
   listEstimates,
   updateEstimate,
-} from "../../lib/quoting";
+} from "../../lib/estimating";
+import { generatePDF, getPDFFilename } from "../../lib/pdf/generate-pdf";
 import type { EditorEstimate } from "../../lib/types";
 
 const args = process.argv.slice(2);
@@ -113,7 +113,7 @@ async function loadJsonFile<T>(path: string): Promise<T> {
 }
 
 // List estimates
-async function listCommand(argv: string[]): Promise<void> {
+function listCommand(argv: string[]): void {
   const opts = parseArgs(argv);
   const limit = opts.limit ? Number.parseInt(opts.limit, 10) : 20;
 
@@ -144,7 +144,7 @@ async function listCommand(argv: string[]): Promise<void> {
 }
 
 // Get estimate details
-async function getCommand(argv: string[]): Promise<void> {
+function getCommand(argv: string[]): void {
   const idOrBase = argv[0];
   if (!idOrBase) {
     console.error("Error: Estimate ID or base number is required");
@@ -384,7 +384,7 @@ async function updateCommand(argv: string[]): Promise<void> {
 }
 
 // Delete estimate
-async function deleteCommand(argv: string[]): Promise<void> {
+function deleteCommand(argv: string[]): void {
   const id = argv[0];
   if (!id) {
     console.error("Error: Estimate ID is required");
@@ -412,7 +412,7 @@ async function deleteCommand(argv: string[]): Promise<void> {
 }
 
 // Duplicate estimate
-async function duplicateCommand(argv: string[]): Promise<void> {
+function duplicateCommand(argv: string[]): void {
   const id = argv[0];
   if (!id) {
     console.error("Error: Estimate ID is required");

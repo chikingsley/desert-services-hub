@@ -8,7 +8,7 @@
  * - Additional Services section (budgetary, not priced)
  *
  * Usage:
- *   bun apps/contract-ui/contract/scripts/extract-estimate.ts <pdf-text-file>
+ *   bun apps/contract/scripts/extract-estimate.ts <pdf-text-file>
  *
  * The PDF must first be converted to text. The Read tool in Cursor extracts PDF text directly.
  */

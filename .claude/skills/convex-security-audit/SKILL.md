@@ -15,9 +15,9 @@ Comprehensive security review patterns for Convex applications including authori
 
 Before implementing, do not assume; fetch the latest documentation:
 
-- Primary: https://docs.convex.dev/auth/functions-auth
-- Production Security: https://docs.convex.dev/production
-- For broader context: https://docs.convex.dev/llms.txt
+- Primary: <https://docs.convex.dev/auth/functions-auth>
+- Production Security: <https://docs.convex.dev/production>
+- For broader context: <https://docs.convex.dev/llms.txt>
 
 ## Instructions
 
@@ -533,7 +533,7 @@ export const getAuditLogs = query({
 
 ## References
 
-- Convex Documentation: https://docs.convex.dev/
-- Convex LLMs.txt: https://docs.convex.dev/llms.txt
-- Functions Auth: https://docs.convex.dev/auth/functions-auth
-- Production Security: https://docs.convex.dev/production
+- Convex Documentation: <https://docs.convex.dev/>
+- Convex LLMs.txt: <https://docs.convex.dev/llms.txt>
+- Functions Auth: <https://docs.convex.dev/auth/functions-auth>
+- Production Security: <https://docs.convex.dev/production>

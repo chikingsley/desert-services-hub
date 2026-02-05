@@ -1,5 +1,6 @@
 <!-- Page 1 -->
 --- Page 1 ---
+
 # LEGACY ARENA
 
 2727 W BRONCO BUTTE TRAIL, PHOENIX, AZ 85085
@@ -956,7 +957,7 @@ S2.1
 
 ![img-0.jpeg](img-0.jpeg)
 
-# FLOOR FRAMING NOTES:
+# FLOOR FRAMING NOTES
 
 1. GENERAL NOTES ON DWG ST.1
 2. COLUMN SCHEDULE ON DWG *57.0
@@ -997,6 +998,7 @@ SERVICE
 ![img-0.jpeg](img-0.jpeg)
 
 FLOOR FRAMING NOTES:
+
 1. GENERAL NOTES ON DMC 07.1
 2. COLUMN SCHEDULE ON DMC 07.3
 3. BLUE DIM TIN FL - W - Ø
@@ -1040,6 +1042,7 @@ FOR THE STATEMENT OF THE STATE OF AZ
 ![img-0.jpeg](img-0.jpeg)
 
 FLOOR FRAMING NOTES:
+
 1. GENERAL NOTES ON DWG. HGT.1
 2. COLLIMS SCHEDULE ON DWG. HGT.2
 3. W.DEC.1987, F.B. 74 - 14" - 21"
@@ -1140,8 +1143,6 @@ THE INFORMATION SECTION
 2017-10-2
 
 2017-10-2
-
-
 
 ---
 
@@ -2064,6 +2065,7 @@ W4621
 # CENTRE STRUCTURE NOTES
 
 1. Design Codes and Criteria:
+
 - Bq: Bt/alt/alt (Model 1) Bt/alt on the I.B.C. 2016
 - Bq: Bt/alt (Model 2) Bt/alt on the I.B.C. 2016
 - Bt/alt (Model 3) Bt/alt on the I.B.C. 2016
@@ -2071,92 +2073,107 @@ W4621
 - Bt/alt (Model 5) Bt/alt on the I.B.C. 2016
 - Bt/alt (Model 6) Bt/alt on the I.B.C. 2016
 
-2. Design Notes and as follows:
+1. Design Notes and as follows:
+
 - Bq: Bt/alt (Model 1) Bt/alt on the I.B.C. 2016
 - Bt/alt (Model 2) Bt/alt on the I.B.C. 2016
 - Bt/alt (Model 3) Bt/alt on the I.B.C. 2016
 - Bt/alt (Model 4) Bt/alt on the I.B.C. 2016
 - Bt/alt (Model 5) Bt/alt on the I.B.C. 2016
 
-3. Description of the Material:
+1. Description of the Material:
+
 - Bt/alt (Model 1) - Bt/alt on the I.B.C. 2016
 - Bt/alt (Model 2) - Bt/alt on the I.B.C. 2016
 - Bt/alt (Model 3) - Bt/alt on the I.B.C. 2016
 - Bt/alt (Model 4) - Bt/alt on the I.B.C. 2016
 - Bt/alt (Model 5) - Bt/alt on the I.B.C. 2016
 
-4. Description of the Material:
+1. Description of the Material:
+
 - Bt/alt (Model 1) - Bt/alt on the I.B.C. 2016
 - Bt/alt (Model 2) - Bt/alt on the I.B.C. 2016
 - Bt/alt (Model 3) - Bt/alt on the I.B.C. 2016
 - Bt/alt (Model 4) - Bt/alt on the I.B.C. 2016
 
-5. Description of the Material:
+1. Description of the Material:
+
 - Bt/alt (Model 1) - Bt/alt on the I.B.C. 2016
 - Bt/alt (Model 2) - Bt/alt on the I.B.C. 2016
 - Bt/alt (Model 3) - Bt/alt on the I.B.C. 2016
 - Bt/alt (Model 4) - Bt/alt on the I.B.C. 2016
 
-6. Description of the Material:
+1. Description of the Material:
+
 - Bt/alt (Model 1) - Bt/alt on the I.B.C. 2016
 - Bt/alt (Model 2) - Bt/alt on the I.B.C. 2016
 - Bt/alt (Model 3) - Bt/alt on the I.B.C. 2016
 - Bt/alt (Model 4) - Bt/alt on the I.B.C. 2016
 
-7. Process and Specifications:
+1. Process and Specifications:
+
 - Bt/alt (Model 1) - Bt/alt on the I.B.C. 2016
 - Bt/alt (Model 2) - Bt/alt on the I.B.C. 2016
 - Bt/alt (Model 3) - Bt/alt on the I.B.C. 2016
 - Bt/alt (Model 4) - Bt/alt on the I.B.C. 2016
 - Bt/alt (Model 5) - Bt/alt on the I.B.C. 2016
 
-8. Specifications:
+1. Specifications:
+
 - Bt/alt (Model 1) - Bt/alt on the I.B.C. 2016
 - Bt/alt (Model 2) - Bt/alt on the I.B.C. 2016
 - Bt/alt (Model 3) - Bt/alt on the I.B.C. 2016
 - Bt/alt (Model 4) - Bt/alt on the I.B.C. 2016
 
-9. Specifications:
+1. Specifications:
+
 - Bt/alt (Model 1) - Bt/alt on the I.B.C. 2016
 - Bt/alt (Model 2) - Bt/alt on the I.B.C. 2016
 - Bt/alt (Model 3) - Bt/alt on the I.B.C. 2016
 - Bt/alt (Model 4) - Bt/alt on the I.B.C. 2016
 
-10. Material Description:
+1. Material Description:
+
 - Bt/alt (Model 1) - Bt/alt on the I.B.C. 2016
 - Bt/alt (Model 2) - Bt/alt on the I.B.C. 2016
 - Bt/alt (Model 3) - Bt/alt on the I.B.C. 2016
 - Bt/alt (Model 4) - Bt/alt on the I.B.C. 2016
 
-11. Material Description:
+1. Material Description:
+
 - Bt/alt (Model 1) - Bt/alt on the I.B.C. 2016
 - Bt/alt (Model 2) - Bt/alt on the I.B.C. 2016
 - Bt/alt (Model 3) - Bt/alt on the I.B.C. 2016
 - Bt/alt (Model 4) - Bt/alt on the I.B.C. 2016
 
-12. Material Description:
+1. Material Description:
+
 - Bt/alt (Model 1) - Bt/alt on the I.B.C. 2016
 - Bt/alt (Model 2) - Bt/alt on the I.B.C. 2016
 - Bt/alt (Model 3) - Bt/alt on the I.B.C. 2016
 - Bt/alt (Model 4) - Bt/alt on the I.B.C. 2016
 
-13. Material Description:
+1. Material Description:
+
 - Bt/alt (Model 1) - Bt/alt on the I.B.C. 2016
 - Bt/alt (Model 2) - Bt/alt on the I.B.C. 2016
 - Bt/alt (Model 3) - Bt/alt on the I.B.C. 2016
 - Bt/alt (Model 4) - Bt/alt on the I.B.C. 2016
 
-14. Material Description:
+1. Material Description:
+
 - Bt/alt (Model 1) - Bt/alt on the I.B.C. 2016
 - Bt/alt (Model 2) - Bt/alt on the I.B.C. 2016
 - Bt/alt (Model 3) - Bt/alt on the I.B.C. 2016
 
-15. Material Description:
+1. Material Description:
+
 - Bt/alt (Model 1) - Bt/alt on the I.B.C. 2016
 - Bt/alt (Model 2) - Bt/alt on the I.B.C. 2016
 - Bt/alt (Model 3) - Bt/alt on the I.B.C. 2016
 
-16. Material Description:
+1. Material Description:
+
 - Bt/alt (Model 1) - Bt/alt on the I.B.C. 2016
 - Bt/alt (Model 2) - Bt/alt on the I.B.C. 2016
 - Bt/alt (Model 3) - Bt/alt on the I.B.C. 2016
@@ -2630,6 +2647,7 @@ MARCH 2017
 
 <!-- Page 38 -->
 --- Page 1 ---
+
 # BUILDER / CONTRACTOR RESPONSIBILITIES
 
 1. THE THE RESPONSIBILITY OF THE BUILDING/ONTRANCTION TO INSURE THAT ALL PROJECTS THERE ARE SPECIFICIZED ARE COMPLETED. THE SUPPLYING OF BUILDING OR ONTRANCTIONS OF THE CONTRACTOR IS NOT AFFECTED. THE SUPPLYING OF BUILDING OR ONTRANCTIONS OF THE CONTRACTOR IS NOT AFFECTED. THE SUPPLYING OF CONTRACTOR IS NOT AFFECTED. THE SUPPLYING OF CONTRACTOR IS NOT AFFECTED. THE SUPPLYING OF CONTRACTOR IS NOT AFFECTED.
@@ -2704,15 +2722,19 @@ MARCH 2017
 - B) HAVE ALL NETWAGES OF CHANGE CLOUD / INSOLVED
 - C) BE CEDULE AND UNUNBREASURED
 
-3. ENTER DRAWINGS IS REQUIRED ON ALL PAGES.
+1. ENTER DRAWINGS IS REQUIRED ON ALL PAGES.
 
-4. MANUFACTURER RESERVES THE RIGHT TO RE-ELIMET DRAWINGS WITH EXTREMELY UNFADED DRAWING TO HAVE MANUFACTURED DRAWING. THE RIGHT TO RE-ELIMET DRAWINGS WILL BE PROVIDED TO A MANUFACTURER NAMED BY THE DRAWING.
+2. MANUFACTURER RESERVES THE RIGHT TO RE-ELIMET DRAWINGS WITH EXTREMELY UNFADED DRAWING TO HAVE MANUFACTURED DRAWING. THE RIGHT TO RE-ELIMET DRAWINGS WILL BE PROVIDED TO A MANUFACTURER NAMED BY THE DRAWING.
 
-5. ANY CHANGES WITH THE DRAWINGS MAY BE EMBODIED IN THE CONTRACTOR DRAWING MUST BE EMBODIED. THE DRAWINGS MAY BE EMBODIED IN THE CONTRACTOR DRAWING. THE DRAWINGS MAY BE EMBODIED IN THE CONTRACTOR DRAWING. THE DRAWINGS MAY BE EMBODIED IN THE CONTRACTOR DRAWING.
+3. ANY CHANGES WITH THE DRAWINGS MAY BE EMBODIED IN THE CONTRACTOR DRAWING MUST BE EMBODIED. THE DRAWINGS MAY BE EMBODIED IN THE CONTRACTOR DRAWING. THE DRAWINGS MAY BE EMBODIED IN THE CONTRACTOR DRAWING. THE DRAWINGS MAY BE EMBODIED IN THE CONTRACTOR DRAWING.
 
-6. THE DRAWINGS MAY BE EMBODIED IN THE CONTRACTOR DRAWING MUST BE EMBODIED. THE DRAWINGS MAY BE EMBODIED IN THE CONTRACTOR DRAWING.
+4. THE DRAWINGS MAY BE EMBODIED IN THE CONTRACTOR DRAWING MUST BE EMBODIED. THE DRAWINGS MAY BE EMBODIED IN THE CONTRACTOR DRAWING.
 
-7. THE DRAWINGS MAY BE EMBODIED IN THE CONTRACTOR DRAWING MUST BE EMBODIED. THE DRAWINGS MAY BE EMBODIED.
+5. THE DRAWINGS MAY BE EMBODIED IN THE CONTRACTOR DRAWING MUST BE EMBODIED. THE DRAWINGS MAY BE EMBODIED.
+
+6. THE DRAWINGS MAY BE EMBODIED.
+
+7. THE DRAWINGS MAY BE EMBODIED.
 
 8. THE DRAWINGS MAY BE EMBODIED.
 
@@ -2736,11 +2758,7 @@ MARCH 2017
 
 18. THE DRAWINGS MAY BE EMBODIED.
 
-19. THE DRAWINGS MAY BE EMBODIED.
-
-10. THE DRAWINGS MAY BE EMBODIED.
-
-11.
+19.
 
 ---
 
@@ -2861,6 +2879,7 @@ PERMIT CHECK
 SET-4
 
 # LEGACY ARENA
+
 2727 W Bronco Butte Trail
 Phoenix, AZ 85085
 THE MEMPHIS-PROVINCE BROADCAST
@@ -2931,6 +2950,7 @@ REVIEWED BY
 
 <!-- Page 42 -->
 --- Page 1 ---
+
 # Roof Panel Attachment
 
 ![img-0.jpeg](img-0.jpeg)
@@ -3618,8 +3638,6 @@ SPECIFIED
 SPECIFIED
 
 SPECIFIED
-
-
 
 ---
 
@@ -4356,12 +4374,6 @@ LOVERALL FIRST FLOOR PLAN - SOCCER
 ![img-11.jpeg](img-11.jpeg)
 ![img-12.jpeg](img-12.jpeg)
 ![img-13.jpeg](img-13.jpeg)
-
-
-
-
-
-
 
 0.935,0.971,0.989
 
@@ -5296,6 +5308,7 @@ Phoenix, AZ 85085
 THE MILWAUKEE UNIVERSITY HAS A FULL FACILITY
 ![img-0.jpeg](img-0.jpeg)
 ![img-1.jpeg](img-1.jpeg)
+
 1. FIRE RATED SOFFIT BOTTOM OF STAIR ASSEMBLY REFER TO STAIR DETAILS SHEET A10.65
 SMOKE TIGHT STARWELL
 CMU WALLS WITH UL-RATED SOFFIT
@@ -5608,6 +5621,7 @@ WIDTH
 DOUBLE GLAZED
 1/4" TEMP.
 CLEAR |   | NOTES:
+
 1. LENGTH DOOR LABEL WITH
 ARCHITECT BEFORE INSTALLATION
 2. NUMBERS ON LOOKER DOORS ONLY
@@ -5617,9 +5631,9 @@ LOOKER ROOM DOORS
 1
 FONT, ANAL
 WIDTH | NOTES:
-1. LENGTH DOOR LABEL WITH
+3. LENGTH DOOR LABEL WITH
 ARCHITECT BEFORE INSTALLATION
-2. NUMBERS ON LOOKER DOORS ONLY
+4. NUMBERS ON LOOKER DOORS ONLY
 PAINT 12" LOOKER ROOM
 NUMBER ON FRONT OF
 LOOKER ROOM DOORS
@@ -5724,6 +5738,7 @@ A03.03
 
 <!-- Page 83 -->
 --- Page 1 ---
+
 1. CARIBTI A GUARANTEO IN DOMESTIC ASSOCIATION OF FEDERAL ASSOCIATION OF INDONESIA
 2. ILLINOIS A WATER TAX ASSOCIATION OF THE UNITED STATES
 3. ILLINOIS A WATER TAX ASSOCIATION OF THE UNITED STATES
@@ -6526,8 +6541,6 @@ BUILDING SECTION B - THRU LOBBY LOOKING INTO COURTS-1
 
 ![img-15.jpeg](img-15.jpeg)
 
-
-
 ^{}[]
 
 ---
@@ -6648,16 +6661,17 @@ BUILDING SECTION D - FROM CENTER ICE LOOKING TOWARD REAR COURTS
 |  GENERAL NOTES  |   |   |   |
 | --- | --- | --- | --- |
 |  STATEWALL TYPES | 1. ALL STEREOTIANT GUALL OR ITALIA ASSAURERS BEYOND INSTALLATION
-2. HAT TOMETOWN GLASS TYPICAL ON FIRST FLOOR AND 1/2" TOMETONE GLASS TYPICAL ON FREEDOMNE UNLESS OTHERWISE NOTED
-3. BAG SHEET AND SYSTEM ONLY TYPICAR RALS
-4. POSTER GLASS RALS, OR "RATES SAND AND" BY OR EQUAL - APPLIED TO LEGS TRADING AND BY OTHERWISE
-5. ALL PROVIDER ROLLERS (GRADE AND AIR ACCEPTABLE) 7-9. SEAR 10-47 NY
-6. ☑ BAG SHEET AND BY AIR CENTER STEREOTIANT ELEVATIONS | ☑ 1. ALL STEREOTIANT GUALL OR ITALIA ASSAURERS BEYOND INSTALLATION
-2. HAT TOMETOWN GLASS TYPICAL ON FIRST FLOOR AND 1/2" TOMETONE GLASS TYPICAL ON FREEDOMNE UNLESS OTHERWISE NOTED
-3. BAG SHEET AND SYSTEM ONLY TYPICAR RALS
-4. POSTER GLASS RALS, OR "RATES SAND AND" BY OR EQUAL - APPLIED TO LEGS TRADING AND BY OTHERWISE
-5. ALL PROVIDER ROLLERS (GRADE AND AIR ACCEPTABLE) 7-9. SEAR 10-47 NY
-6. ☑ BAG SHEET AND BY AIR CENTER STEREOTIANT ELEVATIONS |   |
+
+1. HAT TOMETOWN GLASS TYPICAL ON FIRST FLOOR AND 1/2" TOMETONE GLASS TYPICAL ON FREEDOMNE UNLESS OTHERWISE NOTED
+2. BAG SHEET AND SYSTEM ONLY TYPICAR RALS
+3. POSTER GLASS RALS, OR "RATES SAND AND" BY OR EQUAL - APPLIED TO LEGS TRADING AND BY OTHERWISE
+4. ALL PROVIDER ROLLERS (GRADE AND AIR ACCEPTABLE) 7-9. SEAR 10-47 NY
+5. ☑ BAG SHEET AND BY AIR CENTER STEREOTIANT ELEVATIONS | ☑ 1. ALL STEREOTIANT GUALL OR ITALIA ASSAURERS BEYOND INSTALLATION
+6. HAT TOMETOWN GLASS TYPICAL ON FIRST FLOOR AND 1/2" TOMETONE GLASS TYPICAL ON FREEDOMNE UNLESS OTHERWISE NOTED
+7. BAG SHEET AND SYSTEM ONLY TYPICAR RALS
+8. POSTER GLASS RALS, OR "RATES SAND AND" BY OR EQUAL - APPLIED TO LEGS TRADING AND BY OTHERWISE
+9. ALL PROVIDER ROLLERS (GRADE AND AIR ACCEPTABLE) 7-9. SEAR 10-47 NY
+10. ☑ BAG SHEET AND BY AIR CENTER STEREOTIANT ELEVATIONS |   |
 
 ![img-2.jpeg](img-2.jpeg)
 
@@ -7110,7 +7124,8 @@ REVISIONS
 WALLS
 WALLS
 WALLS | 1. ALL STORN FROM WALL ON THIS DRAINJARD UNTURN OUTSIDE
-2. ALL TEMPEROR GLASS TYPES A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z, Z, Z, Z, Z, Z, Z, Z, Z, Z, Z, Z, Z, Z, Z, Z, Z, Z, Z, Z, Z, Z, Z, Z, Z, Z  |   |   |
+
+1. ALL TEMPEROR GLASS TYPES A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z, Z, Z, Z, Z, Z, Z, Z, Z, Z, Z, Z, Z, Z, Z, Z, Z, Z, Z, Z, Z, Z, Z, Z, Z, Z  |   |   |
 |  REVISIONS
 REVISIONS
 WALLS
@@ -7175,8 +7190,9 @@ ENLARGED - BUILDING SECTION Y - THRU KITCHEN AND PIZZA BAR WEST
 | --- | --- |
 |  WALL TYPES | WALL TREND  |
 |  1. HAT SOIL DRAINED, TOI HAT NO
-2. STAL WALL NOT TOI HAT NO | 3. 1/2" TOWARD TILE TILE
-4. 1/2" TOWARD TILE TILE  |
+
+1. STAL WALL NOT TOI HAT NO | 3. 1/2" TOWARD TILE TILE
+2. 1/2" TOWARD TILE TILE  |
 |  5. SPLIT FACED DRAINING | 6. PACK TOWARD TILE TILE  |
 |  7. HAT STAL DRAINING | 8. HAT TOWARD TILE TILE  |
 |  9. PACK TOWARD TILE TILE | 10. HAT TOWARD TILE TILE  |
@@ -7190,9 +7206,9 @@ ENLARGED - BUILDING SECTION Y - THRU KITCHEN AND PIZZA BAR WEST
 3. HAT TOWARD TILES WALL
 4. HAT TOWARD TILES WALL |   |
 |  5. HAT TOWARD TILES WALL
-6. HAT TOWARD TILES WALL |   |
+5. HAT TOWARD TILES WALL |   |
 |  7. HAT TOWARD TILES WALL
-8. HAT TOWARD TILES WALL |   |
+6. HAT TOWARD TILES WALL |   |
 
 ![img-2.jpeg](img-2.jpeg)
 
@@ -7879,6 +7895,7 @@ OFFICE
 
 ![img-5.jpeg](img-5.jpeg)
 STOREFRONT NOTES:
+
 1. FIRST STORY 3/4" TEMPERED GLASS AND SECOND STORY 1/2" TEMPERED GLASS UNLESS NOTED OTHERWISE
 2. ALL STOREFRONT SHOULD BE FIELD MEASURED
 
@@ -8143,6 +8160,7 @@ WALL TO 10-11-18  |
 |  LEGACY ARENA
 2727 W Bronco Butte Trail
 Phoenix, AZ 85065
+
 THE WILDLIFE GROUP GROUP INCORPORATED IN THE UNITED STATES  |
 | --- |
 
@@ -8262,6 +8280,7 @@ TRAINING 1165
 
 <!-- Page 119 -->
 --- Page 1 ---
+
 |  LEGEND  |   |   |   |
 | --- | --- | --- | --- |
 |  WALL TYPES | WALL FINISH | GLASS | GUARD & HAND RAIL  |
@@ -8404,6 +8423,7 @@ A11  |   |   |
 
 <!-- Page 120 -->
 --- Page 1 ---
+
 |  LEGEND  |   |   |   |
 | --- | --- | --- | --- |
 |  WALL TYPES | WALL FROOH | GLASS | GUARD & HAND RAIL  |
@@ -9090,6 +9110,7 @@ A06.12
 1/2"-1'-0" | A4 WOMEN 2129
 1/4"-1'-0"  |
 |   |  |  | KEY NOTES
+
 1. 50° WOMEN'S AGA TURNING RADIUS
 2. 50° x 50° CLEAR FLOOR AREA
 3. 30° x 45° CLEAR FLOOR AREA  |
@@ -9103,6 +9124,7 @@ A06.12
 
 <!-- Page 124 -->
 --- Page 1 ---
+
 |   | LEGEND  |   |   |   |   |
 | --- | --- | --- | --- | --- | --- |
 |   |   |  WALL TYPES | WALL FINISH | GLASS | GUARD & HAND BOX  |
@@ -9214,6 +9236,7 @@ ELEVATIONS FOR PIZZA BAR UPDATED. INCLUDING FINISHES.
 
 <!-- Page 126 -->
 --- Page 1 ---
+
 # KITCHEN AND PIZZA BAR- TENANT BUILD-OUT PERMIT AS REVISION
 
 ## SEE FS SHEETS FOR EQUIPMENT AND SCHEDLE OF KITCHEN
@@ -10196,6 +10219,7 @@ VOL. 10, NO. 2
 
 <!-- Page 149 -->
 --- Page 1 ---
+
 |  |   |   |
 | --- | --- | --- |
 |  1 | CF PANEL JOINT - ARCHITECTURAL FLAT
@@ -10229,6 +10253,7 @@ FAXENING PATTERN
 
 <!-- Page 150 -->
 --- Page 1 ---
+
 |  |   |   |   |
 | --- | --- | --- | --- |
 |  1 OUTSIDE CORNER - W/TRIM
@@ -10432,6 +10457,7 @@ F  |   |   |   |
 
 <!-- Page 154 -->
 --- Page 1 ---
+
 |  |   |   |   |   |   |
 | --- | --- | --- | --- | --- | --- |
 |  A1
@@ -10482,6 +10508,7 @@ Scottsdale, AZ 85255
 Phone 602.281.2280  |
 | --- | --- |
 |  LEGACY ARENA - MAIN KITCHEN
+
 PHOENIX, AZ 85095 | Food Service Equipment Floor Plan  |
 | --- | --- |
 |  LEGACY  |
@@ -10505,6 +10532,7 @@ Received 12-15-20
 
 <!-- Page 156 -->
 --- Page 1 ---
+
 |  Num | Qty | Category | Follows/Plus | Hg | Rm | Acquis | Construction | Not | Cold | Direct | Indirect | Gas | B/BTC | Equipment/Remarks | B/A | Model  |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 |  1 | 1 | 1,564 lb. ton Cylind | 2007 |  |  | 13.0 | JB |  | 1/2" |  | 0/4" |  |  |  | Hochtrieb | KM 1801MB5  |
@@ -10864,7 +10892,7 @@ Food Service Equipment Floor Plan
 
 ![img-1.jpeg](img-1.jpeg)
 Food Service Equipment Electrical Rough-Ins
-www.130m x 115.50m
+<www.130m> x 115.50m
 
 ![img-2.jpeg](img-2.jpeg)
 Food Service Equipment Floor Plans
@@ -10924,7 +10952,7 @@ Soutapala, 873009
 
 Phone 692.291.2280
 
-# SHEET:
+# SHEET
 
 FS5
 
@@ -11212,8 +11240,6 @@ Scale: 1/8" = 1'-0"
 
 ![img-4.jpeg](img-4.jpeg)
 
-
-
 PHARMA RELEASES P.T.
 Planned by SIR INTEGRITY COSTS INC
 
@@ -11304,18 +11330,6 @@ INTERIOR LIGHTING CONTACTOR D
 6. All parts of the LIGHTING CONTACTS must be in good condition.
 7. All parts of the LIGHTING CONTACTS must be in good condition.
 
-2. All parts of the LIGHTING CONTACTS must be in good condition.
-
-3. All parts of the LIGHTING CONTACTS must be in good condition.
-
-4. All parts of the LIGHTING CONTACTS must be in good condition.
-
-5. All parts of the LIGHTING CONTACTS must be in good condition.
-
-6. All parts of the LIGHTING CONTACTS must be in good condition.
-
-7. All parts of the LIGHTING CONTACTS must be in good condition.
-
 8. All parts of the LIGHTING CONTACTS must be in good condition.
 
 9. All parts of the LIGHTING CONTACTS must be in good condition.
@@ -11329,6 +11343,18 @@ INTERIOR LIGHTING CONTACTOR D
 13. All parts of the LIGHTING CONTACTS must be in good condition.
 
 14. All parts of the LIGHTING CONTACTS must be in good condition.
+
+15. All parts of the LIGHTING CONTACTS must be in good condition.
+
+16. All parts of the LIGHTING CONTACTS must be in good condition.
+
+17. All parts of the LIGHTING CONTACTS must be in good condition.
+
+18. All parts of the LIGHTING CONTACTS must be in good condition.
+
+19. All parts of the LIGHTING CONTACTS must be in good condition.
+
+20. All parts of the LIGHTING CONTACTS must be in good condition.
 
 Partial 1st Floor Lighting Plan
 Suite 1/8" • 7'-0"
@@ -12348,6 +12374,7 @@ BOILER PIPING DETAILS
 # HYDROMIC SYSTEM SCHEDULE
 
 ## 1. Day of the year
+
 - Start of each schedule
 - Enter on 1 week
 - Enter on 2-3
@@ -12361,6 +12388,7 @@ BOILER PIPING DETAILS
 - Enter on 10-11
 
 ## 2. Day of the year
+
 - Start of each schedule
 - Enter on 2-3
 - Enter on 3-4
@@ -12373,6 +12401,7 @@ BOILER PIPING DETAILS
 - Enter on 10-11
 
 ## 3. Day of the year
+
 - Start of each schedule
 - Enter on 2-3
 - Enter on 3-4
@@ -12976,6 +13005,7 @@ TECH DETAIL 2
 
 <!-- Page 204 -->
 --- Page 1 ---
+
 #
 
 #
@@ -13212,6 +13242,7 @@ DOWESTIC WATER RISER
 ![img-0.jpeg](img-0.jpeg)
 
 Gas Piping Notes
+
 1. WIRE IS DISLIKE PIPING WIRE IS OF BUTTER DISLIKES. DISLIKERS WILL BE THE PRODUCTS OF THE GAS PIPING RISER PROVIDED IN THE PRODUCTS OF THE PRODUCTS OF THE PRODUCTS OF THE PRODUCTS OF THE PRODUCTS OF THE PRODUCTS OF THE PRODUCTS OF THE PRODUCTS OF THE PRODUCTS OF THE PRODUCTS OF THE PRODUCTS OF THE PRODUCTS OF THE PRODUCTS OF THE PRODUCTS OF THE PRODUCTS OF THE PRODUCTS OF THE PRODUCTS OF THE PRO
 
 ---
@@ -14067,7 +14098,6 @@ W-624
 W-625
 W-626
 W-627
-
 
 ---
 

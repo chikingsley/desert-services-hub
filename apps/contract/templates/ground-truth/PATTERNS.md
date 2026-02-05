@@ -234,6 +234,7 @@ When you have an estimate and Notice to Award but no signed subcontract yet:
 ### 1. Read the Estimate PDF
 
 Extract:
+
 - Project name (may differ from job name - e.g., "VEG BUILDING - GOODYEAR REGIONAL CENTER")
 - Estimate number (e.g., 12172501)
 - Address
@@ -270,6 +271,7 @@ WHERE a.storage_path IS NOT NULL
 ### 4. Build SOV from Estimate
 
 Desert Services estimates have consistent structure:
+
 - **Required Items**: Narrative, signs, inspections, permits, mobilization
 - **Phase 1**: BMPs, rock entrance, inlet protection
 - **Phase 2**: Additional BMPs
@@ -279,6 +281,7 @@ Desert Services estimates have consistent structure:
 ### 5. Track Scope Changes
 
 Search emails AFTER the NTA date for scope modifications:
+
 - Items removed ("everything except the waddles")
 - Items added
 - Value adjustments
@@ -286,6 +289,7 @@ Search emails AFTER the NTA date for scope modifications:
 ### 6. Create Reconciliation
 
 Compare:
+
 - NTA value (what GC committed to)
 - Adjusted scope value (after modifications)
 - Flag variance for verification when subcontract arrives

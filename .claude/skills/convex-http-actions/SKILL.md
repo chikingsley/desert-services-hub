@@ -15,10 +15,10 @@ Build HTTP endpoints for webhooks, external API integrations, and custom routes 
 
 Before implementing, do not assume; fetch the latest documentation:
 
-- Primary: https://docs.convex.dev/functions/http-actions
-- Actions Overview: https://docs.convex.dev/functions/actions
-- Authentication: https://docs.convex.dev/auth
-- For broader context: https://docs.convex.dev/llms.txt
+- Primary: <https://docs.convex.dev/functions/http-actions>
+- Actions Overview: <https://docs.convex.dev/functions/actions>
+- Authentication: <https://docs.convex.dev/auth>
+- For broader context: <https://docs.convex.dev/llms.txt>
 
 ## Instructions
 
@@ -726,8 +726,8 @@ export default defineSchema({
 
 ## References
 
-- Convex Documentation: https://docs.convex.dev/
-- Convex LLMs.txt: https://docs.convex.dev/llms.txt
-- HTTP Actions: https://docs.convex.dev/functions/http-actions
-- Actions: https://docs.convex.dev/functions/actions
-- Authentication: https://docs.convex.dev/auth
+- Convex Documentation: <https://docs.convex.dev/>
+- Convex LLMs.txt: <https://docs.convex.dev/llms.txt>
+- HTTP Actions: <https://docs.convex.dev/functions/http-actions>
+- Actions: <https://docs.convex.dev/functions/actions>
+- Authentication: <https://docs.convex.dev/auth>

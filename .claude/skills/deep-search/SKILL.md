@@ -98,13 +98,17 @@ Given a seed email or query:
    ```bash
    sqlite3 hub.db "SELECT a.id, a.name, a.email_id FROM attachments a JOIN emails e ON a.email_id = e.id WHERE e.id = EMAIL_ID;"
    ```
-2. Download using repository utilities:
+
+1. Download using repository utilities:
+
    ```typescript
-   import { downloadAttachment } from '@/apps/contract-ui/contract/db/repositories/attachment';
+   import { downloadAttachment } from '@/apps/contract/db/repositories/attachment';
    await downloadAttachment(ATTACHMENT_ID, 'output/path.pdf');
    ```
-3. Read PDF content
-4. Extract structured data
+
+2. Read PDF content
+3. Extract structured data
+
 ```css
 ```markdown
 ## Summary
@@ -153,7 +157,7 @@ bun services/email/cli.ts thread <messageId> --user chi@desertservices.net
 ### Attachments (use hub.db repositories)
 
 ```typescript
-import { downloadAttachment } from '@/apps/contract-ui/contract/db/repositories/attachment';
+import { downloadAttachment } from '@/apps/contract/db/repositories/attachment';
 
 // Download attachment by ID from hub.db
 await downloadAttachment(ATTACHMENT_ID, 'output/path.pdf');

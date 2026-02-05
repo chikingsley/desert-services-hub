@@ -15,15 +15,16 @@ Create self-contained, reusable Convex components with proper isolation, exports
 
 Before implementing, do not assume; fetch the latest documentation:
 
-- Primary: https://docs.convex.dev/components
-- Component Authoring: https://docs.convex.dev/components/authoring
-- For broader context: https://docs.convex.dev/llms.txt
+- Primary: <https://docs.convex.dev/components>
+- Component Authoring: <https://docs.convex.dev/components/authoring>
+- For broader context: <https://docs.convex.dev/llms.txt>
 
 ## Instructions
 
 ### What Are Convex Components?
 
 Convex components are self-contained packages that include:
+
 - Database tables (isolated from the main app)
 - Functions (queries, mutations, actions)
 - TypeScript types and validators
@@ -451,7 +452,7 @@ function useRateLimitedAction() {
 
 ## References
 
-- Convex Documentation: https://docs.convex.dev/
-- Convex LLMs.txt: https://docs.convex.dev/llms.txt
-- Components: https://docs.convex.dev/components
-- Component Authoring: https://docs.convex.dev/components/authoring
+- Convex Documentation: <https://docs.convex.dev/>
+- Convex LLMs.txt: <https://docs.convex.dev/llms.txt>
+- Components: <https://docs.convex.dev/components>
+- Component Authoring: <https://docs.convex.dev/components/authoring>

@@ -67,6 +67,7 @@ Use plain `<ul>` with NO style attribute. Outlook's native list margins provide 
 ```
 
 **IMPORTANT:**
+
 - Do NOT add `<div><br></div>` before or after lists — creates double spacing
 - Do NOT use `<ul style="margin-top:0; margin-bottom:0">` — removes all spacing
 

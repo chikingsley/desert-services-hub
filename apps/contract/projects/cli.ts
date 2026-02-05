@@ -18,7 +18,7 @@
 import { db } from "./schema";
 import { seedMondayColumns } from "./seed-columns";
 
-type Project = {
+interface Project {
   id: number;
   project_number: string;
   project_name: string;
@@ -41,22 +41,22 @@ type Project = {
   contract_received_mailbox: string | null;
   contract_received_message_id: string | null;
   created_at: string;
-};
+}
 
 type ProjectWithCounts = Project & {
   open_tasks: number;
 };
 
-type MondayColumn = {
+interface MondayColumn {
   id: number;
   column_name: string;
   monday_id: string | null;
   monday_type: string | null;
   action: string;
   notes: string;
-};
+}
 
-type ProjectTask = {
+interface ProjectTask {
   id: number;
   project_id: number;
   task_type: string;
@@ -67,7 +67,7 @@ type ProjectTask = {
   file_path: string | null;
   created_at: string;
   updated_at: string;
-};
+}
 
 const args = process.argv.slice(2);
 const command = args[0];
@@ -468,8 +468,10 @@ function listColumns(opts: Record<string, string>) {
 
   const grouped: Record<string, MondayColumn[]> = {};
   for (const col of columns) {
-    const group = grouped[col.action] ?? (grouped[col.action] = []);
-    group.push(col);
+    if (!grouped[col.action]) {
+      grouped[col.action] = [];
+    }
+    grouped[col.action]?.push(col);
   }
 
   for (const [act, cols] of Object.entries(grouped)) {

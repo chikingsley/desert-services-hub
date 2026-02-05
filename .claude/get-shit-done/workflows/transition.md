@@ -5,4 +5,5 @@
 ```html```text
 ```html```bash
 ```html```markdown
+
 ```Respect user judgment — they know if work matters.**If marking complete with incomplete plans:**- Update ROADMAP: "2/3 plans complete" (not "3/3")- Note in transition message which plans were skipped</partial_completion><success_criteria>Transition is complete when:- [ ] Current phase plan summaries verified (all exist or user chose to skip)- [ ] Any stale handoffs deleted- [ ] ROADMAP.md updated with completion status and plan count- [ ] PROJECT.md evolved (requirements, decisions, description if needed)- [ ] STATE.md updated (position, project reference, context, session)- [ ] Progress table updated- [ ] User knows next steps</success_criteria>

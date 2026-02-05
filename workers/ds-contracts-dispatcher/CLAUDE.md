@@ -1,6 +1,6 @@
 # DS Contracts Dispatcher Worker
 
-Cloudflare Worker that receives emails forwarded from contracts@desertservices.net via Email Routing, classifies them, and dispatches appropriate actions.
+Cloudflare Worker that receives emails forwarded from <contracts@desertservices.net> via Email Routing, classifies them, and dispatches appropriate actions.
 
 ## Project Overview
 
@@ -42,6 +42,7 @@ src/
 ## Environment
 
 Worker secrets configured via `wrangler secret put`:
+
 - `AZURE_TENANT_ID`
 - `AZURE_CLIENT_ID`
 - `AZURE_CLIENT_SECRET`

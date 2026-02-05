@@ -2,7 +2,7 @@
  * Test estimate extraction against multiple PDFs
  *
  * Usage:
- *   bun apps/contract-ui/contract/scripts/test-estimate-extraction.ts
+ *   bun apps/contract/scripts/test-estimate-extraction.ts
  */
 
 import type { Estimate } from "./extract-estimate";

@@ -19,10 +19,10 @@ This project appears under multiple names in different systems:
 
 ## TLW Construction Contacts
 
-- **Jason Klohk** - Project Manager - jason@tlwconstruction.com - 602.309.1034
-- **Carol Rasmussen** - Project Coordinator - carol@tlwconstruction.com - 480.433.1508
-- **Bryce Pfaff** - bryce@tlwconstruction.com
-- **Sheryl Dupuis** - Office & Accounting Manager - sheryl@tlwconstruction.com - 480.273.5328
+- **Jason Klohk** - Project Manager - <jason@tlwconstruction.com> - 602.309.1034
+- **Carol Rasmussen** - Project Coordinator - <carol@tlwconstruction.com> - 480.433.1508
+- **Bryce Pfaff** - <bryce@tlwconstruction.com>
+- **Sheryl Dupuis** - Office & Accounting Manager - <sheryl@tlwconstruction.com> - 480.273.5328
 
 TLW Office: 480.898.8838
 Address: 2085 East Technology Circle, Suite 100, Tempe, AZ 85284 (ASU Research Park)
@@ -62,6 +62,7 @@ Address: 2085 East Technology Circle, Suite 100, Tempe, AZ 85284 (ASU Research P
 ## Census DB References
 
 Key email IDs for research:
+
 - 136804, 206077, 70061, 83474, 155434: Original PO emails (June 2, 2025)
 - 220257: Kendra renaming the job (June 13, 2025)
 - 82386: Won project notification (June 18, 2025)
@@ -69,6 +70,7 @@ Key email IDs for research:
 - 70692: Invoice SW25-174-02 (Jan 28, 2026)
 
 Key attachment IDs:
+
 - 72565, 94583, 94586, etc.: Signed PO (P. O. #01 Desert Services.._Signed.pdf)
 - 98364, 98631: CGP NOI Certificate
 - 98381: Dust Permit
@@ -82,7 +84,7 @@ Key attachment IDs:
 1. **Black Canyon Storage** (Double AA Builders)
    - Estimate 1623 - $14,500 - Bid Sent
    - Original March 2024, refresh pricing requested Jan 2026
-   - Contact: Meagan Chu - meagan@doubleaabuilders.com
+   - Contact: Meagan Chu - <meagan@doubleaabuilders.com>
    - Completely different GC
 
 2. **44012 N Black Canyon** (possibly adjacent parcel)

@@ -81,7 +81,7 @@ const attachments = db.query(
 ).all(emailId);
 
 // Download each using repository
-import { downloadAttachment } from '@/apps/contract-ui/contract/db/repositories/attachment';
+import { downloadAttachment } from '@/apps/contract/db/repositories/attachment';
 for (const att of attachments) {
   await downloadAttachment(att.id, `downloads/${project}-${doctype}.pdf`);
 }

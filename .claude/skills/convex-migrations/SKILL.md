@@ -15,10 +15,10 @@ Evolve your Convex database schema safely with patterns for adding fields, backf
 
 Before implementing, do not assume; fetch the latest documentation:
 
-- Primary: https://docs.convex.dev/database/schemas
-- Schema Overview: https://docs.convex.dev/database
-- Migration Patterns: https://stack.convex.dev/migrate-data-postgres-to-convex
-- For broader context: https://docs.convex.dev/llms.txt
+- Primary: <https://docs.convex.dev/database/schemas>
+- Schema Overview: <https://docs.convex.dev/database>
+- Migration Patterns: <https://stack.convex.dev/migrate-data-postgres-to-convex>
+- For broader context: <https://docs.convex.dev/llms.txt>
 
 ## Instructions
 
@@ -705,8 +705,8 @@ export default defineSchema({
 
 ## References
 
-- Convex Documentation: https://docs.convex.dev/
-- Convex LLMs.txt: https://docs.convex.dev/llms.txt
-- Schemas: https://docs.convex.dev/database/schemas
-- Database Overview: https://docs.convex.dev/database
-- Migration Patterns: https://stack.convex.dev/migrate-data-postgres-to-convex
+- Convex Documentation: <https://docs.convex.dev/>
+- Convex LLMs.txt: <https://docs.convex.dev/llms.txt>
+- Schemas: <https://docs.convex.dev/database/schemas>
+- Database Overview: <https://docs.convex.dev/database>
+- Migration Patterns: <https://stack.convex.dev/migrate-data-postgres-to-convex>

@@ -51,6 +51,7 @@ This is an index skill for Convex development. Use specific skills for detailed 
 ## Quick Start
 
 For most tasks:
+
 1. Start with `/convex-best-practices` for general patterns
 2. Use `/convex-functions` for writing backend logic
 3. Use `/convex-schema-validator` for data modeling
@@ -58,5 +59,5 @@ For most tasks:
 
 ## Documentation
 
-- Primary: https://docs.convex.dev
-- LLM-optimized: https://docs.convex.dev/llms.txt
+- Primary: <https://docs.convex.dev>
+- LLM-optimized: <https://docs.convex.dev/llms.txt>

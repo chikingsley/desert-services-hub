@@ -80,6 +80,7 @@ Filter when hooks fire using regex:
 ### Input (JSON on stdin)
 
 All hooks receive:
+
 - `session_id`
 - `transcript_path`
 - `cwd`

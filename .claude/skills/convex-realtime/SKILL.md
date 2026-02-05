@@ -15,10 +15,10 @@ Build reactive applications with Convex's real-time subscriptions, optimistic up
 
 Before implementing, do not assume; fetch the latest documentation:
 
-- Primary: https://docs.convex.dev/client/react
-- Optimistic Updates: https://docs.convex.dev/client/react/optimistic-updates
-- Pagination: https://docs.convex.dev/database/pagination
-- For broader context: https://docs.convex.dev/llms.txt
+- Primary: <https://docs.convex.dev/client/react>
+- Optimistic Updates: <https://docs.convex.dev/client/react/optimistic-updates>
+- Pagination: <https://docs.convex.dev/database/pagination>
+- For broader context: <https://docs.convex.dev/llms.txt>
 
 ## Instructions
 
@@ -436,8 +436,8 @@ function ChatRoom({ channelId, userId }: Props) {
 
 ## References
 
-- Convex Documentation: https://docs.convex.dev/
-- Convex LLMs.txt: https://docs.convex.dev/llms.txt
-- React Client: https://docs.convex.dev/client/react
-- Optimistic Updates: https://docs.convex.dev/client/react/optimistic-updates
-- Pagination: https://docs.convex.dev/database/pagination
+- Convex Documentation: <https://docs.convex.dev/>
+- Convex LLMs.txt: <https://docs.convex.dev/llms.txt>
+- React Client: <https://docs.convex.dev/client/react>
+- Optimistic Updates: <https://docs.convex.dev/client/react/optimistic-updates>
+- Pagination: <https://docs.convex.dev/database/pagination>

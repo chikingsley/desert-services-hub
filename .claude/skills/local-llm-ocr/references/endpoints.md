@@ -30,4 +30,3 @@ curl -sS https://ollama.peacockery.studio/v1/chat/completions \
 ## OCR (curl)
 
 Use `.claude/skills/local-llm-ocr/scripts/ocr_image.py` for local files. If you need raw curl, send a `data:image/...;base64,...` URL in `image_url.url`.
-

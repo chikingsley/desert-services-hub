@@ -24,7 +24,7 @@ if (!(projectIdArg && (domainArg || autoDetect))) {
 const projectId = Number(projectIdArg.split("=")[1]);
 let domain = domainArg ? domainArg.split("=")[1] : null;
 
-const db = new Database("./apps/contract-ui/contract/hub.db");
+const db = new Database("./apps/contract/hub.db");
 
 const project = db
   .query<{ name: string }, [number]>("SELECT name FROM projects WHERE id = ?")

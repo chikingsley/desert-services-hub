@@ -2,7 +2,7 @@
  * REAL Integration Tests for Data Linking
  *
  * These tests hit the actual database and verify real behavior.
- * Run with: bun test apps/contract-ui/contract/tests/linking.test.ts
+ * Run with: bun test apps/contract/tests/linking.test.ts
  */
 import { describe, expect, test } from "bun:test";
 import { db } from "@contract/db/connection";

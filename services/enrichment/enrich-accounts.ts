@@ -13,7 +13,7 @@
 import { Database } from "bun:sqlite";
 import { cleanCompany } from "./pdl/company";
 
-const HUB_DB_PATH = "apps/contract-ui/contract/hub.db";
+const HUB_DB_PATH = "apps/contract/hub.db";
 const RATE_LIMIT_DELAY_MS = 6500; // 6.5 seconds between calls (safe margin)
 
 // ============================================================================

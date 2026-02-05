@@ -5,6 +5,7 @@
 The Tasks system is a **built-in task tracker** for organizing complex work. It's different from the Task tool (which spawns subagents).
 
 Four tools:
+
 - `TaskCreate` - Add new tasks
 - `TaskUpdate` - Update status, set dependencies
 - `TaskList` - See all tasks

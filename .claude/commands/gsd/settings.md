@@ -1,3 +1,4 @@
 ---name: gsd:settingsdescription: Configure GSD workflow toggles and model profileallowed-tools:  - Read  - Write  - AskUserQuestion---<objective>Allow users to toggle workflow agents on/off and select model profile via interactive settings.Updates `.planning/config.json` with workflow preferences and model profile selection.</objective><process>## 1. Validate Environment```bashls .planning/config.json 2>/dev/null```css```bashcat .planning/config.json```markdown```csv
 ```css```json{  ...existing_config,  "model_profile": "quality" | "balanced" | "budget",  "workflow": {    "research": true/false,    "plan_check": true/false,    "verifier": true/false  }}```css```markdown
+
 ```</process><success_criteria>- [ ] Current config read- [ ] User presented with 4 settings (profile + 3 toggles)- [ ] Config updated with model_profile and workflow section- [ ] Changes confirmed to user</success_criteria>

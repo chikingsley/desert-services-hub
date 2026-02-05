@@ -43,22 +43,28 @@ Your detailed instructions here...
 ## Key Constraints
 
 ### Token Overhead
+
 Each subagent spawn costs **~20,000 tokens** before any work begins. Don't use for small tasks.
 
 ### No Nesting
+
 **Subagents cannot spawn other subagents.** This is intentional.
 
 ### Context Isolation
+
 Subagents receive ONLY:
+
 - Their system prompt (from the markdown file)
 - Basic environment (working directory)
 
 They do NOT inherit:
+
 - Parent conversation history
 - Skills from parent
 - Full Claude Code system prompt
 
 ### Concurrency Limits
+
 - Max **7 concurrent** subagents
 - Cap of 10 per batch
 - Claude waits for batch to finish before next
@@ -66,11 +72,13 @@ They do NOT inherit:
 ## Passing Context
 
 ### Method 1: In the Prompt
+
 ```yaml
 prompt: "Review auth module at src/auth/. Uses JWT tokens. Main file is AuthController.ts"
 ```
 
 ### Method 2: Via Skills
+
 ```yaml
 skills:
   - api-conventions
@@ -78,6 +86,7 @@ skills:
 ```
 
 ### Method 3: File References
+
 ```yaml
 prompt: "Read PROJECT.md first, then implement the feature described there"
 ```
@@ -85,13 +94,17 @@ prompt: "Read PROJECT.md first, then implement the feature described there"
 ## Orchestration Patterns
 
 ### Parallel Specialists
+
 Launch multiple agents for independent analysis:
+
 ```text
 Research auth, database, and API modules in parallel using separate subagents
 ```
 
 ### Pipeline (Sequential)
+
 Use Task system dependencies:
+
 ```javascript
 TaskCreate({ subject: "Research" })      // #1
 TaskCreate({ subject: "Implement" })     // #2
@@ -99,6 +112,7 @@ TaskUpdate({ taskId: "2", addBlockedBy: ["1"] })
 ```
 
 ### Chaining
+
 ```text
 Use code-reviewer subagent to find issues, then optimizer subagent to fix them
 ```
@@ -106,6 +120,7 @@ Use code-reviewer subagent to find issues, then optimizer subagent to fix them
 ## When to Use Subagents
 
 ### YES - Use Subagents
+
 - High-volume output (keeps verbose content out of main context)
 - Parallel independent work
 - Need specific tool restrictions
@@ -113,6 +128,7 @@ Use code-reviewer subagent to find issues, then optimizer subagent to fix them
 - Self-contained work that returns a summary
 
 ### NO - Stay in Main Conversation
+
 - Iterative refinement needed
 - Shared context across phases
 - Quick targeted changes
@@ -124,6 +140,7 @@ Use code-reviewer subagent to find issues, then optimizer subagent to fix them
 **Foreground**: Blocks main conversation, permission prompts pass through
 
 **Background** (`run_in_background: true`):
+
 - Runs concurrently
 - Must pre-approve permissions (auto-denies unapproved)
 - MCP tools not available
@@ -132,10 +149,12 @@ Use code-reviewer subagent to find issues, then optimizer subagent to fix them
 ## Cost Warning
 
 Real-world examples:
+
 - One company spent **$47,000 in three days** on subagent-heavy project
 - Single session consumed **887,000 tokens per minute**
 
 **Mitigation:**
+
 - Use Haiku for simple tasks
 - Stay in main conversation for small work
 - Group related tasks instead of many agents
@@ -143,6 +162,7 @@ Real-world examples:
 ## Resuming Subagents
 
 Each spawn creates new instance. To continue:
+
 ```text
 Continue that code review and analyze authorization logic
 ```

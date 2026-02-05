@@ -91,6 +91,7 @@ For API details, see [api-reference.md](references/api-reference.md)
 ```
 
 **Rules:**
+
 - Keep references one level deep
 - Add table of contents to files over 100 lines
 - Name files descriptively

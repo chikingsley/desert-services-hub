@@ -3,7 +3,7 @@
 Source: USACE Government Contract (through Richard Group)
 Contract Status: SUSPENDED - Resumption planned Feb 2026
 Estimate: "DAVIS MONTHAN BLDG ADD FOR 47TH FIGHTER" - Won ($17,552.00)
-Monday Item: https://desert-services-company.monday.com/boards/7943937851/pulses/9785900360
+Monday Item: <https://desert-services-company.monday.com/boards/7943937851/pulses/9785900360>
 Won Date: 2022-01-01
 
 ---
@@ -20,15 +20,15 @@ Contacts:
 
 - Todd Cruz - Project Manager, Richard Group
   - Phone: 847-840-9357 / 847-859-2412
-  - Email: todd.cruz@richardgroup.com (note: also used richardgroupllc.com domain)
+  - Email: <todd.cruz@richardgroup.com> (note: also used richardgroupllc.com domain)
   - Address: 566 W Lake St, Suite 100, Chicago, IL 60661
 - Audrey Hudgins - Project Accountant, Richard Group
   - Phone: 872-344-0806
-  - Email: Audrey.hudgins@richardgroupllc.com
+  - Email: <Audrey.hudgins@richardgroupllc.com>
 - Chelsea Boyd - Richard Group (ACH/Payments)
-  - Email: Chelsea.boyd@richardgroup.com
+  - Email: <Chelsea.boyd@richardgroup.com>
 - Jessica Wachniak - Richard Group (LCP Tracker compliance)
-  - Email: Jessica.wachniak@richardgroup.com
+  - Email: <Jessica.wachniak@richardgroup.com>
 
 ---
 
@@ -130,10 +130,12 @@ Est_09202211_DESERT_SERVICES_1788.pdf - Total: **$17,552.00**
 ## Documents (in folder)
 
 Contract/Estimate (Oct-Nov 2022):
+
 - Est_09202211_DESERT_SERVICES_1788.pdf - Original estimate (dated 9/20/2022)
 - 22-014-SA02_SERVICE_AGREEMENT_DESERT_SERVICES.pdf - Signed service agreement/subcontract (849KB)
 
 USACE Correspondence:
+
 - 22-014 USACE LETTER C-0005 - SUSPENSION OF WORK.pdf
 - 22-014 USACE LETTER C-0006 - SUSPENSION OF WORK EXTENSION #1.pdf
 - 22-014 USACE LETTER C-0006 - SUSPENSION OF WORK EXTENSION #2.pdf (mislabeled, should be C-0007?)
@@ -142,10 +144,12 @@ USACE Correspondence:
 - 22-014 C-0001 SERIAL LETTER - RESUMPTION OF WORK REQUEST.pdf
 
 Billing/Payment:
+
 - Application-for-Payment-Apr2025.pdf (GCPay Application #9)
 - UNCONDITIONAL-PARTIAL-WAIVER.pdf
 
 Still Missing:
+
 - $10,000 change order COR from Nov 2024 (referenced but not found as attachment)
 
 ---
@@ -166,14 +170,17 @@ Still Missing:
 **September 6, 2022**: Notice to Proceed issued by USACE
 
 **October 1, 2022**: DocuSign Subcontract Sent
+
 - Todd Cruz sent DocuSign to Jeff Gardner for signing
 - Documents: 22-014-S17 CONTRACT - DESERT SERVICES.pdf, 22-014-S17 SF1413.pdf
 
 **October 2, 2022**: Contract Confirmed
+
 - Jeff Gardner forwarded to team: "Estimate attached – Contract amount agrees"
 - Jayson Roti asked Todd for: start date, physical address, NOI, site contacts
 
 **October 19, 2022**: Todd Cruz Answered Project Questions
+
 - NTP was 9/6/2022
 - Location: South Wilmot Rd., Tucson, AZ 85708 (Davis-Monthan AFB) – Building 5247
 - Optional CLIN 0010 (Temporary Swing Spaces) awarded, took critical path
@@ -184,6 +191,7 @@ Still Missing:
   - John Bussey (QC Manager): 224-282-6085
 
 **November 28, 2022**: Contract Signed & Project Setup
+
 - Kendra saved signed service agreement (22-014-SA02)
 - Flagged as CERTIFIED PAYROLL project
 - Requested insurance sent for approval ASAP
@@ -192,23 +200,29 @@ Still Missing:
 ### 2023 - Active Construction Phase
 
 **January 3-4, 2023**: SWPPP Submittals
+
 - Todd Cruz and team discussing SWPPP submittal requirements
 
 **March 28, 2023**: Project Deliverables
+
 - Jayson, Kerin, Dawn coordinating project deliverables
 - Kendra responding to deliverable requests
 
 **April 17-18, 2023**: Outstanding Submittals
+
 - John Bussey sent outstanding submittals list
 - Jayson forwarding/tracking submittal status
 
 **July 2023**: Project Delays Begin
+
 - Delays started impacting schedule
 
 **July 6, 2023**: Partial Waiver Template
+
 - Jayson forwarded partial waiver template to Kerin
 
 **July 24, 2023**: Sub Coordination Meeting Minutes
+
 - Ebben Kicklighter distributing meeting minutes
 
 **July 31, 2023**: Sub Coordination Meeting Minutes
@@ -216,6 +230,7 @@ Still Missing:
 **August 8, 2023**: Sub Coordination Meeting Minutes
 
 **November 27, 2023**: P6 Schedule Update
+
 - Todd Cruz sent updated P6 schedule
 
 ### 2024 - Delays and Suspension
@@ -223,29 +238,37 @@ Still Missing:
 **January 22, 2024**: Sub Coordination Meeting Minutes
 
 **February 5, 2024**: Expiring COI
+
 - Kendra handling expiring Certificate of Insurance
 
 **March 15, 2024**: P6 Schedule Update
+
 - Todd Cruz: Latest P6 schedule update
 
 **April 11, 2024**: P6 Schedule Update
+
 - Todd Cruz: March 2024 updated schedule
 
 **May 15, 2024**: Waiver Rejected
+
 - Kendra forwarding waiver rejection from GCPay
 
 **June 10, 2024**: P6 Schedule Update
+
 - Todd Cruz: May 2024 updated schedule
 
 **September 11, 2024**: P6 Schedule Update
+
 - Todd Cruz: August 2024 P6 schedule update
 
 **October 3, 2024**: Contract Running Out of Money
+
 - Kendra contacted Richard Group asking how much longer the job would be
 - Indicated "out of money on the contract this month"
 - Todd Cruz: "Let's chat tomorrow about our path forward... need to issue a change order for extended services"
 
 **November 14, 2024**: $10,000 Change Order Approved
+
 - Kendra sent COR for inspections through November
 - Todd Cruz approved: "Submit a change order in GC Pay for $10,000.00 to hold us over until the new project timeline is established. We will need these services continued indefinitely."
 
@@ -254,34 +277,42 @@ Still Missing:
 ### 2025 - Suspension Period
 
 **January 23, 2025**: WH-347 Reports
+
 - Jessica Wachniak sent new WH-347 certified payroll report templates for 2025
 - Kendra forwarded to team
 
 **April 28, 2025**: GCPay Application #9
+
 - Payment application submitted through GCPay
 - Unconditional partial waiver submitted
 
 **June 5, 2025**: Credit Memo Applied
+
 - Credit memo applied against 11/14/24 change order (reason unclear)
 
 **June 2025**: ACH/Payment Processing
+
 - Chelsea Boyd handling ACH info and payment notifications
 
 **September 10, 2025**: Credit Memo Investigation
+
 - Don Schade (Controller) noticed credit memo dated 6/5/25 applied against 11/14/24 change order "invoice"
 - Found C/O in Excel file "Items to fix" but no explanation
 - Internal email thread between Don, Kendra, Kerin discussing the credit situation
 
 **December 3-10, 2025**: LCP Tracker Setup
+
 - Jessica Wachniak from Richard Group coordinating LCP Tracker training
 - Certified payroll tracking requirements for government contract
 
 ### 2026 - Resumption Planning
 
 **January 5-6, 2026**: LCP Tracker Updates
+
 - Jessica Wachniak sending tracker updates
 
 **January 23, 2026**: RESUMPTION OF WORK NOTICE
+
 - Todd Cruz sent formal resumption notification
 - Request for cost escalation documentation by Feb 13, 2026
 - Email forwarded by Jared to contracts@ team
@@ -292,12 +323,14 @@ Still Missing:
 ## Key Email IDs (for reference)
 
 Census DB (Jan 2024+):
+
 - 53903: Original resumption email from Todd Cruz
 - 50356: Todd's approval of $10k change order
 - 83365: Don's credit investigation email
 - 48763: October 2024 contract status thread
 
 Email API (older):
+
 - Daniel mailbox: DocuSign forward (Oct 2022), estimate attached
 - Kendra mailbox: Signed service agreement (Nov 2022)
 - Kerin mailbox: Todd's project answers (Oct 2022)

@@ -25,12 +25,12 @@ See [convex-eslint](../convex-eslint/SKILL.md) for linting setup.
 
 Before implementing, do not assume; fetch the latest documentation:
 
-- Primary: https://docs.convex.dev/functions
-- Query Functions: https://docs.convex.dev/functions/query-functions
-- Mutation Functions: https://docs.convex.dev/functions/mutation-functions
-- Actions: https://docs.convex.dev/functions/actions
-- HTTP Actions: https://docs.convex.dev/functions/http-actions
-- For broader context: https://docs.convex.dev/llms.txt
+- Primary: <https://docs.convex.dev/functions>
+- Query Functions: <https://docs.convex.dev/functions/query-functions>
+- Mutation Functions: <https://docs.convex.dev/functions/mutation-functions>
+- Actions: <https://docs.convex.dev/functions/actions>
+- HTTP Actions: <https://docs.convex.dev/functions/http-actions>
+- For broader context: <https://docs.convex.dev/llms.txt>
 
 ## Instructions
 
@@ -450,9 +450,9 @@ export const notifySubscribers = internalMutation({
 
 ## References
 
-- Convex Documentation: https://docs.convex.dev/
-- Convex LLMs.txt: https://docs.convex.dev/llms.txt
-- Functions Overview: https://docs.convex.dev/functions
-- Query Functions: https://docs.convex.dev/functions/query-functions
-- Mutation Functions: https://docs.convex.dev/functions/mutation-functions
-- Actions: https://docs.convex.dev/functions/actions
+- Convex Documentation: <https://docs.convex.dev/>
+- Convex LLMs.txt: <https://docs.convex.dev/llms.txt>
+- Functions Overview: <https://docs.convex.dev/functions>
+- Query Functions: <https://docs.convex.dev/functions/query-functions>
+- Mutation Functions: <https://docs.convex.dev/functions/mutation-functions>
+- Actions: <https://docs.convex.dev/functions/actions>

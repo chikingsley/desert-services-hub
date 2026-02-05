@@ -11,9 +11,11 @@ Cloudflare Worker that receives ComplianceGo inspection emails, generates PDFs, 
 ## Skills
 
 ### Inspection Upload Management
+
 **Path**: `.claude/skills/upload-inspection/SKILL.md`
 
 Use when:
+
 - Checking if an inspection was uploaded
 - Manually uploading failed inspections
 - User provides ComplianceGo URLs or contractor/project details
@@ -57,6 +59,7 @@ sharepoint-inspections-folders-sync/
 ## Development
 
 ### Stack
+
 - **Runtime**: Bun (scripts), Cloudflare Workers (production)
 - **PDF Generation**: Puppeteer (local), @cloudflare/puppeteer (worker)
 - **SharePoint**: Microsoft Graph API via Azure AD app
@@ -72,6 +75,7 @@ import { SharePointClient } from "@sharepoint/client";
 ### Environment
 
 Azure credentials in `sharepoint-inspections-folders-sync/.env`:
+
 ```text
 AZURE_TENANT_ID=...
 AZURE_CLIENT_ID=...
@@ -83,12 +87,15 @@ Worker secrets configured via `wrangler secret put`.
 ## Common Issues
 
 ### Upload fails with "JSON Content-Type" error
+
 Path contains spaces that aren't URL-encoded. Already fixed in worker and client.
 
 ### "Could not determine SharePoint folder path"
+
 Site name in ComplianceGo missing separator. Should be: `CONTRACTOR - PROJECT`
 
 ### Wrong date on manual upload
+
 Use 4th parameter: `bun scripts/manual-upload.ts "..." "CONTRACTOR" "PROJECT" "01.29.26"`
 
 ## Bun Usage

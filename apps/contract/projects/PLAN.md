@@ -21,9 +21,11 @@ Local SQLite database for tracking projects and deliverables. Eventually merges 
 ## Monday Board Changes (Planned)
 
 ### Columns to DELETE (26 total)
+
 All mirrors and redundant fields. See `monday_columns` table where `action = 'delete'`.
 
 ### Columns to ADD (16 total)
+
 - Project Number (text)
 - Contractor (text)
 - PO Number (text)
@@ -39,6 +41,7 @@ All mirrors and redundant fields. See `monday_columns` table where `action = 'de
 - Signs Status
 
 ### Columns to KEEP (14 total)
+
 - Name, Subitems, Project Owner, Project Status
 - Inspection Reports, Submit Inspection, Linked Estimate
 - Address fields (Building, Street, City, State, Zip)
@@ -47,6 +50,7 @@ All mirrors and redundant fields. See `monday_columns` table where `action = 'de
 ## Project Number Format
 
 Simple sequential: `1001`, `1002`, `1003`, ...
+
 - 4+ digits
 - No year prefix
 - Auto-increment

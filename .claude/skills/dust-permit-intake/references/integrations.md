@@ -22,7 +22,7 @@ bun services/email/cli.ts contracts "dust permit"
 ### Download Attachments (use hub.db)
 
 ```typescript
-import { downloadAttachment } from '@/apps/contract-ui/contract/db/repositories/attachment';
+import { downloadAttachment } from '@/apps/contract/db/repositories/attachment';
 
 // Download by attachment ID from hub.db
 await downloadAttachment(ATTACHMENT_ID, 'output/path.pdf');

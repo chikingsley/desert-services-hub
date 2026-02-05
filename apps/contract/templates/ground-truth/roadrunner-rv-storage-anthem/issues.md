@@ -42,6 +42,7 @@ There are TWO estimates in Monday for what is the SAME project:
 ### The Problem
 
 The project is referred to by at least 4 different names:
+
 - "ROADRUNNER RV STORAGE -ANTHEM" (Monday duplicate)
 - "ANTHEM BOAT & RV STORAGE" (Monday original)
 - "Roadrunner RV Storage- Anthem" (Kendra's standardized name)
@@ -64,6 +65,7 @@ Standardize on: **"Roadrunner RV Storage - Anthem"** (per Kendra's June 13, 2025
 ### The Problem
 
 There's also Estimate 2054 "ANTHEM BOAT & RV STORAGE" with:
+
 - Contractor: TLW Construction
 - Status: Bid Sent
 - Bid Value: $16,000.00
@@ -79,6 +81,7 @@ Three estimates exist for one project, creating confusion about actual contract 
 ## Missing: Project Record Linking
 
 The `projects` table has an entry for "Roadrunner Rv Storage -anthem" (id unknown) but it shows:
+
 - email_count: 0
 - monday_item_id: NULL
 - account_id: NULL

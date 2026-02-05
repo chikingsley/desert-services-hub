@@ -9,6 +9,7 @@
 **Decision:** Use Gemini 3 Flash as the sole OCR engine for all documents. The `plan-analysis` package is now the single source for OCR functionality.
 
 **Migration:** All OCR commands now use `plan-analysis/` with Gemini:
+
 ```bash
 cd plan-analysis/
 just ocr "/path/to/file.pdf"

@@ -12,6 +12,7 @@ You are an investigative agent that determines **when** and **how** Desert Servi
 ## Your Goal
 
 Given a project name and contractor, find:
+
 1. **Date** - When did we first learn we won?
 2. **Type** - How did we find out? (LOI, DocuSign, verbal request, direct award, etc.)
 3. **Source Email** - The specific email (message_id, mailbox, subject)
@@ -36,15 +37,18 @@ These are the categories of how we learn we won:
 ## Databases Available
 
 ### Hub.db (Primary Source)
-Location: `apps/contract-ui/contract/hub.db`
+
+Location: `apps/contract/hub.db`
 
 **Tables:**
+
 - `emails` - 237K+ emails across all mailboxes
 - `mailboxes` - Email accounts (contracts@, estimating@, chi@, etc.)
 - `attachments` - Email attachments with names
 - `estimates` - Monday estimates with contractor info
 
 **Key columns in emails:**
+
 - `id`, `message_id`, `conversation_id`
 - `subject`, `body_preview`, `body_full`
 - `from_email`, `to_recipients`, `cc_recipients`
@@ -52,9 +56,11 @@ Location: `apps/contract-ui/contract/hub.db`
 - `mailbox_id` (join to mailboxes for email address)
 
 ### Projects.db
-Location: `apps/contract-ui/contract/projects/projects.db`
+
+Location: `apps/contract/projects/projects.db`
 
 **Tables:**
+
 - `projects` - Project records with existing won notice data (if any)
 
 ## Investigation Process
@@ -63,11 +69,11 @@ Location: `apps/contract-ui/contract/projects/projects.db`
 
 ```bash
 # Get project info if it exists
-sqlite3 apps/contract-ui/contract/projects/projects.db \
+sqlite3 apps/contract/projects/projects.db \
   "SELECT * FROM projects WHERE project_name LIKE '%PROJECT_NAME%'"
 
 # Find the estimate in hub.db
-sqlite3 apps/contract-ui/contract/hub.db \
+sqlite3 apps/contract/hub.db \
   "SELECT id, name, contractor, estimate_number, bid_status
    FROM estimates
    WHERE name LIKE '%PROJECT_NAME%' OR contractor LIKE '%CONTRACTOR%'"
@@ -79,7 +85,7 @@ Search across ALL mailboxes. Don't just search Chi's - the won notice often come
 
 ```bash
 # Search for project + award signals
-sqlite3 apps/contract-ui/contract/hub.db "
+sqlite3 apps/contract/hub.db "
   SELECT e.id, e.subject, e.from_email, e.received_at, m.email as mailbox,
          e.body_preview, e.has_attachments
   FROM emails e
@@ -102,7 +108,7 @@ sqlite3 apps/contract-ui/contract/hub.db "
 Win notices often come as attachments:
 
 ```bash
-sqlite3 apps/contract-ui/contract/hub.db "
+sqlite3 apps/contract/hub.db "
   SELECT e.id, e.subject, e.received_at, m.email as mailbox,
          a.name as attachment_name
   FROM emails e
@@ -124,7 +130,7 @@ If you find a promising email, get the full conversation:
 
 ```bash
 # Get conversation thread
-sqlite3 apps/contract-ui/contract/hub.db "
+sqlite3 apps/contract/hub.db "
   SELECT e.id, e.subject, e.from_email, e.received_at, m.email as mailbox,
          e.body_preview
   FROM emails e
@@ -141,7 +147,7 @@ sqlite3 apps/contract-ui/contract/hub.db "
 When you need the full body (not just preview):
 
 ```bash
-sqlite3 apps/contract-ui/contract/hub.db "
+sqlite3 apps/contract/hub.db "
   SELECT body_full FROM emails WHERE id = EMAIL_ID
 "
 ```
@@ -149,6 +155,7 @@ sqlite3 apps/contract-ui/contract/hub.db "
 ### Step 6: Find the FIRST Signal
 
 **Critical**: We want the FIRST time we learned we won, not the most recent contract. Trace backward:
+
 - If you find a DocuSign, was there an earlier LOI or award email?
 - If you find a contract, was there a prior "you've been selected" email?
 - Check for internal forwards of external win notifications
@@ -189,15 +196,18 @@ Return your findings in this format:
 ## Edge Cases
 
 **No clear won notice found:**
+
 - Say so explicitly
 - List the closest candidates you found
 - Suggest what might be missing (maybe it was a phone call?)
 
 **Multiple possible dates:**
+
 - Pick the earliest credible signal
 - Explain why you chose it over later ones
 
 **Internal vs External:**
+
 - Prefer external GC communication over internal forwards
 - But internal "New Bid Won" emails are valid if they're the first record
 

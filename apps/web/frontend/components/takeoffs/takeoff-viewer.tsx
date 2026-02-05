@@ -12,7 +12,7 @@ import {
   type TakeoffToolType,
   type ViewportPosition,
   viewportPositionToScaled,
-} from "@/lib/pdf-takeoff";
+} from "@/lib/takeoff/pdf-takeoff";
 
 // Note: pdfjs-dist CSS is loaded via CDN in layout/head to avoid SVG reference issues
 import "@/lib/pdf-takeoff/style/PdfHighlighter.css";

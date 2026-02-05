@@ -9,7 +9,7 @@ import { getItemsRich, type MondayItemRich } from "../../monday/client";
 import { BOARD_IDS, CONTACTS_COLUMNS } from "../../monday/types";
 
 const HUB_DB_PATH =
-  "/Users/chiejimofor/Documents/Github/desert-services-hub/apps/contract-ui/contract/hub.db";
+  "/Users/chiejimofor/Documents/Github/desert-services-hub/apps/contract/hub.db";
 
 // Groups to skip
 const SKIP_GROUPS = ["Shell Contacts", "Test Contacts"];

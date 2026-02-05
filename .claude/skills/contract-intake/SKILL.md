@@ -26,7 +26,7 @@ Mailboxes: chi@, jared@, jayson@, jeff@, internalcontracts@
 ```csv
 ```bash
 # Search hub.db estimates
-sqlite3 /Users/chiejimofor/Documents/Github/desert-services-hub/apps/contract-ui/contract/hub.db ".mode column" ".headers on" "
+sqlite3 /Users/chiejimofor/Documents/Github/desert-services-hub/apps/contract/hub.db ".mode column" ".headers on" "
 SELECT id, monday_item_id, name, contractor, bid_value 
 FROM estimates 
 WHERE name LIKE '%PROJECT_NAME%' 

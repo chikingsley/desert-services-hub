@@ -18,7 +18,7 @@ if (!(projectIdArg || expandAll)) {
   process.exit(1);
 }
 
-const db = new Database("./apps/contract-ui/contract/hub.db");
+const db = new Database("./apps/contract/hub.db");
 
 if (expandAll) {
   console.log("Expanding threads for ALL projects with linked emails...\n");

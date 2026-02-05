@@ -5,7 +5,7 @@
 import { Database } from "bun:sqlite";
 
 const HUB_DB_PATH =
-  "/Users/chiejimofor/Documents/Github/desert-services-hub/apps/contract-ui/contract/hub.db";
+  "/Users/chiejimofor/Documents/Github/desert-services-hub/apps/contract/hub.db";
 
 export function showStats(): void {
   const db = new Database(HUB_DB_PATH, { readonly: true });

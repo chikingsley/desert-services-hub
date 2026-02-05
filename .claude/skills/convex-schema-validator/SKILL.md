@@ -15,10 +15,10 @@ Define and validate database schemas in Convex with proper typing, index configu
 
 Before implementing, do not assume; fetch the latest documentation:
 
-- Primary: https://docs.convex.dev/database/schemas
-- Indexes: https://docs.convex.dev/database/indexes
-- Data Types: https://docs.convex.dev/database/types
-- For broader context: https://docs.convex.dev/llms.txt
+- Primary: <https://docs.convex.dev/database/schemas>
+- Indexes: <https://docs.convex.dev/database/indexes>
+- Data Types: <https://docs.convex.dev/database/types>
+- For broader context: <https://docs.convex.dev/llms.txt>
 
 ## Instructions
 
@@ -389,12 +389,12 @@ export const get = query({
 2. **Wrong index field order** - Fields must be queried in order defined
 3. **Using v.any() excessively** - Lose type safety benefits
 4. **Not making new fields optional** - Breaks existing data
-5. **Forgetting system fields** - _id and _creationTime are automatic
+5. **Forgetting system fields** - _id and_creationTime are automatic
 
 ## References
 
-- Convex Documentation: https://docs.convex.dev/
-- Convex LLMs.txt: https://docs.convex.dev/llms.txt
-- Schemas: https://docs.convex.dev/database/schemas
-- Indexes: https://docs.convex.dev/database/indexes
-- Data Types: https://docs.convex.dev/database/types
+- Convex Documentation: <https://docs.convex.dev/>
+- Convex LLMs.txt: <https://docs.convex.dev/llms.txt>
+- Schemas: <https://docs.convex.dev/database/schemas>
+- Indexes: <https://docs.convex.dev/database/indexes>
+- Data Types: <https://docs.convex.dev/database/types>

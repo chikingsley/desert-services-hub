@@ -6,6 +6,11 @@
  */
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { db } from "../../../lib/db";
+import type {
+  EstimateLineItemRow,
+  EstimateRow,
+  EstimateSectionRow,
+} from "../../../lib/types";
 import { createQuote, listQuotes } from "./quotes";
 import {
   deleteQuote,

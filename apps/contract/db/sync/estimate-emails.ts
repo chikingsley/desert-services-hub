@@ -8,8 +8,8 @@
  * 3. Estimate number in subject
  * 4. Conversation thread expansion
  *
- * Run: bun apps/contract-ui/contract/db/sync/estimate-emails.ts
- * Or:  bun apps/contract-ui/contract/db/sync/estimate-emails.ts --estimate=10142559
+ * Run: bun apps/contract/db/sync/estimate-emails.ts
+ * Or:  bun apps/contract/db/sync/estimate-emails.ts --estimate=10142559
  */
 
 import { db } from "@contract/db/connection";
@@ -127,20 +127,20 @@ function ensureTable() {
   );
 }
 
-type EstimateRow = {
+interface EstimateRow {
   id: number;
   name: string;
   contractor: string | null;
   estimate_number: string | null;
   account_domain: string | null;
   project_id: number | null;
-};
+}
 
-type EmailRow = {
+interface EmailRow {
   id: number;
   subject: string;
   conversation_id: string | null;
-};
+}
 
 /**
  * Find and link emails for a single estimate
@@ -358,12 +358,12 @@ function processBatch(): void {
   console.log(`  ${contractorMap.size} unique contractors (normalized)`);
 
   // Get all platform emails with contractor info
-  type PlatformEmail = {
+  interface PlatformEmail {
     id: number;
     subject: string;
     conversation_id: string | null;
     real_sender_company: string;
-  };
+  }
   const platformEmails = db
     .query<PlatformEmail, []>(`
     SELECT id, subject, conversation_id, real_sender_company 
@@ -510,12 +510,12 @@ function processBatch(): void {
   console.log(`  ${domainMap.size} contractor domains to check`);
 
   // Get ALL emails (not just platform) grouped by from_domain
-  type DirectEmail = {
+  interface DirectEmail {
     id: number;
     subject: string;
     conversation_id: string | null;
     from_domain: string;
-  };
+  }
   const directEmails = db
     .query<DirectEmail, []>(`
     SELECT id, subject, conversation_id, from_domain 

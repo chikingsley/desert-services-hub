@@ -8,7 +8,7 @@ Active work areas and known tasks for the Desert Services Hub platform.
 
 ## Contract Processing Pipeline (Active)
 
-See `apps/contract-ui/contract/PROJECT.md` for full 15-step workflow and `STATE.md` for current status.
+See `apps/contract/PROJECT.md` for full 15-step workflow and `STATE.md` for current status.
 
 ### Immediate Work
 
@@ -50,7 +50,7 @@ See `apps/contract-ui/contract/PROJECT.md` for full 15-step workflow and `STATE.
 
 ### Hub Database (hub.db)
 
-- [ ] Verify all services use correct hub.db path (`apps/contract-ui/contract/hub.db`)
+- [ ] Verify all services use correct hub.db path (`apps/contract/hub.db`)
 - [ ] Update any remaining scripts referencing old census.db paths
 - [ ] Document migration path from census.db (if any data still needed)
 
@@ -100,8 +100,8 @@ See `apps/contract-ui/contract/PROJECT.md` for full 15-step workflow and `STATE.
 
 - **Main App**: `apps/web/` — Bun full-stack (quotes, takeoffs, contracts, catalog)
 - **Quoting MCP**: `apps/quoting/` — Quote generation and catalog
-- **Contract Workflow**: `apps/contract-ui/contract/` — Processing pipeline
-- **Hub Database**: `apps/contract-ui/contract/hub.db` — Primary data store
+- **Contract Workflow**: `apps/contract/` — Processing pipeline
+- **Hub Database**: `apps/contract/hub.db` — Primary data store
 - **Monday Sync CLI**: `workers/ds-estimates-sync-worker/cli/hub.ts`
 
 ### Current Stats (Hub DB)
@@ -114,6 +114,6 @@ See `apps/contract-ui/contract/PROJECT.md` for full 15-step workflow and `STATE.
 ### Documentation
 
 - `CLAUDE.md` — Engineering standards and patterns
-- `apps/contract-ui/contract/PROJECT.md` — Contract workflow
-- `apps/contract-ui/contract/STATE.md` — Current processing state
+- `apps/contract/PROJECT.md` — Contract workflow
+- `apps/contract/STATE.md` — Current processing state
 - `workers/ds-estimates-sync-worker/SYNC-KNOWLEDGE.md` — Monday sync patterns

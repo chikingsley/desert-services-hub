@@ -14,14 +14,7 @@ export const db = new Database(DB_PATH, { create: true });
 // SQLite safety + concurrency defaults
 db.run("PRAGMA busy_timeout = 5000;");
 db.run("PRAGMA foreign_keys = ON;");
-try {
-  const current = db
-    .query<{ journal_mode: string }, []>("PRAGMA journal_mode")
-    .get()?.journal_mode;
-  if (current && current.toLowerCase() !== "wal") {
-    db.run("PRAGMA journal_mode = WAL;");
-  }
-} catch {}
+db.run("PRAGMA journal_mode = WAL;");
 
 // Initialize schema
 db.run(`

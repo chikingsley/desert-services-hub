@@ -15,10 +15,10 @@ Schedule recurring functions for background tasks, cleanup jobs, data syncing, a
 
 Before implementing, do not assume; fetch the latest documentation:
 
-- Primary: https://docs.convex.dev/scheduling/cron-jobs
-- Scheduling Overview: https://docs.convex.dev/scheduling
-- Scheduled Functions: https://docs.convex.dev/scheduling/scheduled-functions
-- For broader context: https://docs.convex.dev/llms.txt
+- Primary: <https://docs.convex.dev/scheduling/cron-jobs>
+- Scheduling Overview: <https://docs.convex.dev/scheduling>
+- Scheduled Functions: <https://docs.convex.dev/scheduling/scheduled-functions>
+- For broader context: <https://docs.convex.dev/llms.txt>
 
 ## Instructions
 
@@ -156,6 +156,7 @@ export default crons;
 ```
 
 Common patterns:
+
 - `* * * * *` - Every minute
 - `0 * * * *` - Every hour
 - `0 0 * * *` - Every day at midnight
@@ -597,8 +598,8 @@ export default crons;
 
 ## References
 
-- Convex Documentation: https://docs.convex.dev/
-- Convex LLMs.txt: https://docs.convex.dev/llms.txt
-- Cron Jobs: https://docs.convex.dev/scheduling/cron-jobs
-- Scheduling Overview: https://docs.convex.dev/scheduling
-- Scheduled Functions: https://docs.convex.dev/scheduling/scheduled-functions
+- Convex Documentation: <https://docs.convex.dev/>
+- Convex LLMs.txt: <https://docs.convex.dev/llms.txt>
+- Cron Jobs: <https://docs.convex.dev/scheduling/cron-jobs>
+- Scheduling Overview: <https://docs.convex.dev/scheduling>
+- Scheduled Functions: <https://docs.convex.dev/scheduling/scheduled-functions>

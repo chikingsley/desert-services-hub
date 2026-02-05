@@ -15,9 +15,9 @@ Build persistent, stateful AI agents with Convex including thread management, to
 
 Before implementing, do not assume; fetch the latest documentation:
 
-- Primary: https://docs.convex.dev/ai
-- Convex Agent Component: https://www.npmjs.com/package/@convex-dev/agent
-- For broader context: https://docs.convex.dev/llms.txt
+- Primary: <https://docs.convex.dev/ai>
+- Convex Agent Component: <https://www.npmjs.com/package/@convex-dev/agent>
+- For broader context: <https://docs.convex.dev/llms.txt>
 
 ## Instructions
 
@@ -510,7 +510,7 @@ function ChatInterface({ threadId }: { threadId: Id<"threads"> }) {
 
 ## References
 
-- Convex Documentation: https://docs.convex.dev/
-- Convex LLMs.txt: https://docs.convex.dev/llms.txt
-- Convex AI: https://docs.convex.dev/ai
-- Agent Component: https://www.npmjs.com/package/@convex-dev/agent
+- Convex Documentation: <https://docs.convex.dev/>
+- Convex LLMs.txt: <https://docs.convex.dev/llms.txt>
+- Convex AI: <https://docs.convex.dev/ai>
+- Agent Component: <https://www.npmjs.com/package/@convex-dev/agent>

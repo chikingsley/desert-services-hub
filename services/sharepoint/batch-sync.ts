@@ -4,15 +4,11 @@
  *
  * Usage: bun services/sharepoint/batch-sync.ts [--dry-run]
  */
-import { Database } from "bun:sqlite";
 import { parseArgs } from "node:util";
+import { db } from "@contract/db/connection";
 import { getFile } from "@lib/minio";
 import { SharePointClient } from "./client";
 
-const HUB_DB_PATH = new URL(
-  "../../apps/contract-ui/contract/hub.db",
-  import.meta.url
-).pathname;
 const SHAREPOINT_ROOT = "Customer Projects/Active";
 const SUBFOLDERS = [
   "01-Estimates",
@@ -210,8 +206,6 @@ const sp = new SharePointClient({
   azureClientId: process.env.AZURE_CLIENT_ID ?? "",
   azureClientSecret: process.env.AZURE_CLIENT_SECRET ?? "",
 });
-
-const db = new Database(HUB_DB_PATH, { readonly: true });
 
 // Exclude already-synced projects (Verge + Symbiont)
 const EXCLUDE_IDS = [

@@ -81,6 +81,7 @@ GRIC fees are significantly lower than Maricopa and Pima:
 ## Contact
 
 GRIC Department of Environmental Quality
+
 - Phone: (520) 562-2234
 - Hours: 8am - 5pm M-F
 - Address: 124 Skill Center Rd, Sacaton, AZ 85147

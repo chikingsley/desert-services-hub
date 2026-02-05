@@ -31,33 +31,17 @@
   "files": {
     "includes": [
       "**/*",
-      "!projects",
       "!docs/_archive",
-      "!docs/archive",
-      "!app",
-      "!bun-init",
-      "!bun-example",
-      "!components",
       "!services/file-automation/_reference",
       "!**/.wrangler",
       "!**/.cursor",
-      "!**/inspections-app-idea",
-      "!services/canonical/accounts/archive",
-      "!services/canonical/accounts/scripts",
-      "!apps/contract-ui/build.ts",
-      "!apps/contract-ui/sample-apps"
+      "!**/inspections-app-idea"
     ]
   },
   "overrides": [
     {
       "includes": [
         "docs/_archive/**",
-        "docs/archive/**",
-        "projects/**",
-        "app/**",
-        "bun-init/**",
-        "bun-example/**",
-        "components/**",
         "services/file-automation/_reference/**"
       ],
       "linter": {
@@ -91,129 +75,11 @@
       }
     },
     {
-      "includes": [
-        "components/catalog/catalog-category-card.tsx",
-        "components/takeoffs/takeoff-viewer.tsx",
-        "src/frontend/components/catalog/catalog-category-card.tsx",
-        "src/frontend/components/takeoffs/takeoff-viewer.tsx"
-      ],
-      "linter": {
-        "rules": {
-          "a11y": {
-            "useSemanticElements": "off",
-            "noNoninteractiveElementInteractions": "off",
-            "useKeyWithClickEvents": "off"
-          }
-        }
-      }
-    },
-    {
-      "includes": ["src/frontend/App.tsx", "apps/web/frontend/App.tsx"],
+      "includes": ["apps/web/frontend/App.tsx"],
       "linter": {
         "rules": {
           "style": {
             "useFilenamingConvention": "off"
-          }
-        }
-      }
-    },
-    {
-      "includes": ["src/frontend/components/ui/**/*"],
-      "linter": {
-        "rules": {
-          "performance": {
-            "noNamespaceImport": "off"
-          }
-        }
-      }
-    },
-    {
-      "includes": ["src/frontend/components/ui/calendar.tsx"],
-      "linter": {
-        "rules": {
-          "correctness": {
-            "noNestedComponentDefinitions": "off"
-          }
-        }
-      }
-    },
-    {
-      "includes": ["services/contract/census/db.ts"],
-      "linter": {
-        "rules": {
-          "suspicious": {
-            "noRedeclare": "off"
-          },
-          "style": {
-            "noExportedImports": "off"
-          }
-        }
-      }
-    },
-    {
-      "includes": [
-        "src/frontend/components/ui/button-group.tsx",
-        "src/frontend/components/ui/field.tsx",
-        "src/frontend/components/ui/item.tsx",
-        "src/frontend/components/ui/input-group.tsx"
-      ],
-      "linter": {
-        "rules": {
-          "a11y": {
-            "useSemanticElements": "off"
-          }
-        }
-      }
-    },
-    {
-      "includes": ["src/frontend/components/takeoffs/new-takeoff-dialog.tsx"],
-      "linter": {
-        "rules": {
-          "a11y": {
-            "noNoninteractiveElementInteractions": "off"
-          }
-        }
-      }
-    },
-    {
-      "includes": ["apps/contract-ui/src/App.tsx"],
-      "linter": {
-        "rules": {
-          "style": {
-            "useFilenamingConvention": "off"
-          }
-        }
-      }
-    },
-    {
-      "includes": ["apps/contract-ui/src/components/ui/**/*"],
-      "linter": {
-        "rules": {
-          "performance": {
-            "noNamespaceImport": "off"
-          }
-        }
-      }
-    },
-    {
-      "includes": ["apps/contract-ui/**/*"],
-      "linter": {
-        "rules": {
-          "style": {
-            "useConsistentTypeDefinitions": "off"
-          }
-        }
-      }
-    },
-    {
-      "includes": ["apps/contract-ui/src/frontend.tsx"],
-      "linter": {
-        "rules": {
-          "style": {
-            "noNonNullAssertion": "off"
-          },
-          "suspicious": {
-            "noAssignInExpressions": "off"
           }
         }
       }
@@ -257,16 +123,6 @@
         "rules": {
           "a11y": {
             "noNoninteractiveElementInteractions": "off"
-          }
-        }
-      }
-    },
-    {
-      "includes": ["apps/quoting/mcp-server.ts"],
-      "linter": {
-        "rules": {
-          "performance": {
-            "noNamespaceImport": "off"
           }
         }
       }

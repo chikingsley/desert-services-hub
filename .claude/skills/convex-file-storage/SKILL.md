@@ -15,16 +15,17 @@ Handle file uploads, storage, serving, and management in Convex applications wit
 
 Before implementing, do not assume; fetch the latest documentation:
 
-- Primary: https://docs.convex.dev/file-storage
-- Upload Files: https://docs.convex.dev/file-storage/upload-files
-- Serve Files: https://docs.convex.dev/file-storage/serve-files
-- For broader context: https://docs.convex.dev/llms.txt
+- Primary: <https://docs.convex.dev/file-storage>
+- Upload Files: <https://docs.convex.dev/file-storage/upload-files>
+- Serve Files: <https://docs.convex.dev/file-storage/serve-files>
+- For broader context: <https://docs.convex.dev/llms.txt>
 
 ## Instructions
 
 ### File Storage Overview
 
 Convex provides built-in file storage with:
+
 - Automatic URL generation for serving files
 - Support for any file type (images, PDFs, videos, etc.)
 - File metadata via the `_storage` system table
@@ -460,8 +461,8 @@ export default defineSchema({
 
 ## References
 
-- Convex Documentation: https://docs.convex.dev/
-- Convex LLMs.txt: https://docs.convex.dev/llms.txt
-- File Storage: https://docs.convex.dev/file-storage
-- Upload Files: https://docs.convex.dev/file-storage/upload-files
-- Serve Files: https://docs.convex.dev/file-storage/serve-files
+- Convex Documentation: <https://docs.convex.dev/>
+- Convex LLMs.txt: <https://docs.convex.dev/llms.txt>
+- File Storage: <https://docs.convex.dev/file-storage>
+- Upload Files: <https://docs.convex.dev/file-storage/upload-files>
+- Serve Files: <https://docs.convex.dev/file-storage/serve-files>

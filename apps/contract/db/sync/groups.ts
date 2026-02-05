@@ -8,10 +8,10 @@
  * Auto-paginates to fetch ALL conversations (same pattern as email sync).
  *
  * Usage:
- *   bun apps/contract-ui/contract/db/sync/groups.ts
- *   bun apps/contract-ui/contract/db/sync/groups.ts --since=2025-01-01
- *   bun apps/contract-ui/contract/db/sync/groups.ts --group=internalcontracts
- *   bun apps/contract-ui/contract/db/sync/groups.ts status
+ *   bun apps/contract/db/sync/groups.ts
+ *   bun apps/contract/db/sync/groups.ts --since=2025-01-01
+ *   bun apps/contract/db/sync/groups.ts --group=internalcontracts
+ *   bun apps/contract/db/sync/groups.ts status
  */
 
 import {

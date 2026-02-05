@@ -61,9 +61,10 @@ The following services are integrated and available for both automation scripts 
 
 ## Primary Database
 
-**Hub.db** (`apps/contract-ui/contract/hub.db`)
+**Hub.db** (`apps/contract/hub.db`)
 
 The consolidated SQLite database containing:
+
 - 237K+ emails across all mailboxes
 - 125K+ attachments with MinIO storage paths
 - 4,800+ estimates synced from Monday
@@ -75,6 +76,7 @@ The consolidated SQLite database containing:
 This repository exposes MCP servers for integration with AI coding assistants (like Claude Code), defined in `.mcp.json`. These servers provide tools for managing emails, CRM items, and quotes directly from the agentic environment.
 
 Available MCP servers:
+
 - `desert-quoting` — Quote generation and catalog
 - `desert-mistral` — OCR and document processing
 
@@ -107,4 +109,4 @@ bun run test
 
 - **Engineering Standards**: See [CLAUDE.md](CLAUDE.md) for detailed coding conventions, service usage patterns, and testing requirements.
 - **System Design**: See `docs/` for specific SOPs and integration diagrams.
-- **Contract Workflow**: See `apps/contract-ui/contract/PROJECT.md` and `STATE.md`
+- **Contract Workflow**: See `apps/contract/PROJECT.md` and `STATE.md`

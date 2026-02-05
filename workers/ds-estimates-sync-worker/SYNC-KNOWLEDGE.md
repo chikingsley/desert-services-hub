@@ -344,7 +344,7 @@ AZURE_CLIENT_SECRET=<secret>
 
 Use the Microsoft Graph `/shares` endpoint for instant file access from stored URLs.
 
-**Official docs:** https://learn.microsoft.com/en-us/graph/api/shares-get
+**Official docs:** <https://learn.microsoft.com/en-us/graph/api/shares-get>
 
 ### Why This Is Fast
 

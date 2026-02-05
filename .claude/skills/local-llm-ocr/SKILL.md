@@ -31,4 +31,3 @@ python3 .claude/skills/local-llm-ocr/scripts/ocr_image.py /path/to/image.jpg --p
 - For curl/Python SDK examples and SSH ops commands, see:
   - `.claude/skills/local-llm-ocr/references/endpoints.md`
   - `.claude/skills/local-llm-ocr/references/ops.md`
-

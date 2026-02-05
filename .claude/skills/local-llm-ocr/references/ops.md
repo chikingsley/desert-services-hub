@@ -26,4 +26,3 @@ ssh gmk-server "curl -s localhost:11434/api/tags | jq -r '.models[].name'"
 ```bash
 ssh gmk-server "curl -s localhost:11434/api/generate -d '{\"model\":\"glm-ocr:latest\",\"keep_alive\":-1}'"
 ```
-

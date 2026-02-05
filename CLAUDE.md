@@ -31,7 +31,7 @@ Default to using **Bun** instead of Node.js.
 Prefer running actual `.ts` files with `bun` for type safety:
 
 ```bash
-bun apps/contract-ui/contract/db/sync/all.ts
+bun apps/contract/db/sync/all.ts
 ```
 
 For quick one-offs where no script exists, `bun -e` is acceptable:
@@ -65,7 +65,7 @@ console.log(result.boards[0].items_page.items);
 For ad-hoc queries, use `sqlite3` CLI directly (no Bun overhead):
 
 ```bash
-sqlite3 apps/contract-ui/contract/hub.db
+sqlite3 apps/contract/hub.db
 ```
 
 Then run queries:
@@ -107,13 +107,13 @@ This project uses **Ultracite** (a Biome preset).
 
 ## Contract Cascade — Active Workflow (READ THIS FIRST)
 
-The primary work right now is processing contracts through the intake pipeline. The full workflow is defined in `apps/contract-ui/contract/PROJECT.md`. Project state is in `apps/contract-ui/contract/STATE.md`. Read both at the start of any contract-related session.
+The primary work right now is processing contracts through the intake pipeline. The full workflow is defined in `apps/contract/PROJECT.md`. Project state is in `apps/contract/STATE.md`. Read both at the start of any contract-related session.
 
 ### What's Happening Right Now
 
 We are manually processing ~25 projects. Some are new intake, some are already active. **READ THE EMAILS FIRST** before applying any checklist. The emails tell you what stage the project is actually in. Don't assume intake — check the timeline, check what's already happening.
 
-For new contracts going through intake, see `apps/contract-ui/contract/PROJECT.md`. For active projects, document current state from emails instead. Each project needs:
+For new contracts going through intake, see `apps/contract/PROJECT.md`. For active projects, document current state from emails instead. Each project needs:
 
 1. Research project (search hub.db locally — emails, estimates, attachments)
 2. Find estimate in Monday (query `estimates` table in hub.db — DO NOT call Monday API)
@@ -133,7 +133,7 @@ For new contracts going through intake, see `apps/contract-ui/contract/PROJECT.m
 - **All project files must end up in SharePoint** — cataloging in MinIO is not enough
 - **Use the file naming convention** from `services/sharepoint/paths.ts`
 - **Contracts may not be in email** — check DocuSign, Procore, internal contracts group, shared drives
-- **Read `apps/contract-ui/contract/PROJECT.md` and `apps/contract-ui/contract/STATE.md`** at the start of contract work sessions
+- **Read `apps/contract/PROJECT.md` and `apps/contract/STATE.md`** at the start of contract work sessions
 - **No `bun -e` for workflows** — write durable `.ts` scripts in the repo that can be run repeatedly and improved over time. Only use `bun -e` for one-off queries if you ask first. Workflows must be files, not inline scripts.
 - **READ THE EMAILS before making any determination** — don't just search subjects/metadata. Read `body_preview` for every email on a project to understand what's actually happening.
 
@@ -156,8 +156,8 @@ For new contracts going through intake, see `apps/contract-ui/contract/PROJECT.m
 **Before creating new scripts or utilities, search the codebase for existing solutions:**
 
 - Use `codebase_search` to find existing functions: "How to search hub database for attachments?", "How to download files from MinIO?"
-- Check `apps/contract-ui/contract/db/repositories/attachment.ts` for file download utilities
-- Check `apps/contract-ui/contract/db/repositories/` for database query functions
+- Check `apps/contract/db/repositories/attachment.ts` for file download utilities
+- Check `apps/contract/db/repositories/` for database query functions
 - Review `CLAUDE.md` sections for documented patterns and utilities
 - Look for similar scripts in `scripts/` folder before creating new ones
 
@@ -167,7 +167,7 @@ For new contracts going through intake, see `apps/contract-ui/contract/PROJECT.m
 
 **Always query local SQLite databases before calling any external API.** We have synced data from Monday, email, and other sources locally. Do NOT call MCP tools or APIs for data that already exists in these databases.
 
-### Hub DB (`apps/contract-ui/contract/hub.db`)
+### Hub DB (`apps/contract/hub.db`)
 
 The primary consolidated database containing:
 
@@ -189,7 +189,7 @@ The primary consolidated database containing:
 - `services/inspections/inspections.db` — Inspection records
 - `services/sharepoint/swppp/swppp-master.db` — SWPPP master data
 - `lib/db/app.db` — Application database (quotes, takeoffs, catalog)
-- `apps/contract-ui/contract/projects/projects.db` — Contract processing project tasks
+- `apps/contract/projects/projects.db` — Contract processing project tasks
 
 ### When to use APIs vs local data
 
@@ -205,7 +205,7 @@ All email attachments and estimate PDFs are stored in MinIO. **DO NOT** use curl
 **Download a single attachment:**
 
 ```typescript
-import { downloadAttachment, getAttachmentContent } from '@/apps/contract-ui/contract/db/repositories/attachment';
+import { downloadAttachment, getAttachmentContent } from '@/apps/contract/db/repositories/attachment';
 
 await downloadAttachment(12345, 'output/contract.pdf');
 
@@ -216,7 +216,7 @@ const content = await getAttachmentContent(12345); // Uint8Array
 **Get attachment info:**
 
 ```typescript
-import { db } from '@/apps/contract-ui/contract/db/connection';
+import { db } from '@/apps/contract/db/connection';
 
 const attachments = db
   .query<{ id: number; name: string; storage_path: string | null }, [string]>(
@@ -233,7 +233,7 @@ const attachments = db
 **Search by email subject/body with attachment filename filter**:
 
 ```typescript
-import { db } from '@/apps/contract-ui/contract/db/connection';
+import { db } from '@/apps/contract/db/connection';
 
 const attachments = db
   .query<{ id: number; name: string; storage_path: string | null }, [string, string, string]>(
@@ -378,6 +378,7 @@ bun services/email/cli.ts groups                  # List all groups
 ```
 
 **Key flags:**
+
 - `--no-signature` — Skip auto-signature (Outlook adds it)
 - `--to`, `--cc` — Comma-separated emails
 - `--body` — HTML body content
@@ -495,23 +496,26 @@ const MAX_RETRIES = 5;
 const RETRY_DELAY_MS = 3000;
 ```
 
-**Hub.db location:** `apps/contract-ui/contract/hub.db`
+**Hub.db location:** `apps/contract/hub.db`
 
 **CRITICAL: Local changes MUST sync to Monday.** Hub.db is a local cache - any create/update must also happen in Monday:
+
 - Creating an account locally → also create in Monday CONTRACTORS board via MCP
 - Updating a contact → use `--push` flag to sync to Monday
 - Moving a contact to a group → CLI automatically updates Monday
 
 **Creating accounts in Monday:**
+
 ```bash
 # Create account via CLI (preferred)
 bun workers/ds-estimates-sync-worker/cli/hub.ts create account --name="Company Name" --domain=domain.com
 
 # Then update local hub.db with the Monday ID
-sqlite3 apps/contract-ui/contract/hub.db "UPDATE accounts SET monday_account_id = 'MONDAY_ID' WHERE id = LOCAL_ID;"
+sqlite3 apps/contract/hub.db "UPDATE accounts SET monday_account_id = 'MONDAY_ID' WHERE id = LOCAL_ID;"
 ```
 
 **Tables:**
+
 - `contacts` — synced from CONTACTS board, has `group_id`, `group_title`, `account_id`, phone fields (`mobile_phone`, `office_phone`, `company_phone`, `company_fax`)
 - `accounts` — synced from CONTRACTORS board + email-derived companies
 - `estimates` — synced from ESTIMATING board, preserves local enrichments (project_id, storage paths)
@@ -551,7 +555,7 @@ When enriching contacts, the goal is to **extract and record all useful informat
 bun cli/hub.ts update contact <id> --email=x@y.com --mobile=4805551234 --title="Project Manager" --push
 
 # Add notes to local DB
-sqlite3 apps/contract-ui/contract/hub.db "UPDATE contacts SET contractor_search_notes = 'Company Name - type. Customer for X service. Found via email signature.' WHERE id = ID;"
+sqlite3 apps/contract/hub.db "UPDATE contacts SET contractor_search_notes = 'Company Name - type. Customer for X service. Found via email signature.' WHERE id = ID;"
 ```
 
 Use the `contact-enricher` subagent (`.claude/agents/contact-enricher.md`) for batch enrichment.
@@ -609,9 +613,11 @@ workers/ds-{name}/
 ### The Workers
 
 #### 1. ds-estimates-sync-worker
+
 **Most complex - has BOTH Worker AND extensive CLI**
 
 **Worker (`src/index.ts`):**
+
 - Runs hourly via Cron
 - Syncs Monday estimates → SharePoint folders
 - Creates/moves folders based on bid status
@@ -619,6 +625,7 @@ workers/ds-{name}/
 - Has its own inline Monday client (raw fetch)
 
 **CLI (`cli/` and root-level scripts):**
+
 ```bash
 cd workers/ds-estimates-sync-worker
 
@@ -638,20 +645,24 @@ bun sync-estimates.ts --limit=100
 ```
 
 **Key Files:**
+
 - `cli/hub.ts` - Main hub CLI (imports from `../monday/`)
 - `cli/sync/*.ts` - Individual board sync modules
 - `sync-estimates.ts` - SharePoint sync script
 - `SYNC-KNOWLEDGE.md` - Critical API patterns and gotchas
 
 #### 2. ds-inspections-email-worker
+
 **Worker + Scripts**
 
 **Worker (`src/index.ts`):**
+
 - Receives forwarded inspection emails
 - Parses PDF attachments
 - (Likely syncs to somewhere - check implementation)
 
 **Scripts (`scripts/`):**
+
 ```bash
 cd workers/ds-inspections-email-worker
 bun scripts/check-inspection.ts     # Check inspection status
@@ -661,6 +672,7 @@ bun scripts/manual-upload.ts        # Manual PDF upload
 **Also has:** `sharepoint-inspections-folders-sync/` - Separate folder sync tool
 
 #### 3. ds-contracts-dispatcher
+
 **Worker ONLY** (no CLI)
 
 - Receives emails at `contracts-dispatch@desertservices.app`
@@ -669,6 +681,7 @@ bun scripts/manual-upload.ts        # Manual PDF upload
 - Simple worker, no local CLI needed
 
 #### 4. ds-monday-status-sync-worker
+
 **Worker ONLY** (no CLI)
 
 - Syncs Monday item status changes
@@ -678,7 +691,8 @@ bun scripts/manual-upload.ts        # Manual PDF upload
 
 **Mistake:** "The estimates sync worker replaces the Monday service"
 
-**Reality:** 
+**Reality:**
+
 - The **Worker** (`src/index.ts`) does automated SharePoint syncing (runs hourly)
 - The **CLI** (`cli/`) does Monday → hub.db syncing (run manually)
 - They share a folder but do different things
@@ -687,6 +701,7 @@ bun scripts/manual-upload.ts        # Manual PDF upload
 **Mistake:** "I can use the Graph SDK in the Worker"
 
 **Reality:**
+
 - Workers use raw `fetch()` to Microsoft Graph
 - CLI scripts use `@microsoft/microsoft-graph-client` SDK
 - Different auth mechanisms (Worker env vs local Azure credentials)
@@ -694,11 +709,13 @@ bun scripts/manual-upload.ts        # Manual PDF upload
 ### When to Use What
 
 **Use the Worker when:**
+
 - You want automated background syncing
 - You need it to run on a schedule (cron)
 - You're deploying, not debugging
 
 **Use the CLI when:**
+
 - You need to manually trigger a sync
 - You're debugging why something didn't sync
 - You need to backfill or fix data
@@ -707,11 +724,13 @@ bun scripts/manual-upload.ts        # Manual PDF upload
 ### Environment Variables
 
 **Workers** use `.dev.vars` + Wrangler secrets:
+
 ```bash
 wrangler secret put MONDAY_API_KEY
 ```
 
 **CLI scripts** use `.env` file or local environment:
+
 ```bash
 export MONDAY_API_KEY=xxx
 bun cli/hub.ts sync estimates
@@ -720,6 +739,7 @@ bun cli/hub.ts sync estimates
 ### TypeScript Configs
 
 Workers have TWO tsconfigs because of the dual runtime:
+
 - `tsconfig.json` - Worker (Cloudflare Workers types)
 - `tsconfig.cli.json` - CLI (Bun types)
 
@@ -880,8 +900,8 @@ When a dust permit is submitted and paid, send an internal billing notification 
 
 ### Recipients
 
-- **TO:** eva@desertservices.net, jayson@desertservices.net
-- **CC:** don@desertservices.net, francine@desertservices.net, kendra@desertservices.net
+- **TO:** <eva@desertservices.net>, <jayson@desertservices.net>
+- **CC:** <don@desertservices.net>, <francine@desertservices.net>, <kendra@desertservices.net>
 
 ### Subject Format
 
@@ -899,6 +919,7 @@ Do NOT include contractor name in parentheses. Just the project name.
 ### Schedule Values (Dust Permits)
 
 Standard pricing from catalog:
+
 - **Standard dust permit:** $5,000
 - **Accelerated processing fee:** $500 (when applicable)
 - **Revision/renewal:** $2,500
@@ -914,6 +935,7 @@ See `.claude/skills/draft-email/html-reference.md` for full reference. Key rules
 - **Signature is added by Outlook** — Use `skipSignature: true` when creating drafts
 
 **Correct list pattern:**
+
 ```html
 <div>Intro text.</div>
 <ul>
@@ -923,6 +945,7 @@ See `.claude/skills/draft-email/html-reference.md` for full reference. Key rules
 ```
 
 **WRONG patterns:**
+
 - `<ul style="margin-top:0; margin-bottom:0">` — removes all spacing
 - `<div><br></div>` before/after `<ul>` — double spacing
 - `<strong>Label:</strong>` — use `<b>` instead
@@ -930,6 +953,7 @@ See `.claude/skills/draft-email/html-reference.md` for full reference. Key rules
 ### Template
 
 The billing template is at `services/email/email-templates/dust-permit-billing.hbs`. Variables:
+
 - `recipientName`, `accountName`, `projectName`, `address`
 - `applicationNumber`, `permitNumber` (Facility ID), `acceleratedProcessing`
 - `vendorName`, `permitCost`, `acceleratedFee` (optional), `scheduleValue`
@@ -973,7 +997,7 @@ ORDER BY e.received_at DESC;
 ### If estimate_emails is empty
 
 1. **Run manual research** - search emails by contractor domain + project name tokens
-2. **Link using repository**: `apps/contract-ui/contract/db/repositories/estimate-email.ts`
+2. **Link using repository**: `apps/contract/db/repositories/estimate-email.ts`
    - `linkEmailToEstimate(estimateId, emailId, "manual", "agent research")`
    - `findEstimate("search")` - find by estimate_number or name
    - `getEstimateEmails(estimateId)` - get all linked emails
@@ -981,7 +1005,7 @@ ORDER BY e.received_at DESC;
 ### Re-sync all estimate emails
 
 ```bash
-bun apps/contract-ui/contract/db/sync/estimate-emails.ts
+bun apps/contract/db/sync/estimate-emails.ts
 ```
 
 Takes ~1 min. Matches by contractor + name tokens, expands via threads.

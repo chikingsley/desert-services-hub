@@ -22,7 +22,7 @@ if (!folderName) {
   process.exit(1);
 }
 
-const db = new Database("./apps/contract-ui/contract/hub.db");
+const db = new Database("./apps/contract/hub.db");
 
 // Find project ID from alias if not provided
 if (!projectId) {

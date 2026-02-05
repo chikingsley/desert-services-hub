@@ -1,7 +1,0 @@
-raw_spelling,source_file,record_count,is_job_entry,job_number_extracted,should_merge,canonical_name
-LAYTON CONSTRUCTION COMPANY,"certs_2025_all.csv, excel_cp_invoices_2024.csv, excel_credit_memos.csv, excel_location_billing_invoices.csv, excel_location_completed.csv, excel_location_contract_billing.csv, excel_location_need_start.csv, excel_location_sheet1.csv, excel_location_uploads.csv, excel_swppp_bv.csv, excel_swppp_confirmed.csv, excel_swppp_need_schedule.csv",222,NO,,YES,Layton Construction Company
-LAYTON,"excel_location_completed.csv, excel_rental_bv.csv, excel_rental_items.csv, excel_rental_swppp_numbers.csv, excel_swppp_bv.csv, excel_wt_sw.csv",78,NO,,YES,Layton Construction Company
-LAYTON CONSTRUCTON COMPANY,"excel_location_completed.csv, excel_location_contract_billing.csv, excel_location_sheet1.csv, excel_location_uploads.csv",8,NO,,YES,Layton Construction Company
-Layton Construction,"excel_rental_items.csv, excel_rental_swppp_numbers.csv",3,NO,,YES,Layton Construction Company
-LAYTON CONSTRUCTION COMPANY Merged with dc1,excel_location_completed.csv,2,NO,,YES,Layton Construction Company
-Layton Construction Company:Lakin Industrial Park Ph.4,excel_cp_invoices_2025.csv,1,NO,,YES,Layton Construction Company

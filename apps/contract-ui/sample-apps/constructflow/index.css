@@ -1,6 +1,6 @@
 /* ConstructFlow — Industrial Precision Design System */
 
-@import url('https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600&family=DM+Sans:wght@400;500;600;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600&family=DM+Sans:wght@400;500;600;700&display=swap");
 
 :root {
   /* Spacing scale (4px base) */
@@ -38,8 +38,8 @@
   --info: #3b82f6;
 
   /* Typography */
-  --font-sans: 'DM Sans', system-ui, sans-serif;
-  --font-mono: 'Geist Mono', monospace;
+  --font-sans: "DM Sans", system-ui, sans-serif;
+  --font-mono: "Geist Mono", monospace;
 
   /* Radius */
   --radius-sm: 4px;
@@ -135,7 +135,6 @@ button:focus-visible {
   max-width: 1200px;
   margin: 0 auto;
 }
-
 
 /* Transitions */
 .transition-default {

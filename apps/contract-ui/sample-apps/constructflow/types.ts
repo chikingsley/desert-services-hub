@@ -1,5 +1,4 @@
-
-export type Priority = 'Low' | 'Medium' | 'High';
+export type Priority = "Low" | "Medium" | "High";
 
 export interface Attachment {
   id: string;
@@ -7,7 +6,7 @@ export interface Attachment {
   size: string;
   type: string;
   url: string;
-  category?: 'Permit' | 'Contract' | 'Invoice' | 'Blueprint' | 'Other';
+  category?: "Permit" | "Contract" | "Invoice" | "Blueprint" | "Other";
 }
 
 export interface Email {
@@ -29,14 +28,14 @@ export interface Estimate {
   id: string;
   number: string;
   amount: string;
-  status: 'Draft' | 'Sent' | 'Won' | 'Lost';
+  status: "Draft" | "Sent" | "Won" | "Lost";
   date: string;
 }
 
 export interface Task {
   id: string;
   title: string;
-  status: 'Pending' | 'In Progress' | 'Done';
+  status: "Pending" | "In Progress" | "Done";
   dueDate: string;
   assignee: string;
 }
@@ -45,8 +44,8 @@ export interface Project {
   id: string;
   name: string;
   client: string;
-  status: 'In Review' | 'Active' | 'Permitting' | 'Completed';
-  emails: string[]; 
+  status: "In Review" | "Active" | "Permitting" | "Completed";
+  emails: string[];
   files: Attachment[];
   estimates: Estimate[];
   tasks: Task[];
@@ -57,7 +56,7 @@ export interface Project {
   description: string;
 }
 
-export type TriageType = 'new_email' | 'unlinked_doc' | 'project_update';
+export type TriageType = "new_email" | "unlinked_doc" | "project_update";
 
 export interface TriageItem {
   id: string;
@@ -65,8 +64,8 @@ export interface TriageItem {
   title: string;
   subtitle: string;
   timestamp: string;
-  metadata: any; 
+  metadata: any;
   isResolved: boolean;
 }
 
-export type ViewMode = 'triage' | 'projects' | 'analytics' | 'archive';
+export type ViewMode = "triage" | "projects" | "analytics" | "archive";

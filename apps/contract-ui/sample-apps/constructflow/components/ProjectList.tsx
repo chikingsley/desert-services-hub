@@ -1,43 +1,47 @@
-import type { Project } from '../types';
 import {
-  FolderKanban,
-  Plus,
   Activity,
   Calendar,
+  ChevronRight,
+  FolderKanban,
+  Plus,
   User,
-  ChevronRight
-} from 'lucide-react';
+} from "lucide-react";
+import type { Project } from "../types";
 
 interface ProjectListProps {
   projects: Project[];
   onSelectProject: (projectId: string) => void;
 }
 
-const statusColors: Record<Project['status'], string> = {
-  'Active': 'bg-success/10 text-success border-success/20',
-  'In Review': 'bg-info/10 text-info border-info/20',
-  'Permitting': 'bg-warning/10 text-warning border-warning/20',
-  'Completed': 'bg-ink/10 text-ink-muted border-ink/10'
+const statusColors: Record<Project["status"], string> = {
+  Active: "bg-success/10 text-success border-success/20",
+  "In Review": "bg-info/10 text-info border-info/20",
+  Permitting: "bg-warning/10 text-warning border-warning/20",
+  Completed: "bg-ink/10 text-ink-muted border-ink/10",
 };
 
 const ProjectList = ({ projects, onSelectProject }: ProjectListProps) => {
   return (
-    <div className="flex-1 overflow-y-auto p-8 bg-grid">
+    <div className="flex-1 overflow-y-auto bg-grid p-8">
       {/* Header */}
-      <div className="max-w-6xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
+      <div className="mx-auto max-w-6xl">
+        <div className="mb-8 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-ink flex items-center justify-center">
-              <FolderKanban size={22} className="text-accent" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-ink">
+              <FolderKanban className="text-accent" size={22} />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-ink tracking-tight">Projects</h1>
-              <p className="text-[13px] text-ink-dim font-medium">{projects.length} active projects</p>
+              <h1 className="font-bold text-2xl text-ink tracking-tight">
+                Projects
+              </h1>
+              <p className="font-medium text-[13px] text-ink-dim">
+                {projects.length} active projects
+              </p>
             </div>
           </div>
           <button
+            className="flex h-10 items-center gap-2 rounded-lg bg-ink px-5 font-bold text-[13px] text-white shadow-md transition-all hover:bg-ink-muted"
             type="button"
-            className="flex items-center gap-2 h-10 px-5 bg-ink text-white rounded-lg text-[13px] font-bold hover:bg-ink-muted shadow-md transition-all"
           >
             <Plus size={16} strokeWidth={2.5} />
             New Project
@@ -46,58 +50,69 @@ const ProjectList = ({ projects, onSelectProject }: ProjectListProps) => {
 
         {/* Project Grid */}
         {projects.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {projects.map(project => (
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {projects.map((project) => (
               <button
+                className="industrial-card group rounded-xl p-6 text-left transition-all hover:border-accent"
                 key={project.id}
-                type="button"
                 onClick={() => onSelectProject(project.id)}
-                className="industrial-card rounded-xl p-6 text-left hover:border-accent group transition-all"
+                type="button"
               >
                 {/* Header */}
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-mono text-[10px] text-ink-dim">#{project.id.toUpperCase()}</span>
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${statusColors[project.status]}`}>
+                <div className="mb-4 flex items-start justify-between">
+                  <div className="min-w-0 flex-1">
+                    <div className="mb-1 flex items-center gap-2">
+                      <span className="font-mono text-[10px] text-ink-dim">
+                        #{project.id.toUpperCase()}
+                      </span>
+                      <span
+                        className={`rounded-full border px-2 py-0.5 font-bold text-[10px] ${statusColors[project.status]}`}
+                      >
                         {project.status}
                       </span>
                     </div>
-                    <h3 className="text-[15px] font-bold text-ink truncate group-hover:text-accent transition-colors">
+                    <h3 className="truncate font-bold text-[15px] text-ink transition-colors group-hover:text-accent">
                       {project.name}
                     </h3>
                   </div>
-                  <ChevronRight size={16} className="text-ink-dim group-hover:text-accent group-hover:translate-x-0.5 transition-all shrink-0 mt-1" />
+                  <ChevronRight
+                    className="mt-1 shrink-0 text-ink-dim transition-all group-hover:translate-x-0.5 group-hover:text-accent"
+                    size={16}
+                  />
                 </div>
 
                 {/* Client */}
-                <div className="flex items-center gap-2 text-[12px] text-ink-muted mb-4">
-                  <User size={12} className="text-ink-dim" />
+                <div className="mb-4 flex items-center gap-2 text-[12px] text-ink-muted">
+                  <User className="text-ink-dim" size={12} />
                   {project.client}
                 </div>
 
                 {/* Progress */}
                 <div className="mb-4">
-                  <div className="flex justify-between items-center mb-1.5">
-                    <span className="text-[10px] font-bold text-ink-dim uppercase tracking-wider">Progress</span>
-                    <span className="text-[11px] font-bold font-mono text-ink">{project.progress}%</span>
+                  <div className="mb-1.5 flex items-center justify-between">
+                    <span className="font-bold text-[10px] text-ink-dim uppercase tracking-wider">
+                      Progress
+                    </span>
+                    <span className="font-bold font-mono text-[11px] text-ink">
+                      {project.progress}%
+                    </span>
                   </div>
-                  <div className="h-1.5 bg-surface-sunken rounded-full overflow-hidden">
+                  <div className="h-1.5 overflow-hidden rounded-full bg-surface-sunken">
                     <div
-                      className="h-full bg-accent rounded-full transition-all"
+                      className="h-full rounded-full bg-accent transition-all"
                       style={{ width: `${project.progress}%` }}
                     />
                   </div>
                 </div>
 
                 {/* Footer */}
-                <div className="flex items-center justify-between pt-4 border-t border-border">
+                <div className="flex items-center justify-between border-border border-t pt-4">
                   <div className="flex items-center gap-1.5 text-[11px] text-ink-dim">
                     <Calendar size={11} />
                     <span className="font-mono">{project.startDate}</span>
                   </div>
                   <div className="flex items-center gap-1.5 text-[11px] text-ink-dim">
-                    <Activity size={11} className="text-success" />
+                    <Activity className="text-success" size={11} />
                     <span>{project.lastActivity}</span>
                   </div>
                 </div>
@@ -105,12 +120,16 @@ const ProjectList = ({ projects, onSelectProject }: ProjectListProps) => {
             ))}
           </div>
         ) : (
-          <div className="text-center py-16">
-            <div className="w-16 h-16 rounded-2xl bg-surface-sunken flex items-center justify-center mx-auto mb-4">
-              <FolderKanban size={28} className="text-ink-dim" />
+          <div className="py-16 text-center">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-surface-sunken">
+              <FolderKanban className="text-ink-dim" size={28} />
             </div>
-            <p className="text-[15px] font-medium text-ink-muted mb-1">No projects found</p>
-            <p className="text-[13px] text-ink-dim">Try adjusting your search or create a new project</p>
+            <p className="mb-1 font-medium text-[15px] text-ink-muted">
+              No projects found
+            </p>
+            <p className="text-[13px] text-ink-dim">
+              Try adjusting your search or create a new project
+            </p>
           </div>
         )}
       </div>

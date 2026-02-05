@@ -1,8 +1,5 @@
 {
   "name": "ConstructFlow AI - Triage & Project Hub",
   "description": "A sophisticated email triage and project management system designed for construction workflows, featuring automated project association, document extraction, and template-driven action flows.",
-  "requestFramePermissions": [
-    "camera",
-    "microphone"
-  ]
+  "requestFramePermissions": ["camera", "microphone"]
 }

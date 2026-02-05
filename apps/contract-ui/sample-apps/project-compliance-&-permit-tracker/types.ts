@@ -1,8 +1,7 @@
-
 export enum TaskType {
-  BINARY = 'BINARY',
-  STAGED = 'STAGED',
-  NARRATIVE = 'NARRATIVE'
+  BINARY = "BINARY",
+  STAGED = "STAGED",
+  NARRATIVE = "NARRATIVE",
 }
 
 export enum PermitStage {
@@ -11,7 +10,7 @@ export enum PermitStage {
   FILED = 2,
   RECEIVED = 3,
   SENT_TO_BILLING = 4,
-  COMPLETED = 5
+  COMPLETED = 5,
 }
 
 export interface Checkpoint {
@@ -29,7 +28,7 @@ export interface ComplianceTask {
   status: TaskStatus;
   isRequired: boolean;
   lastUpdated: string;
-  category: 'Permit' | 'Signage' | 'Document' | 'Narrative';
+  category: "Permit" | "Signage" | "Document" | "Narrative";
   checkpoints: Checkpoint[];
 }
 
@@ -38,12 +37,12 @@ export interface Project {
   name: string;
   client: string;
   contractNumber: string;
-  status: 'Active' | 'On Hold' | 'Completed';
+  status: "Active" | "On Hold" | "Completed";
   tasks: ComplianceTask[];
 }
 
 export interface ChatMessage {
-  role: 'user' | 'agent';
+  role: "user" | "agent";
   text: string;
   timestamp: string;
 }

@@ -2,7 +2,7 @@
 // Uses max catalog items to test multipage layouts
 
 import { createLineItems } from "@/lib/catalog";
-import type { EditorQuote, EditorSection } from "@/lib/types";
+import type { EditorEstimate, EditorSection } from "@/lib/types";
 
 // Create line items using actual catalog codes (max coverage)
 const catalogLineItems = createLineItems([
@@ -203,7 +203,7 @@ const lineItems: EditorLineItem[] = catalogLineItems.map((item, index) => ({
 const total = lineItems.reduce((sum, item) => sum + item.total, 0);
 
 // Full test quote with all catalog items and sections
-export const maxCatalogQuote: EditorQuote = {
+export const maxCatalogQuote: EditorEstimate = {
   estimateNumber: "E-2026-TEST",
   date: new Date().toISOString(),
   estimator: "John Smith",
@@ -224,7 +224,7 @@ export const maxCatalogQuote: EditorQuote = {
 };
 
 // Simple quote without sections (flat line items)
-export const simpleQuote: EditorQuote = {
+export const simpleQuote: EditorEstimate = {
   ...maxCatalogQuote,
   sections: [],
   lineItems: lineItems.map((item) => ({ ...item, sectionId: undefined })),

@@ -106,7 +106,7 @@ function slugify(text: string): string {
 /**
  * Generate PDF filename from quote data
  */
-export function getPDFFilename(quote: EditorQuote): string {
+export function getPDFFilename(quote: EditorEstimate): string {
   const companySlug = slugify(quote.billTo.companyName);
   return `Estimate-${quote.estimateNumber}-${companySlug}.pdf`;
 }

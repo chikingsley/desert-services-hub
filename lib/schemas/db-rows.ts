@@ -21,7 +21,7 @@ const sqliteBool = z
 /**
  * Quote line item row from database
  */
-export const QuoteLineItemRowSchema = z.object({
+export const EstimateLineItemRowSchema = z.object({
   id: z.string(),
   version_id: z.string(),
   section_id: z.string().nullable(),
@@ -37,13 +37,13 @@ export const QuoteLineItemRowSchema = z.object({
   updated_at: z.string(),
 });
 
-export type QuoteLineItemRow = z.input<typeof QuoteLineItemRowSchema>;
+export type EstimateLineItemRow = z.input<typeof EstimateLineItemRowSchema>;
 
 /**
  * Transform: DB Row → Canonical LineItem
  */
-export function rowToLineItem(row: QuoteLineItemRow): LineItem {
-  const parsed = QuoteLineItemRowSchema.parse(row);
+export function rowToLineItem(row: EstimateLineItemRow): LineItem {
+  const parsed = EstimateLineItemRowSchema.parse(row);
   return {
     id: parsed.id,
     sectionId: parsed.section_id,
@@ -64,7 +64,7 @@ export function rowToLineItem(row: QuoteLineItemRow): LineItem {
  */
 export function lineItemToRowValues(
   item: LineItem
-): Omit<QuoteLineItemRow, "created_at" | "updated_at" | "version_id"> {
+): Omit<EstimateLineItemRow, "created_at" | "updated_at" | "version_id"> {
   return {
     id: item.id,
     section_id: item.sectionId,
@@ -82,7 +82,7 @@ export function lineItemToRowValues(
 /**
  * Quote section row from database
  */
-export const QuoteSectionRowSchema = z.object({
+export const EstimateSectionRowSchema = z.object({
   id: z.string(),
   version_id: z.string(),
   name: z.string(),
@@ -93,13 +93,13 @@ export const QuoteSectionRowSchema = z.object({
   created_at: z.string(),
 });
 
-export type QuoteSectionRow = z.input<typeof QuoteSectionRowSchema>;
+export type EstimateSectionRow = z.input<typeof EstimateSectionRowSchema>;
 
 /**
  * Transform: DB Row → Canonical Section
  */
-export function rowToSection(row: QuoteSectionRow): Section {
-  const parsed = QuoteSectionRowSchema.parse(row);
+export function rowToSection(row: EstimateSectionRow): Section {
+  const parsed = EstimateSectionRowSchema.parse(row);
   return {
     id: parsed.id,
     name: parsed.name,
@@ -115,7 +115,7 @@ export function rowToSection(row: QuoteSectionRow): Section {
  */
 export function sectionToRowValues(
   section: Section
-): Omit<QuoteSectionRow, "created_at" | "version_id"> {
+): Omit<EstimateSectionRow, "created_at" | "version_id"> {
   return {
     id: section.id,
     name: section.name,
@@ -129,7 +129,7 @@ export function sectionToRowValues(
 /**
  * Quote row from database
  */
-export const QuoteRowSchema = z.object({
+export const EstimateRowSchema = z.object({
   id: z.string(),
   base_number: z.string(),
   takeoff_id: z.string().nullable(),
@@ -148,12 +148,12 @@ export const QuoteRowSchema = z.object({
   updated_at: z.string(),
 });
 
-export type QuoteRow = z.input<typeof QuoteRowSchema>;
+export type EstimateRow = z.input<typeof EstimateRowSchema>;
 
 /**
  * Quote version row from database
  */
-export const QuoteVersionRowSchema = z.object({
+export const EstimateVersionRowSchema = z.object({
   id: z.string(),
   quote_id: z.string(),
   version_number: z.number(),
@@ -162,16 +162,16 @@ export const QuoteVersionRowSchema = z.object({
   created_at: z.string(),
 });
 
-export type QuoteVersionRow = z.input<typeof QuoteVersionRowSchema>;
+export type EstimateVersionRow = z.input<typeof EstimateVersionRowSchema>;
 
 /**
  * Transform quote row + version + sections + line items → canonical Quote for PDF
  */
 export function assembleQuoteForPDF(
-  quoteRow: QuoteRow,
-  _versionRow: QuoteVersionRow,
-  sectionRows: QuoteSectionRow[],
-  lineItemRows: QuoteLineItemRow[]
+  quoteRow: EstimateRow,
+  _versionRow: EstimateVersionRow,
+  sectionRows: EstimateSectionRow[],
+  lineItemRows: EstimateLineItemRow[]
 ): {
   estimateNumber: string;
   date: string;

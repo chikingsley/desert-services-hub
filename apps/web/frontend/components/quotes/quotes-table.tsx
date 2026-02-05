@@ -37,8 +37,8 @@ import {
 } from "@/apps/web/frontend/components/ui/table";
 import { formatCurrency, formatDate, getStatusColor } from "@/lib/utils";
 
-// Summary version info (subset of full QuoteVersion for list display)
-interface QuoteVersionSummary {
+// Summary version info (subset of full EstimateVersion for list display)
+interface EstimateVersionSummary {
   id: string;
   version_number: number;
   total: number;
@@ -53,7 +53,7 @@ export interface QuoteWithVersion {
   client_name: string | null;
   status: string;
   created_at: string;
-  current_version: QuoteVersionSummary | null;
+  current_version: EstimateVersionSummary | null;
   takeoff_id?: string | null;
   takeoff_name?: string | null;
 }

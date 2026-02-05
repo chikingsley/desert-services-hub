@@ -9,7 +9,7 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./*"],
-      "@contract/*": ["apps/contract-ui/contract/*"],
+      "@contract/*": ["apps/contract/*"],
       "@services/*": ["services/*"],
       "@lib/*": ["lib/*"],
       "@/components/*": ["apps/web/frontend/components/*"],

@@ -12,7 +12,7 @@ import {
   PopoverTrigger,
 } from "@/apps/web/frontend/components/ui/popover";
 import { useQuoteEditor } from "@/hooks/use-quote-editor";
-import type { Catalog, EditorLineItem, EditorQuote } from "@/lib/types";
+import type { Catalog, EditorEstimate, EditorLineItem } from "@/lib/types";
 import { formatCurrency } from "@/lib/utils";
 import { CatalogCombobox } from "./catalog-combobox";
 import { ItemCombobox } from "./item-combobox";
@@ -20,12 +20,12 @@ import { SectionCombobox } from "./section-combobox";
 
 interface InlineQuoteEditorProps {
   catalog: Catalog;
-  initialQuote?: EditorQuote;
-  onSave?: (quote: EditorQuote) => Promise<void>;
+  initialQuote?: EditorEstimate;
+  onSave?: (quote: EditorEstimate) => Promise<void>;
   onSaveStatusChange?: (status: "saved" | "saving" | "unsaved") => void;
-  onQuoteChange?: (quote: EditorQuote) => void;
+  onQuoteChange?: (quote: EditorEstimate) => void;
   onSaveRef?: (ref: { save: () => Promise<void> } | null) => void;
-  onResetRef?: (ref: { reset: (quote: EditorQuote) => void } | null) => void;
+  onResetRef?: (ref: { reset: (quote: EditorEstimate) => void } | null) => void;
   quoteId?: string | null;
 }
 

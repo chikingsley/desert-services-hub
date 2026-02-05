@@ -5,7 +5,11 @@
 import type { LoaderFunctionArgs } from "react-router";
 import { useLoaderData } from "react-router";
 import { QuoteWorkspace } from "@/apps/web/frontend/components/quotes/quote-workspace";
-import type { EditorLineItem, EditorQuote, EditorSection } from "@/lib/types";
+import type {
+  EditorEstimate,
+  EditorLineItem,
+  EditorSection,
+} from "@/lib/types";
 
 // API response types
 interface ApiLineItem {
@@ -61,8 +65,8 @@ export async function quoteLoader({ params }: LoaderFunctionArgs) {
   return response.json();
 }
 
-// Transform API response to EditorQuote format
-function transformToEditorQuote(api: ApiQuoteResponse): EditorQuote {
+// Transform API response to EditorEstimate format
+function transformToEditorEstimate(api: ApiQuoteResponse): EditorEstimate {
   const version = api.current_version;
 
   const sections: EditorSection[] = (version.sections || []).map((s) => ({
@@ -109,7 +113,7 @@ function transformToEditorQuote(api: ApiQuoteResponse): EditorQuote {
 export function QuoteEditorPage() {
   const apiQuote = useLoaderData() as ApiQuoteResponse;
 
-  const initialQuote = transformToEditorQuote(apiQuote);
+  const initialQuote = transformToEditorEstimate(apiQuote);
   const linkedTakeoff = apiQuote.linked_takeoff || null;
 
   return (

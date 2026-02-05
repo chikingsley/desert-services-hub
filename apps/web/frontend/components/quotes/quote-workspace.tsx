@@ -23,7 +23,7 @@ import { useSettings } from "@/hooks/use-settings";
 import { catalog } from "@/lib/catalog";
 import { generatePDFBlob } from "@/lib/pdf/generate-client";
 import type { GeneratePDFOptions } from "@/lib/pdf/pdf-builder";
-import type { EditorQuote } from "@/lib/types";
+import type { EditorEstimate } from "@/lib/types";
 import { FloatingPdfOptions } from "./floating-pdf-options";
 import { InlineQuoteEditor } from "./inline-quote-editor";
 
@@ -67,14 +67,14 @@ function SaveButtonLabel({ isManualSaving, saveStatus }: SaveButtonProps) {
 }
 
 interface QuoteWorkspaceProps {
-  initialQuote: EditorQuote;
+  initialQuote: EditorEstimate;
   quoteId: string;
   versionId: string;
   jobName: string;
   linkedTakeoff: { id: string; name: string } | null;
 }
 
-// Convert API response to EditorQuote format
+// Convert API response to EditorEstimate format
 interface ApiQuoteResponse {
   id: string;
   base_number: string;
@@ -106,10 +106,10 @@ interface ApiQuoteResponse {
   };
 }
 
-function apiToEditorQuote(
+function apiToEditorEstimate(
   api: ApiQuoteResponse,
-  current: EditorQuote
-): EditorQuote {
+  current: EditorEstimate
+): EditorEstimate {
   const version = api.current_version;
   if (!version) {
     return current;
@@ -188,7 +188,7 @@ export function QuoteWorkspace({
   // External update detection
   const lastKnownUpdateRef = useRef<string | null>(null);
   const [resetRef, setResetRef] = useState<{
-    reset: (quote: EditorQuote) => void;
+    reset: (quote: EditorEstimate) => void;
   } | null>(null);
 
   const { autoHideSidebar } = useSettings();
@@ -294,7 +294,7 @@ export function QuoteWorkspace({
 
       if (hasExternalChange) {
         // Auto-refresh the editor with external changes
-        const newQuote = apiToEditorQuote(data, previewQuote);
+        const newQuote = apiToEditorEstimate(data, previewQuote);
         setPreviewQuote(newQuote);
         resetRef?.reset(newQuote);
       }
@@ -317,7 +317,7 @@ export function QuoteWorkspace({
   }, [quoteId, saveStatus, previewQuote, resetRef]);
 
   const handleSave = useCallback(
-    async (quote: EditorQuote) => {
+    async (quote: EditorEstimate) => {
       // Convert editor format to API format
       const payload = {
         base_number: quote.estimateNumber,

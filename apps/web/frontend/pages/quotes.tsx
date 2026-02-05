@@ -12,7 +12,7 @@ import {
 } from "@/apps/web/frontend/components/quotes/quotes-table";
 
 // API response shape for quote versions
-interface QuoteVersionFromApi {
+interface EstimateVersionFromApi {
   id: string;
   version_number: number;
   total: number;
@@ -29,7 +29,7 @@ interface QuoteFromApi {
   is_locked: number;
   created_at: string;
   takeoff_id: string | null;
-  versions: QuoteVersionFromApi[];
+  versions: EstimateVersionFromApi[];
 }
 
 // Loader function for fetching quotes

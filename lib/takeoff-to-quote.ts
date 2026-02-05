@@ -1,6 +1,6 @@
 // Utility to convert takeoff annotations into quote line items
 import type { TakeoffAnnotation } from "@/lib/pdf-takeoff";
-import type { QuoteLineItem } from "@/lib/types";
+import type { EstimateLineItem } from "@/lib/types";
 
 // Bundle item within a takeoff bundle
 export interface TakeoffBundleItem {
@@ -234,10 +234,10 @@ export function aggregateTakeoffAnnotations(
 }
 
 // Convert takeoff summary items to quote line items
-export function convertToQuoteLineItems(
+export function convertToEstimateLineItems(
   summaryItems: TakeoffSummaryItem[],
   versionId: string
-): Omit<QuoteLineItem, "id" | "created_at" | "updated_at">[] {
+): Omit<EstimateLineItem, "id" | "created_at" | "updated_at">[] {
   return summaryItems.map((item, index) => ({
     version_id: versionId,
     section_id: null, // Will be set when creating sections

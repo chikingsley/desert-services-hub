@@ -148,7 +148,7 @@ describe("createQuote", () => {
     // Query database directly and verify ACTUAL VALUES
     const row = db
       .prepare("SELECT * FROM quotes WHERE id = ?")
-      .get(id) as QuoteRow;
+      .get(id) as EstimateRow;
 
     expect(row.job_name).toBe(input.job_name);
     expect(row.job_address).toBe(input.job_address);
@@ -184,7 +184,7 @@ describe("createQuote", () => {
     // Verify the description was saved to notes
     const item = db
       .prepare("SELECT * FROM quote_line_items WHERE version_id = ?")
-      .get(version_id) as QuoteLineItemRow;
+      .get(version_id) as EstimateLineItemRow;
 
     expect(item.description).toBe(UNIQUE.ITEM_NAME);
     expect(item.notes).toBe(UNIQUE.ITEM_DESCRIPTION);
@@ -208,7 +208,7 @@ describe("createQuote", () => {
 
     const section = db
       .prepare("SELECT * FROM quote_sections WHERE version_id = ?")
-      .get(version_id) as QuoteSectionRow;
+      .get(version_id) as EstimateSectionRow;
 
     expect(section.name).toBe(UNIQUE.SECTION_NAME);
   });
@@ -402,7 +402,7 @@ describe("updateQuote", () => {
 
     const items = db
       .prepare("SELECT * FROM quote_line_items WHERE version_id = ?")
-      .all(version.id) as QuoteLineItemRow[];
+      .all(version.id) as EstimateLineItemRow[];
 
     expect(items).toHaveLength(1);
     expect(items[0].description).toBe(newItemName);
@@ -514,7 +514,7 @@ describe("duplicateQuote", () => {
     // Verify the copy has all the same data
     const copy = db
       .prepare("SELECT * FROM quotes WHERE id = ?")
-      .get(newId) as QuoteRow;
+      .get(newId) as EstimateRow;
 
     expect(copy.job_name).toContain("DuplicateOriginal");
     expect(copy.job_name).toContain("(Copy)");
@@ -538,7 +538,7 @@ describe("duplicateQuote", () => {
     // Verify line item was copied WITH DESCRIPTION
     const copyItems = db
       .prepare("SELECT * FROM quote_line_items WHERE version_id = ?")
-      .all(copyVersion.id) as QuoteLineItemRow[];
+      .all(copyVersion.id) as EstimateLineItemRow[];
 
     expect(copyItems).toHaveLength(1);
     expect(copyItems[0].description).toBe(UNIQUE.ITEM_NAME);
@@ -594,7 +594,7 @@ describe("getQuotePdf", () => {
     expect(header).toBe("%PDF");
   });
 
-  test("PDF contains the data we saved - verify via EditorQuote transformation", async () => {
+  test("PDF contains the data we saved - verify via EditorEstimate transformation", async () => {
     // Instead of parsing the PDF (complex), verify the transformation is correct
     // by checking what getQuote returns (which is what gets transformed to PDF)
 
@@ -614,7 +614,7 @@ describe("getQuotePdf", () => {
       };
     };
 
-    // These are the values that will be transformed into EditorQuote for PDF
+    // These are the values that will be transformed into EditorEstimate for PDF
     expect(quote.client_name).toBe(UNIQUE.CLIENT_NAME);
     expect(quote.job_address).toBe(UNIQUE.JOB_ADDRESS);
 
@@ -623,7 +623,7 @@ describe("getQuotePdf", () => {
     expect(item.description).toBe(UNIQUE.ITEM_NAME);
     expect(item.notes).toBe(UNIQUE.ITEM_DESCRIPTION);
 
-    // Verify the transformation to EditorQuote format
+    // Verify the transformation to EditorEstimate format
     // In the PDF, item.description -> notes, item.item <- description
     // So the EditorLineItem.description should be quote.notes
     expect(item.notes).not.toBeNull();

@@ -3,18 +3,18 @@
 import { Mountain } from "lucide-react";
 import { useMemo } from "react";
 import type {
+  EstimateLineItem,
+  EstimateSection,
+  EstimateVersion,
   Quote,
-  QuoteLineItem,
-  QuoteSection,
-  QuoteVersion,
 } from "@/lib/types";
 import { cn, formatCurrency, formatDate } from "@/lib/utils";
 
 interface QuotePDFPreviewProps {
   quote: Quote;
-  version: QuoteVersion;
-  sections: QuoteSection[];
-  lineItems: QuoteLineItem[];
+  version: EstimateVersion;
+  sections: EstimateSection[];
+  lineItems: EstimateLineItem[];
   total: number;
 }
 
@@ -27,7 +27,7 @@ export function QuotePDFPreview({
 }: QuotePDFPreviewProps) {
   // Group line items by section
   const itemsBySection = useMemo(() => {
-    const grouped: Record<string, QuoteLineItem[]> = { unsectioned: [] };
+    const grouped: Record<string, EstimateLineItem[]> = { unsectioned: [] };
     for (const s of sections) {
       grouped[s.id] = [];
     }
@@ -211,7 +211,7 @@ export function QuotePDFPreview({
   );
 }
 
-function LineItemRow({ item }: { item: QuoteLineItem }) {
+function LineItemRow({ item }: { item: EstimateLineItem }) {
   const total = item.quantity * item.unit_price;
 
   return (

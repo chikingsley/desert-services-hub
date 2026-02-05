@@ -201,7 +201,7 @@ function extractLineItems(text: string): EstimateLineItem[] {
     const qtyStr = match[1];
     const unitCostStr = match[2];
     const totalStr = match[3];
-    if (!qtyStr || !unitCostStr || !totalStr) {
+    if (!(qtyStr && unitCostStr && totalStr)) {
       continue;
     }
     const qty = Number.parseFloat(qtyStr.replace(/,/g, ""));
@@ -248,8 +248,10 @@ function extractLineItems(text: string): EstimateLineItem[] {
     );
 
     let itemName = "Misc";
-    let category: { section: EstimateLineItem["section"]; unit: string | null } =
-      categorizeItem(lookbackText);
+    let category: {
+      section: EstimateLineItem["section"];
+      unit: string | null;
+    } = categorizeItem(lookbackText);
 
     for (const pattern of Object.keys(ITEM_RULES)) {
       // Check if pattern appears in lookback and is the most recent one

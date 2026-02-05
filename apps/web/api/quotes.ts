@@ -8,7 +8,7 @@ import { generateBaseNumber } from "../../../lib/utils";
 
 type EstimateWithVersionsJson = EstimateRow & { versions: string };
 
-interface QuoteLineItemInput {
+interface EstimateLineItemInput {
   section_id?: string;
   description?: string;
   item?: string;
@@ -141,7 +141,7 @@ export async function createQuote(req: Request): Promise<Response> {
     }
 
     // Create line items if provided
-    const lineItems = body.line_items as QuoteLineItemInput[] | undefined;
+    const lineItems = body.line_items as EstimateLineItemInput[] | undefined;
     if (lineItems) {
       let sortOrder = 0;
       for (const item of lineItems) {

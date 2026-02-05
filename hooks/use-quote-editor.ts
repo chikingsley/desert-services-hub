@@ -6,13 +6,13 @@ import type {
   Catalog,
   CatalogServiceItem,
   CatalogSubcategory,
+  EditorEstimate,
   EditorLineItem,
-  EditorQuote,
   EditorSection,
 } from "@/lib/types";
 
 export interface UseQuoteEditorOptions {
-  initialQuote?: EditorQuote;
+  initialQuote?: EditorEstimate;
   catalog: Catalog;
 }
 
@@ -25,7 +25,7 @@ function generateEstimateNumber(sequenceNum = 1): string {
   return `${yy}${mm}${dd}${seq}`;
 }
 
-function createEmptyQuote(): EditorQuote {
+function createEmptyQuote(): EditorEstimate {
   return {
     estimateNumber: generateEstimateNumber(1),
     date: new Date().toISOString(),
@@ -59,10 +59,10 @@ export function useQuoteEditor({
     canUndo,
     canRedo,
     reset: resetQuoteState,
-  } = useUndoRedo<EditorQuote>(initialQuote || createEmptyQuote());
+  } = useUndoRedo<EditorEstimate>(initialQuote || createEmptyQuote());
 
   const updateQuote = useCallback(
-    (updater: (prev: EditorQuote) => EditorQuote) => {
+    (updater: (prev: EditorEstimate) => EditorEstimate) => {
       setQuote(updater);
     },
     [setQuote]
@@ -449,7 +449,7 @@ export function useQuoteEditor({
   }, [resetQuoteState]);
 
   const loadQuote = useCallback(
-    (newQuote: EditorQuote) => {
+    (newQuote: EditorEstimate) => {
       resetQuoteState(newQuote);
     },
     [resetQuoteState]

@@ -463,7 +463,7 @@ async function pdfCommand(argv: string[]): Promise<void> {
   const currentVersion = details.current_version;
 
   // Convert to EditorEstimate format for PDF generation
-  const _editorEstimate: EditorEstimate = {
+  const estimate: EditorEstimate = {
     estimateNumber: getEstimateNumber(
       details.base_number,
       currentVersion.version_number
@@ -502,13 +502,13 @@ async function pdfCommand(argv: string[]): Promise<void> {
     total: currentVersion.total,
   };
 
-  const pdf = await generatePDF(editorQuote, { includeBackPage: true });
+  const pdf = await generatePDF(estimate, { includeBackPage: true });
 
   let outputPath: string;
   if (opts.output) {
     outputPath = opts.output;
   } else {
-    const filename = getPDFFilename(editorQuote);
+    const filename = getPDFFilename(estimate);
     outputPath = join(process.cwd(), filename);
   }
 

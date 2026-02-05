@@ -1,11 +1,11 @@
 /**
  * Tests for Quote Workspace utility functions
  *
- * Tests the apiToEditorQuote conversion and related logic
+ * Tests the apiToEditorEstimate conversion and related logic
  * used for auto-refresh when external updates are detected.
  */
 import { describe, expect, it } from "bun:test";
-import type { EditorQuote } from "@/lib/types";
+import type { EditorEstimate } from "@/lib/types";
 
 // ============================================================================
 // Types (matching quote-workspace.tsx)
@@ -42,10 +42,10 @@ interface ApiQuoteResponse {
 // Function Under Test (extracted from quote-workspace.tsx)
 // ============================================================================
 
-function apiToEditorQuote(
+function apiToEditorEstimate(
   api: ApiQuoteResponse,
-  current: EditorQuote
-): EditorQuote {
+  current: EditorEstimate
+): EditorEstimate {
   const version = api.current_version;
   if (!version) {
     return current;
@@ -89,7 +89,7 @@ function apiToEditorQuote(
 // Test Data
 // ============================================================================
 
-const mockCurrentQuote: EditorQuote = {
+const mockCurrentQuote: EditorEstimate = {
   estimateNumber: "250101001",
   date: "2025-01-01T00:00:00Z",
   estimator: "John Doe",
@@ -113,7 +113,7 @@ const mockCurrentQuote: EditorQuote = {
 // Tests
 // ============================================================================
 
-describe("apiToEditorQuote", () => {
+describe("apiToEditorEstimate", () => {
   it("returns current quote if no current_version", () => {
     const api: ApiQuoteResponse = {
       id: "quote-1",
@@ -127,7 +127,7 @@ describe("apiToEditorQuote", () => {
       // No current_version
     };
 
-    const result = apiToEditorQuote(api, mockCurrentQuote);
+    const result = apiToEditorEstimate(api, mockCurrentQuote);
     expect(result).toBe(mockCurrentQuote);
   });
 
@@ -149,7 +149,7 @@ describe("apiToEditorQuote", () => {
       },
     };
 
-    const result = apiToEditorQuote(api, mockCurrentQuote);
+    const result = apiToEditorEstimate(api, mockCurrentQuote);
     expect(result.estimateNumber).toBe("250101999");
   });
 
@@ -171,7 +171,7 @@ describe("apiToEditorQuote", () => {
       },
     };
 
-    const result = apiToEditorQuote(api, mockCurrentQuote);
+    const result = apiToEditorEstimate(api, mockCurrentQuote);
     expect(result.date).toBe(mockCurrentQuote.date);
     expect(result.estimator).toBe(mockCurrentQuote.estimator);
     expect(result.estimatorEmail).toBe(mockCurrentQuote.estimatorEmail);
@@ -195,7 +195,7 @@ describe("apiToEditorQuote", () => {
       },
     };
 
-    const result = apiToEditorQuote(api, mockCurrentQuote);
+    const result = apiToEditorEstimate(api, mockCurrentQuote);
     expect(result.billTo.companyName).toBe("New Client Name");
     expect(result.billTo.email).toBe("newclient@example.com");
     expect(result.billTo.phone).toBe("555-9999");
@@ -220,7 +220,7 @@ describe("apiToEditorQuote", () => {
       },
     };
 
-    const result = apiToEditorQuote(api, mockCurrentQuote);
+    const result = apiToEditorEstimate(api, mockCurrentQuote);
     expect(result.billTo.companyName).toBe("");
     expect(result.billTo.email).toBe("");
     expect(result.billTo.phone).toBe("");
@@ -244,7 +244,7 @@ describe("apiToEditorQuote", () => {
       },
     };
 
-    const result = apiToEditorQuote(api, mockCurrentQuote);
+    const result = apiToEditorEstimate(api, mockCurrentQuote);
     expect(result.jobInfo.siteName).toBe("Phoenix Construction");
     expect(result.jobInfo.address).toBe("1234 Phoenix Way");
   });
@@ -267,7 +267,7 @@ describe("apiToEditorQuote", () => {
       },
     };
 
-    const result = apiToEditorQuote(api, mockCurrentQuote);
+    const result = apiToEditorEstimate(api, mockCurrentQuote);
     expect(result.jobInfo.address).toBe("");
   });
 
@@ -292,7 +292,7 @@ describe("apiToEditorQuote", () => {
       },
     };
 
-    const result = apiToEditorQuote(api, mockCurrentQuote);
+    const result = apiToEditorEstimate(api, mockCurrentQuote);
     expect(result.sections).toHaveLength(2);
     expect(result.sections[0]).toEqual({ id: "sec-1", name: "Fencing" });
     expect(result.sections[1]).toEqual({ id: "sec-2", name: "Gates" });
@@ -328,7 +328,7 @@ describe("apiToEditorQuote", () => {
       },
     };
 
-    const result = apiToEditorQuote(api, mockCurrentQuote);
+    const result = apiToEditorEstimate(api, mockCurrentQuote);
     expect(result.lineItems).toHaveLength(1);
 
     const item = result.lineItems[0];
@@ -373,7 +373,7 @@ describe("apiToEditorQuote", () => {
       },
     };
 
-    const result = apiToEditorQuote(api, mockCurrentQuote);
+    const result = apiToEditorEstimate(api, mockCurrentQuote);
     expect(result.lineItems[0].sectionId).toBe("sec-1");
   });
 
@@ -407,7 +407,7 @@ describe("apiToEditorQuote", () => {
       },
     };
 
-    const result = apiToEditorQuote(api, mockCurrentQuote);
+    const result = apiToEditorEstimate(api, mockCurrentQuote);
     expect(result.lineItems[0].isStruck).toBe(true);
   });
 
@@ -441,7 +441,7 @@ describe("apiToEditorQuote", () => {
       },
     };
 
-    const result = apiToEditorQuote(api, mockCurrentQuote);
+    const result = apiToEditorEstimate(api, mockCurrentQuote);
     expect(result.lineItems[0].description).toBe("");
   });
 
@@ -475,7 +475,7 @@ describe("apiToEditorQuote", () => {
       },
     };
 
-    const result = apiToEditorQuote(api, mockCurrentQuote);
+    const result = apiToEditorEstimate(api, mockCurrentQuote);
     expect(result.lineItems[0].total).toBe(825); // 330 * 2.5
     expect(result.total).toBe(825);
   });
@@ -521,7 +521,7 @@ describe("apiToEditorQuote", () => {
       },
     };
 
-    const result = apiToEditorQuote(api, mockCurrentQuote);
+    const result = apiToEditorEstimate(api, mockCurrentQuote);
     expect(result.lineItems).toHaveLength(2);
     expect(result.lineItems[0].total).toBe(250); // 100 * 2.5
     expect(result.lineItems[1].total).toBe(400); // 2 * 200

@@ -2,13 +2,13 @@
  * Attachment Repository
  */
 import { db } from "@contract/db/connection";
+import { getEmailById, parseEmailRow } from "@contract/db/repositories/email";
 import type {
   Attachment,
   Email,
   ExtractionStatus,
   InsertAttachmentData,
 } from "@contract/db/types";
-import { getEmailById, parseEmailRow } from "@contract/db/repositories/email";
 
 function parseAttachmentRow(row: Record<string, unknown>): Attachment {
   return {

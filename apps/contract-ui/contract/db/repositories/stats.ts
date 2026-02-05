@@ -2,8 +2,12 @@
  * Statistics & Cleanup Functions
  */
 import { db } from "@contract/db/connection";
-import type { ClassificationStats, Email, EmailClassification } from "@contract/db/types";
 import { parseEmailRow } from "@contract/db/repositories/email";
+import type {
+  ClassificationStats,
+  Email,
+  EmailClassification,
+} from "@contract/db/types";
 
 // ============================================
 // Statistics

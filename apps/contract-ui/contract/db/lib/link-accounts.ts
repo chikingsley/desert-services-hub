@@ -466,11 +466,12 @@ if (import.meta.main) {
     "DELETE FROM accounts WHERE id NOT IN (SELECT DISTINCT account_id FROM company_aliases)"
   );
   console.log(
-    `Cleared email links. Removed ${deletedAccounts.changes} accounts (preserved ${db
-      .query<{ c: number }, []>(
-        "SELECT COUNT(DISTINCT account_id) as c FROM company_aliases"
-      )
-      .get()?.c ?? 0
+    `Cleared email links. Removed ${deletedAccounts.changes} accounts (preserved ${
+      db
+        .query<{ c: number }, []>(
+          "SELECT COUNT(DISTINCT account_id) as c FROM company_aliases"
+        )
+        .get()?.c ?? 0
     } aliased accounts).\n`
   );
 

@@ -13,8 +13,7 @@
  *   bun apps/contract-ui/contract/db/sync/groups.ts --group=internalcontracts
  *   bun apps/contract-ui/contract/db/sync/groups.ts status
  */
-import { BUCKETS, uploadFile } from "@lib/minio";
-import { GraphGroupsClient } from "@services/email/groups";
+
 import {
   getOrCreateMailbox,
   insertAttachment,
@@ -23,9 +22,11 @@ import {
   updateMailboxSyncState,
 } from "@contract/db";
 import { db } from "@contract/db/connection";
-import type { InsertAttachmentData, InsertEmailData } from "@contract/db/types";
 import { htmlToText } from "@contract/db/lib/html-to-text";
 import { ALL_GROUPS } from "@contract/db/sync/all";
+import type { InsertAttachmentData, InsertEmailData } from "@contract/db/types";
+import { BUCKETS, uploadFile } from "@lib/minio";
+import { GraphGroupsClient } from "@services/email/groups";
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
@@ -271,9 +272,9 @@ async function syncAllGroups(options: {
   // Determine which groups to sync
   const groupsToSync = groups
     ? groups.map((g) => ({
-      email: g.includes("@") ? g : `${g}@desertservices.net`,
-      id: GROUP_IDS[g.toLowerCase()] ?? GROUP_IDS[g],
-    }))
+        email: g.includes("@") ? g : `${g}@desertservices.net`,
+        id: GROUP_IDS[g.toLowerCase()] ?? GROUP_IDS[g],
+      }))
     : Object.entries(ALL_GROUPS).map(([email, id]) => ({ email, id }));
 
   for (const { email, id } of groupsToSync) {
@@ -385,10 +386,12 @@ if (import.meta.main) {
 
   if (sinceArg) {
     const splitValue = sinceArg.split("=")[1];
-    if (splitValue) options.since = new Date(splitValue);
+    if (splitValue) {
+      options.since = new Date(splitValue);
+    }
   } else if (monthsArg) {
     const splitValue = monthsArg.split("=")[1];
-    const months = splitValue ? Number.parseInt(splitValue, 10) : NaN;
+    const months = splitValue ? Number.parseInt(splitValue, 10) : Number.NaN;
     if (!Number.isNaN(months)) {
       options.since = new Date(Date.now() - months * 30 * MS_PER_DAY);
     }
@@ -397,9 +400,7 @@ if (import.meta.main) {
   if (groupArg) {
     const splitValue = groupArg.split("=")[1];
     if (splitValue) {
-      options.groups = splitValue
-        .split(",")
-        .map((g) => g.trim());
+      options.groups = splitValue.split(",").map((g) => g.trim());
     }
   }
 
@@ -416,8 +417,12 @@ if (import.meta.main) {
   console.log(`${"=".repeat(60)}\n`);
 
   // Import enrichment modules
-  const { processPlatformEmails } = await import("@contract/db/lib/platform-extraction");
-  const { linkEmailsToAccounts } = await import("@contract/db/lib/link-accounts");
+  const { processPlatformEmails } = await import(
+    "@contract/db/lib/platform-extraction"
+  );
+  const { linkEmailsToAccounts } = await import(
+    "@contract/db/lib/link-accounts"
+  );
 
   try {
     // Step 1: Sync group conversations

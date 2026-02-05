@@ -2,8 +2,8 @@
  * Project Repository
  */
 import { db } from "@contract/db/connection";
-import type { Email, Project } from "@contract/db/types";
 import { parseEmailRow } from "@contract/db/repositories/email";
+import type { Email, Project } from "@contract/db/types";
 
 function parseProjectRow(row: Record<string, unknown>): Project {
   return {
@@ -187,4 +187,10 @@ export function findProjectByText(text: string): Project | null {
     return parseProjectRow(row);
   }
   return null;
+}
+export function getAllProjectNames(): [number, string][] {
+  const rows = db
+    .query<{ id: number; name: string }, []>("SELECT id, name FROM projects")
+    .all();
+  return rows.map((r) => [r.id, r.name]);
 }

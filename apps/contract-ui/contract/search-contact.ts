@@ -71,10 +71,8 @@ for (const email of results) {
     const nameMatch = context.match(
       /(?:^|\n|>)\s*([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\s+(?:Mark|Borelli)/i
     );
-    if (nameMatch) {
-      if (nameMatch?.[1]) {
-        name = nameMatch[1].trim();
-      }
+    if (nameMatch?.[1]) {
+      name = nameMatch[1].trim();
     }
   }
 

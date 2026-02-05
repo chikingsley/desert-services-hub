@@ -301,3 +301,40 @@ export function getEmailsWithAttachments(limit = 100): Email[] {
 
   return rows.map(parseEmailRow);
 }
+export function getLinkedConversationSibling(
+  conversationId: string
+): number | null {
+  const row = db
+    .query<{ project_id: number | null }, [string]>(
+      "SELECT project_id FROM emails WHERE conversation_id = ? AND project_id IS NOT NULL LIMIT 1"
+    )
+    .get(conversationId);
+  return row?.project_id ?? null;
+}
+
+export function getSenderProjectStats(fromEmail: string): {
+  projectId: number;
+  percentage: number;
+} | null {
+  const rows = db
+    .query<{ project_id: number; count: number }, [string]>(
+      `SELECT project_id, COUNT(*) as count 
+       FROM emails 
+       WHERE from_email = ? AND project_id IS NOT NULL 
+       GROUP BY project_id 
+       ORDER BY count DESC`
+    )
+    .all(fromEmail);
+
+  if (rows.length === 0) {
+    return null;
+  }
+
+  const totalLinked = rows.reduce((sum, r) => sum + r.count, 0);
+  const top = rows[0];
+
+  return {
+    projectId: top.project_id,
+    percentage: top.count / totalLinked,
+  };
+}

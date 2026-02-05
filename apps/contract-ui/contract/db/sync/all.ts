@@ -1,5 +1,3 @@
-import { BUCKETS, uploadFile } from "@lib/minio";
-import { GraphEmailClient } from "@services/email";
 import {
   getAllMailboxes,
   getMailbox,
@@ -10,13 +8,19 @@ import {
   updateMailboxSyncState,
 } from "@contract/db";
 import { db } from "@contract/db/connection";
-import type { InsertAttachmentData, InsertEmailData } from "@contract/db/types";
 import { htmlToText } from "@contract/db/lib/html-to-text";
 import { isSpam } from "@contract/db/lib/spam-filter";
+import type { InsertAttachmentData, InsertEmailData } from "@contract/db/types";
+import { GraphEmailClient } from "@services/email";
 
 // All company mailboxes to sync
 // NOTE: internalcontracts@ is a Microsoft 365 Group, not a mailbox.
 // Use sync-groups.ts to sync group conversations instead.
+//
+// Historical sync status (as of Feb 2026):
+// - chi@, contracts@ — FULLY SYNCED (mailboxes are newer, no older emails exist)
+// - kendra@ — synced back to 2024-01-01
+// - Other mailboxes have varying history, check `bun sync/all.ts status`
 export const ALL_MAILBOXES = [
   "chi@desertservices.net",
   "contracts@desertservices.net",
@@ -71,7 +75,7 @@ function createGraphClient(): GraphEmailClient {
     azureTenantId: process.env.AZURE_TENANT_ID ?? "",
     azureClientId: process.env.AZURE_CLIENT_ID ?? "",
     azureClientSecret: process.env.AZURE_CLIENT_SECRET ?? "",
-    batchSize: 100,
+    batchSize: 250, // Microsoft recommends 250 for messages API
   };
 
   if (
@@ -107,21 +111,13 @@ async function syncMailboxFull(
 
     reportProgress({ mailbox: mailboxEmail, phase: "fetching" });
 
-    // Fetch emails from Graph API
-    let emails = await client.getAllEmailsPaginated(
+    // Phase 1: Fast fetch emails WITHOUT body content
+    const emails = await client.getAllEmailsPaginated(
       mailboxEmail,
       since,
-      maxEmails
+      maxEmails,
+      { includeBody: false, before }
     );
-
-    // Filter by before date if specified
-    if (before) {
-      const beforeTime = before.getTime();
-      emails = emails.filter(
-        (e: { receivedDateTime: Date }) =>
-          e.receivedDateTime.getTime() < beforeTime
-      );
-    }
 
     reportProgress({
       mailbox: mailboxEmail,
@@ -129,17 +125,31 @@ async function syncMailboxFull(
       emailsFetched: emails.length,
     });
 
+    // Phase 2: Batch fetch bodies for non-spam emails (20 at a time)
+    const nonSpamEmails = emails.filter(
+      (e) => !isSpam(e.fromEmail, e.subject).isSpam
+    );
+    const emailIds = nonSpamEmails.map((e) => e.id);
+
+    console.log(
+      `   [${mailboxEmail}] Fetching bodies for ${emailIds.length} emails...`
+    );
+
+    const bodies = await client.getEmailBodiesBatch(emailIds, mailboxEmail);
+
+    // Merge bodies back into email objects
+    for (const email of nonSpamEmails) {
+      const body = bodies.get(email.id);
+      if (body) {
+        email.bodyContent = body;
+      }
+    }
+
     let storedCount = 0;
     let attachmentCount = 0;
-    let spamFiltered = 0;
+    const spamFiltered = emails.length - nonSpamEmails.length;
 
-    for (const email of emails) {
-      // Skip spam/marketing emails
-      const spamCheck = isSpam(email.fromEmail, email.subject);
-      if (spamCheck.isSpam) {
-        spamFiltered++;
-        continue;
-      }
+    for (const email of nonSpamEmails) {
       // Get attachment metadata
       let attachmentNames: string[] = [];
       let attachmentMeta: Array<{
@@ -215,65 +225,16 @@ async function syncMailboxFull(
         }
       }
 
-      // Store attachment metadata, upload PDFs to MinIO, and optionally extract
+      // Store attachment metadata only (no MinIO upload - using SharePoint as source of truth)
       for (const att of attachmentMeta) {
-        const isPdf =
-          att.contentType?.toLowerCase() === "application/pdf" ||
-          att.name.toLowerCase().endsWith(".pdf");
-
-        let storageBucket: string | null = null;
-        let storagePath: string | null = null;
-        let pdfBuffer: Buffer | null = null;
-
-        // Check if attachment already uploaded (resume support)
-        const existingAtt = db
-          .query<{ storage_path: string | null }, [number, string]>(
-            "SELECT storage_path FROM attachments WHERE email_id = ? AND attachment_id = ?"
-          )
-          .get(emailId, att.id);
-
-        const alreadyUploaded = Boolean(existingAtt?.storage_path);
-
-        // Download and upload PDF to MinIO (skip if already uploaded)
-        if (isPdf && !alreadyUploaded) {
-          try {
-            pdfBuffer = await client.downloadAttachment(
-              email.id,
-              att.id,
-              mailboxEmail
-            );
-
-            // Upload to MinIO: email-attachments/{emailId}/{attachmentId}/{filename}
-            if (pdfBuffer) {
-              const objectPath = `${emailId}/${att.id}/${att.name}`;
-              await uploadFile(
-                BUCKETS.EMAIL_ATTACHMENTS,
-                objectPath,
-                pdfBuffer,
-                "application/pdf"
-              );
-              storageBucket = BUCKETS.EMAIL_ATTACHMENTS;
-              storagePath = objectPath;
-            }
-          } catch (uploadErr) {
-            console.error(
-              `Failed to upload ${att.name} to MinIO: ${uploadErr}`
-            );
-          }
-        } else if (alreadyUploaded) {
-          // Use existing storage info
-          storageBucket = BUCKETS.EMAIL_ATTACHMENTS;
-          storagePath = existingAtt?.storage_path ?? null;
-        }
-
         const attData: InsertAttachmentData = {
           emailId,
           attachmentId: att.id,
           name: att.name,
           contentType: att.contentType,
           size: att.size,
-          storageBucket,
-          storagePath,
+          storageBucket: null,
+          storagePath: null,
         };
         insertAttachment(attData);
         attachmentCount++;
@@ -746,7 +707,9 @@ if (import.meta.main) {
   );
   console.log(`Max per mailbox: ${options.maxPerMailbox ?? 50_000}`);
   console.log(`Concurrency: ${options.concurrency ?? 3}`);
-  console.log(`Incremental: ${incremental}${fullSync ? "" : " (default, use --full for full sync)"}`);
+  console.log(
+    `Incremental: ${incremental}${fullSync ? "" : " (default, use --full for full sync)"}`
+  );
   if (incremental) {
     console.log(`  → Will use each mailbox's last_synced_at as start date`);
   }
@@ -754,8 +717,12 @@ if (import.meta.main) {
   console.log(`${"=".repeat(60)}\n`);
 
   // Import enrichment modules (dynamic to avoid circular deps)
-  const { processPlatformEmails } = await import("@contract/db/lib/platform-extraction");
-  const { linkEmailsToAccounts } = await import("@contract/db/lib/link-accounts");
+  const { processPlatformEmails } = await import(
+    "@contract/db/lib/platform-extraction"
+  );
+  const { linkEmailsToAccounts } = await import(
+    "@contract/db/lib/link-accounts"
+  );
 
   try {
     // Step 1: Sync emails from Graph API

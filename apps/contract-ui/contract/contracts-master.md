@@ -453,7 +453,7 @@ Located in `services/contract/templates/`:
 | Step | V0 (Ready) | V1 (Agent) | Manual |
 |------|------------|------------|--------|
 | 1. Research | | Email + Monday search | |
-| 2. Find estimate | Monday MCP | | |
+| 2. Find estimate | Monday CLI / Hub DB | | |
 | 3. Create Notion | Notion API | | |
 | 4. Mark Won | Monday API | | |
 | 5. Mark Lost | | Find competing logic | |

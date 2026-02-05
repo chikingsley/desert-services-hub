@@ -1,7 +1,8 @@
 /**
  * Database Queries for Project Tracking
  */
-import { db, type ProjectTask, type ProjectTracking } from "./schema";
+import { db } from "@contract/db/connection";
+import type { ProjectTask, ProjectTracking } from "./schema";
 
 // Project view type - from projects table with aggregated estimate data + tracking
 export type ProjectRow = {

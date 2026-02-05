@@ -61,13 +61,13 @@ describe("Mistral OCR", () => {
     const file = Bun.file(
       "files-for-work-all/Est_09152505_from_DESERT_SERVICES_LLC_19424.pdf"
     );
-    
+
     // Skip test if file doesn't exist
     if (!(await file.exists())) {
       console.log("  → Skipping: PDF file not found");
       return;
     }
-    
+
     const buffer = Buffer.from(await file.arrayBuffer());
 
     const result = await extractPdfText(buffer);
@@ -80,7 +80,9 @@ describe("Mistral OCR", () => {
 
     // Check page structure
     const firstPage = result.pages[0];
-    if (!firstPage) throw new Error("No pages found");
+    if (!firstPage) {
+      throw new Error("No pages found");
+    }
     expect(firstPage.index).toBe(0);
     expect(firstPage.markdown).toBeString();
     expect(firstPage.markdown.length).toBeGreaterThan(100);
@@ -97,13 +99,13 @@ describe("Mistral OCR", () => {
     const file = Bun.file(
       "files-for-work-all/Est_09152505_from_DESERT_SERVICES_LLC_19424.pdf"
     );
-    
+
     // Skip test if file doesn't exist
     if (!(await file.exists())) {
       console.log("  → Skipping: PDF file not found");
       return;
     }
-    
+
     const buffer = Buffer.from(await file.arrayBuffer());
 
     const result = await extractPdfText(buffer);

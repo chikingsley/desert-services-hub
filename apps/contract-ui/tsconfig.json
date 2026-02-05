@@ -1,9 +1,6 @@
 {
   "compilerOptions": {
-    "lib": [
-      "ESNext",
-      "DOM"
-    ],
+    "lib": ["ESNext", "DOM"],
     "target": "ESNext",
     "module": "Preserve",
     "moduleDetection": "force",
@@ -20,31 +17,15 @@
     "noImplicitOverride": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": [
-        "./src/*"
-      ],
-      "@contract/*": [
-        "./contract/*"
-      ],
-      "@services/*": [
-        "../../services/*"
-      ],
-      "@lib/*": [
-        "../../lib/*"
-      ]
+      "@/*": ["./src/*"],
+      "@contract/*": ["./contract/*"],
+      "@services/*": ["../../services/*"],
+      "@lib/*": ["../../lib/*"]
     },
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "noPropertyAccessFromIndexSignature": false
   },
-  "include": [
-    "src/**/*",
-    "contract/**/*",
-    "bun-env.d.ts"
-  ],
-  "exclude": [
-    "dist",
-    "node_modules",
-    "build.ts"
-  ]
+  "include": ["src/**/*", "contract/**/*", "bun-env.d.ts"],
+  "exclude": ["dist", "node_modules", "build.ts"]
 }

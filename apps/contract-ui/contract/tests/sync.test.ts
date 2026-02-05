@@ -9,11 +9,15 @@
  * - Date filtering
  */
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
+import { db } from "@contract/db/connection";
+import {
+  getEmailByMessageId,
+  getOrCreateMailbox,
+  insertEmail,
+} from "@contract/db/repositories";
+import type { InsertEmailData } from "@contract/db/types";
 import { ensureBucket, fileExists, getFile, minioClient } from "@lib/minio";
 import { GraphEmailClient } from "@services/email/client";
-import { getEmailByMessageId, getOrCreateMailbox, insertEmail } from "@contract/db/repositories";
-import { db } from "@contract/db/connection";
-import type { InsertEmailData } from "@contract/db/types";
 
 // Test constants
 const TEST_MAILBOX = "estimating@desertservices.net";
@@ -118,7 +122,7 @@ describe("Email Sync", () => {
         if (email.bodyContent.length > 50) {
           expect(
             email.bodyContent.includes("<") ||
-            email.bodyContent.includes("&nbsp;")
+              email.bodyContent.includes("&nbsp;")
           ).toBe(true);
         }
       }
@@ -154,7 +158,9 @@ describe("Email Sync", () => {
       expect(emails.length).toBeGreaterThan(0);
 
       const emailWithAttachments = emails[0];
-      if (!emailWithAttachments) throw new Error("No email found");
+      if (!emailWithAttachments) {
+        throw new Error("No email found");
+      }
       const attachments = await client.getAttachments(
         emailWithAttachments.id,
         TEST_MAILBOX
@@ -165,7 +171,9 @@ describe("Email Sync", () => {
 
       // Check attachment structure
       const att = attachments[0];
-      if (!att) throw new Error("No attachment found");
+      if (!att) {
+        throw new Error("No attachment found");
+      }
       expect(att.id).toBeDefined();
       expect(att.name).toBeDefined();
       expect(typeof att.name).toBe("string");
@@ -304,8 +312,8 @@ describe("AIStor MinIO Email Attachments", () => {
       await ensureBucket(EMAIL_ATTACHMENTS_BUCKET);
     } catch (error) {
       throw new Error(
-        `AIStor MinIO not available. Start it with: docker compose up -d aistor\n` +
-        `Original error: ${error instanceof Error ? error.message : String(error)}`
+        "AIStor MinIO not available. Start it with: docker compose up -d aistor\n" +
+          `Original error: ${error instanceof Error ? error.message : String(error)}`
       );
     }
   });

@@ -1,0 +1,237 @@
+{
+  "source": "Contract Schedule of Values - Page 69",
+  "contractValue": 75555.0,
+  "lineItems": [
+    {
+      "code": "02-31-2316",
+      "itemNo": "100",
+      "description": "SWPPP Narrative Design Manual (1 @ $1,350.00) - Feb 2026",
+      "amount": 1350.0
+    },
+    {
+      "code": "02-31-2316",
+      "itemNo": "101",
+      "description": "Installation of 9\" Compost Filter Sock (1,780 LF @ $2.75) - Feb 2026",
+      "amount": 4895.0
+    },
+    {
+      "code": "02-31-2316",
+      "itemNo": "102",
+      "description": "Rock Entrance with Rock and Filterfabric (3 @ $2,475.00) - Feb 2026",
+      "amount": 7425.0
+    },
+    {
+      "code": "02-31-2316",
+      "itemNo": "104",
+      "description": "Curb Inlet Protection (2 @ $375.00) - Feb 2026",
+      "amount": 750.0
+    },
+    {
+      "code": "02-31-2316",
+      "itemNo": "105",
+      "description": "SWPPP Sign (2 @ $275.00) - Feb 2026",
+      "amount": 550.0
+    },
+    {
+      "code": "02-31-2316",
+      "itemNo": "106",
+      "description": "Spill Kit (2 @ $345.00) - Feb 2026",
+      "amount": 690.0
+    },
+    {
+      "code": "02-31-2316",
+      "itemNo": "107",
+      "description": "City Approved Fire Access Signs (2 @ $675.00) - Feb 2026",
+      "amount": 1350.0
+    },
+    {
+      "code": "02-31-2316",
+      "itemNo": "108",
+      "description": "Dust Control Permit (1 @ $2,760.00) - Feb 2026",
+      "amount": 2760.0
+    },
+    {
+      "code": "02-31-2316",
+      "itemNo": "109",
+      "description": "Mobilization Charges (1 @ $255.00) - Feb 2026",
+      "amount": 255.0
+    },
+    {
+      "code": "02-31-2316",
+      "itemNo": "110",
+      "description": "Certification of Backflow (2 @ $295.00) - Feb 2026",
+      "amount": 590.0
+    },
+    {
+      "code": "02-31-2316",
+      "itemNo": "111",
+      "description": "Textura - Feb 2026",
+      "amount": 350.0
+    },
+    {
+      "code": "02-31-2316",
+      "itemNo": "112",
+      "description": "Rumble Grates Rental - Q1 (Feb-Apr 2026) (3 mo @ $1,100.00)",
+      "amount": 3300.0
+    },
+    {
+      "code": "02-31-2316",
+      "itemNo": "113",
+      "description": "Rumble Grates Rental - Q2 (May-Jul 2026) (3 mo @ $1,100.00)",
+      "amount": 3300.0
+    },
+    {
+      "code": "02-31-2316",
+      "itemNo": "114",
+      "description": "Rumble Grates Rental - Q3 (Aug-Oct 2026) (3 mo @ $1,100.00)",
+      "amount": 3300.0
+    },
+    {
+      "code": "02-31-2316",
+      "itemNo": "115",
+      "description": "Rumble Grates Rental - Q4 (Nov 2026-Jan 2027) (3 mo @ $1,100.00)",
+      "amount": 3300.0
+    },
+    {
+      "code": "02-31-2316",
+      "itemNo": "116",
+      "description": "Rumble Grates Rental - Q5 (Feb-Apr 2027) (3 mo @ $1,100.00)",
+      "amount": 3300.0
+    },
+    {
+      "code": "02-31-2316",
+      "itemNo": "117",
+      "description": "Rumble Grates Rental - Q6 (May-Jul 2027) (3 mo @ $1,100.00)",
+      "amount": 3300.0
+    },
+    {
+      "code": "02-31-2316",
+      "itemNo": "118",
+      "description": "Rumble Grates Rental - Q7 (Aug-Oct 2027) (3 mo @ $1,100.00)",
+      "amount": 3300.0
+    },
+    {
+      "code": "02-31-2316",
+      "itemNo": "119",
+      "description": "Rumble Grates Rental - Q8 (Nov 2027-Jan 2028) (3 mo @ $1,100.00)",
+      "amount": 3300.0
+    },
+    {
+      "code": "02-31-2316",
+      "itemNo": "120",
+      "description": "SWPPP Inspections - Q1 (Feb-Apr 2026) (8 @ $195.00)",
+      "amount": 1560.0
+    },
+    {
+      "code": "02-31-2316",
+      "itemNo": "121",
+      "description": "SWPPP Inspections - Q2 (May-Jul 2026) (8 @ $195.00)",
+      "amount": 1560.0
+    },
+    {
+      "code": "02-31-2316",
+      "itemNo": "122",
+      "description": "SWPPP Inspections - Q3 (Aug-Oct 2026) (8 @ $195.00)",
+      "amount": 1560.0
+    },
+    {
+      "code": "02-31-2316",
+      "itemNo": "123",
+      "description": "SWPPP Inspections - Q4 (Nov 2026-Jan 2027) (8 @ $195.00)",
+      "amount": 1560.0
+    },
+    {
+      "code": "02-31-2316",
+      "itemNo": "124",
+      "description": "SWPPP Inspections - Q5 (Feb-Apr 2027) (7 @ $195.00)",
+      "amount": 1365.0
+    },
+    {
+      "code": "02-31-2316",
+      "itemNo": "125",
+      "description": "SWPPP Inspections - Q6 (May-Jul 2027) (7 @ $195.00)",
+      "amount": 1365.0
+    },
+    {
+      "code": "02-31-2316",
+      "itemNo": "126",
+      "description": "SWPPP Inspections - Q7 (Aug-Oct 2027) (7 @ $195.00)",
+      "amount": 1365.0
+    },
+    {
+      "code": "02-31-2316",
+      "itemNo": "127",
+      "description": "SWPPP Inspections - Q8 (Nov 2027-Jan 2028) (7 @ $195.00)",
+      "amount": 1365.0
+    },
+    {
+      "code": "02-31-2316",
+      "itemNo": "128",
+      "description": "Dust Permit Renewal - Jan 2027",
+      "amount": 1630.0
+    },
+    {
+      "code": "02-31-2316",
+      "itemNo": "129",
+      "description": "Dust Permit Renewal - Jan 2028",
+      "amount": 1630.0
+    },
+    {
+      "code": "02-31-2316",
+      "itemNo": "130",
+      "description": "Backflow Rental - Q1 (Feb-Apr 2026) (3 mo @ $490.00)",
+      "amount": 1470.0
+    },
+    {
+      "code": "02-31-2316",
+      "itemNo": "131",
+      "description": "Backflow Rental - Q2 (May-Jul 2026) (3 mo @ $490.00)",
+      "amount": 1470.0
+    },
+    {
+      "code": "02-31-2316",
+      "itemNo": "132",
+      "description": "Backflow Rental - Q3 (Aug-Oct 2026) (3 mo @ $490.00)",
+      "amount": 1470.0
+    },
+    {
+      "code": "02-31-2316",
+      "itemNo": "133",
+      "description": "Backflow Rental - Q4 (Nov 2026-Jan 2027) (3 mo @ $490.00)",
+      "amount": 1470.0
+    },
+    {
+      "code": "02-31-2316",
+      "itemNo": "134",
+      "description": "Backflow Rental - Q5 (Feb-Apr 2027) (3 mo @ $490.00)",
+      "amount": 1470.0
+    },
+    {
+      "code": "02-31-2316",
+      "itemNo": "135",
+      "description": "Backflow Rental - Q6 (May-Jul 2027) (3 mo @ $490.00)",
+      "amount": 1470.0
+    },
+    {
+      "code": "02-31-2316",
+      "itemNo": "136",
+      "description": "Backflow Rental - Q7 (Aug-Oct 2027) (3 mo @ $490.00)",
+      "amount": 1470.0
+    },
+    {
+      "code": "02-31-2316",
+      "itemNo": "137",
+      "description": "Backflow Rental - Q8 (Nov 2027-Jan 2028) (3 mo @ $490.00)",
+      "amount": 1470.0
+    },
+    {
+      "code": "02-31-2316",
+      "itemNo": "138",
+      "description": "Backflow Rental - Q9 (Feb-Apr 2028) (3 mo @ $490.00)",
+      "amount": 1470.0
+    }
+  ],
+  "extractedAt": "2026-02-03",
+  "sourceFile": "contract-docusign.pdf",
+  "sourcePage": 69
+}

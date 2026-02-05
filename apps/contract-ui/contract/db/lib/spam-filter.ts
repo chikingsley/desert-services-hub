@@ -103,7 +103,7 @@ export function isSpam(
 
   // Extract domain from email
   const domainMatch = email.match(RE_EMAIL_DOMAIN);
-  const domain = (domainMatch && domainMatch[1]) ? domainMatch[1] : "";
+  const domain = domainMatch?.[1] ? domainMatch[1] : "";
 
   // Check allowlist first
   for (const allowed of ALLOWLIST_DOMAINS) {

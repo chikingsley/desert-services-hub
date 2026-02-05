@@ -8,9 +8,7 @@
   "ignores": [
     "node_modules/**",
     ".next/**",
-    "out/**",
-    "dist/**",
-    "quoting-example/**"
+    ".claude/**"
   ],
   "globs": ["**/*.md"]
 }

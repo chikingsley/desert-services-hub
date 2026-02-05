@@ -1,12 +1,12 @@
 /**
- * Quotes API handlers
+ * Estimates API handlers
  * Routes: GET /api/quotes, POST /api/quotes
  */
 import { db } from "../../../lib/db";
-import type { QuoteRow, QuoteSection } from "../../../lib/types";
+import type { EstimateRow, EstimateSection } from "../../../lib/types";
 import { generateBaseNumber } from "../../../lib/utils";
 
-type QuoteWithVersionsJson = QuoteRow & { versions: string };
+type EstimateWithVersionsJson = EstimateRow & { versions: string };
 
 interface QuoteLineItemInput {
   section_id?: string;
@@ -26,7 +26,7 @@ interface QuoteLineItemInput {
 function getNextBaseNumber(): string {
   const baseNumber = generateBaseNumber();
 
-  // Check for existing quotes with this prefix
+  // Check for existing estimates with this prefix
   const existing = db
     .prepare(
       `SELECT base_number FROM quotes
@@ -49,10 +49,10 @@ function getNextBaseNumber(): string {
   return `${baseNumber}01`;
 }
 
-// GET /api/quotes - List all quotes
+// GET /api/quotes - List all estimates
 export function listQuotes(): Response {
   try {
-    const quotes = db
+    const estimates = db
       .prepare(
         `SELECT q.*,
           (SELECT json_group_array(json_object(
@@ -65,22 +65,25 @@ export function listQuotes(): Response {
         FROM quotes q
         ORDER BY q.created_at DESC`
       )
-      .all() as QuoteWithVersionsJson[];
+      .all() as EstimateWithVersionsJson[];
 
-    // Parse the versions JSON for each quote
-    const parsedQuotes = quotes.map((q) => ({
-      ...q,
-      versions: JSON.parse(q.versions || "[]"),
+    // Parse the versions JSON for each estimate
+    const parsedEstimates = estimates.map((e) => ({
+      ...e,
+      versions: JSON.parse(e.versions || "[]"),
     }));
 
-    return Response.json(parsedQuotes);
+    return Response.json(parsedEstimates);
   } catch (error) {
-    console.error("Failed to fetch quotes:", error);
-    return Response.json({ error: "Failed to fetch quotes" }, { status: 500 });
+    console.error("Failed to fetch estimates:", error);
+    return Response.json(
+      { error: "Failed to fetch estimates" },
+      { status: 500 }
+    );
   }
 }
 
-// POST /api/quotes - Create a new quote
+// POST /api/quotes - Create a new estimate
 export async function createQuote(req: Request): Promise<Response> {
   try {
     const body = await req.json();
@@ -97,7 +100,7 @@ export async function createQuote(req: Request): Promise<Response> {
       id,
       baseNumber,
       body.takeoff_id || null,
-      body.job_name || "Untitled Quote",
+      body.job_name || "Untitled Estimate",
       body.job_address || null,
       body.client_name || null,
       body.client_email || null,
@@ -116,7 +119,7 @@ export async function createQuote(req: Request): Promise<Response> {
 
     // Create sections if provided
     const sectionIdMap = new Map<string, string>();
-    const sections = body.sections as QuoteSection[] | undefined;
+    const sections = body.sections as EstimateSection[] | undefined;
     if (sections) {
       let sortOrder = 0;
       for (const section of sections) {
@@ -172,8 +175,11 @@ export async function createQuote(req: Request): Promise<Response> {
 
     return Response.json({ id, version_id: versionId });
   } catch (error) {
-    console.error("Failed to create quote:", error);
-    return Response.json({ error: "Failed to create quote" }, { status: 500 });
+    console.error("Failed to create estimate:", error);
+    return Response.json(
+      { error: "Failed to create estimate" },
+      { status: 500 }
+    );
   }
 }
 

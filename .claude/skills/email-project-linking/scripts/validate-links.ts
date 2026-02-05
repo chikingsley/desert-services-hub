@@ -22,7 +22,7 @@ if (!(projectIdArg || validateAll)) {
   process.exit(1);
 }
 
-const db = new Database("./services/contract/census/hub.db");
+const db = new Database("./apps/contract-ui/contract/hub.db");
 
 interface ProjectRow {
   id: number;

@@ -29,21 +29,25 @@ You draft emails for Chi Ejimofor at Desert Services LLC. Every email must match
 
 ## Output Format
 
-Output the **body-only HTML** (no signature, no logo — those are appended by `wrapWithSignature()` and `getLogoAttachment()` from `services/email/email-templates/index.ts`).
+Output the **body-only HTML** (no signature — Outlook adds it).
 
-Wrap in a code block so it can be copied:
+Then **create the draft using the CLI**:
 
-```html
-<the body HTML here — from greeting through last line before "Best,">
+```bash
+bun services/email/cli.ts draft \
+  --to "recipient@example.com" \
+  --cc "cc@example.com" \
+  --subject "Subject line" \
+  --body '<div>HTML body here</div>' \
+  --no-signature
 ```
 
-Then below the code block, provide:
+**ALWAYS use the CLI. NEVER use MCP tools or `bun -e` for email.**
 
-- **To**: recipient(s)
-- **Subject**: suggested subject line
-- **Summary**: one sentence describing what the email says
-
-To send, the body gets passed to `wrapWithSignature()` which appends the signature block + logo automatically.
+After creating the draft, tell the user:
+- Draft created in Outlook
+- Subject line
+- One sentence summary of what the email says
 
 ## Important Rules
 

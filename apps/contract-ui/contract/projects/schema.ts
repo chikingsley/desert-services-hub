@@ -7,7 +7,7 @@
 
 import { Database } from "bun:sqlite";
 
-const DB_PATH = import.meta.dir + "/projects.db";
+const DB_PATH = `${import.meta.dir}/projects.db`;
 
 export const db = new Database(DB_PATH, { create: true });
 
@@ -99,7 +99,9 @@ function ensureProjectsColumns() {
     .map((c) => c.name);
 
   const addColumn = (name: string, sqlType: string) => {
-    if (columns.includes(name)) return;
+    if (columns.includes(name)) {
+      return;
+    }
     db.run(`ALTER TABLE projects ADD COLUMN ${name} ${sqlType}`);
   };
 

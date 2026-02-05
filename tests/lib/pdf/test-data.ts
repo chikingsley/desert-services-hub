@@ -1,8 +1,8 @@
 // Shared test data for PDF generation tests
 // Uses max catalog items to test multipage layouts
 
+import { createLineItems } from "@/lib/catalog";
 import type { EditorQuote, EditorSection } from "@/lib/types";
-import { createLineItems } from "@/apps/quoting/catalog";
 
 // Create line items using actual catalog codes (max coverage)
 const catalogLineItems = createLineItems([

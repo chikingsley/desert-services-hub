@@ -7,7 +7,7 @@ import {
   catalog,
   findItem,
   takeoffBundles,
-} from "../../quoting/catalog";
+} from "@/lib/catalog";
 
 function buildTakeoffItemCodeSet(): Set<string> {
   const codes = new Set<string>();

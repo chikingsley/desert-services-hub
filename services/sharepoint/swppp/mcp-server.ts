@@ -399,16 +399,20 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
   tools: TOOLS,
 }));
 
-server.setRequestHandler(CallToolRequestSchema, async (request) => {
-  const { name, arguments: args = {} } = request.params;
+server.setRequestHandler(
+  CallToolRequestSchema,
+  // @ts-expect-error MCP SDK type mismatch - handler works correctly at runtime
+  async (request) => {
+    const { name, arguments: args = {} } = request.params;
 
-  const handler = toolHandlers[name];
-  if (!handler) {
-    return error(`Unknown tool: ${name}`);
+    const handler = toolHandlers[name];
+    if (!handler) {
+      return error(`Unknown tool: ${name}`);
+    }
+
+    return await handler(args);
   }
-
-  return await handler(args);
-});
+);
 
 // ============================================================================
 // Server Startup

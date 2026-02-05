@@ -10,15 +10,13 @@ Every email uses the simple.hbs template via `wrapWithSignature()` from `service
 - Signature block (Best, / -- / name / title / email / phone)
 - Desert Services logo as inline attachment (`<img src="cid:logo">`)
 
-## Signature + Logo Integration
+## Signature Handling
 
-The signature and logo are handled by the template system, NOT by the draft. When drafting:
+**For drafts created via MCP:** Use `skipSignature: true`. Outlook adds the signature from account settings when you send.
 
-1. Output ONLY the email body content (greeting through last line before signature)
-2. The signature is appended automatically by `wrapWithSignature()`
-3. The logo PNG is attached inline via `getLogoAttachment()` with `contentId: "logo"`
+**For programmatic sends using templates:** The signature is baked into the template or added by `wrapWithSignature()`.
 
-The full signature block rendered by the system:
+The full signature block:
 
 ```html
 <div>Best,</div>
@@ -27,57 +25,93 @@ The full signature block rendered by the system:
 <div>Chi Ejimofor</div>
 <div>Project Coordinator</div>
 <div>E: <a href="mailto:chi@desertservices.net">chi@desertservices.net</a></div>
-<div>M: (304) 405-2446</div>
+<div>M: (304) 216-8700</div>
 <div><img src="cid:logo" alt="Desert Services LLC" width="264" style="max-width:100%"></div>
-```css
+```
+
+## Text Content
+
 ```html
 <div>Text content here</div>
-```html
+```
+
+## Line Breaks (Blank Lines)
+
 ```html
 <div><br></div>
-```csv
+```
+
+## Bold Text
+
 ```html
 <b>important text</b>
-```css
+```
+
+## Links
+
 ```html
 <a href="mailto:kendra@desertservices.net">kendra@desertservices.net</a>
 <a href="https://example.com">link text</a>
-```css
+```
+
+## Unordered Lists (CRITICAL)
+
+Use plain `<ul>` with NO style attribute. Outlook's native list margins provide correct spacing.
+
 ```html
-<ul style="margin-top:0; margin-bottom:0">
+<ul>
   <li><div>First item</div></li>
   <li><div>Second item</div></li>
   <li><div>Third item</div></li>
 </ul>
+```
+
+**IMPORTANT:**
+- Do NOT add `<div><br></div>` before or after lists — creates double spacing
+- Do NOT use `<ul style="margin-top:0; margin-bottom:0">` — removes all spacing
+
+## Ordered Lists
+
+Same rules as unordered lists - plain `<ol>` with no style:
+
 ```html
-```html
-<ol style="margin-top:0; margin-bottom:0">
+<ol>
   <li><div>First item</div></li>
   <li><div>Second item</div></li>
 </ol>
-```css
+```
+
+## Inline Numbered Points (Alternative to Lists)
+
+When you need tighter control over spacing:
+
 ```html
-<div>(1) The contract lists IDG, which is no longer our active company name/entity. Can you update the contract to match Desert Services LLC?</div>
-<div>(2) Then in Exhibits B-2 and B-3, $5M aggregate coverage is required...</div>
-```css
+<div>(1) First point here.</div>
+<div>(2) Second point here.</div>
+```
+
+## Line Items with Prices
+
 ```html
 <div>Compost Filter Sock (1,200 LF) — $2,940.00</div>
-```css
+```
+
+## Full Example Email
+
 ```html
 <div>Matt,</div>
 <div><br></div>
 <div>I reviewed the LOI and had a few comments/questions (see attached for markup).</div>
 <div><br></div>
 <div>Could you provide the schedule of values that you used to get to this $19,439 total?</div>
-<div><br></div>
-<div>Exhibit A.16 Did you want Desert Services to provide water trucks for Dust Control? Currently, this line would be out of scope but we can provide pricing and include it if you wish.</div>
-<div><br></div>
-<div>Exhibit A.34 Silt Fence &amp; Wattle are specified here. Usually only filter sock is required per ADEQ. Did you actually want silt fence? Pricing for that is $5.50/LF vs Compost Filter Sock $2.75/LF</div>
-<div><br></div>
-<div>Let me know if you need an updated quote with water trucks for site water/dust control, lot washes, backflow meter.</div>
+<ul>
+<li><div><b>Item 1:</b> Value here</div></li>
+<li><div><b>Item 2:</b> Value here</div></li>
+</ul>
+<div>Let me know if you have any questions!</div>
 ```
 
-Note: No signature in the body — it's appended by the template system.
+Note: No signature in the body when using `skipSignature: true` — Outlook adds it.
 
 ## Things to AVOID
 
@@ -89,4 +123,5 @@ Note: No signature in the body — it's appended by the template system.
 - `<table>` for layout (never use tables)
 - CSS classes (Outlook strips them)
 - `<span>` with styling (use `<b>` for bold, plain text for everything else)
-- `<div><br></div>` immediately before or after `<ul>`/`<ol>` tags (Outlook's native list margins provide sufficient spacing)
+- `<ul style="margin-top:0; margin-bottom:0">` — removes all spacing, makes lists look cramped
+- `<div><br></div>` before/after `<ul>` — creates double spacing

@@ -730,27 +730,31 @@ const handlers: Record<string, ToolHandler> = {
 
 server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools }));
 
-server.setRequestHandler(CallToolRequestSchema, async (request) => {
-  const { name, arguments: args } = request.params;
-  const handler = handlers[name];
+server.setRequestHandler(
+  CallToolRequestSchema,
+  // @ts-expect-error MCP SDK type mismatch - handler works correctly at runtime
+  async (request) => {
+    const { name, arguments: args } = request.params;
+    const handler = handlers[name];
 
-  if (!handler) {
-    return {
-      content: [{ type: "text" as const, text: `Unknown tool: ${name}` }],
-      isError: true,
-    };
-  }
+    if (!handler) {
+      return {
+        content: [{ type: "text" as const, text: `Unknown tool: ${name}` }],
+        isError: true,
+      };
+    }
 
-  try {
-    return await handler(args ?? {});
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    return {
-      content: [{ type: "text" as const, text: `Error: ${message}` }],
-      isError: true,
-    };
+    try {
+      return await handler(args ?? {});
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return {
+        content: [{ type: "text" as const, text: `Error: ${message}` }],
+        isError: true,
+      };
+    }
   }
-});
+);
 
 // ============================================================================
 // Start Server

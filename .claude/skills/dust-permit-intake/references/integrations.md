@@ -2,47 +2,56 @@
 
 Quick reference for all integration points used in the dust permit intake process.
 
-## Email (desert-email MCP)
+## Email CLI (ALWAYS USE THIS - NOT MCP)
 
 ### Search for Request Email
 
-```typescript
-// MCP Tool: search-email
-{
-  query: "dust permit [company name]",
-  userId: "chi@desertservices.net",  // or other mailbox
-  limit: 20
-}
+```bash
+# Search user's mailbox
+bun services/email/cli.ts search "dust permit [company name]" --user chi@desertservices.net
 
-// Search multiple mailboxes
-// Mailboxes to check in order:
-// 1. chi@desertservices.net (primary)
-// 2. jared@desertservices.net
-// 3. jayson@desertservices.net
-// 4. jeff@desertservices.net
-// 5. internalcontracts@desertservices.net
-```css
-```typescript
-// MCP Tool: list-attachments
-{ messageId: "...", userId: "chi@desertservices.net" }
+# Search contracts mailbox
+bun services/email/cli.ts contracts "dust permit"
 
-// MCP Tool: download-attachment
-{ messageId: "...", attachmentId: "...", userId: "chi@desertservices.net" }
+# Mailboxes to check in order:
+# 1. chi@desertservices.net (primary)
+# 2. contracts@desertservices.net
+# 3. estimating@desertservices.net
+```
 
-// Look for:
-// - NOI.pdf, Notice of Intent
-// - NVC.pdf, Notice of Void and Cancel
-// - Grading Plan, Site Plan
-// - SWPPP Plan
-```css
+### Download Attachments (use hub.db)
+
 ```typescript
-// MCP Tool: send-email
-{
-  to: [{ email: "requester@company.com" }],
-  subject: "Dust Permit Submitted - [Project Name]",
-  body: "<HTML from dust-permit-submitted template>",
-  bodyType: "html"
-}
+import { downloadAttachment } from '@/apps/contract-ui/contract/db/repositories/attachment';
+
+// Download by attachment ID from hub.db
+await downloadAttachment(ATTACHMENT_ID, 'output/path.pdf');
+```
+
+```sql
+-- Find attachments in hub.db
+SELECT a.id, a.name FROM attachments a
+JOIN emails e ON a.email_id = e.id
+WHERE e.subject LIKE '%dust permit%';
+```
+
+Look for: NOI.pdf, NVC.pdf, Grading Plan, Site Plan, SWPPP Plan
+
+### Send/Draft Emails
+
+```bash
+# Create a draft
+bun services/email/cli.ts draft \
+  --to "requester@company.com" \
+  --subject "Dust Permit Submitted - [Project Name]" \
+  --body '<div>HTML body here</div>' \
+  --no-signature
+
+# Send using template
+bun services/email/cli.ts send-template dust-permit-submitted \
+  --to "contact@gc.com" \
+  --subject "Dust Permit Submitted - [Project]" \
+  --vars '{"recipientName":"John",...}'
 ```css
 ```typescript
 const NOTION_DBS = {
@@ -249,13 +258,15 @@ Deployed: [check docker-compose or cloudflare tunnel]
 "deep search [project name]"
 "research [company name] emails"
 "find all related emails for [X]"
-```csv
+```
+
+### Deep Search Output Format
+
 ```markdown
 ## Summary
 Brief overview of what was found
 
 ## Timeline
-- [date] - [event/email]
 - [date] - [event/email]
 
 ## Documents Found
@@ -267,26 +278,27 @@ Brief overview of what was found
 
 ## Gaps
 - Missing site contact email
-- Acreage not specified in docs
 
 ## Recommended Actions
 1. Request site contact info from GC
-2. Verify acreage with engineer
-```css
-```bash
+```
+
+## Workflow Overview
+
+```text
 1. User: "dust permit for X"
    └─► Parse what X refers to
 
 2. Search Notion
    └─► notion-search for project/task
 
-3. Search Email
-   └─► desert-email: search-email
+3. Search Email (USE CLI)
+   └─► bun services/email/cli.ts search "query"
    └─► deep-search skill if needed
 
-4. Gather Documents
-   └─► desert-email: list-attachments, download-attachment
-   └─► Extract: NOI, plans, contacts
+4. Gather Documents (USE hub.db)
+   └─► Query attachments table
+   └─► downloadAttachment() from repositories
 
 5. Check History
    └─► find-permit skill (SQLite query)
@@ -298,6 +310,6 @@ Brief overview of what was found
 7. Submit Permit
    └─► auto-permit API: /api/applications/create
 
-8. Notify
-   └─► desert-email: send-email with template
+8. Notify (USE CLI)
+   └─► bun services/email/cli.ts send-template
 ```

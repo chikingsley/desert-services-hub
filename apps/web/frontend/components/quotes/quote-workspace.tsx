@@ -20,10 +20,10 @@ import {
 import { useSidebar } from "@/apps/web/frontend/components/ui/sidebar";
 import { Spinner } from "@/apps/web/frontend/components/ui/spinner";
 import { useSettings } from "@/hooks/use-settings";
+import { catalog } from "@/lib/catalog";
 import { generatePDFBlob } from "@/lib/pdf/generate-client";
 import type { GeneratePDFOptions } from "@/lib/pdf/pdf-builder";
 import type { EditorQuote } from "@/lib/types";
-import { catalog } from "@/apps/quoting/catalog";
 import { FloatingPdfOptions } from "./floating-pdf-options";
 import { InlineQuoteEditor } from "./inline-quote-editor";
 

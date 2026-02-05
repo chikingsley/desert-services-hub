@@ -24,12 +24,15 @@ Process incoming contracts end-to-end: find in email, match to estimate, reconci
 Search email for: "{project name}" OR "{contractor name}" subcontract OR contract
 Mailboxes: chi@, jared@, jayson@, jeff@, internalcontracts@
 ```csv
-```typescript
-// Use Monday MCP
-mcp__desert-mondaycrm__find_best_matches({
-  boardId: "ESTIMATING",
-  name: "{project name or contractor}"
-})
+```bash
+# Search hub.db estimates
+sqlite3 /Users/chiejimofor/Documents/Github/desert-services-hub/apps/contract-ui/contract/hub.db ".mode column" ".headers on" "
+SELECT id, monday_item_id, name, contractor, bid_value 
+FROM estimates 
+WHERE name LIKE '%PROJECT_NAME%' 
+   OR contractor LIKE '%CONTRACTOR_NAME%'
+LIMIT 10;
+"
 ```csv
 ```text
 Search Notion: "{project name}" OR "{contractor name}"

@@ -326,12 +326,12 @@ export function getSenderProjectStats(fromEmail: string): {
     )
     .all(fromEmail);
 
-  if (rows.length === 0) {
+  const top = rows[0];
+  if (!top) {
     return null;
   }
 
   const totalLinked = rows.reduce((sum, r) => sum + r.count, 0);
-  const top = rows[0];
 
   return {
     projectId: top.project_id,

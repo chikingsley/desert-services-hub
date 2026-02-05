@@ -5,8 +5,8 @@
 // These match the exact schema in lib/db/index.ts
 // ============================================
 
-/** Quote row from SQLite - is_locked is 0|1 in DB */
-export interface QuoteRow {
+/** Estimate row from SQLite - is_locked is 0|1 in DB */
+export interface EstimateRow {
   id: string;
   base_number: string;
   takeoff_id: string | null;
@@ -25,18 +25,18 @@ export interface QuoteRow {
   updated_at: string;
 }
 
-/** Quote version row from SQLite */
-export interface QuoteVersionRow {
+/** Estimate version row from SQLite */
+export interface EstimateVersionRow {
   id: string;
-  quote_id: string;
+  estimate_id: string;
   version_number: number;
   total: number;
   is_current: number; // SQLite stores as 0 or 1
   created_at: string;
 }
 
-/** Quote section row from SQLite */
-export interface QuoteSectionRow {
+/** Estimate section row from SQLite */
+export interface EstimateSectionRow {
   id: string;
   version_id: string;
   name: string;
@@ -46,8 +46,8 @@ export interface QuoteSectionRow {
   created_at: string;
 }
 
-/** Quote line item row from SQLite */
-export interface QuoteLineItemRow {
+/** Estimate line item row from SQLite */
+export interface EstimateLineItemRow {
   id: string;
   version_id: string;
   section_id: string | null;
@@ -121,11 +121,11 @@ export interface TakeoffRow {
 // Application Types (transformed from DB rows)
 // ============================================
 
-export interface Quote {
+export interface Estimate {
   id: string;
   base_number: string;
   takeoff_id: string | null;
-  quote_date: string;
+  estimate_date: string;
   estimator_name: string | null;
   estimator_email: string | null;
   job_name: string;
@@ -141,9 +141,9 @@ export interface Quote {
   updated_at: string;
 }
 
-export interface QuoteVersion {
+export interface EstimateVersion {
   id: string;
-  quote_id: string;
+  estimate_id: string;
   version_number: number;
   change_summary: string | null;
   total: number;
@@ -151,7 +151,7 @@ export interface QuoteVersion {
   created_at: string;
 }
 
-export interface QuoteSection {
+export interface EstimateSection {
   id: string;
   version_id: string;
   name: string;
@@ -161,7 +161,7 @@ export interface QuoteSection {
   created_at: string;
 }
 
-export interface QuoteLineItem {
+export interface EstimateLineItem {
   id: string;
   version_id: string;
   section_id: string | null;
@@ -177,7 +177,7 @@ export interface QuoteLineItem {
   updated_at: string;
 }
 
-export interface QuoteSend {
+export interface EstimateSend {
   id: string;
   version_id: string;
   estimate_number: string;
@@ -203,15 +203,15 @@ export interface CatalogItem {
 }
 
 // Extended types with relations
-export interface QuoteWithVersion extends Quote {
-  current_version?: QuoteVersion & {
-    sections: QuoteSection[];
-    line_items: QuoteLineItem[];
+export interface EstimateWithVersion extends Estimate {
+  current_version?: EstimateVersion & {
+    sections: EstimateSection[];
+    line_items: EstimateLineItem[];
   };
 }
 
-// Utility type for creating new quotes
-export interface NewQuote {
+// Utility type for creating new estimates
+export interface NewEstimate {
   job_name: string;
   job_address?: string;
   client_name?: string;
@@ -222,7 +222,7 @@ export interface NewQuote {
 }
 
 // Utility type for line item with calculated total
-export interface LineItemWithTotal extends QuoteLineItem {
+export interface LineItemWithTotal extends EstimateLineItem {
   total: number;
   margin: number;
   margin_percent: number;
@@ -287,7 +287,7 @@ export function findItemInCategory(
 }
 
 // ============================================
-// Quote Editor Types (inline editing)
+// Estimate Editor Types (inline editing)
 // ============================================
 
 export interface EditorLineItem {
@@ -311,7 +311,7 @@ export interface EditorSection {
   catalogCategoryId?: string; // Links to catalog category for filtering
 }
 
-export interface EditorQuote {
+export interface EditorEstimate {
   estimateNumber: string;
   date: string;
   estimator: string;

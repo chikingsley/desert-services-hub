@@ -83,9 +83,11 @@ export const SCALE_PRESETS = [
 
 // Lazy load TakeoffViewer to avoid SSR issues with PDF.js
 const TakeoffViewer = lazy(() =>
-  import("@/apps/web/frontend/components/takeoffs/takeoff-viewer").then((mod) => ({
-    default: mod.TakeoffViewer,
-  }))
+  import("@/apps/web/frontend/components/takeoffs/takeoff-viewer").then(
+    (mod) => ({
+      default: mod.TakeoffViewer,
+    })
+  )
 );
 
 // Map preset item types to takeoff tool types

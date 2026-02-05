@@ -1,0 +1,32 @@
+---
+description: Email workflow guidelines for agents - attachment prompts and draft creation
+globs: "services/email/**/*.{ts,tsx}"
+alwaysApply: false
+---
+
+# Email Workflow Guidelines
+
+## Attachment Prompts
+
+**IMPORTANT**: When creating email drafts or sending emails on behalf of the user, **always ask in the conversation** if they want to attach any files before proceeding.
+
+### When to Ask
+
+- After creating a draft email (before the user sends it)
+- Before sending an email directly
+- When replying to emails that might benefit from attachments
+
+### Example
+
+```
+✓ Draft created: "Subject" (ID: ...)
+
+Would you like me to attach any files to this draft? 
+You can provide file paths and I'll add them.
+```
+
+### Implementation Notes
+
+- Do NOT add interactive CLI prompts - ask in conversation only
+- The CLI already supports `--attachments` flag for file paths
+- Common attachments: PDFs, images, documents related to the email content

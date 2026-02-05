@@ -17,16 +17,31 @@ import "./index.css";
 // Layout components
 import { AppSidebar } from "@/apps/web/frontend/components/app-sidebar";
 import { Button } from "@/apps/web/frontend/components/ui/button";
-import { SidebarInset, SidebarProvider } from "@/apps/web/frontend/components/ui/sidebar";
+import {
+  SidebarInset,
+  SidebarProvider,
+} from "@/apps/web/frontend/components/ui/sidebar";
 import { CatalogPage, catalogLoader } from "@/apps/web/frontend/pages/catalog";
-import { ContractsPage, contractsLoader } from "@/apps/web/frontend/pages/contracts";
+import {
+  ContractsPage,
+  contractsLoader,
+} from "@/apps/web/frontend/pages/contracts";
 // Pages
 import { DashboardPage } from "@/apps/web/frontend/pages/dashboard";
-import { QuoteEditorPage, quoteLoader } from "@/apps/web/frontend/pages/quote-editor";
+import {
+  QuoteEditorPage,
+  quoteLoader,
+} from "@/apps/web/frontend/pages/quote-editor";
 import { QuotesPage, quotesLoader } from "@/apps/web/frontend/pages/quotes";
 import { SettingsPage } from "@/apps/web/frontend/pages/settings";
-import { TakeoffEditorPage, takeoffLoader } from "@/apps/web/frontend/pages/takeoff-editor";
-import { TakeoffsPage, takeoffsLoader } from "@/apps/web/frontend/pages/takeoffs";
+import {
+  TakeoffEditorPage,
+  takeoffLoader,
+} from "@/apps/web/frontend/pages/takeoff-editor";
+import {
+  TakeoffsPage,
+  takeoffsLoader,
+} from "@/apps/web/frontend/pages/takeoffs";
 
 // Error boundary component for routes
 function RouteErrorBoundary() {

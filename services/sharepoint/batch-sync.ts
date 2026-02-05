@@ -9,8 +9,10 @@ import { parseArgs } from "node:util";
 import { getFile } from "@lib/minio";
 import { SharePointClient } from "./client";
 
-const HUB_DB_PATH = new URL("../contract/census/hub.db", import.meta.url)
-  .pathname;
+const HUB_DB_PATH = new URL(
+  "../../apps/contract-ui/contract/hub.db",
+  import.meta.url
+).pathname;
 const SHAREPOINT_ROOT = "Customer Projects/Active";
 const SUBFOLDERS = [
   "01-Estimates",

@@ -7,8 +7,12 @@ import type {
   TableCell,
   TDocumentDefinitions,
 } from "pdfmake/interfaces";
-import type { EditorLineItem, EditorQuote, EditorSection } from "@/lib/types";
-import { findItem } from "@/apps/quoting/catalog";
+import { findItem } from "@/lib/catalog";
+import type {
+  EditorEstimate,
+  EditorLineItem,
+  EditorSection,
+} from "@/lib/types";
 
 // Formatting helpers
 function formatCurrency(value: number): string {
@@ -630,12 +634,12 @@ export interface GeneratePDFOptions {
 }
 
 export function buildDocDefinition(
-  quote: EditorQuote,
+  estimate: EditorEstimate,
   logoBase64: string,
   options?: GeneratePDFOptions
 ): TDocumentDefinitions {
   // Filter out struck items - they shouldn't appear on the PDF
-  const visibleItems = quote.lineItems;
+  const visibleItems = estimate.lineItems;
 
   // Build content based on style option
   const style = options?.style ?? "sectioned";
@@ -645,7 +649,7 @@ export function buildDocDefinition(
     style === "simple"
       ? buildSimpleLineItems(visibleItems)
       : buildSectionTables(
-          groupItemsBySection(visibleItems, quote.sections),
+          groupItemsBySection(visibleItems, estimate.sections),
           unbreakable
         );
 
@@ -700,17 +704,17 @@ export function buildDocDefinition(
                       ],
                       [
                         {
-                          text: quote.estimator,
+                          text: estimate.estimator,
                           fontSize: 9,
                           alignment: "center",
                         },
                         {
-                          text: formatDate(quote.date),
+                          text: formatDate(estimate.date),
                           fontSize: 9,
                           alignment: "center",
                         },
                         {
-                          text: quote.estimateNumber,
+                          text: estimate.estimateNumber,
                           fontSize: 9,
                           alignment: "center",
                         },
@@ -741,8 +745,11 @@ export function buildDocDefinition(
                   [
                     {
                       text: [
-                        { text: `${quote.billTo.companyName}\n`, bold: true },
-                        { text: quote.billTo.address ?? "" },
+                        {
+                          text: `${estimate.billTo.companyName}\n`,
+                          bold: true,
+                        },
+                        { text: estimate.billTo.address ?? "" },
                       ],
                       fontSize: 9,
                       margin: [4, 4, 4, 4],
@@ -770,8 +777,8 @@ export function buildDocDefinition(
                   [
                     {
                       text: [
-                        { text: `${quote.jobInfo.siteName}\n`, bold: true },
-                        { text: quote.jobInfo.address ?? "" },
+                        { text: `${estimate.jobInfo.siteName}\n`, bold: true },
+                        { text: estimate.jobInfo.address ?? "" },
                       ],
                       fontSize: 9,
                       margin: [4, 4, 4, 4],
@@ -822,7 +829,7 @@ export function buildDocDefinition(
                     {
                       text:
                         currentPage === pageCount
-                          ? formatCurrency(quote.total)
+                          ? formatCurrency(estimate.total)
                           : "See last page",
                       fontSize: 11,
                       alignment: "right",
@@ -923,7 +930,7 @@ export function buildDocDefinition(
                       fontSize: 9,
                     },
                     {
-                      text: `Email: ${quote.estimatorEmail}`,
+                      text: `Email: ${estimate.estimatorEmail}`,
                       alignment: "center",
                       color: "#fff",
                       fontSize: 9,

@@ -354,16 +354,16 @@ export function extractRealSender(
           // Pattern captured both name and company
           if (config.companyFirst) {
             // BidMail and similar: body has company then name
-            result.realSenderCompany = match[1]?.trim();
-            result.realSenderName = match[2]?.trim();
+            result.realSenderCompany = match[1]?.trim() ?? null;
+            result.realSenderName = match[2]?.trim() ?? null;
           } else {
             // Standard: body has name then company
-            result.realSenderName = match[1]?.trim();
-            result.realSenderCompany = match[2]?.trim();
+            result.realSenderName = match[1]?.trim() ?? null;
+            result.realSenderCompany = match[2]?.trim() ?? null;
           }
         } else if (match.length === 2) {
           // Pattern captured only company
-          result.realSenderCompany = match[1]?.trim();
+          result.realSenderCompany = match[1]?.trim() ?? null;
         }
         break;
       }
@@ -437,7 +437,7 @@ export function processPlatformEmails(): void {
 
   ensureColumns();
 
-  // Only get emails that haven't been processed yet (platform_sender_email is NULL)
+  // Only get emails that haven't been processed yet (real_sender_email is NULL)
   // and are either from a known platform domain or haven't been checked for exclusion
   const platformDomains = Object.keys(PLATFORM_DOMAINS);
   const platformDomainsStr = platformDomains.map((d) => `'${d}'`).join(",");
@@ -445,7 +445,7 @@ export function processPlatformEmails(): void {
   const emails = db
     .query<EmailRow, []>(
       `SELECT id, from_email, from_domain, subject, body_full, body_preview FROM emails
-       WHERE platform_sender_email IS NULL
+       WHERE real_sender_email IS NULL
          AND (from_domain IN (${platformDomainsStr}) OR is_excluded IS NULL)`
     )
     .all();

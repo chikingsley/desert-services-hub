@@ -200,6 +200,131 @@ describe.skipIf(!hasCredentials)("email service integration", () => {
       // Note: deleteEmail is a soft delete, moves to Deleted Items
       // We verify by checking it's not in drafts anymore
     });
+
+    it("createDraft includes signature with logo by default", async () => {
+      const subject = `${TEST_PREFIX}Draft With Signature ${Date.now()}`;
+      const bodyContent = "Test body content";
+
+      // Act: create draft with signature (default)
+      const draft = await client.createDraft({
+        subject,
+        body: bodyContent,
+        userId: TEST_USER_ID,
+        // skipSignature defaults to false
+      });
+      createdDraftIds.push(draft.id);
+
+      // Assert: draft body includes signature HTML
+      const retrieved = await client.getEmail(draft.id, TEST_USER_ID);
+      expect(retrieved).not.toBeNull();
+      expect(retrieved?.bodyContent).toContain("Chi Ejimofor");
+      expect(retrieved?.bodyContent).toContain("Project Coordinator");
+      expect(retrieved?.bodyContent).toContain("chi@desertservices.net");
+      expect(retrieved?.bodyContent).toContain(bodyContent);
+
+      // Assert: draft has logo attachment (inline)
+      const attachments = await client.getAttachments(draft.id, TEST_USER_ID);
+      const logoAttachment = attachments.find(
+        (att) => att.name === "desert-services-logo.png"
+      );
+      expect(logoAttachment).toBeDefined();
+      expect(logoAttachment?.isInline).toBe(true);
+      // Note: contentId may not be returned by getAttachments, but we verify
+      // the logo exists and is inline, which is sufficient
+    });
+
+    it("createDraft skips signature when skipSignature is true", async () => {
+      const subject = `${TEST_PREFIX}Draft Without Signature ${Date.now()}`;
+      const bodyContent = "Test body without signature";
+
+      // Act: create draft without signature
+      const draft = await client.createDraft({
+        subject,
+        body: bodyContent,
+        userId: TEST_USER_ID,
+        skipSignature: true,
+      });
+      createdDraftIds.push(draft.id);
+
+      // Assert: draft body does NOT include signature
+      const retrieved = await client.getEmail(draft.id, TEST_USER_ID);
+      expect(retrieved).not.toBeNull();
+      expect(retrieved?.bodyContent).not.toContain("Chi Ejimofor");
+      expect(retrieved?.bodyContent).not.toContain("Project Coordinator");
+      expect(retrieved?.bodyContent).toContain(bodyContent);
+
+      // Assert: draft does NOT have logo attachment
+      const attachments = await client.getAttachments(draft.id, TEST_USER_ID);
+      const logoAttachment = attachments.find(
+        (att) => att.name === "desert-services-logo.png"
+      );
+      expect(logoAttachment).toBeUndefined();
+    });
+
+    it("createReplyDraft includes signature with logo by default", async () => {
+      // Arrange: create a test email to reply to
+      const testSubject = `${TEST_PREFIX}Reply Test ${Date.now()}`;
+      const testDraft = await client.createDraft({
+        subject: testSubject,
+        body: "Original message body",
+        to: [{ email: TEST_USER_ID }],
+        userId: TEST_USER_ID,
+      });
+      createdDraftIds.push(testDraft.id);
+
+      // Send it so we can reply to it (requires user auth)
+      const userClient = new GraphEmailClient({
+        azureTenantId: process.env.AZURE_TENANT_ID ?? "",
+        azureClientId: process.env.AZURE_CLIENT_ID ?? "",
+        azureClientSecret: process.env.AZURE_CLIENT_SECRET ?? "",
+      });
+      await userClient.initUserAuth();
+      await userClient.sendDraft(testDraft.id);
+
+      // Wait for email to be delivered
+      await wait(2000);
+
+      // Find the sent email
+      const sentEmails = await client.searchEmails({
+        query: testSubject,
+        userId: TEST_USER_ID,
+        folder: "sentitems",
+        limit: 1,
+      });
+      expect(sentEmails.length).toBeGreaterThan(0);
+      const originalEmail = sentEmails[0];
+
+      const replyBody = "This is my reply";
+
+      // Act: create reply draft with signature (default)
+      const replyDraft = await client.createReplyDraft({
+        messageId: originalEmail.id,
+        body: replyBody,
+        userId: TEST_USER_ID,
+        // skipSignature defaults to false
+      });
+      createdDraftIds.push(replyDraft.id);
+
+      // Assert: reply draft body includes signature HTML
+      const retrieved = await client.getEmail(replyDraft.id, TEST_USER_ID);
+      expect(retrieved).not.toBeNull();
+      expect(retrieved?.bodyContent).toContain("Chi Ejimofor");
+      expect(retrieved?.bodyContent).toContain("Project Coordinator");
+      expect(retrieved?.bodyContent).toContain(replyBody);
+
+      // Assert: reply draft has logo attachment (inline)
+      const attachments = await client.getAttachments(
+        replyDraft.id,
+        TEST_USER_ID
+      );
+      const logoAttachment = attachments.find(
+        (att) => att.name === "desert-services-logo.png"
+      );
+      expect(logoAttachment).toBeDefined();
+      expect(logoAttachment?.isInline).toBe(true);
+      // Note: contentId may not be returned by getAttachments, but we verify
+      // the logo exists and is inline, which is sufficient
+    }, 15_000);
   });
 
   // ============================================================================
@@ -628,6 +753,323 @@ describe.skipIf(!hasCredentials)("email service integration", () => {
         }
       }
     }, 60_000);
+  });
+
+  // ============================================================================
+  // Template Integration Tests (create drafts using templates)
+  // ============================================================================
+
+  describe("template integration (drafts)", () => {
+    it("createDraft using dust-permit-billing template", async () => {
+      const { getTemplate, getLogoAttachment } = await import(
+        "../email-templates/index"
+      );
+
+      // Generate template HTML
+      const html = await getTemplate("dust-permit-billing", {
+        recipientName: "Team",
+        accountName: "Caliente Construction",
+        projectName: "Kiwanis Playground",
+        applicationNumber: "D0064940",
+        address: "6111 S All-America Way, Tempe AZ 85283",
+        acceleratedProcessing: "No",
+        vendorName: "Maricopa County Air Quality Department",
+        permitCost: "$150.00",
+        scheduleValue: "$5,000.00",
+        paymentMethod: "Credit Card",
+        cardLastFour: "1234",
+        cardholderName: "Chi Ejimofor",
+        invoiceNumber: "INV-2025-001",
+        invoiceDate: "December 18, 2025",
+        projectFolderLink: "https://example.sharepoint.com/projects/kiwanis",
+      });
+
+      const logo = await getLogoAttachment();
+
+      // Create draft using template
+      const subject = `${TEST_PREFIX}Template Draft Test ${Date.now()}`;
+      console.log(`\n📧 Creating draft with subject: ${subject}`);
+      console.log("📧 Using template: dust-permit-billing");
+      console.log(`📧 Mailbox: ${TEST_USER_ID}`);
+
+      const draft = await client.createDraft({
+        subject,
+        body: html,
+        bodyType: "html",
+        to: [{ email: TEST_USER_ID }],
+        attachments: [logo],
+        userId: TEST_USER_ID,
+        skipSignature: true, // Template already has signature
+      });
+
+      createdDraftIds.push(draft.id);
+
+      // Log draft info so you can see it
+      console.log("\n✓ Created draft using dust-permit-billing template:");
+      console.log(`  Subject: ${draft.subject}`);
+      console.log(`  Draft ID: ${draft.id}`);
+      console.log(`  Mailbox: ${TEST_USER_ID}\n`);
+
+      // Verify draft was created
+      expect(draft.id).toBeDefined();
+      expect(draft.subject).toBe(subject);
+
+      // Retrieve and verify content
+      const retrieved = await client.getEmail(draft.id, TEST_USER_ID);
+      expect(retrieved).not.toBeNull();
+      expect(retrieved?.bodyContent).toContain("Caliente Construction");
+      expect(retrieved?.bodyContent).toContain("Kiwanis Playground");
+      expect(retrieved?.bodyContent).toContain("$150.00");
+      expect(retrieved?.bodyContent).toContain("INV-2025-001");
+      expect(retrieved?.bodyContent).toContain("1234"); // cardLastFour
+      expect(retrieved?.bodyContent).toContain("Chi Ejimofor"); // cardholderName
+
+      // Verify logo attachment exists
+      const attachments = await client.getAttachments(draft.id, TEST_USER_ID);
+      const logoAttachment = attachments.find(
+        (att) => att.name === "desert-services-logo.png"
+      );
+      expect(logoAttachment).toBeDefined();
+    });
+
+    it("createDraft using dust-permit-issued template", async () => {
+      const { getTemplate, getLogoAttachment } = await import(
+        "../email-templates/index"
+      );
+
+      // Generate template HTML
+      const html = await getTemplate("dust-permit-issued", {
+        recipientName: "LeAnn",
+        accountName: "Caliente Construction",
+        projectName: "Kiwanis Playground",
+        actionStatus: "processed and approved",
+        permitStatus: "Active",
+        applicationNumber: "D0064940",
+        permitNumber: "F054321",
+        siteAddress: "6111 S All-America Way, Tempe AZ 85283",
+        acreage: "1.2",
+        issueDate: "December 18, 2025",
+        expirationDate: "December 18, 2026",
+        showPermitInfo: "true",
+      });
+
+      const logo = await getLogoAttachment();
+
+      // Create draft using template
+      const subject = `${TEST_PREFIX}Customer Template Draft ${Date.now()}`;
+      console.log(`\n📧 Creating draft with subject: ${subject}`);
+      console.log("📧 Using template: dust-permit-issued");
+
+      const draft = await client.createDraft({
+        subject,
+        body: html,
+        bodyType: "html",
+        to: [{ email: TEST_USER_ID }],
+        attachments: [logo],
+        userId: TEST_USER_ID,
+        skipSignature: true, // Template already has signature
+      });
+
+      createdDraftIds.push(draft.id);
+
+      console.log("✓ Created draft using dust-permit-issued template:");
+      console.log(`  Subject: ${draft.subject}`);
+      console.log(`  Draft ID: ${draft.id}\n`);
+
+      // Verify draft content
+      const retrieved = await client.getEmail(draft.id, TEST_USER_ID);
+      expect(retrieved).not.toBeNull();
+      expect(retrieved?.bodyContent).toContain("LeAnn");
+      expect(retrieved?.bodyContent).toContain("Caliente Construction");
+      expect(retrieved?.bodyContent).toContain("F054321");
+      expect(retrieved?.bodyContent).toContain("Annual Renewal"); // Conditional content
+    });
+  });
+});
+
+// ============================================================================
+// Template Tests (no credentials needed - just template rendering)
+// ============================================================================
+
+describe("email templates", () => {
+  it("loadTemplate loads existing template files", async () => {
+    const { loadTemplate } = await import("../email-templates/index");
+    const template = await loadTemplate("dust-permit-issued");
+    expect(template).toBeDefined();
+    expect(template.length).toBeGreaterThan(0);
+    expect(template).toContain("html");
+  });
+
+  it("fillTemplate replaces variables correctly", async () => {
+    const { fillTemplate } = await import("../email-templates/index");
+    const template = "Hello {{name}}, your project is {{projectName}}.";
+    const result = fillTemplate(template, {
+      name: "LeAnn",
+      projectName: "Kiwanis Playground",
+    });
+    expect(result).toBe("Hello LeAnn, your project is Kiwanis Playground.");
+  });
+
+  it("fillTemplate handles triple braces for raw HTML", async () => {
+    const { fillTemplate } = await import("../email-templates/index");
+    const template = "Content: {{{htmlContent}}}";
+    const result = fillTemplate(template, {
+      htmlContent: "<strong>Bold</strong>",
+    });
+    expect(result).toBe("Content: <strong>Bold</strong>");
+  });
+
+  it("fillTemplate handles {{#if}} conditionals", async () => {
+    const { fillTemplate } = await import("../email-templates/index");
+    const template =
+      "Hello {{name}}.{{#if showExtra}} Extra content here.{{/if}}";
+    const resultTrue = fillTemplate(template, {
+      name: "LeAnn",
+      showExtra: "true",
+    });
+    expect(resultTrue).toContain("Extra content here");
+
+    const resultFalse = fillTemplate(template, {
+      name: "LeAnn",
+      showExtra: "",
+    });
+    expect(resultFalse).not.toContain("Extra content here");
+  });
+
+  it("getTemplate loads and fills dust-permit-issued template", async () => {
+    const { getTemplate } = await import("../email-templates/index");
+    const html = await getTemplate("dust-permit-issued", {
+      recipientName: "LeAnn",
+      accountName: "Caliente Construction",
+      projectName: "Kiwanis Playground",
+      actionStatus: "processed and approved",
+      permitStatus: "Active",
+      applicationNumber: "D0064940",
+      permitNumber: "F054321",
+      siteAddress: "6111 S All-America Way, Tempe AZ 85283",
+      acreage: "1.2",
+      issueDate: "December 18, 2025",
+      expirationDate: "December 18, 2026",
+      showPermitInfo: "true",
+    });
+
+    // Verify variables are replaced
+    expect(html).toContain("LeAnn");
+    expect(html).toContain("Caliente Construction");
+    expect(html).toContain("Kiwanis Playground");
+    expect(html).toContain("D0064940");
+    expect(html).toContain("F054321");
+    expect(html).toContain("December 18, 2025");
+    expect(html).toContain("December 18, 2026");
+
+    // Verify logo reference exists
+    expect(html).toContain("cid:logo");
+
+    // Verify conditional content (showPermitInfo)
+    expect(html).toContain("Annual Renewal");
+  });
+
+  it("getTemplate handles dust-permit-billing template with all variables", async () => {
+    const { getTemplate } = await import("../email-templates/index");
+    const html = await getTemplate("dust-permit-billing", {
+      recipientName: "Team",
+      accountName: "Caliente Construction",
+      projectName: "Kiwanis Playground",
+      applicationNumber: "D0064940",
+      address: "6111 S All-America Way, Tempe AZ 85283",
+      acceleratedProcessing: "No",
+      vendorName: "Maricopa County Air Quality Department",
+      permitCost: "$150.00",
+      scheduleValue: "$5,000.00",
+      paymentMethod: "Credit Card",
+      invoiceNumber: "INV-2025-001",
+      invoiceDate: "December 18, 2025",
+      projectFolderLink: "https://example.sharepoint.com/projects/kiwanis",
+    });
+
+    // Verify all variables are replaced
+    expect(html).toContain("Team");
+    expect(html).toContain("Caliente Construction");
+    expect(html).toContain("Kiwanis Playground");
+    expect(html).toContain("D0064940");
+    expect(html).toContain("$150.00");
+    expect(html).toContain("$5,000.00");
+    expect(html).toContain("INV-2025-001");
+    expect(html).toContain("December 18, 2025");
+    expect(html).toContain("Credit Card");
+    expect(html).toContain("Maricopa County Air Quality Department");
+
+    // Verify logo reference exists
+    expect(html).toContain("cid:logo");
+  });
+
+  it("getTemplate handles optional variables in dust-permit-billing", async () => {
+    const { getTemplate } = await import("../email-templates/index");
+    // Test with optional variables (acceleratedFee, paymentDate, etc.)
+    const html = await getTemplate("dust-permit-billing", {
+      recipientName: "Team",
+      accountName: "Caliente Construction",
+      projectName: "Kiwanis Playground",
+      applicationNumber: "D0064940",
+      address: "6111 S All-America Way, Tempe AZ 85283",
+      acceleratedProcessing: "Yes",
+      vendorName: "Maricopa County",
+      permitCost: "$150.00",
+      acceleratedFee: "$50.00", // Optional
+      scheduleValue: "$5,000.00",
+      paymentMethod: "Credit Card",
+      paymentDate: "December 18, 2025", // Optional
+      confirmationId: "CONF-12345", // Optional
+      cardLastFour: "1234", // Optional
+      cardholderName: "Chi Ejimofor", // Optional
+      invoiceNumber: "INV-2025-001",
+      invoiceDate: "December 18, 2025",
+      projectFolderLink: "https://example.sharepoint.com",
+    });
+
+    // Verify optional variables appear when provided
+    expect(html).toContain("$50.00"); // acceleratedFee
+    expect(html).toContain("December 18, 2025"); // paymentDate
+    expect(html).toContain("CONF-12345"); // confirmationId
+    expect(html).toContain("1234"); // cardLastFour
+    expect(html).toContain("Chi Ejimofor"); // cardholderName
+  });
+
+  it("getTemplate handles dust-permit-billing-revised with changesHtml", async () => {
+    const { getTemplate } = await import("../email-templates/index");
+    const html = await getTemplate("dust-permit-billing-revised", {
+      recipientName: "Team",
+      accountName: "Caliente Construction",
+      projectName: "Kiwanis Playground",
+      applicationNumber: "D0064941",
+      supersededApplicationNumber: "D0064940",
+      permitNumber: "F054321",
+      address: "6111 S All-America Way, Tempe AZ 85283",
+      acceleratedProcessing: "No",
+      vendorName: "Maricopa County",
+      permitCost: "$50.00",
+      scheduleValue: "$5,000.00",
+      invoiceNumber: "INV-2025-002",
+      invoiceDate: "December 18, 2025",
+      projectFolderLink: "https://example.sharepoint.com",
+      changesHtml:
+        "<li><div>Increased acreage: 1.2 → 2.5 acres</div></li><li><div>Updated superintendent</div></li>",
+    });
+
+    // Verify changes are included
+    expect(html).toContain("Increased acreage");
+    expect(html).toContain("Updated superintendent");
+    expect(html).toContain("D0064940"); // superseded
+    expect(html).toContain("D0064941"); // new
+  });
+
+  it("listTemplates returns all available templates", async () => {
+    const { listTemplates } = await import("../email-templates/index");
+    const templates = await listTemplates();
+    expect(templates.length).toBeGreaterThan(0);
+    expect(templates).toContain("dust-permit-issued");
+    expect(templates).toContain("dust-permit-billing");
+    expect(templates).toContain("simple");
   });
 });
 

@@ -44,8 +44,8 @@ Find all related emails by expanding from the seed:
 
 Download all attachments from relevant emails:
 
-1. **Identify emails with attachments** (hasAttachments flag)
-2. **Download each attachment** using the email API
+1. **Identify emails with attachments** (has_attachments column in hub.db)
+2. **Download each attachment** using the hub.db repository utilities
 3. **Organize by type**: estimates, POs, contracts, permits, plans, invoices
 4. **Name files descriptively**: `{project}-{doctype}-{date}.pdf`
 
@@ -94,8 +94,15 @@ Given a seed email or query:
 4. Log: "Found X related emails, Y with attachments"
 ```csv
 ```bash
-1. List attachments for each relevant email
-2. Download to local directory (services/inbox/downloads/)
+1. Find attachments in hub.db:
+   ```bash
+   sqlite3 hub.db "SELECT a.id, a.name, a.email_id FROM attachments a JOIN emails e ON a.email_id = e.id WHERE e.id = EMAIL_ID;"
+   ```
+2. Download using repository utilities:
+   ```typescript
+   import { downloadAttachment } from '@/apps/contract-ui/contract/db/repositories/attachment';
+   await downloadAttachment(ATTACHMENT_ID, 'output/path.pdf');
+   ```
 3. Read PDF content
 4. Extract structured data
 ```css
@@ -126,29 +133,38 @@ Given a seed email or query:
 ## Recommended Actions
 - [Specific next steps]
 ```csv
+```bash
+# Search user's mailbox
+bun services/email/cli.ts search "query" --user chi@desertservices.net
+
+# Search contracts mailbox
+bun services/email/cli.ts contracts "query"
+
+# Search estimating mailbox
+bun services/email/cli.ts estimating "query"
+
+# Get full email
+bun services/email/cli.ts get <messageId> --user chi@desertservices.net
+
+# Get email thread
+bun services/email/cli.ts thread <messageId> --user chi@desertservices.net
+```
+
+### Attachments (use hub.db repositories)
+
 ```typescript
-// Search user's mailbox
-mcp__desert-email__search_user_mailbox({ userId, query, limit })
+import { downloadAttachment } from '@/apps/contract-ui/contract/db/repositories/attachment';
 
-// Search multiple mailboxes
-mcp__desert-email__search_mailboxes({ userIds: [...], query, limit })
+// Download attachment by ID from hub.db
+await downloadAttachment(ATTACHMENT_ID, 'output/path.pdf');
+```
 
-// Search all org mailboxes
-mcp__desert-email__search_all_mailboxes({ query, limit })
-```css
-```typescript
-// List attachments
-mcp__desert-email__get_attachments({ messageId, userId })
-
-// Download attachment
-mcp__desert-email__download_attachment({ messageId, attachmentId, userId })
-```css
-```typescript
-// Get full email with body
-mcp__desert-email__get_email({ messageId, userId })
-
-// Get conversation thread
-mcp__desert-email__get_email_thread({ messageId, userId })
+```sql
+-- Find attachments in hub.db
+SELECT a.id, a.name, a.email_id
+FROM attachments a
+JOIN emails e ON a.email_id = e.id
+WHERE e.id = EMAIL_ID;
 ```
 
 ## Additional Resources

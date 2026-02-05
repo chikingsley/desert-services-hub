@@ -12,9 +12,9 @@ import { extractClosestEdge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/clo
 import { RefreshCw } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { ContractDetailPanel } from "@/apps/web/frontend/components/contracts/contract-detail-panel";
+import { ContractsTable } from "@/apps/web/frontend/components/contracts/contracts-table";
 import { PipelineBoard } from "@/apps/web/frontend/components/contracts/pipeline-board";
 import { PipelineStats } from "@/apps/web/frontend/components/contracts/pipeline-stats";
-import { ContractsTable } from "@/apps/web/frontend/components/contracts/contracts-table";
 import { SAMPLE_CONTRACTS } from "@/apps/web/frontend/components/contracts/sample-data";
 import type {
   PipelineContract,
@@ -138,7 +138,7 @@ export function ContractsPage() {
           {/* Stats bar */}
           <PipelineStats contracts={contracts} />
 
-          <Tabs defaultValue="pipeline" className="flex flex-col gap-4">
+          <Tabs className="flex flex-col gap-4" defaultValue="pipeline">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <TabsList>
                 <TabsTrigger value="pipeline">Pipeline</TabsTrigger>

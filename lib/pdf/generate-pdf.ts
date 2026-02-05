@@ -4,7 +4,7 @@
 import { join } from "node:path";
 import { PDFDocument } from "pdf-lib";
 import pdfmake from "pdfmake";
-import type { EditorQuote } from "@/lib/types";
+import type { EditorEstimate } from "@/lib/types";
 import type { GeneratePDFOptions } from "./pdf-builder";
 import { buildBackPageDocDefinition, buildDocDefinition } from "./pdf-builder";
 
@@ -12,32 +12,18 @@ import { buildBackPageDocDefinition, buildDocDefinition } from "./pdf-builder";
 export type { GeneratePDFOptions } from "./pdf-builder";
 
 // Initialize pdfmake Node.js API with standard PDF fonts
-// Using Roboto (standard pdfmake font) to match client-side
-const fonts = {
+// Using Times (Times New Roman) family - matches legacy MCP output
+pdfmake.setFonts({
   Roboto: {
-    normal: join(
-      process.cwd(),
-      "node_modules/pdfmake/fonts/Roboto/Roboto-Regular.ttf"
-    ),
-    bold: join(
-      process.cwd(),
-      "node_modules/pdfmake/fonts/Roboto/Roboto-Medium.ttf"
-    ),
-    italics: join(
-      process.cwd(),
-      "node_modules/pdfmake/fonts/Roboto/Roboto-Italic.ttf"
-    ),
-    bolditalics: join(
-      process.cwd(),
-      "node_modules/pdfmake/fonts/Roboto/Roboto-MediumItalic.ttf"
-    ),
+    normal: "Times-Roman",
+    bold: "Times-Bold",
+    italics: "Times-Italic",
+    bolditalics: "Times-BoldItalic",
   },
-};
+});
 
-pdfmake.setFonts(fonts);
-
-// Logo path - in public directory for Next.js
-const LOGO_PATH = join(process.cwd(), "public", "logo.png");
+// Logo path - shared asset location
+const LOGO_PATH = join(import.meta.dir, "..", "assets", "logo.png");
 
 async function getLogoBase64(): Promise<string> {
   const bytes = await Bun.file(LOGO_PATH).bytes();
@@ -67,11 +53,11 @@ async function concatenatePDFs(
 
 // Generate estimate PDF (without back page)
 function generateEstimatePDF(
-  quote: EditorQuote,
+  estimate: EditorEstimate,
   logoBase64: string,
   options?: GeneratePDFOptions
 ): Promise<Buffer> {
-  const docDefinition = buildDocDefinition(quote, logoBase64, options);
+  const docDefinition = buildDocDefinition(estimate, logoBase64, options);
   return pdfmake.createPdf(docDefinition).getBuffer();
 }
 
@@ -89,11 +75,11 @@ export async function generateBackPagePDF(): Promise<Buffer> {
  * Returns Uint8Array for web compatibility (Buffer extends Uint8Array)
  */
 export async function generatePDF(
-  quote: EditorQuote,
+  estimate: EditorEstimate,
   options?: GeneratePDFOptions
 ): Promise<Uint8Array> {
   const logoBase64 = await getLogoBase64();
-  const estimatePDF = await generateEstimatePDF(quote, logoBase64, options);
+  const estimatePDF = await generateEstimatePDF(estimate, logoBase64, options);
 
   if (options?.includeBackPage) {
     const backPagePDF = await generateBackPagePDF();
@@ -129,12 +115,12 @@ export function getPDFFilename(quote: EditorQuote): string {
  * Save PDF to file
  */
 export async function savePDF(
-  quote: EditorQuote,
+  estimate: EditorEstimate,
   outputPath?: string,
   options?: GeneratePDFOptions
 ): Promise<string> {
-  const buffer = await generatePDF(quote, options);
-  const filename = outputPath ?? getPDFFilename(quote);
+  const buffer = await generatePDF(estimate, options);
+  const filename = outputPath ?? getPDFFilename(estimate);
   await Bun.write(filename, buffer);
   return filename;
 }

@@ -76,7 +76,7 @@ function parseArgs(args: string[]): Record<string, string> {
   const result: Record<string, string> = {};
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
-    if (arg.startsWith("--")) {
+    if (arg?.startsWith("--")) {
       const key = arg.slice(2);
       const value = args[i + 1];
       if (value && !value.startsWith("--")) {
@@ -130,9 +130,15 @@ function addProject(opts: Record<string, string>) {
   );
 
   console.log(`Created project ${projectNumber}: ${name}`);
-  if (contractor) console.log(`  Contractor: ${contractor}`);
-  if (po) console.log(`  PO: ${po}`);
-  if (value) console.log(`  Value: $${value.toLocaleString()}`);
+  if (contractor) {
+    console.log(`  Contractor: ${contractor}`);
+  }
+  if (po) {
+    console.log(`  PO: ${po}`);
+  }
+  if (value) {
+    console.log(`  Value: $${value.toLocaleString()}`);
+  }
 }
 
 function listProjects() {
@@ -180,12 +186,24 @@ function listProjects() {
   };
 
   const needsWork = (p: ProjectWithCounts) => {
-    if (p.open_tasks > 0) return true;
-    if (!isTerminal("contract", p.contract_status)) return true;
-    if (!isTerminal("dust", p.dust_permit_status)) return true;
-    if (!isTerminal("noi", p.noi_status)) return true;
-    if (!isTerminal("swppp", p.swppp_status)) return true;
-    if (!isTerminal("signs", p.signs_status)) return true;
+    if (p.open_tasks > 0) {
+      return true;
+    }
+    if (!isTerminal("contract", p.contract_status)) {
+      return true;
+    }
+    if (!isTerminal("dust", p.dust_permit_status)) {
+      return true;
+    }
+    if (!isTerminal("noi", p.noi_status)) {
+      return true;
+    }
+    if (!isTerminal("swppp", p.swppp_status)) {
+      return true;
+    }
+    if (!isTerminal("signs", p.signs_status)) {
+      return true;
+    }
     return false;
   };
 
@@ -202,12 +220,24 @@ function listProjects() {
 
   for (const p of filtered) {
     const needs: string[] = [];
-    if (!isTerminal("contract", p.contract_status)) needs.push("Contract");
-    if (!isTerminal("dust", p.dust_permit_status)) needs.push("Dust");
-    if (!isTerminal("noi", p.noi_status)) needs.push("NOI");
-    if (!isTerminal("swppp", p.swppp_status)) needs.push("SWPPP");
-    if (!isTerminal("signs", p.signs_status)) needs.push("Signs");
-    if (p.open_tasks > 0) needs.push(`Tasks:${p.open_tasks}`);
+    if (!isTerminal("contract", p.contract_status)) {
+      needs.push("Contract");
+    }
+    if (!isTerminal("dust", p.dust_permit_status)) {
+      needs.push("Dust");
+    }
+    if (!isTerminal("noi", p.noi_status)) {
+      needs.push("NOI");
+    }
+    if (!isTerminal("swppp", p.swppp_status)) {
+      needs.push("SWPPP");
+    }
+    if (!isTerminal("signs", p.signs_status)) {
+      needs.push("Signs");
+    }
+    if (p.open_tasks > 0) {
+      needs.push(`Tasks:${p.open_tasks}`);
+    }
 
     console.log(
       `${p.project_number.padEnd(6)} ${p.project_name.slice(0, 26).padEnd(28)} ${(p.contractor || "-").slice(0, 20).padEnd(22)} ${p.contract_status.padEnd(10)} ${p.dust_permit_status.padEnd(10)} ${p.noi_status.padEnd(10)} ${p.swppp_status.padEnd(10)} ${p.signs_status.padEnd(10)} ${String(p.open_tasks).padEnd(5)} ${needs.length ? needs.join(", ") : "-"}`
@@ -294,13 +324,17 @@ function getProject(projectNumber: string) {
     if (contractDates.length > 0) {
       console.log("");
       console.log("Contract Timeline:");
-      for (const d of contractDates) console.log(`  ${d}`);
+      for (const d of contractDates) {
+        console.log(`  ${d}`);
+      }
     }
 
     if (dustDates.length > 0) {
       console.log("");
       console.log("Dust Permit Timeline:");
-      for (const d of dustDates) console.log(`  ${d}`);
+      for (const d of dustDates) {
+        console.log(`  ${d}`);
+      }
     }
   }
 }
@@ -376,7 +410,9 @@ function updateProject(projectNumber: string, opts: Record<string, string>) {
         if (raw.startsWith("[")) {
           try {
             const parsed = JSON.parse(raw);
-            if (!Array.isArray(parsed)) throw new Error("not array");
+            if (!Array.isArray(parsed)) {
+              throw new Error("not array");
+            }
             values.push(JSON.stringify(parsed));
           } catch {
             console.error(
@@ -432,8 +468,8 @@ function listColumns(opts: Record<string, string>) {
 
   const grouped: Record<string, MondayColumn[]> = {};
   for (const col of columns) {
-    if (!grouped[col.action]) grouped[col.action] = [];
-    grouped[col.action].push(col);
+    const group = grouped[col.action] ?? (grouped[col.action] = []);
+    group.push(col);
   }
 
   for (const [act, cols] of Object.entries(grouped)) {
@@ -441,7 +477,9 @@ function listColumns(opts: Record<string, string>) {
     for (const col of cols) {
       const mondayInfo = col.monday_id ? ` [${col.monday_id}]` : "";
       console.log(`  ${col.column_name}${mondayInfo}`);
-      if (col.notes) console.log(`    └─ ${col.notes}`);
+      if (col.notes) {
+        console.log(`    └─ ${col.notes}`);
+      }
     }
   }
 }
@@ -682,9 +720,6 @@ switch (command) {
   case "tasks":
     tasksCommand(args.slice(1));
     break;
-  case "help":
-  case "--help":
-  case "-h":
   default:
     showHelp();
     break;

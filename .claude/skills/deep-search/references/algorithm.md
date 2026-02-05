@@ -75,22 +75,15 @@ Email 4: Valley Rain - Contract Template (Jan 2025)
   → 1 attachment: contract-template.docx
 ```css
 ```typescript
-// Get attachments list
-const attachments = await mcp__desert-email__get_attachments({
-  messageId: "AAMk...",
-  userId: "chi@desertservices.net"
-});
+// Query attachments from hub.db
+const attachments = db.query(
+  "SELECT id, name FROM attachments WHERE email_id = ?"
+).all(emailId);
 
-// Download each
+// Download each using repository
+import { downloadAttachment } from '@/apps/contract-ui/contract/db/repositories/attachment';
 for (const att of attachments) {
-  const data = await mcp__desert-email__download_attachment({
-    messageId: "AAMk...",
-    attachmentId: att.id,
-    userId: "chi@desertservices.net"
-  });
-
-  // Save locally
-  await Bun.write(`downloads/${project}-${doctype}.pdf`, Buffer.from(data));
+  await downloadAttachment(att.id, `downloads/${project}-${doctype}.pdf`);
 }
 ```sql
 ```text

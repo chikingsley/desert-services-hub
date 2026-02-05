@@ -1,25 +1,25 @@
 /**
- * Quote by ID API handlers
+ * Estimate by ID API handlers
  * Routes: /api/quotes/:id, /api/quotes/:id/pdf, /api/quotes/:id/duplicate, /api/quotes/:id/takeoff
  */
 import { db } from "../../../lib/db";
 import { generatePDF, getPDFFilename } from "../../../lib/pdf/generate-pdf";
 import type {
+  EditorEstimate,
   EditorLineItem,
-  EditorQuote,
   EditorSection,
-  QuoteLineItemRow,
-  QuoteRow,
-  QuoteSection,
-  QuoteSectionRow,
-  QuoteVersionRow,
+  EstimateLineItemRow,
+  EstimateRow,
+  EstimateSection,
+  EstimateSectionRow,
+  EstimateVersionRow,
 } from "../../../lib/types";
 import { generateBaseNumber } from "../../../lib/utils";
 
 // Bun extends Request with params from route matching
 type BunRequest = Request & { params: { id: string } };
 
-interface QuoteLineItemInput {
+interface EstimateLineItemInput {
   section_id?: string;
   description?: string;
   item?: string;
@@ -58,24 +58,24 @@ function getNextBaseNumber(): string {
   return `${baseNumber}01`;
 }
 
-// GET /api/quotes/:id - Get a single quote with versions, sections, line items
+// GET /api/quotes/:id - Get a single estimate with versions, sections, line items
 export function getQuote(req: BunRequest): Response {
   try {
     const { id } = req.params;
 
-    const quote = db.prepare("SELECT * FROM quotes WHERE id = ?").get(id) as
-      | QuoteRow
+    const estimate = db.prepare("SELECT * FROM quotes WHERE id = ?").get(id) as
+      | EstimateRow
       | undefined;
 
-    if (!quote) {
-      return Response.json({ error: "Quote not found" }, { status: 404 });
+    if (!estimate) {
+      return Response.json({ error: "Estimate not found" }, { status: 404 });
     }
 
     const version = db
       .prepare(
         "SELECT * FROM quote_versions WHERE quote_id = ? AND is_current = 1"
       )
-      .get(id) as QuoteVersionRow | undefined;
+      .get(id) as EstimateVersionRow | undefined;
 
     if (!version) {
       return Response.json(
@@ -88,16 +88,16 @@ export function getQuote(req: BunRequest): Response {
       .prepare(
         "SELECT * FROM quote_sections WHERE version_id = ? ORDER BY sort_order"
       )
-      .all(version.id) as QuoteSectionRow[];
+      .all(version.id) as EstimateSectionRow[];
 
     const lineItems = db
       .prepare(
         "SELECT * FROM quote_line_items WHERE version_id = ? ORDER BY sort_order"
       )
-      .all(version.id) as QuoteLineItemRow[];
+      .all(version.id) as EstimateLineItemRow[];
 
     return Response.json({
-      ...quote,
+      ...estimate,
       current_version: {
         ...version,
         sections,
@@ -105,18 +105,21 @@ export function getQuote(req: BunRequest): Response {
       },
     });
   } catch (error) {
-    console.error("Failed to fetch quote:", error);
-    return Response.json({ error: "Failed to fetch quote" }, { status: 500 });
+    console.error("Failed to fetch estimate:", error);
+    return Response.json(
+      { error: "Failed to fetch estimate" },
+      { status: 500 }
+    );
   }
 }
 
-// PUT /api/quotes/:id - Update a quote
+// PUT /api/quotes/:id - Update an estimate
 export async function updateQuote(req: BunRequest): Promise<Response> {
   try {
     const { id } = req.params;
     const body = await req.json();
 
-    // Update quote metadata
+    // Update estimate metadata
     const updateFields = [
       "base_number = ?",
       "job_name = ?",
@@ -130,7 +133,7 @@ export async function updateQuote(req: BunRequest): Promise<Response> {
     ];
     const updateValues: (string | null)[] = [
       body.base_number,
-      body.job_name || "Untitled Quote",
+      body.job_name || "Untitled Estimate",
       body.job_address || null,
       body.client_name || null,
       body.client_email || null,
@@ -169,7 +172,7 @@ export async function updateQuote(req: BunRequest): Promise<Response> {
 
       // Re-create sections
       const sectionIdMap = new Map<string, string>();
-      const sections = body.sections as QuoteSection[] | undefined;
+      const sections = body.sections as EstimateSection[] | undefined;
       if (sections) {
         let sortOrder = 0;
         for (const section of sections) {
@@ -191,7 +194,7 @@ export async function updateQuote(req: BunRequest): Promise<Response> {
       }
 
       // Re-create line items
-      const lineItems = body.line_items as QuoteLineItemInput[] | undefined;
+      const lineItems = body.line_items as EstimateLineItemInput[] | undefined;
       if (lineItems) {
         let sortOrder = 0;
         for (const item of lineItems) {
@@ -239,23 +242,26 @@ export async function updateQuote(req: BunRequest): Promise<Response> {
   }
 }
 
-// DELETE /api/quotes/:id - Delete a quote
+// DELETE /api/quotes/:id - Delete an estimate
 export function deleteQuote(req: BunRequest): Response {
   try {
     const { id } = req.params;
 
-    const quote = db.prepare("SELECT id FROM quotes WHERE id = ?").get(id);
+    const estimate = db.prepare("SELECT id FROM quotes WHERE id = ?").get(id);
 
-    if (!quote) {
-      return Response.json({ error: "Quote not found" }, { status: 404 });
+    if (!estimate) {
+      return Response.json({ error: "Estimate not found" }, { status: 404 });
     }
 
     db.prepare("DELETE FROM quotes WHERE id = ?").run(id);
 
     return Response.json({ success: true });
   } catch (error) {
-    console.error("Failed to delete quote:", error);
-    return Response.json({ error: "Failed to delete quote" }, { status: 500 });
+    console.error("Failed to delete estimate:", error);
+    return Response.json(
+      { error: "Failed to delete estimate" },
+      { status: 500 }
+    );
   }
 }
 
@@ -264,19 +270,19 @@ export async function getQuotePdf(req: BunRequest): Promise<Response> {
   try {
     const { id } = req.params;
 
-    const quote = db.prepare("SELECT * FROM quotes WHERE id = ?").get(id) as
-      | QuoteRow
+    const estimate = db.prepare("SELECT * FROM quotes WHERE id = ?").get(id) as
+      | EstimateRow
       | undefined;
 
-    if (!quote) {
-      return Response.json({ error: "Quote not found" }, { status: 404 });
+    if (!estimate) {
+      return Response.json({ error: "Estimate not found" }, { status: 404 });
     }
 
     const version = db
       .prepare(
         "SELECT * FROM quote_versions WHERE quote_id = ? AND is_current = 1"
       )
-      .get(id) as QuoteVersionRow | undefined;
+      .get(id) as EstimateVersionRow | undefined;
 
     if (!version) {
       return Response.json(
@@ -289,15 +295,15 @@ export async function getQuotePdf(req: BunRequest): Promise<Response> {
       .prepare(
         "SELECT * FROM quote_sections WHERE version_id = ? ORDER BY sort_order"
       )
-      .all(version.id) as QuoteSectionRow[];
+      .all(version.id) as EstimateSectionRow[];
 
     const lineItemsData = db
       .prepare(
         "SELECT * FROM quote_line_items WHERE version_id = ? ORDER BY sort_order"
       )
-      .all(version.id) as QuoteLineItemRow[];
+      .all(version.id) as EstimateLineItemRow[];
 
-    // Convert to EditorQuote format
+    // Convert to EditorEstimate format
     const sections: EditorSection[] = sectionsData.map((s) => ({
       id: s.id,
       name: s.name,
@@ -316,28 +322,28 @@ export async function getQuotePdf(req: BunRequest): Promise<Response> {
 
     const total = lineItems.reduce((sum, item) => sum + item.total, 0);
 
-    const editorQuote: EditorQuote = {
-      estimateNumber: quote.base_number,
-      date: quote.created_at || new Date().toISOString(),
-      estimator: quote.estimator || "",
-      estimatorEmail: quote.estimator_email || "",
+    const editorEstimate: EditorEstimate = {
+      estimateNumber: estimate.base_number,
+      date: estimate.created_at || new Date().toISOString(),
+      estimator: "",
+      estimatorEmail: estimate.estimator_email || "",
       billTo: {
-        companyName: quote.client_name || "",
-        address: quote.client_address || "",
-        email: quote.client_email || "",
-        phone: quote.client_phone || "",
+        companyName: estimate.client_name || "",
+        address: estimate.client_address || "",
+        email: estimate.client_email || "",
+        phone: estimate.client_phone || "",
       },
       jobInfo: {
-        siteName: quote.job_name || "",
-        address: quote.job_address || "",
+        siteName: estimate.job_name || "",
+        address: estimate.job_address || "",
       },
       sections,
       lineItems,
       total,
     };
 
-    const pdfBytes = await generatePDF(editorQuote);
-    const filename = getPDFFilename(editorQuote);
+    const pdfBytes = await generatePDF(editorEstimate);
+    const filename = getPDFFilename(editorEstimate);
 
     return new Response(Buffer.from(pdfBytes), {
       headers: {
@@ -352,24 +358,24 @@ export async function getQuotePdf(req: BunRequest): Promise<Response> {
   }
 }
 
-// POST /api/quotes/:id/duplicate - Duplicate a quote
+// POST /api/quotes/:id/duplicate - Duplicate an estimate
 export function duplicateQuote(req: BunRequest): Response {
   try {
     const { id } = req.params;
 
-    const originalQuote = db
+    const originalEstimate = db
       .prepare("SELECT * FROM quotes WHERE id = ?")
-      .get(id) as QuoteRow | undefined;
+      .get(id) as EstimateRow | undefined;
 
-    if (!originalQuote) {
-      return Response.json({ error: "Quote not found" }, { status: 404 });
+    if (!originalEstimate) {
+      return Response.json({ error: "Estimate not found" }, { status: 404 });
     }
 
     const originalVersion = db
       .prepare(
         "SELECT * FROM quote_versions WHERE quote_id = ? AND is_current = 1"
       )
-      .get(id) as QuoteVersionRow | undefined;
+      .get(id) as EstimateVersionRow | undefined;
 
     if (!originalVersion) {
       return Response.json(
@@ -382,31 +388,31 @@ export function duplicateQuote(req: BunRequest): Response {
       .prepare(
         "SELECT * FROM quote_sections WHERE version_id = ? ORDER BY sort_order"
       )
-      .all(originalVersion.id) as QuoteSectionRow[];
+      .all(originalVersion.id) as EstimateSectionRow[];
 
     const originalLineItems = db
       .prepare(
         "SELECT * FROM quote_line_items WHERE version_id = ? ORDER BY sort_order"
       )
-      .all(originalVersion.id) as QuoteLineItemRow[];
+      .all(originalVersion.id) as EstimateLineItemRow[];
 
-    // Create new quote
-    const newQuoteId = crypto.randomUUID();
+    // Create new estimate
+    const newEstimateId = crypto.randomUUID();
     const newBaseNumber = getNextBaseNumber();
 
     db.prepare(
       `INSERT INTO quotes (id, base_number, takeoff_id, job_name, job_address, client_name, client_email, client_phone, notes, status, is_locked)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).run(
-      newQuoteId,
+      newEstimateId,
       newBaseNumber,
-      originalQuote.takeoff_id,
-      `${originalQuote.job_name} (Copy)`,
-      originalQuote.job_address,
-      originalQuote.client_name,
-      originalQuote.client_email,
-      originalQuote.client_phone,
-      originalQuote.notes,
+      originalEstimate.takeoff_id,
+      `${originalEstimate.job_name} (Copy)`,
+      originalEstimate.job_address,
+      originalEstimate.client_name,
+      originalEstimate.client_email,
+      originalEstimate.client_phone,
+      originalEstimate.notes,
       "draft",
       0
     );
@@ -416,7 +422,7 @@ export function duplicateQuote(req: BunRequest): Response {
     db.prepare(
       `INSERT INTO quote_versions (id, quote_id, version_number, total, is_current)
        VALUES (?, ?, 1, ?, 1)`
-    ).run(newVersionId, newQuoteId, originalVersion.total);
+    ).run(newVersionId, newEstimateId, originalVersion.total);
 
     // Copy sections
     const sectionIdMap = new Map<string, string>();
@@ -461,13 +467,13 @@ export function duplicateQuote(req: BunRequest): Response {
     }
 
     return Response.json({
-      id: newQuoteId,
+      id: newEstimateId,
       base_number: newBaseNumber,
     });
   } catch (error) {
-    console.error("Failed to duplicate quote:", error);
+    console.error("Failed to duplicate estimate:", error);
     return Response.json(
-      { error: "Failed to duplicate quote" },
+      { error: "Failed to duplicate estimate" },
       { status: 500 }
     );
   }
@@ -478,11 +484,11 @@ export function getQuoteTakeoff(req: BunRequest): Response {
   try {
     const { id } = req.params;
 
-    const quote = db
+    const estimate = db
       .prepare("SELECT takeoff_id FROM quotes WHERE id = ?")
       .get(id) as { takeoff_id: string | null } | undefined;
 
-    if (!quote?.takeoff_id) {
+    if (!estimate?.takeoff_id) {
       return Response.json({ takeoff: null });
     }
 
@@ -492,7 +498,7 @@ export function getQuoteTakeoff(req: BunRequest): Response {
          FROM takeoffs
          WHERE id = ?`
       )
-      .get(quote.takeoff_id) as
+      .get(estimate.takeoff_id) as
       | {
           id: string;
           name: string;

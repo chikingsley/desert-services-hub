@@ -5,9 +5,9 @@
  * how to register for a myDEQ account and apply for an NOI (Notice of Intent).
  */
 
+import { join, resolve } from "node:path";
 import pdfmake from "pdfmake";
 import type { Content, TDocumentDefinitions } from "pdfmake/interfaces";
-import { join, resolve } from "node:path";
 
 // Initialize pdfmake with font paths (server-side)
 const fonts = {
@@ -33,7 +33,8 @@ const fonts = {
     normal: "/System/Library/Fonts/Supplemental/Times New Roman.ttf",
     bold: "/System/Library/Fonts/Supplemental/Times New Roman Bold.ttf",
     italics: "/System/Library/Fonts/Supplemental/Times New Roman Italic.ttf",
-    bolditalics: "/System/Library/Fonts/Supplemental/Times New Roman Bold Italic.ttf",
+    bolditalics:
+      "/System/Library/Fonts/Supplemental/Times New Roman Bold Italic.ttf",
   },
 };
 
@@ -89,7 +90,7 @@ function buildGuideDocDefinition(logoBase64: string): TDocumentDefinitions {
             image: logoBase64,
             fit: [220, 55],
             width: "auto",
-          },
+          } as unknown as Content,
           {
             stack: [
               {
@@ -139,7 +140,7 @@ function buildGuideDocDefinition(logoBase64: string): TDocumentDefinitions {
         },
         buildNumberedList([
           "Go to azdeq.gov/mydeq",
-          "Click \"Request Account\"",
+          'Click "Request Account"',
           "Verify your identity online (or by mail if needed)",
           "Choose a password and security questions",
           "Authorize additional users if needed (see User Roles below)",
@@ -166,26 +167,50 @@ function buildGuideDocDefinition(logoBase64: string): TDocumentDefinitions {
                             {
                               text: [
                                 { text: "RCO ", bold: true, fontSize: 8 },
-                                { text: "(Responsible Corporate Officer)", fontSize: 7, italics: true },
+                                {
+                                  text: "(Responsible Corporate Officer)",
+                                  fontSize: 7,
+                                  italics: true,
+                                },
                               ],
                             },
-                            { text: "Main account holder. Has legal authority to bind the organization.", fontSize: 8, margin: [0, 2, 0, 6] },
+                            {
+                              text: "Main account holder. Has legal authority to bind the organization.",
+                              fontSize: 8,
+                              margin: [0, 2, 0, 6],
+                            },
                             {
                               text: [
                                 { text: "DRO ", bold: true, fontSize: 8 },
-                                { text: "(Delegated Responsible Officer)", fontSize: 7, italics: true },
+                                {
+                                  text: "(Delegated Responsible Officer)",
+                                  fontSize: 7,
+                                  italics: true,
+                                },
                               ],
                             },
-                            { text: "Acts on RCO's behalf. Requires notarized Signature Agreement.", fontSize: 8, margin: [0, 2, 0, 0] },
+                            {
+                              text: "Acts on RCO's behalf. Requires notarized Signature Agreement.",
+                              fontSize: 8,
+                              margin: [0, 2, 0, 0],
+                            },
                           ],
                         },
                         {
                           width: "50%",
                           stack: [
                             { text: "Submitter", bold: true, fontSize: 8 },
-                            { text: "Submits compliance reports. Requires notarized Signature Agreement.", fontSize: 8, margin: [0, 2, 0, 6] },
+                            {
+                              text: "Submits compliance reports. Requires notarized Signature Agreement.",
+                              fontSize: 8,
+                              margin: [0, 2, 0, 6],
+                            },
                             { text: "Data Entry", bold: true, fontSize: 8 },
-                            { text: "Prepares data for others to submit. Cannot submit directly to ADEQ.", fontSize: 8, margin: [0, 2, 0, 0] },
+                            {
+                              text: "Prepares data for others to submit. Cannot submit directly to ADEQ.",
+                              fontSize: 8,
+                              margin: [0, 2, 0, 0],
+                            },
                           ],
                         },
                       ],
@@ -230,7 +255,7 @@ function buildGuideDocDefinition(logoBase64: string): TDocumentDefinitions {
           {
             text: [
               { text: "Select the correct permit type: ", bold: true },
-              "Choose \"General Construction Permit (NOI/NDC)\"",
+              'Choose "General Construction Permit (NOI/NDC)"',
             ],
           },
           {
@@ -238,7 +263,7 @@ function buildGuideDocDefinition(logoBase64: string): TDocumentDefinitions {
               { text: "Water discharge question: ", bold: true },
               "When asked if water will run off the site into US tributary waters, select ",
               { text: "YES", bold: true },
-              ". Selecting \"No\" or \"Unknown\" generates an NDC certificate, which must be canceled before you can reapply for the NOI.",
+              '. Selecting "No" or "Unknown" generates an NDC certificate, which must be canceled before you can reapply for the NOI.',
             ],
           },
           {
@@ -256,7 +281,7 @@ function buildGuideDocDefinition(logoBase64: string): TDocumentDefinitions {
           {
             text: [
               { text: "Receiving water body: ", bold: true },
-              "Enter the name of the nearest body of water. If unknown, use the dropdown menu to select \"Unknown\" or \"Unnamed.\"",
+              'Enter the name of the nearest body of water. If unknown, use the dropdown menu to select "Unknown" or "Unnamed."',
             ],
           },
           {
@@ -293,9 +318,34 @@ function buildGuideDocDefinition(logoBase64: string): TDocumentDefinitions {
                           bold: true,
                           margin: [0, 0, 0, 6],
                         },
-                        { text: [{ text: "Phone: ", bold: true, fontSize: 9 }, { text: "844-827-4768", fontSize: 9 }], margin: [0, 0, 0, 3] },
-                        { text: [{ text: "Email: ", bold: true, fontSize: 9 }, { text: "myDEQ.support@azdeq.gov", fontSize: 9, color: BRAND.accent }], margin: [0, 0, 0, 3] },
-                        { text: [{ text: "Web: ", bold: true, fontSize: 9 }, { text: "azdeq.gov/mydeq", fontSize: 9, color: BRAND.accent }] },
+                        {
+                          text: [
+                            { text: "Phone: ", bold: true, fontSize: 9 },
+                            { text: "844-827-4768", fontSize: 9 },
+                          ],
+                          margin: [0, 0, 0, 3],
+                        },
+                        {
+                          text: [
+                            { text: "Email: ", bold: true, fontSize: 9 },
+                            {
+                              text: "myDEQ.support@azdeq.gov",
+                              fontSize: 9,
+                              color: BRAND.accent,
+                            },
+                          ],
+                          margin: [0, 0, 0, 3],
+                        },
+                        {
+                          text: [
+                            { text: "Web: ", bold: true, fontSize: 9 },
+                            {
+                              text: "azdeq.gov/mydeq",
+                              fontSize: 9,
+                              color: BRAND.accent,
+                            },
+                          ],
+                        },
                       ],
                       fillColor: BRAND.lightGray,
                       margin: [10, 10, 10, 10],
@@ -326,9 +376,26 @@ function buildGuideDocDefinition(logoBase64: string): TDocumentDefinitions {
                           color: BRAND.primary,
                           margin: [0, 0, 0, 6],
                         },
-                        { text: [{ text: "Office: ", bold: true, fontSize: 9 }, { text: "480-513-8986", fontSize: 9 }], margin: [0, 0, 0, 3] },
-                        { text: [{ text: "Contact: ", bold: true, fontSize: 9 }, { text: "Jayson Roti", fontSize: 9 }], margin: [0, 0, 0, 3] },
-                        { text: [{ text: "Cell: ", bold: true, fontSize: 9 }, { text: "602-722-0218", fontSize: 9 }] },
+                        {
+                          text: [
+                            { text: "Office: ", bold: true, fontSize: 9 },
+                            { text: "480-513-8986", fontSize: 9 },
+                          ],
+                          margin: [0, 0, 0, 3],
+                        },
+                        {
+                          text: [
+                            { text: "Contact: ", bold: true, fontSize: 9 },
+                            { text: "Jayson Roti", fontSize: 9 },
+                          ],
+                          margin: [0, 0, 0, 3],
+                        },
+                        {
+                          text: [
+                            { text: "Cell: ", bold: true, fontSize: 9 },
+                            { text: "602-722-0218", fontSize: 9 },
+                          ],
+                        },
                       ],
                       fillColor: BRAND.lightGray,
                       margin: [10, 10, 10, 10],
@@ -390,10 +457,7 @@ function buildGuideDocDefinition(logoBase64: string): TDocumentDefinitions {
 // Helper: Build a section with title and content
 function buildSection(title: string, content: Content[]): Content {
   return {
-    stack: [
-      { text: title, style: "sectionTitle" },
-      ...content,
-    ],
+    stack: [{ text: title, style: "sectionTitle" }, ...content],
     margin: [0, 0, 0, 20],
   };
 }
@@ -412,16 +476,20 @@ function buildNumberedList(items: string[]): Content {
 // Helper: Build bullet list
 function buildBulletList(items: Content[]): Content {
   return {
-    ul: items.map((item) => ({
-      ...item,
-      margin: [0, 0, 0, 8] as [number, number, number, number],
-    })),
+    ul: items.map((item) => {
+      const itemObj =
+        typeof item === "object" && item !== null ? item : { text: item };
+      return {
+        ...itemObj,
+        margin: [0, 0, 0, 8] as [number, number, number, number],
+      };
+    }),
     margin: [0, 0, 0, 10] as [number, number, number, number],
   };
 }
 
 // Helper: Build role info box
-function buildRoleBox(
+function _buildRoleBox(
   title: string,
   description: string,
   responsibilities: string[]
@@ -491,7 +559,10 @@ export async function generateMyDEQGuide(
 if (import.meta.main) {
   const outputPath =
     process.argv[2] ||
-    resolve(import.meta.dirname, "../../files-for-work-all/myDEQ-NOI-Guide-Desert-Services.pdf");
+    resolve(
+      import.meta.dirname,
+      "../../files-for-work-all/myDEQ-NOI-Guide-Desert-Services.pdf"
+    );
 
   generateMyDEQGuide(outputPath)
     .then(() => {

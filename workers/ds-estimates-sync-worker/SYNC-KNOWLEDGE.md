@@ -144,7 +144,7 @@ For ad-hoc searches/updates, inline scripts are acceptable:
 
 ```bash
 bun -e '
-import { query } from "@services/monday/client";
+import { query } from "./monday/client";
 const result = await query(`query { boards(ids: 7943937851) { items_page(limit: 100, query_params: { rules: [{column_id: "name", compare_value: ["TF"], operator: contains_text}] }) { items { id name } } } }`);
 console.log(result.boards[0].items_page.items);
 '
@@ -339,3 +339,241 @@ AZURE_TENANT_ID=<tenant>
 AZURE_CLIENT_ID=<client>
 AZURE_CLIENT_SECRET=<secret>
 ```
+
+## Fast SharePoint File Retrieval
+
+Use the Microsoft Graph `/shares` endpoint for instant file access from stored URLs.
+
+**Official docs:** https://learn.microsoft.com/en-us/graph/api/shares-get
+
+### Why This Is Fast
+
+Traditional approach requires: parsing URL → resolving site → finding drive → navigating folder path.
+
+The `/shares` endpoint: URL → encoded token → single API call → done.
+
+### How to Encode a SharePoint URL
+
+```typescript
+function encodeSharePointUrl(url: string): string {
+  const base64 = btoa(url);
+  // Convert to unpadded base64url format
+  return "u!" + base64.replace(/=/g, "").replace(/\//g, "_").replace(/\+/g, "-");
+}
+
+// Example
+const fileUrl = "https://desertservices.sharepoint.com/sites/DataDrive/Shared Documents/Customer Projects/Active/W/Willmeng/Project/Estimates/estimate.pdf";
+const sharingToken = encodeSharePointUrl(fileUrl);
+// Result: u!aHR0cHM6Ly9kZXNlcnRzZXJ2aWNlcy5...
+```
+
+### API Calls
+
+```typescript
+// Get file metadata
+GET https://graph.microsoft.com/v1.0/shares/{sharingToken}/driveItem
+
+// Download file content directly
+GET https://graph.microsoft.com/v1.0/shares/{sharingToken}/driveItem/content
+
+// Get SharePoint list item (with custom fields)
+GET https://graph.microsoft.com/v1.0/shares/{sharingToken}/listItem
+
+// Expand to get everything at once
+GET https://graph.microsoft.com/v1.0/shares/{sharingToken}/driveItem?$expand=listItem($expand=fields)
+```
+
+### Usage in Code
+
+```typescript
+async function getFileFromSharePointUrl(url: string): Promise<DriveItem> {
+  const token = encodeSharePointUrl(url);
+  const response = await fetch(
+    `https://graph.microsoft.com/v1.0/shares/${token}/driveItem`,
+    { headers: { Authorization: `Bearer ${accessToken}` } }
+  );
+  return response.json();
+}
+
+// Download file
+async function downloadFromSharePointUrl(url: string): Promise<ArrayBuffer> {
+  const token = encodeSharePointUrl(url);
+  const response = await fetch(
+    `https://graph.microsoft.com/v1.0/shares/${token}/driveItem/content`,
+    { headers: { Authorization: `Bearer ${accessToken}` } }
+  );
+  return response.arrayBuffer();
+}
+```
+
+### What We Store
+
+The `sharepoint_url` column in estimates/hub.db contains the full SharePoint URL. From this, we can:
+
+1. Derive the sharing token instantly (no API call)
+2. Fetch file metadata in one call
+3. Download content in one call
+
+No path parsing, no folder navigation, no site/drive resolution needed.
+
+### Required Permissions
+
+- `Sites.Read.All` or `Sites.Selected` - for reading files
+- `Files.Read.All` - alternative permission
+
+## Contact Sync & Enrichment
+
+### Overview
+
+Contacts board syncs to hub.db `contacts` table. The sync includes email matching, contractor linking, and phone enrichment from email signatures.
+
+### Contact Board Groups in Monday
+
+```typescript
+const CONTACT_GROUPS = {
+  ACTIVE: "topics",                    // Main active contacts
+  OPEN_BIDS: "group_mksd6szc",        // Contacts with open bids
+  BIDS_SENT: "group_mksdfj2a",        // Contacts who received bids
+  SWPPP: "group_mkp9pntg",            // SWPPP-related contacts
+  PERSONAL_EMAIL: "group_mm087tqw",   // Personal email addresses (gmail, yahoo, etc)
+  INSUFFICIENT_INFO: "group_mm08qaqy", // Junk/test/incomplete contacts
+} as const;
+```
+
+### Moving Contacts Between Groups
+
+```typescript
+import { query } from "./monday/client";
+
+await query(`
+  mutation {
+    move_item_to_group(item_id: ${mondayItemId}, group_id: "${groupId}") {
+      id
+    }
+  }
+`);
+```
+
+**CLI command:**
+
+```bash
+bun cli/hub.ts move contact <hub_id> --group=PERSONAL_EMAIL
+bun cli/hub.ts move contact <hub_id> --group=INSUFFICIENT_INFO
+```
+
+### Email Matching Strategies
+
+**1. HIGH confidence (domain + name match):**
+
+```sql
+-- Contact has contractor with known domain
+-- Email sender domain matches contractor domain
+-- Sender name matches contact name (2+ name parts match)
+```
+
+**2. MEDIUM confidence (name match only):**
+
+```sql
+-- Sender name closely matches contact name
+-- But domain doesn't match contractor domain
+-- Often indicates job change or personal email
+```
+
+**3. Phone number matching:**
+
+```typescript
+// Extract last 10 digits from phone
+const normalize = (p: string) => p.replace(/\D/g, "").slice(-10);
+
+// Load contacts with phone, load email senders
+// In-memory match is MUCH faster than SQL LIKE patterns
+```
+
+### Personal Email Detection
+
+Move contacts with personal emails to a dedicated group:
+
+```sql
+SELECT id, monday_item_id FROM contacts
+WHERE email LIKE '%@gmail.com'
+   OR email LIKE '%@yahoo.com'
+   OR email LIKE '%@hotmail.com'
+   OR email LIKE '%@outlook.com'
+   OR email LIKE '%@icloud.com'
+   OR email LIKE '%@aol.com';
+```
+
+### Junk Contact Identification
+
+Contacts to move to Insufficient Information group:
+
+```sql
+-- Single-word names without email (likely incomplete)
+SELECT id FROM contacts
+WHERE LENGTH(name) - LENGTH(REPLACE(name, ' ', '')) < 1
+  AND (email IS NULL OR email = '');
+
+-- Test/placeholder contacts
+SELECT id FROM contacts
+WHERE name LIKE 'TBD%'
+   OR name LIKE '%test%'
+   OR name LIKE '_TEST%'
+   OR name LIKE 'BIDS@%'
+   OR name LIKE '%Hotel%';
+```
+
+### Contact Enrichment from Email Signatures
+
+Use AI to extract phone numbers and titles from email signatures:
+
+```typescript
+// 1. Find HIGH confidence email match
+// 2. Get recent email body from that sender
+// 3. Use Gemini to parse signature
+// 4. Update hub.db and optionally Monday
+
+// Phone fields in Monday CONTACTS board:
+CONTACTS_COLUMNS.PHONE        // Default phone
+CONTACTS_COLUMNS.MOBILE_PHONE // Mobile-specific
+CONTACTS_COLUMNS.OFFICE_PHONE // Office-specific
+CONTACTS_COLUMNS.COMPANY_PHONE // Company main line
+CONTACTS_COLUMNS.TITLE        // Dropdown (has ~40 pre-defined titles)
+```
+
+### Update Contact in Both Systems
+
+```bash
+# Update hub.db only
+bun cli/hub.ts update contact 3083 --email=bids@example.com
+
+# Update hub.db AND Monday
+bun cli/hub.ts update contact 3083 --email=bids@example.com --push
+
+# Available fields: --email, --mobile, --office, --company, --title
+```
+
+### Contractor Linking
+
+Contacts should link to contractors via `account_id` in hub.db. Match by email domain:
+
+```sql
+UPDATE contacts
+SET account_id = (
+  SELECT a.id FROM accounts a
+  WHERE LOWER(c.email) LIKE '%@' || LOWER(a.domain)
+)
+WHERE account_id IS NULL
+  AND email IS NOT NULL;
+```
+
+### Current Metrics (Feb 2026)
+
+Clean contact metrics (excluding junk/test):
+
+- Total real contacts: 4,161
+- With email: 3,856 (92.7%)
+- Without email: 305 (7.3%)
+- With contractor link: 4,161 (100%)
+- With phone: 3,460 (83.2%)
+- Personal emails (separate group): 165
+- Junk/test (separate group): 139

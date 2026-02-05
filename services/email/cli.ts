@@ -15,7 +15,7 @@
  *   reply <messageId>                 Reply to an email
  *   get <messageId>                   Get full email content
  *   thread <messageId>                Get email thread
- *   folders                           List mail folders
+ *   folders                           List mail folders (supports recursive tree)
  *
  * Mailbox Shortcuts (emails):
  *   contracts [query]                 Search contracts@desertservices.net mailbox
@@ -37,11 +37,12 @@
  *   bun services/email/cli.ts ic "Helen"                   # Search InternalContracts group
  */
 import { parseArgs } from "node:util";
-import { GraphEmailClient } from "./client";
+import { GraphEmailClient, type MailFolderWithChildren } from "./client";
 import {
   getLogoAttachment,
   getTemplate,
   listTemplates,
+  wrapWithSignature,
 } from "./email-templates/index";
 import { GraphGroupsClient } from "./groups";
 
@@ -53,6 +54,44 @@ import { GraphGroupsClient } from "./groups";
  * Default user email for commands that require a mailbox but none is specified.
  */
 const DEFAULT_USER = "chi@desertservices.net";
+
+/**
+ * Mailboxes that allow write operations (create draft, send, reply, etc.).
+ * All other mailboxes are read-only to prevent accidental modifications.
+ */
+const WRITABLE_MAILBOXES = [
+  "chi@desertservices.net",
+  "contracts@desertservices.net",
+  "dustpermits@desertservices.net",
+] as const;
+
+/**
+ * Validates that a userId is in the writable mailboxes whitelist.
+ * Throws an error if the mailbox is not allowed for write operations.
+ *
+ * @param userId - The mailbox email address to check
+ * @param operation - The operation name (for error message)
+ * @throws Error if the mailbox is not in the whitelist
+ */
+function assertWritableMailbox(
+  userId: string | undefined,
+  operation: string
+): void {
+  if (!userId) {
+    throw new Error(`Operation "${operation}" requires a mailbox (--user)`);
+  }
+  const normalized = userId.toLowerCase().trim();
+  if (
+    !WRITABLE_MAILBOXES.includes(
+      normalized as (typeof WRITABLE_MAILBOXES)[number]
+    )
+  ) {
+    throw new Error(
+      `Operation "${operation}" not allowed on mailbox "${userId}". ` +
+        `Write operations are restricted to: ${WRITABLE_MAILBOXES.join(", ")}`
+    );
+  }
+}
 
 /**
  * Azure AD configuration for Microsoft Graph API authentication.
@@ -254,9 +293,14 @@ function getGroupsClient(): GraphGroupsClient {
  * // CLI: bun services/email/cli.ts search "invoice" --user contracts@desertservices.net
  * await searchCommand("invoice", "contracts@desertservices.net", 10);
  */
-async function searchCommand(query: string, userId: string, limit: number) {
+async function searchCommand(
+  query: string,
+  userId: string,
+  limit: number,
+  folder?: string
+) {
   const client = getAppClient();
-  const emails = await client.searchEmails({ query, userId, limit });
+  const emails = await client.searchEmails({ query, userId, limit, folder });
 
   if (emails.length === 0) {
     console.log("No emails found.");
@@ -488,20 +532,100 @@ async function threadCommand(messageId: string, userId: string) {
  * Lists all mail folders in a mailbox.
  * Displays folder name and ID for each folder.
  *
- * @param userId - Email address of the mailbox to list folders for
+ * @param options.userId - Email address of the mailbox to list folders for
+ * @param options.recursive - If true, prints recursive folder tree
+ * @param options.query - Optional substring filter (matches name, id, or path)
+ * @param options.maxDepth - Max recursion depth when recursive is true
+ * @param options.paths - If true, prints full folder paths (best for copy/paste)
  * @returns Promise that resolves when folders are displayed
  *
  * @example
  * // CLI: bun services/email/cli.ts folders --user contracts@desertservices.net
- * await foldersCommand("contracts@desertservices.net");
+ * await foldersCommand({ userId: "contracts@desertservices.net", recursive: false, maxDepth: 10, paths: false });
  */
-async function foldersCommand(userId: string) {
+async function foldersCommand(options: {
+  userId: string;
+  recursive: boolean;
+  query?: string;
+  maxDepth: number;
+  paths: boolean;
+}) {
   const client = getAppClient();
-  const folders = await client.listFolders(userId);
+  const { userId, recursive, query, maxDepth, paths } = options;
 
-  console.log(`Mail folders for ${userId}:\n`);
-  for (const folder of folders) {
-    console.log(`- ${folder.displayName}`);
+  const normQuery = query?.trim().toLowerCase();
+
+  if (!recursive) {
+    const folders = await client.listFolders(userId);
+    console.log(`Mail folders for ${userId}:\n`);
+    for (const folder of folders) {
+      if (
+        normQuery &&
+        !folder.displayName.toLowerCase().includes(normQuery) &&
+        !folder.id.toLowerCase().includes(normQuery)
+      ) {
+        continue;
+      }
+      console.log(`- ${folder.displayName}`);
+      console.log(`  ID: ${folder.id}\n`);
+    }
+    return;
+  }
+
+  const tree = await client.listFoldersRecursive(userId, maxDepth);
+
+  interface FlatFolder {
+    id: string;
+    displayName: string;
+    parentFolderId: string | null;
+    depth: number;
+    path: string;
+  }
+
+  const flatten = (
+    nodes: MailFolderWithChildren[],
+    parentPath: string,
+    depth: number
+  ): FlatFolder[] => {
+    const out: FlatFolder[] = [];
+    for (const n of nodes) {
+      const currentPath = parentPath
+        ? `${parentPath}/${n.displayName}`
+        : n.displayName;
+      out.push({
+        id: n.id,
+        displayName: n.displayName,
+        parentFolderId: n.parentFolderId ?? null,
+        depth,
+        path: currentPath,
+      });
+      if (n.children && n.children.length > 0) {
+        out.push(...flatten(n.children, currentPath, depth + 1));
+      }
+    }
+    return out;
+  };
+
+  const flat = flatten(tree, "", 0);
+
+  const filtered = normQuery
+    ? flat.filter(
+        (f) =>
+          f.displayName.toLowerCase().includes(normQuery) ||
+          f.id.toLowerCase().includes(normQuery) ||
+          f.path.toLowerCase().includes(normQuery)
+      )
+    : flat;
+
+  console.log(
+    `Mail folders for ${userId} (recursive, maxDepth=${maxDepth}):\n`
+  );
+  for (const folder of filtered) {
+    if (paths) {
+      console.log(`- ${folder.path}`);
+    } else {
+      console.log(`${"  ".repeat(folder.depth)}- ${folder.displayName}`);
+    }
     console.log(`  ID: ${folder.id}\n`);
   }
 }
@@ -569,6 +693,319 @@ async function templateCommand(templateName: string) {
   });
 
   console.log("\n✓ Test email sent!");
+}
+
+/**
+ * Creates a draft email (not sent).
+ * Similar to sendCommand but creates a draft instead of sending immediately.
+ *
+ * @param options - Draft options
+ * @param options.to - Comma-separated list of recipient email addresses
+ * @param options.cc - Optional comma-separated list of CC recipients
+ * @param options.subject - Email subject line
+ * @param options.body - Email body content (plain text)
+ * @param options.skipSignature - If true, omits the automatic signature
+ * @param options.attachmentPaths - Optional comma-separated list of file paths to attach
+ * @param options.userId - Email address of the mailbox (default: chi@desertservices.net)
+ * @returns Promise that resolves when draft is created
+ *
+ * @example
+ * // CLI: bun services/email/cli.ts draft --to "user@example.com" --subject "Hello" --body "Hi there"
+ * await draftCommand({ to: "user@example.com", subject: "Hello", body: "Hi there", skipSignature: false });
+ */
+async function draftCommand(options: {
+  to?: string;
+  cc?: string;
+  subject: string;
+  body: string;
+  skipSignature: boolean;
+  attachmentPaths?: string;
+  userId: string;
+}) {
+  assertWritableMailbox(options.userId, "draft");
+  const client = await getUserClient();
+
+  const toRecipients = options.to
+    ? options.to.split(",").map((email) => ({ email: email.trim() }))
+    : undefined;
+  const ccRecipients = options.cc
+    ? options.cc.split(",").map((email) => ({ email: email.trim() }))
+    : undefined;
+
+  // Load file attachments if provided
+  const attachments: Array<{
+    name: string;
+    contentType: string;
+    contentBytes: string;
+  }> = [];
+
+  if (options.attachmentPaths) {
+    const paths = options.attachmentPaths.split(",").map((p) => p.trim());
+    for (const filePath of paths) {
+      const file = Bun.file(filePath);
+      if (!(await file.exists())) {
+        console.error(`Attachment not found: ${filePath}`);
+        process.exit(1);
+      }
+      const buffer = await file.arrayBuffer();
+      const base64 = Buffer.from(buffer).toString("base64");
+      const fileName = filePath.split("/").pop() ?? "attachment";
+      attachments.push({
+        name: fileName,
+        contentType: file.type || "application/octet-stream",
+        contentBytes: base64,
+      });
+      console.log(`  Attached: ${fileName}`);
+    }
+  }
+
+  // Wrap body with signature unless skipped
+  let body = options.body;
+  let bodyType: "html" | "text" = "text";
+  const attachmentsToAdd = [...attachments];
+
+  if (!options.skipSignature) {
+    body = await wrapWithSignature(options.body);
+    bodyType = "html";
+    const logo = await getLogoAttachment();
+    attachmentsToAdd.push({
+      name: logo.name,
+      contentType: logo.contentType,
+      contentBytes: logo.contentBytes,
+    });
+  }
+
+  const draft = await client.createDraft({
+    subject: options.subject,
+    body,
+    bodyType,
+    to: toRecipients,
+    cc: ccRecipients,
+    attachments: attachmentsToAdd.length > 0 ? attachmentsToAdd : undefined,
+    userId: options.userId,
+  });
+
+  const attInfo =
+    attachments.length > 0 ? ` with ${attachments.length} attachment(s)` : "";
+  console.log(
+    `✓ Draft created: "${draft.subject}" (ID: ${draft.id})${attInfo}`
+  );
+  console.log(`  View in Outlook or send with: send-draft ${draft.id}`);
+}
+
+/**
+ * Finds an email by search query and creates a reply draft.
+ * This is a two-step process in one command: search → create reply draft.
+ *
+ * @param options - Reply draft options
+ * @param options.query - Search query to find the email (searches subject and body)
+ * @param options.body - Reply body content
+ * @param options.replyAll - If true, creates reply-all draft
+ * @param options.skipSignature - If true, omits the automatic signature
+ * @param options.userId - Email address of the mailbox to search
+ * @param options.limit - Maximum number of search results to consider (default: 5)
+ * @param options.attachmentPaths - Optional comma-separated list of file paths to attach
+ * @returns Promise that resolves when reply draft is created
+ *
+ * @example
+ * // CLI: bun services/email/cli.ts reply-draft "invoice" --body "Thanks for the invoice"
+ * await replyDraftCommand({ query: "invoice", body: "Thanks", userId: "chi@desertservices.net", replyAll: false });
+ */
+async function replyDraftCommand(options: {
+  query: string;
+  body: string;
+  replyAll: boolean;
+  skipSignature: boolean;
+  userId: string;
+  limit?: number;
+  attachmentPaths?: string;
+}) {
+  assertWritableMailbox(options.userId, "reply-draft");
+  const appClient = getAppClient();
+  const userClient = await getUserClient();
+
+  // Step 1: Search for the email
+  console.log(`Searching for: "${options.query}"...`);
+  const emails = await appClient.searchEmails({
+    query: options.query,
+    userId: options.userId,
+    limit: options.limit ?? 5,
+  });
+
+  if (emails.length === 0) {
+    console.error(`No emails found matching: "${options.query}"`);
+    console.log("\nTry a different search query or check the mailbox with:");
+    console.log(
+      `  bun services/email/cli.ts search "${options.query}" --user ${options.userId}`
+    );
+    process.exit(1);
+  }
+
+  // Step 2: Display results and pick the first one (or let user pick if multiple)
+  const selectedEmail = emails[0];
+
+  if (emails.length > 1) {
+    console.log(`\nFound ${emails.length} emails. Using the most recent:`);
+    for (let i = 0; i < Math.min(emails.length, 5); i++) {
+      const email = emails[i];
+      const date = new Date(email.receivedDateTime).toLocaleDateString();
+      const marker = i === 0 ? "→" : " ";
+      console.log(
+        `${marker} [${date}] ${email.subject} (From: ${email.fromEmail})`
+      );
+    }
+    console.log(
+      "\nUsing the first result. To use a different email, search more specifically or use:"
+    );
+    console.log(
+      `  bun services/email/cli.ts reply-draft-by-id <messageId> --body "..."`
+    );
+  } else {
+    const date = new Date(selectedEmail.receivedDateTime).toLocaleDateString();
+    console.log(`Found: [${date}] ${selectedEmail.subject}`);
+    console.log(`  From: ${selectedEmail.fromEmail}`);
+  }
+
+  // Step 3: Load attachments if provided
+  const attachments: Array<{
+    name: string;
+    contentType: string;
+    contentBytes: string;
+  }> = [];
+
+  if (options.attachmentPaths) {
+    const paths = options.attachmentPaths.split(",").map((p) => p.trim());
+    for (const filePath of paths) {
+      const file = Bun.file(filePath);
+      if (!(await file.exists())) {
+        console.error(`Attachment not found: ${filePath}`);
+        process.exit(1);
+      }
+      const buffer = await file.arrayBuffer();
+      const base64 = Buffer.from(buffer).toString("base64");
+      const fileName = filePath.split("/").pop() ?? "attachment";
+      attachments.push({
+        name: fileName,
+        contentType: file.type || "application/octet-stream",
+        contentBytes: base64,
+      });
+      console.log(`  Attached: ${fileName}`);
+    }
+  }
+
+  // Step 4: Create the reply draft
+  console.log(
+    `\nCreating ${options.replyAll ? "reply-all" : "reply"} draft...`
+  );
+  const draft = await userClient.createReplyDraft({
+    messageId: selectedEmail.id,
+    body: options.body,
+    replyAll: options.replyAll,
+    attachments: attachments.length > 0 ? attachments : undefined,
+    userId: options.userId,
+    skipSignature: options.skipSignature,
+  });
+
+  const attInfo =
+    attachments.length > 0 ? ` with ${attachments.length} attachment(s)` : "";
+  const action = options.replyAll ? "Reply-all" : "Reply";
+  console.log(
+    `✓ ${action} draft created: "${draft.subject}" (ID: ${draft.id})${attInfo}`
+  );
+  console.log(`  View in Outlook or send with: send-draft ${draft.id}`);
+}
+
+/**
+ * Creates a reply draft to a specific email by message ID.
+ * Use this when you already know the message ID.
+ *
+ * @param options - Reply draft options
+ * @param options.messageId - ID of the email message to reply to
+ * @param options.body - Reply body content
+ * @param options.replyAll - If true, creates reply-all draft
+ * @param options.skipSignature - If true, omits the automatic signature
+ * @param options.userId - Email address of the mailbox containing the email
+ * @param options.attachmentPaths - Optional comma-separated list of file paths to attach
+ * @returns Promise that resolves when reply draft is created
+ *
+ * @example
+ * // CLI: bun services/email/cli.ts reply-draft-by-id <messageId> --body "Thanks"
+ * await replyDraftByIdCommand({ messageId: "AAMk...", body: "Thanks", userId: "chi@desertservices.net", replyAll: false });
+ */
+async function replyDraftByIdCommand(options: {
+  messageId: string;
+  body: string;
+  replyAll: boolean;
+  skipSignature: boolean;
+  userId: string;
+  attachmentPaths?: string;
+}) {
+  assertWritableMailbox(options.userId, "reply-draft-by-id");
+  const client = await getUserClient();
+
+  // Load attachments if provided
+  const attachments: Array<{
+    name: string;
+    contentType: string;
+    contentBytes: string;
+  }> = [];
+
+  if (options.attachmentPaths) {
+    const paths = options.attachmentPaths.split(",").map((p) => p.trim());
+    for (const filePath of paths) {
+      const file = Bun.file(filePath);
+      if (!(await file.exists())) {
+        console.error(`Attachment not found: ${filePath}`);
+        process.exit(1);
+      }
+      const buffer = await file.arrayBuffer();
+      const base64 = Buffer.from(buffer).toString("base64");
+      const fileName = filePath.split("/").pop() ?? "attachment";
+      attachments.push({
+        name: fileName,
+        contentType: file.type || "application/octet-stream",
+        contentBytes: base64,
+      });
+      console.log(`  Attached: ${fileName}`);
+    }
+  }
+
+  const draft = await client.createReplyDraft({
+    messageId: options.messageId,
+    body: options.body,
+    replyAll: options.replyAll,
+    attachments: attachments.length > 0 ? attachments : undefined,
+    userId: options.userId,
+    skipSignature: options.skipSignature,
+  });
+
+  const attInfo =
+    attachments.length > 0 ? ` with ${attachments.length} attachment(s)` : "";
+  const action = options.replyAll ? "Reply-all" : "Reply";
+  console.log(
+    `✓ ${action} draft created: "${draft.subject}" (ID: ${draft.id})${attInfo}`
+  );
+  console.log(`  View in Outlook or send with: send-draft ${draft.id}`);
+}
+
+/**
+ * Sends an existing draft email.
+ *
+ * @param draftId - ID of the draft message to send
+ * @param userId - Email address of the mailbox containing the draft
+ * @returns Promise that resolves when draft is sent
+ *
+ * @example
+ * // CLI: bun services/email/cli.ts send-draft <draftId>
+ * await sendDraftCommand("AAMk...", "chi@desertservices.net");
+ */
+async function sendDraftCommand(draftId: string, userId: string) {
+  assertWritableMailbox(userId, "send-draft");
+  const client = await getUserClient();
+
+  await client.sendDraft(draftId);
+
+  console.log(`✓ Draft sent successfully (ID: ${draftId})`);
 }
 
 /**
@@ -844,6 +1281,7 @@ const handlers: Record<string, CommandHandler> = {
       options: {
         user: { type: "string", short: "u", default: DEFAULT_USER },
         limit: { type: "string", short: "l", default: "10" },
+        folder: { type: "string", short: "f" },
       },
       allowPositionals: true,
     });
@@ -855,7 +1293,8 @@ const handlers: Record<string, CommandHandler> = {
     await searchCommand(
       query,
       values.user as string,
-      Number.parseInt(values.limit as string, 10)
+      Number.parseInt(values.limit as string, 10),
+      values.folder
     );
   },
 
@@ -930,6 +1369,113 @@ const handlers: Record<string, CommandHandler> = {
     });
   },
 
+  draft: async (args) => {
+    const { values } = parseArgs({
+      args,
+      options: {
+        to: { type: "string" },
+        cc: { type: "string" },
+        subject: { type: "string", short: "s" },
+        body: { type: "string", short: "b" },
+        attachments: { type: "string", short: "a" },
+        "no-signature": { type: "boolean", default: false },
+        user: { type: "string", short: "u", default: DEFAULT_USER },
+      },
+    });
+    if (!(values.subject && values.body)) {
+      console.error("Error: --subject and --body are required");
+      console.error(
+        "Usage: draft --subject <text> --body <text> [--to <email>] [--attachments <paths>]"
+      );
+      process.exit(1);
+    }
+    await draftCommand({
+      to: values.to,
+      cc: values.cc,
+      subject: values.subject,
+      body: values.body,
+      skipSignature: values["no-signature"] ?? false,
+      attachmentPaths: values.attachments,
+      userId: values.user as string,
+    });
+  },
+
+  "reply-draft": async (args) => {
+    const { values, positionals } = parseArgs({
+      args,
+      options: {
+        body: { type: "string", short: "b" },
+        user: { type: "string", short: "u", default: DEFAULT_USER },
+        "reply-all": { type: "boolean", default: false },
+        "no-signature": { type: "boolean", default: false },
+        limit: { type: "string", short: "l", default: "5" },
+        attachments: { type: "string", short: "a" },
+      },
+      allowPositionals: true,
+    });
+    const query = positionals[0];
+    if (!(query && values.body)) {
+      console.error("Error: search query and --body are required");
+      console.error(
+        "Usage: reply-draft <query> --body <text> [--reply-all] [--limit <number>]"
+      );
+      process.exit(1);
+    }
+    await replyDraftCommand({
+      query,
+      body: values.body,
+      userId: values.user as string,
+      replyAll: values["reply-all"] ?? false,
+      skipSignature: values["no-signature"] ?? false,
+      limit: Number.parseInt(values.limit as string, 10),
+      attachmentPaths: values.attachments,
+    });
+  },
+
+  "reply-draft-by-id": async (args) => {
+    const { values, positionals } = parseArgs({
+      args,
+      options: {
+        body: { type: "string", short: "b" },
+        user: { type: "string", short: "u", default: DEFAULT_USER },
+        "reply-all": { type: "boolean", default: false },
+        "no-signature": { type: "boolean", default: false },
+        attachments: { type: "string", short: "a" },
+      },
+      allowPositionals: true,
+    });
+    const messageId = positionals[0];
+    if (!(messageId && values.body)) {
+      console.error("Error: messageId and --body are required");
+      console.error("Usage: reply-draft-by-id <messageId> --body <text>");
+      process.exit(1);
+    }
+    await replyDraftByIdCommand({
+      messageId,
+      body: values.body,
+      userId: values.user as string,
+      replyAll: values["reply-all"] ?? false,
+      skipSignature: values["no-signature"] ?? false,
+      attachmentPaths: values.attachments,
+    });
+  },
+
+  "send-draft": async (args) => {
+    const { values, positionals } = parseArgs({
+      args,
+      options: {
+        user: { type: "string", short: "u", default: DEFAULT_USER },
+      },
+      allowPositionals: true,
+    });
+    const draftId = positionals[0];
+    if (!draftId) {
+      console.error("Error: draftId required. Usage: send-draft <draftId>");
+      process.exit(1);
+    }
+    await sendDraftCommand(draftId, values.user as string);
+  },
+
   get: async (args) => {
     const { values, positionals } = parseArgs({
       args,
@@ -967,9 +1513,19 @@ const handlers: Record<string, CommandHandler> = {
       args,
       options: {
         user: { type: "string", short: "u", default: DEFAULT_USER },
+        recursive: { type: "boolean", short: "r", default: false },
+        query: { type: "string", short: "q" },
+        "max-depth": { type: "string", default: "10" },
+        paths: { type: "boolean", default: false },
       },
     });
-    await foldersCommand(values.user as string);
+    await foldersCommand({
+      userId: values.user as string,
+      recursive: values.recursive ?? false,
+      query: values.query,
+      maxDepth: Number.parseInt(values["max-depth"] as string, 10),
+      paths: values.paths ?? false,
+    });
   },
 
   templates: async (_args) => {
@@ -1139,6 +1695,7 @@ const handlers: Record<string, CommandHandler> = {
       args,
       options: {
         limit: { type: "string", short: "l", default: "20" },
+        folder: { type: "string", short: "f" },
       },
       allowPositionals: true,
     });
@@ -1146,7 +1703,8 @@ const handlers: Record<string, CommandHandler> = {
     await searchCommand(
       query,
       KNOWN_MAILBOXES.contracts,
-      Number.parseInt(values.limit as string, 10)
+      Number.parseInt(values.limit as string, 10),
+      values.folder
     );
   },
 
@@ -1155,6 +1713,7 @@ const handlers: Record<string, CommandHandler> = {
       args,
       options: {
         limit: { type: "string", short: "l", default: "20" },
+        folder: { type: "string", short: "f" },
       },
       allowPositionals: true,
     });
@@ -1162,7 +1721,8 @@ const handlers: Record<string, CommandHandler> = {
     await searchCommand(
       query,
       KNOWN_MAILBOXES.estimating,
-      Number.parseInt(values.limit as string, 10)
+      Number.parseInt(values.limit as string, 10),
+      values.folder
     );
   },
 };
@@ -1178,14 +1738,20 @@ Desert Email CLI
 Usage: bun services/email/cli.ts <command> [options]
 
 Email Commands:
-  search <query>              Search emails in your mailbox
+  search <query>              Search emails in your mailbox (supports --folder)
   search-all <query>          Search across all org mailboxes
   send                        Send an email (supports attachments)
   send-template <name>        Send email using HTML template
-  reply <messageId>           Reply to an email
+  reply <messageId>           Reply to an email (sends immediately)
   get <messageId>             Get full email content
   thread <messageId>          Get email thread
-  folders                     List mail folders
+  folders                     List mail folders (supports --recursive)
+
+Draft Commands:
+  draft                       Create a new email draft
+  reply-draft <query>         Find email by search and create reply draft
+  reply-draft-by-id <id>     Create reply draft to specific email by ID
+  send-draft <draftId>        Send an existing draft
 
 Template Commands:
   templates                   List available email templates
@@ -1225,6 +1791,11 @@ Examples:
   bun services/email/cli.ts ic                           # List InternalContracts group
   bun services/email/cli.ts ic "Helen"                   # Search InternalContracts group
   bun services/email/cli.ts search-group dust-control "permit"
+
+  # Create drafts:
+  bun services/email/cli.ts draft --subject "Hello" --body "Hi there" --to "user@example.com"
+  bun services/email/cli.ts reply-draft "invoice" --body "Thanks for the invoice" --reply-all
+  bun services/email/cli.ts send-draft <draftId>         # Send an existing draft
 
   # Send dust permit email using template:
   bun services/email/cli.ts send-template dust-permit-issued \\

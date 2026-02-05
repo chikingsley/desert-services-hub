@@ -5,8 +5,8 @@
  */
 
 import { Database } from "bun:sqlite";
-import { getItemsRich, type MondayItemRich } from "@services/monday/client";
-import { BOARD_IDS, CONTRACTORS_COLUMNS } from "@services/monday/types";
+import { getItemsRich, type MondayItemRich } from "../../monday/client";
+import { BOARD_IDS, CONTRACTORS_COLUMNS } from "../../monday/types";
 
 const HUB_DB_PATH =
   "/Users/chiejimofor/Documents/Github/desert-services-hub/apps/contract-ui/contract/hub.db";

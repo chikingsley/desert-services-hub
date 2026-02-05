@@ -7,7 +7,7 @@
  *   bun services/sharepoint/sync-project-files.ts --dry-run --notion-id=<id>
  *
  * What it does:
- * 1. Looks up project in census DB (by notion_project_id or project name)
+ * 1. Looks up project in hub DB (by notion_project_id or project name)
  * 2. Finds all PDF attachments in MinIO for linked emails
  * 3. Creates SharePoint folder structure if needed
  * 4. Downloads from MinIO → uploads to SharePoint
@@ -41,8 +41,10 @@ const RE_LEADING_TRAILING_DASHES = /^-+|-+$/g;
 // Config
 // ---------------------------------------------------------------------------
 
-const HUB_DB_PATH = new URL("../contract/census/hub.db", import.meta.url)
-  .pathname;
+const HUB_DB_PATH = new URL(
+  "../../apps/contract-ui/contract/hub.db",
+  import.meta.url
+).pathname;
 
 const SHAREPOINT_ROOT = "Customer Projects/Active";
 

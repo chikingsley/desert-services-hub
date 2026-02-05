@@ -89,38 +89,38 @@ export function parseEstimateText(text: string, sourceFile: string): Estimate {
 function extractHeader(text: string): EstimateHeader {
   // Extract estimate number (may include revision like -R1)
   const estimateMatch = text.match(ESTIMATE_NUMBER_REGEX);
-  const estimateNumber = estimateMatch ? estimateMatch[1] : "";
-  const revision = estimateMatch?.[2] || null;
+  const estimateNumber = estimateMatch?.[1] ?? "";
+  const revision = estimateMatch?.[2] ?? null;
 
   // Extract date
   const dateMatch = text.match(DATE_REGEX);
-  const date = dateMatch ? dateMatch[1] : "";
+  const date = dateMatch?.[1] ?? "";
 
   // Extract GC name and address
   const gcMatch = text.match(GC_REGEX);
   let gcName = "";
   let gcAddress = "";
-  if (gcMatch) {
+  if (gcMatch?.[1]) {
     const gcLines = gcMatch[1]
       .trim()
       .split("\n")
       .filter((l) => l.trim());
-    gcName = gcLines[0] || "";
+    gcName = gcLines[0] ?? "";
     gcAddress = gcLines.slice(1).join(", ");
   }
 
   // Extract job name
   const jobNameMatch = text.match(JOB_NAME_REGEX);
-  const jobName = jobNameMatch ? jobNameMatch[1].trim() : "";
+  const jobName = jobNameMatch?.[1]?.trim() ?? "";
 
   // Extract estimator
   const estimatorMatch = text.match(ESTIMATOR_REGEX);
-  const estimator = estimatorMatch ? estimatorMatch[1].trim() : "";
+  const estimator = estimatorMatch?.[1]?.trim() ?? "";
 
   // Extract job address
   const addressMatch = text.match(JOB_ADDRESS_REGEX);
   let jobAddress = "";
-  if (addressMatch) {
+  if (addressMatch?.[1] && addressMatch[2]) {
     jobAddress = `${addressMatch[1].trim()}, ${addressMatch[2].trim()}`;
   }
 
@@ -198,9 +198,15 @@ function extractLineItems(text: string): EstimateLineItem[] {
 
   // Find all price matches
   for (const match of text.matchAll(pricePattern)) {
-    const qty = Number.parseFloat(match[1].replace(/,/g, ""));
-    const unitCost = Number.parseFloat(match[2].replace(/,/g, ""));
-    const total = Number.parseFloat(match[3].replace(/,/g, ""));
+    const qtyStr = match[1];
+    const unitCostStr = match[2];
+    const totalStr = match[3];
+    if (!qtyStr || !unitCostStr || !totalStr) {
+      continue;
+    }
+    const qty = Number.parseFloat(qtyStr.replace(/,/g, ""));
+    const unitCost = Number.parseFloat(unitCostStr.replace(/,/g, ""));
+    const total = Number.parseFloat(totalStr.replace(/,/g, ""));
     const taxable = match[4] === "T";
 
     // Skip if this looks like a date (month/day/year pattern nearby)
@@ -242,7 +248,8 @@ function extractLineItems(text: string): EstimateLineItem[] {
     );
 
     let itemName = "Misc";
-    let category = categorizeItem(lookbackText);
+    let category: { section: EstimateLineItem["section"]; unit: string | null } =
+      categorizeItem(lookbackText);
 
     for (const pattern of Object.keys(ITEM_RULES)) {
       // Check if pattern appears in lookback and is the most recent one
@@ -255,7 +262,10 @@ function extractLineItems(text: string): EstimateLineItem[] {
             .split(" ")
             .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
             .join(" ");
-          category = ITEM_RULES[pattern];
+          const rule = ITEM_RULES[pattern];
+          if (rule) {
+            category = { section: rule.section, unit: rule.unit ?? null };
+          }
           break;
         }
       }
@@ -263,19 +273,17 @@ function extractLineItems(text: string): EstimateLineItem[] {
 
     // Extract a short description from context
     const descMatch = lookbackText.match(DESC_ITEM_REGEX);
-    const description = descMatch ? descMatch[1].trim() : itemName;
+    const description = descMatch?.[1]?.trim() ?? itemName;
 
     items.push({
       item: itemName,
       description,
       qty,
-      unit: category?.unit || null,
+      unit: category.unit,
       unitCost,
       total,
       taxable,
-      section: inAdditionalServices
-        ? "additional_services"
-        : category?.section || "misc",
+      section: inAdditionalServices ? "additional_services" : category.section,
     });
   }
 
@@ -289,8 +297,9 @@ function extractTax(
   // Look for Rental Tax line
   const taxMatch = text.match(RENTAL_TAX_REGEX);
 
-  if (taxMatch) {
-    const taxAmount = Number.parseFloat(taxMatch[2].replace(/,/g, ""));
+  const taxAmountStr = taxMatch?.[2];
+  if (taxAmountStr) {
+    const taxAmount = Number.parseFloat(taxAmountStr.replace(/,/g, ""));
     const taxableSubtotal = lineItems
       .filter((item) => item.taxable)
       .reduce((sum, item) => sum + item.total, 0);
@@ -310,8 +319,8 @@ function extractTax(
 function extractTotal(text: string): number {
   // Look for the final total (usually last dollar amount before page marker)
   const matches = text.match(/\$(\d[\d,]*\.\d{2})/g);
-  if (matches && matches.length > 0) {
-    const lastMatch = matches.at(-1);
+  const lastMatch = matches?.at(-1);
+  if (lastMatch) {
     return Number.parseFloat(lastMatch.replace(/[$,]/g, ""));
   }
   return 0;

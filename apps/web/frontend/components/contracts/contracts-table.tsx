@@ -25,7 +25,11 @@ import {
   STAGE_CONFIG,
 } from "./types";
 
-type SortKey = "receivedDesc" | "receivedAsc" | "estimateDesc" | "contractorAsc";
+type SortKey =
+  | "receivedDesc"
+  | "receivedAsc"
+  | "estimateDesc"
+  | "contractorAsc";
 
 interface ContractsTableProps {
   contracts: PipelineContract[];
@@ -97,11 +101,7 @@ export function ContractsTable({
         return matchesStage;
       }
 
-      const haystack = [
-        contract.subject,
-        contract.contractor,
-        contract.id,
-      ]
+      const haystack = [contract.subject, contract.contractor, contract.id]
         .join(" ")
         .toLowerCase();
 
@@ -119,7 +119,6 @@ export function ContractsTable({
           return (b.estimateTotal ?? 0) - (a.estimateTotal ?? 0);
         case "contractorAsc":
           return a.contractor.localeCompare(b.contractor);
-        case "receivedDesc":
         default:
           return (
             new Date(b.receivedDate).getTime() -
@@ -161,7 +160,10 @@ export function ContractsTable({
           </SelectContent>
         </Select>
 
-        <Select onValueChange={(value) => setSortKey(value as SortKey)} value={sortKey}>
+        <Select
+          onValueChange={(value) => setSortKey(value as SortKey)}
+          value={sortKey}
+        >
           <SelectTrigger className="min-w-[150px]" size="sm">
             <SelectValue placeholder="Sort by" />
           </SelectTrigger>

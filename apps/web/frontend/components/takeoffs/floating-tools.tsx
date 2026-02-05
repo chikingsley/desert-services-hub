@@ -16,7 +16,10 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/apps/web/frontend/components/ui/tooltip";
-import { type PresetItem, SCALE_PRESETS } from "@/apps/web/frontend/pages/takeoff-editor";
+import {
+  type PresetItem,
+  SCALE_PRESETS,
+} from "@/apps/web/frontend/pages/takeoff-editor";
 
 interface FloatingToolsProps {
   items: PresetItem[];

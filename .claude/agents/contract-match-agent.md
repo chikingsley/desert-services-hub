@@ -1,7 +1,7 @@
 ---
 name: contract-match-agent
-description: "Searches Monday ESTIMATING board using multiple strategies to find estimates matching contract details"
-tools: mcp__desert-mondaycrm__find_best_matches, mcp__desert-mondaycrm__search_items, mcp__desert-mondaycrm__get_item
+description: "Searches Monday ESTIMATING board using hub.db or CLI to find estimates matching contract details"
+tools: Bash, Read
 model: haiku
 ---
 
@@ -21,30 +21,26 @@ You will receive contract details extracted from a PDF:
 
 ## Search Strategy
 
-Run ALL of these searches in parallel using the Monday MCP tools:
+Run ALL of these searches using hub.db (SQLite) or the Monday CLI:
 
-### 1. Fuzzy Project Name Match
+### 1. Search hub.db Estimates Table
 
-```yaml
+Primary search - hub.db has all estimates synced from Monday:
+
+```bash
+sqlite3 /Users/chiejimofor/Documents/Github/desert-services-hub/apps/contract-ui/contract/hub.db ".mode column" ".headers on" "SELECT id, monday_item_id, name, contractor, bid_value, bid_status FROM estimates WHERE name LIKE '%PROJECT_NAME%' OR contractor LIKE '%CONTRACTOR_NAME%' LIMIT 10;"
 ```
 
-### 2. Contractor Name Search
+### 2. Search by Contractor Domain
 
-```yaml
+```bash
+sqlite3 /Users/chiejimofor/Documents/Github/desert-services-hub/apps/contract-ui/contract/hub.db ".mode column" ".headers on" "SELECT e.id, e.monday_item_id, e.name, e.contractor, e.bid_value FROM estimates e JOIN accounts a ON LOWER(e.contractor) LIKE '%' || LOWER(SUBSTR(a.name, 1, 10)) || '%' WHERE a.domain LIKE '%DOMAIN%' LIMIT 10;"
 ```
 
-### 3. Address/Location Search
+### 3. Monday CLI Search (if hub.db insufficient)
 
-If address is provided:
-
-```yaml
-```
-
-### 4. Job Number Search
-
-If job number is provided:
-
-```yaml
+```bash
+cd /Users/chiejimofor/Documents/Github/desert-services-hub && bun -e "import { searchItems } from './services/monday/client'; console.log(await searchItems('7943937851', 'SEARCH_TERM'));"
 ```
 
 ## Evaluation
@@ -71,12 +67,16 @@ For each result, assess match quality:
 Return structured results:
 
 ```css
+Match Results:
+- Estimate: "PROJECT NAME" (Monday ID: xxx)
+  Contractor: Name
+  Amount: $X (Y% of contract)
+  Confidence: High/Medium/Low
+  Link: https://desert-services-company.monday.com/boards/7943937851/pulses/ITEM_ID
 ```
 
 ## Important Notes
 
-- Run searches in PARALLEL for speed
-- The ESTIMATING board excludes "Shell Estimates" by default
-- Use `get_item` to fetch full details only for top matches
+- Search hub.db first (it's faster and has all synced data)
 - Project names in Monday may be slightly different (abbreviations, punctuation)
 - Amount matching is strong signal - contracts usually match estimates closely

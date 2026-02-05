@@ -4,59 +4,40 @@
   </head>
   <body>
     <div>{{recipientName}},</div>
-    <div>
-      <br>
-    </div>
-    <div>
-      A dust permit revision has been submitted to Maricopa County. Please prepare for billing.
-      <br>
-      <br>
-    </div>
-    <ul style="margin-top:0; margin-bottom:0">
-      <li><div><strong>Customer:</strong> {{accountName}}</div></li>
-      <li><div><strong>Project:</strong> {{projectName}}</div></li>
-      <li><div><strong>Site Address:</strong> {{address}}</div></li>
-      <li><div><strong>Application #:</strong> {{applicationNumber}}</div></li>
-      <li><div><strong>Superseded Application #:</strong> {{supersededApplicationNumber}}</div></li>
-      <li><div><strong>Permit # (Facility ID):</strong> {{permitNumber}}</div></li>
-      <li><div><strong>Accelerated Processing:</strong> {{acceleratedProcessing}}</div></li>
-      <li><div><strong>Vendor Paid:</strong> {{vendorName}}</div></li>
-      <li><div><strong>Permit Cost:</strong> {{permitCost}}</div></li>
-      {{#if acceleratedFee}}<li><div><strong>Accelerated Fee:</strong> {{acceleratedFee}}</div></li>{{/if}}
-      <li><div><strong>Schedule Value:</strong> {{scheduleValue}}</div></li>
-      <li><div><strong>Payment Method:</strong> {{paymentMethod}}</div></li>
-      {{#if paymentDate}}<li><div><strong>Payment Date:</strong> {{paymentDate}}</div></li>{{/if}}
-      {{#if confirmationId}}<li><div><strong>Confirmation #:</strong> {{confirmationId}}</div></li>{{/if}}
-      {{#if cardLastFour}}<li><div><strong>Card Last 4:</strong> {{cardLastFour}}</div></li>{{/if}}
-      {{#if cardholderName}}<li><div><strong>Cardholder:</strong> {{cardholderName}}</div></li>{{/if}}
-      <li><div><strong>Invoice #:</strong> {{invoiceNumber}}</div></li>
-      <li><div><strong>Invoice Date:</strong> {{invoiceDate}}</div></li>
-      <li><div><strong>Project Folder:</strong> <a href="{{projectFolderLink}}">View in SharePoint</a></div></li>
+    <div><br></div>
+    <div>A dust permit revision has been submitted to Maricopa County. Please prepare for billing.</div>
+    <ul>
+      <li><div><b>Customer:</b> {{accountName}}</div></li>
+      <li><div><b>Project:</b> {{projectName}}</div></li>
+      <li><div><b>Site Address:</b> {{address}}</div></li>
+      <li><div><b>Application #:</b> {{applicationNumber}}</div></li>
+      <li><div><b>Superseded Application #:</b> {{supersededApplicationNumber}}</div></li>
+      <li><div><b>Permit # (Facility ID):</b> {{permitNumber}}</div></li>
+      <li><div><b>Accelerated Processing:</b> {{acceleratedProcessing}}</div></li>
+      <li><div><b>Vendor Paid:</b> {{vendorName}}</div></li>
+      <li><div><b>Permit Cost:</b> {{permitCost}}</div></li>
+      {{#if acceleratedFee}}<li><div><b>Accelerated Fee:</b> {{acceleratedFee}}</div></li>{{/if}}
+      <li><div><b>Schedule Value:</b> {{scheduleValue}}</div></li>
+      <li><div><b>Payment Method:</b> {{paymentMethod}}</div></li>
+      {{#if paymentDate}}<li><div><b>Payment Date:</b> {{paymentDate}}</div></li>{{/if}}
+      {{#if confirmationId}}<li><div><b>Confirmation #:</b> {{confirmationId}}</div></li>{{/if}}
+      <li><div><b>Card Last 4:</b> {{cardLastFour}}</div></li>
+      <li><div><b>Cardholder:</b> {{cardholderName}}</div></li>
+      <li><div><b>Invoice #:</b> {{invoiceNumber}}</div></li>
+      <li><div><b>Invoice Date:</b> {{invoiceDate}}</div></li>
     </ul>
-    <div>
-      <br>
-    </div>
-    <div><strong>Changes Made:</strong></div>
-    <ul style="margin-top:0; margin-bottom:0">
+    <div><b>Changes Made:</b></div>
+    <ul>
       {{{changesHtml}}}
     </ul>
-    <div>
-      <br>
-    </div>
     <div>Let me know if you have any questions!</div>
-    <div>
-      <br>
-    </div>
+    <div><br></div>
     <div>Best,</div>
     <div>--</div>
-    <div>
-      <br>
-    </div>
+    <div><br></div>
     <div>Chi Ejimofor</div>
     <div>Project Coordinator</div>
-    <div>
-      E: <a href="mailto:chi@desertservices.net">chi@desertservices.net</a>
-    </div>
+    <div>E: <a href="mailto:chi@desertservices.net">chi@desertservices.net</a></div>
     <div>M: (304) 216-8700</div>
     <div>
       <img

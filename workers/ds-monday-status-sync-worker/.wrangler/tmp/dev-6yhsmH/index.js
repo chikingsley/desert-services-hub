@@ -1,5 +1,6 @@
-var __defProp = Object.defineProperty;
-var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+const __defProp = Object.defineProperty;
+const __name = (target, value) =>
+  __defProp(target, "name", { value, configurable: true });
 
 // ../../../../../.bun/install/global/node_modules/unenv/dist/runtime/_internal/utils.mjs
 // @__NO_SIDE_EFFECTS__
@@ -17,9 +18,11 @@ function notImplemented(name) {
 __name(notImplemented, "notImplemented");
 
 // ../../../../../.bun/install/global/node_modules/unenv/dist/runtime/node/internal/perf_hooks/performance.mjs
-var _timeOrigin = globalThis.performance?.timeOrigin ?? Date.now();
-var _performanceNow = globalThis.performance?.now ? globalThis.performance.now.bind(globalThis.performance) : () => Date.now() - _timeOrigin;
-var nodeTiming = {
+const _timeOrigin = globalThis.performance?.timeOrigin ?? Date.now();
+const _performanceNow = globalThis.performance?.now
+  ? globalThis.performance.now.bind(globalThis.performance)
+  : () => Date.now() - _timeOrigin;
+const nodeTiming = {
   name: "node",
   entryType: "node",
   startTime: 0,
@@ -34,14 +37,14 @@ var nodeTiming = {
   uvMetricsInfo: {
     loopCount: 0,
     events: 0,
-    eventsWaiting: 0
+    eventsWaiting: 0,
   },
   detail: void 0,
   toJSON() {
     return this;
-  }
+  },
 };
-var PerformanceEntry = class {
+const PerformanceEntry = class {
   static {
     __name(this, "PerformanceEntry");
   }
@@ -64,13 +67,13 @@ var PerformanceEntry = class {
       entryType: this.entryType,
       startTime: this.startTime,
       duration: this.duration,
-      detail: this.detail
+      detail: this.detail,
     };
   }
 };
-var PerformanceMark = class PerformanceMark2 extends PerformanceEntry {
+const PerformanceMark = class PerformanceMark2 extends PerformanceEntry {
   static {
-    __name(this, "PerformanceMark");
+    __name(PerformanceMark2, "PerformanceMark");
   }
   entryType = "mark";
   constructor() {
@@ -80,13 +83,13 @@ var PerformanceMark = class PerformanceMark2 extends PerformanceEntry {
     return 0;
   }
 };
-var PerformanceMeasure = class extends PerformanceEntry {
+const PerformanceMeasure = class extends PerformanceEntry {
   static {
     __name(this, "PerformanceMeasure");
   }
   entryType = "measure";
 };
-var PerformanceResourceTiming = class extends PerformanceEntry {
+const PerformanceResourceTiming = class extends PerformanceEntry {
   static {
     __name(this, "PerformanceResourceTiming");
   }
@@ -113,7 +116,7 @@ var PerformanceResourceTiming = class extends PerformanceEntry {
   workerStart = 0;
   responseStatus = 0;
 };
-var PerformanceObserverEntryList = class {
+const PerformanceObserverEntryList = class {
   static {
     __name(this, "PerformanceObserverEntryList");
   }
@@ -124,11 +127,11 @@ var PerformanceObserverEntryList = class {
   getEntriesByName(_name, _type) {
     return [];
   }
-  getEntriesByType(type) {
+  getEntriesByType(_type) {
     return [];
   }
 };
-var Performance = class {
+const Performance = class {
   static {
     __name(this, "Performance");
   }
@@ -159,19 +162,27 @@ var Performance = class {
     return Date.now() - this.timeOrigin;
   }
   clearMarks(markName) {
-    this._entries = markName ? this._entries.filter((e) => e.name !== markName) : this._entries.filter((e) => e.entryType !== "mark");
+    this._entries = markName
+      ? this._entries.filter((e) => e.name !== markName)
+      : this._entries.filter((e) => e.entryType !== "mark");
   }
   clearMeasures(measureName) {
-    this._entries = measureName ? this._entries.filter((e) => e.name !== measureName) : this._entries.filter((e) => e.entryType !== "measure");
+    this._entries = measureName
+      ? this._entries.filter((e) => e.name !== measureName)
+      : this._entries.filter((e) => e.entryType !== "measure");
   }
   clearResourceTimings() {
-    this._entries = this._entries.filter((e) => e.entryType !== "resource" || e.entryType !== "navigation");
+    this._entries = this._entries.filter(
+      (e) => e.entryType !== "resource" || e.entryType !== "navigation"
+    );
   }
   getEntries() {
     return this._entries;
   }
   getEntriesByName(name, type) {
-    return this._entries.filter((e) => e.name === name && (!type || e.entryType === type));
+    return this._entries.filter(
+      (e) => e.name === name && (!type || e.entryType === type)
+    );
   }
   getEntriesByType(type) {
     return this._entries.filter((e) => e.entryType === type);
@@ -185,7 +196,8 @@ var Performance = class {
     let start;
     let end;
     if (typeof startOrMeasureOptions === "string") {
-      start = this.getEntriesByName(startOrMeasureOptions, "mark")[0]?.startTime;
+      start = this.getEntriesByName(startOrMeasureOptions, "mark")[0]
+        ?.startTime;
       end = this.getEntriesByName(endMark, "mark")[0]?.startTime;
     } else {
       start = Number.parseFloat(startOrMeasureOptions?.start) || this.now();
@@ -195,8 +207,8 @@ var Performance = class {
       startTime: start,
       detail: {
         start,
-        end
-      }
+        end,
+      },
     });
     this._entries.push(entry);
     return entry;
@@ -204,20 +216,20 @@ var Performance = class {
   setResourceTimingBufferSize(maxSize) {
     this._resourceTimingBufferSize = maxSize;
   }
-  addEventListener(type, listener, options) {
+  addEventListener(_type, _listener, _options) {
     throw createNotImplementedError("Performance.addEventListener");
   }
-  removeEventListener(type, listener, options) {
+  removeEventListener(_type, _listener, _options) {
     throw createNotImplementedError("Performance.removeEventListener");
   }
-  dispatchEvent(event) {
+  dispatchEvent(_event) {
     throw createNotImplementedError("Performance.dispatchEvent");
   }
   toJSON() {
     return this;
   }
 };
-var PerformanceObserver = class {
+const PerformanceObserver = class {
   static {
     __name(this, "PerformanceObserver");
   }
@@ -233,7 +245,7 @@ var PerformanceObserver = class {
   disconnect() {
     throw createNotImplementedError("PerformanceObserver.disconnect");
   }
-  observe(options) {
+  observe(_options) {
     throw createNotImplementedError("PerformanceObserver.observe");
   }
   bind(fn) {
@@ -252,7 +264,10 @@ var PerformanceObserver = class {
     return this;
   }
 };
-var performance = globalThis.performance && "addEventListener" in globalThis.performance ? globalThis.performance : new Performance();
+const performance =
+  globalThis.performance && "addEventListener" in globalThis.performance
+    ? globalThis.performance
+    : new Performance();
 
 // ../../../../../.bun/install/global/node_modules/@cloudflare/unenv-preset/dist/runtime/polyfill/performance.mjs
 globalThis.performance = performance;
@@ -265,29 +280,34 @@ globalThis.PerformanceObserverEntryList = PerformanceObserverEntryList;
 globalThis.PerformanceResourceTiming = PerformanceResourceTiming;
 
 // ../../../../../.bun/install/global/node_modules/unenv/dist/runtime/node/internal/process/hrtime.mjs
-var hrtime = /* @__PURE__ */ Object.assign(/* @__PURE__ */ __name(function hrtime2(startTime) {
-  const now = Date.now();
-  const seconds = Math.trunc(now / 1e3);
-  const nanos = now % 1e3 * 1e6;
-  if (startTime) {
-    let diffSeconds = seconds - startTime[0];
-    let diffNanos = nanos - startTime[0];
-    if (diffNanos < 0) {
-      diffSeconds = diffSeconds - 1;
-      diffNanos = 1e9 + diffNanos;
+const hrtime = /* @__PURE__ */ Object.assign(
+  /* @__PURE__ */ __name(function hrtime2(startTime) {
+    const now = Date.now();
+    const seconds = Math.trunc(now / 1e3);
+    const nanos = (now % 1e3) * 1e6;
+    if (startTime) {
+      let diffSeconds = seconds - startTime[0];
+      let diffNanos = nanos - startTime[0];
+      if (diffNanos < 0) {
+        diffSeconds -= 1;
+        diffNanos = 1e9 + diffNanos;
+      }
+      return [diffSeconds, diffNanos];
     }
-    return [diffSeconds, diffNanos];
+    return [seconds, nanos];
+  }, "hrtime"),
+  {
+    bigint: /* @__PURE__ */ __name(function bigint() {
+      return BigInt(Date.now() * 1e6);
+    }, "bigint"),
   }
-  return [seconds, nanos];
-}, "hrtime"), { bigint: /* @__PURE__ */ __name(function bigint() {
-  return BigInt(Date.now() * 1e6);
-}, "bigint") });
+);
 
 // ../../../../../.bun/install/global/node_modules/unenv/dist/runtime/node/internal/process/process.mjs
 import { EventEmitter } from "node:events";
 
 // ../../../../../.bun/install/global/node_modules/unenv/dist/runtime/node/internal/tty/read-stream.mjs
-var ReadStream = class {
+const ReadStream = class {
   static {
     __name(this, "ReadStream");
   }
@@ -304,7 +324,7 @@ var ReadStream = class {
 };
 
 // ../../../../../.bun/install/global/node_modules/unenv/dist/runtime/node/internal/tty/write-stream.mjs
-var WriteStream = class {
+const WriteStream = class {
   static {
     __name(this, "WriteStream");
   }
@@ -315,51 +335,50 @@ var WriteStream = class {
   constructor(fd) {
     this.fd = fd;
   }
-  clearLine(dir, callback) {
-    callback && callback();
+  clearLine(_dir, callback) {
+    callback?.();
     return false;
   }
   clearScreenDown(callback) {
-    callback && callback();
+    callback?.();
     return false;
   }
-  cursorTo(x, y, callback) {
+  cursorTo(_x, _y, callback) {
     callback && typeof callback === "function" && callback();
     return false;
   }
-  moveCursor(dx, dy, callback) {
-    callback && callback();
+  moveCursor(_dx, _dy, callback) {
+    callback?.();
     return false;
   }
-  getColorDepth(env2) {
+  getColorDepth(_env2) {
     return 1;
   }
-  hasColors(count, env2) {
+  hasColors(_count, _env2) {
     return false;
   }
   getWindowSize() {
     return [this.columns, this.rows];
   }
-  write(str, encoding, cb) {
+  write(str, _encoding, cb) {
     if (str instanceof Uint8Array) {
       str = new TextDecoder().decode(str);
     }
     try {
       console.log(str);
-    } catch {
-    }
+    } catch {}
     cb && typeof cb === "function" && cb();
     return false;
   }
 };
 
 // ../../../../../.bun/install/global/node_modules/unenv/dist/runtime/node/internal/process/node-version.mjs
-var NODE_VERSION = "22.14.0";
+const NODE_VERSION = "22.14.0";
 
 // ../../../../../.bun/install/global/node_modules/unenv/dist/runtime/node/internal/process/process.mjs
-var Process = class _Process extends EventEmitter {
+const Process = class _Process extends EventEmitter {
   static {
-    __name(this, "Process");
+    __name(_Process, "Process");
   }
   env;
   hrtime;
@@ -369,7 +388,10 @@ var Process = class _Process extends EventEmitter {
     this.env = impl.env;
     this.hrtime = impl.hrtime;
     this.nextTick = impl.nextTick;
-    for (const prop of [...Object.getOwnPropertyNames(_Process.prototype), ...Object.getOwnPropertyNames(EventEmitter.prototype)]) {
+    for (const prop of [
+      ...Object.getOwnPropertyNames(_Process.prototype),
+      ...Object.getOwnPropertyNames(EventEmitter.prototype),
+    ]) {
       const value = this[prop];
       if (typeof value === "function") {
         this[prop] = value.bind(this);
@@ -378,7 +400,9 @@ var Process = class _Process extends EventEmitter {
   }
   // --- event emitter ---
   emitWarning(warning, type, code) {
-    console.warn(`${code ? `[${code}] ` : ""}${type ? `${type}: ` : ""}${warning}`);
+    console.warn(
+      `${code ? `[${code}] ` : ""}${type ? `${type}: ` : ""}${warning}`
+    );
   }
   emit(...args) {
     return super.emit(...args);
@@ -391,13 +415,13 @@ var Process = class _Process extends EventEmitter {
   #stdout;
   #stderr;
   get stdin() {
-    return this.#stdin ??= new ReadStream(0);
+    return (this.#stdin ??= new ReadStream(0));
   }
   get stdout() {
-    return this.#stdout ??= new WriteStream(1);
+    return (this.#stdout ??= new WriteStream(1));
   }
   get stderr() {
-    return this.#stderr ??= new WriteStream(2);
+    return (this.#stderr ??= new WriteStream(2));
   }
   // --- cwd ---
   #cwd = "/";
@@ -466,10 +490,8 @@ var Process = class _Process extends EventEmitter {
     return {};
   }
   // --- noop methods ---
-  ref() {
-  }
-  unref() {
-  }
+  ref() {}
+  unref() {}
   // --- unimplemented methods ---
   umask() {
     throw createNotImplementedError("process.umask");
@@ -508,10 +530,14 @@ var Process = class _Process extends EventEmitter {
     throw createNotImplementedError("process.cpuUsage");
   }
   setUncaughtExceptionCaptureCallback() {
-    throw createNotImplementedError("process.setUncaughtExceptionCaptureCallback");
+    throw createNotImplementedError(
+      "process.setUncaughtExceptionCaptureCallback"
+    );
   }
   hasUncaughtExceptionCaptureCallback() {
-    throw createNotImplementedError("process.hasUncaughtExceptionCaptureCallback");
+    throw createNotImplementedError(
+      "process.hasUncaughtExceptionCaptureCallback"
+    );
   }
   initgroups() {
     throw createNotImplementedError("process.initgroups");
@@ -526,7 +552,9 @@ var Process = class _Process extends EventEmitter {
     throw createNotImplementedError("process.binding");
   }
   // --- attached interfaces ---
-  permission = { has: /* @__PURE__ */ notImplemented("process.permission.has") };
+  permission = {
+    has: /* @__PURE__ */ notImplemented("process.permission.has"),
+  };
   report = {
     directory: "",
     filename: "",
@@ -536,20 +564,27 @@ var Process = class _Process extends EventEmitter {
     reportOnSignal: false,
     reportOnUncaughtException: false,
     getReport: /* @__PURE__ */ notImplemented("process.report.getReport"),
-    writeReport: /* @__PURE__ */ notImplemented("process.report.writeReport")
+    writeReport: /* @__PURE__ */ notImplemented("process.report.writeReport"),
   };
   finalization = {
     register: /* @__PURE__ */ notImplemented("process.finalization.register"),
-    unregister: /* @__PURE__ */ notImplemented("process.finalization.unregister"),
-    registerBeforeExit: /* @__PURE__ */ notImplemented("process.finalization.registerBeforeExit")
+    unregister: /* @__PURE__ */ notImplemented(
+      "process.finalization.unregister"
+    ),
+    registerBeforeExit: /* @__PURE__ */ notImplemented(
+      "process.finalization.registerBeforeExit"
+    ),
   };
-  memoryUsage = Object.assign(() => ({
-    arrayBuffers: 0,
-    rss: 0,
-    external: 0,
-    heapTotal: 0,
-    heapUsed: 0
-  }), { rss: /* @__PURE__ */ __name(() => 0, "rss") });
+  memoryUsage = Object.assign(
+    () => ({
+      arrayBuffers: 0,
+      rss: 0,
+      external: 0,
+      heapTotal: 0,
+      heapUsed: 0,
+    }),
+    { rss: /* @__PURE__ */ __name(() => 0, "rss") }
+  );
   // --- undefined props ---
   mainModule = void 0;
   domain = void 0;
@@ -592,27 +627,28 @@ var Process = class _Process extends EventEmitter {
 };
 
 // ../../../../../.bun/install/global/node_modules/@cloudflare/unenv-preset/dist/runtime/node/process.mjs
-var globalProcess = globalThis["process"];
-var getBuiltinModule = globalProcess.getBuiltinModule;
-var workerdProcess = getBuiltinModule("node:process");
-var isWorkerdProcessV2 = globalThis.Cloudflare.compatibilityFlags.enable_nodejs_process_v2;
-var unenvProcess = new Process({
+const globalProcess = globalThis.process;
+const getBuiltinModule = globalProcess.getBuiltinModule;
+const workerdProcess = getBuiltinModule("node:process");
+const isWorkerdProcessV2 =
+  globalThis.Cloudflare.compatibilityFlags.enable_nodejs_process_v2;
+const unenvProcess = new Process({
   env: globalProcess.env,
   // `hrtime` is only available from workerd process v2
   hrtime: isWorkerdProcessV2 ? workerdProcess.hrtime : hrtime,
   // `nextTick` is available from workerd process v1
-  nextTick: workerdProcess.nextTick
+  nextTick: workerdProcess.nextTick,
 });
-var { exit, features, platform } = workerdProcess;
-var {
+const { exit, features, platform } = workerdProcess;
+const {
   // Always implemented by workerd
   env,
   // Only implemented in workerd v2
   hrtime: hrtime3,
   // Always implemented by workerd
-  nextTick
+  nextTick,
 } = unenvProcess;
-var {
+const {
   _channel,
   _disconnect,
   _events,
@@ -623,9 +659,9 @@ var {
   _send,
   assert,
   disconnect,
-  mainModule
+  mainModule,
 } = unenvProcess;
-var {
+const {
   // @ts-expect-error `_debugEnd` is missing typings
   _debugEnd,
   // @ts-expect-error `_debugProcess` is missing typings
@@ -735,9 +771,9 @@ var {
   unref,
   uptime,
   version,
-  versions
+  versions,
 } = isWorkerdProcessV2 ? workerdProcess : unenvProcess;
-var _process = {
+const _process = {
   abort,
   addListener,
   allowedNodeEnvironmentFlags,
@@ -845,33 +881,34 @@ var _process = {
   _pendingMessage,
   _channel,
   _send,
-  _linkedBinding
+  _linkedBinding,
 };
-var process_default = _process;
+const process_default = _process;
 
 // ../../../../../.bun/install/global/node_modules/wrangler/_virtual_unenv_global_polyfill-@cloudflare-unenv-preset-node-process
 globalThis.process = process_default;
 
 // src/index.ts
-var ESTIMATING_BOARD_ID = "7943937851";
-var LEADS_BOARD_ID = "7943937841";
-var BID_STATUS_COLUMN_ID = "deal_stage";
-var TARGET_STATUS = "GC Not Awarded";
-var OVERALL_STATUS_COL = "color_mm068kjz";
-var ESTIMATE_LINK_COL = "board_relation_mktg3z60";
-var WON_GROUP = "group_mkthxpv3";
-var OPEN_GROUP = "group_mkt5hjqh";
-var SENT_GROUP = "group_mkt5fv3a";
-var PREFIX_PATTERN = /^(TF|PJ|RO|REBID|CFS|INSPECTIONS|LW|MISC|SF|SS)[\s\-_:]+/i;
-var BID_TO_OVERALL_STATUS = {
-  "Won": "Won",
+const ESTIMATING_BOARD_ID = "7943937851";
+const LEADS_BOARD_ID = "7943937841";
+const BID_STATUS_COLUMN_ID = "deal_stage";
+const TARGET_STATUS = "GC Not Awarded";
+const OVERALL_STATUS_COL = "color_mm068kjz";
+const ESTIMATE_LINK_COL = "board_relation_mktg3z60";
+const WON_GROUP = "group_mkthxpv3";
+const OPEN_GROUP = "group_mkt5hjqh";
+const SENT_GROUP = "group_mkt5fv3a";
+const PREFIX_PATTERN =
+  /^(TF|PJ|RO|REBID|CFS|INSPECTIONS|LW|MISC|SF|SS)[\s\-_:]+/i;
+const BID_TO_OVERALL_STATUS = {
+  Won: "Won",
   "Pending Won": "Won",
   "Add to Projects": "Won",
-  "Lost": "Lost",
+  Lost: "Lost",
   "GC Not Awarded": "Lost",
-  "Duplicates": "Lost"
+  Duplicates: "Lost",
 };
-var src_default = {
+const src_default = {
   // HTTP handler for manual trigger / testing
   async fetch(request, env2) {
     const url = new URL(request.url);
@@ -935,10 +972,10 @@ Jobs:
           console.log(
             `[Leads Sync] Complete: ${result.updatedCount} updated, ${result.errors.length} errors`
           );
-        })
+        }),
       ])
     );
-  }
+  },
 };
 async function runCleanup(env2, dryRun = false) {
   const result = {
@@ -946,7 +983,7 @@ async function runCleanup(env2, dryRun = false) {
     openSentCount: 0,
     toUpdateCount: 0,
     updatedCount: 0,
-    errors: []
+    errors: [],
   };
   try {
     console.log("[GC Cleanup] Fetching Won items...");
@@ -995,19 +1032,25 @@ async function runLeadsSync(env2, dryRun = false) {
     leadsCount: 0,
     updatedCount: 0,
     skippedCount: 0,
-    errors: []
+    errors: [],
   };
   try {
     console.log("[Leads Sync] Fetching leads...");
     const leads = await getLeadsWithEstimates(env2);
     result.leadsCount = leads.length;
-    console.log(`[Leads Sync] Found ${leads.length} leads with linked estimates`);
+    console.log(
+      `[Leads Sync] Found ${leads.length} leads with linked estimates`
+    );
     const estimateIds = [...new Set(leads.map((l) => l.estimateId))];
-    console.log(`[Leads Sync] Fetching ${estimateIds.length} estimate statuses...`);
+    console.log(
+      `[Leads Sync] Fetching ${estimateIds.length} estimate statuses...`
+    );
     const estimateStatuses = await getEstimateStatuses(env2, estimateIds);
     for (const lead of leads) {
       const bidStatus = estimateStatuses.get(lead.estimateId);
-      const newOverallStatus = bidStatus ? BID_TO_OVERALL_STATUS[bidStatus] : null;
+      const newOverallStatus = bidStatus
+        ? BID_TO_OVERALL_STATUS[bidStatus]
+        : null;
       if (!newOverallStatus || newOverallStatus === lead.currentStatus) {
         result.skippedCount++;
         continue;
@@ -1021,7 +1064,9 @@ async function runLeadsSync(env2, dryRun = false) {
       }
       try {
         await updateLeadOverallStatus(env2, lead.id, newOverallStatus);
-        console.log(`[Leads Sync] Updated "${lead.name}": \u2192 ${newOverallStatus}`);
+        console.log(
+          `[Leads Sync] Updated "${lead.name}": \u2192 ${newOverallStatus}`
+        );
         result.updatedCount++;
         await sleep(200);
       } catch (error) {
@@ -1065,14 +1110,18 @@ async function getLeadsWithEstimates(env2) {
     const page = data.boards?.[0]?.items_page;
     if (page?.items) {
       for (const item of page.items) {
-        const estimateCol = item.column_values.find((c) => c.id === ESTIMATE_LINK_COL);
-        const statusCol = item.column_values.find((c) => c.id === OVERALL_STATUS_COL);
+        const estimateCol = item.column_values.find(
+          (c) => c.id === ESTIMATE_LINK_COL
+        );
+        const statusCol = item.column_values.find(
+          (c) => c.id === OVERALL_STATUS_COL
+        );
         if (estimateCol?.linked_item_ids?.[0]) {
           leads.push({
             id: item.id,
             name: item.name,
             estimateId: estimateCol.linked_item_ids[0],
-            currentStatus: statusCol?.label ?? null
+            currentStatus: statusCol?.label ?? null,
           });
         }
       }
@@ -1101,7 +1150,9 @@ async function getEstimateStatuses(env2, estimateIds) {
     `;
     const data = await mondayQuery(env2, query);
     for (const item of data.items) {
-      const statusCol = item.column_values.find((c) => c.id === BID_STATUS_COLUMN_ID);
+      const statusCol = item.column_values.find(
+        (c) => c.id === BID_STATUS_COLUMN_ID
+      );
       if (statusCol?.label) {
         statusMap.set(item.id, statusCol.label);
       }
@@ -1130,9 +1181,9 @@ async function mondayQuery(env2, query) {
     headers: {
       "Content-Type": "application/json",
       Authorization: env2.MONDAY_API_KEY,
-      "API-Version": "2026-01"
+      "API-Version": "2026-01",
     },
-    body: JSON.stringify({ query })
+    body: JSON.stringify({ query }),
   });
   if (!response.ok) {
     throw new Error(`Monday API error: ${response.status}`);
@@ -1199,31 +1250,33 @@ function sleep(ms) {
 __name(sleep, "sleep");
 
 // ../../../../../.bun/install/global/node_modules/wrangler/templates/middleware/middleware-ensure-req-body-drained.ts
-var drainBody = /* @__PURE__ */ __name(async (request, env2, _ctx, middlewareCtx) => {
-  try {
-    return await middlewareCtx.next(request, env2);
-  } finally {
+const drainBody = /* @__PURE__ */ __name(
+  async (request, env2, _ctx, middlewareCtx) => {
     try {
-      if (request.body !== null && !request.bodyUsed) {
-        const reader = request.body.getReader();
-        while (!(await reader.read()).done) {
+      return await middlewareCtx.next(request, env2);
+    } finally {
+      try {
+        if (request.body !== null && !request.bodyUsed) {
+          const reader = request.body.getReader();
+          while (!(await reader.read()).done) {}
         }
+      } catch (e) {
+        console.error("Failed to drain the unused request body.", e);
       }
-    } catch (e) {
-      console.error("Failed to drain the unused request body.", e);
     }
-  }
-}, "drainBody");
-var middleware_ensure_req_body_drained_default = drainBody;
+  },
+  "drainBody"
+);
+const middleware_ensure_req_body_drained_default = drainBody;
 
 // .wrangler/tmp/bundle-DlJ4Mc/middleware-insertion-facade.js
-var __INTERNAL_WRANGLER_MIDDLEWARE__ = [
-  middleware_ensure_req_body_drained_default
+const __INTERNAL_WRANGLER_MIDDLEWARE__ = [
+  middleware_ensure_req_body_drained_default,
 ];
-var middleware_insertion_facade_default = src_default;
+const middleware_insertion_facade_default = src_default;
 
 // ../../../../../.bun/install/global/node_modules/wrangler/templates/middleware/common.ts
-var __facade_middleware__ = [];
+const __facade_middleware__ = [];
 function __facade_register__(...args) {
   __facade_middleware__.push(...args.flat());
 }
@@ -1234,7 +1287,7 @@ function __facade_invokeChain__(request, env2, ctx, dispatch, middlewareChain) {
     dispatch,
     next(newRequest, newEnv) {
       return __facade_invokeChain__(newRequest, newEnv, ctx, dispatch, tail);
-    }
+    },
   };
   return head(request, env2, ctx, middlewareCtx);
 }
@@ -1242,20 +1295,20 @@ __name(__facade_invokeChain__, "__facade_invokeChain__");
 function __facade_invoke__(request, env2, ctx, dispatch, finalMiddleware) {
   return __facade_invokeChain__(request, env2, ctx, dispatch, [
     ...__facade_middleware__,
-    finalMiddleware
+    finalMiddleware,
   ]);
 }
 __name(__facade_invoke__, "__facade_invoke__");
 
 // .wrangler/tmp/bundle-DlJ4Mc/middleware-loader.entry.ts
-var __Facade_ScheduledController__ = class ___Facade_ScheduledController__ {
+const __Facade_ScheduledController__ = class ___Facade_ScheduledController__ {
   constructor(scheduledTime, cron, noRetry) {
     this.scheduledTime = scheduledTime;
     this.cron = cron;
     this.#noRetry = noRetry;
   }
   static {
-    __name(this, "__Facade_ScheduledController__");
+    __name(___Facade_ScheduledController__, "__Facade_ScheduledController__");
   }
   #noRetry;
   noRetry() {
@@ -1266,13 +1319,16 @@ var __Facade_ScheduledController__ = class ___Facade_ScheduledController__ {
   }
 };
 function wrapExportedHandler(worker) {
-  if (__INTERNAL_WRANGLER_MIDDLEWARE__ === void 0 || __INTERNAL_WRANGLER_MIDDLEWARE__.length === 0) {
+  if (
+    __INTERNAL_WRANGLER_MIDDLEWARE__ === void 0 ||
+    __INTERNAL_WRANGLER_MIDDLEWARE__.length === 0
+  ) {
     return worker;
   }
   for (const middleware of __INTERNAL_WRANGLER_MIDDLEWARE__) {
     __facade_register__(middleware);
   }
-  const fetchDispatcher = /* @__PURE__ */ __name(function(request, env2, ctx) {
+  const fetchDispatcher = /* @__PURE__ */ __name((request, env2, ctx) => {
     if (worker.fetch === void 0) {
       throw new Error("Handler does not export a fetch() function.");
     }
@@ -1281,24 +1337,26 @@ function wrapExportedHandler(worker) {
   return {
     ...worker,
     fetch(request, env2, ctx) {
-      const dispatcher = /* @__PURE__ */ __name(function(type, init) {
+      const dispatcher = /* @__PURE__ */ __name((type, init) => {
         if (type === "scheduled" && worker.scheduled !== void 0) {
           const controller = new __Facade_ScheduledController__(
             Date.now(),
             init.cron ?? "",
-            () => {
-            }
+            () => {}
           );
           return worker.scheduled(controller, env2, ctx);
         }
       }, "dispatcher");
       return __facade_invoke__(request, env2, ctx, dispatcher, fetchDispatcher);
-    }
+    },
   };
 }
 __name(wrapExportedHandler, "wrapExportedHandler");
 function wrapWorkerEntrypoint(klass) {
-  if (__INTERNAL_WRANGLER_MIDDLEWARE__ === void 0 || __INTERNAL_WRANGLER_MIDDLEWARE__.length === 0) {
+  if (
+    __INTERNAL_WRANGLER_MIDDLEWARE__ === void 0 ||
+    __INTERNAL_WRANGLER_MIDDLEWARE__.length === 0
+  ) {
     return klass;
   }
   for (const middleware of __INTERNAL_WRANGLER_MIDDLEWARE__) {
@@ -1318,8 +1376,7 @@ function wrapWorkerEntrypoint(klass) {
         const controller = new __Facade_ScheduledController__(
           Date.now(),
           init.cron ?? "",
-          () => {
-          }
+          () => {}
         );
         return super.scheduled(controller);
       }
@@ -1336,15 +1393,15 @@ function wrapWorkerEntrypoint(klass) {
   };
 }
 __name(wrapWorkerEntrypoint, "wrapWorkerEntrypoint");
-var WRAPPED_ENTRY;
+let WRAPPED_ENTRY;
 if (typeof middleware_insertion_facade_default === "object") {
   WRAPPED_ENTRY = wrapExportedHandler(middleware_insertion_facade_default);
 } else if (typeof middleware_insertion_facade_default === "function") {
   WRAPPED_ENTRY = wrapWorkerEntrypoint(middleware_insertion_facade_default);
 }
-var middleware_loader_entry_default = WRAPPED_ENTRY;
+const middleware_loader_entry_default = WRAPPED_ENTRY;
 export {
   __INTERNAL_WRANGLER_MIDDLEWARE__,
-  middleware_loader_entry_default as default
+  middleware_loader_entry_default as default,
 };
 //# sourceMappingURL=index.js.map

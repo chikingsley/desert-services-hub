@@ -98,7 +98,7 @@ Default values cause runtime failures. Example:
 
 // ✅ WORKS - all parameters explicit
 {resource: "message", operation: "post", select: "channel", channelId: "C123", text: "Hello"}
-```css
+```
 
 ### ⚠️ Example Availability
 
@@ -139,7 +139,7 @@ Created workflow:
 - Configured: POST /webhook → #general channel
 
 Validation: ✅ All checks passed
-```css
+```
 
 ### Modifications
 
@@ -151,7 +151,7 @@ Updated workflow:
 - Fixed required Slack parameters
 
 Changes validated successfully.
-```css
+```
 
 ## Batch Operations
 
@@ -168,14 +168,14 @@ n8n_update_partial_workflow({
     {type: "cleanStaleConnections"}
   ]
 })
-```text
+```
 
 ❌ BAD - Separate calls:
 
 ```json
 n8n_update_partial_workflow({id: "wf-123", operations: [{...}]})
 n8n_update_partial_workflow({id: "wf-123", operations: [{...}]})
-```css
+```
 
 ### CRITICAL: addConnection Syntax
 
@@ -191,7 +191,7 @@ The `addConnection` operation requires **four separate string parameters**. Comm
     "destination": {"nodeId": "node-2", "inputIndex": 0}
   }
 }
-```text
+```
 
 ❌ WRONG - Combined string (fails with "Source node not found"):
 
@@ -201,7 +201,7 @@ The `addConnection` operation requires **four separate string parameters**. Comm
   "source": "node-1:main:0",
   "target": "node-2:main:0"
 }
-```text
+```
 
 ✅ CORRECT - Four separate string parameters:
 
@@ -213,7 +213,7 @@ The `addConnection` operation requires **four separate string parameters**. Comm
   "sourcePort": "main",
   "targetPort": "main"
 }
-```css
+```
 
 **Reference**: [GitHub Issue #327](https://github.com/czlonkowski/n8n-mcp/issues/327)
 
@@ -232,7 +232,7 @@ IF nodes have **two outputs** (TRUE and FALSE). Use the **`branch` parameter** t
   "targetPort": "main",
   "branch": "true"
 }
-```text
+```
 
 ✅ CORRECT - Route to FALSE branch (when condition is NOT met):
 
@@ -245,7 +245,7 @@ IF nodes have **two outputs** (TRUE and FALSE). Use the **`branch` parameter** t
   "targetPort": "main",
   "branch": "false"
 }
-```text
+```
 
 **Common Pattern** - Complete IF node routing:
 
@@ -257,7 +257,7 @@ n8n_update_partial_workflow({
     {type: "addConnection", source: "If Node", target: "False Handler", sourcePort: "main", targetPort: "main", branch: "false"}
   ]
 })
-```css
+```
 
 **Note**: Without the `branch` parameter, both connections may end up on the same output, causing logic errors!
 
@@ -273,7 +273,7 @@ Use the same four-parameter format:
   "sourcePort": "main",
   "targetPort": "main"
 }
-```css
+```
 
 ## Example Workflow
 
@@ -299,7 +299,7 @@ validate_workflow(workflow)
 View at: https://n8n.io/workflows/2414
 
 Validation: ✅ All checks passed"
-```css
+```
 
 ### Building from Scratch (if no template)
 
@@ -330,7 +330,7 @@ validate_workflow(workflowJson)
 // Response after all tools complete:
 "Created workflow: Webhook → Slack
 Validation: ✅ Passed"
-```css
+```
 
 ### Batch Updates
 
@@ -397,3 +397,24 @@ n8n_update_partial_workflow({
 20. **n8n-nodes-base.executeWorkflowTrigger** - Sub-workflow calls
 
 **Note:** LangChain nodes use the `@n8n/n8n-nodes-langchain.` prefix, core nodes use `n8n-nodes-base.`
+
+---
+
+## Repository Context
+
+This is the Desert Services Hub, a unified platform for construction services automation.
+
+### Key Locations
+
+- **Main App**: `apps/web/` — Bun full-stack React app (quotes, takeoffs, contracts)
+- **Contract Processing**: `apps/contract-ui/contract/` — Workflow for contract intake
+- **Hub Database**: `apps/contract-ui/contract/hub.db` — Primary SQLite database (237K+ emails)
+- **Quoting MCP**: `apps/quoting/` — Quote generation and catalog (moved from services/)
+- **Monday Sync**: `workers/ds-estimates-sync-worker/cli/hub.ts`
+
+### Local Data First
+
+Always query local SQLite databases before calling external APIs:
+- Search estimates → `hub.db` estimates table
+- Find emails → `hub.db` emails table
+- Download attachments → MinIO via `lib/minio.ts`

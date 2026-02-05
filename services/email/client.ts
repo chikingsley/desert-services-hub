@@ -468,16 +468,29 @@ export class GraphEmailClient {
   async getAllEmailsPaginated(
     userId?: string,
     since?: Date,
-    maxEmails = MAX_EMAILS_DEFAULT
+    maxEmails = MAX_EMAILS_DEFAULT,
+    options?: { includeBody?: boolean; before?: Date }
   ): Promise<EmailMessage[]> {
     const client = this.getClient();
     const daysBack = this.config.daysBack ?? DEFAULT_DAYS_BACK;
     const sinceDate = since ?? new Date(Date.now() - daysBack * MS_PER_DAY);
-    const dateFilter = `receivedDateTime ge ${sinceDate.toISOString()}`;
+    const includeBody = options?.includeBody ?? true;
+
+    // Build date filter
+    let dateFilter = `receivedDateTime ge ${sinceDate.toISOString()}`;
+    if (options?.before) {
+      dateFilter += ` and receivedDateTime lt ${options.before.toISOString()}`;
+    }
+
     const messagesPath = this.getMessagesPath(userId);
     const displayName = this.authMode === "user" ? "your mailbox" : userId;
     const batchSize = this.config.batchSize ?? DEFAULT_BATCH_SIZE;
     const allEmails: EmailMessage[] = [];
+
+    // Fast listing without body, or full fetch with body
+    const selectFields = includeBody
+      ? "id,internetMessageId,subject,receivedDateTime,from,toRecipients,ccRecipients,body,hasAttachments,conversationId,categories"
+      : "id,internetMessageId,subject,receivedDateTime,from,toRecipients,ccRecipients,hasAttachments,conversationId,categories,bodyPreview";
 
     try {
       let response = await client
@@ -485,9 +498,7 @@ export class GraphEmailClient {
         .filter(dateFilter)
         .orderby("receivedDateTime desc")
         .top(Math.min(batchSize, maxEmails))
-        .select(
-          "id,internetMessageId,subject,receivedDateTime,from,toRecipients,ccRecipients,body,hasAttachments,conversationId,categories"
-        )
+        .select(selectFields)
         .get();
 
       while (response?.value && allEmails.length < maxEmails) {
@@ -513,6 +524,108 @@ export class GraphEmailClient {
       );
       throw error;
     }
+  }
+
+  /**
+   * Batch fetch email bodies using Graph batch API
+   * Fetches up to 20 emails at a time (Graph batch limit)
+   * Includes retry logic for rate limiting (429 errors)
+   * @param emailIds - Array of email IDs to fetch bodies for
+   * @param userId - User/mailbox to fetch from
+   * @returns Map of email ID to body content (HTML)
+   */
+  async getEmailBodiesBatch(
+    emailIds: string[],
+    userId?: string
+  ): Promise<Map<string, string>> {
+    const client = this.getClient();
+    const messagesPath = this.getMessagesPath(userId);
+    const results = new Map<string, string>();
+    const BATCH_SIZE = 20; // Graph batch API limit
+    const MAX_RETRIES = 5;
+
+    // Process in batches of 20
+    for (let i = 0; i < emailIds.length; i += BATCH_SIZE) {
+      const batch = emailIds.slice(i, i + BATCH_SIZE);
+
+      const batchRequests = batch.map((id, idx) => ({
+        id: String(idx),
+        method: "GET",
+        url: `${messagesPath}/${id}?$select=id,body`,
+      }));
+
+      let retries = 0;
+      let success = false;
+
+      while (!success && retries < MAX_RETRIES) {
+        try {
+          const batchResponse = await client.api("/$batch").post({
+            requests: batchRequests,
+          });
+
+          for (const response of batchResponse.responses || []) {
+            if (response.status === 200 && response.body?.id) {
+              const bodyContent = response.body.body?.content || "";
+              results.set(response.body.id, bodyContent);
+            } else if (response.status === 429) {
+              // Individual request in batch was throttled
+              const retryAfter =
+                Number(response.headers?.["Retry-After"]) || 30;
+              console.error(
+                `[Batch ${Math.floor(i / BATCH_SIZE)}] Individual request throttled, waiting ${retryAfter}s...`
+              );
+              await this.sleep(retryAfter * 1000);
+            }
+          }
+          success = true;
+        } catch (error) {
+          const graphError = error as {
+            statusCode?: number;
+            headers?: { get?: (key: string) => string | null };
+          };
+
+          // Check if it's a rate limit error (429)
+          if (graphError.statusCode === 429) {
+            retries++;
+            // Extract Retry-After header, default to exponential backoff
+            let retryAfterMs = Math.min(30_000 * 2 ** retries, 120_000); // 30s, 60s, 120s max
+
+            // Try to get Retry-After from headers
+            const retryAfterHeader = graphError.headers?.get?.("Retry-After");
+            if (retryAfterHeader) {
+              retryAfterMs = Number.parseInt(retryAfterHeader, 10) * 1000;
+            }
+
+            console.error(
+              `[Batch ${Math.floor(i / BATCH_SIZE)}] Rate limited (429), retry ${retries}/${MAX_RETRIES} in ${retryAfterMs / 1000}s...`
+            );
+            await this.sleep(retryAfterMs);
+          } else {
+            console.error(
+              `Batch body fetch failed for batch ${Math.floor(i / BATCH_SIZE)}:`,
+              error
+            );
+            // Non-rate-limit error, skip batch
+            break;
+          }
+        }
+      }
+
+      if (!success && retries >= MAX_RETRIES) {
+        console.error(
+          `[Batch ${Math.floor(i / BATCH_SIZE)}] Gave up after ${MAX_RETRIES} retries`
+        );
+      }
+    }
+
+    return results;
+  }
+
+  /**
+   * Sleep for a given number of milliseconds
+   */
+  private sleep(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   /**
@@ -866,27 +979,54 @@ export class GraphEmailClient {
   ): Promise<EmailAttachment[]> {
     const client = this.getClient();
     const basePath = this.getBasePath(userId);
+    const MAX_RETRIES = 5;
 
-    try {
-      const response = await client
-        .api(`${basePath}/messages/${messageId}/attachments`)
-        .get();
+    for (let retries = 0; retries < MAX_RETRIES; retries++) {
+      try {
+        const response = await client
+          .api(`${basePath}/messages/${messageId}/attachments`)
+          .get();
 
-      if (!response?.value) {
-        return [];
+        if (!response?.value) {
+          return [];
+        }
+
+        return response.value.map((att: Record<string, unknown>) => ({
+          id: att.id as string,
+          name: att.name as string,
+          contentType: att.contentType as string,
+          size: att.size as number,
+          isInline: (att.isInline as boolean) ?? false,
+        }));
+      } catch (error) {
+        const graphError = error as {
+          statusCode?: number;
+          headers?: { get?: (key: string) => string | null };
+        };
+
+        if (graphError.statusCode === 429) {
+          // Rate limited - extract Retry-After or use exponential backoff
+          let retryAfterMs = Math.min(30_000 * 2 ** retries, 120_000);
+          const retryAfterHeader = graphError.headers?.get?.("Retry-After");
+          if (retryAfterHeader) {
+            retryAfterMs = Number.parseInt(retryAfterHeader, 10) * 1000;
+          }
+
+          console.error(
+            `[getAttachments] Rate limited (429), retry ${retries + 1}/${MAX_RETRIES} in ${retryAfterMs / 1000}s...`
+          );
+          await this.sleep(retryAfterMs);
+          continue;
+        }
+
+        // Non-rate-limit error
+        console.error("Error fetching attachments:", error);
+        throw error;
       }
-
-      return response.value.map((att: Record<string, unknown>) => ({
-        id: att.id as string,
-        name: att.name as string,
-        contentType: att.contentType as string,
-        size: att.size as number,
-        isInline: (att.isInline as boolean) ?? false,
-      }));
-    } catch (error) {
-      console.error("Error fetching attachments:", error);
-      throw error;
     }
+
+    console.error(`[getAttachments] Gave up after ${MAX_RETRIES} retries`);
+    return [];
   }
 
   /**

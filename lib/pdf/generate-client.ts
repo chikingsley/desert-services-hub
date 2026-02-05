@@ -3,7 +3,7 @@
 
 import pdfMake from "pdfmake/build/pdfmake";
 import pdfFonts from "pdfmake/build/vfs_fonts";
-import type { EditorQuote } from "@/lib/types";
+import type { EditorEstimate } from "@/lib/types";
 import type { GeneratePDFOptions } from "./pdf-builder";
 import { buildDocDefinition } from "./pdf-builder";
 
@@ -34,11 +34,11 @@ async function getLogoBase64(): Promise<string> {
  * Generate PDF as Blob (for client-side preview in iframe)
  */
 export async function generatePDFBlob(
-  quote: EditorQuote,
+  estimate: EditorEstimate,
   options?: GeneratePDFOptions
 ): Promise<Blob> {
   const logoBase64 = await getLogoBase64();
-  const docDefinition = buildDocDefinition(quote, logoBase64, options);
+  const docDefinition = buildDocDefinition(estimate, logoBase64, options);
 
   return new Promise((resolve, reject) => {
     try {
@@ -63,10 +63,10 @@ export async function generatePDFBlob(
  * Open PDF in new tab
  */
 export async function openPDF(
-  quote: EditorQuote,
+  estimate: EditorEstimate,
   options?: GeneratePDFOptions
 ): Promise<void> {
   const logoBase64 = await getLogoBase64();
-  const docDefinition = buildDocDefinition(quote, logoBase64, options);
+  const docDefinition = buildDocDefinition(estimate, logoBase64, options);
   await pdfMake.createPdf(docDefinition).open();
 }

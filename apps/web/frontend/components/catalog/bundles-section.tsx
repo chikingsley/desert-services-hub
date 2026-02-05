@@ -20,7 +20,12 @@ import {
   AlertDialogTitle,
 } from "@/apps/web/frontend/components/ui/alert-dialog";
 import { Button } from "@/apps/web/frontend/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/apps/web/frontend/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/apps/web/frontend/components/ui/card";
 import { Checkbox } from "@/apps/web/frontend/components/ui/checkbox";
 import {
   Collapsible,

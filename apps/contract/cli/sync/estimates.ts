@@ -10,7 +10,7 @@ import { getItemsRich, type MondayItemRich, query } from "@monday/client";
 import { BOARD_IDS, ESTIMATING_COLUMNS } from "@monday/types";
 
 const HUB_DB_PATH =
-  "/Users/chiejimofor/Documents/Github/desert-services-hub/apps/contract/hub.db";
+  "/Users/chiejimofor/Documents/Github/desert-services-hub/lib/db/hub.db";
 
 // Groups to skip (templates, sales items)
 const SKIP_GROUPS = ["Shell Estimates ( Do Not Move)", "Sales Team Estimates"];

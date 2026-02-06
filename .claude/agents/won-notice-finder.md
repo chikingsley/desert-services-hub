@@ -38,7 +38,7 @@ These are the categories of how we learn we won:
 
 ### Hub.db (Primary Source)
 
-Location: `apps/contract/hub.db`
+Location: `lib/db/hub.db`
 
 **Tables:**
 
@@ -73,7 +73,7 @@ sqlite3 apps/contract/projects/projects.db \
   "SELECT * FROM projects WHERE project_name LIKE '%PROJECT_NAME%'"
 
 # Find the estimate in hub.db
-sqlite3 apps/contract/hub.db \
+sqlite3 lib/db/hub.db \
   "SELECT id, name, contractor, estimate_number, bid_status
    FROM estimates
    WHERE name LIKE '%PROJECT_NAME%' OR contractor LIKE '%CONTRACTOR%'"
@@ -85,7 +85,7 @@ Search across ALL mailboxes. Don't just search Chi's - the won notice often come
 
 ```bash
 # Search for project + award signals
-sqlite3 apps/contract/hub.db "
+sqlite3 lib/db/hub.db "
   SELECT e.id, e.subject, e.from_email, e.received_at, m.email as mailbox,
          e.body_preview, e.has_attachments
   FROM emails e
@@ -108,7 +108,7 @@ sqlite3 apps/contract/hub.db "
 Win notices often come as attachments:
 
 ```bash
-sqlite3 apps/contract/hub.db "
+sqlite3 lib/db/hub.db "
   SELECT e.id, e.subject, e.received_at, m.email as mailbox,
          a.name as attachment_name
   FROM emails e
@@ -130,7 +130,7 @@ If you find a promising email, get the full conversation:
 
 ```bash
 # Get conversation thread
-sqlite3 apps/contract/hub.db "
+sqlite3 lib/db/hub.db "
   SELECT e.id, e.subject, e.from_email, e.received_at, m.email as mailbox,
          e.body_preview
   FROM emails e
@@ -147,7 +147,7 @@ sqlite3 apps/contract/hub.db "
 When you need the full body (not just preview):
 
 ```bash
-sqlite3 apps/contract/hub.db "
+sqlite3 lib/db/hub.db "
   SELECT body_full FROM emails WHERE id = EMAIL_ID
 "
 ```

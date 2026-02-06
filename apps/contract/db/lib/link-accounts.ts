@@ -14,7 +14,7 @@
  * NO derived names. Domain is the identifier. Display names come from
  * real data (platform extraction, manual entry, etc.) not guessing.
  */
-import { db } from "@contract/db/connection";
+import { db } from "@lib/db/hub";
 
 // ============================================================================
 // Domain Configuration

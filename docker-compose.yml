@@ -12,19 +12,10 @@ services:
     environment:
       NODE_ENV: production
       # Database path (inside container, backed by volume)
-      DATABASE_PATH: /app/data/desert-services.db
-      # Connect to MinIO (optional - for file storage)
-      MINIO_ENDPOINT: aistor
-      MINIO_PORT: 9000
-      MINIO_USE_SSL: "false"
-      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
-      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin}
+      HUB_DATABASE_PATH: /app/data/hub.db
     volumes:
       # Persist SQLite database outside container
       - app_data:/app/data
-    depends_on:
-      aistor:
-        condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
       interval: 30s
@@ -33,59 +24,20 @@ services:
       start_period: 40s
     restart: unless-stopped
 
-  # ==========================================================================
-  # MinIO AIStor Object Storage (Commercial/Enterprise)
-  # ==========================================================================
-  # Requires license key from https://subnet.min.io
-  aistor:
-    image: quay.io/minio/aistor/minio:latest
-    container_name: desert-aistor
-    command: server /data --console-address ":9001" --license /minio.license
-    ports:
-      - "9000:9000"  # S3 API
-      - "9001:9001"  # Web Console
-    environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
-    volumes:
-      - aistor_data:/data
-      - ./.minio/minio.license:/minio.license:ro
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
-      interval: 30s
-      timeout: 20s
-      retries: 3
-    restart: unless-stopped
-
 volumes:
   app_data:
-    driver: local
-  aistor_data:
     driver: local
 
 # =============================================================================
 # Usage
 # =============================================================================
 #
-# Start everything:      docker compose up -d
-# Start app only:        docker compose up -d app
-# Start storage only:    docker compose up -d aistor
+# Start:                 docker compose up -d
 # View logs:             docker compose logs -f app
 # Rebuild after changes: docker compose build app && docker compose up -d app
-#
-# =============================================================================
-# Services
-# =============================================================================
 #
 # App (Desert Services Hub):
 #   URL:           http://localhost:3000
 #   Database:      SQLite persisted in app_data volume
-#
-# MinIO AIStor (Object Storage):
-#   Prerequisites: Get license from https://subnet.min.io/health?download-license
-#                  Save to .minio/minio.license
-#   Console:       http://localhost:9001
-#   S3 API:        http://localhost:9000
-#   Credentials:   minioadmin / minioadmin (or set in .env)
 #
 # =============================================================================

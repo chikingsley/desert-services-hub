@@ -2,7 +2,7 @@
  * Webhook handlers
  * Routes: POST /api/webhooks/monday
  */
-import { db } from "@lib/db";
+import { db } from "@lib/db/hub";
 
 interface MondayEvent {
   boardId?: string;
@@ -22,7 +22,6 @@ export async function handleMondayWebhook(req: Request): Promise<Response> {
       return Response.json({ challenge: body.challenge });
     }
 
-    // 2. Event handling
     const event = body.event as MondayEvent | undefined;
     if (!event) {
       return Response.json({ ok: true });
@@ -30,10 +29,10 @@ export async function handleMondayWebhook(req: Request): Promise<Response> {
 
     const { type } = event;
 
-    // Handle name changes by updating the cache directly
+    // Handle name changes by updating the estimates table
     if (type === "change_name" && event.value?.name && event.itemId) {
       db.prepare(
-        "UPDATE monday_cache SET name = ?, updated_at = datetime('now') WHERE id = ?"
+        "UPDATE estimates SET name = ?, updated_at = datetime('now') WHERE monday_item_id = ?"
       ).run(event.value.name, event.itemId);
     }
 

@@ -4,7 +4,7 @@
  * Stores Desert Services' insurance limits and compares against contract requirements.
  */
 
-import { db } from "./index";
+import { db } from "@lib/db/hub";
 
 // =============================================================================
 // Schema

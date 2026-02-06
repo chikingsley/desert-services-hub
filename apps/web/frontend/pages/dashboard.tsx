@@ -10,8 +10,8 @@ import {
   Sparkles,
 } from "lucide-react";
 import { Link } from "react-router";
+import { NewEstimateButton } from "@/apps/web/frontend/components/estimates/new-estimate-button";
 import { PageHeader } from "@/apps/web/frontend/components/page-header";
-import { NewQuoteButton } from "@/apps/web/frontend/components/quotes/new-quote-button";
 import { Button } from "@/apps/web/frontend/components/ui/button";
 import {
   Card,
@@ -31,7 +31,7 @@ const workflowSteps = [
   },
   {
     step: 2,
-    title: "Quote",
+    title: "Estimate",
     description: "Build the estimate",
     icon: FileText,
     active: true,
@@ -81,20 +81,20 @@ export function DashboardPage() {
                 delivery. Built for construction and landscaping professionals.
               </p>
               <div className="flex flex-wrap gap-3">
-                <NewQuoteButton
+                <NewEstimateButton
                   className="glow-primary bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90"
                   size="lg"
                 >
-                  Create New Quote
-                </NewQuoteButton>
+                  Create New Estimate
+                </NewEstimateButton>
                 <Button
                   asChild
                   className="border-sidebar-border bg-sidebar-accent text-sidebar-foreground hover:bg-sidebar-accent/80"
                   size="lg"
                   variant="outline"
                 >
-                  <Link to="/quotes">
-                    View All Quotes
+                  <Link to="/estimates">
+                    View All Estimates
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
                 </Button>
@@ -168,7 +168,7 @@ export function DashboardPage() {
 
         {/* Feature Cards */}
         <div className="stagger-children grid gap-5 lg:grid-cols-2">
-          {/* Quotes Feature Card */}
+          {/* Estimates Feature Card */}
           <Card className="hover-lift group relative overflow-hidden border-border bg-card">
             <div className="absolute inset-0 bg-linear-to-br from-primary/5 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
             <CardHeader className="relative pb-3">
@@ -177,7 +177,9 @@ export function DashboardPage() {
                   <FileText className="h-5 w-5" />
                 </div>
                 <div>
-                  <CardTitle className="font-display text-lg">Quotes</CardTitle>
+                  <CardTitle className="font-display text-lg">
+                    Estimates
+                  </CardTitle>
                   <CardDescription>Create and manage estimates</CardDescription>
                 </div>
               </div>
@@ -189,9 +191,11 @@ export function DashboardPage() {
                 all changes.
               </p>
               <div className="flex items-center gap-3">
-                <NewQuoteButton className="flex-1">New Quote</NewQuoteButton>
+                <NewEstimateButton className="flex-1">
+                  New Estimate
+                </NewEstimateButton>
                 <Button asChild className="flex-1" variant="outline">
-                  <Link to="/quotes">
+                  <Link to="/estimates">
                     View All
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
@@ -219,7 +223,7 @@ export function DashboardPage() {
             <CardContent className="relative">
               <p className="mb-5 text-muted-foreground/80 text-sm leading-relaxed">
                 Import plan PDFs, set scale, and measure quantities that flow
-                directly into quotes. Digital takeoffs made simple.
+                directly into estimates. Digital takeoffs made simple.
               </p>
               <Button className="w-full" disabled variant="outline">
                 <Ruler className="mr-2 h-4 w-4" />

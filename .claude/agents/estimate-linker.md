@@ -13,7 +13,7 @@ You link projects (in projects.db) to their Won estimates (in hub.db) by searchi
 ## Databases
 
 - **projects.db**: `/Users/chiejimofor/Documents/Github/desert-services-hub/apps/contract/projects/projects.db`
-- **hub.db**: `/Users/chiejimofor/Documents/Github/desert-services-hub/apps/contract/hub.db`
+- **hub.db**: `/Users/chiejimofor/Documents/Github/desert-services-hub/lib/db/hub.db`
 
 ## Input
 
@@ -75,7 +75,7 @@ For batch mode, get all unlinked projects in one query (Step 1 of batch).
 Pick the most distinctive 1-2 words from the project name. Do NOT search common words like "the", "at", "park", "project".
 
 ```bash
-sqlite3 /Users/chiejimofor/Documents/Github/desert-services-hub/apps/contract/hub.db ".mode column" ".headers on" "
+sqlite3 /Users/chiejimofor/Documents/Github/desert-services-hub/lib/db/hub.db ".mode column" ".headers on" "
 SELECT id, monday_item_id, name, contractor, bid_status, awarded_value,
        CASE WHEN estimate_storage_path IS NOT NULL THEN 'yes' ELSE 'no' END as has_pdf
 FROM estimates
@@ -93,7 +93,7 @@ If Step 2 returns too many results, add contractor filter. If too few, try:
 - **Search ALL bid statuses** (not just Won) — the project may be active but the estimate not yet marked Won
 
 ```bash
-sqlite3 /Users/chiejimofor/Documents/Github/desert-services-hub/apps/contract/hub.db ".mode column" ".headers on" "
+sqlite3 /Users/chiejimofor/Documents/Github/desert-services-hub/lib/db/hub.db ".mode column" ".headers on" "
 SELECT id, monday_item_id, name, contractor, bid_status, awarded_value,
        CASE WHEN estimate_storage_path IS NOT NULL THEN 'yes' ELSE 'no' END as has_pdf
 FROM estimates
@@ -107,7 +107,7 @@ ORDER BY bid_status, name
 The project's contractor field can be WRONG. Search by name keywords across ALL contractors:
 
 ```bash
-sqlite3 /Users/chiejimofor/Documents/Github/desert-services-hub/apps/contract/hub.db ".mode column" ".headers on" "
+sqlite3 /Users/chiejimofor/Documents/Github/desert-services-hub/lib/db/hub.db ".mode column" ".headers on" "
 SELECT id, monday_item_id, name, contractor, bid_status, awarded_value
 FROM estimates
 WHERE UPPER(name) LIKE '%KEYWORD%'

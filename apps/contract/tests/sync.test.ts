@@ -8,20 +8,18 @@
  * - Upsert behavior (re-syncing same emails)
  * - Date filtering
  */
-import { afterAll, beforeAll, describe, expect, test } from "bun:test";
-import { db } from "@contract/db/connection";
+import { beforeAll, describe, expect, test } from "bun:test";
+import { GraphEmailClient } from "@email/client";
+import { db } from "@lib/db/hub";
 import {
   getEmailByMessageId,
   getOrCreateMailbox,
   insertEmail,
-} from "@contract/db/repositories";
-import type { InsertEmailData } from "@contract/db/types";
-import { GraphEmailClient } from "@email/client";
-import { ensureBucket, fileExists, getFile, minioClient } from "@lib/minio";
+} from "@lib/db/repositories";
+import type { InsertEmailData } from "@lib/db/types";
 
 // Test constants
 const TEST_MAILBOX = "estimating@desertservices.net";
-const EMAIL_ATTACHMENTS_BUCKET = "email-attachments";
 
 // Create graph client for tests
 function createTestClient(): GraphEmailClient {
@@ -297,86 +295,5 @@ describe("Email Sync", () => {
       // Cleanup
       db.run("DELETE FROM emails WHERE message_id = ?", [testMessageId]);
     });
-  });
-});
-
-describe("AIStor MinIO Email Attachments", () => {
-  const TEST_EMAIL_ID = 999_999;
-  const TEST_ATTACHMENT_ID = "test-att-id";
-  const TEST_PDF_CONTENT = Buffer.from("%PDF-1.4 test email attachment");
-
-  beforeAll(async () => {
-    // Ensure bucket exists - will fail if AIStor not running
-    // Start AIStor with: docker compose up -d aistor
-    try {
-      await ensureBucket(EMAIL_ATTACHMENTS_BUCKET);
-    } catch (error) {
-      throw new Error(
-        "AIStor MinIO not available. Start it with: docker compose up -d aistor\n" +
-          `Original error: ${error instanceof Error ? error.message : String(error)}`
-      );
-    }
-  });
-
-  test("should upload email attachment to AIStor", async () => {
-    const objectKey = `${TEST_EMAIL_ID}/${TEST_ATTACHMENT_ID}/test-contract.pdf`;
-
-    await minioClient.putObject(
-      EMAIL_ATTACHMENTS_BUCKET,
-      objectKey,
-      TEST_PDF_CONTENT,
-      TEST_PDF_CONTENT.length,
-      { "Content-Type": "application/pdf" }
-    );
-
-    const exists = await fileExists(EMAIL_ATTACHMENTS_BUCKET, objectKey);
-    expect(exists).toBe(true);
-  });
-
-  test("should retrieve email attachment from AIStor", async () => {
-    const objectKey = `${TEST_EMAIL_ID}/${TEST_ATTACHMENT_ID}/test-contract.pdf`;
-
-    const data = await getFile(EMAIL_ATTACHMENTS_BUCKET, objectKey);
-
-    // getFile returns Uint8Array, convert to Buffer for comparison
-    expect(Buffer.from(data).toString()).toBe(TEST_PDF_CONTENT.toString());
-  });
-
-  test("should organize attachments by email ID", async () => {
-    // Upload attachments for different "emails"
-    const email1Key = `${TEST_EMAIL_ID}/att1/doc1.pdf`;
-    const email2Key = `${TEST_EMAIL_ID + 1}/att1/doc1.pdf`;
-
-    await minioClient.putObject(
-      EMAIL_ATTACHMENTS_BUCKET,
-      email1Key,
-      TEST_PDF_CONTENT
-    );
-    await minioClient.putObject(
-      EMAIL_ATTACHMENTS_BUCKET,
-      email2Key,
-      TEST_PDF_CONTENT
-    );
-
-    // Both should exist independently
-    expect(await fileExists(EMAIL_ATTACHMENTS_BUCKET, email1Key)).toBe(true);
-    expect(await fileExists(EMAIL_ATTACHMENTS_BUCKET, email2Key)).toBe(true);
-  });
-
-  afterAll(async () => {
-    // Cleanup test files
-    const testKeys = [
-      `${TEST_EMAIL_ID}/${TEST_ATTACHMENT_ID}/test-contract.pdf`,
-      `${TEST_EMAIL_ID}/att1/doc1.pdf`,
-      `${TEST_EMAIL_ID + 1}/att1/doc1.pdf`,
-    ];
-
-    for (const key of testKeys) {
-      try {
-        await minioClient.removeObject(EMAIL_ATTACHMENTS_BUCKET, key);
-      } catch {
-        // Ignore errors during cleanup
-      }
-    }
   });
 });

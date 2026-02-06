@@ -50,7 +50,7 @@ See `apps/contract/PROJECT.md` for full 15-step workflow and `STATE.md` for curr
 
 ### Hub Database (hub.db)
 
-- [ ] Verify all services use correct hub.db path (`apps/contract/hub.db`)
+- [ ] Verify all services use correct hub.db path (`lib/db/hub.db`)
 - [ ] Update any remaining scripts referencing old census.db paths
 - [ ] Document migration path from census.db (if any data still needed)
 
@@ -101,7 +101,7 @@ See `apps/contract/PROJECT.md` for full 15-step workflow and `STATE.md` for curr
 - **Main App**: `apps/web/` — Bun full-stack (quotes, takeoffs, contracts, catalog)
 - **Quoting MCP**: `apps/quoting/` — Quote generation and catalog
 - **Contract Workflow**: `apps/contract/` — Processing pipeline
-- **Hub Database**: `apps/contract/hub.db` — Primary data store
+- **Hub Database**: `lib/db/hub.db` — Primary data store
 - **Monday Sync CLI**: `workers/ds-estimates-sync-worker/cli/hub.ts`
 
 ### Current Stats (Hub DB)

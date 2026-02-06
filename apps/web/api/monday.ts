@@ -1,85 +1,37 @@
 /**
- * Monday.com API handlers
+ * Monday.com search API handlers
  * Routes: GET /api/monday/search
+ *
+ * Searches the estimates table in hub.db (synced from Monday ESTIMATING board).
  */
-import { db } from "@lib/db";
+import { db } from "@lib/db/hub";
 
-// GET /api/monday/search - Search Monday cache
+// GET /api/monday/search - Search estimates
 export function searchMonday(req: Request): Response {
   try {
     const { searchParams } = new URL(req.url);
     const query = searchParams.get("q");
-    const boardId = searchParams.get("boardId");
     const limit = Number.parseInt(searchParams.get("limit") || "20", 10);
 
     if (!query || query.length < 2) {
       return Response.json([]);
     }
 
-    let items: unknown[] = [];
+    const likeQuery = `%${query}%`;
+    const items = db
+      .prepare(
+        `SELECT id, monday_item_id, name, estimate_number, contractor,
+                bid_status, bid_value, awarded_value, group_title, monday_url
+         FROM estimates
+         WHERE name LIKE ? OR contractor LIKE ? OR estimate_number LIKE ?
+         ORDER BY updated_at DESC
+         LIMIT ?`
+      )
+      .all(likeQuery, likeQuery, likeQuery, limit);
 
-    // Try FTS5 search first
-    try {
-      if (boardId) {
-        items = db
-          .prepare(
-            `
-          SELECT m.* FROM monday_cache m
-          JOIN monday_search_vectors v ON m.id = v.item_id
-          WHERE v.board_id = ? AND monday_search_vectors MATCH ?
-          ORDER BY rank
-          LIMIT ?
-        `
-          )
-          .all(boardId, query, limit);
-      } else {
-        items = db
-          .prepare(
-            `
-          SELECT m.* FROM monday_cache m
-          JOIN monday_search_vectors v ON m.id = v.item_id
-          WHERE monday_search_vectors MATCH ?
-          ORDER BY rank
-          LIMIT ?
-        `
-          )
-          .all(query, limit);
-      }
-    } catch {
-      // Fallback to simple LIKE search if FTS5 fails
-      const likeQuery = `%${query}%`;
-      if (boardId) {
-        items = db
-          .prepare(
-            `
-          SELECT * FROM monday_cache
-          WHERE board_id = ? AND (name LIKE ? OR column_values LIKE ?)
-          LIMIT ?
-        `
-          )
-          .all(boardId, likeQuery, likeQuery, limit);
-      } else {
-        items = db
-          .prepare(
-            `
-          SELECT * FROM monday_cache
-          WHERE name LIKE ? OR column_values LIKE ?
-          LIMIT ?
-        `
-          )
-          .all(likeQuery, likeQuery, limit);
-      }
-    }
-
-    // Parse column_values JSON
-    const results = (items as Record<string, unknown>[]).map((item) => ({
-      ...item,
-      column_values: JSON.parse(item.column_values as string),
-    }));
-
-    return Response.json(results);
+    return Response.json(items);
   } catch (error) {
-    console.error("Error searching Monday cache:", error);
+    console.error("Error searching estimates:", error);
     return Response.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

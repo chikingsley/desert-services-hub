@@ -1,15 +1,8 @@
 /**
  * Takeoff by ID API handlers
- * Routes: /api/takeoffs/:id, /api/takeoffs/:id/pdf, /api/takeoffs/:id/quote
+ * Routes: /api/takeoffs/:id, /api/takeoffs/:id/pdf, /api/takeoffs/:id/estimate
  */
-import { db } from "@lib/db";
-import {
-  BUCKETS,
-  fileExists,
-  getFileTags,
-  getFileWebStream,
-  getTakeoffPdfUrl,
-} from "@lib/minio";
+import { db } from "@lib/db/hub";
 
 // Bun extends Request with params from route matching
 type BunRequest = Request & { params: { id: string } };
@@ -87,79 +80,38 @@ export function deleteTakeoff(req: BunRequest): Response {
   return Response.json({ success: true });
 }
 
-// GET /api/takeoffs/:id/pdf - Get presigned URL or stream PDF
-export async function getTakeoffPdf(req: BunRequest): Promise<Response> {
-  try {
-    const { id } = req.params;
-    const { searchParams } = new URL(req.url);
-    const filename = searchParams.get("filename") || "original.pdf";
-    const mode = searchParams.get("mode") || "url";
+// GET /api/takeoffs/:id/pdf - Serve takeoff PDF
+export function getTakeoffPdf(req: BunRequest): Response {
+  const { id } = req.params;
 
-    const objectName = `${id}/${filename}`;
+  const takeoff = db
+    .prepare("SELECT pdf_url FROM takeoffs WHERE id = ?")
+    .get(id) as { pdf_url: string | null } | undefined;
 
-    // Check if file exists
-    const exists = await fileExists(BUCKETS.TAKEOFFS, objectName);
-    if (!exists) {
-      return Response.json(
-        { error: "PDF not found", takeoffId: id },
-        { status: 404 }
-      );
-    }
-
-    if (mode === "stream") {
-      // Stream the file directly using Web API-compatible stream
-      const webStream = await getFileWebStream(BUCKETS.TAKEOFFS, objectName);
-
-      return new Response(webStream, {
-        headers: {
-          "Content-Type": "application/pdf",
-          "Content-Disposition": `inline; filename="${filename}"`,
-          "Cache-Control": "private, max-age=3600",
-        },
-      });
-    }
-
-    // Default: return presigned URL (valid for 1 hour)
-    const url = await getTakeoffPdfUrl(id, filename, 3600);
-
-    // Also get metadata if available
-    let tags: Record<string, string> = {};
-    try {
-      tags = await getFileTags(BUCKETS.TAKEOFFS, objectName);
-    } catch {
-      // Tags might not exist
-    }
-
-    return Response.json({
-      url,
-      takeoffId: id,
-      filename,
-      expiresIn: 3600,
-      metadata: tags,
-    });
-  } catch (error) {
-    console.error("Failed to get PDF:", error);
+  if (!takeoff?.pdf_url) {
     return Response.json(
-      {
-        error: "Failed to get PDF",
-        details: error instanceof Error ? error.message : String(error),
-      },
-      { status: 500 }
+      { error: "PDF not found", takeoffId: id },
+      { status: 404 }
     );
   }
+
+  return Response.json(
+    { error: "PDF serving not available — storage migrated to SharePoint" },
+    { status: 501 }
+  );
 }
 
-// GET /api/takeoffs/:id/quote - Get linked quote
-export function getTakeoffQuote(req: BunRequest): Response {
+// GET /api/takeoffs/:id/estimate - Get linked estimate
+export function getTakeoffEstimate(req: BunRequest): Response {
   try {
     const { id } = req.params;
 
-    const quote = db
+    const estimate = db
       .prepare(
-        `SELECT q.id, q.base_number, q.job_name, q.status, q.created_at
-         FROM quotes q
-         WHERE q.takeoff_id = ?
-         ORDER BY q.created_at DESC
+        `SELECT e.id, e.base_number, e.job_name, e.status, e.created_at
+         FROM estimates e
+         WHERE e.takeoff_id = ?
+         ORDER BY e.created_at DESC
          LIMIT 1`
       )
       .get(id) as
@@ -172,15 +124,15 @@ export function getTakeoffQuote(req: BunRequest): Response {
         }
       | undefined;
 
-    if (!quote) {
-      return Response.json({ quote: null });
+    if (!estimate) {
+      return Response.json({ estimate: null });
     }
 
-    return Response.json({ quote });
+    return Response.json({ estimate });
   } catch (error) {
-    console.error("Failed to get linked quote:", error);
+    console.error("Failed to get linked estimate:", error);
     return Response.json(
-      { error: "Failed to get linked quote" },
+      { error: "Failed to get linked estimate" },
       { status: 500 }
     );
   }

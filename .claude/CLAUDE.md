@@ -4,13 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Desert Services Hub is an estimation workflow platform for construction/landscaping services. It handles takeoffs (measurements from PDFs), quoting, contracts, and project management. Currently, the **Quotes** and **Takeoffs** modules are implemented.
+Desert Services Hub is an estimation workflow platform for construction/landscaping services. It handles takeoffs (measurements from PDFs), estimates, contracts, and project management. Currently, the **Estimates** and **Takeoffs** modules are implemented.
 
 ## Commands
 
 ```bash
 # Development
-bun run dev          # Start Next.js dev server
+bun run dev          # Start Bun dev server
 
 # Build & Production
 bun run build        # Build for production
@@ -26,59 +26,47 @@ bun x ultracite check  # Check for issues without fixing
 ### Directory Structure
 
 ```text
-app/                    # Next.js App Router pages
-  layout.tsx           # Root layout with sidebar
-  page.tsx             # Dashboard
-  quotes/              # Quotes module
-    page.tsx           # List quotes
-    new/page.tsx       # Create quote
-    [id]/page.tsx      # Edit quote
-  takeoffs/            # Takeoffs module (PDF measurement)
-    page.tsx           # List takeoffs
-    new/page.tsx       # Upload new PDF
-    [id]/page.tsx      # Takeoff editor
-  catalog/             # Service catalog management
-  api/                 # API routes (SQLite-backed)
-
-components/
-  ui/                  # shadcn/ui primitives
-  quotes/              # Quote-specific components
-  takeoffs/            # Takeoff-specific components
-  catalog/             # Catalog components
-  app-sidebar.tsx      # Main navigation sidebar
-  page-header.tsx      # Page header with breadcrumbs
+apps/web/              # Main Bun application
+  server.ts            # Bun.serve() entry point with API routes
+  api/                 # API route handlers
+  frontend/            # React SPA
+    App.tsx            # Router with data loaders
+    pages/             # Route pages (estimates, takeoffs, catalog, settings)
+    components/        # UI components
+      estimates/       # Estimate-specific components
+      takeoffs/        # Takeoff-specific components
+      ui/              # shadcn/ui primitives
 
 lib/
-  db/index.ts          # SQLite database connection and schema
+  db/                  # SQLite schemas, connection (hub.ts), hub.db
   types.ts             # TypeScript interfaces for domain models
-  utils.ts             # Utilities: cn(), formatCurrency(), formatDate()
   pdf-takeoff/         # PDF annotation library
-  takeoffs.ts          # Takeoff API client functions
 
 hooks/                 # Custom React hooks
 ```
 
 ### Data Model
 
-The quote system uses a versioned structure:
+The estimate system uses a versioned structure:
 
-- **Quote** → base document (job info, client info, status)
-- **QuoteVersion** → iteration of line items (supports revisions)
-- **QuoteSection** → groups line items (optional)
-- **QuoteLineItem** → individual priced items (qty, unit, cost, price)
+- **Estimate** → base document (job info, client info, status)
+- **EstimateVersion** → iteration of line items (supports revisions, OCR extraction)
+- **EstimateSection** → groups line items (optional)
+- **EstimateLineItem** → individual priced items (qty, unit, cost, price)
 - **CatalogItem** → reusable pricing templates
 
 Key relationships:
 
-- Quote has many QuoteVersions (one marked `is_current`)
-- QuoteVersion has many QuoteSections and QuoteLineItems
+- Estimate has many EstimateVersions (one marked `is_current`)
+- EstimateVersion has many EstimateSections and EstimateLineItems
 - Line items can belong to a section or be "unsectioned"
 
 ### Database (SQLite)
 
-- All data stored in `desert-services.db` at project root
-- Schema defined in `lib/db/index.ts`
-- API routes in `app/api/` use the db directly
+- All data stored in `lib/db/hub.db`
+- Schema defined in `lib/db/schema.ts`
+- Connection module: `lib/db/hub.ts`
+- API routes in `apps/web/api/` use the db directly
 - Client components use fetch to API routes
 
 ## Dev Server Policy

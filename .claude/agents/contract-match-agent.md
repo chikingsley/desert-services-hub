@@ -28,13 +28,13 @@ Run ALL of these searches using hub.db (SQLite) or the Monday CLI:
 Primary search - hub.db has all estimates synced from Monday:
 
 ```bash
-sqlite3 /Users/chiejimofor/Documents/Github/desert-services-hub/apps/contract/hub.db ".mode column" ".headers on" "SELECT id, monday_item_id, name, contractor, bid_value, bid_status FROM estimates WHERE name LIKE '%PROJECT_NAME%' OR contractor LIKE '%CONTRACTOR_NAME%' LIMIT 10;"
+sqlite3 /Users/chiejimofor/Documents/Github/desert-services-hub/lib/db/hub.db ".mode column" ".headers on" "SELECT id, monday_item_id, name, contractor, bid_value, bid_status FROM estimates WHERE name LIKE '%PROJECT_NAME%' OR contractor LIKE '%CONTRACTOR_NAME%' LIMIT 10;"
 ```
 
 ### 2. Search by Contractor Domain
 
 ```bash
-sqlite3 /Users/chiejimofor/Documents/Github/desert-services-hub/apps/contract/hub.db ".mode column" ".headers on" "SELECT e.id, e.monday_item_id, e.name, e.contractor, e.bid_value FROM estimates e JOIN accounts a ON LOWER(e.contractor) LIKE '%' || LOWER(SUBSTR(a.name, 1, 10)) || '%' WHERE a.domain LIKE '%DOMAIN%' LIMIT 10;"
+sqlite3 /Users/chiejimofor/Documents/Github/desert-services-hub/lib/db/hub.db ".mode column" ".headers on" "SELECT e.id, e.monday_item_id, e.name, e.contractor, e.bid_value FROM estimates e JOIN accounts a ON LOWER(e.contractor) LIKE '%' || LOWER(SUBSTR(a.name, 1, 10)) || '%' WHERE a.domain LIKE '%DOMAIN%' LIMIT 10;"
 ```
 
 ### 3. Monday CLI Search (if hub.db insufficient)

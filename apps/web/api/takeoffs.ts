@@ -2,7 +2,7 @@
  * Takeoffs API handlers
  * Routes: GET /api/takeoffs, POST /api/takeoffs
  */
-import { db } from "@lib/db";
+import { db } from "@lib/db/hub";
 
 // GET /api/takeoffs - List all takeoffs
 export function listTakeoffs(): Response {

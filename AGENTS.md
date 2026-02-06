@@ -408,7 +408,7 @@ This is the Desert Services Hub, a unified platform for construction services au
 
 - **Main App**: `apps/web/` — Bun full-stack React app (quotes, takeoffs, contracts)
 - **Contract Processing**: `apps/contract/` — Workflow for contract intake
-- **Hub Database**: `apps/contract/hub.db` — Primary SQLite database (237K+ emails)
+- **Hub Database**: `lib/db/hub.db` — Primary SQLite database (237K+ emails)
 - **Quoting MCP**: `apps/quoting/` — Quote generation and catalog (moved from services/)
 - **Monday Sync**: `workers/ds-estimates-sync-worker/cli/hub.ts`
 
@@ -418,4 +418,4 @@ Always query local SQLite databases before calling external APIs:
 
 - Search estimates → `hub.db` estimates table
 - Find emails → `hub.db` emails table
-- Download attachments → MinIO via `lib/minio.ts`
+- Find attachments → `hub.db` attachments table (files in SharePoint)

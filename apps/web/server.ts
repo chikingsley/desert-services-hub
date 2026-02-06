@@ -14,23 +14,23 @@ import {
   listArchives,
 } from "@/api/archive";
 import { getCatalog, getTakeoffItems } from "@/api/catalog";
+import { createEstimate, listEstimates } from "@/api/estimates";
+import {
+  deleteEstimate,
+  duplicateEstimate,
+  getEstimate,
+  getEstimatePdf,
+  getEstimateTakeoff,
+  updateEstimate,
+} from "@/api/estimates-by-id";
 import { healthCheck } from "@/api/health";
 import { searchMonday } from "@/api/monday";
-import { createQuote, listQuotes } from "@/api/quotes";
-import {
-  deleteQuote,
-  duplicateQuote,
-  getQuote,
-  getQuotePdf,
-  getQuoteTakeoff,
-  updateQuote,
-} from "@/api/quotes-by-id";
 import { createTakeoff, listTakeoffs } from "@/api/takeoffs";
 import {
   deleteTakeoff,
   getTakeoff,
+  getTakeoffEstimate,
   getTakeoffPdf,
-  getTakeoffQuote,
   updateTakeoff,
 } from "@/api/takeoffs-by-id";
 import { checkPdfExists, uploadPdf } from "@/api/upload";
@@ -57,24 +57,24 @@ const server = serve({
       GET: healthCheck,
     },
 
-    // Quotes
-    "/api/quotes": {
-      GET: h(listQuotes),
-      POST: h(createQuote),
+    // Estimates
+    "/api/estimates": {
+      GET: h(listEstimates),
+      POST: h(createEstimate),
     },
-    "/api/quotes/:id": {
-      GET: h(getQuote),
-      PUT: h(updateQuote),
-      DELETE: h(deleteQuote),
+    "/api/estimates/:id": {
+      GET: h(getEstimate),
+      PUT: h(updateEstimate),
+      DELETE: h(deleteEstimate),
     },
-    "/api/quotes/:id/pdf": {
-      GET: h(getQuotePdf),
+    "/api/estimates/:id/pdf": {
+      GET: h(getEstimatePdf),
     },
-    "/api/quotes/:id/duplicate": {
-      POST: h(duplicateQuote),
+    "/api/estimates/:id/duplicate": {
+      POST: h(duplicateEstimate),
     },
-    "/api/quotes/:id/takeoff": {
-      GET: h(getQuoteTakeoff),
+    "/api/estimates/:id/takeoff": {
+      GET: h(getEstimateTakeoff),
     },
 
     // Takeoffs
@@ -90,8 +90,8 @@ const server = serve({
     "/api/takeoffs/:id/pdf": {
       GET: h(getTakeoffPdf),
     },
-    "/api/takeoffs/:id/quote": {
-      GET: h(getTakeoffQuote),
+    "/api/takeoffs/:id/estimate": {
+      GET: h(getTakeoffEstimate),
     },
 
     // Upload
@@ -136,8 +136,8 @@ const server = serve({
     // Frontend SPA Routes (explicit paths)
     // ===========================================
     "/": homepage,
-    "/quotes": homepage,
-    "/quotes/*": homepage,
+    "/estimates": homepage,
+    "/estimates/*": homepage,
     "/takeoffs": homepage,
     "/takeoffs/*": homepage,
     "/contracts": homepage,

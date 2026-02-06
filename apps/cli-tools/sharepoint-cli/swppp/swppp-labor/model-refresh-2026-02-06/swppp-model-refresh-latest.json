@@ -1,0 +1,242 @@
+{
+  "generatedAt": "2026-02-06T11:06:59.049Z",
+  "source": "/Users/chiejimofor/Documents/Github/desert-services-hub/apps/cli-tools/sharepoint-cli/swppp/swppp-master.db",
+  "sampleCounts": {
+    "rowsWithCompletedText": 2805,
+    "rowsWithParsedLabor": 1678,
+    "modeledSamples": 1112,
+    "droppedForNoSignal": 566,
+    "coreSamples": 921,
+    "strictSamples": 738
+  },
+  "featureCoverage": {
+    "install_panels": 261,
+    "relocate_panels": 134,
+    "remove_panels": 213,
+    "install_sock_lf": 416,
+    "relocate_sock_lf": 34,
+    "inlets": 141,
+    "maintenance_flag": 102,
+    "base_setup": 1112
+  },
+  "modelAllSignal": {
+    "sampleCount": 1112,
+    "holdout": {
+      "trainCount": 889,
+      "testCount": 223,
+      "r2": 0.514501214790578,
+      "medianApe": 0.4149033959048848,
+      "p90Ape": 1.7212387873669408
+    },
+    "crossValidation": {
+      "folds": [
+        {
+          "fold": 1,
+          "trainCount": 890,
+          "testCount": 222,
+          "r2": 0.20326595883066012,
+          "medianApe": 0.3749236597206517,
+          "p90Ape": 1.766859245638475
+        },
+        {
+          "fold": 2,
+          "trainCount": 890,
+          "testCount": 222,
+          "r2": 0.5198187023817925,
+          "medianApe": 0.4485832048631647,
+          "p90Ape": 2.20916431888682
+        },
+        {
+          "fold": 3,
+          "trainCount": 890,
+          "testCount": 222,
+          "r2": 0.25431093466883836,
+          "medianApe": 0.46805151400599765,
+          "p90Ape": 1.6846829532667158
+        },
+        {
+          "fold": 4,
+          "trainCount": 890,
+          "testCount": 222,
+          "r2": 0.3622541881517005,
+          "medianApe": 0.5018603743458476,
+          "p90Ape": 2.0490707581994827
+        },
+        {
+          "fold": 5,
+          "trainCount": 888,
+          "testCount": 224,
+          "r2": 0.4213690429459296,
+          "medianApe": 0.4902804567042053,
+          "p90Ape": 2.1067829087835754
+        }
+      ],
+      "mean": {
+        "r2": 0.35220376539578424,
+        "medianApe": 0.45673984192797334,
+        "p90Ape": 1.9633120369550139
+      }
+    },
+    "finalRates": {
+      "install_panels": 9.205004909041259,
+      "relocate_panels": 9.188887545282753,
+      "remove_panels": 2.8543787909117615,
+      "install_sock_lf": 0.1190235001915452,
+      "relocate_sock_lf": 0.31203833560451466,
+      "inlets": 11.08706738032329,
+      "maintenance_flag": 107.37853787491707,
+      "base_setup": 221.55854975869417
+    },
+    "iterations": 33
+  },
+  "modelCoreOnly": {
+    "sampleCount": 921,
+    "holdout": {
+      "trainCount": 736,
+      "testCount": 185,
+      "r2": 0.3493180380472779,
+      "medianApe": 0.5101681540553389,
+      "p90Ape": 2.170574333021276
+    },
+    "crossValidation": {
+      "folds": [
+        {
+          "fold": 1,
+          "trainCount": 737,
+          "testCount": 184,
+          "r2": 0.5643812631568035,
+          "medianApe": 0.4913137747278885,
+          "p90Ape": 1.9742937137563004
+        },
+        {
+          "fold": 2,
+          "trainCount": 737,
+          "testCount": 184,
+          "r2": 0.600643827443909,
+          "medianApe": 0.43346573014620443,
+          "p90Ape": 2.154115782985798
+        },
+        {
+          "fold": 3,
+          "trainCount": 737,
+          "testCount": 184,
+          "r2": 0.17580819637067968,
+          "medianApe": 0.5193076797845948,
+          "p90Ape": 2.564295077216927
+        },
+        {
+          "fold": 4,
+          "trainCount": 737,
+          "testCount": 184,
+          "r2": -0.3215558981606996,
+          "medianApe": 0.47824740282096256,
+          "p90Ape": 1.8756752398219867
+        },
+        {
+          "fold": 5,
+          "trainCount": 736,
+          "testCount": 185,
+          "r2": 0.379544192254721,
+          "medianApe": 0.519104713899037,
+          "p90Ape": 2.2734828785648706
+        }
+      ],
+      "mean": {
+        "r2": 0.2797643162130827,
+        "medianApe": 0.48828786027573745,
+        "p90Ape": 2.1683725384691765
+      }
+    },
+    "finalRates": {
+      "install_panels": 9.134165809632924,
+      "relocate_panels": 9.115401351826879,
+      "remove_panels": 2.728850757860934,
+      "install_sock_lf": 0.10453506461745048,
+      "relocate_sock_lf": 0.31988310707160017,
+      "inlets": 9.223198150082155,
+      "maintenance_flag": 111.02571198089113,
+      "base_setup": 228.76266938122797
+    },
+    "iterations": 31
+  },
+  "modelStrictProduction": {
+    "sampleCount": 738,
+    "holdout": {
+      "trainCount": 590,
+      "testCount": 148,
+      "r2": 0.23510039752071588,
+      "medianApe": 0.40792466495548035,
+      "p90Ape": 1.9691352988202198
+    },
+    "crossValidation": {
+      "folds": [
+        {
+          "fold": 1,
+          "trainCount": 591,
+          "testCount": 147,
+          "r2": 0.17496313976709033,
+          "medianApe": 0.42424574470722215,
+          "p90Ape": 1.6165602957342475
+        },
+        {
+          "fold": 2,
+          "trainCount": 591,
+          "testCount": 147,
+          "r2": 0.4944386831437966,
+          "medianApe": 0.46519523662202594,
+          "p90Ape": 1.70903052646748
+        },
+        {
+          "fold": 3,
+          "trainCount": 591,
+          "testCount": 147,
+          "r2": 0.6378451182505577,
+          "medianApe": 0.4524713986686319,
+          "p90Ape": 1.8331999534196264
+        },
+        {
+          "fold": 4,
+          "trainCount": 591,
+          "testCount": 147,
+          "r2": 0.47183175537246935,
+          "medianApe": 0.4339235947209211,
+          "p90Ape": 2.5960795762653244
+        },
+        {
+          "fold": 5,
+          "trainCount": 588,
+          "testCount": 150,
+          "r2": 0.300092117071988,
+          "medianApe": 0.39986035582570334,
+          "p90Ape": 1.4147094071522075
+        }
+      ],
+      "mean": {
+        "r2": 0.41583416272118034,
+        "medianApe": 0.4351392661089009,
+        "p90Ape": 1.8339159518077772
+      }
+    },
+    "finalRates": {
+      "install_panels": 8.743318270524071,
+      "relocate_panels": 10.561667424162287,
+      "remove_panels": 2.554536181070805,
+      "install_sock_lf": 0.12332496371598135,
+      "relocate_sock_lf": 0.2492242280954944,
+      "inlets": 10.953528882831908,
+      "maintenance_flag": 102.57460339355923,
+      "base_setup": 189.02724638404476
+    },
+    "iterations": 28
+  },
+  "previousRates": {
+    "install_panels": 12.7,
+    "relocate_panels": 10.1,
+    "remove_panels": 4.8,
+    "install_sock_lf": 0.22,
+    "relocate_sock_lf": 0.4,
+    "inlets": 15.6,
+    "maintenance_flag": 32.1,
+    "base_setup": 41.4
+  }
+}

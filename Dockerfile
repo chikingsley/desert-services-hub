@@ -58,7 +58,7 @@ EXPOSE 3000
 
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
-ENV DATABASE_PATH="/app/data/desert-services.db"
+ENV HUB_DATABASE_PATH="/app/data/hub.db"
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \

@@ -65,7 +65,7 @@ console.log(result.boards[0].items_page.items);
 For ad-hoc queries, use `sqlite3` CLI directly (no Bun overhead):
 
 ```bash
-sqlite3 apps/contract/hub.db
+sqlite3 lib/db/hub.db
 ```
 
 Then run queries:
@@ -134,7 +134,7 @@ For new contracts going through intake, see `apps/contract/PROJECT.md`. For acti
 
 ### Key Rules
 
-- **All project files must end up in SharePoint** — cataloging in MinIO is not enough
+- **All project files must end up in SharePoint**
 - **Use the file naming convention** from `services/sharepoint/paths.ts`
 - **Contracts may not be in email** — check DocuSign, Procore, internal contracts group, shared drives
 - **Read `apps/contract/PROJECT.md` and `apps/contract/STATE.md`** at the start of contract work sessions
@@ -159,7 +159,7 @@ For new contracts going through intake, see `apps/contract/PROJECT.md`. For acti
 
 **Before creating new scripts or utilities, search the codebase for existing solutions:**
 
-- Use `codebase_search` to find existing functions: "How to search hub database for attachments?", "How to download files from MinIO?"
+- Use `codebase_search` to find existing functions: "How to search hub database for attachments?"
 - Check `apps/contract/db/repositories/attachment.ts` for file download utilities
 - Check `apps/contract/db/repositories/` for database query functions
 - Review `CLAUDE.md` sections for documented patterns and utilities
@@ -171,12 +171,12 @@ For new contracts going through intake, see `apps/contract/PROJECT.md`. For acti
 
 **Always query local SQLite databases before calling any external API.** We have synced data from Monday, email, and other sources locally. Do NOT call MCP tools or APIs for data that already exists in these databases.
 
-### Hub DB (`apps/contract/hub.db`)
+### Hub DB (`lib/db/hub.db`)
 
 The primary consolidated database containing:
 
 - `emails` — All synced emails across mailboxes (237K+). Has `project_name`, `contractor_name` for linking.
-- `attachments` — 125K+ email attachments cataloged. Has `storage_bucket`, `storage_path` for MinIO references.
+- `attachments` — 125K+ email attachments cataloged. Has `storage_bucket`, `storage_path` columns (legacy, from former MinIO storage).
 - `estimates` — 4,843 estimates synced from Monday. Has `monday_item_id`, `name`, `estimate_number`, `contractor`, `bid_status`, `bid_value`, `awarded_value`, `sharepoint_url`, storage paths.
 - `projects` — Projects extracted from email data. Has `monday_item_id`, `account_id`, `email_count`.
 - `accounts` — Account/company records linked across systems (3,600+).
@@ -192,7 +192,7 @@ The primary consolidated database containing:
 
 - `services/inspections/inspections.db` — Inspection records
 - `services/sharepoint/swppp/swppp-master.db` — SWPPP master data
-- `lib/db/app.db` — Application database (quotes, takeoffs, catalog)
+- `lib/db/hub.db` — Unified database (estimates, takeoffs, catalog, emails, contacts, accounts)
 - `apps/contract/projects/projects.db` — Contract processing project tasks
 
 ### When to use APIs vs local data
@@ -202,32 +202,20 @@ The primary consolidated database containing:
 - **Find attachments** → query `attachments` table in hub.db
 - **Only use MCP/API** when local data is stale, missing, or you need to write/update the remote system
 
-### Downloading Files from MinIO
+### Querying Attachments
 
-All email attachments and estimate PDFs are stored in MinIO. **DO NOT** use curl, `mc` CLI, or email API to download - use the utilities in the hub.db repositories.
-
-**Download a single attachment:**
-
-```typescript
-import { downloadAttachment, getAttachmentContent } from '@/apps/contract/db/repositories/attachment';
-
-await downloadAttachment(12345, 'output/contract.pdf');
-
-// Or get bytes without saving
-const content = await getAttachmentContent(12345); // Uint8Array
-```
+Attachment metadata is in hub.db. File storage was migrated from MinIO to SharePoint (Feb 2026). See `docs/archive/minio-aistor.md` for history.
 
 **Get attachment info:**
 
 ```typescript
-import { db } from '@/apps/contract/db/connection';
+import { db } from '@/lib/db/hub';
 
 const attachments = db
   .query<{ id: number; name: string; storage_path: string | null }, [string]>(
     `SELECT a.id, a.name, a.storage_path
      FROM attachments a
-     WHERE a.storage_path IS NOT NULL
-       AND a.name LIKE ?
+     WHERE a.name LIKE ?
      ORDER BY a.id DESC
      LIMIT 20`
   )
@@ -237,26 +225,19 @@ const attachments = db
 **Search by email subject/body with attachment filename filter**:
 
 ```typescript
-import { db } from '@/apps/contract/db/connection';
+import { db } from '@/lib/db/hub';
 
 const attachments = db
   .query<{ id: number; name: string; storage_path: string | null }, [string, string, string]>(
     `SELECT DISTINCT a.id, a.name, a.storage_path
      FROM attachments a
      JOIN emails e ON a.email_id = e.id
-     WHERE a.storage_path IS NOT NULL
-       AND (e.subject LIKE ? OR e.body_full LIKE ?)
+     WHERE (e.subject LIKE ? OR e.body_full LIKE ?)
        AND a.name LIKE ?
      ORDER BY e.received_at DESC`
   )
   .all('%W9%', '%W9%', '%2026%');
 ```
-
-**Low-level access (`lib/minio.ts`):**
-
-- `getFile(bucket, path)` → `Uint8Array`
-- `getPresignedUrl(bucket, path)` → temporary URL
-- `BUCKETS.EMAIL_ATTACHMENTS`, `BUCKETS.MONDAY_ESTIMATES`
 
 ---
 
@@ -509,7 +490,7 @@ const MAX_RETRIES = 5;
 const RETRY_DELAY_MS = 3000;
 ```
 
-**Hub.db location:** `apps/contract/hub.db`
+**Hub.db location:** `lib/db/hub.db`
 
 **CRITICAL: Local changes MUST sync to Monday.** Hub.db is a local cache - any create/update must also happen in Monday:
 
@@ -524,7 +505,7 @@ const RETRY_DELAY_MS = 3000;
 bun apps/contract/cli/hub.ts create account --name="Company Name" --domain=domain.com
 
 # Then update local hub.db with the Monday ID
-sqlite3 apps/contract/hub.db "UPDATE accounts SET monday_account_id = 'MONDAY_ID' WHERE id = LOCAL_ID;"
+sqlite3 lib/db/hub.db "UPDATE accounts SET monday_account_id = 'MONDAY_ID' WHERE id = LOCAL_ID;"
 ```
 
 **Tables:**
@@ -568,7 +549,7 @@ When enriching contacts, the goal is to **extract and record all useful informat
 bun apps/contract/cli/hub.ts update contact <id> --email=x@y.com --mobile=4805551234 --title="Project Manager" --push
 
 # Add notes to local DB
-sqlite3 apps/contract/hub.db "UPDATE contacts SET contractor_search_notes = 'Company Name - type. Customer for X service. Found via email signature.' WHERE id = ID;"
+sqlite3 lib/db/hub.db "UPDATE contacts SET contractor_search_notes = 'Company Name - type. Customer for X service. Found via email signature.' WHERE id = ID;"
 ```
 
 Use the `contact-enricher` subagent (`.claude/agents/contact-enricher.md`) for batch enrichment.

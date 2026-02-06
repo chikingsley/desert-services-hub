@@ -1,0 +1,190 @@
+/**
+ * Estimates API handlers
+ * Routes: GET /api/estimates, POST /api/estimates
+ */
+import { db } from "@lib/db/hub";
+import type { EstimateRow, EstimateSection } from "@lib/types";
+import { generateBaseNumber } from "@lib/utils";
+
+type EstimateWithVersionsJson = EstimateRow & { versions: string };
+
+interface EstimateLineItemInput {
+  section_id?: string;
+  description?: string;
+  item?: string;
+  quantity?: number;
+  qty?: number;
+  unit?: string;
+  uom?: string;
+  unit_cost?: number;
+  cost?: number;
+  unit_price?: number;
+  notes?: string;
+}
+
+// Generate a unique base number (YYMMDD format with suffix for duplicates)
+function getNextBaseNumber(): string {
+  const baseNumber = generateBaseNumber();
+
+  // Check for existing estimates with this prefix
+  const existing = db
+    .prepare(
+      `SELECT base_number FROM estimates
+       WHERE base_number LIKE ?
+       ORDER BY base_number DESC
+       LIMIT 1`
+    )
+    .get(`${baseNumber}%`) as { base_number: string } | undefined;
+
+  if (!existing) {
+    return baseNumber;
+  }
+
+  // Add suffix for duplicates (01, 02, etc.)
+  const lastNumber = existing.base_number;
+  if (lastNumber.length > 6) {
+    const suffix = Number.parseInt(lastNumber.slice(6), 10) + 1;
+    return `${baseNumber}${suffix.toString().padStart(2, "0")}`;
+  }
+  return `${baseNumber}01`;
+}
+
+// GET /api/estimates - List all estimates
+export function listEstimates(): Response {
+  try {
+    const estimates = db
+      .prepare(
+        `SELECT q.*,
+          (SELECT json_group_array(json_object(
+            'id', v.id,
+            'version_number', v.version_number,
+            'total', v.total,
+            'is_current', v.is_current,
+            'created_at', v.created_at
+          )) FROM estimate_versions v WHERE v.estimate_id = q.id) as versions
+        FROM estimates q
+        ORDER BY q.created_at DESC`
+      )
+      .all() as EstimateWithVersionsJson[];
+
+    // Parse the versions JSON for each estimate
+    const parsedEstimates = estimates.map((e) => ({
+      ...e,
+      versions: JSON.parse(e.versions || "[]"),
+    }));
+
+    return Response.json(parsedEstimates);
+  } catch (error) {
+    console.error("Failed to fetch estimates:", error);
+    return Response.json(
+      { error: "Failed to fetch estimates" },
+      { status: 500 }
+    );
+  }
+}
+
+// POST /api/estimates - Create a new estimate
+export async function createEstimate(req: Request): Promise<Response> {
+  try {
+    const body = (await req.json()) as Record<string, unknown>;
+    const id = crypto.randomUUID();
+
+    // Auto-generate base_number if not provided (YYMMDD format)
+    const baseNumber = (body.base_number as string) || getNextBaseNumber();
+
+    // Insert estimate
+    db.prepare(
+      `INSERT INTO estimates (id, base_number, takeoff_id, job_name, job_address, client_name, client_email, client_phone, notes, status, is_locked)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    ).run(
+      id,
+      baseNumber,
+      (body.takeoff_id as string) || null,
+      (body.job_name as string) || "Untitled Estimate",
+      (body.job_address as string) || null,
+      (body.client_name as string) || null,
+      (body.client_email as string) || null,
+      (body.client_phone as string) || null,
+      (body.notes as string) || null,
+      (body.status as string) || "draft",
+      body.is_locked ? 1 : 0
+    );
+
+    // Create first version
+    const versionId = crypto.randomUUID();
+    db.prepare(
+      `INSERT INTO estimate_versions (id, quote_id, version_number, total, is_current)
+       VALUES (?, ?, 1, ?, 1)`
+    ).run(versionId, id, (body.total as number) || 0);
+
+    // Create sections if provided
+    const sectionIdMap = new Map<string, string>();
+    const sections = body.sections as EstimateSection[] | undefined;
+    if (sections) {
+      let sortOrder = 0;
+      for (const section of sections) {
+        const sectionId = crypto.randomUUID();
+        db.prepare(
+          `INSERT INTO estimate_sections (id, version_id, name, title, show_subtotal, sort_order)
+           VALUES (?, ?, ?, ?, ?, ?)`
+        ).run(
+          sectionId,
+          versionId,
+          section.name,
+          section.title ?? null,
+          section.show_subtotal ? 1 : 0,
+          sortOrder
+        );
+        sectionIdMap.set(section.id, sectionId);
+        sortOrder += 1;
+      }
+    }
+
+    // Create line items if provided
+    const lineItems = body.line_items as EstimateLineItemInput[] | undefined;
+    if (lineItems) {
+      let sortOrder = 0;
+      for (const item of lineItems) {
+        const lineItemId = crypto.randomUUID();
+        const cost = item.cost ?? 0;
+        db.prepare(
+          `INSERT INTO estimate_line_items (id, version_id, section_id, description, quantity, unit, unit_cost, unit_price, notes, sort_order)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        ).run(
+          lineItemId,
+          versionId,
+          item.section_id ? (sectionIdMap.get(item.section_id) ?? null) : null,
+          item.item || item.description || "",
+          item.quantity ?? item.qty ?? 1,
+          item.unit || item.uom || "EA",
+          item.unit_cost ?? cost * 0.7,
+          item.unit_price ?? cost,
+          item.notes ||
+            (item.item &&
+            item.description &&
+            item.description.trim() &&
+            item.item !== item.description
+              ? item.description
+              : null) ||
+            null,
+          sortOrder
+        );
+        sortOrder += 1;
+      }
+    }
+
+    return Response.json({ id, version_id: versionId });
+  } catch (error) {
+    console.error("Failed to create estimate:", error);
+    return Response.json(
+      { error: "Failed to create estimate" },
+      { status: 500 }
+    );
+  }
+}
+
+// Route handler object for Bun.serve()
+export const estimatesRoutes = {
+  GET: listEstimates,
+  POST: createEstimate,
+};

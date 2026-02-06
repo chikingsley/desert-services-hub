@@ -32,7 +32,7 @@ Use the Read tool to read the contract PDF. Extract these key fields:
 Search the local hub.db which has all estimates synced from Monday:
 
 ```bash
-sqlite3 /Users/chiejimofor/Documents/Github/desert-services-hub/apps/contract/hub.db ".mode column" ".headers on" "
+sqlite3 /Users/chiejimofor/Documents/Github/desert-services-hub/lib/db/hub.db ".mode column" ".headers on" "
 SELECT id, monday_item_id, name, contractor, bid_value, bid_status 
 FROM estimates 
 WHERE name LIKE '%PROJECT_NAME%' 

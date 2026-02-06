@@ -1,8 +1,10 @@
 /**
  * Upload API handlers
  * Routes: GET/POST /api/upload/pdf
+ *
+ * File storage migrated to SharePoint. Upload endpoint preserved
+ * for future local/SharePoint upload integration.
  */
-import { BUCKETS, fileExists, setFileTags, uploadTakeoffPdf } from "@lib/minio";
 
 const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
 
@@ -12,7 +14,6 @@ export async function uploadPdf(req: Request): Promise<Response> {
     const formData = await req.formData();
     const file = formData.get("file") as File | null;
     const takeoffId = formData.get("takeoffId") as string | null;
-    const filename = formData.get("filename") as string | null;
 
     if (!file) {
       return Response.json({ error: "No file provided" }, { status: 400 });
@@ -22,7 +23,6 @@ export async function uploadPdf(req: Request): Promise<Response> {
       return Response.json({ error: "No takeoffId provided" }, { status: 400 });
     }
 
-    // Validate file type
     if (file.type !== "application/pdf") {
       return Response.json(
         { error: "Only PDF files are allowed" },
@@ -30,7 +30,6 @@ export async function uploadPdf(req: Request): Promise<Response> {
       );
     }
 
-    // Validate file size
     if (file.size > MAX_FILE_SIZE) {
       return Response.json(
         { error: "File size exceeds 100MB limit" },
@@ -38,33 +37,10 @@ export async function uploadPdf(req: Request): Promise<Response> {
       );
     }
 
-    // Convert file to Uint8Array (web-standard, no Buffer.from() needed)
-    const bytes = new Uint8Array(await file.arrayBuffer());
-
-    // Upload to MinIO
-    const objectFilename = filename || file.name || "original.pdf";
-    const { url, size } = await uploadTakeoffPdf(
-      takeoffId,
-      bytes,
-      objectFilename
+    return Response.json(
+      { error: "File upload not available — storage migrated to SharePoint" },
+      { status: 501 }
     );
-
-    // Set metadata tags
-    const objectName = `${takeoffId}/${objectFilename}`;
-    await setFileTags(BUCKETS.TAKEOFFS, objectName, {
-      takeoff_id: takeoffId,
-      original_name: file.name,
-      original_size: String(file.size),
-      upload_time: new Date().toISOString(),
-    });
-
-    return Response.json({
-      success: true,
-      url,
-      size,
-      filename: objectFilename,
-      takeoffId,
-    });
   } catch (error) {
     console.error("Failed to upload PDF:", error);
     return Response.json(
@@ -78,20 +54,20 @@ export async function uploadPdf(req: Request): Promise<Response> {
 }
 
 // GET /api/upload/pdf - Check if a PDF exists
-export async function checkPdfExists(req: Request): Promise<Response> {
+export function checkPdfExists(req: Request): Response {
   try {
     const { searchParams } = new URL(req.url);
     const takeoffId = searchParams.get("takeoffId");
-    const filename = searchParams.get("filename") || "original.pdf";
 
     if (!takeoffId) {
       return Response.json({ error: "No takeoffId provided" }, { status: 400 });
     }
 
-    const objectName = `${takeoffId}/${filename}`;
-    const exists = await fileExists(BUCKETS.TAKEOFFS, objectName);
-
-    return Response.json({ exists, takeoffId, filename });
+    return Response.json({
+      exists: false,
+      takeoffId,
+      filename: "original.pdf",
+    });
   } catch (error) {
     console.error("Failed to check PDF:", error);
     return Response.json(

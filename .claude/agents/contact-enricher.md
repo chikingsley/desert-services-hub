@@ -12,7 +12,7 @@ You enrich contacts by searching hub.db email data to find matching emails and e
 
 ## Key Paths
 
-- **hub.db**: `/Users/chiejimofor/Documents/Github/desert-services-hub/apps/contract/hub.db`
+- **hub.db**: `/Users/chiejimofor/Documents/Github/desert-services-hub/lib/db/hub.db`
 - **CLI**: `cd /Users/chiejimofor/Documents/Github/desert-services-hub/workers/ds-estimates-sync-worker && bun cli/hub.ts`
 
 ## Contacts Table Schema
@@ -41,7 +41,7 @@ contacts (
 Before enriching, get the contact's current data and contractor domain:
 
 ```bash
-sqlite3 /Users/chiejimofor/Documents/Github/desert-services-hub/apps/contract/hub.db ".mode column" ".headers on" "
+sqlite3 /Users/chiejimofor/Documents/Github/desert-services-hub/lib/db/hub.db ".mode column" ".headers on" "
 SELECT c.id, c.name, c.email, c.phone, c.mobile_phone, c.title, a.domain as contractor_domain, a.name as contractor_name
 FROM contacts c
 LEFT JOIN accounts a ON c.account_id = a.id
@@ -52,7 +52,7 @@ WHERE c.id = HUB_ID_HERE;
 Or find contacts missing email with searchable domains:
 
 ```bash
-sqlite3 /Users/chiejimofor/Documents/Github/desert-services-hub/apps/contract/hub.db ".mode column" ".headers on" "
+sqlite3 /Users/chiejimofor/Documents/Github/desert-services-hub/lib/db/hub.db ".mode column" ".headers on" "
 SELECT c.id, c.name, a.domain
 FROM contacts c
 JOIN accounts a ON c.account_id = a.id
@@ -80,7 +80,7 @@ For each contact, find:
 Primary search - hub.db has 237K+ emails synced:
 
 ```bash
-sqlite3 /Users/chiejimofor/Documents/Github/desert-services-hub/apps/contract/hub.db ".mode column" ".headers on" "
+sqlite3 /Users/chiejimofor/Documents/Github/desert-services-hub/lib/db/hub.db ".mode column" ".headers on" "
 SELECT e.from_email, e.from_name, e.subject, e.body_preview, e.received_at
 FROM emails e
 WHERE e.from_email LIKE '%DOMAIN%'
@@ -93,7 +93,7 @@ LIMIT 20;
 ### 2. Search by contractor domain only
 
 ```bash
-sqlite3 /Users/chiejimofor/Documents/Github/desert-services-hub/apps/contract/hub.db ".mode column" ".headers on" "
+sqlite3 /Users/chiejimofor/Documents/Github/desert-services-hub/lib/db/hub.db ".mode column" ".headers on" "
 SELECT DISTINCT e.from_email, e.from_name, COUNT(*) as email_count
 FROM emails e
 WHERE e.from_email LIKE '%@DOMAIN%'
@@ -106,7 +106,7 @@ LIMIT 20;
 ### 3. Check attachments for contact info
 
 ```bash
-sqlite3 /Users/chiejimofor/Documents/Github/desert-services-hub/apps/contract/hub.db ".mode column" ".headers on" "
+sqlite3 /Users/chiejimofor/Documents/Github/desert-services-hub/lib/db/hub.db ".mode column" ".headers on" "
 SELECT a.name, a.content_type, e.from_email, e.subject
 FROM attachments a
 JOIN emails e ON a.email_id = e.id

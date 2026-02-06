@@ -14,12 +14,13 @@
  *   bun apps/contract/db/sync/extract-estimates.ts --stats        # Show extraction stats
  */
 
+import { randomUUID } from "node:crypto";
 import { existsSync, mkdirSync, unlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { parseArgs } from "node:util";
-import { db } from "@contract/db/connection";
-import "@contract/db/schema";
+import { db } from "@lib/db/hub";
+import "@lib/db/schema";
 import { SharePointClient } from "@sharepoint/client";
 
 // ---------------------------------------------------------------------------
@@ -154,18 +155,27 @@ async function runExtraction(pdfPath: string): Promise<ExtractedEstimate> {
 }
 
 // ---------------------------------------------------------------------------
-// Database operations
+// Database operations (versioned model)
 // ---------------------------------------------------------------------------
+
+const markOldVersionsNotCurrent = db.prepare(
+  "UPDATE estimate_versions SET is_current = 0 WHERE estimate_id = ? AND source = 'ocr'"
+);
+
+const getNextVersionNumber = db.prepare<{ next_num: number }, [number]>(
+  "SELECT COALESCE(MAX(version_number), 0) + 1 as next_num FROM estimate_versions WHERE estimate_id = ?"
+);
+
+const insertVersion = db.prepare(`
+  INSERT INTO estimate_versions (id, estimate_id, version_number, source, total, is_current)
+  VALUES (?, ?, ?, 'ocr', ?, 1)
+`);
 
 const insertLineItem = db.prepare(`
   INSERT INTO estimate_line_items
-    (estimate_id, item, description, qty, unit, unit_cost, total, taxable, section, sort_order)
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    (id, version_id, item_name, description, quantity, unit, unit_cost, unit_price, sort_order)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
 `);
-
-const deleteLineItems = db.prepare(
-  "DELETE FROM estimate_line_items WHERE estimate_id = ?"
-);
 
 const updateSuccess = db.prepare(`
   UPDATE estimates SET
@@ -243,22 +253,28 @@ async function extractOne(estimate: EstimateRow): Promise<boolean> {
     // Run Python extraction
     const result = await runExtraction(tempPath);
 
-    // Store in DB (idempotent — delete old items first)
+    // Store in DB — create new OCR version (preserves previous versions)
     db.transaction(() => {
-      deleteLineItems.run(estimate.id);
+      markOldVersionsNotCurrent.run(estimate.id);
+
+      const versionId = randomUUID();
+      const { next_num } = getNextVersionNumber.get(estimate.id) ?? {
+        next_num: 1,
+      };
+
+      insertVersion.run(versionId, estimate.id, next_num, result.grand_total);
 
       for (let i = 0; i < result.line_items.length; i++) {
         const item = result.line_items[i];
         insertLineItem.run(
-          estimate.id,
+          randomUUID(),
+          versionId,
           item.item,
           item.description,
           item.qty,
-          item.unit ?? null,
+          item.unit ?? "EA",
           item.unit_cost,
           item.total,
-          item.taxable ? 1 : 0,
-          item.section,
           i
         );
       }

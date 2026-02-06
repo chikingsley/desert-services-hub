@@ -22,9 +22,9 @@ import {
   SidebarSeparator,
 } from "@/apps/web/frontend/components/ui/sidebar";
 
-// Workflow order: Quotes → Contracts → Project Initiation
+// Workflow order: Estimates → Contracts → Project Initiation
 const mainNavItems = [
-  { title: "Quotes", href: "/quotes", icon: FileText },
+  { title: "Estimates", href: "/estimates", icon: FileText },
   { title: "Contracts", href: "/contracts", icon: FileCheck },
   {
     title: "Project Initiation",

@@ -7,7 +7,7 @@ import type {
   CatalogItem,
   LineItem,
   TakeoffBundle,
-} from "./types";
+} from "@lib/catalog/types";
 
 export const catalog: Catalog = {
   categories: [

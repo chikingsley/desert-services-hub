@@ -5,7 +5,7 @@
  * Run with: bun test apps/contract/tests/linking.test.ts
  */
 import { describe, expect, test } from "bun:test";
-import { db } from "@contract/db/connection";
+import { db } from "@lib/db/hub";
 
 // Note: Estimate name normalization tests removed - normalization now handled by worker
 

@@ -138,7 +138,7 @@ export function SubcategoryDialog({
               <div>
                 <Label htmlFor="hidden">Hidden</Label>
                 <p className="text-muted-foreground text-xs">
-                  Hide this subcategory from the quote builder
+                  Hide this subcategory from the estimate builder
                 </p>
               </div>
               <Switch

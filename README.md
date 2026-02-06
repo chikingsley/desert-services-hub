@@ -7,20 +7,18 @@ The unified platform for Desert Services, combining Bun full-stack web applicati
 This repository is organized into multiple pillars:
 
 - **Applications** (`apps/`): Bun full-stack React applications
-  - `apps/web/` — Main quoting/takeoff application (quotes, takeoffs, contracts, catalog)
+  - `apps/web/` — Main estimation/takeoff application (estimates, takeoffs, contracts, catalog)
   - `apps/quoting/` — Quoting MCP server (catalog, PDF generation)
   - `apps/pdf-analysis/` — Unified Python OCR and PDF analysis CLI (Gemini, local, Mistral)
-  - `apps/contract-ui/` — Contract processing workflow UI (experimental)
 - **Services** (`services/`): Bun-native automation logic and API clients
 - **Workers** (`workers/`): Cloudflare Workers for background tasks
 - **Shared Libraries** (`lib/`): Common utilities, types, and database schemas
 
 ```bash
 apps/           # Bun full-stack applications
-├── web/        # Main app: quotes, takeoffs, contracts, catalog
+├── web/        # Main app: estimates, takeoffs, contracts, catalog
 ├── quoting/    # Quoting MCP server (moved from services/)
-├── pdf-analysis/ # Python OCR/analysis CLI (Gemini, local, Mistral)
-└── contract-ui/  # Contract processing UI (experimental)
+└── pdf-analysis/ # Python OCR/analysis CLI (Gemini, local, Mistral)
 
 services/       # Core automation services
 ├── email/      # Microsoft Graph email client
@@ -40,8 +38,7 @@ workers/        # Cloudflare Workers
 └── ds-monday-status-sync-worker/
 
 lib/            # Shared libraries
-├── db/         # SQLite schemas and connection
-├── minio.ts    # MinIO/S3 storage client
+├── db/         # SQLite schemas, connection, and hub.db
 ├── pdf/        # PDF utilities
 └── schemas/    # Zod validation schemas
 
@@ -63,23 +60,23 @@ The following services are integrated and available for both automation scripts 
 
 ## Primary Database
 
-**Hub.db** (`apps/contract/hub.db`)
+**Hub.db** (`lib/db/hub.db`)
 
 The consolidated SQLite database containing:
 
 - 237K+ emails across all mailboxes
-- 125K+ attachments with MinIO storage paths
+- 125K+ attachments cataloged
 - 4,800+ estimates synced from Monday
 - 3,600+ accounts (contractors/companies)
 - Contacts, projects, and pre-computed estimate-email links
 
 ## MCP Integration
 
-This repository exposes MCP servers for integration with AI coding assistants (like Claude Code), defined in `.mcp.json`. These servers provide tools for managing quotes directly from the agentic environment.
+This repository exposes MCP servers for integration with AI coding assistants (like Claude Code), defined in `.mcp.json`. These servers provide tools for managing estimates directly from the agentic environment.
 
 Available MCP servers:
 
-- `desert-quoting` — Quote generation and catalog
+- `desert-quoting` — Estimate generation and catalog
 
 ## Getting Started
 
@@ -100,9 +97,6 @@ bun install
 ```bash
 # Run the main web application (apps/web/)
 bun run dev
-
-# Run contract-ui app (separate)
-cd apps/contract-ui && bun run dev
 
 # Run tests
 bun run test

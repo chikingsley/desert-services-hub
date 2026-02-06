@@ -7,7 +7,7 @@
  *
  * Also handles exclusions for domains we want to skip entirely.
  */
-import { db } from "@contract/db/connection";
+import { db } from "@lib/db/hub";
 
 // ============================================================================
 // Domain Configuration

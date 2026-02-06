@@ -12,7 +12,7 @@
  * Or:  bun apps/contract/db/sync/estimate-emails.ts --estimate=10142559
  */
 
-import { db } from "@contract/db/connection";
+import { db } from "@lib/db/hub";
 
 // Common words to skip when tokenizing project names (too generic = false positives)
 const SKIP_WORDS = new Set([

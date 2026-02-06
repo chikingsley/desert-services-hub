@@ -1,8 +1,7 @@
 // Estimate CRUD operations
 // Shared between CLI and web app
 
-import { db } from "../db";
-import { generateBaseNumber } from "../utils";
+import { db } from "@lib/db/hub";
 import type {
   CreateEstimateInput,
   Estimate,
@@ -11,7 +10,8 @@ import type {
   EstimateVersion,
   LineItemChange,
   UpdateEstimateInput,
-} from "./types";
+} from "@lib/estimating/types";
+import { generateBaseNumber } from "@lib/utils";
 
 // Generate a unique base number (YYMMDD format with suffix for duplicates)
 export function getNextBaseNumber(): string {
@@ -19,7 +19,7 @@ export function getNextBaseNumber(): string {
 
   const existing = db
     .prepare(
-      `SELECT base_number FROM quotes
+      `SELECT base_number FROM estimates
        WHERE base_number LIKE ?
        ORDER BY base_number DESC
        LIMIT 1`
@@ -58,8 +58,8 @@ export function listEstimates(): Estimate[] {
           'total', v.total,
           'is_current', v.is_current,
           'created_at', v.created_at
-        )) FROM quote_versions v WHERE v.quote_id = q.id) as versions
-      FROM quotes q
+        )) FROM estimate_versions v WHERE v.estimate_id = q.id) as versions
+      FROM estimates q
       ORDER BY q.created_at DESC`
     )
     .all() as Array<Record<string, unknown> & { versions: string }>;
@@ -81,8 +81,8 @@ export function getEstimate(id: string): Estimate | null {
           'total', v.total,
           'is_current', v.is_current,
           'created_at', v.created_at
-        )) FROM quote_versions v WHERE v.quote_id = q.id) as versions
-      FROM quotes q
+        )) FROM estimate_versions v WHERE v.estimate_id = q.id) as versions
+      FROM estimates q
       WHERE q.id = ?`
     )
     .get(id) as (Record<string, unknown> & { versions: string }) | undefined;
@@ -108,8 +108,8 @@ export function getEstimateByBaseNumber(baseNumber: string): Estimate | null {
           'total', v.total,
           'is_current', v.is_current,
           'created_at', v.created_at
-        )) FROM quote_versions v WHERE v.quote_id = q.id) as versions
-      FROM quotes q
+        )) FROM estimate_versions v WHERE v.estimate_id = q.id) as versions
+      FROM estimates q
       WHERE q.base_number = ?`
     )
     .get(baseNumber) as
@@ -146,7 +146,7 @@ export function getEstimateWithDetails(id: string):
   const sections = db
     .prepare(
       `SELECT id, name, title, show_subtotal, sort_order
-       FROM quote_sections
+       FROM estimate_sections
        WHERE version_id = ?
        ORDER BY sort_order`
     )
@@ -165,7 +165,7 @@ export function getEstimateWithDetails(id: string):
         unit_price,
         notes,
         sort_order
-       FROM quote_line_items
+       FROM estimate_line_items
        WHERE version_id = ?
        ORDER BY sort_order`
     )
@@ -188,7 +188,7 @@ export function createEstimate(input: CreateEstimateInput): Estimate {
 
   // Insert quote
   db.prepare(
-    `INSERT INTO quotes (id, base_number, takeoff_id, job_name, job_address, client_name, client_address, client_email, client_phone, estimator, estimator_email, notes, status, is_locked)
+    `INSERT INTO estimates (id, base_number, takeoff_id, job_name, job_address, client_name, client_address, client_email, client_phone, estimator, estimator_email, notes, status, is_locked)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   ).run(
     id,
@@ -220,7 +220,7 @@ export function createEstimate(input: CreateEstimateInput): Estimate {
   // Create first version
   const versionId = crypto.randomUUID();
   db.prepare(
-    `INSERT INTO quote_versions (id, quote_id, version_number, total, is_current)
+    `INSERT INTO estimate_versions (id, estimate_id, version_number, total, is_current)
      VALUES (?, ?, 1, ?, 1)`
   ).run(versionId, id, computedTotal);
 
@@ -231,7 +231,7 @@ export function createEstimate(input: CreateEstimateInput): Estimate {
     for (const section of input.sections) {
       const sectionId = crypto.randomUUID();
       db.prepare(
-        `INSERT INTO quote_sections (id, version_id, name, title, show_subtotal, sort_order)
+        `INSERT INTO estimate_sections (id, version_id, name, title, show_subtotal, sort_order)
          VALUES (?, ?, ?, ?, ?, ?)`
       ).run(
         sectionId,
@@ -258,7 +258,7 @@ export function createEstimate(input: CreateEstimateInput): Estimate {
         : null;
       const cost = item.unit_cost ?? 0;
       db.prepare(
-        `INSERT INTO quote_line_items (id, version_id, section_id, item_name, description, quantity, unit, unit_cost, unit_price, notes, sort_order)
+        `INSERT INTO estimate_line_items (id, version_id, section_id, item_name, description, quantity, unit, unit_cost, unit_price, notes, sort_order)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
       ).run(
         lineItemId,
@@ -337,7 +337,7 @@ export function updateEstimate(
   updates.push("updated_at = datetime('now')");
   values.push(id);
 
-  db.prepare(`UPDATE quotes SET ${updates.join(", ")} WHERE id = ?`).run(
+  db.prepare(`UPDATE estimates SET ${updates.join(", ")} WHERE id = ?`).run(
     ...values
   );
 
@@ -346,7 +346,7 @@ export function updateEstimate(
 
 // Delete an estimate
 export function deleteEstimate(id: string): boolean {
-  const result = db.prepare("DELETE FROM quotes WHERE id = ?").run(id);
+  const result = db.prepare("DELETE FROM estimates WHERE id = ?").run(id);
   return result.changes > 0;
 }
 
@@ -365,9 +365,9 @@ export function duplicateEstimate(
 
   // Create new estimate
   db.prepare(
-    `INSERT INTO quotes (id, base_number, job_name, job_address, client_name, client_email, client_phone, notes, status, is_locked)
+    `INSERT INTO estimates (id, base_number, job_name, job_address, client_name, client_email, client_phone, notes, status, is_locked)
      SELECT ?, ?, ?, job_address, client_name, client_email, client_phone, notes, 'draft', 0
-     FROM quotes WHERE id = ?`
+     FROM estimates WHERE id = ?`
   ).run(
     newEstimateId,
     newBaseNumber,
@@ -381,7 +381,7 @@ export function duplicateEstimate(
   // Create new version
   const newVersionId = crypto.randomUUID();
   db.prepare(
-    `INSERT INTO quote_versions (id, quote_id, version_number, total, is_current)
+    `INSERT INTO estimate_versions (id, estimate_id, version_number, total, is_current)
      VALUES (?, ?, 1, ?, 1)`
   ).run(newVersionId, newEstimateId, originalVersion.total);
 
@@ -390,7 +390,7 @@ export function duplicateEstimate(
   for (const section of originalVersion.sections) {
     const newSectionId = crypto.randomUUID();
     db.prepare(
-      `INSERT INTO quote_sections (id, version_id, name, title, show_subtotal, sort_order)
+      `INSERT INTO estimate_sections (id, version_id, name, title, show_subtotal, sort_order)
        VALUES (?, ?, ?, ?, ?, ?)`
     ).run(
       newSectionId,
@@ -410,7 +410,7 @@ export function duplicateEstimate(
       ? sectionIdMap.get(item.section_id)
       : null;
     db.prepare(
-      `INSERT INTO quote_line_items (id, version_id, section_id, description, quantity, unit, unit_cost, unit_price, notes, sort_order)
+      `INSERT INTO estimate_line_items (id, version_id, section_id, description, quantity, unit, unit_cost, unit_price, notes, sort_order)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).run(
       newLineItemId,
@@ -452,7 +452,7 @@ export function applyLineItemChanges(
             ? Math.max(...currentVersion.line_items.map((i) => i.sort_order))
             : -1;
         db.prepare(
-          `INSERT INTO quote_line_items (id, version_id, section_id, description, quantity, unit, unit_cost, unit_price, notes, sort_order)
+          `INSERT INTO estimate_line_items (id, version_id, section_id, description, quantity, unit, unit_cost, unit_price, notes, sort_order)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
         ).run(
           lineItemId,
@@ -471,7 +471,7 @@ export function applyLineItemChanges(
       case "remove": {
         if (change.id) {
           db.prepare(
-            "DELETE FROM quote_line_items WHERE id = ? AND version_id = ?"
+            "DELETE FROM estimate_line_items WHERE id = ? AND version_id = ?"
           ).run(change.id, versionId);
         }
         break;
@@ -508,7 +508,7 @@ export function applyLineItemChanges(
             updates.push("updated_at = datetime('now')");
             values.push(change.id, versionId);
             db.prepare(
-              `UPDATE quote_line_items SET ${updates.join(", ")} WHERE id = ? AND version_id = ?`
+              `UPDATE estimate_line_items SET ${updates.join(", ")} WHERE id = ? AND version_id = ?`
             ).run(...values);
           }
         }
@@ -522,12 +522,12 @@ export function applyLineItemChanges(
   // Recalculate total
   const result = db
     .prepare(
-      "SELECT SUM(quantity * unit_cost) as total FROM quote_line_items WHERE version_id = ?"
+      "SELECT SUM(quantity * unit_cost) as total FROM estimate_line_items WHERE version_id = ?"
     )
     .get(versionId) as { total: number } | undefined;
   const newTotal = result?.total || 0;
 
-  db.prepare("UPDATE quote_versions SET total = ? WHERE id = ?").run(
+  db.prepare("UPDATE estimate_versions SET total = ? WHERE id = ?").run(
     newTotal,
     versionId
   );

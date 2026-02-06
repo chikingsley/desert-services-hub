@@ -2,7 +2,7 @@
 
 // ============================================
 // SQLite Database Row Types
-// These match the exact schema in lib/db/index.ts
+// These match the exact schema in lib/db/schema.ts
 // ============================================
 
 /** Estimate row from SQLite - is_locked is 0|1 in DB */

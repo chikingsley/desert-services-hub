@@ -25,7 +25,7 @@ import type {
 import {
   aggregateTakeoffAnnotations,
   type TakeoffCatalogItem,
-} from "@/lib/takeoff/takeoff-to-quote";
+} from "@/lib/takeoff/takeoff-to-estimate";
 
 type SaveStatus = "saved" | "saving" | "unsaved";
 
@@ -171,7 +171,7 @@ export function TakeoffEditorPage() {
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("saved");
   const [catalogItems, setCatalogItems] = useState<TakeoffCatalogItem[]>([]);
   const [presetItems, setPresetItems] = useState<PresetItem[]>([]);
-  const [linkedQuote, setLinkedQuote] = useState<{
+  const [linkedEstimate, setLinkedEstimate] = useState<{
     id: string;
     base_number: string;
   } | null>(null);
@@ -233,17 +233,17 @@ export function TakeoffEditorPage() {
         console.error("Error loading catalog items:", error);
       }
 
-      // Check for linked quote
+      // Check for linked estimate
       try {
-        const quoteRes = await fetch(`/api/takeoffs/${id}/quote`);
-        if (quoteRes.ok) {
-          const { quote } = (await quoteRes.json()) as {
-            quote: { id: string; base_number: string } | null;
+        const estimateRes = await fetch(`/api/takeoffs/${id}/estimate`);
+        if (estimateRes.ok) {
+          const { estimate } = (await estimateRes.json()) as {
+            estimate: { id: string; base_number: string } | null;
           };
-          setLinkedQuote(quote);
+          setLinkedEstimate(estimate);
         }
       } catch {
-        // Ignore - linked quote is optional
+        // Ignore - linked estimate is optional
       }
 
       // Load PDF URL
@@ -453,10 +453,10 @@ export function TakeoffEditorPage() {
     }
   };
 
-  const handleCreateQuote = async () => {
+  const handleCreateEstimate = async () => {
     const safeAnnotations = Array.isArray(annotations) ? annotations : [];
     if (safeAnnotations.length === 0) {
-      toast.error("No annotations to create quote from");
+      toast.error("No annotations to create estimate from");
       return;
     }
 
@@ -467,7 +467,7 @@ export function TakeoffEditorPage() {
     );
 
     if (summaryItems.length === 0) {
-      toast.error("Could not aggregate annotations into quote items.");
+      toast.error("Could not aggregate annotations into estimate items.");
       return;
     }
 
@@ -501,7 +501,7 @@ export function TakeoffEditorPage() {
     }
 
     try {
-      const res = await fetch("/api/quotes", {
+      const res = await fetch("/api/estimates", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -515,15 +515,15 @@ export function TakeoffEditorPage() {
 
       if (!res.ok) {
         const errData = (await res.json()) as { error?: string };
-        throw new Error(errData.error || "Failed to create quote");
+        throw new Error(errData.error || "Failed to create estimate");
       }
 
       const data = (await res.json()) as { id: string };
-      toast.success("Quote created successfully");
-      navigate(`/quotes/${data.id}`);
+      toast.success("Estimate created successfully");
+      navigate(`/estimates/${data.id}`);
     } catch (err) {
       toast.error(
-        err instanceof Error ? err.message : "Failed to create quote"
+        err instanceof Error ? err.message : "Failed to create estimate"
       );
     }
   };
@@ -553,24 +553,24 @@ export function TakeoffEditorPage() {
               <SaveButtonLabel isSaving={isSaving} saveStatus={saveStatus} />
             </Button>
 
-            {linkedQuote ? (
+            {linkedEstimate ? (
               <Button
-                onClick={() => navigate(`/quotes/${linkedQuote.id}`)}
+                onClick={() => navigate(`/estimates/${linkedEstimate.id}`)}
                 size="sm"
                 variant="outline"
               >
                 <FileText className="mr-2 h-4 w-4" />
-                View Quote #{linkedQuote.base_number}
+                View Estimate #{linkedEstimate.base_number}
               </Button>
             ) : (
               <Button
                 disabled={!hasAnnotations}
-                onClick={handleCreateQuote}
+                onClick={handleCreateEstimate}
                 size="sm"
                 variant="default"
               >
                 <FileText className="mr-2 h-4 w-4" />
-                Create Quote
+                Create Estimate
               </Button>
             )}
           </div>

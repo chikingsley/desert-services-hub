@@ -9,6 +9,10 @@ import {
   Trash2,
 } from "lucide-react";
 import { useCallback, useState } from "react";
+import type {
+  CatalogItemData,
+  CategoryData,
+} from "@/apps/web/frontend/components/catalog/catalog-content";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -50,7 +54,6 @@ import {
   SelectValue,
 } from "@/apps/web/frontend/components/ui/select";
 import { cn } from "@/lib/utils";
-import type { CatalogItemData, CategoryData } from "./catalog-content";
 
 export interface BundleItem {
   id: string;
@@ -354,7 +357,7 @@ export function BundlesSection({
 
       <p className="mb-4 text-muted-foreground text-sm">
         Bundles group catalog items together. When measured on a takeoff, all
-        items in the bundle are added to the quote.
+        items in the bundle are added to the estimate.
       </p>
 
       {/* Bundle Cards */}

@@ -1,0 +1,247 @@
+{
+  "generatedAt": "2026-02-06T11:29:47.948Z",
+  "source": "/Users/chiejimofor/Documents/Github/desert-services-hub/apps/cli-tools/sharepoint-cli/swppp/swppp-master.db",
+  "sampleCounts": {
+    "rowsWithCompletedText": 2805,
+    "rowsWithParsedLabor": 1678,
+    "legacySignalSamples": 1112,
+    "expandedSignalSamples": 1433,
+    "segmentedProductionSamples": 1136,
+    "segmentedAdminSamples": 297
+  },
+  "legacyModel": {
+    "sampleCount": 1112,
+    "holdout": {
+      "trainCount": 889,
+      "testCount": 223,
+      "r2": 0.3166791418431554,
+      "medianApe": 0.4474981886034114,
+      "p90Ape": 1.8180473020551615
+    },
+    "crossValidation": {
+      "folds": [
+        {
+          "fold": 1,
+          "trainCount": 890,
+          "testCount": 222,
+          "r2": 0.46252613373645113,
+          "medianApe": 0.5034827822095299,
+          "p90Ape": 2.5701475442102772
+        },
+        {
+          "fold": 2,
+          "trainCount": 890,
+          "testCount": 222,
+          "r2": 0.3485364216425011,
+          "medianApe": 0.4893840167708944,
+          "p90Ape": 2.229275718571646
+        },
+        {
+          "fold": 3,
+          "trainCount": 890,
+          "testCount": 222,
+          "r2": 0.4137300968747645,
+          "medianApe": 0.41647740741425976,
+          "p90Ape": 1.7264102336835347
+        },
+        {
+          "fold": 4,
+          "trainCount": 890,
+          "testCount": 222,
+          "r2": -0.08673703573804237,
+          "medianApe": 0.4977988084059338,
+          "p90Ape": 1.6410367716653496
+        },
+        {
+          "fold": 5,
+          "trainCount": 888,
+          "testCount": 224,
+          "r2": 0.5463024807265504,
+          "medianApe": 0.4375471459476498,
+          "p90Ape": 1.9470173355212768
+        }
+      ],
+      "mean": {
+        "r2": 0.33687161944844496,
+        "medianApe": 0.4689380321496535,
+        "p90Ape": 2.022777520730417
+      }
+    },
+    "coefficients": {
+      "install_panels": 9.205004909041275,
+      "relocate_panels": 9.188887545282766,
+      "remove_panels": 2.8543787909117646,
+      "install_sock_lf": 0.11902350019154521,
+      "relocate_sock_lf": 0.3120383356045147,
+      "inlets": 11.087067380323306,
+      "maintenance_flag": 107.3785378749175,
+      "base_setup": 221.55854975869374
+    }
+  },
+  "expandedModel": {
+    "sampleCount": 1433,
+    "holdout": {
+      "trainCount": 1146,
+      "testCount": 287,
+      "r2": 0.28831409307897604,
+      "medianApe": 0.5133810162021842,
+      "p90Ape": 2.165361345338339
+    },
+    "crossValidation": {
+      "folds": [
+        {
+          "fold": 1,
+          "trainCount": 1147,
+          "testCount": 286,
+          "r2": -1.3491884720305691,
+          "medianApe": 0.42373895521286314,
+          "p90Ape": 2.3849866390055157
+        },
+        {
+          "fold": 2,
+          "trainCount": 1147,
+          "testCount": 286,
+          "r2": 0.3714071725047532,
+          "medianApe": 0.5033348365318412,
+          "p90Ape": 2.3981354170815665
+        },
+        {
+          "fold": 3,
+          "trainCount": 1147,
+          "testCount": 286,
+          "r2": 0.5701181648905286,
+          "medianApe": 0.4515277016594136,
+          "p90Ape": 2.0984028660384277
+        },
+        {
+          "fold": 4,
+          "trainCount": 1147,
+          "testCount": 286,
+          "r2": 0.5870680019321926,
+          "medianApe": 0.5170202407400502,
+          "p90Ape": 2.4367580765827412
+        },
+        {
+          "fold": 5,
+          "trainCount": 1144,
+          "testCount": 289,
+          "r2": 0.5484826681228894,
+          "medianApe": 0.48011545237911946,
+          "p90Ape": 2.5369561667197686
+        }
+      ],
+      "mean": {
+        "r2": 0.14557750708395892,
+        "medianApe": 0.47514743730465747,
+        "p90Ape": 2.371047833085604
+      }
+    },
+    "coefficients": {
+      "install_panels": 9.077405232414115,
+      "relocate_panels": 9.738372118367993,
+      "remove_panels": 3.257054802590905,
+      "install_sock_lf": 0.14287092793174386,
+      "relocate_sock_lf": 0.3344840227344696,
+      "inlets": 13.385282995595793,
+      "install_silt_fence_lf": 1.1592932395782647,
+      "install_privacy_screen_lf": 0.6553895184942214,
+      "rock_entrance_count": 0,
+      "rumble_grate_count": 36.18841277406203,
+      "trackout_rock_tons": 0,
+      "signs_count": 0,
+      "stickers_count": 0,
+      "narrative_count": 0,
+      "delivery_flag": 0,
+      "trip_charge_count": 0,
+      "mobilization_count": 0,
+      "maintenance_flag": 136.6591287870967,
+      "base_setup": 171.04483904511542
+    }
+  },
+  "segmentedModel": {
+    "sampleCount": 1433,
+    "productionSampleCount": 1136,
+    "adminSampleCount": 297,
+    "holdout": {
+      "trainCount": 1146,
+      "testCount": 287,
+      "r2": 0.3045339548937884,
+      "medianApe": 0.5244536265308438,
+      "p90Ape": 2.1460441034638205
+    },
+    "crossValidation": {
+      "folds": [
+        {
+          "fold": 1,
+          "trainCount": 1147,
+          "testCount": 286,
+          "r2": 0.17607604362414853,
+          "medianApe": 0.45598096763413803,
+          "p90Ape": 1.775180179947205
+        },
+        {
+          "fold": 2,
+          "trainCount": 1147,
+          "testCount": 286,
+          "r2": 0.3896942865550561,
+          "medianApe": 0.5040864149267242,
+          "p90Ape": 2.1388871389603175
+        },
+        {
+          "fold": 3,
+          "trainCount": 1147,
+          "testCount": 286,
+          "r2": 0.5661800749512866,
+          "medianApe": 0.3919927913147586,
+          "p90Ape": 1.8921675664149924
+        },
+        {
+          "fold": 4,
+          "trainCount": 1147,
+          "testCount": 286,
+          "r2": 0.5846438031777823,
+          "medianApe": 0.4784282834788399,
+          "p90Ape": 2.1960454251167234
+        },
+        {
+          "fold": 5,
+          "trainCount": 1144,
+          "testCount": 289,
+          "r2": 0.5477529967862184,
+          "medianApe": 0.4577500246002941,
+          "p90Ape": 1.9763799042169772
+        }
+      ],
+      "mean": {
+        "r2": 0.45286944101889837,
+        "medianApe": 0.457647696390951,
+        "p90Ape": 1.9957320429312428
+      }
+    },
+    "productionCoefficients": {
+      "install_panels": 8.752479776187261,
+      "relocate_panels": 9.284198482560543,
+      "remove_panels": 2.9404930434747114,
+      "install_sock_lf": 0.12539295891384147,
+      "relocate_sock_lf": 0.3106184773292762,
+      "install_silt_fence_lf": 1.1225125601567865,
+      "install_privacy_screen_lf": 0.6229344978572726,
+      "inlets": 11.32666288562112,
+      "rock_entrance_count": 0,
+      "rumble_grate_count": 16.862434548665988,
+      "trackout_rock_tons": 0,
+      "maintenance_flag": 173.41731382568267,
+      "base_setup": 205.49996083664396
+    },
+    "adminCoefficients": {
+      "narrative_count": 0,
+      "signs_count": 10.136614248578907,
+      "stickers_count": 0,
+      "delivery_flag": 9.474313957137277,
+      "trip_charge_count": 0,
+      "mobilization_count": 0,
+      "maintenance_flag": 193.31951657890528,
+      "base_setup": 84.20576974050073
+    }
+  }
+}

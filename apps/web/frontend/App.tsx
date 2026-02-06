@@ -12,7 +12,7 @@ import {
 import { Toaster } from "sonner";
 
 // Global styles - must be imported via JS for Bun's Tailwind plugin to process
-import "./index.css";
+import "@/apps/web/frontend/index.css";
 
 // Layout components
 import { AppSidebar } from "@/apps/web/frontend/components/app-sidebar";
@@ -29,10 +29,13 @@ import {
 // Pages
 import { DashboardPage } from "@/apps/web/frontend/pages/dashboard";
 import {
-  QuoteEditorPage,
-  quoteLoader,
-} from "@/apps/web/frontend/pages/quote-editor";
-import { QuotesPage, quotesLoader } from "@/apps/web/frontend/pages/quotes";
+  EstimateEditorPage,
+  estimateLoader,
+} from "@/apps/web/frontend/pages/estimate-editor";
+import {
+  EstimatesPage,
+  estimatesLoader,
+} from "@/apps/web/frontend/pages/estimates";
 import { SettingsPage } from "@/apps/web/frontend/pages/settings";
 import {
   TakeoffEditorPage,
@@ -100,15 +103,15 @@ const router = createBrowserRouter([
         element: <DashboardPage />,
       },
       {
-        path: "quotes",
-        element: <QuotesPage />,
-        loader: quotesLoader,
+        path: "estimates",
+        element: <EstimatesPage />,
+        loader: estimatesLoader,
         errorElement: <RouteErrorBoundary />,
       },
       {
-        path: "quotes/:id",
-        element: <QuoteEditorPage />,
-        loader: quoteLoader,
+        path: "estimates/:id",
+        element: <EstimateEditorPage />,
+        loader: estimateLoader,
         errorElement: <RouteErrorBoundary />,
       },
       {

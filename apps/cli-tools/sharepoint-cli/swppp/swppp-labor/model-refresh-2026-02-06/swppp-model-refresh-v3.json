@@ -1,0 +1,414 @@
+{
+  "generatedAt": "2026-02-06T11:45:10.244Z",
+  "source": "/Users/chiejimofor/Documents/Github/desert-services-hub/apps/cli-tools/sharepoint-cli/swppp/swppp-master.db",
+  "sampleCounts": {
+    "rowsWithCompletedText": 2805,
+    "rowsWithParsedLabor": 2014,
+    "legacySignalSamples": 1119,
+    "expandedSignalSamples": 1733,
+    "segmentedProductionSamples": 1419,
+    "segmentedAdminSamples": 314,
+    "workFamilySamples": {
+      "admin_trip": 314,
+      "fence_screen": 557,
+      "sock_silt": 383,
+      "inlet": 73,
+      "rock_trackout": 302,
+      "mixed_install": 104
+    }
+  },
+  "legacyModel": {
+    "sampleCount": 1119,
+    "holdout": {
+      "trainCount": 895,
+      "testCount": 224,
+      "r2": 0.2832967509022667,
+      "medianApe": 0.4816293433760933,
+      "p90Ape": 1.9290127545234643
+    },
+    "crossValidation": {
+      "folds": [
+        {
+          "fold": 1,
+          "trainCount": 896,
+          "testCount": 223,
+          "r2": 0.3882523574146497,
+          "medianApe": 0.46353554904433725,
+          "p90Ape": 1.9456883691196676
+        },
+        {
+          "fold": 2,
+          "trainCount": 896,
+          "testCount": 223,
+          "r2": 0.43704113929420574,
+          "medianApe": 0.5048594675794982,
+          "p90Ape": 2.382384939431644
+        },
+        {
+          "fold": 3,
+          "trainCount": 896,
+          "testCount": 223,
+          "r2": 0.2122178926947551,
+          "medianApe": 0.42937007208082795,
+          "p90Ape": 1.758918669864926
+        },
+        {
+          "fold": 4,
+          "trainCount": 896,
+          "testCount": 223,
+          "r2": 0.39423836177424887,
+          "medianApe": 0.46570987744430253,
+          "p90Ape": 2.227392987635813
+        },
+        {
+          "fold": 5,
+          "trainCount": 892,
+          "testCount": 227,
+          "r2": 0.2972656446128604,
+          "medianApe": 0.44878626985266534,
+          "p90Ape": 2.045898136490763
+        }
+      ],
+      "mean": {
+        "r2": 0.34580307915814396,
+        "medianApe": 0.4624522472003262,
+        "p90Ape": 2.0720566205085627
+      }
+    },
+    "coefficients": {
+      "install_panels": 9.187551568171102,
+      "relocate_panels": 9.129534799060398,
+      "remove_panels": 2.818589702594873,
+      "install_sock_lf": 0.11923226702814929,
+      "relocate_sock_lf": 0.31392852801379456,
+      "inlets": 10.869006007513926,
+      "maintenance_flag": 102.68691181844844,
+      "base_setup": 225.72077925575223
+    }
+  },
+  "expandedModel": {
+    "sampleCount": 1733,
+    "holdout": {
+      "trainCount": 1386,
+      "testCount": 347,
+      "r2": 0.09473288673409885,
+      "medianApe": 0.4414679186239598,
+      "p90Ape": 1.8159224549815376
+    },
+    "crossValidation": {
+      "folds": [
+        {
+          "fold": 1,
+          "trainCount": 1387,
+          "testCount": 346,
+          "r2": 0.5674624008986293,
+          "medianApe": 0.4177080116566336,
+          "p90Ape": 2.163421340173803
+        },
+        {
+          "fold": 2,
+          "trainCount": 1387,
+          "testCount": 346,
+          "r2": 0.5452493100167282,
+          "medianApe": 0.419135026260739,
+          "p90Ape": 2.0823483605912343
+        },
+        {
+          "fold": 3,
+          "trainCount": 1387,
+          "testCount": 346,
+          "r2": 0.5357350364931868,
+          "medianApe": 0.4676863298076458,
+          "p90Ape": 1.8874930252113917
+        },
+        {
+          "fold": 4,
+          "trainCount": 1387,
+          "testCount": 346,
+          "r2": 0.5661790076614827,
+          "medianApe": 0.5023819056593739,
+          "p90Ape": 2.130312423655945
+        },
+        {
+          "fold": 5,
+          "trainCount": 1384,
+          "testCount": 349,
+          "r2": -0.20778169112905243,
+          "medianApe": 0.44042607721673543,
+          "p90Ape": 2.0959217066284146
+        }
+      ],
+      "mean": {
+        "r2": 0.40136881278819486,
+        "medianApe": 0.44946747012022553,
+        "p90Ape": 2.0718993712521576
+      }
+    },
+    "coefficients": {
+      "install_panels": 9.178971883623058,
+      "relocate_panels": 9.848765424990287,
+      "remove_panels": 3.33730128071134,
+      "install_sock_lf": 0.14857659763824477,
+      "relocate_sock_lf": 0.3436339809578792,
+      "inlets": 13.957634362361635,
+      "install_silt_fence_lf": 1.1655025824449496,
+      "install_privacy_screen_lf": 0.663187279377708,
+      "rock_entrance_count": 19.875764962273873,
+      "rumble_grate_count": 25.007919466388877,
+      "trackout_rock_tons": 3.3028265333095574,
+      "signs_count": 0,
+      "stickers_count": 0,
+      "narrative_count": 0,
+      "delivery_flag": 0,
+      "trip_charge_count": 0,
+      "mobilization_count": 0,
+      "maintenance_flag": 139.44772322504195,
+      "base_setup": 161.8573110697399
+    }
+  },
+  "segmentedModel": {
+    "sampleCount": 1733,
+    "productionSampleCount": 1419,
+    "adminSampleCount": 314,
+    "holdout": {
+      "trainCount": 1386,
+      "testCount": 347,
+      "r2": 0.4261727826647813,
+      "medianApe": 0.43751138625602864,
+      "p90Ape": 1.5893279017164326
+    },
+    "crossValidation": {
+      "folds": [
+        {
+          "fold": 1,
+          "trainCount": 1387,
+          "testCount": 346,
+          "r2": 0.5662221633138564,
+          "medianApe": 0.46506810651927677,
+          "p90Ape": 1.7886233169995753
+        },
+        {
+          "fold": 2,
+          "trainCount": 1387,
+          "testCount": 346,
+          "r2": 0.5447023882808761,
+          "medianApe": 0.4478589890872014,
+          "p90Ape": 1.8509043417418876
+        },
+        {
+          "fold": 3,
+          "trainCount": 1387,
+          "testCount": 346,
+          "r2": 0.5346075661994516,
+          "medianApe": 0.45588550368162245,
+          "p90Ape": 1.9313957466363627
+        },
+        {
+          "fold": 4,
+          "trainCount": 1387,
+          "testCount": 346,
+          "r2": 0.5732076841949784,
+          "medianApe": 0.4768131533758553,
+          "p90Ape": 2.2834168265910355
+        },
+        {
+          "fold": 5,
+          "trainCount": 1384,
+          "testCount": 349,
+          "r2": -0.18894063241575831,
+          "medianApe": 0.46481107399993793,
+          "p90Ape": 2.001857005630704
+        }
+      ],
+      "mean": {
+        "r2": 0.40595983391468077,
+        "medianApe": 0.4620873653327788,
+        "p90Ape": 1.9712394475199133
+      }
+    },
+    "productionCoefficients": {
+      "install_panels": 8.945428466269489,
+      "relocate_panels": 9.515412324145583,
+      "remove_panels": 3.10550395057805,
+      "install_sock_lf": 0.13615146305590495,
+      "relocate_sock_lf": 0.32684455986723676,
+      "install_silt_fence_lf": 1.1384769798475314,
+      "install_privacy_screen_lf": 0.6393213549882403,
+      "inlets": 12.430408643668986,
+      "rock_entrance_count": 14.70781268478006,
+      "rumble_grate_count": 16.007978094057396,
+      "trackout_rock_tons": 2.8505984266803237,
+      "maintenance_flag": 175.91723693186617,
+      "base_setup": 186.73889419291217
+    },
+    "adminCoefficients": {
+      "narrative_count": 0,
+      "signs_count": 9.283125673921887,
+      "stickers_count": 0,
+      "delivery_flag": 17.419943712718542,
+      "trip_charge_count": 0,
+      "mobilization_count": 0,
+      "maintenance_flag": 185.71440101967093,
+      "base_setup": 85.95115215163165
+    }
+  },
+  "workFamilyModel": {
+    "sampleCount": 1733,
+    "familySampleCounts": {
+      "admin_trip": 314,
+      "fence_screen": 557,
+      "sock_silt": 383,
+      "inlet": 73,
+      "rock_trackout": 302,
+      "mixed_install": 104
+    },
+    "holdout": {
+      "trainCount": 1386,
+      "testCount": 347,
+      "r2": 0.4232761200680544,
+      "medianApe": 0.38137015331612856,
+      "p90Ape": 1.7076977965144873
+    },
+    "crossValidation": {
+      "folds": [
+        {
+          "fold": 1,
+          "trainCount": 1387,
+          "testCount": 346,
+          "r2": 0.542238744492731,
+          "medianApe": 0.4343365795581229,
+          "p90Ape": 1.746531162328437
+        },
+        {
+          "fold": 2,
+          "trainCount": 1387,
+          "testCount": 346,
+          "r2": 0.5513678002374689,
+          "medianApe": 0.4112236703554596,
+          "p90Ape": 1.8843784571149351
+        },
+        {
+          "fold": 3,
+          "trainCount": 1387,
+          "testCount": 346,
+          "r2": 0.5079466410003399,
+          "medianApe": 0.43020600319845415,
+          "p90Ape": 1.8857927743999996
+        },
+        {
+          "fold": 4,
+          "trainCount": 1387,
+          "testCount": 346,
+          "r2": 0.5707129706323208,
+          "medianApe": 0.4232416719261861,
+          "p90Ape": 2.285716084301111
+        },
+        {
+          "fold": 5,
+          "trainCount": 1384,
+          "testCount": 349,
+          "r2": -0.16582233066386753,
+          "medianApe": 0.4512183511546743,
+          "p90Ape": 2.2503007158971067
+        }
+      ],
+      "mean": {
+        "r2": 0.4012887651397987,
+        "medianApe": 0.4300452552385794,
+        "p90Ape": 2.010543838808318
+      }
+    },
+    "familyCoefficients": {
+      "admin_trip": {
+        "narrative_count": 0,
+        "signs_count": 9.283125673921887,
+        "stickers_count": 0,
+        "delivery_flag": 17.419943712718542,
+        "trip_charge_count": 0,
+        "mobilization_count": 0,
+        "maintenance_flag": 185.71440101967093,
+        "base_setup": 85.95115215163165
+      },
+      "fence_screen": {
+        "install_panels": 8.362846494076088,
+        "relocate_panels": 7.979539913696698,
+        "remove_panels": 2.5381665914166067,
+        "install_privacy_screen_lf": 0.5794683234842835,
+        "maintenance_flag": 121.56911172050023,
+        "base_setup": 253.06412478834372
+      },
+      "sock_silt": {
+        "install_sock_lf": 0.1386669113746873,
+        "relocate_sock_lf": 0.2408871820614126,
+        "install_silt_fence_lf": 1.211060031301154,
+        "maintenance_flag": 56.30510382528492,
+        "base_setup": 168.796133952192
+      },
+      "inlet": {
+        "inlets": 9.901930301238542,
+        "maintenance_flag": 545.4796022394423,
+        "base_setup": 145.58001106042016
+      },
+      "rock_trackout": {
+        "rock_entrance_count": 43.423462420983455,
+        "rumble_grate_count": 55.48854019002547,
+        "trackout_rock_tons": 4.531545250064374,
+        "maintenance_flag": 224.11624155525053,
+        "base_setup": 77.56251661947064
+      },
+      "mixed_install": {
+        "install_panels": 6.655851656548939,
+        "relocate_panels": 17.609304312360784,
+        "remove_panels": 4.919453927106912,
+        "install_sock_lf": 0.18787483725808612,
+        "relocate_sock_lf": 0.10724072625811847,
+        "install_silt_fence_lf": 0.8056368215727924,
+        "install_privacy_screen_lf": 0.8050368332928642,
+        "inlets": 21.484063805715657,
+        "rock_entrance_count": 0,
+        "rumble_grate_count": 0,
+        "trackout_rock_tons": 7.067589713327077,
+        "maintenance_flag": 117.04329303182762,
+        "base_setup": 144.0287046408177
+      }
+    },
+    "familyModelMeta": {
+      "admin_trip": {
+        "trained": true,
+        "trainCount": 314,
+        "minTrainSamples": 30,
+        "fallback": "segment_prod_admin"
+      },
+      "fence_screen": {
+        "trained": true,
+        "trainCount": 557,
+        "minTrainSamples": 30,
+        "fallback": "segment_prod_admin"
+      },
+      "sock_silt": {
+        "trained": true,
+        "trainCount": 383,
+        "minTrainSamples": 30,
+        "fallback": "segment_prod_admin"
+      },
+      "inlet": {
+        "trained": true,
+        "trainCount": 73,
+        "minTrainSamples": 30,
+        "fallback": "segment_prod_admin"
+      },
+      "rock_trackout": {
+        "trained": true,
+        "trainCount": 302,
+        "minTrainSamples": 30,
+        "fallback": "segment_prod_admin"
+      },
+      "mixed_install": {
+        "trained": true,
+        "trainCount": 104,
+        "minTrainSamples": 30,
+        "fallback": "segment_prod_admin"
+      }
+    }
+  }
+}

@@ -239,9 +239,12 @@ async function createCommand(argv: string[]): Promise<void> {
   const data = await loadJsonFile<{
     jobName: string;
     clientName?: string;
+    clientAddress?: string;
     jobAddress?: string;
     clientEmail?: string;
     clientPhone?: string;
+    estimator?: string;
+    estimatorEmail?: string;
     notes?: string;
     lineItems?: Array<{
       code: string;
@@ -253,9 +256,12 @@ async function createCommand(argv: string[]): Promise<void> {
   const input: CreateEstimateInput = {
     job_name: data.jobName,
     client_name: data.clientName,
+    client_address: data.clientAddress,
     job_address: data.jobAddress,
     client_email: data.clientEmail,
     client_phone: data.clientPhone,
+    estimator: data.estimator,
+    estimator_email: data.estimatorEmail,
     notes: data.notes,
     status: "draft",
   };
@@ -268,7 +274,8 @@ async function createCommand(argv: string[]): Promise<void> {
       if (catalogItem) {
         input.line_items.push({
           section_id: item.sectionId,
-          description: `${catalogItem.code}: ${catalogItem.name}`,
+          item_name: catalogItem.name,
+          description: catalogItem.description,
           quantity: item.quantity ?? catalogItem.defaultQty ?? 1,
           unit: catalogItem.unit,
           unit_cost: catalogItem.price,
@@ -463,17 +470,34 @@ async function pdfCommand(argv: string[]): Promise<void> {
   const currentVersion = details.current_version;
 
   // Convert to EditorEstimate format for PDF generation
+  const editorLineItems = currentVersion.line_items.map((i) => ({
+    id: i.id,
+    item: i.item_name || i.description,
+    description: i.item_name ? i.description : "",
+    qty: i.quantity,
+    quantity: i.quantity,
+    uom: i.unit,
+    unit: i.unit,
+    cost: i.unit_cost,
+    unitCost: i.unit_cost,
+    total: i.quantity * i.unit_cost,
+    sectionId: i.section_id || undefined,
+  }));
+
+  // Compute total from line items (version total may be stale)
+  const computedTotal = editorLineItems.reduce((sum, i) => sum + i.total, 0);
+
   const estimate: EditorEstimate = {
     estimateNumber: getEstimateNumber(
       details.base_number,
       currentVersion.version_number
     ),
     date: details.created_at,
-    estimator: "",
-    estimatorEmail: "",
+    estimator: details.estimator || "",
+    estimatorEmail: details.estimator_email || "",
     billTo: {
       companyName: details.client_name || "",
-      address: "",
+      address: details.client_address || "",
       email: details.client_email || "",
       phone: details.client_phone || "",
     },
@@ -486,20 +510,8 @@ async function pdfCommand(argv: string[]): Promise<void> {
       name: s.name,
       showSubtotal: s.show_subtotal,
     })),
-    lineItems: currentVersion.line_items.map((i) => ({
-      id: i.id,
-      item: i.description,
-      description: i.description,
-      qty: i.quantity,
-      quantity: i.quantity,
-      uom: i.unit,
-      unit: i.unit,
-      cost: i.unit_cost,
-      unitCost: i.unit_cost,
-      total: i.quantity * i.unit_cost,
-      sectionId: i.section_id || undefined,
-    })),
-    total: currentVersion.total,
+    lineItems: editorLineItems,
+    total: computedTotal,
   };
 
   const pdf = await generatePDF(estimate, { includeBackPage: true });

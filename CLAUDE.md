@@ -31,7 +31,7 @@ Default to using **Bun** instead of Node.js.
 Prefer running actual `.ts` files with `bun` for type safety:
 
 ```bash
-bun apps/contract/db/sync/all.ts
+bun apps/email-cli/sync/mailboxes.ts
 ```
 
 For quick one-offs where no script exists, `bun -e` is acceptable:
@@ -94,6 +94,10 @@ Do not use markdown tables in emails, drafts, documentation, or any output. Use 
 - **Direct imports**: Always import from the specific file that defines what you need.
 - **Use `type` over `interface`**: Prefer type aliases for consistency.
 - **Unused Variables**: Prefix intentionally unused variables with `_` (e.g., `const { used, _unused } = obj;`).
+
+### Path Aliases — MANDATORY (No Relative Imports)
+
+**NEVER use relative imports** (`./`, `../`). ALL imports MUST use path aliases defined in `tsconfig.json`. A PostToolUse hook enforces this — edits containing relative imports will be blocked (exit 2). Check `tsconfig.json` `paths` for the current alias map.
 
 ### Linting & Formatting (Biome)
 
@@ -258,16 +262,17 @@ const attachments = db
 
 ## OCR & Document Processing
 
-### Gemini 3 Flash OCR (plan-analysis/)
+### Unified OCR (apps/pdf-analysis/)
 
-All OCR is handled by the **plan-analysis** Python package using Gemini 3 Flash. This provides better accuracy than traditional OCR, especially for construction documents with technical drawings.
+All OCR is handled by the **pdf-analysis** Python package (Gemini, local, and Mistral providers). Gemini 3 Flash remains the highest-quality option for construction documents with technical drawings.
 
-**Location:** `plan-analysis/` directory
+**Location:** `apps/pdf-analysis/` directory
+**Execution standard:** use `uv` commands (`uv sync`, `uv run ...`, `uv add ...`) for all work in this package. Do not use `python -m ...` directly unless debugging environment issues.
 
 **Basic OCR:**
 
 ```bash
-cd plan-analysis/
+cd apps/pdf-analysis/
 just ocr "/path/to/document.pdf"
 # Creates: /path/to/document.gemini.md
 ```
@@ -276,6 +281,14 @@ just ocr "/path/to/document.pdf"
 
 ```bash
 just ocr-limit "/path/to/document.pdf" 5
+```
+
+**Testing:**
+
+```bash
+uv sync --extra dev
+uv run pytest -q
+uv run pytest tests/test_utils.py::test_parse_page_spec_mixed_ranges -q
 ```
 
 **Read the output:**
@@ -289,7 +302,7 @@ Read "/path/to/document.gemini.md"
 For construction plans requiring detailed analysis (counting, measuring, verification):
 
 ```python
-from plan_analysis import PlanAnalyzer
+from pdf_analysis import PlanAnalyzer
 
 analyzer = PlanAnalyzer()
 
@@ -329,7 +342,7 @@ result = analyzer.detailed_inspection(
 - **Technical drawings**: Traditional OCR garbles — Gemini 3 Flash returns structured data
 - **Measurements**: Traditional OCR misses — Gemini 3 Flash extracts with units
 
-**All documents** (contracts, plans, drawings) should use the plan-analysis OCR.
+**All documents** (contracts, plans, drawings) should use the `apps/pdf-analysis` OCR tooling.
 
 ---
 
@@ -471,17 +484,17 @@ mutation {
 cd workers/ds-estimates-sync-worker
 
 # Sync Monday → hub.db (READ-ONLY from Monday)
-bun cli/hub.ts sync contacts      # CONTACTS board → contacts table
-bun cli/hub.ts sync contractors   # CONTRACTORS board → accounts table
-bun cli/hub.ts sync estimates     # ESTIMATING board → estimates table
-bun cli/hub.ts sync all           # All boards
+bun apps/contract/cli/hub.ts sync contacts      # CONTACTS board → contacts table
+bun apps/contract/cli/hub.ts sync contractors   # CONTRACTORS board → accounts table
+bun apps/contract/cli/hub.ts sync estimates     # ESTIMATING board → estimates table
+bun apps/contract/cli/hub.ts sync all           # All boards
 
-bun cli/hub.ts stats              # Show current counts
+bun apps/contract/cli/hub.ts stats              # Show current counts
 
 # Create/update (writes to BOTH hub.db AND Monday)
-bun cli/hub.ts create account --name="Company" --domain=company.com --type=contractor
-bun cli/hub.ts update contact <id> --email=x@y.com --mobile=5551234 --push
-bun cli/hub.ts move contact <id> --group=ACTIVE
+bun apps/contract/cli/hub.ts create account --name="Company" --domain=company.com --type=contractor
+bun apps/contract/cli/hub.ts update contact <id> --email=x@y.com --mobile=5551234 --push
+bun apps/contract/cli/hub.ts move contact <id> --group=ACTIVE
 bun cli/hub.ts link contact <id> --account=<account_id>
 ```
 
@@ -508,7 +521,7 @@ const RETRY_DELAY_MS = 3000;
 
 ```bash
 # Create account via CLI (preferred)
-bun workers/ds-estimates-sync-worker/cli/hub.ts create account --name="Company Name" --domain=domain.com
+bun apps/contract/cli/hub.ts create account --name="Company Name" --domain=domain.com
 
 # Then update local hub.db with the Monday ID
 sqlite3 apps/contract/hub.db "UPDATE accounts SET monday_account_id = 'MONDAY_ID' WHERE id = LOCAL_ID;"
@@ -524,15 +537,15 @@ sqlite3 apps/contract/hub.db "UPDATE accounts SET monday_account_id = 'MONDAY_ID
 
 ```bash
 # Update contact and push to Monday
-bun cli/hub.ts update contact <id> --email=x@y.com --push
+bun apps/contract/cli/hub.ts update contact <id> --email=x@y.com --push
 
 # Move contact to a group
-bun cli/hub.ts move contact <id> --group=MARKETING
+bun apps/contract/cli/hub.ts move contact <id> --group=MARKETING
 ```
 
 **Valid groups for move:** `ACTIVE`, `OPEN_BIDS`, `BIDS_SENT`, `SWPPP`, `PERSONAL_EMAIL`, `INSUFFICIENT_INFO`, `MARKETING`
 
-**Looking up new groups:** If a new group is added in Monday and not in the CLI, use the Monday MCP to get the group ID, then add it to `CONTACT_GROUPS` in `workers/ds-estimates-sync-worker/cli/hub.ts`:
+**Looking up new groups:** If a new group is added in Monday and not in the CLI, use the Monday MCP to get the group ID, then add it to `CONTACT_GROUPS` in `apps/contract/cli/hub.ts`:
 
 ```bash
 # Query board structure via Monday API directly
@@ -552,7 +565,7 @@ When enriching contacts, the goal is to **extract and record all useful informat
 
 ```bash
 # Update contact with extracted info
-bun cli/hub.ts update contact <id> --email=x@y.com --mobile=4805551234 --title="Project Manager" --push
+bun apps/contract/cli/hub.ts update contact <id> --email=x@y.com --mobile=4805551234 --title="Project Manager" --push
 
 # Add notes to local DB
 sqlite3 apps/contract/hub.db "UPDATE contacts SET contractor_search_notes = 'Company Name - type. Customer for X service. Found via email signature.' WHERE id = ID;"
@@ -629,15 +642,15 @@ workers/ds-{name}/
 ```bash
 cd workers/ds-estimates-sync-worker
 
-# Hub CLI - Monday → hub.db sync (uses local monday/)
-bun cli/hub.ts sync contacts      # Sync CONTACTS board
-bun cli/hub.ts sync contractors   # Sync CONTRACTORS board
-bun cli/hub.ts sync estimates     # Sync ESTIMATING board
-bun cli/hub.ts sync all           # All boards
-bun cli/hub.ts stats              # Show counts
-bun cli/hub.ts create account --name="XYZ" --domain=xyz.com
-bun cli/hub.ts update contact <id> --email=x@y.com --push
-bun cli/hub.ts move contact <id> --group=ACTIVE
+# Hub CLI - Monday → hub.db sync (now at apps/contract/cli/)
+bun apps/contract/cli/hub.ts sync contacts      # Sync CONTACTS board
+bun apps/contract/cli/hub.ts sync contractors   # Sync CONTRACTORS board
+bun apps/contract/cli/hub.ts sync estimates     # Sync ESTIMATING board
+bun apps/contract/cli/hub.ts sync all           # All boards
+bun apps/contract/cli/hub.ts stats              # Show counts
+bun apps/contract/cli/hub.ts create account --name="XYZ" --domain=xyz.com
+bun apps/contract/cli/hub.ts update contact <id> --email=x@y.com --push
+bun apps/contract/cli/hub.ts move contact <id> --group=ACTIVE
 
 # SharePoint sync (standalone script)
 bun sync-estimates.ts --dry-run
@@ -733,7 +746,7 @@ wrangler secret put MONDAY_API_KEY
 
 ```bash
 export MONDAY_API_KEY=xxx
-bun cli/hub.ts sync estimates
+bun apps/contract/cli/hub.ts sync estimates
 ```
 
 ### TypeScript Configs

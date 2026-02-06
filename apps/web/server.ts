@@ -12,11 +12,11 @@ import {
   getAttachment,
   getConversation,
   listArchives,
-} from "./api/archive";
-import { getCatalog, getTakeoffItems } from "./api/catalog";
-import { healthCheck } from "./api/health";
-import { searchMonday } from "./api/monday";
-import { createQuote, listQuotes } from "./api/quotes";
+} from "@/api/archive";
+import { getCatalog, getTakeoffItems } from "@/api/catalog";
+import { healthCheck } from "@/api/health";
+import { searchMonday } from "@/api/monday";
+import { createQuote, listQuotes } from "@/api/quotes";
 import {
   deleteQuote,
   duplicateQuote,
@@ -24,20 +24,25 @@ import {
   getQuotePdf,
   getQuoteTakeoff,
   updateQuote,
-} from "./api/quotes-by-id";
-import { createTakeoff, listTakeoffs } from "./api/takeoffs";
+} from "@/api/quotes-by-id";
+import { createTakeoff, listTakeoffs } from "@/api/takeoffs";
 import {
   deleteTakeoff,
   getTakeoff,
   getTakeoffPdf,
   getTakeoffQuote,
   updateTakeoff,
-} from "./api/takeoffs-by-id";
-import { checkPdfExists, uploadPdf } from "./api/upload";
-import { handleMondayWebhook } from "./api/webhooks";
+} from "@/api/takeoffs-by-id";
+import { checkPdfExists, uploadPdf } from "@/api/upload";
+import { handleMondayWebhook } from "@/api/webhooks";
+
+// Bun.serve route handlers expect BunRequest<path> but our API handlers use standard
+// Request. Cloudflare Workers types also pollute the global Request generic, causing
+// type conflicts. This helper bridges the gap.
+const h = (handler: unknown) => handler as never;
 
 // Frontend - HTML entry point (Bun bundles automatically)
-import homepage from "./frontend/index.html";
+import homepage from "@/apps/web/frontend/index.html";
 
 const server = serve({
   port: process.env.PORT || 4747,
@@ -54,77 +59,77 @@ const server = serve({
 
     // Quotes
     "/api/quotes": {
-      GET: listQuotes,
-      POST: createQuote,
+      GET: h(listQuotes),
+      POST: h(createQuote),
     },
     "/api/quotes/:id": {
-      GET: getQuote,
-      PUT: updateQuote,
-      DELETE: deleteQuote,
+      GET: h(getQuote),
+      PUT: h(updateQuote),
+      DELETE: h(deleteQuote),
     },
     "/api/quotes/:id/pdf": {
-      GET: getQuotePdf,
+      GET: h(getQuotePdf),
     },
     "/api/quotes/:id/duplicate": {
-      POST: duplicateQuote,
+      POST: h(duplicateQuote),
     },
     "/api/quotes/:id/takeoff": {
-      GET: getQuoteTakeoff,
+      GET: h(getQuoteTakeoff),
     },
 
     // Takeoffs
     "/api/takeoffs": {
-      GET: listTakeoffs,
-      POST: createTakeoff,
+      GET: h(listTakeoffs),
+      POST: h(createTakeoff),
     },
     "/api/takeoffs/:id": {
-      GET: getTakeoff,
-      PUT: updateTakeoff,
-      DELETE: deleteTakeoff,
+      GET: h(getTakeoff),
+      PUT: h(updateTakeoff),
+      DELETE: h(deleteTakeoff),
     },
     "/api/takeoffs/:id/pdf": {
-      GET: getTakeoffPdf,
+      GET: h(getTakeoffPdf),
     },
     "/api/takeoffs/:id/quote": {
-      GET: getTakeoffQuote,
+      GET: h(getTakeoffQuote),
     },
 
     // Upload
     "/api/upload/pdf": {
-      GET: checkPdfExists,
-      POST: uploadPdf,
+      GET: h(checkPdfExists),
+      POST: h(uploadPdf),
     },
 
     // Catalog
     "/api/catalog": {
-      GET: getCatalog,
+      GET: h(getCatalog),
     },
     "/api/catalog/takeoff-items": {
-      GET: getTakeoffItems,
+      GET: h(getTakeoffItems),
     },
 
     // Monday.com
     "/api/monday/search": {
-      GET: searchMonday,
+      GET: h(searchMonday),
     },
 
     // Webhooks
     "/api/webhooks/monday": {
-      POST: handleMondayWebhook,
+      POST: h(handleMondayWebhook),
     },
 
     // Email Archives
     "/api/archives": {
-      GET: listArchives,
+      GET: h(listArchives),
     },
     "/api/archives/:archive": {
-      GET: getArchiveIndex,
+      GET: h(getArchiveIndex),
     },
     "/api/archives/:archive/conversations/:folder": {
-      GET: getConversation,
+      GET: h(getConversation),
     },
     "/api/archives/:archive/conversations/:folder/attachments/:filename": {
-      GET: getAttachment,
+      GET: h(getAttachment),
     },
 
     // ===========================================

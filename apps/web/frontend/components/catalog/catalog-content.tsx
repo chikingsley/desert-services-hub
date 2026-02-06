@@ -268,7 +268,7 @@ export function CatalogContent({
       if (!res.ok) {
         throw new Error("Failed to create category");
       }
-      const newCategory = await res.json();
+      const newCategory = (await res.json()) as CategoryData;
 
       setCategories((prev) => [
         ...prev,
@@ -411,7 +411,7 @@ export function CatalogContent({
       if (!res.ok) {
         throw new Error("Failed to create subcategory");
       }
-      const newSubcat = await res.json();
+      const newSubcat = (await res.json()) as SubcategoryData;
 
       setCategories((prev) =>
         prev.map((cat) =>
@@ -644,7 +644,7 @@ export function CatalogContent({
       if (!res.ok) {
         throw new Error("Failed to create item");
       }
-      const newItem = await res.json();
+      const newItem = (await res.json()) as CatalogItemData;
 
       const itemData: CatalogItemData = {
         id: newItem.id,

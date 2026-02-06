@@ -2,7 +2,7 @@
  * Monday.com API handlers
  * Routes: GET /api/monday/search
  */
-import { db } from "../../../lib/db";
+import { db } from "@lib/db";
 
 // GET /api/monday/search - Search Monday cache
 export function searchMonday(req: Request): Response {

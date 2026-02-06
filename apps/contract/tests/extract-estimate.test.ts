@@ -22,7 +22,7 @@ import {
 // Test fixtures - PDF text extracted from actual estimates
 const _FIXTURES_PATH = join(
   import.meta.dir,
-  "../templates/ground-truth/test-fixtures"
+  "../projects/ground-truth/test-fixtures"
 );
 
 // Sample estimate text for unit tests - PDF-like format (space separated)

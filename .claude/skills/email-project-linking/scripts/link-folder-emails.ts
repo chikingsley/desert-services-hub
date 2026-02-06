@@ -9,7 +9,7 @@
  */
 
 import Database from "bun:sqlite";
-import { GraphEmailClient } from "@/services/email/client";
+import { GraphEmailClient } from "@email-cli/client";
 
 const folderName = process.argv[2];
 const projectIdArg = process.argv.find((a) => a.startsWith("--project-id="));

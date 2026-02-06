@@ -89,6 +89,7 @@ db.run(`
     id TEXT PRIMARY KEY,
     version_id TEXT NOT NULL,
     section_id TEXT,
+    item_name TEXT,
     description TEXT NOT NULL,
     quantity REAL NOT NULL DEFAULT 1,
     unit TEXT NOT NULL DEFAULT 'EA',

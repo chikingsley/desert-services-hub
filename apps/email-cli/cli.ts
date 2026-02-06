@@ -1,0 +1,144 @@
+#!/usr/bin/env bun
+/**
+ * Desert Email CLI
+ *
+ * Command-line interface for email and M365 group operations.
+ * All sent emails include your signature automatically (use --no-signature to skip).
+ *
+ * Usage:
+ *   bun apps/email-cli/cli.ts <command> [options]
+ *
+ * Run with --help for full command list.
+ */
+import { DEFAULT_USER } from "@email/commands/config";
+import { draftHandlers } from "@email/commands/draft";
+import { foldersHandlers } from "@email/commands/folders";
+import { groupHandlers } from "@email/commands/groups";
+import { readHandlers } from "@email/commands/read";
+import { searchHandlers } from "@email/commands/search";
+import { sendHandlers } from "@email/commands/send";
+import { templateHandlers } from "@email/commands/templates";
+import type { CommandHandler } from "@email/commands/types";
+
+// ============================================================================
+// Merge all command handlers
+// ============================================================================
+
+const handlers: Record<string, CommandHandler> = {
+  ...searchHandlers,
+  ...sendHandlers,
+  ...readHandlers,
+  ...draftHandlers,
+  ...foldersHandlers,
+  ...templateHandlers,
+  ...groupHandlers,
+};
+
+// ============================================================================
+// Help
+// ============================================================================
+
+function showHelp() {
+  console.log(`
+Desert Email CLI
+
+Usage: bun apps/email-cli/cli.ts <command> [options]
+
+Email Commands:
+  search <query>              Search emails in your mailbox (supports --folder)
+  search-all <query>          Search across all org mailboxes
+  send                        Send an email (supports attachments)
+  send-template <name>        Send email using HTML template
+  reply <messageId>           Reply to an email (sends immediately)
+  get <messageId>             Get full email content
+  thread <messageId>          Get email thread
+  download-attachments <id>   Download attachments from an email
+  folders                     List mail folders (supports --recursive)
+
+Draft Commands:
+  draft                       Create a new email draft
+  reply-draft <query>         Find email by search and create reply draft
+  reply-draft-by-id <id>     Create reply draft to specific email by ID
+  send-draft <draftId>        Send an existing draft
+
+Template Commands:
+  templates                   List available email templates
+  template <name>             Send test email from template (to self)
+  send-template <name>        Send template to recipients
+
+Mailbox Shortcuts (emails):
+  contracts [query]           Search contracts@desertservices.net mailbox
+  estimating [query]          Search estimating@desertservices.net mailbox
+
+M365 Group Commands (conversations):
+  groups                      List all M365 groups
+  ic [query]                  InternalContracts group (list or search)
+  group-conversations <name>  List conversations in a group
+  group-conversation <name> <cid>  Get full conversation
+  search-group <name> <query> Search group conversations
+
+Known Groups: ic, internal-contracts, dust-control, all-company, accounting, sales
+Known Mailboxes: contracts, estimating, chi, tim
+
+Options:
+  --user, -u <email>          Mailbox to search (default: ${DEFAULT_USER})
+  --to <emails>               Recipients (comma-separated)
+  --cc <emails>               CC recipients (comma-separated)
+  --subject, -s <text>        Email subject
+  --body, -b <text>           Email body
+  --vars, -v <json>           Template variables as JSON
+  --attachments, -a <paths>   File attachments (comma-separated paths)
+  --limit, -l <number>        Max results (default: 10)
+  --reply-all                 Reply to all recipients
+  --no-signature              Skip auto-signature
+
+Examples:
+  bun apps/email-cli/cli.ts contracts                    # List contracts mailbox emails
+  bun apps/email-cli/cli.ts contracts "Layton"           # Search contracts mailbox
+  bun apps/email-cli/cli.ts estimating "bid"             # Search estimating mailbox
+  bun apps/email-cli/cli.ts ic                           # List InternalContracts group
+  bun apps/email-cli/cli.ts ic "Helen"                   # Search InternalContracts group
+  bun apps/email-cli/cli.ts search-group dust-control "permit"
+
+  # Create drafts:
+  bun apps/email-cli/cli.ts draft --subject "Hello" --body "Hi there" --to "user@example.com"
+  bun apps/email-cli/cli.ts reply-draft "invoice" --body "Thanks for the invoice" --reply-all
+  bun apps/email-cli/cli.ts send-draft <draftId>         # Send an existing draft
+
+  # Send dust permit email using template:
+  bun apps/email-cli/cli.ts send-template dust-permit-issued \\
+    --to "contact@gc.com" --subject "Dust Permit Issued - Project X" \\
+    --vars '{"recipientName":"John","projectName":"Project X",...}' \\
+    --attachments "/path/to/permit.pdf"
+`);
+}
+
+// ============================================================================
+// Main
+// ============================================================================
+
+async function main() {
+  const args = process.argv.slice(2);
+  const command = args[0];
+
+  if (!command || command === "--help" || command === "-h") {
+    showHelp();
+    return;
+  }
+
+  const handler = handlers[command];
+  if (!handler) {
+    console.error(`Unknown command: ${command}`);
+    console.error("Run with --help for usage information.");
+    process.exit(1);
+  }
+
+  try {
+    await handler(args.slice(1));
+  } catch (error) {
+    console.error("Error:", error instanceof Error ? error.message : error);
+    process.exit(1);
+  }
+}
+
+main();

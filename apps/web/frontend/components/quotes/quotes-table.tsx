@@ -106,7 +106,7 @@ export function QuotesTable({ quotes }: QuotesTableProps) {
         throw new Error("Failed to duplicate quote");
       }
 
-      const data = await response.json();
+      const data = (await response.json()) as { id: string };
       navigate(`/quotes/${data.id}`);
     } catch (_error) {
       setDuplicatingId(null);

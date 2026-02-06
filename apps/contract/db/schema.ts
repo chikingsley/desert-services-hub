@@ -185,6 +185,26 @@ db.run(`
 `);
 
 // ============================================
+// Schema: Estimate Line Items (extracted from PDFs)
+// ============================================
+db.run(`
+  CREATE TABLE IF NOT EXISTS estimate_line_items (
+    id INTEGER PRIMARY KEY,
+    estimate_id INTEGER NOT NULL REFERENCES estimates(id) ON DELETE CASCADE,
+    item TEXT NOT NULL,
+    description TEXT NOT NULL,
+    qty REAL NOT NULL,
+    unit TEXT,
+    unit_cost REAL NOT NULL,
+    total REAL NOT NULL,
+    taxable INTEGER DEFAULT 0,
+    section TEXT DEFAULT 'required',
+    sort_order INTEGER DEFAULT 0,
+    extracted_at TEXT DEFAULT (datetime('now'))
+  )
+`);
+
+// ============================================
 // Migrations (add columns to existing tables)
 // ============================================
 
@@ -223,6 +243,13 @@ const migrations = [
   "ALTER TABLE emails ADD COLUMN real_sender_email TEXT",
   "ALTER TABLE emails ADD COLUMN real_sender_domain TEXT",
   "ALTER TABLE emails ADD COLUMN is_excluded INTEGER DEFAULT 0",
+  // Estimate extraction tracking columns
+  "ALTER TABLE estimates ADD COLUMN extraction_status TEXT",
+  "ALTER TABLE estimates ADD COLUMN extraction_error TEXT",
+  "ALTER TABLE estimates ADD COLUMN extracted_at TEXT",
+  "ALTER TABLE estimates ADD COLUMN extracted_grand_total REAL",
+  "ALTER TABLE estimates ADD COLUMN extracted_job_name TEXT",
+  "ALTER TABLE estimates ADD COLUMN extracted_estimator TEXT",
 ];
 
 for (const sql of migrations) {
@@ -273,6 +300,10 @@ const indexes = [
   "CREATE INDEX IF NOT EXISTS idx_estimates_synced ON estimates(synced_at)",
   "CREATE INDEX IF NOT EXISTS idx_estimates_account ON estimates(account_monday_id)",
   "CREATE INDEX IF NOT EXISTS idx_estimates_domain ON estimates(account_domain)",
+  // Estimate line items
+  "CREATE INDEX IF NOT EXISTS idx_eli_estimate ON estimate_line_items(estimate_id)",
+  // Estimate extraction status
+  "CREATE INDEX IF NOT EXISTS idx_estimates_extraction ON estimates(extraction_status)",
 ];
 
 for (const sql of indexes) {

@@ -2,14 +2,14 @@
  * Takeoff by ID API handlers
  * Routes: /api/takeoffs/:id, /api/takeoffs/:id/pdf, /api/takeoffs/:id/quote
  */
-import { db } from "../../../lib/db";
+import { db } from "@lib/db";
 import {
   BUCKETS,
   fileExists,
   getFileTags,
   getFileWebStream,
   getTakeoffPdfUrl,
-} from "../../../lib/minio";
+} from "@lib/minio";
 
 // Bun extends Request with params from route matching
 type BunRequest = Request & { params: { id: string } };
@@ -36,18 +36,18 @@ export function getTakeoff(req: BunRequest): Response {
 // PUT /api/takeoffs/:id - Update a takeoff
 export async function updateTakeoff(req: BunRequest): Promise<Response> {
   const { id } = req.params;
-  const body = await req.json();
+  const body = (await req.json()) as Record<string, unknown>;
 
   const updates: string[] = [];
   const values: (string | number | null)[] = [];
 
   if (body.name !== undefined) {
     updates.push("name = ?");
-    values.push(body.name);
+    values.push(body.name as string);
   }
   if (body.pdf_url !== undefined) {
     updates.push("pdf_url = ?");
-    values.push(body.pdf_url);
+    values.push(body.pdf_url as string);
   }
   if (body.annotations !== undefined) {
     updates.push("annotations = ?");
@@ -59,7 +59,7 @@ export async function updateTakeoff(req: BunRequest): Promise<Response> {
   }
   if (body.status !== undefined) {
     updates.push("status = ?");
-    values.push(body.status);
+    values.push(body.status as string);
   }
 
   updates.push("updated_at = datetime('now')");

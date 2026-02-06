@@ -167,7 +167,7 @@ export function BundlesSection({
         throw new Error("Failed to create bundle");
       }
 
-      const newBundle = await res.json();
+      const newBundle = (await res.json()) as Bundle;
       onBundlesChange([...bundles, newBundle]);
       setExpandedBundles((prev) => new Set([...prev, newBundle.id]));
 
@@ -228,7 +228,7 @@ export function BundlesSection({
         throw new Error("Failed to add item");
       }
 
-      const newItem = await res.json();
+      const newItem = (await res.json()) as BundleItem;
 
       onBundlesChange(
         bundles.map((b) =>

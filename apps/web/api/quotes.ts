@@ -2,9 +2,9 @@
  * Estimates API handlers
  * Routes: GET /api/quotes, POST /api/quotes
  */
-import { db } from "../../../lib/db";
-import type { EstimateRow, EstimateSection } from "../../../lib/types";
-import { generateBaseNumber } from "../../../lib/utils";
+import { db } from "@lib/db";
+import type { EstimateRow, EstimateSection } from "@lib/types";
+import { generateBaseNumber } from "@lib/utils";
 
 type EstimateWithVersionsJson = EstimateRow & { versions: string };
 
@@ -86,11 +86,11 @@ export function listQuotes(): Response {
 // POST /api/quotes - Create a new estimate
 export async function createQuote(req: Request): Promise<Response> {
   try {
-    const body = await req.json();
+    const body = (await req.json()) as Record<string, unknown>;
     const id = crypto.randomUUID();
 
     // Auto-generate base_number if not provided (YYMMDD format)
-    const baseNumber = body.base_number || getNextBaseNumber();
+    const baseNumber = (body.base_number as string) || getNextBaseNumber();
 
     // Insert quote
     db.prepare(
@@ -99,14 +99,14 @@ export async function createQuote(req: Request): Promise<Response> {
     ).run(
       id,
       baseNumber,
-      body.takeoff_id || null,
-      body.job_name || "Untitled Estimate",
-      body.job_address || null,
-      body.client_name || null,
-      body.client_email || null,
-      body.client_phone || null,
-      body.notes || null,
-      body.status || "draft",
+      (body.takeoff_id as string) || null,
+      (body.job_name as string) || "Untitled Estimate",
+      (body.job_address as string) || null,
+      (body.client_name as string) || null,
+      (body.client_email as string) || null,
+      (body.client_phone as string) || null,
+      (body.notes as string) || null,
+      (body.status as string) || "draft",
       body.is_locked ? 1 : 0
     );
 
@@ -115,7 +115,7 @@ export async function createQuote(req: Request): Promise<Response> {
     db.prepare(
       `INSERT INTO quote_versions (id, quote_id, version_number, total, is_current)
        VALUES (?, ?, 1, ?, 1)`
-    ).run(versionId, id, body.total || 0);
+    ).run(versionId, id, (body.total as number) || 0);
 
     // Create sections if provided
     const sectionIdMap = new Map<string, string>();

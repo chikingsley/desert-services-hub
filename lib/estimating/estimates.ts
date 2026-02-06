@@ -145,7 +145,7 @@ export function getEstimateWithDetails(id: string):
   // Get sections and line items for current version
   const sections = db
     .prepare(
-      `SELECT id, name, title, show_subtotal as showSubtotal, sort_order as sortOrder
+      `SELECT id, name, title, show_subtotal, sort_order
        FROM quote_sections
        WHERE version_id = ?
        ORDER BY sort_order`
@@ -154,16 +154,17 @@ export function getEstimateWithDetails(id: string):
 
   const lineItems = db
     .prepare(
-      `SELECT 
+      `SELECT
         id,
-        section_id as sectionId,
+        section_id,
+        item_name,
         description,
         quantity,
         unit,
-        unit_cost as unitCost,
-        unit_price as unitPrice,
+        unit_cost,
+        unit_price,
         notes,
-        sort_order as sortOrder
+        sort_order
        FROM quote_line_items
        WHERE version_id = ?
        ORDER BY sort_order`
@@ -187,8 +188,8 @@ export function createEstimate(input: CreateEstimateInput): Estimate {
 
   // Insert quote
   db.prepare(
-    `INSERT INTO quotes (id, base_number, takeoff_id, job_name, job_address, client_name, client_email, client_phone, notes, status, is_locked)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    `INSERT INTO quotes (id, base_number, takeoff_id, job_name, job_address, client_name, client_address, client_email, client_phone, estimator, estimator_email, notes, status, is_locked)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   ).run(
     id,
     baseNumber,
@@ -196,19 +197,32 @@ export function createEstimate(input: CreateEstimateInput): Estimate {
     input.job_name || "Untitled Estimate",
     input.job_address || null,
     input.client_name || null,
+    input.client_address || null,
     input.client_email || null,
     input.client_phone || null,
+    input.estimator || null,
+    input.estimator_email || null,
     input.notes || null,
     input.status || "draft",
     input.is_locked ? 1 : 0
   );
+
+  // Compute total from line items if not provided
+  const computedTotal =
+    input.total ??
+    input.line_items?.reduce((sum, item) => {
+      const qty = item.quantity ?? 1;
+      const cost = item.unit_cost ?? 0;
+      return sum + qty * cost;
+    }, 0) ??
+    0;
 
   // Create first version
   const versionId = crypto.randomUUID();
   db.prepare(
     `INSERT INTO quote_versions (id, quote_id, version_number, total, is_current)
      VALUES (?, ?, 1, ?, 1)`
-  ).run(versionId, id, input.total || 0);
+  ).run(versionId, id, computedTotal);
 
   // Create sections if provided
   const sectionIdMap = new Map<string, string>();
@@ -244,12 +258,13 @@ export function createEstimate(input: CreateEstimateInput): Estimate {
         : null;
       const cost = item.unit_cost ?? 0;
       db.prepare(
-        `INSERT INTO quote_line_items (id, version_id, section_id, description, quantity, unit, unit_cost, unit_price, notes, sort_order)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        `INSERT INTO quote_line_items (id, version_id, section_id, item_name, description, quantity, unit, unit_cost, unit_price, notes, sort_order)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
       ).run(
         lineItemId,
         versionId,
         sectionId || null,
+        item.item_name || null,
         item.description,
         item.quantity ?? 1,
         item.unit || "EA",

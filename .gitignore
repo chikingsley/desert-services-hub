@@ -83,3 +83,27 @@ venv/
 
 # Wrangler/Workers
 .dev.vars
+
+# Playwright / E2E
+test-results/
+playwright-report/
+.stagehand-cache/
+
+# Debug artifacts
+debug/
+
+# Internal tool configs
+.gemini/
+.cursor/
+.husky/
+
+# SQLite WAL files (alternate extension)
+*.sqlite-shm
+*.sqlite-wal
+
+# Archive / experiments
+archive/
+experiments/
+
+# Ground truth project data (large PDFs, local only)
+apps/contract/projects/ground-truth/

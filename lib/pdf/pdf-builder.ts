@@ -1,6 +1,5 @@
 // Shared PDF building logic for Desert Services estimates
 // Used by both server (generate-pdf.ts) and client (generate-client.ts)
-// Visual output matches services/quoting/pdf.ts exactly
 
 import type {
   Content,
@@ -13,6 +12,9 @@ import type {
   EditorLineItem,
   EditorSection,
 } from "@/lib/types";
+import { COMPANY } from "./brand";
+import { FONT_TITLE } from "./fonts";
+import { borderedLayout, noBordersLayout, noPaddingLayout } from "./layouts";
 
 // Formatting helpers
 function formatCurrency(value: number): string {
@@ -28,34 +30,30 @@ function formatDate(dateString: string): string {
   });
 }
 
-// Table layouts
-// Use 0.5pt borders so adjacent tables (0.5 + 0.5 = 1pt) look normal
-const borderedLayout = {
-  hLineWidth: () => 0.5,
-  vLineWidth: () => 0.5,
-  hLineColor: () => "#000",
-  vLineColor: () => "#000",
-};
-const noBordersLayout = {
-  hLineWidth: () => 0,
-  vLineWidth: () => 0,
-};
-const noPaddingLayout = {
-  hLineWidth: () => 0,
-  vLineWidth: () => 0,
-  paddingLeft: () => 0,
-  paddingRight: () => 0,
-  paddingTop: () => 0,
-  paddingBottom: () => 0,
-};
+// Split address into two lines: street on line 1, city/state/zip on line 2
+// If already contains a newline, respect it. Otherwise split on first comma.
+function formatAddress(address: string | undefined): string {
+  if (!address) {
+    return "";
+  }
+  if (address.includes("\n")) {
+    return address;
+  }
+  const commaIdx = address.indexOf(",");
+  if (commaIdx > 0) {
+    return `${address.slice(0, commaIdx)}\n${address.slice(commaIdx + 1).trim()}`;
+  }
+  return address;
+}
 
 interface GroupedItems {
   section: EditorSection | null;
   items: EditorLineItem[];
 }
 
-// Column widths: # and numeric columns are auto, Item fixed, Description fills remaining
-const TABLE_WIDTHS = ["auto", 95, "*", "auto", "auto", "auto", "auto"];
+// Column widths: #/Item fixed, Description fills remaining, numeric columns auto-shrink to content
+// U/M set to 32pt min — fits "Month" on one line, so "LF/Month" wraps to 2 lines not 1-char orphans
+const TABLE_WIDTHS = [18, 90, "*", "auto", 32, "auto", "auto"];
 
 // ============================================
 // Back Page Service Categories
@@ -369,7 +367,7 @@ export function buildBackPageContent(logoBase64: string): Content[] {
         body: [
           [
             {
-              text: "Call for pricing: 480-513-8986",
+              text: `Call for pricing: ${COMPANY.phone}`,
               fontSize: 14,
               bold: true,
               alignment: "center" as const,
@@ -397,7 +395,7 @@ export function buildBackPageContent(logoBase64: string): Content[] {
           margin: [0, 15, 0, 2] as [number, number, number, number],
         },
         {
-          text: "Sales tax additional where applicable • ROC #198030",
+          text: `Sales tax additional where applicable • ROC #${COMPANY.roc}`,
           fontSize: 8,
           alignment: "center" as const,
           color: "#666",
@@ -497,17 +495,24 @@ function buildItemRow(rowNumber: number, item: EditorLineItem): TableCell[] {
     { text: String(rowNumber), style: "tableCell", alignment: "center" },
     { text: itemText, style: "tableCell" },
     { text: item.description, style: "tableCell" },
-    { text: String(item.qty), style: "tableCell", alignment: "center" },
-    { text: item.uom, style: "tableCell", alignment: "center" },
+    {
+      text: String(item.qty),
+      style: "tableCell",
+      alignment: "center",
+      noWrap: true,
+    },
+    { text: item.uom, style: "tableCell", alignment: "center", noWrap: true },
     {
       text: formatCurrency(item.cost),
       style: "tableCell",
       alignment: "right",
+      noWrap: true,
     },
     {
       text: formatCurrency(item.total),
       style: "tableCell",
       alignment: "right",
+      noWrap: true,
     },
   ];
 }
@@ -568,8 +573,9 @@ function buildSectionTables(
     }
 
     // Create table for this section
+    // Only mark unbreakable when there's a section header to protect from orphaning
     const sectionTable: Content = {
-      unbreakable,
+      unbreakable: unbreakable && group.section !== null,
       table: {
         headerRows: isFirst ? 1 : 0,
         dontBreakRows: true,
@@ -655,12 +661,12 @@ export function buildDocDefinition(
 
   return {
     pageSize: "LETTER",
-    pageMargins: [40, 175, 40, 195],
+    pageMargins: [40, 168, 40, 185],
 
     header: (): Content => ({
-      margin: [40, 30, 40, 0],
+      margin: [40, 36, 40, 0],
       table: {
-        widths: ["*", 30, "*"],
+        widths: ["*", 20, "*"],
         body: [
           // Row 1: Logo | gap | Title + Estimator (no borders)
           [
@@ -678,7 +684,7 @@ export function buildDocDefinition(
                   alignment: "right",
                 },
                 {
-                  margin: [0, 5, 0, 7],
+                  margin: [0, 4, 0, 0],
                   table: {
                     widths: ["*", "*", "*"],
                     body: [
@@ -739,7 +745,7 @@ export function buildDocDefinition(
                       bold: true,
                       fontSize: 9,
                       fillColor: "#f0f0f0",
-                      margin: [4, 4, 4, 4],
+                      margin: [3, 2, 3, 2],
                     },
                   ],
                   [
@@ -752,13 +758,15 @@ export function buildDocDefinition(
                         { text: estimate.billTo.address ?? "" },
                       ],
                       fontSize: 9,
-                      margin: [4, 4, 4, 4],
+                      lineHeight: 1.15,
+                      margin: [3, 2, 3, 2],
                     },
                   ],
                 ],
               },
               layout: borderedLayout,
               border: [false, false, false, false],
+              margin: [0, 6, 0, 0],
             },
             { text: "", border: [false, false, false, false] },
             {
@@ -771,23 +779,25 @@ export function buildDocDefinition(
                       bold: true,
                       fontSize: 9,
                       fillColor: "#f0f0f0",
-                      margin: [4, 4, 4, 4],
+                      margin: [3, 2, 3, 2],
                     },
                   ],
                   [
                     {
                       text: [
                         { text: `${estimate.jobInfo.siteName}\n`, bold: true },
-                        { text: estimate.jobInfo.address ?? "" },
+                        { text: formatAddress(estimate.jobInfo.address) },
                       ],
                       fontSize: 9,
-                      margin: [4, 4, 4, 4],
+                      lineHeight: 1.15,
+                      margin: [3, 2, 3, 2],
                     },
                   ],
                 ],
               },
               layout: borderedLayout,
               border: [false, false, false, false],
+              margin: [0, 6, 0, 0],
             },
           ],
         ],
@@ -796,7 +806,7 @@ export function buildDocDefinition(
     }),
 
     footer: (currentPage, pageCount): Content => ({
-      margin: [40, 0, 40, 10],
+      margin: [40, 0, 40, 8],
       stack: [
         {
           table: {
@@ -810,17 +820,17 @@ export function buildDocDefinition(
                         "Pricing based on specified quantities, and this is an ESTIMATE ONLY. Actual quantities will be billed. ",
                         { text: "Valid for 180 days.", bold: true },
                       ],
-                      fontSize: 9,
-                      lineHeight: 1.2,
+                      fontSize: 8.5,
+                      lineHeight: 1.15,
                     },
                     {
                       text: "Maintenance and removal is not included unless specifically listed as a line item.",
-                      fontSize: 9,
-                      lineHeight: 1.2,
-                      margin: [0, 2, 0, 0],
+                      fontSize: 8.5,
+                      lineHeight: 1.15,
+                      margin: [0, 1, 0, 0],
                     },
                   ],
-                  margin: [4, 8, 4, 4],
+                  margin: [4, 4, 4, 4],
                   rowSpan: 2,
                 },
                 {
@@ -844,7 +854,7 @@ export function buildDocDefinition(
                 {},
                 {
                   text: "ALL ADDENDA HAVE BEEN RECEIVED AND ACKNOWLEDGED",
-                  fontSize: 9,
+                  fontSize: 8,
                   bold: true,
                   alignment: "center",
                   margin: [4, 4, 4, 4],
@@ -855,34 +865,23 @@ export function buildDocDefinition(
           layout: borderedLayout,
         },
         {
-          table: {
-            widths: ["*"],
-            body: [
-              [
-                {
-                  text: "By signing this estimate I am authorizing Desert Services LLC to proceed with the work indicated above.",
-                  fontSize: 10,
-                  margin: [0, 2, 0, 2],
-                },
-              ],
-              [
-                {
-                  columns: [
-                    {
-                      text: "Print Name: _______________________________",
-                      fontSize: 10,
-                    },
-                    {
-                      text: "Signature: _______________________________",
-                      fontSize: 10,
-                    },
-                  ],
-                },
-              ],
-            ],
-          },
-          layout: noBordersLayout,
-          margin: [0, 6, 0, 6],
+          text: "By signing this estimate I am authorizing Desert Services LLC to proceed with the work indicated above.",
+          fontSize: 9,
+          alignment: "center",
+          margin: [0, 8, 0, 6],
+        },
+        {
+          columns: [
+            {
+              text: "Print Name: ____________________________________________",
+              fontSize: 9,
+            },
+            {
+              text: "Signature: ____________________________________________",
+              fontSize: 9,
+            },
+          ],
+          margin: [0, 0, 0, 6],
         },
         // Footer: PO Box on top, Phone/Fax below
         // Single table with thin gray separator lines
@@ -892,7 +891,7 @@ export function buildDocDefinition(
             body: [
               [
                 {
-                  text: "PO Box: 14695, Scottsdale, AZ 85267",
+                  text: COMPANY.poBox,
                   alignment: "center",
                   fillColor: "#000",
                   color: "#fff",
@@ -906,13 +905,13 @@ export function buildDocDefinition(
                 {
                   stack: [
                     {
-                      text: "Fax: 480-657-2057",
+                      text: `Fax: ${COMPANY.fax}`,
                       alignment: "center",
                       color: "#fff",
                       fontSize: 9,
                     },
                     {
-                      text: "ROC #198030",
+                      text: `ROC #${COMPANY.roc}`,
                       alignment: "center",
                       color: "#fff",
                       fontSize: 9,
@@ -924,7 +923,7 @@ export function buildDocDefinition(
                 {
                   stack: [
                     {
-                      text: "Phone: 480-513-8986",
+                      text: `Phone: ${COMPANY.phoneCompact}`,
                       alignment: "center",
                       color: "#fff",
                       fontSize: 9,
@@ -963,7 +962,7 @@ export function buildDocDefinition(
     content: contentTables,
 
     styles: {
-      title: { fontSize: 20, bold: true },
+      title: { fontSize: 20, bold: true, font: FONT_TITLE },
       tableHeader: { fontSize: 9, bold: true, margin: [2, 2, 2, 2] },
       tableCell: { fontSize: 9, margin: [2, 2, 2, 2] },
       sectionHeader: {

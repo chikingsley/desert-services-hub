@@ -16,8 +16,8 @@ import {
   insertEmail,
 } from "@contract/db/repositories";
 import type { InsertEmailData } from "@contract/db/types";
+import { GraphEmailClient } from "@email/client";
 import { ensureBucket, fileExists, getFile, minioClient } from "@lib/minio";
-import { GraphEmailClient } from "@services/email/client";
 
 // Test constants
 const TEST_MAILBOX = "estimating@desertservices.net";

@@ -36,7 +36,7 @@ export function NewQuoteButton({
         throw new Error("Failed to create quote");
       }
 
-      const data = await res.json();
+      const data = (await res.json()) as { id: string };
       navigate(`/quotes/${data.id}`);
     } catch (_err) {
       setIsCreating(false);

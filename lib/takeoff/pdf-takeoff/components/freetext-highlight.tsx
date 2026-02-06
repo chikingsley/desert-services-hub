@@ -311,8 +311,12 @@ export const FreetextHighlight = ({
     if (onContextMenu && (e.key === "Enter" || e.key === " ")) {
       e.preventDefault();
       const syntheticEvent = {
-        preventDefault: () => {},
-        stopPropagation: () => {},
+        preventDefault: () => {
+          /* no-op for synthetic event */
+        },
+        stopPropagation: () => {
+          /* no-op for synthetic event */
+        },
         clientX: 0,
         clientY: 0,
       } as unknown as React.MouseEvent<HTMLDivElement>;

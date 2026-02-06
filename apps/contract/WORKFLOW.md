@@ -77,10 +77,10 @@ Gather all PDFs for a contract into a project folder.
 bun services/contract/workflow/collect.ts collect "Sun Health La Loma RGS"
 
 # Add a local PDF (e.g., from DocuSign)
-bun services/contract/workflow/collect.ts add ./ground-truth/sun-health-la-loma-rgs ./downloads/contract.pdf
+bun services/contract/workflow/collect.ts add ./apps/contract/projects/ground-truth/project-1073-sun-health-rgs ./downloads/contract.pdf
 
 # List documents in a folder
-bun services/contract/workflow/collect.ts list ./ground-truth/sun-health-la-loma-rgs
+bun services/contract/workflow/collect.ts list ./apps/contract/projects/ground-truth/project-1073-sun-health-rgs
 ```css
 
 **Output:** Project folder with all PDFs, missing document warnings.
@@ -91,7 +91,7 @@ Run OCR and extract structured data with citations.
 
 ```bash
 # Run OCR on a single PDF
-bun services/contract/workflow/extract.ts ocr ./ground-truth/sun-health-la-loma-rgs/contract.pdf
+bun services/contract/workflow/extract.ts ocr ./apps/contract/projects/ground-truth/project-1073-sun-health-rgs/contract.pdf
 
 # Extract from all PDFs in a folder (programmatic)
 # See extract.ts for extractFromDocuments()
@@ -123,7 +123,7 @@ Compare estimate vs contract with math verification.
 
 ```bash
 # Validate existing reconciliation
-bun services/contract/workflow/reconcile.ts validate ./ground-truth/sun-health-la-loma-rgs
+bun services/contract/workflow/reconcile.ts validate ./apps/contract/projects/ground-truth/project-1073-sun-health-rgs
 
 # Show example manual reconciliation
 bun services/contract/workflow/reconcile.ts manual
@@ -170,7 +170,7 @@ services/contract/
 ├── templates/
 │   ├── internal-handoff.hbs  # Internal email template
 │   └── gc-response.hbs       # GC response template
-├── ground-truth/             # Example contracts and notes
+├── projects/ground-truth/    # Example contracts and notes
 └── WORKFLOW.md               # This file
 ```css
 

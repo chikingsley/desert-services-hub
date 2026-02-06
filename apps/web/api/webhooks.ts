@@ -2,7 +2,7 @@
  * Webhook handlers
  * Routes: POST /api/webhooks/monday
  */
-import { db } from "../../../lib/db";
+import { db } from "@lib/db";
 
 interface MondayEvent {
   boardId?: string;
@@ -15,7 +15,7 @@ interface MondayEvent {
 // POST /api/webhooks/monday - Handle Monday.com webhooks
 export async function handleMondayWebhook(req: Request): Promise<Response> {
   try {
-    const body = await req.json();
+    const body = (await req.json()) as Record<string, unknown>;
 
     // Challenge verification (Monday requires this)
     if (body.challenge) {

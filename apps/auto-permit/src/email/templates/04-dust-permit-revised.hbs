@@ -1,0 +1,64 @@
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  </head>
+  <body>
+    <div>{{recipientName}},</div>
+    <div>
+      <br>
+    </div>
+    <div>
+      The dust control permit for <strong>{{accountName}}</strong>&nbsp;on
+      project "<strong>{{projectName}}</strong>" has been revised (see
+      attached).
+      <br>
+      <br>
+    </div>
+    <div>Here are the key details:</div>
+    <ul style="margin-top:0; margin-bottom:0">
+      <li>
+        <div>Permit Status: Revised</div>
+      </li>
+      <li><div>Application #: {{applicationNumber}}</div></li>
+      <li><div>Permit # (Facility ID): {{permitNumber}}</div></li>
+      <li><div>Project Name: {{projectName}}</div></li>
+      <li><div>Site Address: {{siteAddress}}</div></li>
+      <li><div>Project Acreage: {{acreage}} acres</div></li>
+      <li><div>Issue Date: {{issueDate}}</div></li>
+      <li><div>Expiration Date: {{expirationDate}}</div></li>
+    </ul>
+    <div>
+      <br>
+    </div>
+    <div>Changes Made:</div>
+    <ul style="margin-top:0; margin-bottom:0">
+    {{#if changesHtml}}{{changesHtml}}{{/if}}
+  </ul>
+    <div>
+      <br>
+    </div>
+    <div>Let me know if you have any questions!</div>
+    <div>
+      <br>
+    </div>
+    <div>Best,</div>
+    <div>--</div>
+    <div>
+      <br>
+    </div>
+    <div>Chi Ejimofor</div>
+    <div>Project Coordinator</div>
+    <div>
+      E: <a href="mailto:chi@desertservices.net">chi@desertservices.net</a>
+    </div>
+    <div>M: (304) 216-8700</div>
+    <div>
+      <img
+        src="cid:logo"
+        alt="Desert Services LLC"
+        width="264"
+        style="max-width:100%"
+      >
+    </div>
+  </body>
+</html>

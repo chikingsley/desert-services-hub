@@ -237,7 +237,9 @@ export function TakeoffEditorPage() {
       try {
         const quoteRes = await fetch(`/api/takeoffs/${id}/quote`);
         if (quoteRes.ok) {
-          const { quote } = await quoteRes.json();
+          const { quote } = (await quoteRes.json()) as {
+            quote: { id: string; base_number: string } | null;
+          };
           setLinkedQuote(quote);
         }
       } catch {
@@ -249,7 +251,7 @@ export function TakeoffEditorPage() {
         try {
           const pdfRes = await fetch(`/api/takeoffs/${id}/pdf`);
           if (pdfRes.ok) {
-            const pdfData = await pdfRes.json();
+            const pdfData = (await pdfRes.json()) as { url: string };
             setPdfFile(pdfData.url);
           }
         } catch {
@@ -512,11 +514,11 @@ export function TakeoffEditorPage() {
       });
 
       if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || "Failed to create quote");
+        const errData = (await res.json()) as { error?: string };
+        throw new Error(errData.error || "Failed to create quote");
       }
 
-      const data = await res.json();
+      const data = (await res.json()) as { id: string };
       toast.success("Quote created successfully");
       navigate(`/quotes/${data.id}`);
     } catch (err) {

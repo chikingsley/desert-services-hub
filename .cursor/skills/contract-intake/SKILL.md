@@ -11,15 +11,16 @@ Semi-automated contract processing with anti-hallucination safeguards.
 
 ```text
 ⚠️  NEVER read PDF files directly - PDFs are binary, Read tool fails
-⚠️  ALWAYS use Gemini OCR in plan-analysis/ for all documents
+⚠️  ALWAYS use OCR in apps/pdf-analysis/ for all documents
+⚠️  Use uv only for Python package execution (`uv run`, `uv add`, `uv sync`)
 ⚠️  Construction plans benefit from agentic vision for verification
 ```
 
-### OCR Commands (plan-analysis/)
+### OCR Commands (apps/pdf-analysis/)
 
 ```bash
 # Basic OCR - all documents
-cd plan-analysis/
+cd apps/pdf-analysis/
 just ocr "/path/to/file.pdf"
 # Creates: /path/to/file.gemini.md
 
@@ -30,12 +31,20 @@ just ocr-limit "/path/to/file.pdf" 5
 Read "/path/to/file.gemini.md"
 ```
 
+### Validate OCR Tooling
+
+```bash
+cd apps/pdf-analysis/
+uv sync --extra dev
+uv run pytest tests/test_utils.py -q
+```
+
 ### Detailed Inspection (Agentic Vision)
 
 For construction plans that need verification, counting, or measurement:
 
 ```python
-from plan_analysis import PlanAnalyzer
+from pdf_analysis import PlanAnalyzer
 
 analyzer = PlanAnalyzer()
 result = analyzer.detailed_inspection(

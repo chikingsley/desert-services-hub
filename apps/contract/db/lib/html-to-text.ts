@@ -37,7 +37,7 @@ export async function htmlToText(html: string): Promise<string> {
     .on("style, script, head", {
       element(el) {
         skipDepth++;
-        if (el.canHaveContent) {
+        if ((el as unknown as { canHaveContent?: boolean }).canHaveContent) {
           el.onEndTag(() => {
             skipDepth--;
           });
@@ -55,7 +55,10 @@ export async function htmlToText(html: string): Promise<string> {
     // Block elements - add newline after end tag
     .on("p, div, tr, li, h1, h2, h3, h4, h5, h6, blockquote, pre", {
       element(el) {
-        if (skipDepth === 0 && el.canHaveContent) {
+        if (
+          skipDepth === 0 &&
+          (el as unknown as { canHaveContent?: boolean }).canHaveContent
+        ) {
           el.onEndTag(() => {
             text += "\n";
           });

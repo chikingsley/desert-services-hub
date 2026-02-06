@@ -200,8 +200,12 @@ export const AreaHighlight = ({
       e.preventDefault();
       // Create a synthetic mouse event for the context menu callback
       const syntheticEvent = {
-        preventDefault: () => {},
-        stopPropagation: () => {},
+        preventDefault: () => {
+          /* no-op for synthetic event */
+        },
+        stopPropagation: () => {
+          /* no-op for synthetic event */
+        },
         clientX: 0,
         clientY: 0,
       } as unknown as React.MouseEvent<HTMLDivElement>;

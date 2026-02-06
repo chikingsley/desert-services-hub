@@ -9,6 +9,7 @@ This repository is organized into multiple pillars:
 - **Applications** (`apps/`): Bun full-stack React applications
   - `apps/web/` — Main quoting/takeoff application (quotes, takeoffs, contracts, catalog)
   - `apps/quoting/` — Quoting MCP server (catalog, PDF generation)
+  - `apps/pdf-analysis/` — Unified Python OCR and PDF analysis CLI (Gemini, local, Mistral)
   - `apps/contract-ui/` — Contract processing workflow UI (experimental)
 - **Services** (`services/`): Bun-native automation logic and API clients
 - **Workers** (`workers/`): Cloudflare Workers for background tasks
@@ -18,7 +19,8 @@ This repository is organized into multiple pillars:
 apps/           # Bun full-stack applications
 ├── web/        # Main app: quotes, takeoffs, contracts, catalog
 ├── quoting/    # Quoting MCP server (moved from services/)
-└── contract-ui/# Contract processing UI (experimental)
+├── pdf-analysis/ # Python OCR/analysis CLI (Gemini, local, Mistral)
+└── contract-ui/  # Contract processing UI (experimental)
 
 services/       # Core automation services
 ├── email/      # Microsoft Graph email client
@@ -27,7 +29,7 @@ services/       # Core automation services
 ├── sharepoint/ # Document management
 ├── enrichment/ # Data enrichment (PDL, Clearbit)
 ├── jina/       # Web scraping and PDF extraction
-├── mistral/    # OCR and document processing (Python)
+├── mistral/    # Deprecated stub (moved to apps/pdf-analysis/)
 ├── n8n/        # n8n workflow automation client
 └── file-automation/ # DocuSign, Building Connected automation
 
@@ -56,7 +58,7 @@ The following services are integrated and available for both automation scripts 
 - **Quoting (`apps/quoting/`)**: Pricing logic and multi-page PDF estimate generation (MCP server).
 - **Notion (`services/notion`)**: Project tracking and CRM helpers with deduplication.
 - **SharePoint (`services/sharepoint`)**: Document management and file automation.
-- **Mistral OCR (`services/mistral/`)**: PDF OCR and document processing.
+- **PDF Analysis (`apps/pdf-analysis/`)**: Unified Python OCR and document analysis (Gemini, local, Mistral).
 - **Enrichment (`services/enrichment`)**: Data enrichment for leads and companies.
 
 ## Primary Database
@@ -73,18 +75,19 @@ The consolidated SQLite database containing:
 
 ## MCP Integration
 
-This repository exposes MCP servers for integration with AI coding assistants (like Claude Code), defined in `.mcp.json`. These servers provide tools for managing emails, CRM items, and quotes directly from the agentic environment.
+This repository exposes MCP servers for integration with AI coding assistants (like Claude Code), defined in `.mcp.json`. These servers provide tools for managing quotes directly from the agentic environment.
 
 Available MCP servers:
 
 - `desert-quoting` — Quote generation and catalog
-- `desert-mistral` — OCR and document processing
 
 ## Getting Started
 
 ### Prerequisites
 
 - [Bun](https://bun.sh) (v1.3.5 or later)
+- [Python](https://www.python.org/) (3.11+)
+- [uv](https://docs.astral.sh/uv/) for Python package management
 
 ### Installation
 

@@ -185,9 +185,9 @@ Project name first (you usually remember project before contractor).
 
 ---
 
-## Automatic Document Identification (Mistral)
+## Automatic Document Identification (PDF Analysis CLI)
 
-The `identify_document` tool in `services/mistral` extracts metadata and can auto-rename files.
+The unified Python `pdf-analysis` CLI in `apps/pdf-analysis` extracts metadata and can auto-rename files.
 
 **Extracted fields:**
 
@@ -212,9 +212,17 @@ The `identify_document` tool in `services/mistral` extracts metadata and can aut
 **Usage:**
 
 ```bash
-# Via MCP
-mcp__desert-mistral__identify_document file_path="/path/to/doc.pdf" rename=true
+cd apps/pdf-analysis
 
-# Via CLI
-mistral-mcp identify /path/to/doc.pdf --rename
+# Identify and auto-rename a document
+uv run pdf-analysis identify /path/to/doc.pdf --provider mistral --rename
+
+# Identify without renaming
+uv run pdf-analysis identify /path/to/doc.pdf --provider mistral
+
+# OCR a document
+uv run pdf-analysis ocr /path/to/doc.pdf --provider mistral
+
+# Extract structured data
+uv run pdf-analysis extract /path/to/doc.pdf "Extract the payment terms" --provider mistral
 ```

@@ -2,8 +2,8 @@
  * Estimate by ID API handlers
  * Routes: /api/quotes/:id, /api/quotes/:id/pdf, /api/quotes/:id/duplicate, /api/quotes/:id/takeoff
  */
-import { db } from "../../../lib/db";
-import { generatePDF, getPDFFilename } from "../../../lib/pdf/generate-pdf";
+import { db } from "@lib/db";
+import { generatePDF, getPDFFilename } from "@lib/pdf/generate-pdf";
 import type {
   EditorEstimate,
   EditorLineItem,
@@ -13,8 +13,8 @@ import type {
   EstimateSection,
   EstimateSectionRow,
   EstimateVersionRow,
-} from "../../../lib/types";
-import { generateBaseNumber } from "../../../lib/utils";
+} from "@lib/types";
+import { generateBaseNumber } from "@lib/utils";
 
 // Bun extends Request with params from route matching
 type BunRequest = Request & { params: { id: string } };
@@ -117,7 +117,7 @@ export function getQuote(req: BunRequest): Response {
 export async function updateQuote(req: BunRequest): Promise<Response> {
   try {
     const { id } = req.params;
-    const body = await req.json();
+    const body = (await req.json()) as Record<string, unknown>;
 
     // Update estimate metadata
     const updateFields = [
@@ -132,20 +132,20 @@ export async function updateQuote(req: BunRequest): Promise<Response> {
       "updated_at = datetime('now')",
     ];
     const updateValues: (string | null)[] = [
-      body.base_number,
-      body.job_name || "Untitled Estimate",
-      body.job_address || null,
-      body.client_name || null,
-      body.client_email || null,
-      body.client_phone || null,
-      body.notes || null,
-      body.status || "draft",
+      body.base_number as string,
+      (body.job_name as string) || "Untitled Estimate",
+      (body.job_address as string) || null,
+      (body.client_name as string) || null,
+      (body.client_email as string) || null,
+      (body.client_phone as string) || null,
+      (body.notes as string) || null,
+      (body.status as string) || "draft",
     ];
 
     // Only update takeoff_id if explicitly provided
     if ("takeoff_id" in body) {
       updateFields.push("takeoff_id = ?");
-      updateValues.push(body.takeoff_id || null);
+      updateValues.push((body.takeoff_id as string) || null);
     }
 
     updateValues.push(id);
@@ -230,7 +230,7 @@ export async function updateQuote(req: BunRequest): Promise<Response> {
 
       // Update version total
       db.prepare("UPDATE quote_versions SET total = ? WHERE id = ?").run(
-        body.total || 0,
+        (body.total as number) || 0,
         version.id
       );
     }

@@ -10,7 +10,9 @@
     "paths": {
       "@/*": ["./*"],
       "@contract/*": ["apps/contract/*"],
-      "@services/*": ["services/*"],
+      "@monday/*": ["apps/monday-cli/*"],
+      "@sharepoint/*": ["apps/sharepoint-cli/*"],
+      "@email/*": ["apps/email-cli/*"],
       "@lib/*": ["lib/*"],
       "@/components/*": ["apps/web/frontend/components/*"],
       "@/pages/*": ["apps/web/frontend/pages/*"],
@@ -20,12 +22,8 @@
   "include": ["**/*.ts", "**/*.tsx"],
   "exclude": [
     "node_modules",
-    "workers",
-    "docs/_archive",
-    "services/file-automation/_reference",
-    "services/email/inbox",
-    "**/*.mcp.test.ts",
     "**/build.ts",
-    "apps/contract-ui/sample-apps"
+    "apps/auto-permit",
+    "services/docusign-file-automation/_reference"
   ]
 }

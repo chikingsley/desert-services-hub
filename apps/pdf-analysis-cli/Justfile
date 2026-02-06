@@ -1,0 +1,38 @@
+default:
+    @just --list
+
+install:
+    uv sync
+
+status:
+    uv run pdf-analysis status
+
+ocr pdf_path:
+    uv run plan-ocr gemini-ocr {{pdf_path}}
+
+ocr-limit pdf_path max_pages:
+    uv run plan-ocr gemini-ocr {{pdf_path}} --max-pages {{max_pages}}
+
+estimate pdf_path:
+    uv run pdf-analysis estimate {{pdf_path}}
+
+estimate-text pdf_path:
+    uv run pdf-analysis estimate {{pdf_path}} --format text
+
+check:
+    uv run ruff check src/
+
+fix:
+    uv run ruff check --fix src/
+
+fmt:
+    uv run ruff format src/
+
+test:
+    uv run pytest
+
+test-file file:
+    uv run pytest {{file}}
+
+test-node nodeid:
+    uv run pytest {{nodeid}}

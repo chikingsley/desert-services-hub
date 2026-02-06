@@ -32,17 +32,27 @@
     "includes": [
       "**/*",
       "!docs/_archive",
-      "!services/file-automation/_reference",
+      "!services/docusign-file-automation/_reference",
       "!**/.wrangler",
       "!**/.cursor",
-      "!**/inspections-app-idea"
+      "!**/inspections-app-idea",
+      "!apps/auto-permit/docs/page-snapshots",
+      "!apps/auto-permit/docs/auto-custom-map-for-dust-permit",
+      "!apps/auto-permit/docs/agentic-finance-review",
+      "!apps/auto-permit/data/samples",
+      "!apps/auto-permit/tests/e2e/screenshots",
+      "!apps/auto-permit/tests/output",
+      "!apps/auto-permit/scripts",
+      "!apps/auto-permit/dashboard",
+      "!apps/auto-permit/build.ts",
+      "!apps/auto-permit/src/components/ui"
     ]
   },
   "overrides": [
     {
       "includes": [
         "docs/_archive/**",
-        "services/file-automation/_reference/**"
+        "services/docusign-file-automation/_reference/**"
       ],
       "linter": {
         "enabled": false
@@ -52,7 +62,7 @@
       }
     },
     {
-      "includes": ["lib/pdf-takeoff/components/**/*"],
+      "includes": ["lib/takeoff/pdf-takeoff/components/**/*"],
       "linter": {
         "rules": {
           "a11y": {
@@ -123,6 +133,91 @@
         "rules": {
           "a11y": {
             "noNoninteractiveElementInteractions": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["apps/auto-permit/.claude/hooks/**"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noAssignInExpressions": "off",
+            "noEmptyBlockStatements": "off"
+          },
+          "complexity": {
+            "noExcessiveCognitiveComplexity": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["apps/auto-permit/dashboard/**"],
+      "linter": {
+        "rules": {
+          "performance": {
+            "noBarrelFile": "off",
+            "noNamespaceImport": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["apps/auto-permit/src/**"],
+      "linter": {
+        "rules": {
+          "performance": {
+            "noBarrelFile": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["apps/auto-permit/docs/**", "apps/auto-permit/tests/**"],
+      "linter": {
+        "rules": {
+          "performance": {
+            "noBarrelFile": "off"
+          },
+          "complexity": {
+            "noExcessiveCognitiveComplexity": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": [
+        "apps/auto-permit/src/portal/create/fill/page4/category-*.ts",
+        "apps/auto-permit/src/portal/create/fill/page1.ts",
+        "apps/auto-permit/tests/e2e/utils/element-recorder.ts"
+      ],
+      "linter": {
+        "rules": {
+          "complexity": {
+            "noExcessiveCognitiveComplexity": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["apps/auto-permit/src/frontend.tsx"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noNonNullAssertion": "off"
+          },
+          "suspicious": {
+            "noAssignInExpressions": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["apps/auto-permit/src/App.tsx"],
+      "linter": {
+        "rules": {
+          "style": {
+            "useFilenamingConvention": "off"
           }
         }
       }

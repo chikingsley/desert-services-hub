@@ -83,7 +83,10 @@ export function NewTakeoffDialog({ children }: NewTakeoffDialogProps) {
         throw new Error("Failed to create takeoff");
       }
 
-      const takeoff = await createRes.json();
+      const takeoff = (await createRes.json()) as {
+        id: string;
+        [key: string]: unknown;
+      };
 
       // 2. Upload PDF to MinIO AIStor
       const formData = new FormData();
@@ -97,11 +100,11 @@ export function NewTakeoffDialog({ children }: NewTakeoffDialogProps) {
       });
 
       if (!uploadRes.ok) {
-        const error = await uploadRes.json();
-        throw new Error(error.error || "Failed to upload PDF");
+        const errorData = (await uploadRes.json()) as { error?: string };
+        throw new Error(errorData.error || "Failed to upload PDF");
       }
 
-      const uploadData = await uploadRes.json();
+      const uploadData = (await uploadRes.json()) as { filename: string };
 
       // 3. Update takeoff with PDF reference
       await fetch(`/api/takeoffs/${takeoff.id}`, {

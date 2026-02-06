@@ -1,0 +1,61 @@
+services:
+  auto-dust-permit:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: auto-dust-permit
+    restart: unless-stopped
+    networks:
+      - permit-net
+    ports:
+      - "47823:47823" # Dashboard UI
+      - "47822:47822" # API server
+      - "47821:6080"  # noVNC web interface (Host 47821 -> Container 6080)
+    environment:
+      - NODE_ENV=production
+      - HEADLESS=false # Must be false for VNC to see anything
+      - VNC_RESOLUTION=1280x720
+      - DISPLAY=:1
+      # Core Secrets
+      - DUST_PERMIT_USERNAME=${DUST_PERMIT_USERNAME}
+      - DUST_PERMIT_PASSWORD=${DUST_PERMIT_PASSWORD}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      # Optional
+      - JINA_API_KEY=${JINA_API_KEY}
+      - ASSESSOR_API_KEY=${ASSESSOR_API_KEY}
+      # Database paths
+      - COMPANY_PERMITS_DB_PATH=/app/src/db/company-permits.sqlite
+      - MARKETING_PERMITS_DB_PATH=/app/src/db/marketing-permits.sqlite
+    volumes:
+      - ./output:/app/output
+      - ./src/db:/app/src/db
+    # Required for Chromium in Docker
+    ipc: host
+    cap_drop:
+      - ALL
+    cap_add:
+      - SYS_ADMIN
+    security_opt:
+      - seccomp=unconfined
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:47822/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    networks:
+      - permit-net
+    command: tunnel run
+    environment:
+      - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
+    depends_on:
+      auto-dust-permit:
+        condition: service_healthy
+
+networks:
+  permit-net:
+    driver: bridge

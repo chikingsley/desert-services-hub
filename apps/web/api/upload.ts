@@ -2,12 +2,7 @@
  * Upload API handlers
  * Routes: GET/POST /api/upload/pdf
  */
-import {
-  BUCKETS,
-  fileExists,
-  setFileTags,
-  uploadTakeoffPdf,
-} from "../../../lib/minio";
+import { BUCKETS, fileExists, setFileTags, uploadTakeoffPdf } from "@lib/minio";
 
 const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
 

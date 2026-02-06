@@ -4,19 +4,6 @@
       "command": "bun",
       "args": ["./apps/quoting/mcp-server.ts"]
     },
-    "desert-mistral": {
-      "command": "uv",
-      "args": [
-        "--directory",
-        "./services/mistral",
-        "run",
-        "mistral-mcp",
-        "serve"
-      ],
-      "env": {
-        "UV_ENV_FILE": "../../.env"
-      }
-    },
     "svelte": {
       "type": "http",
       "url": "https://mcp.svelte.dev/mcp"

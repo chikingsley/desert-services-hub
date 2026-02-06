@@ -1,0 +1,16 @@
+{
+  "name": "ds-folder-watcher",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "init": "bun cli/init.ts",
+    "watch": "bun cli/watch.ts",
+    "watch:once": "bun cli/watch.ts --once",
+    "status": "bun cli/status.ts",
+    "backfill": "bun cli/backfill.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "catalog:",
+    "typescript": "^5.9.3"
+  }
+}

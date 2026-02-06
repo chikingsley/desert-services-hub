@@ -354,7 +354,10 @@ export function QuoteWorkspace({
         body: JSON.stringify(payload),
       });
 
-      const data = await res.json();
+      const data = (await res.json()) as {
+        error?: string;
+        updated_at?: string;
+      };
 
       if (!res.ok) {
         throw new Error(data.error || "Failed to update quote");

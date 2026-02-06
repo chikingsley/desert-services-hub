@@ -20,7 +20,7 @@ Redesigned workflow with anti-hallucination measures:
 
 ### Infrastructure
 
-- **Mistral OCR:** `services/mistral/` - PDF text extraction with auto-splitting
+- **PDF Analysis OCR:** `apps/pdf-analysis/` - Unified Python OCR (Gemini/local/Mistral providers)
 - **Email census:** `services/email/census/` - 41+ contracts indexed by normalized_subject
 - **Zod schemas:** `schemas/` - structured output with citation requirements
 
@@ -28,7 +28,7 @@ Redesigned workflow with anti-hallucination measures:
 
 ## Recent Issues Fixed
 
-From Sun Health La Loma RGS run (see `ground-truth/sun-health-la-loma-rgs/issues.md`):
+From Sun Health La Loma RGS run (see `projects/ground-truth/project-1073-sun-health-rgs/issues.md`):
 
 1. ✅ Fabricated scope items → Citation requirement enforces source quotes
 2. ✅ Assumed owner → Explicit null if not in documents
@@ -77,5 +77,5 @@ bun services/contract/workflow/reconcile.ts validate ./path/to/folder
 
 - `WORKFLOW.md` - Full workflow documentation
 - `contracts-master.md` - 15-step process checklist
-- `ground-truth/PATTERNS.md` - Validation rule patterns
-- `ground-truth/sun-health-la-loma-rgs/issues.md` - Problem log from last run
+- `projects/ground-truth/PATTERNS.md` - Validation rule patterns
+- `projects/ground-truth/project-1073-sun-health-rgs/issues.md` - Problem log from last run

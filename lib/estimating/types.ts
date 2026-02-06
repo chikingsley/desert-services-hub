@@ -5,6 +5,7 @@
 export interface EstimateLineItem {
   id: string;
   section_id?: string | null;
+  item_name?: string | null;
   description: string;
   quantity: number;
   unit: string;
@@ -39,8 +40,11 @@ export interface Estimate {
   job_name: string;
   job_address?: string | null;
   client_name?: string | null;
+  client_address?: string | null;
   client_email?: string | null;
   client_phone?: string | null;
+  estimator?: string | null;
+  estimator_email?: string | null;
   notes?: string | null;
   status: "draft" | "sent" | "accepted" | "declined";
   is_locked: boolean;
@@ -56,8 +60,11 @@ export interface CreateEstimateInput {
   job_name: string;
   job_address?: string;
   client_name?: string;
+  client_address?: string;
   client_email?: string;
   client_phone?: string;
+  estimator?: string;
+  estimator_email?: string;
   notes?: string;
   status?: "draft" | "sent" | "accepted" | "declined";
   is_locked?: boolean;
@@ -69,6 +76,7 @@ export interface CreateEstimateInput {
   }>;
   line_items?: Array<{
     section_id?: string;
+    item_name?: string;
     description: string;
     quantity?: number;
     unit?: string;

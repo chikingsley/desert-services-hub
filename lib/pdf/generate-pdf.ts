@@ -1,36 +1,19 @@
 // PDF generation for Desert Services estimates
-// Uses pdfmake Node.js API with standard PDF fonts
+// Uses pdfmake Node.js API with shared font/logo infrastructure
 
-import { join } from "node:path";
 import { PDFDocument } from "pdf-lib";
 import pdfmake from "pdfmake";
 import type { EditorEstimate } from "@/lib/types";
+import { initFonts } from "./fonts";
+import { loadLogo } from "./logo";
 import type { GeneratePDFOptions } from "./pdf-builder";
 import { buildBackPageDocDefinition, buildDocDefinition } from "./pdf-builder";
 
 // Re-export types for external use
 export type { GeneratePDFOptions } from "./pdf-builder";
 
-// Initialize pdfmake Node.js API with standard PDF fonts
-// Using Times (Times New Roman) family - matches legacy MCP output
-pdfmake.setFonts({
-  Roboto: {
-    normal: "Times-Roman",
-    bold: "Times-Bold",
-    italics: "Times-Italic",
-    bolditalics: "Times-BoldItalic",
-  },
-});
-
-// Logo path - shared asset location
-const LOGO_PATH = join(import.meta.dir, "..", "assets", "logo.png");
-
-async function getLogoBase64(): Promise<string> {
-  const bytes = await Bun.file(LOGO_PATH).bytes();
-  // Buffer.from(Uint8Array) creates a view without copying
-  const base64 = Buffer.from(bytes).toString("base64");
-  return `data:image/png;base64,${base64}`;
-}
+// Initialize fonts once at module level
+initFonts();
 
 // Concatenate multiple PDFs into one
 // Accepts Buffer or Uint8Array (pdf-lib supports both)
@@ -65,7 +48,7 @@ function generateEstimatePDF(
  * Generate standalone back page PDF
  */
 export async function generateBackPagePDF(): Promise<Buffer> {
-  const logoBase64 = await getLogoBase64();
+  const logoBase64 = await loadLogo();
   const docDefinition = buildBackPageDocDefinition(logoBase64);
   return pdfmake.createPdf(docDefinition).getBuffer();
 }
@@ -78,7 +61,7 @@ export async function generatePDF(
   estimate: EditorEstimate,
   options?: GeneratePDFOptions
 ): Promise<Uint8Array> {
-  const logoBase64 = await getLogoBase64();
+  const logoBase64 = await loadLogo();
   const estimatePDF = await generateEstimatePDF(estimate, logoBase64, options);
 
   if (options?.includeBackPage) {

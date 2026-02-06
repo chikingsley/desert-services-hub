@@ -2,7 +2,7 @@
  * Takeoffs API handlers
  * Routes: GET /api/takeoffs, POST /api/takeoffs
  */
-import { db } from "../../../lib/db";
+import { db } from "@lib/db";
 
 // GET /api/takeoffs - List all takeoffs
 export function listTakeoffs(): Response {
@@ -21,7 +21,7 @@ export function listTakeoffs(): Response {
 
 // POST /api/takeoffs - Create a new takeoff
 export async function createTakeoff(req: Request): Promise<Response> {
-  const body = await req.json();
+  const body = (await req.json()) as Record<string, unknown>;
   const id = crypto.randomUUID();
 
   db.prepare(
@@ -29,11 +29,11 @@ export async function createTakeoff(req: Request): Promise<Response> {
      VALUES (?, ?, ?, ?, ?, ?)`
   ).run(
     id,
-    body.name || "Untitled Takeoff",
-    body.pdf_url || null,
-    JSON.stringify(body.annotations || []),
-    JSON.stringify(body.page_scales || {}),
-    body.status || "draft"
+    (body.name as string) || "Untitled Takeoff",
+    (body.pdf_url as string) || null,
+    JSON.stringify((body.annotations as unknown[]) || []),
+    JSON.stringify((body.page_scales as Record<string, unknown>) || {}),
+    (body.status as string) || "draft"
   );
 
   const takeoff = db

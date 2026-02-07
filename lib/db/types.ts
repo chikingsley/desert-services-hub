@@ -251,6 +251,43 @@ export interface SwpppWorkOrder {
   syncedAt: string;
 }
 
+export type NotificationEventType =
+  | "dust_permit_submitted"
+  | "dust_permit_issued"
+  | "dust_permit_expiring"
+  | "dust_permit_billing"
+  | "estimate_won"
+  | "estimate_lost"
+  | "contract_received"
+  | "swppp_scheduled"
+  | "inspection_received";
+
+export type NotificationStatus = "pending" | "drafted" | "sent" | "failed";
+
+export interface Stakeholder {
+  id: number;
+  eventType: NotificationEventType;
+  email: string;
+  name: string | null;
+  role: string | null;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface Notification {
+  id: number;
+  eventType: NotificationEventType;
+  refType: string | null;
+  refId: string | null;
+  subject: string;
+  draftId: string | null;
+  status: NotificationStatus;
+  sentAt: string | null;
+  error: string | null;
+  metadata: string | null;
+  createdAt: string;
+}
+
 // ============================================
 // Input Data Types (for insert/upsert operations)
 // ============================================

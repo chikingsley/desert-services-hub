@@ -18,7 +18,7 @@ Files:
 Run:
 
 ```bash
-bun apps/cli-tools/sharepoint-cli/swppp/swppp-labor/model-refresh-2026-02-06/build-capacity-plan-v1.ts
+bun apps/cli-tools/sharepoint-cli/src/swppp/swppp-labor/model-refresh-2026-02-06/build-capacity-plan-v1.ts
 ```
 
 Optional capacity overrides (env vars):

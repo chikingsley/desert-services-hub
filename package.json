@@ -25,7 +25,14 @@
     "fix": "ultracite fix",
     "check": "bun run typecheck && bun run lint",
     "test": "bun test tests/ services/",
-    "pdf": "bun run scripts/test-pdf-gen.ts"
+    "pdf": "bun run scripts/test-pdf-gen.ts",
+    "db:supabase:start": "npx --yes supabase start --workdir .",
+    "db:supabase:stop": "npx --yes supabase stop --workdir .",
+    "db:supabase:status": "npx --yes supabase status --workdir .",
+    "db:supabase:env": "bash scripts/db/supabase-env.sh",
+    "db:migrate:snapshot": "bash scripts/db/snapshot-hub.sh",
+    "db:migrate:local-pg": "bash scripts/db/sqlite-to-local-postgres.sh",
+    "db:migrate:verify": "bash scripts/db/verify-local-postgres.sh"
   },
   "dependencies": {
     "@atlaskit/pragmatic-drag-and-drop": "^1.7.7",
@@ -61,11 +68,12 @@
     "lodash.debounce": "^4.0.8",
     "lucide-react": "^0.563.0",
     "mailparser": "^3.9.3",
+    "maplibre-gl": "^5.17.0",
     "pdf-lib": "^1.17.1",
     "pdfjs-dist": "^5.4.624",
     "pdfmake": "^0.3.3",
     "peopledatalabs": "^14.1.1",
-    "playwright": "^1.58.1",
+    "playwright": "^1.58.2",
     "react": "19.1.0",
     "react-day-picker": "9.13.0",
     "react-dom": "19.1.0",
@@ -73,6 +81,8 @@
     "react-router": "^7.13.0",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.4.0",
+    "terra-draw": "^1.24.0",
+    "terra-draw-maplibre-gl-adapter": "^1.3.0",
     "tiny-invariant": "^1.3.3",
     "xlsx": "^0.18.5",
     "zod": "^4.3.6"

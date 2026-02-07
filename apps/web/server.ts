@@ -1,9 +1,11 @@
 /**
- * Desert Services Hub - Bun Server
+ * Desert Services Hub - Web App Server
  *
- * Main entry point using Bun.serve() with native routing.
- * Run with: bun run server.ts
- * Or with hot reload: bun --hot server.ts
+ * Frontend SPA + API routes for estimates, takeoffs, catalog, archives.
+ * Run with: bun run apps/web/server.ts
+ * Or with hot reload: bun --hot apps/web/server.ts
+ *
+ * Webhooks and background worker run separately in webhooks.ts.
  */
 
 import { file, serve } from "bun";
@@ -34,7 +36,6 @@ import {
   updateTakeoff,
 } from "@/api/takeoffs-by-id";
 import { checkPdfExists, uploadPdf } from "@/api/upload";
-import { handleMondayWebhook } from "@/api/webhooks";
 
 // Bun.serve route handlers expect BunRequest<path> but our API handlers use standard
 // Request. Cloudflare Workers types also pollute the global Request generic, causing
@@ -45,14 +46,13 @@ const h = (handler: unknown) => handler as never;
 import homepage from "@/apps/web/frontend/index.html";
 
 const server = serve({
-  port: process.env.PORT || 4747,
+  port: process.env.PORT || 3000,
 
   routes: {
     // ===========================================
     // API Routes
     // ===========================================
 
-    // Health Check
     "/api/health": {
       GET: healthCheck,
     },
@@ -113,11 +113,6 @@ const server = serve({
       GET: h(searchMonday),
     },
 
-    // Webhooks
-    "/api/webhooks/monday": {
-      POST: h(handleMondayWebhook),
-    },
-
     // Email Archives
     "/api/archives": {
       GET: h(listArchives),
@@ -143,6 +138,7 @@ const server = serve({
     "/contracts": homepage,
     "/contracts/*": homepage,
     "/catalog": homepage,
+    "/map": homepage,
     "/settings": homepage,
   },
 
@@ -179,5 +175,5 @@ const server = serve({
   },
 });
 
-console.log(`🚀 Desert Services Hub running at ${server.url}`);
-console.log(`   Environment: ${process.env.NODE_ENV || "development"}`);
+console.log(`Desert Services Hub running at ${server.url}`);
+console.log(`Environment: ${process.env.NODE_ENV || "development"}`);

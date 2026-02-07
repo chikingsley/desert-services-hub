@@ -4,7 +4,7 @@
     "types": ["@cloudflare/workers-types", "@types/bun"],
     "baseUrl": "../../..",
     "paths": {
-      "@sharepoint/*": ["apps/cli-tools/sharepoint-cli/*"]
+      "@sharepoint/*": ["apps/cli-tools/sharepoint-cli/src/*"]
     }
   },
   "include": ["src/**/*.ts", "cli/**/*.ts", "tests/**/*.ts"],

@@ -2,11 +2,11 @@
  * Test dust permit email templates
  *
  * Usage:
- *   bun services/email/test-templates.ts [template-name]
+ *   bun apps/cli-tools/email-cli/tests/test-templates.ts [template-name]
  *
  * Examples:
- *   bun services/email/test-templates.ts                    # List all templates
- *   bun services/email/test-templates.ts dust-permit-issued # Send test email
+ *   bun apps/cli-tools/email-cli/tests/test-templates.ts                    # List all templates
+ *   bun apps/cli-tools/email-cli/tests/test-templates.ts dust-permit-issued # Send test email
  */
 
 import { GraphEmailClient } from "@email/client";
@@ -153,10 +153,10 @@ async function main() {
       console.log(`  - ${t}`);
     }
     console.log(
-      "\nUsage: bun services/email/test-templates.ts <template-name>"
+      "\nUsage: bun apps/cli-tools/email-cli/tests/test-templates.ts <template-name>"
     );
     console.log(
-      "Example: bun services/email/test-templates.ts dust-permit-issued"
+      "Example: bun apps/cli-tools/email-cli/tests/test-templates.ts dust-permit-issued"
     );
     return;
   }

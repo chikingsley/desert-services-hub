@@ -1,6 +1,0 @@
-# Structure TemplateTemplate for `.planning/codebase/STRUCTURE.md` - captures physical file organization.**Purpose:** Document where things physically live in the codebase. Answers "where do I put X?"---## File Template```markdown# Codebase Structure**Analysis Date:** [YYYY-MM-DD]## Directory Layout[ASCII tree of top-level directories with purpose]```text```csv
-
-```html```markdown# Codebase Structure**Analysis Date:** 2025-01-20## Directory Layout```text```csv
-```html```text
-
-```**Useful for phase planning when:**- Adding new features (where should files go?)- Understanding project organization- Finding where specific logic lives- Following existing conventions</guidelines>

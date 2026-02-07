@@ -23,8 +23,7 @@
     "paths": {
       "@/*": ["./src/*"],
       "@tests/*": ["./tests/*"],
-      "@data/*": ["./data/*"],
-      "@email/*": ["./src/email/*"]
+      "@data/*": ["./data/*"]
     }
   },
   "include": ["src/**/*", "tests/**/*", "scripts/**/*"],

@@ -72,6 +72,18 @@ class ProviderManager:
             fn=lambda p: p.ocr(pdf_path, pages=pages),
         )
 
+    async def chat(
+        self,
+        prompt: str,
+        provider: ProviderSelector = ProviderSelector.AUTO,
+    ) -> ExtractResult:
+        """Text-only chat completion — no PDF, no OCR. For when you already have the text."""
+        return await self._run_with_fallback(
+            provider=provider,
+            operation="chat",
+            fn=lambda p: p.chat(prompt),
+        )
+
     async def extract(
         self,
         pdf_path: Path,

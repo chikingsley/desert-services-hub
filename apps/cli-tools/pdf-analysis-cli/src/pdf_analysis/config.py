@@ -17,8 +17,9 @@ class Settings(BaseSettings):
     mistral_ocr_model: str = "mistral-ocr-latest"
     mistral_chat_model: str = "mistral-large-latest"
 
-    ollama_endpoint: str = "http://localhost:11434/v1"
+    ollama_endpoint: str = "https://ollama.peacockery.studio/v1"
     ollama_model: str = "glm-ocr:latest"
+    ollama_chat_model: str = "granite4:latest"
 
-    pdf_analysis_provider_order: str = "gemini,local,mistral"
+    pdf_analysis_provider_order: str = "local,mistral,gemini"
     http_timeout_seconds: float = 90.0

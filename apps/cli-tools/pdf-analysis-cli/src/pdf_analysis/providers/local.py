@@ -31,6 +31,7 @@ class LocalProvider(BaseProvider):
         self.settings = settings
         self.endpoint = settings.ollama_endpoint.rstrip("/")
         self.model = settings.ollama_model
+        self.chat_model = settings.ollama_chat_model
         self.timeout = settings.http_timeout_seconds
 
     async def is_available(self) -> bool:
@@ -94,6 +95,21 @@ class LocalProvider(BaseProvider):
             pages=page_numbers,
             processing_time_ms=elapsed_ms,
             model=self.model,
+        )
+
+    async def chat(self, prompt: str) -> ExtractResult:
+        """Text-only chat completion using the chat model (no OCR/vision)."""
+        started = time.perf_counter()
+        raw = await self._chat_completion(prompt=prompt, model_override=self.chat_model)
+        data = extract_json_from_text(raw)
+        elapsed_ms = int((time.perf_counter() - started) * 1000)
+        return ExtractResult(
+            provider=self.name,
+            data=data,
+            processing_time_ms=elapsed_ms,
+            model=self.chat_model,
+            confidence=0.75,
+            raw_text=raw,
         )
 
     async def extract(
@@ -242,7 +258,7 @@ class LocalProvider(BaseProvider):
         finally:
             doc.close()
 
-    async def _chat_completion(self, prompt: str, image_base64: str | None = None) -> str:
+    async def _chat_completion(self, prompt: str, image_base64: str | None = None, model_override: str | None = None) -> str:
         if image_base64 is None:
             message_content: str | list[dict[str, Any]] = prompt
         else:
@@ -255,7 +271,7 @@ class LocalProvider(BaseProvider):
             ]
 
         payload: dict[str, Any] = {
-            "model": self.model,
+            "model": model_override or self.model,
             "messages": [{"role": "user", "content": message_content}],
         }
 

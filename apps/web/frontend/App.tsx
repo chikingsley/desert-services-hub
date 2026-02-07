@@ -1,6 +1,7 @@
 /**
  * Root App component with React Router (Data Mode)
  */
+import React, { Suspense } from "react";
 import {
   createBrowserRouter,
   isRouteErrorResponse,
@@ -45,6 +46,11 @@ import {
   TakeoffsPage,
   takeoffsLoader,
 } from "@/apps/web/frontend/pages/takeoffs";
+
+// Lazy-load map page (maplibre-gl is huge, don't block main bundle)
+const LazyMapPage = React.lazy(
+  () => import("@/apps/web/frontend/pages/map").then((m) => ({ default: m.MapPage })),
+);
 
 // Error boundary component for routes
 function RouteErrorBoundary() {
@@ -137,6 +143,14 @@ const router = createBrowserRouter([
         element: <CatalogPage />,
         loader: catalogLoader,
         errorElement: <RouteErrorBoundary />,
+      },
+      {
+        path: "map",
+        element: (
+          <Suspense fallback={<div className="flex flex-1 items-center justify-center text-muted-foreground">Loading map...</div>}>
+            <LazyMapPage />
+          </Suspense>
+        ),
       },
       {
         path: "settings",

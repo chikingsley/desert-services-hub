@@ -95,34 +95,46 @@ export function InlineEstimateEditor({
     }
   }, [estimate.sections]);
 
-  const [saveStatus, setSaveStatus] = useState<"saved" | "saving" | "unsaved">(
+  const [_saveStatus, setSaveStatus] = useState<"saved" | "saving" | "unsaved">(
     "saved"
   );
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
-  // Notify parent of save status changes
-  useEffect(() => {
-    onSaveStatusChange?.(saveStatus);
-  }, [saveStatus, onSaveStatusChange]);
+  // Refs for parent callbacks — avoids sync effects and unstable deps
+  const onSaveStatusChangeRef = useRef(onSaveStatusChange);
+  onSaveStatusChangeRef.current = onSaveStatusChange;
 
+  const onEstimateChangeRef = useRef(onEstimateChange);
+  onEstimateChangeRef.current = onEstimateChange;
+
+  // Update save status and notify parent in one call (no sync effect needed)
+  const updateSaveStatus = useCallback(
+    (status: "saved" | "saving" | "unsaved") => {
+      setSaveStatus(status);
+      onSaveStatusChangeRef.current?.(status);
+    },
+    []
+  );
+
+  // Notify parent of estimate changes (ref keeps deps stable)
   useEffect(() => {
-    onEstimateChange?.(estimate);
-  }, [estimate, onEstimateChange]);
+    onEstimateChangeRef.current?.(estimate);
+  }, [estimate]);
 
   // Expose save function to parent
   const handleManualSave = useCallback(async () => {
     if (!onSave) {
       return;
     }
-    setSaveStatus("saving");
+    updateSaveStatus("saving");
     try {
       await onSave(estimate);
-      setSaveStatus("saved");
+      updateSaveStatus("saved");
     } catch (err) {
       console.error("Failed to save:", err);
-      setSaveStatus("unsaved");
+      updateSaveStatus("unsaved");
     }
-  }, [onSave, estimate]);
+  }, [onSave, estimate, updateSaveStatus]);
 
   useEffect(() => {
     onSaveRef?.({ save: handleManualSave });
@@ -146,7 +158,7 @@ export function InlineEstimateEditor({
       return;
     }
 
-    setSaveStatus("unsaved");
+    updateSaveStatus("unsaved");
 
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
@@ -154,14 +166,14 @@ export function InlineEstimateEditor({
 
     saveTimeoutRef.current = setTimeout(async () => {
       if (onSave) {
-        setSaveStatus("saving");
+        updateSaveStatus("saving");
         try {
           await onSave(estimate);
-          setSaveStatus("saved");
+          updateSaveStatus("saved");
         } catch (err) {
           const errorMessage = err instanceof Error ? err.message : String(err);
           console.error("Failed to save estimate:", errorMessage, err);
-          setSaveStatus("unsaved");
+          updateSaveStatus("unsaved");
         }
       }
     }, 2000);
@@ -171,7 +183,7 @@ export function InlineEstimateEditor({
         clearTimeout(saveTimeoutRef.current);
       }
     };
-  }, [estimate, onSave]);
+  }, [estimate, onSave, updateSaveStatus]);
 
   const renderLineItem = useCallback(
     (item: EditorLineItem, catalogCategoryId?: string) => (
@@ -318,10 +330,21 @@ export function InlineEstimateEditor({
     [catalog, removeLineItem, updateLineItem, updateLineItemFromCatalog]
   );
 
-  const unsectioned = estimate.lineItems.filter((i) => !i.sectionId);
+  // Single-pass grouping: build Map<sectionId, items[]> then derive both lists
+  const itemsBySectionId = new Map<string | undefined, EditorLineItem[]>();
+  for (const item of estimate.lineItems) {
+    const key = item.sectionId || undefined;
+    const group = itemsBySectionId.get(key);
+    if (group) {
+      group.push(item);
+    } else {
+      itemsBySectionId.set(key, [item]);
+    }
+  }
+  const unsectioned = itemsBySectionId.get(undefined) ?? [];
   const sectionGroups = estimate.sections.map((section) => ({
     section,
-    items: estimate.lineItems.filter((i) => i.sectionId === section.id),
+    items: itemsBySectionId.get(section.id) ?? [],
   }));
 
   return (

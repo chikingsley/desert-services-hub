@@ -21,7 +21,10 @@ import {
   type MessageChange,
   messagesDelta,
 } from "@/apps/workers/outlook-folder-watcher/lib/graph";
-import { linkMessages } from "@/apps/workers/outlook-folder-watcher/lib/linker";
+import {
+  checkDustPermitIssued,
+  linkMessages,
+} from "@/apps/workers/outlook-folder-watcher/lib/linker";
 import { findProjectByFolder } from "@/apps/workers/outlook-folder-watcher/lib/projects";
 import {
   addTrackedFolder,
@@ -56,10 +59,10 @@ const mailbox: string = _mailbox;
 
 // -- Handlers --
 
-function handleNewFolder(folder: FolderChange): void {
+async function handleNewFolder(folder: FolderChange): Promise<void> {
   console.log(`[NewFolder] "${folder.displayName}"`);
 
-  const projectId = findProjectByFolder(folder.displayName);
+  const projectId = await findProjectByFolder(folder.displayName);
 
   addTrackedFolder(
     db,
@@ -81,12 +84,15 @@ function handleNewFolder(folder: FolderChange): void {
   });
 }
 
-function handleRenamedFolder(folder: FolderChange, oldName: string): void {
+async function handleRenamedFolder(
+  folder: FolderChange,
+  oldName: string
+): Promise<void> {
   console.log(`[Renamed] "${oldName}" → "${folder.displayName}"`);
   updateTrackedFolder(db, folder.id, { display_name: folder.displayName });
 
   // Re-match project on rename
-  const projectId = findProjectByFolder(folder.displayName);
+  const projectId = await findProjectByFolder(folder.displayName);
   if (projectId) {
     updateTrackedFolder(db, folder.id, { project_id: projectId });
   }
@@ -113,12 +119,12 @@ function handleDeletedFolder(folder: FolderChange): void {
   }
 }
 
-function handleNewMessages(
+async function handleNewMessages(
   folderName: string,
   folderId: string,
   hubProjectId: number,
   messages: MessageChange[]
-): void {
+): Promise<void> {
   const toLink = messages.map((m) => ({
     id: m.id,
     internetMessageId: m.internetMessageId,
@@ -126,7 +132,7 @@ function handleNewMessages(
     subject: m.subject,
   }));
 
-  const stats = linkMessages(hubProjectId, toLink);
+  const stats = await linkMessages(hubProjectId, toLink);
 
   if (stats.directLinks > 0 || stats.threadExpanded > 0) {
     console.log(
@@ -135,6 +141,14 @@ function handleNewMessages(
     logEvent(db, "emails_linked", folderId, folderName, {
       ...stats,
       hubProjectId,
+    });
+  }
+
+  // Check for dust permit issued emails
+  const dustUpdated = await checkDustPermitIssued(hubProjectId);
+  if (dustUpdated > 0) {
+    logEvent(db, "dust_permit_issued", folderId, folderName, {
+      permitsMarked: dustUpdated,
     });
   }
 }
@@ -178,9 +192,9 @@ async function poll(): Promise<void> {
       .get(folder.id);
 
     if (!tracked) {
-      handleNewFolder(folder);
+      await handleNewFolder(folder);
     } else if (tracked.display_name !== folder.displayName) {
-      handleRenamedFolder(folder, tracked.display_name);
+      await handleRenamedFolder(folder, tracked.display_name);
     }
   }
 
@@ -205,7 +219,7 @@ async function poll(): Promise<void> {
       const added = msgResult.changes.filter((m) => !m["@removed"]);
 
       if (added.length > 0) {
-        handleNewMessages(
+        await handleNewMessages(
           folder.display_name,
           folder.folder_id,
           folder.project_id,

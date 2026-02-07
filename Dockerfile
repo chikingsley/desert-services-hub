@@ -3,66 +3,74 @@
 # =============================================================================
 # Desert Services Hub - Dockerfile
 # =============================================================================
-# Multi-stage build optimized for Bun server with native HTML bundling
-# Uses bun:sqlite (built into Bun) - no native compilation needed
-# See: https://bun.sh/guides/ecosystem/docker
+# Bun server + Python extraction pipeline.
+# Webhook events → sync item → download PDF → extract line items.
 # =============================================================================
 
 # -----------------------------------------------------------------------------
-# Stage 1: Install dependencies
+# Stage 1: Install JS dependencies
 # -----------------------------------------------------------------------------
 FROM oven/bun:1 AS deps
 WORKDIR /app
 
-# Copy package files
 COPY package.json bun.lock ./
 
-# Install production dependencies only
-RUN bun install --frozen-lockfile --production
+RUN bun install
 
 # -----------------------------------------------------------------------------
-# Stage 2: Production image
+# Stage 2: Production image (Bun + Python)
 # -----------------------------------------------------------------------------
 FROM oven/bun:1 AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
 
-# Create non-root user for security
-RUN groupadd --system --gid 1001 appgroup && \
-    useradd --system --uid 1001 --gid appgroup appuser
+# Install Python + uv (needed for pdf-analysis extraction)
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends python3 python3-venv curl && \
+    curl -LsSf https://astral.sh/uv/install.sh | sh && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Copy dependencies
+ENV PATH="/root/.local/bin:$PATH"
+
+# Copy JS deps
 COPY --from=deps /app/node_modules ./node_modules
 
-# Copy source files needed for runtime
-COPY --chown=appuser:appgroup package.json ./
-COPY --chown=appuser:appgroup bunfig.toml ./
-COPY --chown=appuser:appgroup src/server.ts ./src/
-COPY --chown=appuser:appgroup tsconfig.json ./
-COPY --chown=appuser:appgroup public ./public
-COPY --chown=appuser:appgroup src ./src
-COPY --chown=appuser:appgroup lib ./lib
-COPY --chown=appuser:appgroup styles ./styles
-COPY --chown=appuser:appgroup hooks ./hooks
-COPY --chown=appuser:appgroup services ./services
+# Config files
+COPY package.json tsconfig.json tsconfig.base.json bunfig.toml ./
 
-# Create data directory for SQLite database (mount as volume for persistence)
-RUN mkdir -p /app/data && chown appuser:appgroup /app/data
+# Web server + API routes
+COPY apps/web ./apps/web
 
-# Switch to non-root user
-USER appuser
+# CLI tools
+COPY apps/cli-tools/monday-cli ./apps/cli-tools/monday-cli
+COPY apps/cli-tools/sharepoint-cli ./apps/cli-tools/sharepoint-cli
+COPY apps/cli-tools/email-cli ./apps/cli-tools/email-cli
 
-# Expose the port
-EXPOSE 3000
+# Workers
+COPY apps/workers/estimate-poller/lib ./apps/workers/estimate-poller/lib
+COPY apps/workers/contract-intake/lib ./apps/workers/contract-intake/lib
+
+# Contract utilities + extraction pipeline
+COPY apps/contract/db/lib ./apps/contract/db/lib
+COPY apps/contract/db/sync/extract-estimates.ts ./apps/contract/db/sync/
+COPY apps/cli-tools/pdf-analysis-cli ./apps/cli-tools/pdf-analysis-cli
+
+# Shared libraries + frontend dependencies
+COPY lib ./lib
+COPY hooks ./hooks
+COPY styles ./styles
+
+# Install Python deps for pdf-analysis
+RUN cd apps/cli-tools/pdf-analysis-cli && uv sync --frozen 2>/dev/null || uv sync
+
+# Data + temp directories
+RUN mkdir -p /app/data /app/tmp
+
+EXPOSE 3000 4747
 
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
-ENV HUB_DATABASE_PATH="/app/data/hub.db"
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:3000/api/health || exit 1
-
-# Start the application using Bun
-CMD ["bun", "run", "src/server.ts"]
+# Default entrypoint — override per service in docker-compose.yml
+CMD ["bun", "run", "apps/web/server.ts"]

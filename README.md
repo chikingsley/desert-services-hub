@@ -102,6 +102,23 @@ bun run dev
 bun run test
 ```
 
+## Local Postgres (Supabase) Migration Track
+
+To run SQLite and local Postgres in parallel while migrating:
+
+```bash
+# Start local Supabase and write .env.supabase.local
+bash scripts/db/bootstrap-supabase-local.sh
+
+# Backfill SQLite -> local Postgres
+bun run db:migrate:local-pg
+
+# Verify row-count parity
+bun run db:migrate:verify
+```
+
+Detailed runbook: `docs/POSTGRES_MIGRATION.md`
+
 ## Documentation
 
 - **Engineering Standards**: See [CLAUDE.md](CLAUDE.md) for detailed coding conventions, service usage patterns, and testing requirements.

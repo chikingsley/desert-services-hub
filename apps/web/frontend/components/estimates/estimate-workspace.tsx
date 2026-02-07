@@ -23,7 +23,6 @@ import { useSidebar } from "@/apps/web/frontend/components/ui/sidebar";
 import { Spinner } from "@/apps/web/frontend/components/ui/spinner";
 import { useSettings } from "@/hooks/use-settings";
 import { catalog } from "@/lib/catalog";
-import { generatePDFBlob } from "@/lib/pdf/generate-client";
 import type { GeneratePDFOptions } from "@/lib/pdf/pdf-builder";
 import type { EditorEstimate } from "@/lib/types";
 
@@ -191,6 +190,10 @@ export function EstimateWorkspace({
     reset: (estimate: EditorEstimate) => void;
   } | null>(null);
 
+  // Ref for visibilitychange handler — reads latest state without re-registering listener
+  const visibilityStateRef = useRef({ saveStatus, previewEstimate, resetRef });
+  visibilityStateRef.current = { saveStatus, previewEstimate, resetRef };
+
   const { autoHideSidebar } = useSettings();
 
   const handleManualSave = async () => {
@@ -233,12 +236,21 @@ export function EstimateWorkspace({
     }
   }, [isPreviewOpen, autoHideSidebar, isMobile, setOpen, setOpenMobile]);
 
-  // Generate PDF blob when estimate or options change (for live preview)
+  // Generate PDF blob when estimate or options change (debounced, lazy-loaded)
   useEffect(() => {
     let currentUrl: string | null = null;
+    let cancelled = false;
 
-    generatePDFBlob(previewEstimate, pdfOptions)
-      .then((blob) => {
+    const timer = setTimeout(async () => {
+      try {
+        const { generatePDFBlob } = await import("@/lib/pdf/generate-client");
+        if (cancelled) {
+          return;
+        }
+        const blob = await generatePDFBlob(previewEstimate, pdfOptions);
+        if (cancelled) {
+          return;
+        }
         currentUrl = URL.createObjectURL(blob);
         setPdfBlobUrl((prev) => {
           if (prev) {
@@ -246,12 +258,16 @@ export function EstimateWorkspace({
           }
           return currentUrl;
         });
-      })
-      .catch((err) => {
-        console.error("PDF generation error:", err);
-      });
+      } catch (err) {
+        if (!cancelled) {
+          console.error("PDF generation error:", err);
+        }
+      }
+    }, 500);
 
     return () => {
+      cancelled = true;
+      clearTimeout(timer);
       if (currentUrl) {
         URL.revokeObjectURL(currentUrl);
       }
@@ -272,49 +288,50 @@ export function EstimateWorkspace({
     });
   }, [estimateId]);
 
-  // Check for external updates when tab gains focus
+  // Check for external updates when tab gains focus (uses ref to avoid listener churn)
   useEffect(() => {
-    const checkForUpdates = async () => {
-      // Skip if we have unsaved changes
-      const hasUnsavedChanges =
-        saveStatus === "unsaved" || saveStatus === "saving";
-      if (hasUnsavedChanges) {
-        return;
-      }
-
-      const res = await fetch(`/api/estimates/${estimateId}`);
-      if (!res.ok) {
-        return;
-      }
-
-      const data: ApiEstimateResponse = await res.json();
-      const hasExternalChange =
-        lastKnownUpdateRef.current &&
-        data.updated_at !== lastKnownUpdateRef.current;
-
-      if (hasExternalChange) {
-        // Auto-refresh the editor with external changes
-        const newEstimate = apiToEditorEstimate(data, previewEstimate);
-        setPreviewEstimate(newEstimate);
-        resetRef?.reset(newEstimate);
-      }
-
-      lastKnownUpdateRef.current = data.updated_at;
-    };
-
     const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible") {
-        checkForUpdates().catch(() => {
-          // Silently fail - non-critical background check
-        });
+      if (document.visibilityState !== "visible") {
+        return;
       }
+
+      const {
+        saveStatus: status,
+        previewEstimate: estimate,
+        resetRef: reset,
+      } = visibilityStateRef.current;
+
+      if (status === "unsaved" || status === "saving") {
+        return;
+      }
+
+      (async () => {
+        const res = await fetch(`/api/estimates/${estimateId}`);
+        if (!res.ok) {
+          return;
+        }
+
+        const data: ApiEstimateResponse = await res.json();
+        if (
+          lastKnownUpdateRef.current &&
+          data.updated_at !== lastKnownUpdateRef.current
+        ) {
+          const newEstimate = apiToEditorEstimate(data, estimate);
+          setPreviewEstimate(newEstimate);
+          reset?.reset(newEstimate);
+        }
+
+        lastKnownUpdateRef.current = data.updated_at;
+      })().catch(() => {
+        // Silently fail - non-critical background check
+      });
     };
 
     document.addEventListener("visibilitychange", handleVisibilityChange);
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [estimateId, saveStatus, previewEstimate, resetRef]);
+  }, [estimateId]);
 
   const handleSave = useCallback(
     async (estimate: EditorEstimate) => {

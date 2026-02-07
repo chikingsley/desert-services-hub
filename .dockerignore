@@ -1,61 +1,44 @@
-# Dependencies
-node_modules
+# Ignore everything by default
+*
 
-# Build outputs (we build fresh in Docker)
-.next
-out
-dist
-build
+# Config files
+!package.json
+!bun.lock
+!tsconfig.json
+!tsconfig.base.json
+!bunfig.toml
 
-# Docker files (avoid recursion)
-Dockerfile*
-docker-compose*
-.dockerignore
+# Web server + API routes
+!apps/web/
 
-# Version control
-.git
-.gitignore
+# CLI tools
+!apps/cli-tools/monday-cli/
+!apps/cli-tools/sharepoint-cli/
+!apps/cli-tools/email-cli/
+!apps/cli-tools/pdf-analysis-cli/
 
-# IDE and editor
-.vscode
-.idea
-*.swp
-*.swo
-.DS_Store
+# Workers
+!apps/workers/estimate-poller/lib/
+!apps/workers/contract-intake/lib/
 
-# Documentation
-README.md
-LICENSE
-CHANGELOG.md
-docs/
+# Contract utilities (html-to-text, spam-filter, extraction)
+!apps/contract/db/lib/
+!apps/contract/db/sync/extract-estimates.ts
 
-# Development files
-.env
-.env.*
-!.env.example
+# Shared libraries
+!lib/
 
-# Testing
-coverage
-*.test.ts
-*.spec.ts
-tests/
-__tests__/
+# Frontend dependencies (hooks, styles)
+!hooks/
+!styles/
 
-# SQLite databases (will be mounted as volumes)
-*.db
-*.db-journal
-*.db-shm
-*.db-wal
-
-# MinIO license (sensitive)
-.minio/
-
-# Projects folder (separate deployments)
-projects/
-
-# Misc
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.turbo
+# Exclude heavy data from lib/ (databases, downloaded files, logs)
+lib/**/*.db
+lib/**/*.db-journal
+lib/**/*.db-shm
+lib/**/*.db-wal
+lib/**/*.db.bak*
+lib/db/monday-files/
+lib/db/hub-corrupted.db
+lib/db/*.log
+lib/db/app.db

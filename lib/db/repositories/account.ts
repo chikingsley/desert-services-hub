@@ -19,18 +19,18 @@ function parseAccountRow(row: Record<string, unknown>): Account {
   };
 }
 
-export function createAccount(
+export async function createAccount(
   domain: string,
   name: string,
   type: AccountType = "contractor"
-): Account {
-  db.run(
+): Promise<Account> {
+  await db.run(
     `INSERT INTO accounts (domain, name, type) VALUES (?, ?, ?)
-     ON CONFLICT(domain) DO UPDATE SET name = ?, type = ?, updated_at = datetime('now')`,
+     ON CONFLICT(domain) DO UPDATE SET name = ?, type = ?, updated_at = now()`,
     [domain, name, type, name, type]
   );
 
-  const row = db
+  const row = await db
     .query<Record<string, unknown>, [string]>(
       "SELECT * FROM accounts WHERE domain = ?"
     )
@@ -42,8 +42,10 @@ export function createAccount(
   return parseAccountRow(row);
 }
 
-export function getAccountByDomain(domain: string): Account | null {
-  const row = db
+export async function getAccountByDomain(
+  domain: string
+): Promise<Account | null> {
+  const row = await db
     .query<Record<string, unknown>, [string]>(
       "SELECT * FROM accounts WHERE domain = ?"
     )
@@ -52,8 +54,10 @@ export function getAccountByDomain(domain: string): Account | null {
   return row ? parseAccountRow(row) : null;
 }
 
-export function getAccountIdByAlias(alias: string): number | null {
-  const row = db
+export async function getAccountIdByAlias(
+  alias: string
+): Promise<number | null> {
+  const row = await db
     .query<{ account_id: number }, [string]>(
       "SELECT account_id FROM company_aliases WHERE alias = ?"
     )
@@ -62,10 +66,15 @@ export function getAccountIdByAlias(alias: string): number | null {
   return row?.account_id ?? null;
 }
 
-export function addCompanyAlias(accountId: number, alias: string): boolean {
+export async function addCompanyAlias(
+  accountId: number,
+  alias: string
+): Promise<boolean> {
   try {
-    db.run(
-      "INSERT OR IGNORE INTO company_aliases (account_id, alias) VALUES (?, ?)",
+    await db.run(
+      `INSERT INTO company_aliases (account_id, alias)
+       VALUES (?, ?)
+       ON CONFLICT DO NOTHING`,
       [accountId, alias.toLowerCase()]
     );
     return true;
@@ -74,20 +83,20 @@ export function addCompanyAlias(accountId: number, alias: string): boolean {
   }
 }
 
-export function getAllAccounts(type?: AccountType): Account[] {
+export async function getAllAccounts(type?: AccountType): Promise<Account[]> {
   const query = type
     ? "SELECT * FROM accounts WHERE type = ? ORDER BY email_count DESC"
     : "SELECT * FROM accounts ORDER BY email_count DESC";
 
   const rows = type
-    ? db.query<Record<string, unknown>, [string]>(query).all(type)
-    : db.query<Record<string, unknown>, []>(query).all();
+    ? await db.query<Record<string, unknown>, [string]>(query).all(type)
+    : await db.query<Record<string, unknown>, []>(query).all();
 
   return rows.map(parseAccountRow);
 }
 
-export function updateAccountCounts(): void {
-  db.run(`
+export async function updateAccountCounts(): Promise<void> {
+  await db.run(`
     UPDATE accounts SET
       email_count = (
         SELECT COUNT(*) FROM emails WHERE account_id = accounts.id
@@ -95,10 +104,16 @@ export function updateAccountCounts(): void {
       contact_count = (
         SELECT COUNT(DISTINCT from_email) FROM emails WHERE account_id = accounts.id
       ),
-      updated_at = datetime('now')
+      updated_at = now()
   `);
 }
 
-export function linkEmailToAccount(emailId: number, accountId: number): void {
-  db.run("UPDATE emails SET account_id = ? WHERE id = ?", [accountId, emailId]);
+export async function linkEmailToAccount(
+  emailId: number,
+  accountId: number
+): Promise<void> {
+  await db.run("UPDATE emails SET account_id = ? WHERE id = ?", [
+    accountId,
+    emailId,
+  ]);
 }

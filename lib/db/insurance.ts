@@ -2,55 +2,10 @@
  * Insurance Coverage Management
  *
  * Stores Desert Services' insurance limits and compares against contract requirements.
+ * Schema managed by Supabase migrations.
  */
 
 import { db } from "@lib/db/hub";
-
-// =============================================================================
-// Schema
-// =============================================================================
-
-db.run(`
-  CREATE TABLE IF NOT EXISTS company_insurance (
-    id TEXT PRIMARY KEY DEFAULT 'desert-services',
-    gl_each_occurrence INTEGER NOT NULL,
-    gl_general_aggregate INTEGER NOT NULL,
-    gl_products_completed_ops INTEGER NOT NULL,
-    auto_combined_single_limit INTEGER NOT NULL,
-    umbrella_each_occurrence INTEGER NOT NULL,
-    umbrella_aggregate INTEGER NOT NULL,
-    workers_comp_each_accident INTEGER NOT NULL,
-    workers_comp_disease_employee INTEGER NOT NULL,
-    workers_comp_disease_policy INTEGER NOT NULL,
-    professional_liability INTEGER NOT NULL,
-    policy_expiration TEXT NOT NULL,
-    broker_name TEXT,
-    broker_email TEXT,
-    broker_phone TEXT,
-    updated_at TEXT NOT NULL DEFAULT (datetime('now'))
-  )
-`);
-
-db.run(`
-  CREATE TABLE IF NOT EXISTS contract_insurance_requirements (
-    id TEXT PRIMARY KEY,
-    contract_id TEXT,
-    project_name TEXT NOT NULL,
-    contractor_name TEXT NOT NULL,
-    gl_each_occurrence INTEGER,
-    gl_general_aggregate INTEGER,
-    gl_products_completed_ops INTEGER,
-    auto_combined_single_limit INTEGER,
-    umbrella_each_occurrence INTEGER,
-    umbrella_aggregate INTEGER,
-    workers_comp_each_accident INTEGER,
-    professional_liability INTEGER,
-    additional_insureds TEXT,
-    waiver_of_subrogation INTEGER DEFAULT 0,
-    primary_noncontributory INTEGER DEFAULT 0,
-    created_at TEXT NOT NULL DEFAULT (datetime('now'))
-  )
-`);
 
 // =============================================================================
 // Types
@@ -112,51 +67,70 @@ export interface ComparisonResult {
 /**
  * Get Desert Services' current insurance coverage
  */
-export function getCompanyInsurance(): CompanyInsurance | null {
-  return db
+export async function getCompanyInsurance(): Promise<CompanyInsurance | null> {
+  return (await db
     .prepare("SELECT * FROM company_insurance WHERE id = 'desert-services'")
-    .get() as CompanyInsurance | null;
+    .get()) as CompanyInsurance | null;
 }
 
 /**
  * Update Desert Services' insurance coverage
  */
-export function updateCompanyInsurance(insurance: CompanyInsurance): void {
-  db.prepare(`
-    INSERT OR REPLACE INTO company_insurance (
+export async function updateCompanyInsurance(
+  insurance: CompanyInsurance
+): Promise<void> {
+  await db.run(
+    `INSERT INTO company_insurance (
       id, gl_each_occurrence, gl_general_aggregate, gl_products_completed_ops,
       auto_combined_single_limit, umbrella_each_occurrence, umbrella_aggregate,
       workers_comp_each_accident, workers_comp_disease_employee, workers_comp_disease_policy,
       professional_liability, policy_expiration, broker_name, broker_email, broker_phone,
       updated_at
     ) VALUES (
-      'desert-services', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now')
+      'desert-services', $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, now()
     )
-  `).run(
-    insurance.gl_each_occurrence,
-    insurance.gl_general_aggregate,
-    insurance.gl_products_completed_ops,
-    insurance.auto_combined_single_limit,
-    insurance.umbrella_each_occurrence,
-    insurance.umbrella_aggregate,
-    insurance.workers_comp_each_accident,
-    insurance.workers_comp_disease_employee,
-    insurance.workers_comp_disease_policy,
-    insurance.professional_liability,
-    insurance.policy_expiration,
-    insurance.broker_name ?? null,
-    insurance.broker_email ?? null,
-    insurance.broker_phone ?? null
+    ON CONFLICT (id) DO UPDATE SET
+      gl_each_occurrence = EXCLUDED.gl_each_occurrence,
+      gl_general_aggregate = EXCLUDED.gl_general_aggregate,
+      gl_products_completed_ops = EXCLUDED.gl_products_completed_ops,
+      auto_combined_single_limit = EXCLUDED.auto_combined_single_limit,
+      umbrella_each_occurrence = EXCLUDED.umbrella_each_occurrence,
+      umbrella_aggregate = EXCLUDED.umbrella_aggregate,
+      workers_comp_each_accident = EXCLUDED.workers_comp_each_accident,
+      workers_comp_disease_employee = EXCLUDED.workers_comp_disease_employee,
+      workers_comp_disease_policy = EXCLUDED.workers_comp_disease_policy,
+      professional_liability = EXCLUDED.professional_liability,
+      policy_expiration = EXCLUDED.policy_expiration,
+      broker_name = EXCLUDED.broker_name,
+      broker_email = EXCLUDED.broker_email,
+      broker_phone = EXCLUDED.broker_phone,
+      updated_at = now()`,
+    [
+      insurance.gl_each_occurrence,
+      insurance.gl_general_aggregate,
+      insurance.gl_products_completed_ops,
+      insurance.auto_combined_single_limit,
+      insurance.umbrella_each_occurrence,
+      insurance.umbrella_aggregate,
+      insurance.workers_comp_each_accident,
+      insurance.workers_comp_disease_employee,
+      insurance.workers_comp_disease_policy,
+      insurance.professional_liability,
+      insurance.policy_expiration,
+      insurance.broker_name ?? null,
+      insurance.broker_email ?? null,
+      insurance.broker_phone ?? null,
+    ]
   );
 }
 
 /**
  * Compare contract requirements against company coverage
  */
-export function checkCoverage(
+export async function checkCoverage(
   requirements: ContractRequirements
-): ComparisonResult {
-  const coverage = getCompanyInsurance();
+): Promise<ComparisonResult> {
+  const coverage = await getCompanyInsurance();
 
   if (!coverage) {
     return {
@@ -173,7 +147,6 @@ export function checkCoverage(
   const gaps: CoverageGap[] = [];
   const warnings: string[] = [];
 
-  // Check each coverage type
   const checks: Array<{
     field: string;
     required: number | undefined;
@@ -234,7 +207,6 @@ export function checkCoverage(
     }
   }
 
-  // Check policy expiration
   const expDate = new Date(coverage.policy_expiration);
   const now = new Date();
   const daysUntilExpiry = Math.floor(
@@ -258,9 +230,6 @@ export function checkCoverage(
   };
 }
 
-/**
- * Format currency for display
- */
 function formatMoney(amount: number): string {
   if (amount >= 1_000_000) {
     return `$${(amount / 1_000_000).toFixed(1)}M`;
@@ -268,19 +237,16 @@ function formatMoney(amount: number): string {
   return `$${(amount / 1000).toFixed(0)}K`;
 }
 
-/**
- * Print comparison result to console
- */
 export function printComparisonResult(result: ComparisonResult): void {
   console.log(`\n=== Insurance Check: ${result.project_name} ===`);
   console.log(`Contractor: ${result.contractor_name}`);
 
   if (result.meets_requirements) {
-    console.log("\n✅ MEETS ALL REQUIREMENTS\n");
+    console.log("\n MEETS ALL REQUIREMENTS\n");
   } else {
-    console.log("\n❌ COVERAGE GAPS FOUND:\n");
+    console.log("\n COVERAGE GAPS FOUND:\n");
     for (const gap of result.gaps) {
-      const icon = gap.severity === "critical" ? "🚨" : "⚠️";
+      const icon = gap.severity === "critical" ? "!!" : "!";
       console.log(`${icon} ${gap.field}`);
       console.log(`   Required: ${formatMoney(gap.required)}`);
       console.log(`   Have:     ${formatMoney(gap.have)}`);
@@ -292,7 +258,7 @@ export function printComparisonResult(result: ComparisonResult): void {
   if (result.warnings.length > 0) {
     console.log("Warnings:");
     for (const warning of result.warnings) {
-      console.log(`  ⚠️  ${warning}`);
+      console.log(`  !  ${warning}`);
     }
     console.log();
   }

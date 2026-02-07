@@ -1,0 +1,2 @@
+-- Intentionally empty seed.
+-- SQLite->Postgres backfill is handled by scripts in /scripts/db.

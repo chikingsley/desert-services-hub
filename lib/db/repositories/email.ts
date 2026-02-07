@@ -96,10 +96,10 @@ function normalizeSubjectInternal(subject: string | null): string | null {
 // CRUD Operations
 // ============================================
 
-export function insertEmail(data: InsertEmailData): number {
+export async function insertEmail(data: InsertEmailData): Promise<number> {
   const normalized = normalizeSubjectInternal(data.subject ?? null);
 
-  db.run(
+  await db.run(
     `INSERT INTO emails (
       message_id, internet_message_id, mailbox_id, conversation_id, subject, normalized_subject, from_email, from_name,
       to_emails, cc_emails, received_at, has_attachments, attachment_names,
@@ -141,7 +141,7 @@ export function insertEmail(data: InsertEmailData): number {
     ]
   );
 
-  const row = db
+  const row = await db
     .query<{ id: number }, [string]>(
       "SELECT id FROM emails WHERE message_id = ?"
     )
@@ -150,8 +150,10 @@ export function insertEmail(data: InsertEmailData): number {
   return row?.id ?? 0;
 }
 
-export function getEmailByMessageId(messageId: string): Email | null {
-  const row = db
+export async function getEmailByMessageId(
+  messageId: string
+): Promise<Email | null> {
+  const row = await db
     .query<Record<string, unknown>, [string]>(
       "SELECT * FROM emails WHERE message_id = ?"
     )
@@ -164,8 +166,8 @@ export function getEmailByMessageId(messageId: string): Email | null {
   return parseEmailRow(row);
 }
 
-export function getEmailById(id: number): Email | null {
-  const row = db
+export async function getEmailById(id: number): Promise<Email | null> {
+  const row = await db
     .query<Record<string, unknown>, [number]>(
       "SELECT * FROM emails WHERE id = ?"
     )
@@ -178,13 +180,13 @@ export function getEmailById(id: number): Email | null {
   return parseEmailRow(row);
 }
 
-export function updateEmailClassification(
+export async function updateEmailClassification(
   emailId: number,
   classification: EmailClassification,
   confidence: number,
   method: ClassificationMethod
-): void {
-  db.run(
+): Promise<void> {
+  await db.run(
     `UPDATE emails
      SET classification = ?, classification_confidence = ?, classification_method = ?
      WHERE id = ?`,
@@ -192,7 +194,7 @@ export function updateEmailClassification(
   );
 }
 
-export function updateEmailProjectLink(
+export async function updateEmailProjectLink(
   emailId: number,
   data: {
     projectName?: string | null;
@@ -200,7 +202,7 @@ export function updateEmailProjectLink(
     mondayEstimateId?: string | null;
     notionProjectId?: string | null;
   }
-): void {
+): Promise<void> {
   const updates: string[] = [];
   const values: (string | number | null)[] = [];
 
@@ -226,15 +228,15 @@ export function updateEmailProjectLink(
   }
 
   values.push(emailId);
-  db.run(`UPDATE emails SET ${updates.join(", ")} WHERE id = ?`, values);
+  await db.run(`UPDATE emails SET ${updates.join(", ")} WHERE id = ?`, values);
 }
 
 // ============================================
 // Query Operations
 // ============================================
 
-export function getUnclassifiedEmails(limit = 1000): Email[] {
-  const rows = db
+export async function getUnclassifiedEmails(limit = 1000): Promise<Email[]> {
+  const rows = await db
     .query<Record<string, unknown>, [number]>(
       `SELECT * FROM emails
        WHERE classification IS NULL
@@ -246,11 +248,11 @@ export function getUnclassifiedEmails(limit = 1000): Email[] {
   return rows.map(parseEmailRow);
 }
 
-export function getEmailsByClassification(
+export async function getEmailsByClassification(
   classification: EmailClassification,
   limit = 100
-): Email[] {
-  const rows = db
+): Promise<Email[]> {
+  const rows = await db
     .query<Record<string, unknown>, [string, number]>(
       `SELECT * FROM emails
        WHERE classification = ?
@@ -262,12 +264,12 @@ export function getEmailsByClassification(
   return rows.map(parseEmailRow);
 }
 
-export function getEmailsWithoutProjectLink(
+export async function getEmailsWithoutProjectLink(
   classifications: EmailClassification[],
   limit = 1000
-): Email[] {
+): Promise<Email[]> {
   const placeholders = classifications.map(() => "?").join(", ");
-  const rows = db
+  const rows = await db
     .query<Record<string, unknown>, (string | number)[]>(
       `SELECT * FROM emails
        WHERE classification IN (${placeholders})
@@ -280,8 +282,8 @@ export function getEmailsWithoutProjectLink(
   return rows.map(parseEmailRow);
 }
 
-export function getRecentEmails(limit = 10): Email[] {
-  const rows = db
+export async function getRecentEmails(limit = 10): Promise<Email[]> {
+  const rows = await db
     .query<Record<string, unknown>, [number]>(
       "SELECT * FROM emails ORDER BY id DESC LIMIT ?"
     )
@@ -289,8 +291,8 @@ export function getRecentEmails(limit = 10): Email[] {
   return rows.map(parseEmailRow);
 }
 
-export function getEmailsWithAttachments(limit = 100): Email[] {
-  const rows = db
+export async function getEmailsWithAttachments(limit = 100): Promise<Email[]> {
+  const rows = await db
     .query<Record<string, unknown>, [number]>(
       `SELECT * FROM emails
        WHERE has_attachments = 1
@@ -301,10 +303,10 @@ export function getEmailsWithAttachments(limit = 100): Email[] {
 
   return rows.map(parseEmailRow);
 }
-export function getLinkedConversationSibling(
+export async function getLinkedConversationSibling(
   conversationId: string
-): number | null {
-  const row = db
+): Promise<number | null> {
+  const row = await db
     .query<{ project_id: number | null }, [string]>(
       "SELECT project_id FROM emails WHERE conversation_id = ? AND project_id IS NOT NULL LIMIT 1"
     )
@@ -312,11 +314,11 @@ export function getLinkedConversationSibling(
   return row?.project_id ?? null;
 }
 
-export function getSenderProjectStats(fromEmail: string): {
+export async function getSenderProjectStats(fromEmail: string): Promise<{
   projectId: number;
   percentage: number;
-} | null {
-  const rows = db
+} | null> {
+  const rows = await db
     .query<{ project_id: number; count: number }, [string]>(
       `SELECT project_id, COUNT(*) as count
        FROM emails

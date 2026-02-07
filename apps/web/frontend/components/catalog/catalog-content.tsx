@@ -2,16 +2,16 @@
 
 import { Database, Plus, Search } from "lucide-react";
 import { useCallback, useState } from "react";
+import type { Bundle } from "@/apps/web/frontend/components/catalog/bundles-section";
+import { BundlesSection } from "@/apps/web/frontend/components/catalog/bundles-section";
+import { CatalogCategoryCard } from "@/apps/web/frontend/components/catalog/catalog-category-card";
+import { CategoryDialog } from "@/apps/web/frontend/components/catalog/category-dialog";
+import { DeleteConfirmDialog } from "@/apps/web/frontend/components/catalog/delete-confirm-dialog";
+import { DraggableCategory } from "@/apps/web/frontend/components/catalog/draggable-category";
+import { ItemDialog } from "@/apps/web/frontend/components/catalog/item-dialog";
+import { SubcategoryDialog } from "@/apps/web/frontend/components/catalog/subcategory-dialog";
 import { Button } from "@/apps/web/frontend/components/ui/button";
 import { Input } from "@/apps/web/frontend/components/ui/input";
-import type { Bundle } from "./bundles-section";
-import { BundlesSection } from "./bundles-section";
-import { CatalogCategoryCard } from "./catalog-category-card";
-import { CategoryDialog } from "./category-dialog";
-import { DeleteConfirmDialog } from "./delete-confirm-dialog";
-import { DraggableCategory } from "./draggable-category";
-import { ItemDialog } from "./item-dialog";
-import { SubcategoryDialog } from "./subcategory-dialog";
 
 export interface CatalogItemData {
   id: string;

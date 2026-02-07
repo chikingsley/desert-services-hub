@@ -1,5 +1,11 @@
 import { AlertTriangle, Paperclip } from "lucide-react";
 import { useMemo, useState } from "react";
+import {
+  PIPELINE_STAGES,
+  type PipelineContract,
+  type PipelineStage,
+  STAGE_CONFIG,
+} from "@/apps/web/frontend/components/contracts/types";
 import { Badge } from "@/apps/web/frontend/components/ui/badge";
 import { Input } from "@/apps/web/frontend/components/ui/input";
 import {
@@ -18,12 +24,6 @@ import {
   TableRow,
 } from "@/apps/web/frontend/components/ui/table";
 import { formatCurrency, formatDate } from "@/lib/utils";
-import {
-  PIPELINE_STAGES,
-  type PipelineContract,
-  type PipelineStage,
-  STAGE_CONFIG,
-} from "./types";
 
 type SortKey =
   | "receivedDesc"

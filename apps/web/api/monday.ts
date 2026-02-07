@@ -7,7 +7,7 @@
 import { db } from "@lib/db/hub";
 
 // GET /api/monday/search - Search estimates
-export function searchMonday(req: Request): Response {
+export async function searchMonday(req: Request): Promise<Response> {
   try {
     const { searchParams } = new URL(req.url);
     const query = searchParams.get("q");
@@ -18,7 +18,7 @@ export function searchMonday(req: Request): Response {
     }
 
     const likeQuery = `%${query}%`;
-    const items = db
+    const items = await db
       .prepare(
         `SELECT id, monday_item_id, name, estimate_number, contractor,
                 bid_status, bid_value, awarded_value, group_title, monday_url

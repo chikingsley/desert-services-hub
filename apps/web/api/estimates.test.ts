@@ -77,18 +77,18 @@ function makeGetRequest(params: { id: string }): Request & {
 // Cleanup
 // ============================================================================
 
-afterAll(() => {
+afterAll(async () => {
   for (const id of testEstimateIds) {
     try {
-      db.prepare("DELETE FROM estimates WHERE id = ?").run(id);
+      await db.prepare("DELETE FROM estimates WHERE id = ?").run(id);
     } catch {
       // Ignore cleanup errors
     }
   }
   // Verify cleanup
-  const remaining = db
+  const remaining = (await db
     .prepare("SELECT COUNT(*) as count FROM estimates WHERE job_name LIKE ?")
-    .get(`${TEST_PREFIX}%`) as { count: number };
+    .get(`${TEST_PREFIX}%`)) as { count: number };
   if (remaining.count > 0) {
     throw new Error(`Cleanup failed: ${remaining.count} test estimates remain`);
   }
@@ -111,7 +111,7 @@ describe("listEstimates", () => {
     testEstimateIds.push(id);
 
     // List and find our estimate
-    const response = listEstimates();
+    const response = await listEstimates();
     const estimates = (await response.json()) as Array<{
       id: string;
       job_name: string;
@@ -151,9 +151,9 @@ describe("createEstimate", () => {
     testEstimateIds.push(id);
 
     // Query database directly and verify ACTUAL VALUES
-    const row = db
+    const row = (await db
       .prepare("SELECT * FROM estimates WHERE id = ?")
-      .get(id) as EstimateRow;
+      .get(id)) as EstimateRow;
 
     expect(row.job_name).toBe(input.job_name);
     expect(row.job_address).toBe(input.job_address);
@@ -187,9 +187,9 @@ describe("createEstimate", () => {
     testEstimateIds.push(id);
 
     // Verify the description was saved to notes
-    const item = db
+    const item = (await db
       .prepare("SELECT * FROM estimate_line_items WHERE version_id = ?")
-      .get(version_id) as EstimateLineItemRow;
+      .get(version_id)) as EstimateLineItemRow;
 
     expect(item.description).toBe(UNIQUE.ITEM_NAME);
     expect(item.notes).toBe(UNIQUE.ITEM_DESCRIPTION);
@@ -211,9 +211,9 @@ describe("createEstimate", () => {
     };
     testEstimateIds.push(id);
 
-    const section = db
+    const section = (await db
       .prepare("SELECT * FROM estimate_sections WHERE version_id = ?")
-      .get(version_id) as EstimateSectionRow;
+      .get(version_id)) as EstimateSectionRow;
 
     expect(section.name).toBe(UNIQUE.SECTION_NAME);
   });
@@ -241,15 +241,15 @@ describe("createEstimate", () => {
     };
     testEstimateIds.push(id);
 
-    const section = db
+    const section = (await db
       .prepare("SELECT id FROM estimate_sections WHERE version_id = ?")
-      .get(version_id) as { id: string };
+      .get(version_id)) as { id: string };
 
-    const item = db
+    const item = (await db
       .prepare(
         "SELECT section_id FROM estimate_line_items WHERE version_id = ?"
       )
-      .get(version_id) as { section_id: string };
+      .get(version_id)) as { section_id: string };
 
     // Item should reference the NEW section ID, not the original
     expect(item.section_id).toBe(section.id);
@@ -288,13 +288,15 @@ describe("getEstimate", () => {
     testEstimateIds.push(testId);
   });
 
-  test("returns 404 for non-existent estimate", () => {
-    const response = getEstimate(makeGetRequest({ id: "nonexistent-12345" }));
+  test("returns 404 for non-existent estimate", async () => {
+    const response = await getEstimate(
+      makeGetRequest({ id: "nonexistent-12345" })
+    );
     expect(response.status).toBe(404);
   });
 
   test("returns estimate with all the values we saved", async () => {
-    const response = getEstimate(makeGetRequest({ id: testId }));
+    const response = await getEstimate(makeGetRequest({ id: testId }));
     expect(response.status).toBe(200);
 
     const estimate = (await response.json()) as {
@@ -369,11 +371,11 @@ describe("updateEstimate", () => {
     );
 
     // Query database and verify values ACTUALLY changed
-    const row = db
+    const row = (await db
       .prepare(
         "SELECT job_name, client_name, status FROM estimates WHERE id = ?"
       )
-      .get(testId) as {
+      .get(testId)) as {
       job_name: string;
       client_name: string;
       status: string;
@@ -407,15 +409,15 @@ describe("updateEstimate", () => {
       )
     );
 
-    const version = db
+    const version = (await db
       .prepare(
         "SELECT id FROM estimate_versions WHERE quote_id = ? AND is_current = 1"
       )
-      .get(testId) as { id: string };
+      .get(testId)) as { id: string };
 
-    const items = db
+    const items = (await db
       .prepare("SELECT * FROM estimate_line_items WHERE version_id = ?")
-      .all(version.id) as EstimateLineItemRow[];
+      .all(version.id)) as EstimateLineItemRow[];
 
     expect(items).toHaveLength(1);
     expect(items[0].description).toBe(newItemName);
@@ -430,8 +432,8 @@ describe("updateEstimate", () => {
 // ============================================================================
 
 describe("deleteEstimate", () => {
-  test("returns 404 for non-existent estimate", () => {
-    const response = deleteEstimate(
+  test("returns 404 for non-existent estimate", async () => {
+    const response = await deleteEstimate(
       makeGetRequest({ id: "nonexistent-12345" })
     );
     expect(response.status).toBe(404);
@@ -453,30 +455,34 @@ describe("deleteEstimate", () => {
 
     // Verify everything exists first
     expect(
-      db.prepare("SELECT 1 FROM estimates WHERE id = ?").get(id)
+      await db.prepare("SELECT 1 FROM estimates WHERE id = ?").get(id)
     ).toBeTruthy();
     expect(
-      db.prepare("SELECT 1 FROM estimate_versions WHERE id = ?").get(version_id)
+      await db
+        .prepare("SELECT 1 FROM estimate_versions WHERE id = ?")
+        .get(version_id)
     ).toBeTruthy();
 
     // Delete
-    const response = deleteEstimate(makeGetRequest({ id }));
+    const response = await deleteEstimate(makeGetRequest({ id }));
     expect(response.status).toBe(200);
 
     // Verify everything is gone
     expect(
-      db.prepare("SELECT 1 FROM estimates WHERE id = ?").get(id)
+      await db.prepare("SELECT 1 FROM estimates WHERE id = ?").get(id)
     ).toBeNull();
     expect(
-      db.prepare("SELECT 1 FROM estimate_versions WHERE id = ?").get(version_id)
+      await db
+        .prepare("SELECT 1 FROM estimate_versions WHERE id = ?")
+        .get(version_id)
     ).toBeNull();
     expect(
-      db
+      await db
         .prepare("SELECT 1 FROM estimate_sections WHERE version_id = ?")
         .get(version_id)
     ).toBeNull();
     expect(
-      db
+      await db
         .prepare("SELECT 1 FROM estimate_line_items WHERE version_id = ?")
         .get(version_id)
     ).toBeNull();
@@ -514,24 +520,26 @@ describe("duplicateEstimate", () => {
     testEstimateIds.push(originalId);
   });
 
-  test("returns 404 for non-existent estimate", () => {
-    const response = duplicateEstimate(
+  test("returns 404 for non-existent estimate", async () => {
+    const response = await duplicateEstimate(
       makeGetRequest({ id: "nonexistent-12345" })
     );
     expect(response.status).toBe(404);
   });
 
   test("copies all values to new estimate", async () => {
-    const response = duplicateEstimate(makeGetRequest({ id: originalId }));
+    const response = await duplicateEstimate(
+      makeGetRequest({ id: originalId })
+    );
     expect(response.status).toBe(200);
 
     const { id: newId } = (await response.json()) as { id: string };
     testEstimateIds.push(newId);
 
     // Verify the copy has all the same data
-    const copy = db
+    const copy = (await db
       .prepare("SELECT * FROM estimates WHERE id = ?")
-      .get(newId) as EstimateRow;
+      .get(newId)) as EstimateRow;
 
     expect(copy.job_name).toContain("DuplicateOriginal");
     expect(copy.job_name).toContain("(Copy)");
@@ -539,23 +547,23 @@ describe("duplicateEstimate", () => {
     expect(copy.client_email).toBe(UNIQUE.CLIENT_EMAIL);
 
     // Verify section was copied
-    const copyVersion = db
+    const copyVersion = (await db
       .prepare(
         "SELECT id FROM estimate_versions WHERE quote_id = ? AND is_current = 1"
       )
-      .get(newId) as { id: string };
+      .get(newId)) as { id: string };
 
-    const copySections = db
+    const copySections = (await db
       .prepare("SELECT name FROM estimate_sections WHERE version_id = ?")
-      .all(copyVersion.id) as Array<{ name: string }>;
+      .all(copyVersion.id)) as Array<{ name: string }>;
 
     expect(copySections).toHaveLength(1);
     expect(copySections[0].name).toBe(UNIQUE.SECTION_NAME);
 
     // Verify line item was copied WITH DESCRIPTION
-    const copyItems = db
+    const copyItems = (await db
       .prepare("SELECT * FROM estimate_line_items WHERE version_id = ?")
-      .all(copyVersion.id) as EstimateLineItemRow[];
+      .all(copyVersion.id)) as EstimateLineItemRow[];
 
     expect(copyItems).toHaveLength(1);
     expect(copyItems[0].description).toBe(UNIQUE.ITEM_NAME);
@@ -615,7 +623,7 @@ describe("getEstimatePdf", () => {
     // Instead of parsing the PDF (complex), verify the transformation is correct
     // by checking what getEstimate returns (which is what gets transformed to PDF)
 
-    const response = getEstimate(makeGetRequest({ id: testId }));
+    const response = await getEstimate(makeGetRequest({ id: testId }));
     const estimate = (await response.json()) as {
       job_name: string;
       client_name: string;
@@ -676,9 +684,9 @@ describe("edge cases", () => {
     };
     testEstimateIds.push(id);
 
-    const item = db
+    const item = (await db
       .prepare("SELECT notes FROM estimate_line_items WHERE version_id = ?")
-      .get(version_id) as { notes: string | null };
+      .get(version_id)) as { notes: string | null };
 
     // Empty string should become null, not saved as ""
     expect(item.notes).toBeNull();
@@ -706,9 +714,9 @@ describe("edge cases", () => {
     };
     testEstimateIds.push(id);
 
-    const item = db
+    const item = (await db
       .prepare("SELECT notes FROM estimate_line_items WHERE version_id = ?")
-      .get(version_id) as { notes: string | null };
+      .get(version_id)) as { notes: string | null };
 
     expect(item.notes).toBeNull();
   });
@@ -735,11 +743,11 @@ describe("edge cases", () => {
     };
     testEstimateIds.push(id);
 
-    const item = db
+    const item = (await db
       .prepare(
         "SELECT description, notes FROM estimate_line_items WHERE version_id = ?"
       )
-      .get(version_id) as { description: string; notes: string | null };
+      .get(version_id)) as { description: string; notes: string | null };
 
     expect(item.description).toBe("Same Value");
     expect(item.notes).toBeNull(); // Should not duplicate
@@ -768,9 +776,9 @@ describe("edge cases", () => {
     };
     testEstimateIds.push(id);
 
-    const item = db
+    const item = (await db
       .prepare("SELECT notes FROM estimate_line_items WHERE version_id = ?")
-      .get(version_id) as { notes: string | null };
+      .get(version_id)) as { notes: string | null };
 
     expect(item.notes).toBe("Notes Value");
   });

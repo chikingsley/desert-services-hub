@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   PdfHighlighter,
   type PdfHighlighterUtils,
@@ -71,6 +71,15 @@ export function TakeoffViewer({
     startY: number;
     type: "count" | "polyline" | "polygon";
   } | null>(null);
+
+  // O(1) annotation lookup by id (avoids linear scan on every drag mousemove)
+  const annotationById = useMemo(() => {
+    const map = new Map<string, TakeoffAnnotation>();
+    for (const ann of annotations) {
+      map.set(ann.id, ann);
+    }
+    return map;
+  }, [annotations]);
 
   const getViewer = useCallback(() => {
     return highlighterUtilsRef.current?.getViewer() ?? null;
@@ -289,6 +298,14 @@ export function TakeoffViewer({
     [activeTool, drawingPoints.length, currentPageNumber, findPageFromPoint]
   );
 
+  // Refs for stable keydown listener (avoids teardown/re-register on every point add)
+  const drawingPointsRef = useRef(drawingPoints);
+  drawingPointsRef.current = drawingPoints;
+  const handlePdfDoubleClickRef = useRef(handlePdfDoubleClick);
+  handlePdfDoubleClickRef.current = handlePdfDoubleClick;
+  const onToolClearRef = useRef(onToolClear);
+  onToolClearRef.current = onToolClear;
+
   // Handle escape to cancel drawing
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -296,14 +313,14 @@ export function TakeoffViewer({
         setDrawingPoints([]);
         setCurrentPageNumber(null);
         setCursorPosition(null);
-        onToolClear();
-      } else if (e.key === "Enter" && drawingPoints.length > 0) {
-        handlePdfDoubleClick();
+        onToolClearRef.current();
+      } else if (e.key === "Enter" && drawingPointsRef.current.length > 0) {
+        handlePdfDoubleClickRef.current();
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [drawingPoints, handlePdfDoubleClick, onToolClear]);
+  }, []);
 
   // Handle drag start
   const _handleDragStart = useCallback(
@@ -334,7 +351,7 @@ export function TakeoffViewer({
         return;
       }
 
-      const ann = annotations.find((a) => a.id === dragging.id);
+      const ann = annotationById.get(dragging.id);
       if (!ann) {
         return;
       }
@@ -399,7 +416,7 @@ export function TakeoffViewer({
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [dragging, annotations, getViewer, onAnnotationUpdate]);
+  }, [dragging, annotationById, getViewer, onAnnotationUpdate]);
 
   // Inject annotations into PDF page layers
   useEffect(() => {
@@ -582,7 +599,7 @@ export function TakeoffViewer({
       }
 
       const annId = annotationEl.dataset.annotationId;
-      const ann = annotations.find((a) => a.id === annId);
+      const ann = annId ? annotationById.get(annId) : undefined;
       if (!ann || activeTool) {
         return;
       }
@@ -640,7 +657,14 @@ export function TakeoffViewer({
         );
       }
     };
-  }, [viewerReady, annotations, activeTool, getViewer, onAnnotationDelete]);
+  }, [
+    viewerReady,
+    annotations,
+    activeTool,
+    getViewer,
+    onAnnotationDelete,
+    annotationById,
+  ]);
 
   // Render current drawing preview
   const renderDrawingPreview = () => {

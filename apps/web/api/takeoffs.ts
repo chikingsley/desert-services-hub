@@ -5,10 +5,10 @@
 import { db } from "@lib/db/hub";
 
 // GET /api/takeoffs - List all takeoffs
-export function listTakeoffs(): Response {
-  const takeoffs = db
+export async function listTakeoffs(): Promise<Response> {
+  const takeoffs = (await db
     .prepare("SELECT * FROM takeoffs ORDER BY created_at DESC")
-    .all() as Record<string, unknown>[];
+    .all()) as Record<string, unknown>[];
 
   return Response.json(
     takeoffs.map((t) => ({
@@ -24,21 +24,23 @@ export async function createTakeoff(req: Request): Promise<Response> {
   const body = (await req.json()) as Record<string, unknown>;
   const id = crypto.randomUUID();
 
-  db.prepare(
-    `INSERT INTO takeoffs (id, name, pdf_url, annotations, page_scales, status)
+  await db
+    .prepare(
+      `INSERT INTO takeoffs (id, name, pdf_url, annotations, page_scales, status)
      VALUES (?, ?, ?, ?, ?, ?)`
-  ).run(
-    id,
-    (body.name as string) || "Untitled Takeoff",
-    (body.pdf_url as string) || null,
-    JSON.stringify((body.annotations as unknown[]) || []),
-    JSON.stringify((body.page_scales as Record<string, unknown>) || {}),
-    (body.status as string) || "draft"
-  );
+    )
+    .run(
+      id,
+      (body.name as string) || "Untitled Takeoff",
+      (body.pdf_url as string) || null,
+      JSON.stringify((body.annotations as unknown[]) || []),
+      JSON.stringify((body.page_scales as Record<string, unknown>) || {}),
+      (body.status as string) || "draft"
+    );
 
-  const takeoff = db
+  const takeoff = (await db
     .prepare("SELECT * FROM takeoffs WHERE id = ?")
-    .get(id) as Record<string, unknown>;
+    .get(id)) as Record<string, unknown>;
 
   return Response.json({
     ...takeoff,

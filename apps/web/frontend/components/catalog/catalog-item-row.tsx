@@ -2,6 +2,7 @@
 
 import { Edit2, Eye, EyeOff, Info, Trash2 } from "lucide-react";
 import { useState } from "react";
+import type { CatalogItemData } from "@/apps/web/frontend/components/catalog/catalog-content";
 import { Button } from "@/apps/web/frontend/components/ui/button";
 import { Input } from "@/apps/web/frontend/components/ui/input";
 import {
@@ -11,7 +12,6 @@ import {
   TooltipTrigger,
 } from "@/apps/web/frontend/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import type { CatalogItemData } from "./catalog-content";
 
 interface CatalogItemRowProps {
   item: CatalogItemData;

@@ -11,7 +11,7 @@
 
 import { getStatus } from "@/apps/workers/swppp-sync/lib/sync";
 
-const status = getStatus();
+const status = await getStatus();
 
 console.log("SWPPP Work Orders Status");
 console.log("========================\n");

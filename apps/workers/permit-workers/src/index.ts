@@ -11,11 +11,6 @@ import {
   handleBrowserStop,
 } from "@/api/browser";
 import {
-  handleListTemplates,
-  handleSendEmail,
-  handleSwpppEmail,
-} from "@/api/email";
-import {
   handleClosePermit,
   handleCreatePermit,
   handleDeleteAllDrafts,
@@ -139,27 +134,6 @@ const server = serve({
     "/api/browser/stop": {
       POST() {
         return handleBrowserStop();
-      },
-    },
-
-    // ============================================
-    // Email API
-    // ============================================
-    "/api/email/templates": {
-      GET() {
-        return handleListTemplates();
-      },
-    },
-    "/api/email/send": {
-      async POST(req) {
-        const body = await req.json();
-        return handleSendEmail(body);
-      },
-    },
-    "/swppp-plan-notifications": {
-      async POST(req) {
-        const body = await req.json();
-        return handleSwpppEmail(body);
       },
     },
 

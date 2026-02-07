@@ -36,7 +36,7 @@ RUN bun install --frozen-lockfile
 COPY . .
 
 # Copy startup script
-COPY scripts/start-stack.sh /start-stack.sh
+COPY start-stack.sh /start-stack.sh
 RUN chmod +x /start-stack.sh
 
 # Expose ports

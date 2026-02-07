@@ -28,8 +28,10 @@ function parseAttachmentRow(row: Record<string, unknown>): Attachment {
   };
 }
 
-export function insertAttachment(data: InsertAttachmentData): number {
-  const result = db.run(
+export async function insertAttachment(
+  data: InsertAttachmentData
+): Promise<number> {
+  const result = await db.run(
     `INSERT INTO attachments (email_id, attachment_id, name, content_type, size, storage_bucket, storage_path)
      VALUES (?, ?, ?, ?, ?, ?, ?)
      ON CONFLICT(email_id, attachment_id) DO UPDATE SET
@@ -52,8 +54,10 @@ export function insertAttachment(data: InsertAttachmentData): number {
   return Number(result.lastInsertRowid);
 }
 
-export function getAttachmentsForEmail(emailId: number): Attachment[] {
-  const rows = db
+export async function getAttachmentsForEmail(
+  emailId: number
+): Promise<Attachment[]> {
+  const rows = await db
     .query<Record<string, unknown>, [number]>(
       "SELECT * FROM attachments WHERE email_id = ? ORDER BY name"
     )
@@ -62,8 +66,10 @@ export function getAttachmentsForEmail(emailId: number): Attachment[] {
   return rows.map(parseAttachmentRow);
 }
 
-export function getAttachmentById(id: number): Attachment | null {
-  const row = db
+export async function getAttachmentById(
+  id: number
+): Promise<Attachment | null> {
+  const row = await db
     .query<Record<string, unknown>, [number]>(
       "SELECT * FROM attachments WHERE id = ?"
     )
@@ -72,8 +78,10 @@ export function getAttachmentById(id: number): Attachment | null {
   return row ? parseAttachmentRow(row) : null;
 }
 
-export function getPendingAttachments(limit = 100): Attachment[] {
-  const rows = db
+export async function getPendingAttachments(
+  limit = 100
+): Promise<Attachment[]> {
+  const rows = await db
     .query<Record<string, unknown>, [number]>(
       `SELECT * FROM attachments
        WHERE extraction_status = 'pending'
@@ -85,31 +93,31 @@ export function getPendingAttachments(limit = 100): Attachment[] {
   return rows.map(parseAttachmentRow);
 }
 
-export function updateAttachmentExtraction(
+export async function updateAttachmentExtraction(
   attachmentId: number,
   status: ExtractionStatus,
   extractedText?: string | null,
   error?: string | null
-): void {
-  db.run(
+): Promise<void> {
+  await db.run(
     `UPDATE attachments
      SET extraction_status = ?,
          extracted_text = ?,
          extraction_error = ?,
-         extracted_at = datetime('now')
+         extracted_at = now()
      WHERE id = ?`,
     [status, extractedText ?? null, error ?? null, attachmentId]
   );
 }
 
-export function getAttachmentStats(): {
+export async function getAttachmentStats(): Promise<{
   total: number;
   pending: number;
   success: number;
   failed: number;
   skipped: number;
-} {
-  const rows = db
+}> {
+  const rows = await db
     .query<{ status: string; count: number }, []>(
       `SELECT extraction_status as status, COUNT(*) as count
        FROM attachments
@@ -141,13 +149,13 @@ export function getAttachmentStats(): {
   return stats;
 }
 
-export function searchAttachments(
+export async function searchAttachments(
   searchTerm: string,
   limit = 100
-): Attachment[] {
+): Promise<Attachment[]> {
   const pattern = `%${searchTerm}%`;
 
-  const rows = db
+  const rows = await db
     .query<Record<string, unknown>, [string, string, string, number]>(
       `SELECT a.*
        FROM attachments a
@@ -164,13 +172,13 @@ export function searchAttachments(
   return rows.map(parseAttachmentRow);
 }
 
-export function searchEmailsFullText(
+export async function searchEmailsFullText(
   query: string,
   limit = 50
-): Array<Email & { matchSource: "subject" | "body" | "attachment" }> {
+): Promise<Array<Email & { matchSource: "subject" | "body" | "attachment" }>> {
   const pattern = `%${query}%`;
 
-  const emailRows = db
+  const emailRows = await db
     .query<
       Record<string, unknown> & { match_source: string },
       [string, string, string, number]
@@ -198,7 +206,7 @@ export function searchEmailsFullText(
     });
   }
 
-  const attachmentRows = db
+  const attachmentRows = await db
     .query<{ email_id: number }, [string, number]>(
       `SELECT DISTINCT email_id
        FROM attachments
@@ -212,7 +220,7 @@ export function searchEmailsFullText(
       continue;
     }
 
-    const email = getEmailById(email_id);
+    const email = await getEmailById(email_id);
     if (email) {
       results.push({ ...email, matchSource: "attachment" });
     }
@@ -221,6 +229,6 @@ export function searchEmailsFullText(
   return results.slice(0, limit);
 }
 
-export function clearAttachments(): void {
-  db.run("DELETE FROM attachments");
+export async function clearAttachments(): Promise<void> {
+  await db.run("DELETE FROM attachments");
 }

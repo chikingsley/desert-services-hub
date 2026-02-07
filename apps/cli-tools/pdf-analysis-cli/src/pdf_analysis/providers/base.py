@@ -33,6 +33,10 @@ class BaseProvider(ABC):
     ) -> ExtractResult:
         raise NotImplementedError
 
+    async def chat(self, prompt: str) -> ExtractResult:
+        """Text-only chat completion (no PDF/OCR). Override for provider-specific impl."""
+        raise NotImplementedError(f"{self.name.value} does not support chat()")
+
     @abstractmethod
     async def identify(self, pdf_path: Path) -> IdentifyResult:
         raise NotImplementedError

@@ -1,5 +1,0 @@
----name: gsd:whats-newdescription: See what's new in GSD since your installed version---<objective>Display changes between installed version and latest available version.Shows version comparison, changelog entries for missed versions, and update instructions.</objective><process><step name="get_installed_version">Read installed version from VERSION file:```bashcat ./.claude/get-shit-done/VERSION 2>/dev/null```text```bash
-```html```bashcat ./.claude/get-shit-done/CHANGELOG.md 2>/dev/null```html```bash
-```text```bash
-
-```**Breaking changes:** Surface prominently with **BREAKING:** prefix in the output.</step></process><success_criteria>- [ ] Installed version read from VERSION file- [ ] Remote changelog fetched (or graceful fallback to local)- [ ] Version comparison displayed clearly- [ ] Changes since installed version shown (if any)- [ ] Update instructions provided when behind</success_criteria>

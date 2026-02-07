@@ -35,9 +35,11 @@ export function parseFolderName(name: string): {
  * Tries: outlook_folder exact match → normalized_name → project_aliases.
  * Returns project ID or null. Never creates.
  */
-export function findProjectByFolder(folderName: string): number | null {
+export async function findProjectByFolder(
+  folderName: string
+): Promise<number | null> {
   // 1. Exact outlook_folder match
-  const byFolder = db
+  const byFolder = await db
     .query<{ id: number }, [string]>(
       "SELECT id FROM projects WHERE outlook_folder = ?"
     )
@@ -50,7 +52,7 @@ export function findProjectByFolder(folderName: string): number | null {
   //    Handles cases like "Fox Residence - 6505 N 43rd Place" where the full
   //    string IS the project name (not "PROJECT - CONTRACTOR" format)
   const fullNormalized = folderName.toLowerCase().replace(/[^a-z0-9]/g, "");
-  const byFullName = db
+  const byFullName = await db
     .query<{ id: number }, [string]>(
       "SELECT id FROM projects WHERE normalized_name = ?"
     )
@@ -63,7 +65,7 @@ export function findProjectByFolder(folderName: string): number | null {
   const { projectName } = parseFolderName(folderName);
   const normalized = projectName.toLowerCase().replace(/[^a-z0-9]/g, "");
   if (normalized !== fullNormalized) {
-    const byParsedName = db
+    const byParsedName = await db
       .query<{ id: number }, [string]>(
         "SELECT id FROM projects WHERE normalized_name = ?"
       )
@@ -79,7 +81,7 @@ export function findProjectByFolder(folderName: string): number | null {
       .toLowerCase()
       .replace(/[^\w\s]/g, "")
       .trim();
-    const byAlias = db
+    const byAlias = await db
       .query<{ project_id: number }, [string]>(
         "SELECT project_id FROM project_aliases WHERE normalized_alias = ?"
       )

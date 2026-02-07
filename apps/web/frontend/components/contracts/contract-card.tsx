@@ -25,14 +25,14 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Badge } from "@/apps/web/frontend/components/ui/badge";
-import { Button } from "@/apps/web/frontend/components/ui/button";
-import { cn } from "@/lib/utils";
 import {
   type PipelineContract,
   type PipelineStage,
   STAGE_CONFIG,
-} from "./types";
+} from "@/apps/web/frontend/components/contracts/types";
+import { Badge } from "@/apps/web/frontend/components/ui/badge";
+import { Button } from "@/apps/web/frontend/components/ui/button";
+import { cn } from "@/lib/utils";
 
 interface ContractCardProps {
   contract: PipelineContract;

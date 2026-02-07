@@ -12,16 +12,17 @@ import { db } from "@lib/db/hub";
  * @param source - Who/what made this link: 'agent', 'script', 'manual'
  * @param detail - Optional detail about why this link was made
  */
-export function linkEmailToEstimate(
+export async function linkEmailToEstimate(
   estimateId: number,
   emailId: number,
   source: "agent" | "script" | "manual" = "manual",
   detail?: string
-): boolean {
+): Promise<boolean> {
   try {
-    db.run(
-      `INSERT OR IGNORE INTO estimate_emails (estimate_id, email_id, match_type, match_detail)
-       VALUES (?, ?, ?, ?)`,
+    await db.run(
+      `INSERT INTO estimate_emails (estimate_id, email_id, match_type, match_detail)
+       VALUES (?, ?, ?, ?)
+       ON CONFLICT DO NOTHING`,
       [estimateId, emailId, source, detail || null]
     );
     return true;
@@ -33,15 +34,15 @@ export function linkEmailToEstimate(
 /**
  * Link multiple emails to an estimate.
  */
-export function linkEmailsToEstimate(
+export async function linkEmailsToEstimate(
   estimateId: number,
   emailIds: number[],
   source: "agent" | "script" | "manual" = "manual",
   detail?: string
-): number {
+): Promise<number> {
   let linked = 0;
   for (const emailId of emailIds) {
-    if (linkEmailToEstimate(estimateId, emailId, source, detail)) {
+    if (await linkEmailToEstimate(estimateId, emailId, source, detail)) {
       linked++;
     }
   }
@@ -51,22 +52,22 @@ export function linkEmailsToEstimate(
 /**
  * Remove a link between an email and estimate.
  */
-export function unlinkEmailFromEstimate(
+export async function unlinkEmailFromEstimate(
   estimateId: number,
   emailId: number
-): boolean {
-  const result = db.run(
+): Promise<boolean> {
+  const result = await db.run(
     "DELETE FROM estimate_emails WHERE estimate_id = ? AND email_id = ?",
     [estimateId, emailId]
   );
-  return result.changes > 0;
+  return result.count > 0;
 }
 
 /**
  * Get all emails linked to an estimate.
  */
-export function getEstimateEmails(estimateId: number) {
-  return db
+export async function getEstimateEmails(estimateId: number) {
+  return await db
     .query<
       {
         email_id: number;
@@ -96,8 +97,8 @@ export function getEstimateEmails(estimateId: number) {
 /**
  * Get all estimates linked to an email.
  */
-export function getEmailEstimates(emailId: number) {
-  return db
+export async function getEmailEstimates(emailId: number) {
+  return await db
     .query<
       {
         estimate_id: number;
@@ -122,8 +123,8 @@ export function getEmailEstimates(emailId: number) {
 /**
  * Find estimate by number or name pattern.
  */
-export function findEstimate(search: string) {
-  return db
+export async function findEstimate(search: string) {
+  return await db
     .query<
       {
         id: number;
@@ -150,9 +151,9 @@ export function findEstimate(search: string) {
 /**
  * Find email by subject or ID.
  */
-export function findEmail(search: string | number) {
+export async function findEmail(search: string | number) {
   if (typeof search === "number") {
-    return db
+    return await db
       .query<
         {
           id: number;
@@ -165,7 +166,7 @@ export function findEmail(search: string | number) {
       .get(search);
   }
 
-  return db
+  return await db
     .query<
       {
         id: number;

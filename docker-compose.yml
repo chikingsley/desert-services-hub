@@ -1,43 +1,77 @@
 services:
   # ==========================================================================
-  # Desert Services Hub - Bun Application
+  # Web App — Frontend SPA + API (estimates, takeoffs, catalog)
   # ==========================================================================
-  app:
+  web:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: desert-app
+    container_name: desert-web
     ports:
       - "3000:3000"
+    env_file: .env
     environment:
       NODE_ENV: production
-      # Database path (inside container, backed by volume)
-      HUB_DATABASE_PATH: /app/data/hub.db
-    volumes:
-      # Persist SQLite database outside container
-      - app_data:/app/data
+      PORT: 3000
+      DATABASE_URL: postgresql://postgres:postgres@host.docker.internal:54322/postgres
+      MONDAY_FILES_DIR: /app/data/monday-files
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
-      interval: 30s
-      timeout: 10s
+      test: ["CMD", "bun", "-e", "const r = await fetch('http://localhost:3000/api/health'); if (!r.ok) process.exit(1);"]
+      interval: 10s
+      timeout: 5s
       retries: 3
-      start_period: 40s
+      start_period: 5s
     restart: unless-stopped
+    command: ["bun", "run", "apps/web/server.ts"]
 
-volumes:
-  app_data:
-    driver: local
+  # ==========================================================================
+  # Webhooks — Monday + Outlook webhook receiver + background worker
+  # ==========================================================================
+  webhooks:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: desert-webhooks
+    ports:
+      - "4747:4747"
+    env_file: .env
+    environment:
+      NODE_ENV: production
+      WEBHOOK_PORT: 4747
+      DATABASE_URL: postgresql://postgres:postgres@host.docker.internal:54322/postgres
+      MONDAY_FILES_DIR: /app/data/monday-files
+    healthcheck:
+      test: ["CMD", "bun", "-e", "const r = await fetch('http://localhost:4747/api/health'); if (!r.ok) process.exit(1);"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    restart: unless-stopped
+    command: ["bun", "run", "apps/web/webhooks.ts"]
+
+  # ==========================================================================
+  # Cloudflare Tunnel — Exposes webhooks publicly for Monday/Outlook callbacks
+  # ==========================================================================
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    container_name: desert-tunnel
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
+    depends_on:
+      webhooks:
+        condition: service_healthy
+    restart: unless-stopped
 
 # =============================================================================
 # Usage
 # =============================================================================
 #
-# Start:                 docker compose up -d
-# View logs:             docker compose logs -f app
-# Rebuild after changes: docker compose build app && docker compose up -d app
+# Start everything:
+#   docker compose up -d
 #
-# App (Desert Services Hub):
-#   URL:           http://localhost:3000
-#   Database:      SQLite persisted in app_data volume
+# Web app:        http://localhost:3000
+# Webhooks:       http://localhost:4747 (tunneled to monday-estimates.desertservices.app)
 #
+# Logs:           docker compose logs -f web
+#                 docker compose logs -f webhooks
+# Rebuild:        docker compose build && docker compose up -d
 # =============================================================================

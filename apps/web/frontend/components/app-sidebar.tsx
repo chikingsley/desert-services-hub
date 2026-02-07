@@ -1,6 +1,7 @@
 import {
   FileCheck,
   FileText,
+  MapPin,
   Package,
   Rocket,
   Search,
@@ -34,7 +35,10 @@ const mainNavItems = [
   },
 ];
 
-const manageItems = [{ title: "Catalog", href: "/catalog", icon: Package }];
+const manageItems = [
+  { title: "Catalog", href: "/catalog", icon: Package },
+  { title: "Map", href: "/map", icon: MapPin },
+];
 
 const utilityItems = [
   { title: "Search", href: "/search", icon: Search, disabled: true },

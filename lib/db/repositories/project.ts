@@ -36,20 +36,20 @@ function parseProjectRow(row: Record<string, unknown>): Project {
   };
 }
 
-export function createProject(
+export async function createProject(
   name: string,
   accountId?: number,
   address?: string
-): Project {
+): Promise<Project> {
   const normalized = name.toLowerCase().replace(/[^a-z0-9]/g, "");
 
-  db.run(
+  await db.run(
     `INSERT INTO projects (name, normalized_name, account_id, address)
      VALUES (?, ?, ?, ?)`,
     [name, normalized, accountId ?? null, address ?? null]
   );
 
-  const row = db
+  const row = await db
     .query<Record<string, unknown>, []>(
       "SELECT * FROM projects WHERE id = last_insert_rowid()"
     )
@@ -61,8 +61,8 @@ export function createProject(
   return parseProjectRow(row);
 }
 
-export function getProjectById(id: number): Project | null {
-  const row = db
+export async function getProjectById(id: number): Promise<Project | null> {
+  const row = await db
     .query<Record<string, unknown>, [number]>(
       "SELECT * FROM projects WHERE id = ?"
     )
@@ -71,8 +71,10 @@ export function getProjectById(id: number): Project | null {
   return row ? parseProjectRow(row) : null;
 }
 
-export function getProjectsForAccount(accountId: number): Project[] {
-  const rows = db
+export async function getProjectsForAccount(
+  accountId: number
+): Promise<Project[]> {
+  const rows = await db
     .query<Record<string, unknown>, [number]>(
       "SELECT * FROM projects WHERE account_id = ? ORDER BY last_seen DESC"
     )
@@ -81,8 +83,8 @@ export function getProjectsForAccount(accountId: number): Project[] {
   return rows.map(parseProjectRow);
 }
 
-export function getAllProjects(): Project[] {
-  const rows = db
+export async function getAllProjects(): Promise<Project[]> {
+  const rows = await db
     .query<Record<string, unknown>, []>(
       "SELECT * FROM projects ORDER BY last_seen DESC"
     )
@@ -91,24 +93,30 @@ export function getAllProjects(): Project[] {
   return rows.map(parseProjectRow);
 }
 
-export function linkEmailToProject(emailId: number, projectId: number): void {
-  db.run("UPDATE emails SET project_id = ? WHERE id = ?", [projectId, emailId]);
+export async function linkEmailToProject(
+  emailId: number,
+  projectId: number
+): Promise<void> {
+  await db.run("UPDATE emails SET project_id = ? WHERE id = ?", [
+    projectId,
+    emailId,
+  ]);
 
-  db.run(
+  await db.run(
     `
     UPDATE projects SET
       email_count = (SELECT COUNT(*) FROM emails WHERE project_id = projects.id),
       first_seen = (SELECT MIN(received_at) FROM emails WHERE project_id = projects.id),
       last_seen = (SELECT MAX(received_at) FROM emails WHERE project_id = projects.id),
-      updated_at = datetime('now')
+      updated_at = now()
     WHERE id = ?
   `,
     [projectId]
   );
 }
 
-export function getEmailsForProject(projectId: number): Email[] {
-  const rows = db
+export async function getEmailsForProject(projectId: number): Promise<Email[]> {
+  const rows = await db
     .query<Record<string, unknown>, [number]>(
       "SELECT * FROM emails WHERE project_id = ? ORDER BY received_at ASC"
     )
@@ -117,8 +125,8 @@ export function getEmailsForProject(projectId: number): Email[] {
   return rows.map(parseEmailRow);
 }
 
-export function getEmailsForAccount(accountId: number): Email[] {
-  const rows = db
+export async function getEmailsForAccount(accountId: number): Promise<Email[]> {
+  const rows = await db
     .query<Record<string, unknown>, [number]>(
       "SELECT * FROM emails WHERE account_id = ? ORDER BY received_at DESC"
     )
@@ -131,11 +139,11 @@ export function getEmailsForAccount(accountId: number): Email[] {
 // Project Alias Functions
 // ============================================
 
-export function addProjectAlias(
+export async function addProjectAlias(
   projectId: number,
   alias: string,
   source: "manual" | "monday" | "learned" = "manual"
-): boolean {
+): Promise<boolean> {
   const normalized = alias
     .toLowerCase()
     .replace(/[^\w\s]/g, "")
@@ -145,9 +153,10 @@ export function addProjectAlias(
   }
 
   try {
-    db.run(
-      `INSERT OR IGNORE INTO project_aliases (project_id, alias, normalized_alias, source)
-       VALUES (?, ?, ?, ?)`,
+    await db.run(
+      `INSERT INTO project_aliases (project_id, alias, normalized_alias, source)
+       VALUES (?, ?, ?, ?)
+       ON CONFLICT DO NOTHING`,
       [projectId, alias, normalized, source]
     );
     return true;
@@ -156,12 +165,14 @@ export function addProjectAlias(
   }
 }
 
-export function getProjectByAlias(alias: string): Project | null {
+export async function getProjectByAlias(
+  alias: string
+): Promise<Project | null> {
   const normalized = alias
     .toLowerCase()
     .replace(/[^\w\s]/g, "")
     .trim();
-  const row = db
+  const row = await db
     .query<{ project_id: number }, [string]>(
       "SELECT project_id FROM project_aliases WHERE normalized_alias = ?"
     )
@@ -173,8 +184,10 @@ export function getProjectByAlias(alias: string): Project | null {
   return getProjectById(row.project_id);
 }
 
-export function getAliasesForProject(projectId: number): string[] {
-  const rows = db
+export async function getAliasesForProject(
+  projectId: number
+): Promise<string[]> {
+  const rows = await db
     .query<{ alias: string }, [number]>(
       "SELECT alias FROM project_aliases WHERE project_id = ?"
     )
@@ -182,8 +195,8 @@ export function getAliasesForProject(projectId: number): string[] {
   return rows.map((r) => r.alias);
 }
 
-export function findProjectByText(text: string): Project | null {
-  const byAlias = getProjectByAlias(text);
+export async function findProjectByText(text: string): Promise<Project | null> {
+  const byAlias = await getProjectByAlias(text);
   if (byAlias) {
     return byAlias;
   }
@@ -192,7 +205,7 @@ export function findProjectByText(text: string): Project | null {
     .toLowerCase()
     .replace(/[^\w\s]/g, "")
     .replace(/\s+/g, "");
-  const row = db
+  const row = await db
     .query<Record<string, unknown>, [string]>(
       "SELECT * FROM projects WHERE normalized_name = ?"
     )
@@ -203,8 +216,8 @@ export function findProjectByText(text: string): Project | null {
   }
   return null;
 }
-export function getAllProjectNames(): [number, string][] {
-  const rows = db
+export async function getAllProjectNames(): Promise<[number, string][]> {
+  const rows = await db
     .query<{ id: number; name: string }, []>("SELECT id, name FROM projects")
     .all();
   return rows.map((r) => [r.id, r.name]);

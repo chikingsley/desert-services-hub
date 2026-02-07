@@ -4,6 +4,13 @@ default:
 install:
     uv sync
 
+clean:
+    find . -type d -name "__pycache__" -prune -exec find {} -type f -delete \; -exec rmdir {} \; 2>/dev/null || true
+    find . -type d -name ".pytest_cache" -prune -exec find {} -type f -delete \; -exec find {} -depth -type d -empty -delete \; 2>/dev/null || true
+    find . -type d -name ".ruff_cache" -prune -exec find {} -type f -delete \; -exec find {} -depth -type d -empty -delete \; 2>/dev/null || true
+    find . -type d -name ".venv" -prune -exec find {} \( -type f -o -type l \) -exec unlink {} \; \; -exec find {} -depth -type d -empty -delete \; 2>/dev/null || true
+    find . -name ".DS_Store" -type f -delete 2>/dev/null || true
+
 status:
     uv run pdf-analysis status
 
@@ -18,6 +25,12 @@ estimate pdf_path:
 
 estimate-text pdf_path:
     uv run pdf-analysis estimate {{pdf_path}} --format text
+
+noi pdf_path:
+    uv run pdf-analysis noi {{pdf_path}}
+
+noi-text pdf_path:
+    uv run pdf-analysis noi {{pdf_path}} --format text
 
 check:
     uv run ruff check src/

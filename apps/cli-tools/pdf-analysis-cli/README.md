@@ -11,7 +11,7 @@ This package replaces the old split between `services/mistral` and `plan-analysi
 ## Quick Start
 
 ```bash
-cd apps/pdf-analysis
+cd apps/cli-tools/pdf-analysis-cli
 uv sync
 ```
 
@@ -66,3 +66,4 @@ uv run pytest -k provider
 
 - `--provider auto` uses `PDF_ANALYSIS_PROVIDER_ORDER`.
 - OCR outputs can be emitted as `text`, `markdown`, or `json`.
+- Use `just clean` to remove local caches/virtualenv artifacts.

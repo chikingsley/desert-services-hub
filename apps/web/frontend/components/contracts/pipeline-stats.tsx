@@ -4,7 +4,7 @@
  */
 import { CheckCircle, Flame, TrendingUp, Zap } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import type { PipelineContract } from "./types";
+import type { PipelineContract } from "@/apps/web/frontend/components/contracts/types";
 
 interface PipelineStatsProps {
   contracts: PipelineContract[];

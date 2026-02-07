@@ -2,6 +2,7 @@
 
 import { Crosshair } from "lucide-react";
 import { useEffect, useState } from "react";
+import { UnitCombobox } from "@/apps/web/frontend/components/catalog/unit-combobox";
 import { Button } from "@/apps/web/frontend/components/ui/button";
 import {
   Dialog,
@@ -15,7 +16,6 @@ import { Input } from "@/apps/web/frontend/components/ui/input";
 import { Label } from "@/apps/web/frontend/components/ui/label";
 import { Switch } from "@/apps/web/frontend/components/ui/switch";
 import { Textarea } from "@/apps/web/frontend/components/ui/textarea";
-import { UnitCombobox } from "./unit-combobox";
 
 // Units that support takeoff measurement
 const TAKEOFF_UNITS = ["Each", "EA", "LF", "SF"];

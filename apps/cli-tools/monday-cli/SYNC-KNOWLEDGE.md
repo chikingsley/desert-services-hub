@@ -299,28 +299,28 @@ This means:
 
 | Script | Purpose |
 | -------- | --------- |
-| `sync-estimates.ts` | Main sync (use `--dry-run` first!) |
+| `bin/sync-estimates.ts` | Main sync (use `--dry-run` first!) |
 | `validate-sharepoint.ts` | Check folder structure |
 
 ## Running the Sync
 
 ```bash
 # Always dry-run first
-bun sync-estimates.ts --dry-run --limit=100
+bun bin/sync-estimates.ts --dry-run --limit=100
 
 # Check results, then real run
-bun sync-estimates.ts --limit=500
+bun bin/sync-estimates.ts --limit=500
 
 # Full sync (takes time)
-bun sync-estimates.ts
+bun bin/sync-estimates.ts
 ```
 
 ## Key Files
 
-1. `sync-estimates.ts` - Main sync logic with account resolution, TF consolidation, status folder moves
-2. `services/monday/client.ts` - Monday API with retry logic, `getItemsRich()`, `getItemNames()` batch lookup
-3. `client.ts` - SharePoint Graph API client
-4. `validate-sharepoint.ts` - Folder structure validation utility
+1. `bin/sync-estimates.ts` - Main sync logic with account resolution, TF consolidation, status folder moves
+2. `src/client.ts` - Monday API with retry logic, `getItemsRich()`, `getItemNames()` batch lookup
+3. `../sharepoint-cli/src/client.ts` - SharePoint Graph API client
+4. `src/sync/sharepoint-ops.ts` - Folder hierarchy, move, upload, and URL writeback operations
 
 ## Key Learnings
 

@@ -10,13 +10,13 @@ import {
   Trash2,
 } from "lucide-react";
 import { useState } from "react";
-import { Button } from "@/apps/web/frontend/components/ui/button";
 import type {
   CatalogItemData,
   CategoryData,
   SubcategoryData,
-} from "./catalog-content";
-import { CatalogItemRow } from "./catalog-item-row";
+} from "@/apps/web/frontend/components/catalog/catalog-content";
+import { CatalogItemRow } from "@/apps/web/frontend/components/catalog/catalog-item-row";
+import { Button } from "@/apps/web/frontend/components/ui/button";
 
 // Regex for stripping number prefix (at module level for performance)
 const NUMBER_PREFIX_REGEX = /^\d+\.\s*/;

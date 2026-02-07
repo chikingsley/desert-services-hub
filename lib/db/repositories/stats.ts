@@ -13,8 +13,10 @@ import type {
 // Statistics
 // ============================================
 
-export function getClassificationDistribution(): ClassificationStats[] {
-  const rows = db
+export async function getClassificationDistribution(): Promise<
+  ClassificationStats[]
+> {
+  const rows = await db
     .query<{ classification: string | null; count: number }, []>(
       `SELECT classification, COUNT(*) as count
        FROM emails
@@ -29,8 +31,11 @@ export function getClassificationDistribution(): ClassificationStats[] {
   }));
 }
 
-export function getLowConfidenceEmails(threshold = 0.7, limit = 50): Email[] {
-  const rows = db
+export async function getLowConfidenceEmails(
+  threshold = 0.7,
+  limit = 50
+): Promise<Email[]> {
+  const rows = await db
     .query<Record<string, unknown>, [number, number]>(
       `SELECT * FROM emails
        WHERE classification IS NOT NULL
@@ -43,11 +48,13 @@ export function getLowConfidenceEmails(threshold = 0.7, limit = 50): Email[] {
   return rows.map(parseEmailRow);
 }
 
-export function getEmailCountByMailbox(): Array<{
-  email: string;
-  count: number;
-}> {
-  const rows = db
+export async function getEmailCountByMailbox(): Promise<
+  Array<{
+    email: string;
+    count: number;
+  }>
+> {
+  const rows = await db
     .query<{ email: string; count: number }, []>(
       `SELECT m.email, COUNT(e.id) as count
        FROM mailboxes m
@@ -60,18 +67,18 @@ export function getEmailCountByMailbox(): Array<{
   return rows;
 }
 
-export function getTotalEmailCount(): number {
-  const result = db
+export async function getTotalEmailCount(): Promise<number> {
+  const result = await db
     .query<{ count: number }, []>("SELECT COUNT(*) as count FROM emails")
     .get();
   return result?.count ?? 0;
 }
 
-export function getDateRange(): {
+export async function getDateRange(): Promise<{
   earliest: string | null;
   latest: string | null;
-} {
-  const result = db
+}> {
+  const result = await db
     .query<{ earliest: string | null; latest: string | null }, []>(
       "SELECT MIN(received_at) as earliest, MAX(received_at) as latest FROM emails"
     )
@@ -83,13 +90,13 @@ export function getDateRange(): {
 // Cleanup/Reset
 // ============================================
 
-export function clearAllData(): void {
-  db.run("DELETE FROM emails");
-  db.run("DELETE FROM mailboxes");
+export async function clearAllData(): Promise<void> {
+  await db.run("DELETE FROM emails");
+  await db.run("DELETE FROM mailboxes");
 }
 
-export function clearClassifications(): void {
-  db.run(
+export async function clearClassifications(): Promise<void> {
+  await db.run(
     `UPDATE emails
      SET classification = NULL,
          classification_confidence = NULL,
@@ -97,8 +104,8 @@ export function clearClassifications(): void {
   );
 }
 
-export function clearProjectLinks(): void {
-  db.run(
+export async function clearProjectLinks(): Promise<void> {
+  await db.run(
     `UPDATE emails
      SET project_name = NULL,
          contractor_name = NULL,

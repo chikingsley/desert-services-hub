@@ -42,7 +42,7 @@ bun services/email/cli.ts draft \
   --no-signature
 ```
 
-**ALWAYS use the CLI. NEVER use MCP tools or `bun -e` for email.**
+**ALWAYS use the CLI. NEVER use MCP tools for email.**
 
 After creating the draft, tell the user:
 

@@ -4,14 +4,14 @@
  */
 import { dropTargetForElements } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
 import { useEffect, useRef, useState } from "react";
-import { cn } from "@/lib/utils";
-import { ContractCard } from "./contract-card";
+import { ContractCard } from "@/apps/web/frontend/components/contracts/contract-card";
 import {
   PIPELINE_STAGES,
   type PipelineContract,
   type PipelineStage,
   STAGE_CONFIG,
-} from "./types";
+} from "@/apps/web/frontend/components/contracts/types";
+import { cn } from "@/lib/utils";
 
 function emptyLabel(isDone: boolean): string {
   return isDone ? "Completed contracts appear here" : "No contracts";

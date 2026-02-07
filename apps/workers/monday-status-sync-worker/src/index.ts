@@ -37,6 +37,7 @@ export interface Env {
 interface MondayItem {
   id: string;
   name: string;
+  bidStatus: string | null;
 }
 
 interface CleanupResult {
@@ -91,6 +92,7 @@ const TARGET_STATUS = "GC Not Awarded";
 // Leads columns
 const OVERALL_STATUS_COL = "color_mm068kjz";
 const ESTIMATE_LINK_COL = "board_relation_mktg3z60";
+const MIRRORED_BID_STATUS_COL = "lookup_mktg8b1z";
 
 // Project relationship columns (defaults from shared Monday types)
 const DEFAULT_ESTIMATE_PROJECT_LINK_COL = "board_relation_mktgebxf";
@@ -152,6 +154,23 @@ export default {
     if (url.pathname === "/project-links/dry-run") {
       const result = await runProjectLinkSync(env, true);
       return Response.json(result);
+    }
+
+    // Debug a specific lead
+    const leadDebugMatch = url.pathname.match(/^\/leads\/debug\/(\d+)$/);
+    if (leadDebugMatch) {
+      const targetId = leadDebugMatch[1];
+      const leads = await getLeadsWithEstimates(env);
+      const lead = leads.find((l) => l.id === targetId);
+      if (!lead) {
+        return Response.json({ error: "Lead not found in fetched leads", totalLeads: leads.length });
+      }
+      const bidStatus = lead.mirroredBidStatus;
+      const mappedStatus = bidStatus ? BID_TO_OVERALL_STATUS[bidStatus] ?? null : null;
+      return Response.json({
+        lead: { id: lead.id, name: lead.name, estimateId: lead.estimateId, currentStatus: lead.currentStatus, mirroredBidStatus: lead.mirroredBidStatus },
+        mapping: { mappedStatus, wouldUpdate: mappedStatus !== null && mappedStatus !== lead.currentStatus },
+      });
     }
 
     // Run all
@@ -266,10 +285,10 @@ async function runCleanup(env: Env, dryRun = false): Promise<CleanupResult> {
     result.openSentCount = openSentItems.length;
     console.log(`[GC Cleanup] Found ${openSentItems.length} Open/Sent items`);
 
-    // 3. Find items to update (matching Won base names)
+    // 3. Find items to update (matching Won base names, not already GC Not Awarded)
     const toUpdate = openSentItems.filter((item) => {
       const baseName = getBaseName(item.name);
-      return wonBaseNames.has(baseName);
+      return wonBaseNames.has(baseName) && item.bidStatus !== TARGET_STATUS;
     });
 
     result.toUpdateCount = toUpdate.length;
@@ -328,22 +347,25 @@ async function runLeadsSync(
       `[Leads Sync] Found ${leads.length} leads with linked estimates`
     );
 
-    // 2. Get unique estimate IDs and fetch their statuses
-    const estimateIds = [...new Set(leads.map((l) => l.estimateId))];
-    console.log(
-      `[Leads Sync] Fetching ${estimateIds.length} estimate statuses...`
-    );
-    const estimateStatuses = await getEstimateStatuses(env, estimateIds);
-
-    // 3. Update leads where status mapping applies
+    // 2. Use mirrored bid status from leads (no separate estimate fetch needed)
+    let noStatusCount = 0;
+    let noMappingCount = 0;
+    let alreadyCorrectCount = 0;
     for (const lead of leads) {
-      const bidStatus = estimateStatuses.get(lead.estimateId);
+      const bidStatus = lead.mirroredBidStatus;
+      if (!bidStatus) noStatusCount++;
       const newOverallStatus = bidStatus
         ? BID_TO_OVERALL_STATUS[bidStatus]
         : null;
 
       // Skip if no mapping or already correct
-      if (!newOverallStatus || newOverallStatus === lead.currentStatus) {
+      if (!newOverallStatus) {
+        if (bidStatus) noMappingCount++;
+        result.skippedCount++;
+        continue;
+      }
+      if (newOverallStatus === lead.currentStatus) {
+        alreadyCorrectCount++;
         result.skippedCount++;
         continue;
       }
@@ -370,7 +392,8 @@ async function runLeadsSync(
       }
     }
 
-    return result;
+    console.log(`[Leads Sync] Breakdown: noStatus=${noStatusCount} noMapping=${noMappingCount} alreadyCorrect=${alreadyCorrectCount} updated=${result.updatedCount}`);
+    return { ...result, noStatusCount, noMappingCount, alreadyCorrectCount };
   } catch (error) {
     result.errors.push(`Leads sync failed: ${error}`);
     console.error(`[Leads Sync] ${error}`);
@@ -578,7 +601,8 @@ async function runProjectLinkSync(
           if (
             config.projectProjectNumberCol &&
             project &&
-            normalizeProjectNumber(project.projectNumber) !== canonicalProjectNumber
+            normalizeProjectNumber(project.projectNumber) !==
+              canonicalProjectNumber
           ) {
             if (dryRun) {
               console.log(
@@ -625,7 +649,8 @@ async function runProjectLinkSync(
 
           if (
             config.leadProjectNumberCol &&
-            normalizeProjectNumber(lead.projectNumber) !== canonicalProjectNumber
+            normalizeProjectNumber(lead.projectNumber) !==
+              canonicalProjectNumber
           ) {
             if (dryRun) {
               console.log(
@@ -670,6 +695,7 @@ interface LeadWithEstimate {
   name: string;
   estimateId: string;
   currentStatus: string | null;
+  mirroredBidStatus: string | null;
   linkedProjectIds: string[];
   projectNumber: string | null;
 }
@@ -684,6 +710,7 @@ interface ItemColumnValue {
   text?: string | null;
   linked_item_ids?: string[];
   label?: string;
+  display_value?: string | null;
 }
 
 async function getLeadsWithEstimates(
@@ -695,6 +722,7 @@ async function getLeadsWithEstimates(
   const columnIds = [
     ESTIMATE_LINK_COL,
     OVERALL_STATUS_COL,
+    MIRRORED_BID_STATUS_COL,
     options.leadProjectLinkCol ?? null,
     options.leadProjectNumberCol ?? null,
   ].filter((columnId): columnId is string => Boolean(columnId));
@@ -718,6 +746,7 @@ async function getLeadsWithEstimates(
                 text
                 ... on BoardRelationValue { linked_item_ids }
                 ... on StatusValue { label }
+                ... on MirrorValue { display_value }
               }
             }
           }
@@ -747,11 +776,16 @@ async function getLeadsWithEstimates(
         const statusCol = item.column_values.find(
           (c) => c.id === OVERALL_STATUS_COL
         );
+        const mirrorCol = item.column_values.find(
+          (c) => c.id === MIRRORED_BID_STATUS_COL
+        );
         const leadProjectCol = options.leadProjectLinkCol
           ? item.column_values.find((c) => c.id === options.leadProjectLinkCol)
           : undefined;
         const projectNumberCol = options.leadProjectNumberCol
-          ? item.column_values.find((c) => c.id === options.leadProjectNumberCol)
+          ? item.column_values.find(
+              (c) => c.id === options.leadProjectNumberCol
+            )
           : undefined;
 
         if (estimateCol?.linked_item_ids?.[0]) {
@@ -760,8 +794,11 @@ async function getLeadsWithEstimates(
             name: item.name,
             estimateId: estimateCol.linked_item_ids[0],
             currentStatus: statusCol?.label ?? statusCol?.text ?? null,
+            mirroredBidStatus: mirrorCol?.display_value ?? mirrorCol?.text ?? null,
             linkedProjectIds: leadProjectCol?.linked_item_ids ?? [],
-            projectNumber: normalizeProjectNumber(projectNumberCol?.text ?? null),
+            projectNumber: normalizeProjectNumber(
+              projectNumberCol?.text ?? null
+            ),
           });
         }
       }
@@ -1016,9 +1053,12 @@ async function getItemsFromGroup(
           groups(ids: "${groupId}") {
             items_page(limit: 500${cursorPart}) {
               cursor
-              items { 
-                id 
-                name 
+              items {
+                id
+                name
+                column_values(ids: ["${BID_STATUS_COLUMN_ID}"]) {
+                  ... on StatusValue { label }
+                }
               }
             }
           }
@@ -1031,7 +1071,11 @@ async function getItemsFromGroup(
         groups: Array<{
           items_page: {
             cursor: string | null;
-            items: Array<{ id: string; name: string }>;
+            items: Array<{
+              id: string;
+              name: string;
+              column_values: Array<{ label?: string }>;
+            }>;
           };
         }>;
       }>;
@@ -1039,7 +1083,13 @@ async function getItemsFromGroup(
 
     const page = data.boards?.[0]?.groups?.[0]?.items_page;
     if (page?.items) {
-      items.push(...page.items);
+      for (const item of page.items) {
+        items.push({
+          id: item.id,
+          name: item.name,
+          bidStatus: item.column_values?.[0]?.label ?? null,
+        });
+      }
     }
     cursor = page?.cursor ?? null;
   } while (cursor);
@@ -1098,7 +1148,9 @@ function appendUniqueId(ids: string[], id: string): string[] {
   return [...new Set([...ids, id])];
 }
 
-function normalizeProjectNumber(value: string | null | undefined): string | null {
+function normalizeProjectNumber(
+  value: string | null | undefined
+): string | null {
   if (!value) {
     return null;
   }
@@ -1107,7 +1159,10 @@ function normalizeProjectNumber(value: string | null | undefined): string | null
 }
 
 function escapeGraphQLString(value: string): string {
-  return value.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\n/g, "\\n");
+  return value
+    .replace(/\\/g, "\\\\")
+    .replace(/"/g, '\\"')
+    .replace(/\n/g, "\\n");
 }
 
 function getBaseName(name: string): string {

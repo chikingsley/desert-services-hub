@@ -1,0 +1,15 @@
+{
+  "name": "ds-notifications",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "watch": "bun cli/watch.ts",
+    "watch:once": "bun cli/watch.ts --once",
+    "status": "bun cli/status.ts",
+    "seed": "bun cli/seed-stakeholders.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "catalog:",
+    "typescript": "^5.9.3"
+  }
+}

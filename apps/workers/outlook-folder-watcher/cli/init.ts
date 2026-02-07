@@ -103,7 +103,7 @@ let matched = 0;
 let unmatched = 0;
 
 for (const folder of projectFolders) {
-  const projectId = findProjectByFolder(folder.displayName);
+  const projectId = await findProjectByFolder(folder.displayName);
 
   addTrackedFolder(
     db,

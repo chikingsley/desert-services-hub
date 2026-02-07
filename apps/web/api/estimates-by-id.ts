@@ -34,17 +34,17 @@ interface EstimateLineItemInput {
 }
 
 // Generate a unique base number (YYMMDD format with suffix for duplicates)
-function getNextBaseNumber(): string {
+async function getNextBaseNumber(): Promise<string> {
   const baseNumber = generateBaseNumber();
 
-  const existing = db
+  const existing = (await db
     .prepare(
       `SELECT base_number FROM estimates
        WHERE base_number LIKE ?
        ORDER BY base_number DESC
        LIMIT 1`
     )
-    .get(`${baseNumber}%`) as { base_number: string } | undefined;
+    .get(`${baseNumber}%`)) as { base_number: string } | undefined;
 
   if (!existing) {
     return baseNumber;
@@ -59,23 +59,23 @@ function getNextBaseNumber(): string {
 }
 
 // GET /api/estimates/:id - Get a single estimate with versions, sections, line items
-export function getEstimate(req: BunRequest): Response {
+export async function getEstimate(req: BunRequest): Promise<Response> {
   try {
     const { id } = req.params;
 
-    const estimate = db
+    const estimate = (await db
       .prepare("SELECT * FROM estimates WHERE id = ?")
-      .get(id) as EstimateRow | undefined;
+      .get(id)) as EstimateRow | undefined;
 
     if (!estimate) {
       return Response.json({ error: "Estimate not found" }, { status: 404 });
     }
 
-    const version = db
+    const version = (await db
       .prepare(
         "SELECT * FROM estimate_versions WHERE estimate_id = ? AND is_current = 1"
       )
-      .get(id) as EstimateVersionRow | undefined;
+      .get(id)) as EstimateVersionRow | undefined;
 
     if (!version) {
       return Response.json(
@@ -84,17 +84,17 @@ export function getEstimate(req: BunRequest): Response {
       );
     }
 
-    const sections = db
+    const sections = (await db
       .prepare(
         "SELECT * FROM estimate_sections WHERE version_id = ? ORDER BY sort_order"
       )
-      .all(version.id) as EstimateSectionRow[];
+      .all(version.id)) as EstimateSectionRow[];
 
-    const lineItems = db
+    const lineItems = (await db
       .prepare(
         "SELECT * FROM estimate_line_items WHERE version_id = ? ORDER BY sort_order"
       )
-      .all(version.id) as EstimateLineItemRow[];
+      .all(version.id)) as EstimateLineItemRow[];
 
     return Response.json({
       ...estimate,
@@ -129,7 +129,7 @@ export async function updateEstimate(req: BunRequest): Promise<Response> {
       "client_phone = ?",
       "notes = ?",
       "status = ?",
-      "updated_at = datetime('now')",
+      "updated_at = now()",
     ];
     const updateValues: (string | null)[] = [
       body.base_number as string,
@@ -150,25 +150,25 @@ export async function updateEstimate(req: BunRequest): Promise<Response> {
 
     updateValues.push(id);
 
-    db.prepare(
-      `UPDATE estimates SET ${updateFields.join(", ")} WHERE id = ?`
-    ).run(...updateValues);
+    await db
+      .prepare(`UPDATE estimates SET ${updateFields.join(", ")} WHERE id = ?`)
+      .run(...updateValues);
 
     // Get current version
-    const version = db
+    const version = (await db
       .prepare(
         "SELECT id FROM estimate_versions WHERE estimate_id = ? AND is_current = 1"
       )
-      .get(id) as { id: string } | undefined;
+      .get(id)) as { id: string } | undefined;
 
     if (version) {
       // Delete existing sections and line items
-      db.prepare("DELETE FROM estimate_line_items WHERE version_id = ?").run(
-        version.id
-      );
-      db.prepare("DELETE FROM estimate_sections WHERE version_id = ?").run(
-        version.id
-      );
+      await db
+        .prepare("DELETE FROM estimate_line_items WHERE version_id = ?")
+        .run(version.id);
+      await db
+        .prepare("DELETE FROM estimate_sections WHERE version_id = ?")
+        .run(version.id);
 
       // Re-create sections
       const sectionIdMap = new Map<string, string>();
@@ -177,17 +177,19 @@ export async function updateEstimate(req: BunRequest): Promise<Response> {
         let sortOrder = 0;
         for (const section of sections) {
           const sectionId = crypto.randomUUID();
-          db.prepare(
-            `INSERT INTO estimate_sections (id, version_id, name, title, show_subtotal, sort_order)
+          await db
+            .prepare(
+              `INSERT INTO estimate_sections (id, version_id, name, title, show_subtotal, sort_order)
              VALUES (?, ?, ?, ?, ?, ?)`
-          ).run(
-            sectionId,
-            version.id,
-            section.name,
-            section.title ?? null,
-            section.show_subtotal ? 1 : 0,
-            sortOrder
-          );
+            )
+            .run(
+              sectionId,
+              version.id,
+              section.name,
+              section.title ?? null,
+              section.show_subtotal ? 1 : 0,
+              sortOrder
+            );
           sectionIdMap.set(section.id, sectionId);
           sortOrder += 1;
         }
@@ -200,39 +202,40 @@ export async function updateEstimate(req: BunRequest): Promise<Response> {
         for (const item of lineItems) {
           const lineItemId = crypto.randomUUID();
           const cost = item.cost ?? 0;
-          db.prepare(
-            `INSERT INTO estimate_line_items (id, version_id, section_id, description, quantity, unit, unit_cost, unit_price, notes, sort_order)
+          await db
+            .prepare(
+              `INSERT INTO estimate_line_items (id, version_id, section_id, description, quantity, unit, unit_cost, unit_price, notes, sort_order)
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-          ).run(
-            lineItemId,
-            version.id,
-            item.section_id
-              ? (sectionIdMap.get(item.section_id) ?? null)
-              : null,
-            item.item || item.description || "",
-            item.quantity ?? item.qty ?? 1,
-            item.unit || item.uom || "EA",
-            item.unit_cost ?? cost * 0.7,
-            item.unit_price ?? cost,
-            item.notes ||
-              (item.item &&
-              item.description &&
-              item.description.trim() &&
-              item.item !== item.description
-                ? item.description
-                : null) ||
-              null,
-            sortOrder
-          );
+            )
+            .run(
+              lineItemId,
+              version.id,
+              item.section_id
+                ? (sectionIdMap.get(item.section_id) ?? null)
+                : null,
+              item.item || item.description || "",
+              item.quantity ?? item.qty ?? 1,
+              item.unit || item.uom || "EA",
+              item.unit_cost ?? cost * 0.7,
+              item.unit_price ?? cost,
+              item.notes ||
+                (item.item &&
+                item.description &&
+                item.description.trim() &&
+                item.item !== item.description
+                  ? item.description
+                  : null) ||
+                null,
+              sortOrder
+            );
           sortOrder += 1;
         }
       }
 
       // Update version total
-      db.prepare("UPDATE estimate_versions SET total = ? WHERE id = ?").run(
-        (body.total as number) || 0,
-        version.id
-      );
+      await db
+        .prepare("UPDATE estimate_versions SET total = ? WHERE id = ?")
+        .run((body.total as number) || 0, version.id);
     }
 
     return Response.json({ success: true });
@@ -246,11 +249,11 @@ export async function updateEstimate(req: BunRequest): Promise<Response> {
 }
 
 // DELETE /api/estimates/:id - Delete an estimate
-export function deleteEstimate(req: BunRequest): Response {
+export async function deleteEstimate(req: BunRequest): Promise<Response> {
   try {
     const { id } = req.params;
 
-    const estimate = db
+    const estimate = await db
       .prepare("SELECT id FROM estimates WHERE id = ?")
       .get(id);
 
@@ -258,7 +261,7 @@ export function deleteEstimate(req: BunRequest): Response {
       return Response.json({ error: "Estimate not found" }, { status: 404 });
     }
 
-    db.prepare("DELETE FROM estimates WHERE id = ?").run(id);
+    await db.prepare("DELETE FROM estimates WHERE id = ?").run(id);
 
     return Response.json({ success: true });
   } catch (error) {
@@ -275,19 +278,19 @@ export async function getEstimatePdf(req: BunRequest): Promise<Response> {
   try {
     const { id } = req.params;
 
-    const estimate = db
+    const estimate = (await db
       .prepare("SELECT * FROM estimates WHERE id = ?")
-      .get(id) as EstimateRow | undefined;
+      .get(id)) as EstimateRow | undefined;
 
     if (!estimate) {
       return Response.json({ error: "Estimate not found" }, { status: 404 });
     }
 
-    const version = db
+    const version = (await db
       .prepare(
         "SELECT * FROM estimate_versions WHERE estimate_id = ? AND is_current = 1"
       )
-      .get(id) as EstimateVersionRow | undefined;
+      .get(id)) as EstimateVersionRow | undefined;
 
     if (!version) {
       return Response.json(
@@ -296,17 +299,17 @@ export async function getEstimatePdf(req: BunRequest): Promise<Response> {
       );
     }
 
-    const sectionsData = db
+    const sectionsData = (await db
       .prepare(
         "SELECT * FROM estimate_sections WHERE version_id = ? ORDER BY sort_order"
       )
-      .all(version.id) as EstimateSectionRow[];
+      .all(version.id)) as EstimateSectionRow[];
 
-    const lineItemsData = db
+    const lineItemsData = (await db
       .prepare(
         "SELECT * FROM estimate_line_items WHERE version_id = ? ORDER BY sort_order"
       )
-      .all(version.id) as EstimateLineItemRow[];
+      .all(version.id)) as EstimateLineItemRow[];
 
     // Convert to EditorEstimate format
     const sections: EditorSection[] = sectionsData.map((s) => ({
@@ -364,23 +367,23 @@ export async function getEstimatePdf(req: BunRequest): Promise<Response> {
 }
 
 // POST /api/estimates/:id/duplicate - Duplicate an estimate
-export function duplicateEstimate(req: BunRequest): Response {
+export async function duplicateEstimate(req: BunRequest): Promise<Response> {
   try {
     const { id } = req.params;
 
-    const originalEstimate = db
+    const originalEstimate = (await db
       .prepare("SELECT * FROM estimates WHERE id = ?")
-      .get(id) as EstimateRow | undefined;
+      .get(id)) as EstimateRow | undefined;
 
     if (!originalEstimate) {
       return Response.json({ error: "Estimate not found" }, { status: 404 });
     }
 
-    const originalVersion = db
+    const originalVersion = (await db
       .prepare(
         "SELECT * FROM estimate_versions WHERE estimate_id = ? AND is_current = 1"
       )
-      .get(id) as EstimateVersionRow | undefined;
+      .get(id)) as EstimateVersionRow | undefined;
 
     if (!originalVersion) {
       return Response.json(
@@ -389,61 +392,67 @@ export function duplicateEstimate(req: BunRequest): Response {
       );
     }
 
-    const originalSections = db
+    const originalSections = (await db
       .prepare(
         "SELECT * FROM estimate_sections WHERE version_id = ? ORDER BY sort_order"
       )
-      .all(originalVersion.id) as EstimateSectionRow[];
+      .all(originalVersion.id)) as EstimateSectionRow[];
 
-    const originalLineItems = db
+    const originalLineItems = (await db
       .prepare(
         "SELECT * FROM estimate_line_items WHERE version_id = ? ORDER BY sort_order"
       )
-      .all(originalVersion.id) as EstimateLineItemRow[];
+      .all(originalVersion.id)) as EstimateLineItemRow[];
 
     // Create new estimate
     const newEstimateId = crypto.randomUUID();
-    const newBaseNumber = getNextBaseNumber();
+    const newBaseNumber = await getNextBaseNumber();
 
-    db.prepare(
-      `INSERT INTO estimates (id, base_number, takeoff_id, job_name, job_address, client_name, client_email, client_phone, notes, status, is_locked)
+    await db
+      .prepare(
+        `INSERT INTO estimates (id, base_number, takeoff_id, job_name, job_address, client_name, client_email, client_phone, notes, status, is_locked)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-    ).run(
-      newEstimateId,
-      newBaseNumber,
-      originalEstimate.takeoff_id,
-      `${originalEstimate.job_name} (Copy)`,
-      originalEstimate.job_address,
-      originalEstimate.client_name,
-      originalEstimate.client_email,
-      originalEstimate.client_phone,
-      originalEstimate.notes,
-      "draft",
-      0
-    );
+      )
+      .run(
+        newEstimateId,
+        newBaseNumber,
+        originalEstimate.takeoff_id,
+        `${originalEstimate.job_name} (Copy)`,
+        originalEstimate.job_address,
+        originalEstimate.client_name,
+        originalEstimate.client_email,
+        originalEstimate.client_phone,
+        originalEstimate.notes,
+        "draft",
+        0
+      );
 
     // Create new version
     const newVersionId = crypto.randomUUID();
-    db.prepare(
-      `INSERT INTO estimate_versions (id, estimate_id, version_number, total, is_current)
+    await db
+      .prepare(
+        `INSERT INTO estimate_versions (id, estimate_id, version_number, total, is_current)
        VALUES (?, ?, 1, ?, 1)`
-    ).run(newVersionId, newEstimateId, originalVersion.total);
+      )
+      .run(newVersionId, newEstimateId, originalVersion.total);
 
     // Copy sections
     const sectionIdMap = new Map<string, string>();
     for (const section of originalSections) {
       const newSectionId = crypto.randomUUID();
-      db.prepare(
-        `INSERT INTO estimate_sections (id, version_id, name, title, show_subtotal, sort_order)
+      await db
+        .prepare(
+          `INSERT INTO estimate_sections (id, version_id, name, title, show_subtotal, sort_order)
          VALUES (?, ?, ?, ?, ?, ?)`
-      ).run(
-        newSectionId,
-        newVersionId,
-        section.name,
-        section.title,
-        section.show_subtotal,
-        section.sort_order
-      );
+        )
+        .run(
+          newSectionId,
+          newVersionId,
+          section.name,
+          section.title,
+          section.show_subtotal,
+          section.sort_order
+        );
       sectionIdMap.set(section.id, newSectionId);
     }
 
@@ -454,21 +463,23 @@ export function duplicateEstimate(req: BunRequest): Response {
         ? (sectionIdMap.get(item.section_id) ?? null)
         : null;
 
-      db.prepare(
-        `INSERT INTO estimate_line_items (id, version_id, section_id, description, quantity, unit, unit_cost, unit_price, notes, sort_order)
+      await db
+        .prepare(
+          `INSERT INTO estimate_line_items (id, version_id, section_id, description, quantity, unit, unit_cost, unit_price, notes, sort_order)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-      ).run(
-        newLineItemId,
-        newVersionId,
-        newSectionId,
-        item.description,
-        item.quantity,
-        item.unit,
-        item.unit_cost,
-        item.unit_price,
-        item.notes,
-        item.sort_order
-      );
+        )
+        .run(
+          newLineItemId,
+          newVersionId,
+          newSectionId,
+          item.description,
+          item.quantity,
+          item.unit,
+          item.unit_cost,
+          item.unit_price,
+          item.notes,
+          item.sort_order
+        );
     }
 
     return Response.json({
@@ -485,25 +496,25 @@ export function duplicateEstimate(req: BunRequest): Response {
 }
 
 // GET /api/estimates/:id/takeoff - Get linked takeoff
-export function getEstimateTakeoff(req: BunRequest): Response {
+export async function getEstimateTakeoff(req: BunRequest): Promise<Response> {
   try {
     const { id } = req.params;
 
-    const estimate = db
+    const estimate = (await db
       .prepare("SELECT takeoff_id FROM estimates WHERE id = ?")
-      .get(id) as { takeoff_id: string | null } | undefined;
+      .get(id)) as { takeoff_id: string | null } | undefined;
 
     if (!estimate?.takeoff_id) {
       return Response.json({ takeoff: null });
     }
 
-    const takeoff = db
+    const takeoff = (await db
       .prepare(
         `SELECT id, name, status, created_at, updated_at
          FROM takeoffs
          WHERE id = ?`
       )
-      .get(estimate.takeoff_id) as
+      .get(estimate.takeoff_id)) as
       | {
           id: string;
           name: string;

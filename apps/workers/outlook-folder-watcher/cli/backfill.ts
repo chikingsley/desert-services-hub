@@ -15,7 +15,10 @@
  */
 
 import { messagesDelta } from "@/apps/workers/outlook-folder-watcher/lib/graph";
-import { linkMessages } from "@/apps/workers/outlook-folder-watcher/lib/linker";
+import {
+  checkDustPermitIssued,
+  linkMessages,
+} from "@/apps/workers/outlook-folder-watcher/lib/linker";
 import { findProjectByFolder } from "@/apps/workers/outlook-folder-watcher/lib/projects";
 import {
   getConfig,
@@ -73,7 +76,7 @@ for (const folder of folders) {
   // Resolve project ID (refresh from hub.db each time)
   let projectId = folder.project_id;
   if (!projectId) {
-    projectId = findProjectByFolder(folder.display_name);
+    projectId = await findProjectByFolder(folder.display_name);
     if (projectId) {
       updateTrackedFolder(db, folder.folder_id, { project_id: projectId });
       console.log(`  Matched to project #${projectId}`);
@@ -113,7 +116,7 @@ for (const folder of folders) {
       subject: m.subject,
     }));
 
-    const stats = linkMessages(projectId, toLink);
+    const stats = await linkMessages(projectId, toLink);
     totalDirectLinks += stats.directLinks;
     totalThreadExpanded += stats.threadExpanded;
     totalNotFound += stats.notFound;
@@ -121,6 +124,9 @@ for (const folder of folders) {
     console.log(
       `  Linked: ${stats.directLinks} direct, ${stats.threadExpanded} via threads, ${stats.notFound} not in hub.db`
     );
+
+    // Check for dust permit issued emails
+    await checkDustPermitIssued(projectId);
 
     // Save delta link for future incremental polls
     updateTrackedFolder(db, folder.folder_id, {

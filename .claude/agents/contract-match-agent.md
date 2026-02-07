@@ -40,7 +40,7 @@ sqlite3 /Users/chiejimofor/Documents/Github/desert-services-hub/lib/db/hub.db ".
 ### 3. Monday CLI Search (if hub.db insufficient)
 
 ```bash
-cd /Users/chiejimofor/Documents/Github/desert-services-hub && bun -e "import { searchItems } from './services/monday/client'; console.log(await searchItems('7943937851', 'SEARCH_TERM'));"
+cd /Users/chiejimofor/Documents/Github/desert-services-hub && docker exec supabase_db_desert-services-hub psql -U postgres -c "SELECT id, name, contractor, bid_status FROM estimates WHERE name ILIKE '%SEARCH_TERM%' OR contractor ILIKE '%SEARCH_TERM%'"
 ```
 
 ## Evaluation

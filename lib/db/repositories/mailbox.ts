@@ -4,8 +4,8 @@
 import { db } from "@lib/db/hub";
 import type { Mailbox } from "@lib/db/types";
 
-export function getMailbox(email: string): Mailbox | null {
-  const row = db
+export async function getMailbox(email: string): Promise<Mailbox | null> {
+  const row = await db
     .query<
       {
         id: number;
@@ -35,43 +35,43 @@ export function getMailbox(email: string): Mailbox | null {
   };
 }
 
-export function getOrCreateMailbox(
+export async function getOrCreateMailbox(
   email: string,
   displayName?: string
-): Mailbox {
-  const existing = getMailbox(email);
+): Promise<Mailbox> {
+  const existing = await getMailbox(email);
   if (existing) {
     return existing;
   }
 
-  db.run("INSERT INTO mailboxes (email, display_name) VALUES (?, ?)", [
+  await db.run("INSERT INTO mailboxes (email, display_name) VALUES (?, ?)", [
     email,
     displayName ?? null,
   ]);
 
-  const created = getMailbox(email);
+  const created = await getMailbox(email);
   if (!created) {
     throw new Error(`Failed to create mailbox for ${email}`);
   }
   return created;
 }
 
-export function updateMailboxSyncState(
+export async function updateMailboxSyncState(
   mailboxId: number,
   emailCount: number
-): void {
-  db.run(
+): Promise<void> {
+  await db.run(
     `UPDATE mailboxes
-     SET last_sync_at = datetime('now'),
+     SET last_sync_at = now(),
          email_count = ?,
-         updated_at = datetime('now')
+         updated_at = now()
      WHERE id = ?`,
     [emailCount, mailboxId]
   );
 }
 
-export function getAllMailboxes(): Mailbox[] {
-  const rows = db
+export async function getAllMailboxes(): Promise<Mailbox[]> {
+  const rows = await db
     .query<
       {
         id: number;

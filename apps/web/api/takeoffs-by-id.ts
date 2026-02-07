@@ -8,12 +8,12 @@ import { db } from "@lib/db/hub";
 type BunRequest = Request & { params: { id: string } };
 
 // GET /api/takeoffs/:id - Get a single takeoff
-export function getTakeoff(req: BunRequest): Response {
+export async function getTakeoff(req: BunRequest): Promise<Response> {
   const { id } = req.params;
 
-  const takeoff = db.prepare("SELECT * FROM takeoffs WHERE id = ?").get(id) as
-    | Record<string, unknown>
-    | undefined;
+  const takeoff = (await db
+    .prepare("SELECT * FROM takeoffs WHERE id = ?")
+    .get(id)) as Record<string, unknown> | undefined;
 
   if (!takeoff) {
     return Response.json({ error: "Not found" }, { status: 404 });
@@ -55,16 +55,16 @@ export async function updateTakeoff(req: BunRequest): Promise<Response> {
     values.push(body.status as string);
   }
 
-  updates.push("updated_at = datetime('now')");
+  updates.push("updated_at = now()");
   values.push(id);
 
-  db.prepare(`UPDATE takeoffs SET ${updates.join(", ")} WHERE id = ?`).run(
-    ...values
-  );
+  await db
+    .prepare(`UPDATE takeoffs SET ${updates.join(", ")} WHERE id = ?`)
+    .run(...values);
 
-  const takeoff = db
+  const takeoff = (await db
     .prepare("SELECT * FROM takeoffs WHERE id = ?")
-    .get(id) as Record<string, unknown>;
+    .get(id)) as Record<string, unknown>;
 
   return Response.json({
     ...takeoff,
@@ -74,19 +74,19 @@ export async function updateTakeoff(req: BunRequest): Promise<Response> {
 }
 
 // DELETE /api/takeoffs/:id - Delete a takeoff
-export function deleteTakeoff(req: BunRequest): Response {
+export async function deleteTakeoff(req: BunRequest): Promise<Response> {
   const { id } = req.params;
-  db.prepare("DELETE FROM takeoffs WHERE id = ?").run(id);
+  await db.prepare("DELETE FROM takeoffs WHERE id = ?").run(id);
   return Response.json({ success: true });
 }
 
 // GET /api/takeoffs/:id/pdf - Serve takeoff PDF
-export function getTakeoffPdf(req: BunRequest): Response {
+export async function getTakeoffPdf(req: BunRequest): Promise<Response> {
   const { id } = req.params;
 
-  const takeoff = db
+  const takeoff = (await db
     .prepare("SELECT pdf_url FROM takeoffs WHERE id = ?")
-    .get(id) as { pdf_url: string | null } | undefined;
+    .get(id)) as { pdf_url: string | null } | undefined;
 
   if (!takeoff?.pdf_url) {
     return Response.json(
@@ -96,17 +96,17 @@ export function getTakeoffPdf(req: BunRequest): Response {
   }
 
   return Response.json(
-    { error: "PDF serving not available — storage migrated to SharePoint" },
+    { error: "PDF serving not available -- storage migrated to SharePoint" },
     { status: 501 }
   );
 }
 
 // GET /api/takeoffs/:id/estimate - Get linked estimate
-export function getTakeoffEstimate(req: BunRequest): Response {
+export async function getTakeoffEstimate(req: BunRequest): Promise<Response> {
   try {
     const { id } = req.params;
 
-    const estimate = db
+    const estimate = (await db
       .prepare(
         `SELECT e.id, e.base_number, e.job_name, e.status, e.created_at
          FROM estimates e
@@ -114,7 +114,7 @@ export function getTakeoffEstimate(req: BunRequest): Response {
          ORDER BY e.created_at DESC
          LIMIT 1`
       )
-      .get(id) as
+      .get(id)) as
       | {
           id: string;
           base_number: string;

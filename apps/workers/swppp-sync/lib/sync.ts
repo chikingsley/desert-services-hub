@@ -7,7 +7,6 @@
  */
 
 import { db } from "@lib/db/hub";
-import "@lib/db/schema";
 import type { SwpppProject } from "@sharepoint/swppp/client";
 import { SwpppMasterClient } from "@sharepoint/swppp/client";
 import { WORKSHEETS, type WorksheetName } from "@sharepoint/swppp/config";
@@ -34,27 +33,6 @@ export interface SyncSummary {
 // Upsert
 // ============================================================================
 
-const upsertStmt = db.prepare(`
-  INSERT INTO swppp_work_orders (
-    row_number, worksheet, date, contractor, job_name, address,
-    contact, phone, work_description, date_entered, comments,
-    invoice, work_completed, synced_at
-  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
-  ON CONFLICT(worksheet, row_number) DO UPDATE SET
-    date = excluded.date,
-    contractor = excluded.contractor,
-    job_name = excluded.job_name,
-    address = excluded.address,
-    contact = excluded.contact,
-    phone = excluded.phone,
-    work_description = excluded.work_description,
-    date_entered = excluded.date_entered,
-    comments = excluded.comments,
-    invoice = excluded.invoice,
-    work_completed = excluded.work_completed,
-    synced_at = excluded.synced_at
-`);
-
 function excelDateToISO(excelDate: number | string | null): string | null {
   if (excelDate === null || excelDate === "") {
     return null;
@@ -67,23 +45,43 @@ function excelDateToISO(excelDate: number | string | null): string | null {
   return date.toISOString().split("T")[0] ?? null;
 }
 
-function upsertWorkOrders(projects: SwpppProject[]): number {
+async function upsertWorkOrders(projects: SwpppProject[]): Promise<number> {
   let count = 0;
   for (const p of projects) {
-    upsertStmt.run(
-      p.rowNumber,
-      p.worksheet,
-      excelDateToISO(p.date),
-      p.contractor,
-      p.jobName,
-      p.address,
-      p.contact,
-      p.phone,
-      p.workDescription,
-      excelDateToISO(p.dateEntered),
-      p.comments,
-      p.invoice,
-      p.workCompleted
+    await db.run(
+      `INSERT INTO swppp_work_orders (
+        row_number, worksheet, date, contractor, job_name, address,
+        contact, phone, work_description, date_entered, comments,
+        invoice, work_completed, synced_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, now())
+      ON CONFLICT(worksheet, row_number) DO UPDATE SET
+        date = excluded.date,
+        contractor = excluded.contractor,
+        job_name = excluded.job_name,
+        address = excluded.address,
+        contact = excluded.contact,
+        phone = excluded.phone,
+        work_description = excluded.work_description,
+        date_entered = excluded.date_entered,
+        comments = excluded.comments,
+        invoice = excluded.invoice,
+        work_completed = excluded.work_completed,
+        synced_at = excluded.synced_at`,
+      [
+        p.rowNumber,
+        p.worksheet,
+        excelDateToISO(p.date),
+        p.contractor,
+        p.jobName,
+        p.address,
+        p.contact,
+        p.phone,
+        p.workDescription,
+        excelDateToISO(p.dateEntered),
+        p.comments,
+        p.invoice,
+        p.workCompleted,
+      ]
     );
     count++;
   }
@@ -98,9 +96,12 @@ function upsertWorkOrders(projects: SwpppProject[]): number {
  * Link swppp_work_orders.contractor → accounts.id
  * Uses exact name match, then company_aliases fallback.
  */
-export function linkContractorsToAccounts(): { linked: number; total: number } {
+export async function linkContractorsToAccounts(): Promise<{
+  linked: number;
+  total: number;
+}> {
   // Exact name match
-  db.run(`
+  await db.run(`
     UPDATE swppp_work_orders SET account_id = (
       SELECT a.id FROM accounts a
       WHERE LOWER(TRIM(a.name)) = LOWER(TRIM(swppp_work_orders.contractor))
@@ -110,7 +111,7 @@ export function linkContractorsToAccounts(): { linked: number; total: number } {
   `);
 
   // Company alias match
-  db.run(`
+  await db.run(`
     UPDATE swppp_work_orders SET account_id = (
       SELECT ca.account_id FROM company_aliases ca
       WHERE LOWER(ca.alias) = LOWER(TRIM(swppp_work_orders.contractor))
@@ -119,7 +120,7 @@ export function linkContractorsToAccounts(): { linked: number; total: number } {
       AND contractor <> ''
   `);
 
-  const stats = db
+  const stats = await db
     .query<{ total: number; linked: number }, []>(`
       SELECT COUNT(*) as total, COUNT(account_id) as linked
       FROM swppp_work_orders
@@ -139,7 +140,7 @@ export async function syncWorksheet(
 ): Promise<SyncResult> {
   const start = Date.now();
   const projects = await client.getProjects(worksheet);
-  const rowsSynced = upsertWorkOrders(projects);
+  const rowsSynced = await upsertWorkOrders(projects);
 
   return {
     worksheet,
@@ -165,7 +166,7 @@ export async function syncAll(): Promise<SyncSummary> {
   }
 
   // Link contractors to accounts after sync
-  const { linked, total } = linkContractorsToAccounts();
+  const { linked, total } = await linkContractorsToAccounts();
 
   return {
     results,
@@ -180,15 +181,15 @@ export async function syncAll(): Promise<SyncSummary> {
 // Status
 // ============================================================================
 
-export function getStatus(): {
+export async function getStatus(): Promise<{
   byWorksheet: Array<{ worksheet: string; count: number }>;
   total: number;
   linked: number;
   unlinked: number;
   uniqueContractors: number;
   linkedContractors: number;
-} {
-  const byWorksheet = db
+}> {
+  const byWorksheet = await db
     .query<{ worksheet: string; count: number }, []>(`
       SELECT worksheet, COUNT(*) as count
       FROM swppp_work_orders
@@ -197,7 +198,7 @@ export function getStatus(): {
     `)
     .all();
 
-  const stats = db
+  const stats = await db
     .query<
       { total: number; linked: number; unique_c: number; linked_c: number },
       []

@@ -37,14 +37,16 @@ function parseEstimateRow(row: Record<string, unknown>): Estimate {
   };
 }
 
-export function upsertEstimate(data: UpsertEstimateData): number {
-  db.run(
+export async function upsertEstimate(
+  data: UpsertEstimateData
+): Promise<number> {
+  await db.run(
     `INSERT INTO estimates (
       monday_item_id, name, estimate_number, contractor, group_id, group_title,
       monday_url, account_monday_id, account_domain, bid_status, bid_value,
       awarded_value, bid_source, awarded, due_date, location, sharepoint_url,
       estimate_storage_bucket, estimate_storage_path, estimate_file_name, synced_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, now())
     ON CONFLICT(monday_item_id) DO UPDATE SET
       name = excluded.name,
       estimate_number = excluded.estimate_number,
@@ -65,8 +67,8 @@ export function upsertEstimate(data: UpsertEstimateData): number {
       estimate_storage_bucket = COALESCE(excluded.estimate_storage_bucket, estimates.estimate_storage_bucket),
       estimate_storage_path = COALESCE(excluded.estimate_storage_path, estimates.estimate_storage_path),
       estimate_file_name = COALESCE(excluded.estimate_file_name, estimates.estimate_file_name),
-      synced_at = datetime('now'),
-      updated_at = datetime('now')`,
+      synced_at = now(),
+      updated_at = now()`,
     [
       data.mondayItemId,
       data.name,
@@ -91,7 +93,7 @@ export function upsertEstimate(data: UpsertEstimateData): number {
     ]
   );
 
-  const row = db
+  const row = await db
     .query<{ id: number }, [string]>(
       "SELECT id FROM estimates WHERE monday_item_id = ?"
     )
@@ -100,36 +102,41 @@ export function upsertEstimate(data: UpsertEstimateData): number {
   return row?.id ?? 0;
 }
 
-export function updateEstimateStorage(
+export async function updateEstimateStorage(
   mondayItemId: string,
   bucket: string,
   path: string,
   fileName: string
-): void {
-  db.run(
+): Promise<void> {
+  await db.run(
     `UPDATE estimates
      SET estimate_storage_bucket = ?,
          estimate_storage_path = ?,
          estimate_file_name = ?,
-         estimate_synced_at = datetime('now'),
-         updated_at = datetime('now')
+         estimate_synced_at = now(),
+         updated_at = now()
      WHERE monday_item_id = ?`,
     [bucket, path, fileName, mondayItemId]
   );
 }
 
-export function updatePlansStorage(mondayItemId: string, path: string): void {
-  db.run(
+export async function updatePlansStorage(
+  mondayItemId: string,
+  path: string
+): Promise<void> {
+  await db.run(
     `UPDATE estimates
      SET plans_storage_path = ?,
-         updated_at = datetime('now')
+         updated_at = now()
      WHERE monday_item_id = ?`,
     [path, mondayItemId]
   );
 }
 
-export function getEstimateByMondayId(mondayItemId: string): Estimate | null {
-  const row = db
+export async function getEstimateByMondayId(
+  mondayItemId: string
+): Promise<Estimate | null> {
+  const row = await db
     .query<Record<string, unknown>, [string]>(
       "SELECT * FROM estimates WHERE monday_item_id = ?"
     )
@@ -138,8 +145,8 @@ export function getEstimateByMondayId(mondayItemId: string): Estimate | null {
   return row ? parseEstimateRow(row) : null;
 }
 
-export function getEstimateById(id: number): Estimate | null {
-  const row = db
+export async function getEstimateById(id: number): Promise<Estimate | null> {
+  const row = await db
     .query<Record<string, unknown>, [number]>(
       "SELECT * FROM estimates WHERE id = ?"
     )
@@ -148,8 +155,8 @@ export function getEstimateById(id: number): Estimate | null {
   return row ? parseEstimateRow(row) : null;
 }
 
-export function getAllEstimates(): Estimate[] {
-  const rows = db
+export async function getAllEstimates(): Promise<Estimate[]> {
+  const rows = await db
     .query<Record<string, unknown>, []>(
       "SELECT * FROM estimates ORDER BY synced_at DESC"
     )
@@ -158,8 +165,8 @@ export function getAllEstimates(): Estimate[] {
   return rows.map(parseEstimateRow);
 }
 
-export function getEstimatesWithoutFile(): Estimate[] {
-  const rows = db
+export async function getEstimatesWithoutFile(): Promise<Estimate[]> {
+  const rows = await db
     .query<Record<string, unknown>, []>(
       `SELECT * FROM estimates
        WHERE estimate_storage_path IS NULL
@@ -170,22 +177,26 @@ export function getEstimatesWithoutFile(): Estimate[] {
   return rows.map(parseEstimateRow);
 }
 
-export function getEstimateStats(): {
+export async function getEstimateStats(): Promise<{
   total: number;
   withFile: number;
   withoutFile: number;
-} {
+}> {
   const total =
-    db
-      .query<{ count: number }, []>("SELECT COUNT(*) as count FROM estimates")
-      .get()?.count ?? 0;
+    (
+      await db
+        .query<{ count: number }, []>("SELECT COUNT(*) as count FROM estimates")
+        .get()
+    )?.count ?? 0;
 
   const withFile =
-    db
-      .query<{ count: number }, []>(
-        "SELECT COUNT(*) as count FROM estimates WHERE estimate_storage_path IS NOT NULL"
-      )
-      .get()?.count ?? 0;
+    (
+      await db
+        .query<{ count: number }, []>(
+          "SELECT COUNT(*) as count FROM estimates WHERE estimate_storage_path IS NOT NULL"
+        )
+        .get()
+    )?.count ?? 0;
 
   return {
     total,
@@ -194,9 +205,12 @@ export function getEstimateStats(): {
   };
 }
 
-export function searchEstimates(query: string, limit = 50): Estimate[] {
+export async function searchEstimates(
+  query: string,
+  limit = 50
+): Promise<Estimate[]> {
   const pattern = `%${query}%`;
-  const rows = db
+  const rows = await db
     .query<Record<string, unknown>, [string, string, string, number]>(
       `SELECT * FROM estimates
        WHERE name LIKE ? OR estimate_number LIKE ? OR contractor LIKE ?

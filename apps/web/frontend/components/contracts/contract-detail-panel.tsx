@@ -15,6 +15,11 @@ import {
   Plus,
   XCircle,
 } from "lucide-react";
+import {
+  type PipelineContract,
+  type PipelineStage,
+  STAGE_CONFIG,
+} from "@/apps/web/frontend/components/contracts/types";
 import { Badge } from "@/apps/web/frontend/components/ui/badge";
 import { Button } from "@/apps/web/frontend/components/ui/button";
 import { Separator } from "@/apps/web/frontend/components/ui/separator";
@@ -27,11 +32,6 @@ import {
   SheetTitle,
 } from "@/apps/web/frontend/components/ui/sheet";
 import { cn } from "@/lib/utils";
-import {
-  type PipelineContract,
-  type PipelineStage,
-  STAGE_CONFIG,
-} from "./types";
 
 interface ContractDetailPanelProps {
   contract: PipelineContract | null;

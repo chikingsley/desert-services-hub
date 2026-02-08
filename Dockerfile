@@ -54,6 +54,9 @@ COPY apps/workers/contract-intake/lib ./apps/workers/contract-intake/lib
 # Dust permit intake worker
 COPY apps/workers/dust-permit-intake/lib ./apps/workers/dust-permit-intake/lib
 
+# Notifications worker
+COPY apps/workers/notifications/lib ./apps/workers/notifications/lib
+
 # PDF analysis pipeline (Python)
 COPY apps/cli-tools/pdf-analysis-cli ./apps/cli-tools/pdf-analysis-cli
 

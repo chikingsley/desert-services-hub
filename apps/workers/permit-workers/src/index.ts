@@ -1,7 +1,8 @@
 /**
  * Dust Permit Automation API
  *
- * Main entry point using Bun.serve().
+ * Headless API server for browser automation.
+ * Dashboard UI lives in apps/web (main web app).
  */
 
 import { serve } from "bun";
@@ -21,52 +22,37 @@ import {
   handleRenewPermit,
   handleRevisePermit,
 } from "@/api/permits";
-// Handlers
 import { handleScrapePdf, handleScrapePermit } from "@/api/scrape";
 import { handleSync } from "@/api/sync";
-import index from "@/index.html";
 import { initSentry } from "@/portal/utils/sentry";
 
-// Initialize Sentry first (before other imports that might throw)
 initSentry();
 
 const PORT = Number(process.env.PORT) || 47_822;
-
-// ============================================
-// Server
-// ============================================
 
 const server = serve({
   port: PORT,
   hostname: "0.0.0.0",
   routes: {
-    // ============================================
-    // Health Check
-    // ============================================
     "/health": {
       GET: handleHealthCheck,
     },
 
-    // ============================================
     // Permits API
-    // ============================================
     "/api/permits": {
       GET: handleListPermits,
     },
-
     "/api/permits/create": {
       async POST(req) {
         const body = await req.json();
         return handleCreatePermit(body);
       },
     },
-
     "/api/permits/drafts": {
       DELETE() {
         return handleDeleteAllDrafts();
       },
     },
-
     "/api/permits/:id": {
       GET(req) {
         return handleGetPermit(req.params.id);
@@ -75,7 +61,6 @@ const server = serve({
         return handleDeletePermit(req.params.id);
       },
     },
-
     "/api/permits/:id/:action": {
       async POST(req) {
         const id = req.params.id;
@@ -95,34 +80,27 @@ const server = serve({
       },
     },
 
-    // ============================================
     // Scrape API
-    // ============================================
     "/api/scrape/pdf": {
       async POST(req) {
         const body = await req.json();
         return handleScrapePdf(body);
       },
     },
-
     "/api/scrape/:id": {
       GET(req) {
         return handleScrapePermit(req.params.id);
       },
     },
 
-    // ============================================
     // Sync API
-    // ============================================
     "/api/sync": {
       POST() {
         return handleSync();
       },
     },
 
-    // ============================================
     // Browser API
-    // ============================================
     "/api/browser/status": {
       GET: handleBrowserStatus,
     },
@@ -136,21 +114,11 @@ const server = serve({
         return handleBrowserStop();
       },
     },
-
-    // ============================================
-    // Static Assets & Fallback
-    // ============================================
-    "/*": index,
-  },
-
-  development: process.env.NODE_ENV !== "production" && {
-    hmr: true,
-    console: true,
   },
 });
 
 console.log(`
-Dust Permit Automation API & Dashboard
+Dust Permit Automation API
 
 http://localhost:${PORT}
 http://localhost:${PORT}/health

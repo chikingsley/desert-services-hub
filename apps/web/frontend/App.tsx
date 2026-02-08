@@ -30,6 +30,7 @@ import { EstimateEditorPage } from "@/apps/web/frontend/pages/estimate-editor";
 import { EstimatesPage } from "@/apps/web/frontend/pages/estimates";
 import { PermitsPage } from "@/apps/web/frontend/pages/permits";
 import { ProjectsPage } from "@/apps/web/frontend/pages/projects";
+import { AutomationPage } from "@/apps/web/frontend/pages/automation";
 import { SettingsPage } from "@/apps/web/frontend/pages/settings";
 import { TakeoffEditorPage } from "@/apps/web/frontend/pages/takeoff-editor";
 import { TakeoffsPage } from "@/apps/web/frontend/pages/takeoffs";
@@ -128,6 +129,10 @@ const router = createBrowserRouter([
       {
         path: "catalog",
         element: <CatalogPage />,
+      },
+      {
+        path: "automation",
+        element: <AutomationPage />,
       },
       {
         path: "map",

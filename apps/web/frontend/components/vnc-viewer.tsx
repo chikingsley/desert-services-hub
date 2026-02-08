@@ -1,35 +1,38 @@
+/**
+ * VNC Viewer Modal
+ *
+ * Embeds noVNC iframe for watching/interacting with browser automation sessions.
+ * The permit-worker container exposes noVNC on port 47821 (mapped from 6080).
+ */
+
 import { ExternalLink, Maximize2, Minimize2, Monitor } from "lucide-react";
 import { useState } from "react";
-import type { PermitRequest } from "@/lib/types";
-import { Button } from "./ui/button";
+import { Button } from "@/apps/web/frontend/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "./ui/dialog";
+} from "@/apps/web/frontend/components/ui/dialog";
 
-interface VncModalProps {
-  permit: PermitRequest | null;
+const VNC_URL =
+  "http://localhost:47821/vnc.html?autoconnect=true&resize=scale";
+
+interface VncViewerProps {
+  title?: string;
+  subtitle?: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-export function VncModal({ permit, open, onOpenChange }: VncModalProps) {
+export function VncViewer({
+  title = "Browser Session",
+  subtitle,
+  open,
+  onOpenChange,
+}: VncViewerProps) {
   const [isFullscreen, setIsFullscreen] = useState(false);
-
-  if (!permit) {
-    return null;
-  }
-
-  // VNC URL with autoconnect
-  const vncUrl =
-    "http://localhost:47821/vnc.html?autoconnect=true&resize=scale";
-
-  const openInNewTab = () => {
-    window.open(vncUrl, "_blank", "noopener,noreferrer");
-  };
 
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
@@ -43,16 +46,14 @@ export function VncModal({ permit, open, onOpenChange }: VncModalProps) {
         <DialogHeader>
           <div className="flex items-center justify-between pr-8">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-[--color-accent]/20 bg-[--color-accent]/10">
-                <Monitor className="h-5 w-5 text-[--color-accent]" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-primary/20 bg-primary/10">
+                <Monitor className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <DialogTitle className="font-mono">
-                  {permit.company}
-                </DialogTitle>
-                <DialogDescription>
-                  Session: {permit.id.slice(0, 8)}
-                </DialogDescription>
+                <DialogTitle className="font-mono">{title}</DialogTitle>
+                {subtitle && (
+                  <DialogDescription>{subtitle}</DialogDescription>
+                )}
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -69,7 +70,9 @@ export function VncModal({ permit, open, onOpenChange }: VncModalProps) {
                 )}
               </Button>
               <Button
-                onClick={openInNewTab}
+                onClick={() =>
+                  window.open(VNC_URL, "_blank", "noopener,noreferrer")
+                }
                 size="icon"
                 title="Open in new tab"
                 variant="ghost"
@@ -82,7 +85,7 @@ export function VncModal({ permit, open, onOpenChange }: VncModalProps) {
 
         {/* VNC Iframe Container */}
         <div
-          className={`relative overflow-hidden rounded-lg border border-[--color-border] bg-black ${
+          className={`relative overflow-hidden rounded-lg border border-border bg-black ${
             isFullscreen ? "h-[calc(95vh-120px)]" : "h-[600px]"
           }`}
         >
@@ -101,24 +104,22 @@ export function VncModal({ permit, open, onOpenChange }: VncModalProps) {
           <iframe
             allow="clipboard-read; clipboard-write"
             className="h-full w-full border-0"
-            src={vncUrl}
-            title={`VNC Session - ${permit.company}`}
+            src={VNC_URL}
+            title={`VNC Session — ${title}`}
           />
 
           {/* Connection status indicator */}
-          <div className="absolute bottom-3 left-3 flex items-center gap-2 rounded-full border border-[--color-border] bg-black/80 px-3 py-1.5 font-mono text-xs backdrop-blur-sm">
+          <div className="absolute bottom-3 left-3 flex items-center gap-2 rounded-full border border-border bg-black/80 px-3 py-1.5 font-mono text-xs backdrop-blur-sm">
             <span className="relative flex h-2 w-2">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500" />
             </span>
-            <span className="text-[--color-text-secondary]">Connected</span>
+            <span className="text-muted-foreground">Connected</span>
           </div>
         </div>
 
-        {/* Help text */}
-        <div className="text-center font-mono text-[--color-text-muted] text-xs">
-          Click inside the viewer to interact • Use the toolbar for clipboard
-          access
+        <div className="text-center font-mono text-muted-foreground text-xs">
+          Click inside the viewer to interact
         </div>
       </DialogContent>
     </Dialog>

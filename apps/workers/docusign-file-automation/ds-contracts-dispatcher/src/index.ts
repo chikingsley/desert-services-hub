@@ -15,9 +15,9 @@
  */
 
 import { EmailMessage } from "cloudflare:email";
+import { getGraphToken } from "@lib/graph/token";
 import PostalMime from "postal-mime";
 import { type DocuSignResult, findDocuSignLink } from "./docusign";
-import { getGraphToken } from "@lib/graph/token";
 
 // =============================================================================
 // Types

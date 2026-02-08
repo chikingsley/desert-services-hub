@@ -109,6 +109,7 @@ const SENT_GROUP = "group_mkt5fv3a";
 // Prefixes to strip when matching project names
 const PREFIX_PATTERN =
   /^(TF|PJ|RO|REBID|CFS|INSPECTIONS|LW|MISC|SF|SS)[\s\-_:]+/i;
+const LEAD_DEBUG_PATH_RE = /^\/leads\/debug\/(\d+)$/;
 
 // Bid Status -> Overall Status mapping
 const BID_TO_OVERALL_STATUS: Record<string, string> = {
@@ -160,19 +161,34 @@ export default {
     }
 
     // Debug a specific lead
-    const leadDebugMatch = url.pathname.match(/^\/leads\/debug\/(\d+)$/);
+    const leadDebugMatch = url.pathname.match(LEAD_DEBUG_PATH_RE);
     if (leadDebugMatch) {
       const targetId = leadDebugMatch[1];
       const leads = await getLeadsWithEstimates(env);
       const lead = leads.find((l) => l.id === targetId);
       if (!lead) {
-        return Response.json({ error: "Lead not found in fetched leads", totalLeads: leads.length });
+        return Response.json({
+          error: "Lead not found in fetched leads",
+          totalLeads: leads.length,
+        });
       }
       const bidStatus = lead.mirroredBidStatus;
-      const mappedStatus = bidStatus ? BID_TO_OVERALL_STATUS[bidStatus] ?? null : null;
+      const mappedStatus = bidStatus
+        ? (BID_TO_OVERALL_STATUS[bidStatus] ?? null)
+        : null;
       return Response.json({
-        lead: { id: lead.id, name: lead.name, estimateId: lead.estimateId, currentStatus: lead.currentStatus, mirroredBidStatus: lead.mirroredBidStatus },
-        mapping: { mappedStatus, wouldUpdate: mappedStatus !== null && mappedStatus !== lead.currentStatus },
+        lead: {
+          id: lead.id,
+          name: lead.name,
+          estimateId: lead.estimateId,
+          currentStatus: lead.currentStatus,
+          mirroredBidStatus: lead.mirroredBidStatus,
+        },
+        mapping: {
+          mappedStatus,
+          wouldUpdate:
+            mappedStatus !== null && mappedStatus !== lead.currentStatus,
+        },
       });
     }
 
@@ -356,14 +372,18 @@ async function runLeadsSync(
     let alreadyCorrectCount = 0;
     for (const lead of leads) {
       const bidStatus = lead.mirroredBidStatus;
-      if (!bidStatus) noStatusCount++;
+      if (!bidStatus) {
+        noStatusCount++;
+      }
       const newOverallStatus = bidStatus
         ? BID_TO_OVERALL_STATUS[bidStatus]
         : null;
 
       // Skip if no mapping or already correct
       if (!newOverallStatus) {
-        if (bidStatus) noMappingCount++;
+        if (bidStatus) {
+          noMappingCount++;
+        }
         result.skippedCount++;
         continue;
       }
@@ -395,7 +415,9 @@ async function runLeadsSync(
       }
     }
 
-    console.log(`[Leads Sync] Breakdown: noStatus=${noStatusCount} noMapping=${noMappingCount} alreadyCorrect=${alreadyCorrectCount} updated=${result.updatedCount}`);
+    console.log(
+      `[Leads Sync] Breakdown: noStatus=${noStatusCount} noMapping=${noMappingCount} alreadyCorrect=${alreadyCorrectCount} updated=${result.updatedCount}`
+    );
     return { ...result, noStatusCount, noMappingCount, alreadyCorrectCount };
   } catch (error) {
     result.errors.push(`Leads sync failed: ${error}`);
@@ -797,7 +819,8 @@ async function getLeadsWithEstimates(
             name: item.name,
             estimateId: estimateCol.linked_item_ids[0],
             currentStatus: statusCol?.label ?? statusCol?.text ?? null,
-            mirroredBidStatus: mirrorCol?.display_value ?? mirrorCol?.text ?? null,
+            mirroredBidStatus:
+              mirrorCol?.display_value ?? mirrorCol?.text ?? null,
             linkedProjectIds: leadProjectCol?.linked_item_ids ?? [],
             projectNumber: normalizeProjectNumber(
               projectNumberCol?.text ?? null
@@ -812,7 +835,7 @@ async function getLeadsWithEstimates(
   return leads;
 }
 
-async function getEstimateStatuses(
+async function _getEstimateStatuses(
   env: Env,
   estimateIds: string[]
 ): Promise<Map<string, string>> {

@@ -8,6 +8,8 @@ import { findProjectByText } from "@lib/db/repositories/project";
 import type { Project } from "@lib/db/types";
 
 const STRIP_RE = /^(?:re|fw|fwd|forwarded):\s*/gi;
+const NON_WORD_RE = /[^\w\s]/g;
+const WHITESPACE_SPLIT_RE = /\s+/;
 
 /**
  * Strip FW:/RE: prefixes and common noise from subject lines.
@@ -42,8 +44,8 @@ function significantWords(text: string): string[] {
   ]);
   return text
     .toLowerCase()
-    .replace(/[^\w\s]/g, " ")
-    .split(/\s+/)
+    .replace(NON_WORD_RE, " ")
+    .split(WHITESPACE_SPLIT_RE)
     .filter((w) => w.length >= 3 && !stopWords.has(w));
 }
 
@@ -63,7 +65,9 @@ export async function matchProject(
 
   // 1. Exact match via alias/normalized name
   const exact = await findProjectByText(cleaned);
-  if (exact) return exact;
+  if (exact) {
+    return exact;
+  }
 
   // 2. Fuzzy ILIKE with significant words from subject
   const words = significantWords(cleaned);
@@ -83,7 +87,9 @@ export async function matchProject(
   // 3. Try NOI site name if provided
   if (noiSiteName) {
     const bySite = await findProjectByText(noiSiteName);
-    if (bySite) return bySite;
+    if (bySite) {
+      return bySite;
+    }
 
     const siteWords = significantWords(noiSiteName);
     for (const word of siteWords) {
@@ -93,9 +99,7 @@ export async function matchProject(
         )
         .get(word);
       if (row) {
-        const { getProjectById } = await import(
-          "@lib/db/repositories/project"
-        );
+        const { getProjectById } = await import("@lib/db/repositories/project");
         return getProjectById(row.id as number);
       }
     }

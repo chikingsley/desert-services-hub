@@ -66,7 +66,10 @@ export async function listEstimates(): Promise<Estimate[]> {
 
   return rows.map((row) => ({
     ...row,
-    versions: typeof row.versions === "string" ? JSON.parse(row.versions) : (row.versions ?? []),
+    versions:
+      typeof row.versions === "string"
+        ? JSON.parse(row.versions)
+        : (row.versions ?? []),
   })) as Estimate[];
 }
 
@@ -93,7 +96,10 @@ export async function getEstimate(id: string): Promise<Estimate | null> {
 
   return {
     ...quote,
-    versions: typeof quote.versions === "string" ? JSON.parse(quote.versions) : (quote.versions ?? []),
+    versions:
+      typeof quote.versions === "string"
+        ? JSON.parse(quote.versions)
+        : (quote.versions ?? []),
   } as Estimate;
 }
 
@@ -124,7 +130,10 @@ export async function getEstimateByBaseNumber(
 
   return {
     ...quote,
-    versions: typeof quote.versions === "string" ? JSON.parse(quote.versions) : (quote.versions ?? []),
+    versions:
+      typeof quote.versions === "string"
+        ? JSON.parse(quote.versions)
+        : (quote.versions ?? []),
   } as Estimate;
 }
 

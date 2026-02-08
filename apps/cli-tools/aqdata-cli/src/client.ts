@@ -30,7 +30,7 @@ export class AQDataClient {
 
   private state: SessionState = "disconnected";
   private pageContext: PageContext = "home";
-  private cookies: Map<string, string> = new Map();
+  private readonly cookies: Map<string, string> = new Map();
   private stateToken = 1;
   private currentFormName = "";
   private currentFormAction = "";
@@ -61,7 +61,9 @@ export class AQDataClient {
   // ---------------------------------------------------------------------------
 
   async connect(): Promise<void> {
-    if (this.state !== "disconnected") return;
+    if (this.state !== "disconnected") {
+      return;
+    }
 
     // Step 1: GET disclaimer page → extract JSESSIONID
     const disclaimerUrl = `${BASE_URL}${PAGES.disclaimer}`;
@@ -117,7 +119,9 @@ export class AQDataClient {
       throw new Error("Not connected. Call connect() first.");
     }
     const url = `${BASE_URL}${path}`;
-    if (this.debug) console.log(`  [client] GET ${url}`);
+    if (this.debug) {
+      console.log(`  [client] GET ${url}`);
+    }
     const res = await fetch(url, {
       headers: { Cookie: this.getCookieHeader() },
       redirect: "manual",
@@ -125,7 +129,9 @@ export class AQDataClient {
     this.updateCookies(res);
     if (res.status === 302) {
       const location = res.headers.get("location");
-      if (this.debug) console.log(`  [client] Redirect to: ${location}`);
+      if (this.debug) {
+        console.log(`  [client] Redirect to: ${location}`);
+      }
       if (location) {
         const redirectUrl = location.startsWith("http")
           ? location
@@ -153,27 +159,33 @@ export class AQDataClient {
     return html;
   }
 
-  async navigateToDustApplicationSearch(): Promise<string> {
-    return this.navigateTo(PAGES.dustApplicationSearch, "dust_application_search");
+  navigateToDustApplicationSearch(): Promise<string> {
+    return this.navigateTo(
+      PAGES.dustApplicationSearch,
+      "dust_application_search"
+    );
   }
 
-  async navigateToInspectionSearch(): Promise<string> {
+  navigateToInspectionSearch(): Promise<string> {
     return this.navigateTo(PAGES.inspectionSearch, "inspection_search");
   }
 
-  async navigateToComplianceReportSearch(): Promise<string> {
-    return this.navigateTo(PAGES.complianceReportSearch, "compliance_report_search");
+  navigateToComplianceReportSearch(): Promise<string> {
+    return this.navigateTo(
+      PAGES.complianceReportSearch,
+      "compliance_report_search"
+    );
   }
 
-  async navigateToEnforcementSearch(): Promise<string> {
+  navigateToEnforcementSearch(): Promise<string> {
     return this.navigateTo(PAGES.enforcementSearch, "enforcement_search");
   }
 
-  async navigateToSettlementSearch(): Promise<string> {
+  navigateToSettlementSearch(): Promise<string> {
     return this.navigateTo(PAGES.settlementSearch, "settlement_search");
   }
 
-  async navigateToSiteVisitSearch(): Promise<string> {
+  navigateToSiteVisitSearch(): Promise<string> {
     return this.navigateTo(PAGES.siteVisitSearch, "site_visit_search");
   }
 
@@ -181,9 +193,7 @@ export class AQDataClient {
   // Search
   // ---------------------------------------------------------------------------
 
-  async searchDustApplications(
-    params: DustAppSearchParams = {},
-  ): Promise<string> {
+  searchDustApplications(params: DustAppSearchParams = {}): Promise<string> {
     const fields: Record<string, string> = {
       source: FORMS.dustApplications.submitBtn,
     };
@@ -203,51 +213,60 @@ export class AQDataClient {
       }
     }
 
-    if (params.applicationId)
+    if (params.applicationId) {
       fields[FORMS.dustApplications.fields.applicationId] =
         params.applicationId;
-    if (params.facilityId)
+    }
+    if (params.facilityId) {
       fields[FORMS.dustApplications.fields.facilityId] = params.facilityId;
-    if (params.facilityName)
+    }
+    if (params.facilityName) {
       fields[FORMS.dustApplications.fields.facilityName] = params.facilityName;
-    if (params.projectName)
+    }
+    if (params.projectName) {
       fields[FORMS.dustApplications.fields.projectName] = params.projectName;
-    if (params.companyName)
+    }
+    if (params.companyName) {
       fields[FORMS.dustApplications.fields.companyName] = params.companyName;
-    if (params.address)
+    }
+    if (params.address) {
       fields[FORMS.dustApplications.fields.address] = params.address;
-    if (params.city) fields[FORMS.dustApplications.fields.city] = params.city;
-    if (params.parcel)
+    }
+    if (params.city) {
+      fields[FORMS.dustApplications.fields.city] = params.city;
+    }
+    if (params.parcel) {
       fields[FORMS.dustApplications.fields.parcel] = params.parcel;
+    }
 
     return this.postCurrentForm(fields);
   }
 
-  async searchInspections(): Promise<string> {
+  searchInspections(): Promise<string> {
     return this.postCurrentForm({
       source: FORMS.inspections.submitBtn,
     });
   }
 
-  async searchEnforcementActions(): Promise<string> {
+  searchEnforcementActions(): Promise<string> {
     return this.postCurrentForm({
       source: FORMS.enforcementActions.submitBtn,
     });
   }
 
-  async searchSettlements(): Promise<string> {
+  searchSettlements(): Promise<string> {
     return this.postCurrentForm({
       source: FORMS.settlements.submitBtn,
     });
   }
 
-  async searchSiteVisits(): Promise<string> {
+  searchSiteVisits(): Promise<string> {
     return this.postCurrentForm({
       source: FORMS.siteVisits.submitBtn,
     });
   }
 
-  async searchComplianceReports(): Promise<string> {
+  searchComplianceReports(): Promise<string> {
     return this.postCurrentForm({
       source: FORMS.complianceReports.submitBtn,
     });
@@ -287,11 +306,9 @@ export class AQDataClient {
   // ---------------------------------------------------------------------------
 
   private async postCurrentForm(
-    extraFields: Record<string, string>,
+    extraFields: Record<string, string>
   ): Promise<string> {
-    const postUrl = this.buildPostUrl(
-      this.currentFormAction || PAGES.home,
-    );
+    const postUrl = this.buildPostUrl(this.currentFormAction || PAGES.home);
     const body = this.buildFormData({
       [DISCLAIMER.formField]: this.currentFormName || HOME.formName,
       [DISCLAIMER.stateTokenField]: String(this.stateToken),
@@ -301,7 +318,9 @@ export class AQDataClient {
 
     if (this.debug) {
       console.log(`  [client] POST ${postUrl}`);
-      console.log(`  [client] form=${this.currentFormName} token=${this.stateToken} source=${extraFields.source ?? "none"}`);
+      console.log(
+        `  [client] form=${this.currentFormName} token=${this.stateToken} source=${extraFields.source ?? "none"}`
+      );
     }
 
     const res = await fetch(postUrl, {
@@ -378,12 +397,18 @@ export class AQDataClient {
     const setCookies = response.headers.getSetCookie?.() ?? [];
     for (const cookie of setCookies) {
       const parts = cookie.split(";")[0];
-      if (!parts) continue;
+      if (!parts) {
+        continue;
+      }
       const eqIdx = parts.indexOf("=");
-      if (eqIdx === -1) continue;
+      if (eqIdx === -1) {
+        continue;
+      }
       const name = parts.slice(0, eqIdx).trim();
       const value = parts.slice(eqIdx + 1).trim();
-      if (name) this.cookies.set(name, value);
+      if (name) {
+        this.cookies.set(name, value);
+      }
     }
   }
 
@@ -409,5 +434,4 @@ export class AQDataClient {
       this.currentFormAction = actionMatch[2];
     }
   }
-
 }

@@ -16,8 +16,8 @@ import {
   createNotificationDraft,
 } from "@/apps/workers/notifications/lib/delivery";
 import {
-  recordNotification,
   type PendingEvent,
+  recordNotification,
 } from "@/apps/workers/notifications/lib/events";
 import { getStakeholders } from "@/apps/workers/notifications/lib/stakeholders";
 
@@ -26,6 +26,24 @@ import { getStakeholders } from "@/apps/workers/notifications/lib/stakeholders";
 // ============================================================================
 
 export type DustPermitEmailTrigger = "pointandpay_payment" | "maricopa_issued";
+
+const SUBJECT_DUST_PERMIT_ISSUED_RE = /dust permit issued/i;
+const BODY_POINT_AND_PAY_ACCOUNT_RE = /Account Number:\s*IV\d+/i;
+const BODY_POINT_AND_PAY_CONFIRMATION_RE = /Confirmation ID:\s*\d+/i;
+const BODY_MARICOPA_ISSUED_RE =
+  /application\s+D\d{7}\s+has been processed and approved/i;
+const POINT_AND_PAY_INVOICE_RE = /Account Number:\s*(IV\d+)/i;
+const POINT_AND_PAY_AMOUNT_RE = /Amount:\s*(\$[\d,]+\.\d{2})/i;
+const POINT_AND_PAY_CONFIRMATION_RE = /Confirmation ID:\s*(\d+)/i;
+const POINT_AND_PAY_CARD_RE = /Account Last Four:\s*(\d{4})/i;
+const POINT_AND_PAY_DATE_RE = /Payment Date:\s*(.+?)(?:\n|Customer Phone)/i;
+const POINT_AND_PAY_PHONE_RE = /Customer Phone Number:\s*\(?([\d() -]+)\)?/i;
+const MARICOPA_PERMIT_NUMBER_RE = /application\s+(D\d{7})/i;
+const MARICOPA_FACILITY_ID_RE = /Facility ID#?:\s*(\w+)/i;
+const MARICOPA_FACILITY_NAME_RE = /Facility Name:\s*(.+?)(?:\n|$)/i;
+const MARICOPA_SUBJECT_FACILITY_NAME_RE =
+  /Dust Permit Issued\s*--\s*(.+?)(?:,|$)/i;
+const MARICOPA_FACILITY_ADDRESS_RE = /Facility Address:\s*(.+?)(?:\n|$)/i;
 
 export function detectDustPermitEmailTrigger(
   fromEmail: string,
@@ -39,17 +57,23 @@ export function detectDustPermitEmailTrigger(
     return "pointandpay_payment";
   }
 
-  if (from === "no-reply@maricopa.gov" && /dust permit issued/i.test(subject)) {
+  if (
+    from === "no-reply@maricopa.gov" &&
+    SUBJECT_DUST_PERMIT_ISSUED_RE.test(subject)
+  ) {
     return "maricopa_issued";
   }
 
   // Forwarded email detection — check body for original sender patterns
   if (body) {
-    if (/Account Number:\s*IV\d+/i.test(body) && /Confirmation ID:\s*\d+/i.test(body)) {
+    if (
+      BODY_POINT_AND_PAY_ACCOUNT_RE.test(body) &&
+      BODY_POINT_AND_PAY_CONFIRMATION_RE.test(body)
+    ) {
       return "pointandpay_payment";
     }
 
-    if (/application\s+D\d{7}\s+has been processed and approved/i.test(body)) {
+    if (BODY_MARICOPA_ISSUED_RE.test(body)) {
       return "maricopa_issued";
     }
   }
@@ -71,16 +95,12 @@ export interface PointAndPayData {
 }
 
 export function parsePointAndPayEmail(body: string): PointAndPayData {
-  const invoiceMatch = body.match(/Account Number:\s*(IV\d+)/i);
-  const amountMatch = body.match(/Amount:\s*(\$[\d,]+\.\d{2})/i);
-  const confirmationMatch = body.match(/Confirmation ID:\s*(\d+)/i);
-  const cardMatch = body.match(/Account Last Four:\s*(\d{4})/i);
-  const dateMatch = body.match(
-    /Payment Date:\s*(.+?)(?:\n|Customer Phone)/i
-  );
-  const phoneMatch = body.match(
-    /Customer Phone Number:\s*\(?([\d() -]+)\)?/i
-  );
+  const invoiceMatch = body.match(POINT_AND_PAY_INVOICE_RE);
+  const amountMatch = body.match(POINT_AND_PAY_AMOUNT_RE);
+  const confirmationMatch = body.match(POINT_AND_PAY_CONFIRMATION_RE);
+  const cardMatch = body.match(POINT_AND_PAY_CARD_RE);
+  const dateMatch = body.match(POINT_AND_PAY_DATE_RE);
+  const phoneMatch = body.match(POINT_AND_PAY_PHONE_RE);
 
   return {
     invoiceNumber: invoiceMatch?.[1] ?? null,
@@ -104,21 +124,19 @@ export function parseMaricopaIssuedEmail(
   subject: string
 ): MaricopaIssuedData {
   // Permit number from body (D followed by 7 digits)
-  const permitMatch = body.match(/application\s+(D\d{7})/i);
+  const permitMatch = body.match(MARICOPA_PERMIT_NUMBER_RE);
 
   // Facility ID
-  const facilityIdMatch = body.match(/Facility ID#?:\s*(\w+)/i);
+  const facilityIdMatch = body.match(MARICOPA_FACILITY_ID_RE);
 
   // Facility Name — from body or subject
-  const facilityNameMatch = body.match(/Facility Name:\s*(.+?)(?:\n|$)/i);
-  const subjectNameMatch = subject.match(
-    /Dust Permit Issued\s*--\s*(.+?)(?:,|$)/i
-  );
+  const facilityNameMatch = body.match(MARICOPA_FACILITY_NAME_RE);
+  const subjectNameMatch = subject.match(MARICOPA_SUBJECT_FACILITY_NAME_RE);
   const facilityName =
     facilityNameMatch?.[1]?.trim() ?? subjectNameMatch?.[1]?.trim() ?? null;
 
   // Facility Address
-  const addressMatch = body.match(/Facility Address:\s*(.+?)(?:\n|$)/i);
+  const addressMatch = body.match(MARICOPA_FACILITY_ADDRESS_RE);
 
   return {
     permitNumber: permitMatch?.[1] ?? null,
@@ -323,8 +341,7 @@ async function getEmailPdfAttachments(
   try {
     const attachments = await getAttachmentsForEmail(emailId);
     const pdfs = attachments.filter(
-      (a) =>
-        a.contentType === "application/pdf" || a.name.endsWith(".pdf")
+      (a) => a.contentType === "application/pdf" || a.name.endsWith(".pdf")
     );
 
     if (pdfs.length === 0) {

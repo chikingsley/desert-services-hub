@@ -11,35 +11,35 @@ const PARCEL_TILE_URL =
 const PARCEL_QUERY_URL =
   "https://gis.mcassessor.maricopa.gov/arcgis/rest/services/Parcels/MapServer/0/query";
 
-type ParcelInfo = {
+interface ParcelInfo {
   apn: string;
   address: string | null;
   owner: string | null;
   acres: number | null;
-};
+}
 
-type ParcelResult = {
+interface ParcelResult {
   info: ParcelInfo;
   geojson: GeoJSON.Feature<GeoJSON.Polygon, { APN: string }>;
-};
+}
 
-type EsriAttributes = {
+interface EsriAttributes {
   APN?: string | number;
   PHYSICAL_ADDRESS?: string;
   OWNER_NAME?: string;
   LAND_SIZE?: number;
-};
+}
 
-type EsriFeature = {
+interface EsriFeature {
   attributes?: EsriAttributes;
   geometry?: {
     rings?: number[][][];
   };
-};
+}
 
-type EsriQueryResult = {
+interface EsriQueryResult {
   features: EsriFeature[];
-};
+}
 
 function isObjectRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
@@ -47,7 +47,10 @@ function isObjectRecord(value: unknown): value is Record<string, unknown> {
 
 function isFeatureCollection(
   value: unknown
-): value is GeoJSON.FeatureCollection<GeoJSON.Geometry, GeoJSON.GeoJsonProperties> {
+): value is GeoJSON.FeatureCollection<
+  GeoJSON.Geometry,
+  GeoJSON.GeoJsonProperties
+> {
   if (!isObjectRecord(value)) {
     return false;
   }
@@ -64,7 +67,9 @@ function isEsriQueryResult(value: unknown): value is EsriQueryResult {
 function parseEsriFeature(feature: EsriFeature): ParcelResult | null {
   const a = feature.attributes ?? {};
   const rings: number[][][] = feature.geometry?.rings ?? [];
-  if (!rings.length) return null;
+  if (!rings.length) {
+    return null;
+  }
 
   return {
     info: {
@@ -77,14 +82,19 @@ function parseEsriFeature(feature: EsriFeature): ParcelResult | null {
       type: "Feature",
       geometry: {
         type: "Polygon",
-        coordinates: rings.map((ring: number[][]) => ring.map((c: number[]) => [c[0], c[1]])),
+        coordinates: rings.map((ring: number[][]) =>
+          ring.map((c: number[]) => [c[0], c[1]])
+        ),
       },
       properties: { APN: String(a.APN || "") },
     },
   };
 }
 
-const EMPTY_FC: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: [] };
+const EMPTY_FC: GeoJSON.FeatureCollection = {
+  type: "FeatureCollection",
+  features: [],
+};
 
 // Store base layer IDs so we can toggle them without re-scanning
 let baseLayerIds: string[] = [];
@@ -98,7 +108,9 @@ export function MapPage() {
   const [selected, setSelected] = useState<ParcelInfo | null>(null);
 
   useEffect(() => {
-    if (!containerRef.current || mapRef.current) return;
+    if (!containerRef.current || mapRef.current) {
+      return;
+    }
 
     const map = new maplibregl.Map({
       container: containerRef.current,
@@ -108,7 +120,10 @@ export function MapPage() {
     });
 
     map.addControl(new maplibregl.NavigationControl(), "top-right");
-    map.addControl(new maplibregl.ScaleControl({ maxWidth: 200, unit: "imperial" }), "bottom-left");
+    map.addControl(
+      new maplibregl.ScaleControl({ maxWidth: 200, unit: "imperial" }),
+      "bottom-left"
+    );
 
     map.on("load", () => {
       // Capture base layer IDs before adding our custom layers
@@ -166,7 +181,9 @@ export function MapPage() {
       // Fetch APN labels for visible parcels
       let loadingLabels = false;
       const updateLabels = async () => {
-        if (map.getZoom() < 15 || loadingLabels) return;
+        if (map.getZoom() < 15 || loadingLabels) {
+          return;
+        }
         loadingLabels = true;
         try {
           const b = map.getBounds();
@@ -188,8 +205,12 @@ export function MapPage() {
               return;
             }
             console.log("[map] labels loaded:", fc.features.length);
-            const src = map.getSource("apn-labels") as maplibregl.GeoJSONSource | undefined;
-            if (src) src.setData(fc);
+            const src = map.getSource("apn-labels") as
+              | maplibregl.GeoJSONSource
+              | undefined;
+            if (src) {
+              src.setData(fc);
+            }
           }
         } catch (err) {
           console.error("[map] label fetch failed:", err);
@@ -217,7 +238,9 @@ export function MapPage() {
 
       // Click to select
       map.on("click", async (e) => {
-        if (map.getZoom() < 14) return;
+        if (map.getZoom() < 14) {
+          return;
+        }
         console.log("[map] click query at", e.lngLat.lng, e.lngLat.lat);
 
         const params = new URLSearchParams({
@@ -239,11 +262,17 @@ export function MapPage() {
           }
           console.log("[map] click result:", data.features?.length, "features");
 
-          if (!data.features?.length) return;
+          if (!data.features?.length) {
+            return;
+          }
           const result = parseEsriFeature(data.features[0]);
-          if (!result) return;
+          if (!result) {
+            return;
+          }
 
-          const src = map.getSource("selected-parcel") as maplibregl.GeoJSONSource;
+          const src = map.getSource(
+            "selected-parcel"
+          ) as maplibregl.GeoJSONSource;
           src.setData(result.geojson);
           setSelected(result.info);
         } catch (err) {
@@ -259,19 +288,28 @@ export function MapPage() {
     });
 
     mapRef.current = map;
-    return () => { map.remove(); mapRef.current = null; };
+    return () => {
+      map.remove();
+      mapRef.current = null;
+    };
   }, []);
 
   const toggleSatellite = useCallback(() => {
     const map = mapRef.current;
-    if (!map) return;
+    if (!map) {
+      return;
+    }
 
     const next = !isSatellite;
     setIsSatellite(next);
 
     // Show/hide satellite
     if (map.getLayer("satellite")) {
-      map.setLayoutProperty("satellite", "visibility", next ? "visible" : "none");
+      map.setLayoutProperty(
+        "satellite",
+        "visibility",
+        next ? "visible" : "none"
+      );
     }
 
     // Show/hide base street layers
@@ -286,16 +324,32 @@ export function MapPage() {
       map.setPaintProperty("parcels", "raster-opacity", next ? 1.0 : 0.8);
     }
     if (map.getLayer("apn-labels")) {
-      map.setPaintProperty("apn-labels", "text-color", next ? "#ffffff" : "#b71c1c");
-      map.setPaintProperty("apn-labels", "text-halo-color", next ? "#000000" : "#ffffff");
+      map.setPaintProperty(
+        "apn-labels",
+        "text-color",
+        next ? "#ffffff" : "#b71c1c"
+      );
+      map.setPaintProperty(
+        "apn-labels",
+        "text-halo-color",
+        next ? "#000000" : "#ffffff"
+      );
     }
 
-    console.log("[map] satellite:", next, "toggled", baseLayerIds.length, "base layers");
+    console.log(
+      "[map] satellite:",
+      next,
+      "toggled",
+      baseLayerIds.length,
+      "base layers"
+    );
   }, [isSatellite]);
 
   const handleSearch = useCallback(async () => {
     const q = searchQuery.trim();
-    if (!q || !mapRef.current) return;
+    if (!(q && mapRef.current)) {
+      return;
+    }
     setSearching(true);
     setSelected(null);
     console.log("[map] searching APN:", q);
@@ -324,7 +378,10 @@ export function MapPage() {
       }
 
       const result = parseEsriFeature(data.features[0]);
-      if (!result) { setSearching(false); return; }
+      if (!result) {
+        setSearching(false);
+        return;
+      }
 
       const map = mapRef.current;
       if (!map) {
@@ -337,8 +394,11 @@ export function MapPage() {
 
       // Fly to parcel
       const bounds = new maplibregl.LngLatBounds();
-      const coords = (result.geojson.geometry as GeoJSON.Polygon).coordinates[0];
-      for (const c of coords) bounds.extend(c as [number, number]);
+      const coords = (result.geojson.geometry as GeoJSON.Polygon)
+        .coordinates[0];
+      for (const c of coords) {
+        bounds.extend(c as [number, number]);
+      }
       map.fitBounds(bounds, { padding: 120, maxZoom: 18, duration: 1500 });
     } catch (err) {
       console.error("[map] search failed:", err);
@@ -348,8 +408,12 @@ export function MapPage() {
   }, [searchQuery]);
 
   const clearSelection = useCallback(() => {
-    const src = mapRef.current?.getSource("selected-parcel") as maplibregl.GeoJSONSource | undefined;
-    if (src) src.setData(EMPTY_FC);
+    const src = mapRef.current?.getSource("selected-parcel") as
+      | maplibregl.GeoJSONSource
+      | undefined;
+    if (src) {
+      src.setData(EMPTY_FC);
+    }
     setSelected(null);
   }, []);
 
@@ -372,7 +436,6 @@ export function MapPage() {
       {/* Satellite toggle */}
       <div style={{ position: "absolute", top: 12, left: 12, zIndex: 10 }}>
         <button
-          type="button"
           onClick={toggleSatellite}
           style={{
             padding: "6px 14px",
@@ -385,35 +448,60 @@ export function MapPage() {
             cursor: "pointer",
             boxShadow: "0 1px 4px rgba(0,0,0,0.15)",
           }}
+          type="button"
         >
           {isSatellite ? "Streets" : "Satellite"}
         </button>
       </div>
 
       {/* Search */}
-      <div style={{ position: "absolute", top: 12, left: "50%", transform: "translateX(-50%)", zIndex: 10, display: "flex", gap: 6 }}>
+      <div
+        style={{
+          position: "absolute",
+          top: 12,
+          left: "50%",
+          transform: "translateX(-50%)",
+          zIndex: 10,
+          display: "flex",
+          gap: 6,
+        }}
+      >
         <input
-          type="text"
-          value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          onKeyDown={(e) => { if (e.key === "Enter") handleSearch(); }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              handleSearch();
+            }
+          }}
           placeholder="Search APN..."
           style={{
-            width: 220, padding: "7px 12px", border: "1px solid #ccc", borderRadius: 6,
-            fontSize: 13, background: "rgba(255,255,255,0.95)",
-            boxShadow: "0 1px 4px rgba(0,0,0,0.15)", outline: "none",
+            width: 220,
+            padding: "7px 12px",
+            border: "1px solid #ccc",
+            borderRadius: 6,
+            fontSize: 13,
+            background: "rgba(255,255,255,0.95)",
+            boxShadow: "0 1px 4px rgba(0,0,0,0.15)",
+            outline: "none",
           }}
+          type="text"
+          value={searchQuery}
         />
         <button
-          type="button"
-          onClick={handleSearch}
           disabled={searching}
+          onClick={handleSearch}
           style={{
-            padding: "7px 14px", background: "rgba(255,255,255,0.95)",
-            border: "1px solid #ccc", borderRadius: 6, fontSize: 13, fontWeight: 500,
-            cursor: "pointer", boxShadow: "0 1px 4px rgba(0,0,0,0.15)",
+            padding: "7px 14px",
+            background: "rgba(255,255,255,0.95)",
+            border: "1px solid #ccc",
+            borderRadius: 6,
+            fontSize: 13,
+            fontWeight: 500,
+            cursor: "pointer",
+            boxShadow: "0 1px 4px rgba(0,0,0,0.15)",
             opacity: searching ? 0.5 : 1,
           }}
+          type="button"
         >
           {searching ? "..." : "Search"}
         </button>
@@ -423,28 +511,63 @@ export function MapPage() {
       {selected && (
         <div
           style={{
-            position: "absolute", bottom: 20, left: 12, zIndex: 10,
-            background: "rgba(255,255,255,0.95)", border: "1px solid #ccc",
-            borderRadius: 8, padding: "12px 16px",
+            position: "absolute",
+            bottom: 20,
+            left: 12,
+            zIndex: 10,
+            background: "rgba(255,255,255,0.95)",
+            border: "1px solid #ccc",
+            borderRadius: 8,
+            padding: "12px 16px",
             boxShadow: "0 2px 8px rgba(0,0,0,0.18)",
-            fontSize: 13, lineHeight: 1.6, minWidth: 220,
+            fontSize: 13,
+            lineHeight: 1.6,
+            minWidth: 220,
           }}
         >
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start" }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "start",
+            }}
+          >
             <strong style={{ fontSize: 14 }}>Parcel</strong>
             <button
-              type="button"
               onClick={clearSelection}
-              style={{ background: "none", border: "none", cursor: "pointer", fontSize: 16, color: "#999", padding: "0 2px", lineHeight: 1 }}
+              style={{
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                fontSize: 16,
+                color: "#999",
+                padding: "0 2px",
+                lineHeight: 1,
+              }}
+              type="button"
             >
               &times;
             </button>
           </div>
           <div style={{ marginTop: 4 }}>
-            <div><b>APN:</b> {selected.apn}</div>
-            {selected.address && <div><b>Address:</b> {selected.address}</div>}
-            {selected.owner && <div><b>Owner:</b> {selected.owner}</div>}
-            {selected.acres != null && <div><b>Size:</b> {selected.acres.toLocaleString()} sq ft</div>}
+            <div>
+              <b>APN:</b> {selected.apn}
+            </div>
+            {selected.address && (
+              <div>
+                <b>Address:</b> {selected.address}
+              </div>
+            )}
+            {selected.owner && (
+              <div>
+                <b>Owner:</b> {selected.owner}
+              </div>
+            )}
+            {selected.acres != null && (
+              <div>
+                <b>Size:</b> {selected.acres.toLocaleString()} sq ft
+              </div>
+            )}
           </div>
         </div>
       )}

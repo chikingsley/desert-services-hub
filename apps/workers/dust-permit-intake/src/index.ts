@@ -9,7 +9,6 @@
  * Worker: dust-permit-intake.cheez2012.workers.dev
  */
 
-import { EmailMessage } from "cloudflare:email";
 import PostalMime from "postal-mime";
 
 // =============================================================================
@@ -25,13 +24,14 @@ const HUB_PATH = "/api/webhooks/dust-permit-intake";
 const LOG = "[dust-permit-intake]";
 
 const FWD_PREFIX_RE = /^(?:fw|fwd|re|forwarded):\s*/gi;
+const ORIGINAL_SENDER_RE = /From:\s*(?:.*?<([^>]+)>|([^\s<]+@[^\s>]+))/i;
 
 // =============================================================================
 // Worker Entry Point
 // =============================================================================
 
 export default {
-  async fetch(request: Request, _env: Env): Promise<Response> {
+  fetch(request: Request, _env: Env): Response {
     const url = new URL(request.url);
 
     if (url.pathname === "/health") {
@@ -115,7 +115,7 @@ export default {
 async function postToHub(
   env: Env,
   payload: Record<string, unknown>,
-  subject: string
+  _subject: string
 ): Promise<void> {
   const hubUrl =
     (env.HUB_WEBHOOK_URL || "https://monday-estimates.desertservices.app") +
@@ -158,9 +158,7 @@ async function postToHub(
  * Looks for "From: Name <email>" pattern in the body text.
  */
 function extractOriginalSender(body: string): string {
-  const fromMatch = body.match(
-    /From:\s*(?:.*?<([^>]+)>|([^\s<]+@[^\s>]+))/i
-  );
+  const fromMatch = body.match(ORIGINAL_SENDER_RE);
   return fromMatch?.[1] ?? fromMatch?.[2] ?? "";
 }
 
@@ -168,7 +166,7 @@ function arrayBufferToBase64(buffer: ArrayBuffer): string {
   const bytes = new Uint8Array(buffer);
   let binary = "";
   for (let i = 0; i < bytes.byteLength; i++) {
-    binary += String.fromCharCode(bytes[i]!);
+    binary += String.fromCharCode(bytes[i] ?? 0);
   }
   return btoa(binary);
 }

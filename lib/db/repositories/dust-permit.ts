@@ -260,9 +260,7 @@ export async function permitExists(id: string): Promise<boolean> {
   return row !== null;
 }
 
-export async function getExpiringPermits(
-  withinDays = 30
-): Promise<Permit[]> {
+export async function getExpiringPermits(withinDays = 30): Promise<Permit[]> {
   const rows = await db
     .query<Record<string, unknown>, [number]>(
       `SELECT * FROM dust_permits_filed_by_desert_services
@@ -275,9 +273,7 @@ export async function getExpiringPermits(
   return rows.map(parsePermitRow);
 }
 
-export async function getPermitsNeedingScrape(
-  limit = 100
-): Promise<Permit[]> {
+export async function getPermitsNeedingScrape(limit = 100): Promise<Permit[]> {
   const rows = await db
     .query<Record<string, unknown>, [number]>(
       `SELECT * FROM dust_permits_filed_by_desert_services
@@ -327,9 +323,7 @@ export async function getPermitsByPortalCompany(
   return rows.map(parsePermitRow);
 }
 
-export async function deleteRecentPermits(
-  count: number
-): Promise<string[]> {
+export async function deleteRecentPermits(count: number): Promise<string[]> {
   const rows = await db
     .query<{ id: string }, [number]>(
       "SELECT id FROM dust_permits_filed_by_desert_services ORDER BY created_at DESC LIMIT ?"

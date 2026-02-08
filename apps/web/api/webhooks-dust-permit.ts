@@ -32,9 +32,7 @@ const enqueueStmt = db.prepare(
   "INSERT INTO webhook_jobs (job_type, payload) VALUES ('dust_permit_intake', ?) RETURNING id"
 );
 
-export async function handleDustPermitWebhook(
-  req: Request
-): Promise<Response> {
+export async function handleDustPermitWebhook(req: Request): Promise<Response> {
   let body: IncomingPayload;
   try {
     body = (await req.json()) as IncomingPayload;
@@ -43,10 +41,7 @@ export async function handleDustPermitWebhook(
   }
 
   if (!body.attachments?.length) {
-    return Response.json(
-      { error: "No attachments provided" },
-      { status: 400 }
-    );
+    return Response.json({ error: "No attachments provided" }, { status: 400 });
   }
 
   // Filter to PDFs only
@@ -57,7 +52,10 @@ export async function handleDustPermitWebhook(
   );
 
   if (pdfs.length === 0) {
-    return Response.json({ error: "No PDF attachments found" }, { status: 400 });
+    return Response.json(
+      { error: "No PDF attachments found" },
+      { status: 400 }
+    );
   }
 
   // Create job directory

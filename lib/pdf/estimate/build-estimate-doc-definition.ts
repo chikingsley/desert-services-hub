@@ -576,7 +576,9 @@ function buildSectionTables(
 
     // Create table for this section — always breakable, dontBreakRows handles row integrity
     const sectionTable: Content = {
-      margin: isFirst ? undefined : ([0, 4, 0, 0] as [number, number, number, number]),
+      margin: isFirst
+        ? undefined
+        : ([0, 4, 0, 0] as [number, number, number, number]),
       table: {
         headerRows: isFirst ? 1 : 0,
         dontBreakRows: true,

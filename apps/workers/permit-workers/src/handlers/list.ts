@@ -4,14 +4,14 @@
  * Core logic for listing permits from the database.
  */
 
-import { z } from "zod";
-import type { Permit } from "@lib/db/types";
 import {
   getActivePermits,
   getExpiringPermits,
   getPermitById,
   getPermitsByPortalCompany,
 } from "@lib/db/repositories/dust-permit";
+import type { Permit } from "@lib/db/types";
+import { z } from "zod";
 
 /**
  * Schema for list permits operation (AI-tool compatible)
@@ -50,9 +50,7 @@ export interface ListResult {
 /**
  * List permits from the database.
  */
-export async function listPermits(
-  input: ListInput = {}
-): Promise<ListResult> {
+export async function listPermits(input: ListInput = {}): Promise<ListResult> {
   const { status = "active", companyId, permitId, expiringDays = 30 } = input;
 
   try {

@@ -12,8 +12,7 @@
  *   dust_permit_payment    -- PointAndPay payment email → billing + submitted notifications
  *   dust_permit_issued_email -- Maricopa issued email → issued notification with PDF
  */
-import { htmlToText } from "@lib/html-to-text";
-import { isSpam } from "@lib/spam-filter";
+
 import type { GraphEmailClient } from "@email/client";
 import { createGraphClient } from "@email/sync/config";
 import { db } from "@lib/db/hub";
@@ -25,12 +24,15 @@ import {
   linkEmailToProject,
 } from "@lib/db/repositories";
 import type { InsertAttachmentData, InsertEmailData } from "@lib/db/types";
+import { htmlToText } from "@lib/html-to-text";
+import { isSpam } from "@lib/spam-filter";
 import { getItemRich } from "@monday/client";
 import { ESTIMATING_COLUMNS } from "@monday/types";
 import { itemHasFiles, processItemFiles } from "@/apps/web/pipeline";
 import { processContractIntake } from "@/apps/workers/contract-intake/lib/intake";
-import { processDustPermitIntake } from "@/apps/workers/dust-permit-intake/lib/intake";
 import type { DustPermitIntakePayload } from "@/apps/workers/dust-permit-intake/lib/intake";
+import { processDustPermitIntake } from "@/apps/workers/dust-permit-intake/lib/intake";
+import { syncEstimates } from "@/apps/workers/estimate-poller/lib/sync";
 import {
   detectDustPermitEmailTrigger,
   handleIssuedEmail,
@@ -38,7 +40,6 @@ import {
   type IssuedJobPayload,
   type PaymentJobPayload,
 } from "@/apps/workers/notifications/lib/email-triggers";
-import { syncEstimates } from "@/apps/workers/estimate-poller/lib/sync";
 
 // ============================================================================
 // Config
@@ -385,21 +386,35 @@ async function processEmailNotification(
   console.log(`[worker] Webhook synced: "${email.subject}" in ${mailboxEmail}`);
 
   // Dust permit email trigger detection
-  const trigger = detectDustPermitEmailTrigger(email.fromEmail, email.subject, fullText);
+  const trigger = detectDustPermitEmailTrigger(
+    email.fromEmail,
+    email.subject,
+    fullText
+  );
   if (trigger === "pointandpay_payment") {
     await enqueueJob.run(
       "dust_permit_payment",
       null,
       JSON.stringify({ emailId, messageId, mailboxEmail, bodyText: fullText })
     );
-    console.log(`[worker] Enqueued dust_permit_payment for invoice in email #${emailId}`);
+    console.log(
+      `[worker] Enqueued dust_permit_payment for invoice in email #${emailId}`
+    );
   } else if (trigger === "maricopa_issued") {
     await enqueueJob.run(
       "dust_permit_issued_email",
       null,
-      JSON.stringify({ emailId, messageId, mailboxEmail, bodyText: fullText, subject: email.subject })
+      JSON.stringify({
+        emailId,
+        messageId,
+        mailboxEmail,
+        bodyText: fullText,
+        subject: email.subject,
+      })
     );
-    console.log(`[worker] Enqueued dust_permit_issued_email for email #${emailId}`);
+    console.log(
+      `[worker] Enqueued dust_permit_issued_email for email #${emailId}`
+    );
   }
 }
 
@@ -482,9 +497,7 @@ async function processNextJob(): Promise<void> {
       }
 
       case "dust_permit_intake": {
-        const dustPayload = JSON.parse(
-          job.payload
-        ) as DustPermitIntakePayload;
+        const dustPayload = JSON.parse(job.payload) as DustPermitIntakePayload;
         await processDustPermitIntake(dustPayload);
         break;
       }
@@ -509,7 +522,9 @@ async function processNextJob(): Promise<void> {
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
     if (job) {
-      console.error(`[worker] Job #${job.id} failed (attempt ${job.attempts}/${job.max_attempts}): ${msg}`);
+      console.error(
+        `[worker] Job #${job.id} failed (attempt ${job.attempts}/${job.max_attempts}): ${msg}`
+      );
       await failJob.run(msg.slice(0, 1000), job.id);
     } else {
       console.error(`[worker] Job processing error: ${msg}`);

@@ -17,35 +17,33 @@ import { startWorker } from "@/apps/web/worker";
 const h = (handler: unknown) => handler as never;
 
 const server = serve({
-	port: process.env.WEBHOOK_PORT || 4747,
+  port: process.env.WEBHOOK_PORT || 4747,
 
-	routes: {
-		"/api/health": {
-			GET: healthCheck,
-		},
-		"/api/webhooks/monday": {
-			POST: h(handleMondayWebhook),
-		},
-		"/api/webhooks/outlook": {
-			POST: h(handleOutlookWebhook),
-		},
-		"/api/webhooks/dust-permit-intake": {
-			POST: h(handleDustPermitWebhook),
-		},
-	},
+  routes: {
+    "/api/health": {
+      GET: healthCheck,
+    },
+    "/api/webhooks/monday": {
+      POST: h(handleMondayWebhook),
+    },
+    "/api/webhooks/outlook": {
+      POST: h(handleOutlookWebhook),
+    },
+    "/api/webhooks/dust-permit-intake": {
+      POST: h(handleDustPermitWebhook),
+    },
+  },
 
-	fetch() {
-		return new Response("Not Found", { status: 404 });
-	},
+  fetch() {
+    return new Response("Not Found", { status: 404 });
+  },
 
-	error(error) {
-		console.error("Webhook server error:", error);
-		return Response.json({ error: "Internal Server Error" }, { status: 500 });
-	},
+  error(error) {
+    console.error("Webhook server error:", error);
+    return Response.json({ error: "Internal Server Error" }, { status: 500 });
+  },
 });
 
 console.log(`Webhook receiver running at ${server.url}`);
 
-startWorker().catch((err) =>
-	console.error("[worker] Failed to start:", err),
-);
+startWorker().catch((err) => console.error("[worker] Failed to start:", err));

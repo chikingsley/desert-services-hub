@@ -8,9 +8,9 @@
  * Worker: inspection-router.cheez2012.workers.dev
  */
 
-import { getGraphToken } from "@lib/graph/token";
 import { EmailMessage } from "cloudflare:email";
 import puppeteer from "@cloudflare/puppeteer";
+import { getGraphToken } from "@lib/graph/token";
 import {
   formatFilename,
   type InspectionData,
@@ -455,7 +455,7 @@ async function uploadToSharePoint(
   }
 }
 
-async function getGraphTokenFromEnv(env: Env): Promise<string> {
+function getGraphTokenFromEnv(env: Env): Promise<string> {
   return getGraphToken(
     env.AZURE_TENANT_ID,
     env.AZURE_CLIENT_ID,

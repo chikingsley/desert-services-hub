@@ -16,8 +16,7 @@ import {
   DialogTitle,
 } from "@/apps/web/frontend/components/ui/dialog";
 
-const VNC_URL =
-  "http://localhost:47821/vnc.html?autoconnect=true&resize=scale";
+const VNC_URL = "http://localhost:47821/vnc.html?autoconnect=true&resize=scale";
 
 interface VncViewerProps {
   title?: string;
@@ -51,9 +50,7 @@ export function VncViewer({
               </div>
               <div>
                 <DialogTitle className="font-mono">{title}</DialogTitle>
-                {subtitle && (
-                  <DialogDescription>{subtitle}</DialogDescription>
-                )}
+                {subtitle && <DialogDescription>{subtitle}</DialogDescription>}
               </div>
             </div>
             <div className="flex items-center gap-2">

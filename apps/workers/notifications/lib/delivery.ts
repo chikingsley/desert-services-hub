@@ -29,6 +29,8 @@ interface DraftContent {
   }>;
 }
 
+const DATE_ONLY_RE = /^(\d{4})-(\d{2})-(\d{2})$/;
+
 function requireEnvVar(name: string): string {
   const value = process.env[name]?.trim();
   if (!value) {
@@ -53,7 +55,7 @@ function formatDate(value: unknown, fallback = "TBD"): string {
   }
 
   const trimmed = value.trim();
-  const dateOnlyMatch = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  const dateOnlyMatch = trimmed.match(DATE_ONLY_RE);
   if (dateOnlyMatch) {
     const year = Number.parseInt(dateOnlyMatch[1], 10);
     const month = Number.parseInt(dateOnlyMatch[2], 10);
@@ -201,7 +203,10 @@ async function buildDustPermitDraft(
   if (event.eventType === "dust_permit_billing") {
     const body = await getTemplate("dust-permit-billing", {
       recipientName: "Team",
-      accountName: stringValue(metadata.companyName, "Desert Services Customer"),
+      accountName: stringValue(
+        metadata.companyName,
+        "Desert Services Customer"
+      ),
       projectName: stringValue(metadata.projectName, "Unknown Project"),
       address: stringValue(metadata.address, "TBD"),
       applicationNumber: stringValue(metadata.permitId, event.refId),

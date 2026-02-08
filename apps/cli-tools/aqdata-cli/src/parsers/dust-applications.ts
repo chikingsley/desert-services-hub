@@ -1,5 +1,5 @@
-import { read, utils } from "xlsx";
 import type { DustApplication } from "@aqdata/types";
+import { read, utils } from "xlsx";
 
 // Column indices — refined from actual export structure.
 // The AQ Data portal "Export to Excel" produces HTML-table-as-XLS.
@@ -30,15 +30,17 @@ const COL = {
   INVOICE_BALANCE: 21,
 } as const;
 
-export function parseDustApplicationExport(
-  data: Buffer,
-): DustApplication[] {
+export function parseDustApplicationExport(data: Buffer): DustApplication[] {
   const workbook = read(data, { type: "buffer" });
   const sheetName = workbook.SheetNames[0];
-  if (!sheetName) throw new Error("No sheets found in workbook");
+  if (!sheetName) {
+    throw new Error("No sheets found in workbook");
+  }
 
   const sheet = workbook.Sheets[sheetName];
-  if (!sheet) throw new Error("Sheet not found");
+  if (!sheet) {
+    throw new Error("Sheet not found");
+  }
 
   const rows = utils.sheet_to_json<(string | number | null)[]>(sheet, {
     header: 1,
@@ -56,10 +58,14 @@ export function parseDustApplicationExport(
 
   for (let i = 1; i < rows.length; i++) {
     const row = rows[i];
-    if (!row) continue;
+    if (!row) {
+      continue;
+    }
 
     const appId = str(row[COL.APPLICATION_ID]);
-    if (!appId) continue;
+    if (!appId) {
+      continue;
+    }
 
     results.push({
       applicationId: appId,
@@ -95,44 +101,66 @@ export function parseDustApplicationExport(
 // ---------------------------------------------------------------------------
 
 function str(value: unknown): string {
-  if (value === null || value === undefined) return "";
+  if (value === null || value === undefined) {
+    return "";
+  }
   return String(value).trim();
 }
 
 function nullStr(value: unknown): string | null {
-  if (value === null || value === undefined) return null;
+  if (value === null || value === undefined) {
+    return null;
+  }
   const s = String(value).trim();
   return s === "" || s === "&nbsp;" ? null : s;
 }
 
 function toBool(value: unknown): boolean {
-  if (value === null || value === undefined) return false;
+  if (value === null || value === undefined) {
+    return false;
+  }
   const s = String(value).trim().toLowerCase();
   return s === "yes" || s === "true" || s === "y" || s === "1";
 }
 
 function parseNumber(value: unknown): number | null {
-  if (value === null || value === undefined) return null;
-  const s = String(value).replace(/[$,\s]/g, "").trim();
-  if (s === "") return null;
+  if (value === null || value === undefined) {
+    return null;
+  }
+  const s = String(value)
+    .replace(/[$,\s]/g, "")
+    .trim();
+  if (s === "") {
+    return null;
+  }
   const num = Number.parseFloat(s);
   return Number.isNaN(num) ? null : num;
 }
 
 function formatDate(value: unknown): string | null {
-  if (value === null || value === undefined) return null;
+  if (value === null || value === undefined) {
+    return null;
+  }
   const s = String(value).trim();
-  if (s === "" || s === "&nbsp;" || s === "NaT") return null;
+  if (s === "" || s === "&nbsp;" || s === "NaT") {
+    return null;
+  }
 
   // Handle Excel serial date numbers
   const maybeSerial = Number.parseFloat(s);
-  if (!Number.isNaN(maybeSerial) && maybeSerial > 30_000 && maybeSerial < 60_000) {
+  if (
+    !Number.isNaN(maybeSerial) &&
+    maybeSerial > 30_000 &&
+    maybeSerial < 60_000
+  ) {
     const excelEpoch = new Date(1899, 11, 30);
     const date = new Date(excelEpoch.getTime() + maybeSerial * 86_400_000);
     return date.toISOString().split("T")[0] ?? null;
   }
 
   const d = new Date(s);
-  if (Number.isNaN(d.getTime())) return null;
+  if (Number.isNaN(d.getTime())) {
+    return null;
+  }
   return d.toISOString().split("T")[0] ?? null;
 }

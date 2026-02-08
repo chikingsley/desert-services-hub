@@ -126,19 +126,17 @@ export async function updateEstimate(req: BunRequest): Promise<Response> {
     const jobName = (body.job_name as string) || "Untitled Estimate";
     const updateFields = [
       "base_number = ?",
-      "job_name = ?",
       "name = ?",
       "job_address = ?",
       "client_name = ?",
       "client_email = ?",
       "client_phone = ?",
       "notes = ?",
-      "status = ?",
+      "bid_status = ?",
       "updated_at = now()",
     ];
     const updateValues: (string | null)[] = [
       body.base_number as string,
-      jobName,
       jobName,
       (body.job_address as string) || null,
       (body.client_name as string) || null,
@@ -350,7 +348,8 @@ export async function getEstimatePdf(req: BunRequest): Promise<Response> {
     const total = lineItems.reduce((sum, item) => sum + item.total, 0);
 
     const editorEstimate: EditorEstimate = {
-      estimateNumber: estimate.base_number,
+      estimateNumber:
+        estimate.base_number ?? estimate.estimate_number ?? estimate.name,
       date: estimate.created_at || new Date().toISOString(),
       estimator: "",
       estimatorEmail: estimate.estimator_email || "",
@@ -361,7 +360,7 @@ export async function getEstimatePdf(req: BunRequest): Promise<Response> {
         phone: estimate.client_phone || "",
       },
       jobInfo: {
-        siteName: estimate.job_name || "",
+        siteName: estimate.name || "",
         address: estimate.job_address || "",
       },
       sections,
@@ -428,14 +427,13 @@ export async function duplicateEstimate(req: BunRequest): Promise<Response> {
 
     const result = await db.transaction(async () => {
       const insertResult = await db.run(
-        `INSERT INTO estimates (base_number, takeoff_id, job_name, name, job_address, client_name, client_email, client_phone, notes, status, is_locked)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `INSERT INTO estimates (base_number, takeoff_id, name, job_address, client_name, client_email, client_phone, notes, bid_status, is_locked)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
          RETURNING id`,
         [
           newBaseNumber,
           originalEstimate.takeoff_id,
-          `${originalEstimate.job_name} (Copy)`,
-          `${originalEstimate.job_name} (Copy)`,
+          `${originalEstimate.name} (Copy)`,
           originalEstimate.job_address,
           originalEstimate.client_name,
           originalEstimate.client_email,

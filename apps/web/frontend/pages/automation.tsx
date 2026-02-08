@@ -28,7 +28,7 @@ export function AutomationPage() {
           </div>
 
           <div>
-            <h2 className="font-semibold text-lg text-foreground">
+            <h2 className="font-semibold text-foreground text-lg">
               Permit Portal Automation
             </h2>
             <p className="mt-2 text-muted-foreground text-sm">

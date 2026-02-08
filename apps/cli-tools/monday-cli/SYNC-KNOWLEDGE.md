@@ -61,6 +61,24 @@ This returns `columnValues` array with:
 - `linkedItemIds` for board_relation columns
 - `displayValue` for mirror columns
 
+### 3.1 Resolution Audit Command (Direct-First Semantics)
+
+Use the CLI audit command to measure direct relation coverage before deleting legacy/mirror columns:
+
+```bash
+bun apps/cli-tools/monday-cli/bin/cli.ts audit-rel all --active-only
+bun apps/cli-tools/monday-cli/bin/cli.ts audit-rel estimating-account --active-only
+```
+
+Bucket meanings:
+
+- `direct`: target direct relation column on that board is populated
+- `relation_fallback`: direct is blank, but a defined legacy relation chain resolves
+- `display_fallback`: direct and relation fallback are blank, but mirror/display value exists
+- `unresolved`: none of the above (no direct, no relation fallback, no display fallback)
+
+Important: `relation_fallback` is chain-specific and board-specific. It does **not** mean “generic fallback.” For example, Estimating account fallback is `deal_contact -> contact_account`.
+
 ### 4. Pagination Settings
 
 Monday's API is slow and can timeout. Use conservative settings:

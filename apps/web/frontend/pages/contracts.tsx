@@ -5,13 +5,14 @@
  * Table view of all awarded contracts with project linkage info.
  */
 import { RefreshCw, Search } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import useSWR from "swr";
 import { PageHeader } from "@/apps/web/frontend/components/page-header";
 import {
   PageError,
   PageLoading,
 } from "@/apps/web/frontend/components/page-loading";
+import { StatCard } from "@/apps/web/frontend/components/stat-card";
 import { StatusBadge } from "@/apps/web/frontend/components/status-badge";
 import { Button } from "@/apps/web/frontend/components/ui/button";
 import { Input } from "@/apps/web/frontend/components/ui/input";
@@ -60,27 +61,6 @@ interface ContractsApiResponse {
   };
 }
 
-function StatCard({
-  label,
-  value,
-  accent,
-}: {
-  label: string;
-  value: number | string;
-  accent?: boolean;
-}) {
-  return (
-    <div className="rounded-xl border border-border/50 bg-card/80 px-4 py-3">
-      <div
-        className={`font-display font-semibold text-2xl ${accent ? "text-primary" : "text-foreground"}`}
-      >
-        {value}
-      </div>
-      <div className="text-muted-foreground text-xs">{label}</div>
-    </div>
-  );
-}
-
 const CONTRACT_STATUS_TABS = [
   { value: "all", label: "All" },
   { value: "Pending", label: "Pending" },
@@ -96,24 +76,27 @@ export function ContractsPage() {
   );
   const [search, setSearch] = useState("");
   const [statusTab, setStatusTab] = useState("all");
+  const normalizedSearch = search.trim().toLowerCase();
 
   const contracts = data?.contracts ?? [];
   const stats = data?.stats ?? { total: 0, totalValue: 0, pipeline: {} };
 
-  const filtered = contracts.filter((c) => {
-    const matchesStatus =
-      statusTab === "all" ||
-      (statusTab === "Unlinked"
-        ? !c.contract_status
-        : c.contract_status === statusTab);
-    const matchesSearch =
-      !search ||
-      c.name.toLowerCase().includes(search.toLowerCase()) ||
-      c.contractor?.toLowerCase().includes(search.toLowerCase()) ||
-      c.estimate_number?.toLowerCase().includes(search.toLowerCase()) ||
-      c.project_name?.toLowerCase().includes(search.toLowerCase());
-    return matchesStatus && matchesSearch;
-  });
+  const filtered = useMemo(() => {
+    return contracts.filter((c) => {
+      const matchesStatus =
+        statusTab === "all" ||
+        (statusTab === "Unlinked"
+          ? !c.contract_status
+          : c.contract_status === statusTab);
+      const matchesSearch =
+        !normalizedSearch ||
+        c.name.toLowerCase().includes(normalizedSearch) ||
+        c.contractor?.toLowerCase().includes(normalizedSearch) ||
+        c.estimate_number?.toLowerCase().includes(normalizedSearch) ||
+        c.project_name?.toLowerCase().includes(normalizedSearch);
+      return matchesStatus && matchesSearch;
+    });
+  }, [contracts, statusTab, normalizedSearch]);
 
   return (
     <div className="flex flex-1 flex-col">
@@ -156,7 +139,7 @@ export function ContractsPage() {
               <StatCard label="Executed" value={stats.pipeline.Executed || 0} />
             </div>
 
-            {/* Filter tabs */}
+            {/* Filter tabs + count */}
             <div className="flex flex-wrap items-center justify-between gap-3">
               <Tabs onValueChange={setStatusTab} value={statusTab}>
                 <TabsList>

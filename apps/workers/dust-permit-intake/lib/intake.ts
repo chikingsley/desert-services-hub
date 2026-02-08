@@ -69,7 +69,17 @@ interface IntakeResult {
 
 async function runNOIExtraction(pdfPath: string): Promise<NOIResult> {
   const proc = Bun.spawn(
-    ["uv", "run", "-m", "pdf_analysis.cli", "noi", pdfPath, "--ocr-fallback", "--format", "json"],
+    [
+      "uv",
+      "run",
+      "-m",
+      "pdf_analysis.cli",
+      "noi",
+      pdfPath,
+      "--ocr-fallback",
+      "--format",
+      "json",
+    ],
     {
       cwd: PDF_ANALYSIS_CWD,
       stdout: "pipe",
@@ -198,7 +208,9 @@ export async function processDustPermitIntake(
 
   if (succeeded === 0 && results.length > 0) {
     const errors = results.map((r) => `${r.fileName}: ${r.error}`).join("; ");
-    throw new Error(`All ${results.length} PDF(s) failed extraction: ${errors}`);
+    throw new Error(
+      `All ${results.length} PDF(s) failed extraction: ${errors}`
+    );
   }
 
   return results;

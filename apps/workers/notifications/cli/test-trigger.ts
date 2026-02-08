@@ -72,7 +72,7 @@ const SAMPLE_MARICOPA_ISSUED_SUBJECT =
 
 const command = process.argv[2];
 
-if (!command || !["payment", "issued", "detect"].includes(command)) {
+if (!(command && ["payment", "issued", "detect"].includes(command))) {
   console.log("Usage: bun cli/test-trigger.ts <payment|issued|detect>");
   process.exit(1);
 }

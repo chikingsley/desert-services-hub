@@ -49,7 +49,15 @@ async function getNextBaseNumber(): Promise<string> {
   return `${baseNumber}01`;
 }
 
-// GET /api/estimates - List estimates with pagination
+// Status filter groups for the UI tabs
+const STATUS_FILTERS: Record<string, string[]> = {
+  "Bid Sent": ["Bid Sent"],
+  Won: ["Won", "Pending Won", "Add to Projects"],
+  Lost: ["Lost", "GC Not Awarded"],
+  "Yet to Bid": ["Yet to Bid"],
+};
+
+// GET /api/estimates - List estimates with pagination, search, and status filter
 export async function listEstimates(req: Request): Promise<Response> {
   try {
     const url = new URL(req.url);
@@ -58,6 +66,31 @@ export async function listEstimates(req: Request): Promise<Response> {
       100,
       Math.max(1, Number(url.searchParams.get("limit")) || 50)
     );
+    const search = url.searchParams.get("search")?.trim() || "";
+    const statusFilter = url.searchParams.get("status") || "";
+
+    // Build WHERE clause
+    const conditions: string[] = [];
+    const params: unknown[] = [];
+
+    if (search) {
+      conditions.push(
+        "(q.name ILIKE ? OR q.estimate_number ILIKE ? OR q.contractor ILIKE ? OR q.client_name ILIKE ? OR q.base_number ILIKE ?)"
+      );
+      const like = `%${search}%`;
+      params.push(like, like, like, like, like);
+    }
+
+    if (statusFilter && STATUS_FILTERS[statusFilter]) {
+      const statuses = STATUS_FILTERS[statusFilter];
+      conditions.push(
+        `q.bid_status IN (${statuses.map(() => "?").join(", ")})`
+      );
+      params.push(...statuses);
+    }
+
+    const where =
+      conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
     const offset = (page - 1) * limit;
 
     const [estimates, countResult, statsResult] = await Promise.all([
@@ -65,9 +98,9 @@ export async function listEstimates(req: Request): Promise<Response> {
         .prepare(
           `SELECT q.id,
             COALESCE(NULLIF(q.base_number, ''), q.estimate_number) as base_number,
-            COALESCE(NULLIF(q.job_name, ''), q.name) as job_name,
+            q.name as job_name,
             COALESCE(NULLIF(q.client_name, ''), q.contractor) as client_name,
-            COALESCE(q.bid_status, NULLIF(q.status, ''), 'draft') as status,
+            COALESCE(q.bid_status, 'draft') as status,
             q.created_at,
             q.takeoff_id,
           (SELECT COALESCE(json_agg(json_build_object(
@@ -78,21 +111,22 @@ export async function listEstimates(req: Request): Promise<Response> {
             'created_at', v.created_at
           )), '[]'::json) FROM estimate_versions v WHERE v.estimate_id = q.id) as versions
         FROM estimates q
+        ${where}
         ORDER BY q.created_at DESC
         LIMIT ? OFFSET ?`
         )
-        .all(limit, offset) as Promise<EstimateWithVersionsJson[]>,
+        .all(...params, limit, offset) as Promise<EstimateWithVersionsJson[]>,
       db
-        .prepare("SELECT count(*)::int as total FROM estimates")
-        .get() as Promise<{ total: number } | null>,
+        .prepare(`SELECT count(*)::int as total FROM estimates q ${where}`)
+        .get(...params) as Promise<{ total: number } | null>,
       db
         .prepare(
           `SELECT
             count(*)::int as total,
             COALESCE(SUM(COALESCE(bid_value, 0)), 0)::bigint as total_value,
             count(*) FILTER (WHERE bid_status = 'Bid Sent')::int as bid_sent,
-            count(*) FILTER (WHERE bid_status = 'Won')::int as won,
-            count(*) FILTER (WHERE bid_status = 'Lost' OR bid_status = 'GC Not Awarded')::int as lost,
+            count(*) FILTER (WHERE bid_status IN ('Won', 'Pending Won', 'Add to Projects'))::int as won,
+            count(*) FILTER (WHERE bid_status IN ('Lost', 'GC Not Awarded'))::int as lost,
             count(*) FILTER (WHERE bid_status = 'Yet to Bid')::int as yet_to_bid
           FROM estimates`
         )
@@ -150,13 +184,12 @@ export async function createEstimate(req: Request): Promise<Response> {
     const result = await db.transaction(async () => {
       // Insert estimate (let DB auto-generate integer id)
       const insertResult = await db.run(
-        `INSERT INTO estimates (base_number, takeoff_id, job_name, name, job_address, client_name, client_email, client_phone, notes, status, is_locked)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `INSERT INTO estimates (base_number, takeoff_id, name, job_address, client_name, client_email, client_phone, notes, bid_status, is_locked)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
          RETURNING id`,
         [
           baseNumber,
           (body.takeoff_id as string) || null,
-          (body.job_name as string) || "Untitled Estimate",
           (body.job_name as string) || "Untitled Estimate",
           (body.job_address as string) || null,
           (body.client_name as string) || null,

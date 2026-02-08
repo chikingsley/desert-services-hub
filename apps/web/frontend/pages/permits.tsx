@@ -11,6 +11,7 @@ import {
   PageError,
   PageLoading,
 } from "@/apps/web/frontend/components/page-loading";
+import { StatCard } from "@/apps/web/frontend/components/stat-card";
 import { StatusBadge } from "@/apps/web/frontend/components/status-badge";
 import { Input } from "@/apps/web/frontend/components/ui/input";
 import {
@@ -53,27 +54,6 @@ interface PermitsApiResponse {
     submitted: number;
     unlinked: number;
   };
-}
-
-function StatCard({
-  label,
-  value,
-  accent,
-}: {
-  label: string;
-  value: number | string;
-  accent?: boolean;
-}) {
-  return (
-    <div className="rounded-xl border border-border/50 bg-card/80 px-4 py-3">
-      <div
-        className={`font-display font-semibold text-2xl ${accent ? "text-primary" : "text-foreground"}`}
-      >
-        {value}
-      </div>
-      <div className="text-muted-foreground text-xs">{label}</div>
-    </div>
-  );
 }
 
 function formatPermitDate(dateStr: string | null): string {
@@ -158,7 +138,7 @@ export function PermitsPage() {
       {!(error || isLoading) && (
         <div className="flex-1 p-6 lg:p-8">
           <div className="page-transition flex flex-col gap-6">
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-6">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
               <StatCard accent label="Total Permits" value={stats.total} />
               <StatCard label="Active" value={stats.active} />
               <StatCard label="Closed" value={stats.closed} />
@@ -167,6 +147,7 @@ export function PermitsPage() {
               <StatCard label="Unlinked" value={stats.unlinked} />
             </div>
 
+            {/* Filter tabs + count */}
             <div className="flex flex-wrap items-center justify-between gap-3">
               <Tabs onValueChange={setStatusTab} value={statusTab}>
                 <TabsList>
@@ -222,7 +203,7 @@ export function PermitsPage() {
                     <TableRow
                       className="group transition-colors hover:bg-primary/5"
                       key={permit.id}
-                      style={{ animationDelay: `${index * 10}ms` }}
+                      style={{ animationDelay: `${index * 15}ms` }}
                     >
                       <TableCell className="font-medium font-mono text-primary">
                         {permit.id}

@@ -17,14 +17,14 @@ export const EXCLUDED_SUBJECT_PATTERNS = [
   /^bidscope summary/i,
 ];
 
-type PlatformDomainConfig = {
+interface PlatformDomainConfig {
   name: string;
   patterns: RegExp[];
   fromEmailPattern?: RegExp;
   companyFirst?: boolean;
   subjectPatterns?: RegExp[];
   excludeSubjects?: RegExp[];
-};
+}
 
 export const PLATFORM_DOMAINS: Record<string, PlatformDomainConfig> = {
   "buildingconnected.com": {
@@ -73,7 +73,10 @@ export const PLATFORM_DOMAINS: Record<string, PlatformDomainConfig> = {
       /\)\s+([A-Z][^-]+(?:LLC|Inc|Corp)?)\s*-\s*([A-Za-z\s]+)\s*\d{2}\/\d{2}/,
       /From:\s*(.+?)$/m,
     ],
-    excludeSubjects: [/^Get clear on your company's ROI$/i, /^BidScope Summary/i],
+    excludeSubjects: [
+      /^Get clear on your company's ROI$/i,
+      /^BidScope Summary/i,
+    ],
   },
   "bidmail.com": {
     name: "BidMail",
@@ -384,7 +387,12 @@ export async function processPlatformEmails(): Promise<void> {
       platformTotal++;
 
       const body = email.body_full || email.body_preview;
-      const extraction = extractRealSender(domain, email.from_email, body, email.subject);
+      const extraction = extractRealSender(
+        domain,
+        email.from_email,
+        body,
+        email.subject
+      );
 
       if (extraction) {
         platformExtracted++;
@@ -399,8 +407,19 @@ export async function processPlatformEmails(): Promise<void> {
           email.id
         );
       } else {
-        const platformName = domain ? (PLATFORM_DOMAINS[domain]?.name ?? null) : null;
-        await updateStmt.run(1, platformName, null, null, null, null, 0, email.id);
+        const platformName = domain
+          ? (PLATFORM_DOMAINS[domain]?.name ?? null)
+          : null;
+        await updateStmt.run(
+          1,
+          platformName,
+          null,
+          null,
+          null,
+          null,
+          0,
+          email.id
+        );
       }
     }
   });
@@ -434,7 +453,9 @@ export async function processPlatformEmails(): Promise<void> {
     const extracted = Number(p.extracted) || 0;
     const total = Number(p.total) || 0;
     const pct = total === 0 ? "0.0" : ((extracted / total) * 100).toFixed(1);
-    console.log(`  ${p.platform ?? "unknown"}: ${extracted}/${total} extracted (${pct}%)`);
+    console.log(
+      `  ${p.platform ?? "unknown"}: ${extracted}/${total} extracted (${pct}%)`
+    );
   }
 }
 

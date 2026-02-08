@@ -152,9 +152,7 @@ export async function getMarketingPermits(options?: {
     params.push(options.offset);
   }
 
-  const rows = await db
-    .query<Record<string, unknown>>(sql)
-    .all(...params);
+  const rows = await db.query<Record<string, unknown>>(sql).all(...params);
   return rows.map(parseMarketingPermitRow);
 }
 

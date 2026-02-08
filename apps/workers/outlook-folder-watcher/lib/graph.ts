@@ -3,14 +3,13 @@
  * Raw fetch — no SDK dependency. Works with Bun's built-in fetch.
  */
 
-import {
-  clearTokenCache,
-  getGraphTokenCached as getAccessToken,
-} from "@lib/graph/token";
+import { clearTokenCache, getGraphTokenCached } from "@lib/graph/token";
 
 const GRAPH_BASE = "https://graph.microsoft.com/v1.0";
 
-export { getAccessToken };
+export function getAccessToken(): Promise<string> {
+  return getGraphTokenCached();
+}
 
 export class DeltaExpiredError extends Error {
   constructor(message: string) {

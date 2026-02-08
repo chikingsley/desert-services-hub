@@ -87,7 +87,7 @@ afterAll(async () => {
   }
   // Verify cleanup
   const remaining = (await db
-    .prepare("SELECT COUNT(*) as count FROM estimates WHERE job_name LIKE ?")
+    .prepare("SELECT COUNT(*) as count FROM estimates WHERE name LIKE ?")
     .get(`${TEST_PREFIX}%`)) as { count: number };
   if (remaining.count > 0) {
     throw new Error(`Cleanup failed: ${remaining.count} test estimates remain`);
@@ -160,13 +160,13 @@ describe("createEstimate", () => {
       .prepare("SELECT * FROM estimates WHERE id = ?")
       .get(id)) as EstimateRow;
 
-    expect(row.job_name).toBe(input.job_name);
+    expect(row.name).toBe(input.job_name);
     expect(row.job_address).toBe(input.job_address);
     expect(row.client_name).toBe(input.client_name);
     expect(row.client_email).toBe(input.client_email);
     expect(row.client_phone).toBe(input.client_phone);
     expect(row.notes).toBe(input.notes);
-    expect(row.status).toBe(input.status);
+    expect(row.bid_status).toBe(input.status);
   });
 
   test("saves line item with description to notes field", async () => {
@@ -378,17 +378,17 @@ describe("updateEstimate", () => {
     // Query database and verify values ACTUALLY changed
     const row = (await db
       .prepare(
-        "SELECT job_name, client_name, status FROM estimates WHERE id = ?"
+        "SELECT name, client_name, bid_status FROM estimates WHERE id = ?"
       )
       .get(testId)) as {
-      job_name: string;
+      name: string;
       client_name: string;
-      status: string;
+      bid_status: string;
     };
 
-    expect(row.job_name).toBe(newJobName);
+    expect(row.name).toBe(newJobName);
     expect(row.client_name).toBe(newClientName);
-    expect(row.status).toBe("sent");
+    expect(row.bid_status).toBe("sent");
   });
 
   test("replaces line items with new ones including descriptions", async () => {
@@ -416,7 +416,7 @@ describe("updateEstimate", () => {
 
     const version = (await db
       .prepare(
-        "SELECT id FROM estimate_versions WHERE quote_id = ? AND is_current = 1"
+        "SELECT id FROM estimate_versions WHERE estimate_id = ? AND is_current = 1"
       )
       .get(testId)) as { id: string };
 
@@ -546,15 +546,15 @@ describe("duplicateEstimate", () => {
       .prepare("SELECT * FROM estimates WHERE id = ?")
       .get(newId)) as EstimateRow;
 
-    expect(copy.job_name).toContain("DuplicateOriginal");
-    expect(copy.job_name).toContain("(Copy)");
+    expect(copy.name).toContain("DuplicateOriginal");
+    expect(copy.name).toContain("(Copy)");
     expect(copy.client_name).toBe(UNIQUE.CLIENT_NAME);
     expect(copy.client_email).toBe(UNIQUE.CLIENT_EMAIL);
 
     // Verify section was copied
     const copyVersion = (await db
       .prepare(
-        "SELECT id FROM estimate_versions WHERE quote_id = ? AND is_current = 1"
+        "SELECT id FROM estimate_versions WHERE estimate_id = ? AND is_current = 1"
       )
       .get(newId)) as { id: string };
 

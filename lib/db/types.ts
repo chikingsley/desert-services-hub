@@ -440,16 +440,18 @@ export interface ClassificationStats {
 
 export interface EstimateRow {
   id: string;
-  base_number: string;
+  name: string;
+  estimate_number: string | null;
+  contractor: string | null;
+  base_number: string | null;
   takeoff_id: string | null;
-  job_name: string;
   job_address: string | null;
   client_name: string | null;
   client_address: string | null;
   client_email: string | null;
   client_phone: string | null;
   notes: string | null;
-  status: string;
+  bid_status: string | null;
   is_locked: number;
   estimator: string | null;
   estimator_email: string | null;

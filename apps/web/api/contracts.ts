@@ -59,9 +59,7 @@ export async function listContracts(req: Request): Promise<Response> {
 
     query += " ORDER BY e.updated_at DESC";
 
-    const contracts = (await db
-      .prepare(query)
-      .all(...params)) as ContractRow[];
+    const contracts = (await db.prepare(query).all(...params)) as ContractRow[];
 
     // Stats
     const statsRows = (await db

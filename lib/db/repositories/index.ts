@@ -26,6 +26,28 @@ export {
   searchEmailsFullText,
   updateAttachmentExtraction,
 } from "@lib/db/repositories/attachment";
+// Dust Permit (filed by Desert Services)
+export {
+  deleteRecentPermits,
+  getActivePermits,
+  getExpiringPermits,
+  getPermitById,
+  getPermitCount,
+  getPermitStats,
+  getPermitsByAccount,
+  getPermitsByPortalCompany,
+  getPermitsByProject,
+  getPermitsByStatus,
+  getPermitsNeedingScrape,
+  getRenewalChain,
+  getUnlinkedPermits,
+  linkPermitToAccount,
+  linkPermitToProject,
+  markPermitScraped,
+  permitExists,
+  searchPermits,
+  upsertPermit,
+} from "@lib/db/repositories/dust-permit";
 // Email
 export {
   getEmailById,
@@ -61,28 +83,6 @@ export {
   getOrCreateMailbox,
   updateMailboxSyncState,
 } from "@lib/db/repositories/mailbox";
-// Dust Permit (filed by Desert Services)
-export {
-  deleteRecentPermits,
-  getActivePermits,
-  getExpiringPermits,
-  getPermitById,
-  getPermitCount,
-  getPermitStats,
-  getPermitsByAccount,
-  getPermitsByPortalCompany,
-  getPermitsByProject,
-  getPermitsByStatus,
-  getPermitsNeedingScrape,
-  getRenewalChain,
-  getUnlinkedPermits,
-  linkPermitToAccount,
-  linkPermitToProject,
-  markPermitScraped,
-  permitExists,
-  searchPermits,
-  upsertPermit,
-} from "@lib/db/repositories/dust-permit";
 // Marketing Permit (all Maricopa County permits)
 export {
   getActivePermitsByCompany,
@@ -93,6 +93,13 @@ export {
   markDetailScraped,
   upsertMarketingPermit,
 } from "@lib/db/repositories/marketing-permit";
+// NOI
+export {
+  getAllNOIs,
+  getNOIByPermitId,
+  getNOIByProject,
+  insertNOI,
+} from "@lib/db/repositories/noi";
 // Project
 export {
   addProjectAlias,
@@ -108,14 +115,6 @@ export {
   getProjectsForAccount,
   linkEmailToProject,
 } from "@lib/db/repositories/project";
-
-// NOI
-export {
-  getAllNOIs,
-  getNOIByPermitId,
-  getNOIByProject,
-  insertNOI,
-} from "@lib/db/repositories/noi";
 // Statistics & Cleanup
 export {
   clearAllData,

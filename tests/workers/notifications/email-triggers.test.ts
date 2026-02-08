@@ -68,6 +68,7 @@ This is an automatically generated message sent to all facility contacts from th
 
 const MARICOPA_ISSUED_SUBJECT =
   "Dust Permit Issued -- Lexington 420 - Northern Pkwy Logistics Bldg. D,";
+const FACILITY_NAME_LINE_REGEX = /Facility Name:.+/;
 
 // ============================================================================
 // Detection Tests
@@ -170,9 +171,7 @@ describe("parsePointAndPayEmail", () => {
   });
 
   it("extracts payment date", () => {
-    expect(result.paymentDate).toBe(
-      "01/14/2026 09:06 AM US Mountain Time"
-    );
+    expect(result.paymentDate).toBe("01/14/2026 09:06 AM US Mountain Time");
   });
 
   it("extracts customer phone", () => {
@@ -219,7 +218,7 @@ describe("parseMaricopaIssuedEmail", () => {
 
   it("falls back to subject for facility name", () => {
     const bodyWithoutName = MARICOPA_ISSUED_EMAIL_BODY.replace(
-      /Facility Name:.+/,
+      FACILITY_NAME_LINE_REGEX,
       ""
     );
     const result = parseMaricopaIssuedEmail(
@@ -248,15 +247,16 @@ describe("handlePaymentEmail — integration", () => {
 
   afterAll(async () => {
     // Clean up any test notifications
-    await db.run(
-      "DELETE FROM notifications WHERE subject LIKE ?",
-      [`${TEST_REF_PREFIX}%`]
-    );
+    await db.run("DELETE FROM notifications WHERE subject LIKE ?", [
+      `${TEST_REF_PREFIX}%`,
+    ]);
+    // Clean up test notifications
+    await db.run("DELETE FROM notifications WHERE ref_id = 'D0064070'");
   });
 
   it("creates billing + submitted notifications for a known invoice", async () => {
     // IV087334 → D0064070 Alta Goldwater (confirmed in DB)
-    const result = await handlePaymentEmail({
+    const _result = await handlePaymentEmail({
       emailId: 0,
       messageId: "test-message-id",
       mailboxEmail: "chi@desertservices.net",
@@ -282,14 +282,16 @@ describe("handlePaymentEmail — integration", () => {
 
     expect(billing).toBeDefined();
     expect(submitted).toBeDefined();
-    // Status will be 'drafted' if Azure creds available, 'failed' otherwise
-    expect(["drafted", "failed"]).toContain(billing!.status);
-    expect(["drafted", "failed"]).toContain(submitted!.status);
-  });
 
-  afterAll(async () => {
-    // Clean up test notifications
-    await db.run("DELETE FROM notifications WHERE ref_id = 'D0064070'");
+    if (!(billing && submitted)) {
+      throw new Error(
+        "Expected both billing and submitted notifications for D0064070"
+      );
+    }
+
+    // Status will be 'drafted' if Azure creds available, 'failed' otherwise
+    expect(["drafted", "failed"]).toContain(billing.status);
+    expect(["drafted", "failed"]).toContain(submitted.status);
   });
 });
 
@@ -321,9 +323,16 @@ describe("handleIssuedEmail — integration", () => {
       .get();
 
     expect(notification).toBeDefined();
-    expect(notification!.event_type).toBe("dust_permit_issued");
+    if (!notification) {
+      throw new Error("Expected issued notification for D0064501");
+    }
 
-    const metadata = JSON.parse(notification!.metadata);
+    expect(notification.event_type).toBe("dust_permit_issued");
+
+    const metadata = JSON.parse(notification.metadata) as {
+      permitId: string;
+      facilityName: string;
+    };
     expect(metadata.permitId).toBe("D0064501");
     expect(metadata.facilityName).toBe(
       "Lexington 420 - Northern Pkwy Logistics Bldg. D"

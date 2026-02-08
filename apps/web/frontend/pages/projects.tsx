@@ -5,13 +5,14 @@
  * Each project tracks: contract, dust permit, NOI, SWPPP, signs.
  */
 import { Mail, Search } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import useSWR from "swr";
 import { PageHeader } from "@/apps/web/frontend/components/page-header";
 import {
   PageError,
   PageLoading,
 } from "@/apps/web/frontend/components/page-loading";
+import { StatCard } from "@/apps/web/frontend/components/stat-card";
 import { StatusBadge } from "@/apps/web/frontend/components/status-badge";
 import { Input } from "@/apps/web/frontend/components/ui/input";
 import {
@@ -22,6 +23,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/apps/web/frontend/components/ui/table";
+import {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+} from "@/apps/web/frontend/components/ui/tabs";
 import { fetcher } from "@/apps/web/frontend/lib/fetcher";
 import { formatCurrency } from "@/lib/utils";
 
@@ -52,26 +58,13 @@ interface ProjectsApiResponse {
   };
 }
 
-function StatCard({
-  label,
-  value,
-  accent,
-}: {
-  label: string;
-  value: number | string;
-  accent?: boolean;
-}) {
-  return (
-    <div className="rounded-xl border border-border/50 bg-card/80 px-4 py-3">
-      <div
-        className={`font-display font-semibold text-2xl ${accent ? "text-primary" : "text-foreground"}`}
-      >
-        {value}
-      </div>
-      <div className="text-muted-foreground text-xs">{label}</div>
-    </div>
-  );
-}
+const STATUS_TABS = [
+  { value: "all", label: "All" },
+  { value: "Pending", label: "Pending", key: "Pending" },
+  { value: "Received", label: "Received", key: "Received" },
+  { value: "Executed", label: "Executed", key: "Executed" },
+  { value: "Sent Back", label: "Sent Back", key: "Sent Back" },
+] as const;
 
 export function ProjectsPage() {
   const { data, error, isLoading } = useSWR<ProjectsApiResponse>(
@@ -79,6 +72,8 @@ export function ProjectsPage() {
     fetcher
   );
   const [search, setSearch] = useState("");
+  const [statusTab, setStatusTab] = useState("all");
+  const normalizedSearch = search.trim().toLowerCase();
 
   const projects = data?.projects ?? [];
   const stats = data?.stats ?? {
@@ -87,15 +82,19 @@ export function ProjectsPage() {
     dustPermitStatus: {},
   };
 
-  const filtered = search
-    ? projects.filter(
-        (p) =>
-          p.name.toLowerCase().includes(search.toLowerCase()) ||
-          p.contractor?.toLowerCase().includes(search.toLowerCase()) ||
-          p.account_name?.toLowerCase().includes(search.toLowerCase()) ||
-          p.address?.toLowerCase().includes(search.toLowerCase())
-      )
-    : projects;
+  const filtered = useMemo(() => {
+    return projects.filter((p) => {
+      const matchesStatus =
+        statusTab === "all" || p.contract_status === statusTab;
+      const matchesSearch =
+        !normalizedSearch ||
+        p.name.toLowerCase().includes(normalizedSearch) ||
+        p.contractor?.toLowerCase().includes(normalizedSearch) ||
+        p.account_name?.toLowerCase().includes(normalizedSearch) ||
+        p.address?.toLowerCase().includes(normalizedSearch);
+      return matchesStatus && matchesSearch;
+    });
+  }, [projects, statusTab, normalizedSearch]);
 
   return (
     <div className="flex flex-1 flex-col">
@@ -120,7 +119,7 @@ export function ProjectsPage() {
       {!(error || isLoading) && (
         <div className="flex-1 p-6 lg:p-8">
           <div className="page-transition flex flex-col gap-6">
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-6">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
               <StatCard accent label="Total Projects" value={stats.total} />
               <StatCard
                 label="Contract Pending"
@@ -142,6 +141,27 @@ export function ProjectsPage() {
                 label="Dust Permit Requested"
                 value={stats.dustPermitStatus.Requested || 0}
               />
+            </div>
+
+            {/* Filter tabs + count */}
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <Tabs onValueChange={setStatusTab} value={statusTab}>
+                <TabsList>
+                  {STATUS_TABS.map((tab) => (
+                    <TabsTrigger key={tab.value} value={tab.value}>
+                      {tab.label}
+                      {tab.value !== "all" && (
+                        <span className="ml-1 text-muted-foreground/70">
+                          {stats.contractStatus[tab.value] || 0}
+                        </span>
+                      )}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </Tabs>
+              <div className="text-muted-foreground text-sm">
+                {filtered.length} projects
+              </div>
             </div>
 
             <div className="overflow-hidden rounded-xl border border-border bg-card">
@@ -182,7 +202,7 @@ export function ProjectsPage() {
                     <TableRow
                       className="group transition-colors hover:bg-primary/5"
                       key={project.id}
-                      style={{ animationDelay: `${index * 20}ms` }}
+                      style={{ animationDelay: `${index * 15}ms` }}
                     >
                       <TableCell>
                         <div>
@@ -234,18 +254,14 @@ export function ProjectsPage() {
                         className="py-12 text-center text-muted-foreground"
                         colSpan={9}
                       >
-                        {search
-                          ? "No projects match your search."
+                        {search || statusTab !== "all"
+                          ? "No projects match your filters."
                           : "No projects yet."}
                       </TableCell>
                     </TableRow>
                   )}
                 </TableBody>
               </Table>
-            </div>
-
-            <div className="text-muted-foreground text-sm">
-              {filtered.length} of {projects.length} projects
             </div>
           </div>
         </div>

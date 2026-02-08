@@ -8,12 +8,11 @@
  */
 
 import { db } from "@lib/db/hub";
-import { upsertMarketingPermit } from "@lib/db/repositories/marketing-permit";
-import { getMarketingPermitCount } from "@lib/db/repositories/marketing-permit";
+import { getPermitCount, upsertPermit } from "@lib/db/repositories/dust-permit";
 import {
-  getPermitCount,
-  upsertPermit,
-} from "@lib/db/repositories/dust-permit";
+  getMarketingPermitCount,
+  upsertMarketingPermit,
+} from "@lib/db/repositories/marketing-permit";
 import { downloadCompanyPermits } from "@/portal/sync-company";
 import { downloadMarketingPermits } from "@/portal/sync-marketing";
 import { withBrowser } from "@/portal/utils/browser";

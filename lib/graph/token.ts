@@ -17,19 +17,16 @@ export async function getGraphToken(
   clientId: string,
   clientSecret: string
 ): Promise<string> {
-  const res = await fetch(
-    `${TOKEN_URL_BASE}/${tenantId}/oauth2/v2.0/token`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({
-        client_id: clientId,
-        client_secret: clientSecret,
-        scope: GRAPH_SCOPE,
-        grant_type: "client_credentials",
-      }).toString(),
-    }
-  );
+  const res = await fetch(`${TOKEN_URL_BASE}/${tenantId}/oauth2/v2.0/token`, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      client_id: clientId,
+      client_secret: clientSecret,
+      scope: GRAPH_SCOPE,
+      grant_type: "client_credentials",
+    }).toString(),
+  });
 
   if (!res.ok) {
     throw new Error(`Graph token request failed: ${res.status}`);
@@ -63,22 +60,21 @@ export async function getGraphTokenCached(): Promise<string> {
     );
   }
 
-  const res = await fetch(
-    `${TOKEN_URL_BASE}/${tenantId}/oauth2/v2.0/token`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({
-        client_id: clientId,
-        client_secret: clientSecret,
-        scope: GRAPH_SCOPE,
-        grant_type: "client_credentials",
-      }).toString(),
-    }
-  );
+  const res = await fetch(`${TOKEN_URL_BASE}/${tenantId}/oauth2/v2.0/token`, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      client_id: clientId,
+      client_secret: clientSecret,
+      scope: GRAPH_SCOPE,
+      grant_type: "client_credentials",
+    }).toString(),
+  });
 
   if (!res.ok) {
-    throw new Error(`Graph token request failed: ${res.status} ${await res.text()}`);
+    throw new Error(
+      `Graph token request failed: ${res.status} ${await res.text()}`
+    );
   }
 
   const data = (await res.json()) as {

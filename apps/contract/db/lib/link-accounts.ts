@@ -102,7 +102,8 @@ export async function linkEmailsToAccounts(): Promise<LinkStats> {
   };
 
   const accountsBefore =
-    (await db.query<{ c: number }>("SELECT COUNT(*) as c FROM accounts").get())?.c ?? 0;
+    (await db.query<{ c: number }>("SELECT COUNT(*) as c FROM accounts").get())
+      ?.c ?? 0;
 
   const updateStmt = db.prepare(
     "UPDATE emails SET account_id = ? WHERE id = ? AND (account_id IS NULL OR account_id != ?)"
@@ -112,7 +113,11 @@ export async function linkEmailsToAccounts(): Promise<LinkStats> {
     await db.transaction(async () => {
       console.log("Signal 1: Platform emails with real sender domain...");
       const platformEmails = await db
-        .query<{ id: number; real_sender_domain: string; real_sender_company: string | null }>(
+        .query<{
+          id: number;
+          real_sender_domain: string;
+          real_sender_company: string | null;
+        }>(
           `SELECT id, real_sender_domain, real_sender_company
            FROM emails
            WHERE real_sender_domain IS NOT NULL
@@ -146,7 +151,9 @@ export async function linkEmailsToAccounts(): Promise<LinkStats> {
 
       for (const email of forwardEmails) {
         stats.processed++;
-        const accountId = await findOrCreateAccountByDomain(email.original_sender_domain);
+        const accountId = await findOrCreateAccountByDomain(
+          email.original_sender_domain
+        );
         if (accountId > 0) {
           await updateStmt.run(accountId, email.id, accountId);
           stats.linkedByForwardDomain++;
@@ -179,7 +186,9 @@ export async function linkEmailsToAccounts(): Promise<LinkStats> {
         }
       }
 
-      console.log("Signal 4: Name lookup for platform emails without domain...");
+      console.log(
+        "Signal 4: Name lookup for platform emails without domain..."
+      );
       const platformWithoutDomain = await db
         .query<{ id: number; from_name: string | null }>(
           `SELECT id, from_name
@@ -254,7 +263,11 @@ export async function linkEmailsToAccounts(): Promise<LinkStats> {
           .get(email.real_sender_company.toLowerCase());
 
         if (aliasMatch) {
-          await updateStmt.run(aliasMatch.account_id, email.id, aliasMatch.account_id);
+          await updateStmt.run(
+            aliasMatch.account_id,
+            email.id,
+            aliasMatch.account_id
+          );
           stats.linkedByAlias++;
         } else {
           stats.skippedNoDomain++;
@@ -296,7 +309,11 @@ export async function linkEmailsToAccounts(): Promise<LinkStats> {
             continue;
           }
 
-          await updateStmt.run(sibling.account_id, email.id, sibling.account_id);
+          await updateStmt.run(
+            sibling.account_id,
+            email.id,
+            sibling.account_id
+          );
           conversationLinks++;
           stats.linkedByConversation++;
           stats.processed++;
@@ -307,7 +324,11 @@ export async function linkEmailsToAccounts(): Promise<LinkStats> {
     });
 
     const accountsAfter =
-      (await db.query<{ c: number }>("SELECT COUNT(*) as c FROM accounts").get())?.c ?? 0;
+      (
+        await db
+          .query<{ c: number }>("SELECT COUNT(*) as c FROM accounts")
+          .get()
+      )?.c ?? 0;
     stats.accountsCreated = accountsAfter - accountsBefore;
   } catch (error) {
     console.error("Error during account linking:", error);
@@ -327,7 +348,9 @@ if (import.meta.main) {
         stats.linkedByNameLookup +
         stats.linkedByAlias +
         stats.linkedByConversation;
-      console.log(`Linked ${totalLinked} emails. Accounts created: ${stats.accountsCreated}`);
+      console.log(
+        `Linked ${totalLinked} emails. Accounts created: ${stats.accountsCreated}`
+      );
     })
     .catch((error) => {
       console.error("linkEmailsToAccounts failed:", error);

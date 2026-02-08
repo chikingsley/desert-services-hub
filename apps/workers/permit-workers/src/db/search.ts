@@ -21,10 +21,7 @@ export async function searchCompany(
 ): Promise<PortalCompany | null> {
   // Try exact match first
   const exact = await db
-    .query<
-      { portal_company_id: string; company_name: string },
-      [string]
-    >(
+    .query<{ portal_company_id: string; company_name: string }, [string]>(
       `SELECT DISTINCT portal_company_id, company_name
        FROM dust_permits_filed_by_desert_services
        WHERE LOWER(company_name) = LOWER(?)
@@ -42,10 +39,7 @@ export async function searchCompany(
 
   // Fall back to partial match
   const partial = await db
-    .query<
-      { portal_company_id: string; company_name: string },
-      [string]
-    >(
+    .query<{ portal_company_id: string; company_name: string }, [string]>(
       `SELECT DISTINCT portal_company_id, company_name
        FROM dust_permits_filed_by_desert_services
        WHERE company_name ILIKE ?

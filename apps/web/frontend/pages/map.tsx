@@ -18,19 +18,60 @@ type ParcelInfo = {
   acres: number | null;
 };
 
-type ParcelResult = { info: ParcelInfo; geojson: GeoJSON.Feature };
+type ParcelResult = {
+  info: ParcelInfo;
+  geojson: GeoJSON.Feature<GeoJSON.Polygon, { APN: string }>;
+};
 
-function parseEsriFeature(feature: any): ParcelResult | null {
-  const a = feature.attributes || {};
-  const rings: number[][][] = feature.geometry?.rings || [];
+type EsriAttributes = {
+  APN?: string | number;
+  PHYSICAL_ADDRESS?: string;
+  OWNER_NAME?: string;
+  LAND_SIZE?: number;
+};
+
+type EsriFeature = {
+  attributes?: EsriAttributes;
+  geometry?: {
+    rings?: number[][][];
+  };
+};
+
+type EsriQueryResult = {
+  features: EsriFeature[];
+};
+
+function isObjectRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function isFeatureCollection(
+  value: unknown
+): value is GeoJSON.FeatureCollection<GeoJSON.Geometry, GeoJSON.GeoJsonProperties> {
+  if (!isObjectRecord(value)) {
+    return false;
+  }
+  return value.type === "FeatureCollection" && Array.isArray(value.features);
+}
+
+function isEsriQueryResult(value: unknown): value is EsriQueryResult {
+  if (!isObjectRecord(value)) {
+    return false;
+  }
+  return Array.isArray(value.features);
+}
+
+function parseEsriFeature(feature: EsriFeature): ParcelResult | null {
+  const a = feature.attributes ?? {};
+  const rings: number[][][] = feature.geometry?.rings ?? [];
   if (!rings.length) return null;
 
   return {
     info: {
       apn: String(a.APN || ""),
-      address: a.PHYSICAL_ADDRESS || null,
-      owner: a.OWNER_NAME || null,
-      acres: a.LAND_SIZE || null,
+      address: a.PHYSICAL_ADDRESS ?? null,
+      owner: a.OWNER_NAME ?? null,
+      acres: a.LAND_SIZE ?? null,
     },
     geojson: {
       type: "Feature",
@@ -142,8 +183,11 @@ export function MapPage() {
           });
           const res = await fetch(`${PARCEL_QUERY_URL}?${params}`);
           if (res.ok) {
-            const fc = await res.json();
-            console.log("[map] labels loaded:", fc.features?.length);
+            const fc: unknown = await res.json();
+            if (!isFeatureCollection(fc)) {
+              return;
+            }
+            console.log("[map] labels loaded:", fc.features.length);
             const src = map.getSource("apn-labels") as maplibregl.GeoJSONSource | undefined;
             if (src) src.setData(fc);
           }
@@ -189,7 +233,10 @@ export function MapPage() {
 
         try {
           const res = await fetch(`${PARCEL_QUERY_URL}?${params}`);
-          const data = await res.json();
+          const data: unknown = await res.json();
+          if (!isEsriQueryResult(data)) {
+            return;
+          }
           console.log("[map] click result:", data.features?.length, "features");
 
           if (!data.features?.length) return;
@@ -264,7 +311,11 @@ export function MapPage() {
 
     try {
       const res = await fetch(`${PARCEL_QUERY_URL}?${params}`);
-      const data = await res.json();
+      const data: unknown = await res.json();
+      if (!isEsriQueryResult(data)) {
+        setSearching(false);
+        return;
+      }
       console.log("[map] search result:", data.features?.length, "features");
 
       if (!data.features?.length) {
@@ -275,7 +326,11 @@ export function MapPage() {
       const result = parseEsriFeature(data.features[0]);
       if (!result) { setSearching(false); return; }
 
-      const map = mapRef.current!;
+      const map = mapRef.current;
+      if (!map) {
+        setSearching(false);
+        return;
+      }
       const src = map.getSource("selected-parcel") as maplibregl.GeoJSONSource;
       src.setData(result.geojson);
       setSelected(result.info);

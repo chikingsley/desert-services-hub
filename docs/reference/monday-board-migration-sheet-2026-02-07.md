@@ -31,14 +31,17 @@ Source data snapshot:
 - Mirror-heavy boards are the current bottleneck:
   - Leads: 10 mirror columns out of 20 total.
   - Projects: 10 mirror columns out of 40 total.
-- Estimating already has direct relations but parity gaps remain:
-  - `deal_account` mirror has data while `board_relation_mkzdd0r4` is empty on 742 items.
-  - `deal_contact` has data while `board_relation_mm065k5n` is empty on 73 items.
-- Projects Service Lines parity gap:
-  - `lookup_mktg3b6w` mirror has data while `board_relation_mkp8pr9e` is empty on 154 items.
-- Dust Permits parity gaps:
-  - Account mirror has value while contractor direct relation is empty on 18 items.
-  - Contacts mirror has value while contact direct relation is empty on 17 items.
+- Estimating already has direct relations with mixed population paths:
+  - `board_relation_mkzdd0r4` (Contractors - Direct) populated on 2,964 rows.
+  - 742 rows have direct contractor blank but all 742 have contact-relation fallback (`deal_contact`) available.
+  - `board_relation_mm065k5n` is blank on 73 rows where legacy `deal_contact` still carries linkage.
+- Projects Service Lines currently uses split semantics:
+  - 154 rows are mirror-only (`lookup_mktg3b6w`) with no direct service-line relation.
+  - 34 rows are direct-only (`board_relation_mkp8pr9e`).
+  - 4 rows have both populated.
+- Dust Permits also uses mixed paths:
+  - 18 rows have account mirror populated while direct contractor relation is blank; all 18 are estimate-linked.
+  - 17 rows have contacts mirror populated while direct contact relation is blank; all 17 are estimate-linked.
 - Inspection Reports has broken/unused account/contact wiring:
   - `lookup_mkqy8nyj` (Account mirror) usage is 0%.
   - `board_relation_mkz5x9hg` (Contacts relation) usage is 0%.
@@ -77,8 +80,8 @@ Add:
 - No mandatory schema adds before parity; direct columns already exist.
 
 Backfill:
-- Fill `board_relation_mkzdd0r4` where `deal_account` mirror is populated and direct relation is empty (742 rows).
-- Fill `board_relation_mm065k5n` from `deal_contact` where direct is empty (73 rows).
+- For stricter direct-only queryability, fill `board_relation_mkzdd0r4` from contact fallback on the 742 rows where direct is blank.
+- Fill `board_relation_mm065k5n` from `deal_contact` where direct is blank (73 rows).
 
 Deprecate (after parity + code cutover):
 - `deal_account` (mirror Contractor)
@@ -146,7 +149,7 @@ Add:
 - Optional: dedicated canonical `Project Start Date` and `Project End Date` if old date columns remain preferred for querying
 
 Backfill:
-- Fill `board_relation_mkp8pr9e` from Service Lines mirror where missing (154 rows).
+- If Projects should be directly queryable without estimate mirrors, backfill `board_relation_mkp8pr9e` on the 154 mirror-only rows.
 - Fill new direct contractor/contact relations from linked estimate.
 - Decide whether `location_mkqb4cqh` remains canonical and backfill from mirror where needed.
 
@@ -183,8 +186,9 @@ Add:
 - Optional: `Projects - Direct` relation if project-level reporting is needed here.
 
 Backfill:
-- Fill `board_relation_mkxfk8ky` where account mirror has data but direct contractor is empty (18 rows).
-- Fill `board_relation_mkxmh6zg` where contacts mirror has data but direct contact is empty (17 rows).
+- If Dust Permits needs fully direct account/contact querying, fill:
+  - `board_relation_mkxfk8ky` on 18 estimate-backed mirror rows.
+  - `board_relation_mkxmh6zg` on 17 estimate-backed mirror rows.
 
 Deprecate (after parity):
 - `lookup_mkxp5f5n` Account (mirror)

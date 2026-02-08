@@ -1,14 +1,10 @@
 import {
-  APPLICATIONS_SUBTABS,
   BASE_URL,
-  COMPLIANCE_SUBTABS,
   DISCLAIMER,
   DUST_APP_STATUS_VALUES,
   FORMS,
   HOME,
   PAGES,
-  TAB_INDEX,
-  TAB_SOURCES,
 } from "@aqdata/constants";
 import type { DustAppSearchParams } from "@aqdata/types";
 
@@ -28,10 +24,6 @@ const STATE_TOKEN_REGEX =
   /name="oracle\.adf\.faces\.STATE_TOKEN"\s+value="(\d+)"/;
 const FORM_NAME_REGEX = /name="(oracle\.adf\.faces\.FORM)"\s+value="([^"]+)"/;
 const FORM_ACTION_REGEX = /<form[^>]+name="([^"]+)"[^>]+action="([^"]+)"/;
-
-// Regex to find tab links: source:'PREFIX:N:SUFFIX' with tab text nearby
-const TAB_LINK_REGEX =
-  /source:'([^']+)'\}[^>]*>.*?<img[^>]+alt="([^"]+)"/gs;
 
 export class AQDataClient {
   debug = !!process.env.AQ_DEBUG;
@@ -117,128 +109,72 @@ export class AQDataClient {
   }
 
   // ---------------------------------------------------------------------------
-  // Navigation
+  // Navigation — direct GET by URL (reliable, no JSF tab-click dance)
   // ---------------------------------------------------------------------------
 
-  async navigateToTab(tabName: string): Promise<string> {
+  async navigateTo(path: string, context: PageContext): Promise<string> {
     if (this.state === "disconnected") {
       throw new Error("Not connected. Call connect() first.");
     }
-
-    // Dynamically find the tab source ID from the current page HTML
-    const sourceId = this.findTabSourceId(tabName);
-    if (!sourceId) {
-      // Fallback to computed source ID
-      const tabIndex = TAB_INDEX[tabName];
-      if (tabIndex === undefined) {
-        throw new Error(`Unknown tab: ${tabName}. Not found in HTML or TAB_INDEX.`);
+    const url = `${BASE_URL}${path}`;
+    if (this.debug) console.log(`  [client] GET ${url}`);
+    const res = await fetch(url, {
+      headers: { Cookie: this.getCookieHeader() },
+      redirect: "manual",
+    });
+    this.updateCookies(res);
+    if (res.status === 302) {
+      const location = res.headers.get("location");
+      if (this.debug) console.log(`  [client] Redirect to: ${location}`);
+      if (location) {
+        const redirectUrl = location.startsWith("http")
+          ? location
+          : `${BASE_URL}${location}`;
+        const followRes = await fetch(redirectUrl, {
+          headers: { Cookie: this.getCookieHeader() },
+          redirect: "manual",
+        });
+        this.updateCookies(followRes);
+        const html = await followRes.text();
+        this.lastResponseHtml = html;
+        this.extractFormInfo(html);
+        this.stateToken = this.extractStateToken(html);
+        this.pageContext = context;
+        this.state = "on_page";
+        return html;
       }
-      const computed = this.getTabSourceId(tabIndex);
-      const html = await this.postCurrentForm({ source: computed });
-      this.updatePageContext(tabName);
-      return html;
     }
-
-    const html = await this.postCurrentForm({ source: sourceId });
-    this.updatePageContext(tabName);
-    return html;
-  }
-
-  private updatePageContext(tabName: string): void {
-    if (tabName === "applications") {
-      this.pageContext = "applications";
-    } else if (tabName === "compliance") {
-      this.pageContext = "compliance";
-    } else if (tabName === "home") {
-      this.pageContext = "home";
-    }
-    this.state = "on_page";
-  }
-
-  async navigateToSubTab(
-    subTabSource: string,
-    newContext: PageContext,
-  ): Promise<string> {
-    if (this.state === "disconnected") {
-      throw new Error("Not connected. Call connect() first.");
-    }
-
-    const html = await this.postCurrentForm({ source: subTabSource });
-    this.pageContext = newContext;
+    const html = await res.text();
+    this.lastResponseHtml = html;
+    this.extractFormInfo(html);
+    this.stateToken = this.extractStateToken(html);
+    this.pageContext = context;
     this.state = "on_page";
     return html;
   }
 
   async navigateToDustApplicationSearch(): Promise<string> {
-    if (
-      this.pageContext !== "applications" &&
-      this.pageContext !== "dust_application_search"
-    ) {
-      await this.navigateToTab("applications");
-    }
-    return this.navigateToSubTab(
-      APPLICATIONS_SUBTABS.dustApplicationSearch,
-      "dust_application_search",
-    );
+    return this.navigateTo(PAGES.dustApplicationSearch, "dust_application_search");
   }
 
   async navigateToInspectionSearch(): Promise<string> {
-    // Always navigate to compliance tab first (ensures correct page context)
-    if (!this.isOnCompliancePage()) {
-      await this.navigateToTab("compliance");
-    }
-    // Compliance tab lands on inspection search by default
-    if (this.pageContext === "compliance") {
-      // Check if we're already on the inspection search page
-      if (this.lastResponseHtml.includes("inspectionSearch_SubmitBtn")) {
-        this.pageContext = "inspection_search";
-        return this.lastResponseHtml;
-      }
-    }
-    const source =
-      this.findSubTabSourceId("Inspection Search") ??
-      COMPLIANCE_SUBTABS.inspectionSearch;
-    return this.navigateToSubTab(source, "inspection_search");
+    return this.navigateTo(PAGES.inspectionSearch, "inspection_search");
   }
 
   async navigateToComplianceReportSearch(): Promise<string> {
-    if (!this.isOnCompliancePage()) {
-      await this.navigateToTab("compliance");
-    }
-    const source =
-      this.findSubTabSourceId("Compliance Report Search") ??
-      COMPLIANCE_SUBTABS.complianceReportSearch;
-    return this.navigateToSubTab(source, "compliance_report_search");
+    return this.navigateTo(PAGES.complianceReportSearch, "compliance_report_search");
   }
 
   async navigateToEnforcementSearch(): Promise<string> {
-    if (!this.isOnCompliancePage()) {
-      await this.navigateToTab("compliance");
-    }
-    const source =
-      this.findSubTabSourceId("Enforcement Action Search") ??
-      COMPLIANCE_SUBTABS.enforcementSearch;
-    return this.navigateToSubTab(source, "enforcement_search");
+    return this.navigateTo(PAGES.enforcementSearch, "enforcement_search");
   }
 
   async navigateToSettlementSearch(): Promise<string> {
-    if (!this.isOnCompliancePage()) {
-      await this.navigateToTab("compliance");
-    }
-    const source =
-      this.findSubTabSourceId("Settlement Search") ??
-      COMPLIANCE_SUBTABS.settlementSearch;
-    return this.navigateToSubTab(source, "settlement_search");
+    return this.navigateTo(PAGES.settlementSearch, "settlement_search");
   }
 
   async navigateToSiteVisitSearch(): Promise<string> {
-    if (!this.isOnCompliancePage()) {
-      await this.navigateToTab("compliance");
-    }
-    const source =
-      this.findSubTabSourceId("Site Visit Search") ??
-      COMPLIANCE_SUBTABS.siteVisitSearch;
-    return this.navigateToSubTab(source, "site_visit_search");
+    return this.navigateTo(PAGES.siteVisitSearch, "site_visit_search");
   }
 
   // ---------------------------------------------------------------------------
@@ -474,95 +410,4 @@ export class AQDataClient {
     }
   }
 
-  private getTabSourceId(tabIndex: number): string {
-    let ctx: keyof typeof TAB_SOURCES;
-    if (
-      this.pageContext === "applications" ||
-      this.pageContext === "dust_application_search"
-    ) {
-      ctx = "applications";
-    } else if (this.isOnCompliancePage()) {
-      ctx = "compliance";
-    } else {
-      ctx = "home";
-    }
-    const { prefix, suffix } = TAB_SOURCES[ctx];
-    return `${prefix}:${tabIndex}:${suffix}`;
-  }
-
-  /**
-   * Dynamically discover tab source IDs from the current HTML.
-   * Alt text format: "TabName: Select to go to this tab" or "TabName: Currently selected tab"
-   */
-  private findTabSourceId(tabName: string): string | null {
-    const html = this.lastResponseHtml;
-    if (!html) return null;
-
-    const altTextMap: Record<string, string> = {
-      home: "Home",
-      facilities: "Facilities",
-      companies: "Companies",
-      complaints: "Complaints",
-      correspondence: "Correspondence",
-      applications: "Applications",
-      compliance: "Compliance",
-      permits: "Permits",
-      emissions: "Emissions Inventories",
-      invoices: "Invoices",
-      reports: "Reports",
-      monitors: "AQD Monitors",
-    };
-
-    const targetAlt = altTextMap[tabName];
-    if (!targetAlt) return null;
-
-    TAB_LINK_REGEX.lastIndex = 0;
-    let match: RegExpExecArray | null;
-    while ((match = TAB_LINK_REGEX.exec(html)) !== null) {
-      const sourceId = match[1];
-      const altText = match[2];
-      if (!altText || !sourceId) continue;
-      // Match "Compliance: Select to go..." or exact "Compliance"
-      if (
-        altText.startsWith(`${targetAlt}:`) ||
-        altText.trim() === targetAlt
-      ) {
-        return sourceId;
-      }
-    }
-
-    return null;
-  }
-
-  /**
-   * Find a sub-tab source ID by searching for its alt/title text in the HTML.
-   */
-  findSubTabSourceId(subTabName: string): string | null {
-    const html = this.lastResponseHtml;
-    if (!html) return null;
-
-    TAB_LINK_REGEX.lastIndex = 0;
-    let match: RegExpExecArray | null;
-    while ((match = TAB_LINK_REGEX.exec(html)) !== null) {
-      const sourceId = match[1];
-      const altText = match[2];
-      if (!altText || !sourceId) continue;
-      if (altText.toLowerCase().includes(subTabName.toLowerCase())) {
-        return sourceId;
-      }
-    }
-
-    return null;
-  }
-
-  private isOnCompliancePage(): boolean {
-    return (
-      this.pageContext === "compliance" ||
-      this.pageContext === "inspection_search" ||
-      this.pageContext === "compliance_report_search" ||
-      this.pageContext === "enforcement_search" ||
-      this.pageContext === "settlement_search" ||
-      this.pageContext === "site_visit_search"
-    );
-  }
 }

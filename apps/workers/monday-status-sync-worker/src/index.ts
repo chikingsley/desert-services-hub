@@ -52,6 +52,9 @@ interface LeadsSyncResult {
   leadsCount: number;
   updatedCount: number;
   skippedCount: number;
+  noStatusCount?: number;
+  noMappingCount?: number;
+  alreadyCorrectCount?: number;
   errors: string[];
 }
 

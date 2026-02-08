@@ -537,11 +537,10 @@ function buildSubtotalRow(subtotal: number): TableCell[] {
   ];
 }
 
-// Build content as array of unbreakable section tables
-// This prevents orphaned section headers at page bottoms
+// Build content as separate section tables with gaps between them
 function buildSectionTables(
   groupedItems: GroupedItems[],
-  unbreakable: boolean
+  _unbreakable: boolean
 ): Content[] {
   const tables: Content[] = [];
   let rowNumber = 0;
@@ -575,11 +574,9 @@ function buildSectionTables(
       sectionBody.push(buildSubtotalRow(subtotal));
     }
 
-    // Create table for this section
-    // Only mark unbreakable for small sections — large ones must break across pages
+    // Create table for this section — always breakable, dontBreakRows handles row integrity
     const sectionTable: Content = {
-      unbreakable:
-        unbreakable && group.section !== null && group.items.length <= 6,
+      margin: isFirst ? undefined : ([0, 4, 0, 0] as [number, number, number, number]),
       table: {
         headerRows: isFirst ? 1 : 0,
         dontBreakRows: true,
@@ -822,7 +819,7 @@ export function buildEstimateDocDefinition(
     }),
 
     footer: (currentPage, pageCount): Content => ({
-      margin: [40, 0, 40, 8],
+      margin: [40, 8, 40, 8],
       stack: [
         {
           table: {

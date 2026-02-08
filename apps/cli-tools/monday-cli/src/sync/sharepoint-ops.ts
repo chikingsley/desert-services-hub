@@ -3,8 +3,9 @@
  *
  * Handles folder creation, file uploads, folder moves, and URL writeback.
  */
+import { CUSTOMER_PROJECTS_PATH } from "@lib/sharepoint/paths";
 import { updateItem } from "@monday/client";
-import { CUSTOMER_PROJECTS_PATH, FILE_COLUMNS } from "@monday/sync/helpers";
+import { FILE_COLUMNS } from "@monday/sync/helpers";
 import { downloadAsset, fetchAllColumnAssets } from "@monday/sync/monday-fetch";
 import type { Asset, EstimateProject } from "@monday/sync/types";
 import { BOARD_IDS, ESTIMATING_COLUMNS } from "@monday/types";

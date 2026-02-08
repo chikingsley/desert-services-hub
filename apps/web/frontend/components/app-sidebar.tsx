@@ -6,6 +6,7 @@ import {
   Rocket,
   Search,
   Settings,
+  Shield,
 } from "lucide-react";
 import { Link, useLocation } from "react-router";
 import {
@@ -23,16 +24,12 @@ import {
   SidebarSeparator,
 } from "@/apps/web/frontend/components/ui/sidebar";
 
-// Workflow order: Estimates → Contracts → Project Initiation
+// Workflow order: Estimates → Contracts → Project Initiation → Dust Permits
 const mainNavItems = [
   { title: "Estimates", href: "/estimates", icon: FileText },
   { title: "Contracts", href: "/contracts", icon: FileCheck },
-  {
-    title: "Project Initiation",
-    href: "/projects",
-    icon: Rocket,
-    disabled: true,
-  },
+  { title: "Projects", href: "/projects", icon: Rocket },
+  { title: "Dust Permits", href: "/permits", icon: Shield },
 ];
 
 const manageItems = [
@@ -112,11 +109,10 @@ export function AppSidebar() {
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton
                       asChild
-                      disabled={item.disabled}
                       isActive={isActive}
                       tooltip={item.title}
                     >
-                      <Link to={item.disabled ? "#" : item.href}>
+                      <Link to={item.href}>
                         <item.icon />
                         <span>{item.title}</span>
                       </Link>

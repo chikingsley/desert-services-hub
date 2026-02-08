@@ -181,6 +181,46 @@ async function buildDustPermitDraft(
       showPermitInfo: "true",
     });
 
+    // Include PDF attachments from the original Maricopa email if available
+    const fileAttachments = Array.isArray(metadata.attachments)
+      ? (metadata.attachments as Array<{
+          name: string;
+          contentType: string;
+          contentBytes: string;
+        }>)
+      : [];
+
+    return {
+      body,
+      bodyType: "html",
+      skipSignature: true,
+      attachments: [logo, ...fileAttachments],
+    };
+  }
+
+  if (event.eventType === "dust_permit_billing") {
+    const body = await getTemplate("dust-permit-billing", {
+      recipientName: "Team",
+      accountName: stringValue(metadata.companyName, "Desert Services Customer"),
+      projectName: stringValue(metadata.projectName, "Unknown Project"),
+      address: stringValue(metadata.address, "TBD"),
+      applicationNumber: stringValue(metadata.permitId, event.refId),
+      permitNumber: stringValue(metadata.permitNumber, "Pending"),
+      acceleratedProcessing: stringValue(metadata.acceleratedProcessing, "No"),
+      vendorName: "Maricopa County Air Quality Department",
+      permitCost: stringValue(metadata.amount, "N/A"),
+      scheduleValue: stringValue(metadata.scheduleValue, "N/A"),
+      paymentMethod: metadata.cardLastFour
+        ? `Card ending ${stringValue(metadata.cardLastFour)}`
+        : "N/A",
+      paymentDate: stringValue(metadata.paymentDate, "N/A"),
+      confirmationId: stringValue(metadata.confirmationId),
+      cardLastFour: stringValue(metadata.cardLastFour),
+      cardholderName: stringValue(metadata.cardholderName, "Desert Services"),
+      invoiceNumber: stringValue(metadata.invoiceNumber, event.refId),
+      invoiceDate: stringValue(metadata.paymentDate, "N/A"),
+    });
+
     return {
       body,
       bodyType: "html",

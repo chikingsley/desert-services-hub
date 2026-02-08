@@ -2,14 +2,19 @@
  * Estimate Editor Page
  */
 
-import type { LoaderFunctionArgs } from "react-router";
-import { useLoaderData } from "react-router";
-import { EstimateWorkspace } from "@/apps/web/frontend/components/estimates/estimate-workspace";
 import type {
   EditorEstimate,
   EditorLineItem,
   EditorSection,
-} from "@/lib/types";
+} from "@lib/db/types";
+import { useParams } from "react-router";
+import useSWR from "swr";
+import { EstimateWorkspace } from "@/apps/web/frontend/components/estimates/estimate-workspace";
+import {
+  PageError,
+  PageLoading,
+} from "@/apps/web/frontend/components/page-loading";
+import { fetcher } from "@/apps/web/frontend/lib/fetcher";
 
 // API response types
 interface ApiLineItem {
@@ -54,15 +59,6 @@ interface ApiEstimateResponse {
   updated_at: string;
   current_version: ApiVersion;
   linked_takeoff?: { id: string; name: string } | null;
-}
-
-// Loader function for fetching a single estimate
-export async function estimateLoader({ params }: LoaderFunctionArgs) {
-  const response = await fetch(`/api/estimates/${params.id}`);
-  if (!response.ok) {
-    throw new Error("Failed to load estimate");
-  }
-  return response.json();
 }
 
 // Transform API response to EditorEstimate format
@@ -111,7 +107,20 @@ function transformToEditorEstimate(api: ApiEstimateResponse): EditorEstimate {
 }
 
 export function EstimateEditorPage() {
-  const apiEstimate = useLoaderData() as ApiEstimateResponse;
+  const { id } = useParams();
+  const {
+    data: apiEstimate,
+    error,
+    isLoading,
+  } = useSWR<ApiEstimateResponse>(id ? `/api/estimates/${id}` : null, fetcher);
+
+  if (error) {
+    return <PageError message={error.message} />;
+  }
+
+  if (isLoading || !apiEstimate) {
+    return <PageLoading />;
+  }
 
   const initialEstimate = transformToEditorEstimate(apiEstimate);
   const linkedTakeoff = apiEstimate.linked_takeoff || null;
@@ -120,6 +129,7 @@ export function EstimateEditorPage() {
     <EstimateWorkspace
       estimateId={apiEstimate.id}
       initialEstimate={initialEstimate}
+      initialUpdatedAt={apiEstimate.updated_at}
       jobName={apiEstimate.job_name || apiEstimate.base_number}
       linkedTakeoff={linkedTakeoff}
       versionId={apiEstimate.current_version.id}

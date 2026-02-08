@@ -394,13 +394,14 @@ def ingest(
 @app.command()
 def noi(
     pdf_path: Path = typer.Argument(..., exists=True, readable=True, dir_okay=False),
+    ocr_fallback: bool = typer.Option(False, "--ocr-fallback", help="Use glm-ocr if pdfplumber fails"),
     output_format: OutputFormat = typer.Option(OutputFormat.JSON, "--format", "-f"),
     output: Path | None = typer.Option(None, "--output", "-o"),
 ) -> None:
     """Extract structured data from an ADEQ NOI certificate PDF."""
     from pdf_analysis.noi import extract_noi
 
-    result = extract_noi(pdf_path)
+    result = extract_noi(pdf_path, ocr_fallback=ocr_fallback)
     rendered = json.dumps(result.model_dump(by_alias=True), indent=2)
 
     if output_format == OutputFormat.TEXT:

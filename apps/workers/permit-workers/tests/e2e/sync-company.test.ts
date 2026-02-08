@@ -58,7 +58,7 @@ describe("Company Permits Sync Flow", () => {
         throw new Error("No download path");
       }
 
-      const result = await syncFromXls(downloadedPath);
+      const result = await syncFromXls(downloadedPath, "company");
 
       expect(result.newRecords).toBeGreaterThanOrEqual(0);
       expect(result.totalInDb).toBeGreaterThan(0);

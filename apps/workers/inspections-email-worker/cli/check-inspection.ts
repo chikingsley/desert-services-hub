@@ -8,20 +8,13 @@
  *   bun cli/check-inspection.ts "ARCO" "KTEC PHX"
  *   bun cli/check-inspection.ts "BPR COMPANIES" "PV LOT C3" "01.26.26"
  */
+import { getProjectsFolder } from "@lib/sharepoint/paths";
 import { SharePointClient } from "@sharepoint/client";
 
 // --- Inspection path utilities ---
 
 const INSPECTIONS_BASE = "SWPPP/INSPECTIONS/PROJECTS";
 const DATE_FORMAT_REGEX = /^\d{2}\.\d{2}\.\d{2}$/;
-
-function getProjectsFolder(contractor: string): string {
-  const firstChar = contractor.charAt(0).toUpperCase();
-  const isAM =
-    (firstChar >= "0" && firstChar <= "9") ||
-    (firstChar >= "A" && firstChar <= "M");
-  return isAM ? "PROJECTS A-M" : "PROJECTS N-Z";
-}
 
 function formatDate(date: Date = new Date()): string {
   const mm = String(date.getMonth() + 1).padStart(2, "0");

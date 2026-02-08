@@ -1,180 +1,283 @@
 /**
- * Contracts Pipeline Page
+ * Contracts Page
  *
- * Mission control for contract reconciliation.
- * Contracts flow through: Queue -> Collected -> Extracted -> Validated -> Reconciled -> Done
- *
- * Drag-and-drop powered by @atlaskit/pragmatic-drag-and-drop.
- * The monitor lives here so card/column components stay pure.
+ * Won estimates from Monday.com — the contracts pipeline.
+ * Table view of all awarded contracts with project linkage info.
  */
-import { monitorForElements } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
-import { extractClosestEdge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge";
-import { RefreshCw } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
-import { ContractDetailPanel } from "@/apps/web/frontend/components/contracts/contract-detail-panel";
-import { ContractsTable } from "@/apps/web/frontend/components/contracts/contracts-table";
-import { PipelineBoard } from "@/apps/web/frontend/components/contracts/pipeline-board";
-import { PipelineStats } from "@/apps/web/frontend/components/contracts/pipeline-stats";
-import { SAMPLE_CONTRACTS } from "@/apps/web/frontend/components/contracts/sample-data";
-import type {
-  PipelineContract,
-  PipelineStage,
-} from "@/apps/web/frontend/components/contracts/types";
-import { PIPELINE_STAGES } from "@/apps/web/frontend/components/contracts/types";
+import { RefreshCw, Search } from "lucide-react";
+import { useState } from "react";
+import useSWR from "swr";
 import { PageHeader } from "@/apps/web/frontend/components/page-header";
+import {
+  PageError,
+  PageLoading,
+} from "@/apps/web/frontend/components/page-loading";
+import { StatusBadge } from "@/apps/web/frontend/components/status-badge";
 import { Button } from "@/apps/web/frontend/components/ui/button";
+import { Input } from "@/apps/web/frontend/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/apps/web/frontend/components/ui/table";
 import {
   Tabs,
-  TabsContent,
   TabsList,
   TabsTrigger,
 } from "@/apps/web/frontend/components/ui/tabs";
+import { fetcher } from "@/apps/web/frontend/lib/fetcher";
+import { formatCompactCurrency, formatCurrency } from "@/lib/utils";
 
-// TODO: Replace with real API loader when backend endpoint exists
-export function contractsLoader(): PipelineContract[] {
-  // Future: fetch from /api/contracts/pipeline
-  return SAMPLE_CONTRACTS;
+interface ContractFromApi {
+  id: number;
+  monday_item_id: string | null;
+  name: string;
+  estimate_number: string | null;
+  contractor: string | null;
+  group_id: string | null;
+  bid_status: string | null;
+  bid_value: number | null;
+  awarded_value: number | null;
+  due_date: string | null;
+  location: string | null;
+  project_id: number | null;
+  project_name: string | null;
+  contract_status: string | null;
+  dust_permit_status: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
-export function ContractsPage() {
-  const [contracts, setContracts] =
-    useState<PipelineContract[]>(SAMPLE_CONTRACTS);
-  const [selectedContract, setSelectedContract] =
-    useState<PipelineContract | null>(null);
-  const [panelOpen, setPanelOpen] = useState(false);
+interface ContractsApiResponse {
+  contracts: ContractFromApi[];
+  stats: {
+    total: number;
+    totalValue: number;
+    pipeline: Record<string, number>;
+  };
+}
 
-  const handleSelect = useCallback((contract: PipelineContract) => {
-    setSelectedContract(contract);
-    setPanelOpen(true);
-  }, []);
-
-  const handleClosePanel = useCallback(() => {
-    setPanelOpen(false);
-  }, []);
-
-  const handleAdvance = useCallback((contract: PipelineContract) => {
-    const currentIndex = PIPELINE_STAGES.indexOf(contract.stage);
-    if (currentIndex >= PIPELINE_STAGES.length - 1) {
-      return;
-    }
-
-    const nextStage: PipelineStage = PIPELINE_STAGES[currentIndex + 1];
-
-    setContracts((prev) =>
-      prev.map((c) => (c.id === contract.id ? { ...c, stage: nextStage } : c))
-    );
-
-    setSelectedContract((prev) =>
-      prev?.id === contract.id ? { ...prev, stage: nextStage } : prev
-    );
-  }, []);
-
-  const handleMoveContract = useCallback(
-    (contractId: string, toStage: PipelineStage, _toIndex: number) => {
-      setContracts((prev) =>
-        prev.map((c) => (c.id === contractId ? { ...c, stage: toStage } : c))
-      );
-
-      setSelectedContract((prev) =>
-        prev?.id === contractId ? { ...prev, stage: toStage } : prev
-      );
-    },
-    []
+function StatCard({
+  label,
+  value,
+  accent,
+}: {
+  label: string;
+  value: number | string;
+  accent?: boolean;
+}) {
+  return (
+    <div className="rounded-xl border border-border/50 bg-card/80 px-4 py-3">
+      <div
+        className={`font-display font-semibold text-2xl ${accent ? "text-primary" : "text-foreground"}`}
+      >
+        {value}
+      </div>
+      <div className="text-muted-foreground text-xs">{label}</div>
+    </div>
   );
+}
 
-  // Global drag monitor - handles all drop events
-  useEffect(() => {
-    return monitorForElements({
-      canMonitor: ({ source }) => source.data.type === "contract",
-      onDrop: ({ source, location }) => {
-        const dropTargets = location.current.dropTargets;
-        if (dropTargets.length === 0) {
-          return;
-        }
+const CONTRACT_STATUS_TABS = [
+  { value: "all", label: "All" },
+  { value: "Pending", label: "Pending" },
+  { value: "Received", label: "Received" },
+  { value: "Sent Back", label: "Sent Back" },
+  { value: "Executed", label: "Executed" },
+] as const;
 
-        const contractId = source.data.contractId as string;
-        const _sourceStage = source.data.stage as PipelineStage;
+export function ContractsPage() {
+  const { data, error, isLoading, mutate } = useSWR<ContractsApiResponse>(
+    "/api/contracts",
+    fetcher
+  );
+  const [search, setSearch] = useState("");
+  const [statusTab, setStatusTab] = useState("all");
 
-        // Find the column drop target (always the last/outermost one)
-        const columnTarget = dropTargets.find((t) => t.data.type === "column");
-        // Find the card drop target (if dropped on a specific card)
-        const cardTarget = dropTargets.find((t) => t.data.type === "contract");
+  const contracts = data?.contracts ?? [];
+  const stats = data?.stats ?? { total: 0, totalValue: 0, pipeline: {} };
 
-        if (!columnTarget) {
-          return;
-        }
-
-        const destinationStage = columnTarget.data.stage as PipelineStage;
-
-        if (cardTarget) {
-          // Dropped on a specific card - use closest edge for positioning
-          const targetIndex = cardTarget.data.index as number;
-          const edge = extractClosestEdge(cardTarget.data);
-          const insertIndex = edge === "bottom" ? targetIndex + 1 : targetIndex;
-          handleMoveContract(contractId, destinationStage, insertIndex);
-        } else {
-          // Dropped on column itself (empty area) - append to end
-          handleMoveContract(contractId, destinationStage, -1);
-        }
-      },
-    });
-  }, [handleMoveContract]);
+  const filtered = contracts.filter((c) => {
+    const matchesStatus =
+      statusTab === "all" ||
+      (statusTab === "Unlinked"
+        ? !c.contract_status
+        : c.contract_status === statusTab);
+    const matchesSearch =
+      !search ||
+      c.name.toLowerCase().includes(search.toLowerCase()) ||
+      c.contractor?.toLowerCase().includes(search.toLowerCase()) ||
+      c.estimate_number?.toLowerCase().includes(search.toLowerCase()) ||
+      c.project_name?.toLowerCase().includes(search.toLowerCase());
+    return matchesStatus && matchesSearch;
+  });
 
   return (
     <div className="flex flex-1 flex-col">
       <PageHeader
         actions={
-          <Button size="sm" variant="outline">
-            <RefreshCw className="h-4 w-4" />
-            Sync Queue
-          </Button>
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                className="h-9 w-64 pl-9"
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search contracts..."
+                value={search}
+              />
+            </div>
+            <Button onClick={() => mutate()} size="sm" variant="outline">
+              <RefreshCw className="h-4 w-4" />
+              Refresh
+            </Button>
+          </div>
         }
         breadcrumbs={[{ label: "Contracts" }]}
         title="Contracts"
       />
 
-      <div className="flex-1 p-6 lg:p-8">
-        <div className="page-transition flex flex-col gap-6">
-          {/* Stats bar */}
-          <PipelineStats contracts={contracts} />
+      {error && <PageError message={error.message} />}
+      {!error && isLoading && <PageLoading />}
+      {!(error || isLoading) && (
+        <div className="flex-1 p-6 lg:p-8">
+          <div className="page-transition flex flex-col gap-6">
+            {/* Stats bar */}
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+              <StatCard accent label="Won Contracts" value={stats.total} />
+              <StatCard
+                label="Total Value"
+                value={formatCompactCurrency(stats.totalValue)}
+              />
+              <StatCard label="Pending" value={stats.pipeline.Pending || 0} />
+              <StatCard label="Received" value={stats.pipeline.Received || 0} />
+              <StatCard label="Executed" value={stats.pipeline.Executed || 0} />
+            </div>
 
-          <Tabs className="flex flex-col gap-4" defaultValue="pipeline">
+            {/* Filter tabs */}
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <TabsList>
-                <TabsTrigger value="pipeline">Pipeline</TabsTrigger>
-                <TabsTrigger value="table">Table</TabsTrigger>
-              </TabsList>
+              <Tabs onValueChange={setStatusTab} value={statusTab}>
+                <TabsList>
+                  {CONTRACT_STATUS_TABS.map((tab) => (
+                    <TabsTrigger key={tab.value} value={tab.value}>
+                      {tab.label}
+                      {tab.value !== "all" && (
+                        <span className="ml-1 text-muted-foreground/70">
+                          {stats.pipeline[tab.value] || 0}
+                        </span>
+                      )}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </Tabs>
               <div className="text-muted-foreground text-sm">
-                {contracts.length} contracts
+                {filtered.length} contracts
               </div>
             </div>
 
-            <TabsContent value="pipeline">
-              <PipelineBoard
-                contracts={contracts}
-                onAdvanceContract={handleAdvance}
-                onSelectContract={handleSelect}
-              />
-            </TabsContent>
-
-            <TabsContent value="table">
-              <ContractsTable
-                contracts={contracts}
-                onSelect={handleSelect}
-                selectedId={selectedContract?.id}
-              />
-            </TabsContent>
-          </Tabs>
+            {/* Table */}
+            <div className="overflow-hidden rounded-xl border border-border bg-card">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/30 hover:bg-muted/30">
+                    <TableHead className="font-display font-medium text-foreground">
+                      Estimate #
+                    </TableHead>
+                    <TableHead className="font-display font-medium text-foreground">
+                      Project
+                    </TableHead>
+                    <TableHead className="font-display font-medium text-foreground">
+                      Contractor
+                    </TableHead>
+                    <TableHead className="font-display font-medium text-foreground">
+                      Contract Status
+                    </TableHead>
+                    <TableHead className="font-display font-medium text-foreground">
+                      Dust Permit
+                    </TableHead>
+                    <TableHead className="text-right font-display font-medium text-foreground">
+                      Value
+                    </TableHead>
+                    <TableHead className="font-display font-medium text-foreground">
+                      Location
+                    </TableHead>
+                    <TableHead className="font-display font-medium text-foreground">
+                      Linked Project
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filtered.map((contract, index) => (
+                    <TableRow
+                      className="group transition-colors hover:bg-primary/5"
+                      key={contract.id}
+                      style={{ animationDelay: `${index * 15}ms` }}
+                    >
+                      <TableCell className="font-medium font-mono text-primary">
+                        {contract.estimate_number || "—"}
+                      </TableCell>
+                      <TableCell>
+                        <div className="max-w-[280px] truncate font-medium">
+                          {contract.name}
+                        </div>
+                      </TableCell>
+                      <TableCell className="max-w-[180px] truncate text-muted-foreground">
+                        {contract.contractor || "—"}
+                      </TableCell>
+                      <TableCell>
+                        <StatusBadge
+                          status={contract.contract_status || "Unlinked"}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        {contract.dust_permit_status && (
+                          <StatusBadge status={contract.dust_permit_status} />
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right font-mono text-sm">
+                        {contract.awarded_value || contract.bid_value
+                          ? formatCurrency(
+                              (contract.awarded_value ??
+                                contract.bid_value) as number
+                            )
+                          : "—"}
+                      </TableCell>
+                      <TableCell className="max-w-[180px] truncate text-muted-foreground text-sm">
+                        {contract.location || "—"}
+                      </TableCell>
+                      <TableCell>
+                        {contract.project_name ? (
+                          <span className="max-w-[200px] truncate text-sm">
+                            {contract.project_name}
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground/50 text-sm italic">
+                            Not linked
+                          </span>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {filtered.length === 0 && (
+                    <TableRow>
+                      <TableCell
+                        className="py-12 text-center text-muted-foreground"
+                        colSpan={8}
+                      >
+                        {search || statusTab !== "all"
+                          ? "No contracts match your filters."
+                          : "No won contracts found."}
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
         </div>
-      </div>
-
-      {/* Detail panel */}
-      <ContractDetailPanel
-        contract={selectedContract}
-        onAdvance={handleAdvance}
-        onClose={handleClosePanel}
-        open={panelOpen}
-      />
+      )}
     </div>
   );
 }

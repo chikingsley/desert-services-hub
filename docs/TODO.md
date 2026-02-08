@@ -67,6 +67,14 @@ See `apps/contract/PROJECT.md` for full 15-step workflow and `STATE.md` for curr
 - [ ] `ds-contracts-dispatcher` — verify DocuSign integration
 - [ ] `ds-monday-status-sync-worker` — status sync health
 
+### Monday Schema Migration
+
+- [ ] Execute migration plan in `docs/reference/monday-board-migration-sheet-2026-02-07.md`
+- [ ] Add direct/queryable columns on Leads, Projects, and Inspection Reports
+- [ ] Backfill direct relations and produce parity report
+- [ ] Update workers to read direct columns before mirrors
+- [ ] Mark legacy mirror columns deprecated (no deletes until parity holds)
+
 ---
 
 ## Future Work (Unprioritized)

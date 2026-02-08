@@ -1,15 +1,17 @@
 "use client";
 
-import { useCallback } from "react";
-import { useUndoRedo } from "@/hooks/use-undo-redo";
 import type {
   Catalog,
-  CatalogServiceItem,
+  CatalogItem,
   CatalogSubcategory,
+} from "@lib/catalog/types";
+import type {
   EditorEstimate,
   EditorLineItem,
   EditorSection,
-} from "@/lib/types";
+} from "@lib/db/types";
+import { useCallback } from "react";
+import { useUndoRedo } from "@/hooks/use-undo-redo";
 
 export interface UseEstimateEditorOptions {
   initialEstimate?: EditorEstimate;
@@ -182,7 +184,7 @@ export function useEstimateEditor({
       categoryId: string,
       code: string
     ): {
-      item: CatalogServiceItem;
+      item: CatalogItem;
       subcategory?: CatalogSubcategory;
     } | null => {
       const category = catalog.categories.find((c) => c.id === categoryId);
@@ -254,7 +256,7 @@ export function useEstimateEditor({
         return;
       }
 
-      let catalogItem: CatalogServiceItem | undefined;
+      let catalogItem: CatalogItem | undefined;
       let subcategory: CatalogSubcategory | undefined;
 
       if (parts.length === 2) {

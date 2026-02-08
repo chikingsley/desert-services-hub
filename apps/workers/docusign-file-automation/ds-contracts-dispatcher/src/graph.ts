@@ -21,34 +21,6 @@ interface GraphMessageResponse {
   }>;
 }
 
-export async function getGraphToken(
-  tenantId: string,
-  clientId: string,
-  clientSecret: string
-): Promise<string> {
-  const tokenUrl = `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`;
-
-  const body = new URLSearchParams({
-    client_id: clientId,
-    client_secret: clientSecret,
-    scope: "https://graph.microsoft.com/.default",
-    grant_type: "client_credentials",
-  });
-
-  const res = await fetch(tokenUrl, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: body.toString(),
-  });
-
-  if (!res.ok) {
-    throw new Error(`Token request failed: ${res.status}`);
-  }
-
-  const data = (await res.json()) as { access_token: string };
-  return data.access_token;
-}
-
 /**
  * Search a mailbox using KQL.
  */

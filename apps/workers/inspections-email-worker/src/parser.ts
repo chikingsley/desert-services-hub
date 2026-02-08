@@ -2,6 +2,7 @@
  * Email parsing utilities for ComplianceGo inspection emails
  */
 
+import { getProjectsFolder } from "@lib/sharepoint/paths";
 import PostalMime from "postal-mime";
 
 // =============================================================================
@@ -182,18 +183,6 @@ export function parseSiteName(
   }
 
   return null;
-}
-
-/**
- * Determines which folder (A-M or N-Z) based on first character.
- * Numbers and A-M go to PROJECTS A-M, N-Z go to PROJECTS N-Z.
- */
-export function getProjectsFolder(contractor: string): string {
-  const firstChar = contractor.charAt(0).toUpperCase();
-  const isNumberOrAtoM =
-    (firstChar >= "0" && firstChar <= "9") ||
-    (firstChar >= "A" && firstChar <= "M");
-  return isNumberOrAtoM ? "PROJECTS A-M" : "PROJECTS N-Z";
 }
 
 /**

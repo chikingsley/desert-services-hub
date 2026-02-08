@@ -1,5 +1,5 @@
 /**
- * Root App component with React Router (Data Mode)
+ * Root App component with React Router
  */
 import React, { Suspense } from "react";
 import {
@@ -22,34 +22,23 @@ import {
   SidebarInset,
   SidebarProvider,
 } from "@/apps/web/frontend/components/ui/sidebar";
-import { CatalogPage, catalogLoader } from "@/apps/web/frontend/pages/catalog";
-import {
-  ContractsPage,
-  contractsLoader,
-} from "@/apps/web/frontend/pages/contracts";
+import { CatalogPage } from "@/apps/web/frontend/pages/catalog";
+import { ContractsPage } from "@/apps/web/frontend/pages/contracts";
 // Pages
 import { DashboardPage } from "@/apps/web/frontend/pages/dashboard";
-import {
-  EstimateEditorPage,
-  estimateLoader,
-} from "@/apps/web/frontend/pages/estimate-editor";
-import {
-  EstimatesPage,
-  estimatesLoader,
-} from "@/apps/web/frontend/pages/estimates";
+import { EstimateEditorPage } from "@/apps/web/frontend/pages/estimate-editor";
+import { EstimatesPage } from "@/apps/web/frontend/pages/estimates";
+import { PermitsPage } from "@/apps/web/frontend/pages/permits";
+import { ProjectsPage } from "@/apps/web/frontend/pages/projects";
 import { SettingsPage } from "@/apps/web/frontend/pages/settings";
-import {
-  TakeoffEditorPage,
-  takeoffLoader,
-} from "@/apps/web/frontend/pages/takeoff-editor";
-import {
-  TakeoffsPage,
-  takeoffsLoader,
-} from "@/apps/web/frontend/pages/takeoffs";
+import { TakeoffEditorPage } from "@/apps/web/frontend/pages/takeoff-editor";
+import { TakeoffsPage } from "@/apps/web/frontend/pages/takeoffs";
 
 // Lazy-load map page (maplibre-gl is huge, don't block main bundle)
-const LazyMapPage = React.lazy(
-  () => import("@/apps/web/frontend/pages/map").then((m) => ({ default: m.MapPage })),
+const LazyMapPage = React.lazy(() =>
+  import("@/apps/web/frontend/pages/map").then((m) => ({
+    default: m.MapPage,
+  }))
 );
 
 // Error boundary component for routes
@@ -97,7 +86,7 @@ function RootLayout() {
   );
 }
 
-// Router configuration with data loaders
+// Router configuration — all data fetching via SWR inside components
 const router = createBrowserRouter([
   {
     path: "/",
@@ -111,43 +100,45 @@ const router = createBrowserRouter([
       {
         path: "estimates",
         element: <EstimatesPage />,
-        loader: estimatesLoader,
-        errorElement: <RouteErrorBoundary />,
       },
       {
         path: "estimates/:id",
         element: <EstimateEditorPage />,
-        loader: estimateLoader,
-        errorElement: <RouteErrorBoundary />,
       },
       {
         path: "takeoffs",
         element: <TakeoffsPage />,
-        loader: takeoffsLoader,
-        errorElement: <RouteErrorBoundary />,
       },
       {
         path: "takeoffs/:id",
         element: <TakeoffEditorPage />,
-        loader: takeoffLoader,
-        errorElement: <RouteErrorBoundary />,
       },
       {
         path: "contracts",
         element: <ContractsPage />,
-        loader: contractsLoader,
-        errorElement: <RouteErrorBoundary />,
+      },
+      {
+        path: "projects",
+        element: <ProjectsPage />,
+      },
+      {
+        path: "permits",
+        element: <PermitsPage />,
       },
       {
         path: "catalog",
         element: <CatalogPage />,
-        loader: catalogLoader,
-        errorElement: <RouteErrorBoundary />,
       },
       {
         path: "map",
         element: (
-          <Suspense fallback={<div className="flex flex-1 items-center justify-center text-muted-foreground">Loading map...</div>}>
+          <Suspense
+            fallback={
+              <div className="flex flex-1 items-center justify-center text-muted-foreground">
+                Loading map...
+              </div>
+            }
+          >
             <LazyMapPage />
           </Suspense>
         ),

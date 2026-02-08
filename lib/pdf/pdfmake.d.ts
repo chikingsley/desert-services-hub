@@ -45,6 +45,14 @@ declare module "pdfmake/build/vfs_fonts" {
   export default vfsFonts;
 }
 
+declare module "pdfmake/build/standard-fonts/Times" {
+  const timesFonts: {
+    vfs: Record<string, unknown>;
+    fonts: Record<string, unknown>;
+  };
+  export default timesFonts;
+}
+
 // Browser build type declarations
 declare module "pdfmake/build/pdfmake" {
   import type { TDocumentDefinitions } from "pdfmake/interfaces";

@@ -659,7 +659,7 @@ export async function runScrapeFlow(
     console.log(`\n[${index}] ${permitId} - ${app.projectName || "(no name)"}`);
 
     // Check if already in DB
-    if (existsInDb(permitId)) {
+    if (await existsInDb(permitId)) {
       console.log("  → Skipping (already in DB)");
       result.skipped.push(permitId);
       index++;
@@ -678,7 +678,7 @@ export async function runScrapeFlow(
     // Extract data
     try {
       const data = await extractPermitData(page);
-      saveToDb(data);
+      await saveToDb(data);
       console.log(`  ✓ Saved: ${data.applicationId}`);
       result.scraped.push(data.applicationId);
     } catch (error) {

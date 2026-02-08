@@ -8,6 +8,21 @@
  * Cron: 0 * * * * (hourly)
  */
 
+import { getGraphToken } from "@lib/graph/token";
+import {
+  buildSharePointUrl,
+  CUSTOMER_PROJECTS_PATH,
+  DEFAULT_STATUS,
+  extractUrl,
+  getLetterFolder,
+  parseStatusFromUrl,
+  parseVariantPrefix,
+  SHAREPOINT_HOST,
+  SHAREPOINT_SITE_PATH,
+  STATUS_MAP,
+  sanitizeName,
+} from "@lib/sharepoint/paths";
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -53,7 +68,6 @@ interface MondayItem {
 // =============================================================================
 
 const BOARD_ID = "7943937851";
-const CUSTOMER_PROJECTS_PATH = "Customer Projects";
 
 // Column IDs
 const ACCOUNTS_COLUMN = "mirror_mkqz3ngj";
@@ -73,52 +87,8 @@ const FILE_COLUMNS = Object.keys(FILE_COLUMN_MAP);
 // Groups to skip
 const SKIP_GROUPS = ["Shell Estimates ( Do Not Move)", "Sales Team Estimates"];
 
-// Status → SharePoint folder mapping
-const STATUS_MAP: Record<string, string> = {
-  New: "Submitted",
-  "Yet to Bid": "Submitted",
-  "Bid Sent": "Submitted",
-  Won: "Active",
-  "Pending Won": "Active",
-  "Add to Projects": "Active",
-  Lost: "Lost",
-  Duplicates: "Lost",
-  "GC Not Awarded": "Lost",
-};
-
-const DEFAULT_STATUS_FOLDER = "Submitted";
-const VALID_STATUS_FOLDERS = new Set([
-  "Submitted",
-  "Active",
-  "Lost",
-  "Finished",
-]);
-
-// Variant prefix pattern
-const VARIANT_PREFIXES = [
-  "TF",
-  "PJ",
-  "RO",
-  "REBID",
-  "CFS",
-  "INSPECTIONS",
-  "LW",
-  "MISC",
-  "SF",
-  "SS",
-];
-const PREFIX_PATTERN = new RegExp(
-  `^(${VARIANT_PREFIXES.join("|")})[\\s\\-_:]+`,
-  "i"
-);
-
-// SharePoint
-const SHAREPOINT_SITE = "desertservices.sharepoint.com";
-const SITE_PATH = "/sites/DataDrive";
-
 // Regex patterns (top-level for performance)
 const SHAREPOINT_PATH_REGEX = /Shared%20Documents\/(.+)/;
-const URL_REGEX = /https?:\/\/\S+/;
 
 // =============================================================================
 // Worker Entry Point
@@ -200,15 +170,14 @@ async function runSync(env: Env, dryRun = false): Promise<SyncResult> {
     console.log(`[Sync] Found ${items.length} items`);
 
     // Get Graph token and drive ID once
-    const token = await getGraphToken(env);
+    const token = await getGraphTokenFromEnv(env);
     const driveId = await getDriveId(token);
 
     for (const item of items) {
       result.processed++;
 
       try {
-        const targetFolder =
-          STATUS_MAP[item.bidStatus] ?? DEFAULT_STATUS_FOLDER;
+        const targetFolder = STATUS_MAP[item.bidStatus] ?? DEFAULT_STATUS;
         const currentFolder = parseStatusFromUrl(item.sharepointUrl);
 
         // Build folder path using BASE name (without variant prefix)
@@ -461,7 +430,7 @@ async function getEstimateItems(env: Env): Promise<MondayItem[]> {
           accountName:
             accountCol?.display_value || accountCol?.text || "Unknown",
           bidStatus: statusCol?.text || "",
-          sharepointUrl: extractUrl(urlCol?.text),
+          sharepointUrl: urlCol?.text ? extractUrl(urlCol.text) : null,
           files,
           isVariant,
           variantSuffix: suffix,
@@ -730,30 +699,16 @@ async function uploadItemFiles(
 // SharePoint Graph API
 // =============================================================================
 
-async function getGraphToken(env: Env): Promise<string> {
-  const tokenUrl = `https://login.microsoftonline.com/${env.AZURE_TENANT_ID}/oauth2/v2.0/token`;
-  const body = new URLSearchParams({
-    client_id: env.AZURE_CLIENT_ID,
-    client_secret: env.AZURE_CLIENT_SECRET,
-    scope: "https://graph.microsoft.com/.default",
-    grant_type: "client_credentials",
-  });
-
-  const res = await fetch(tokenUrl, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: body.toString(),
-  });
-
-  if (!res.ok) {
-    throw new Error(`Token request failed: ${res.status}`);
-  }
-  const data = (await res.json()) as { access_token: string };
-  return data.access_token;
+function getGraphTokenFromEnv(env: Env): Promise<string> {
+  return getGraphToken(
+    env.AZURE_TENANT_ID,
+    env.AZURE_CLIENT_ID,
+    env.AZURE_CLIENT_SECRET
+  );
 }
 
 async function getDriveId(token: string): Promise<string> {
-  const endpoint = `https://graph.microsoft.com/v1.0/sites/${SHAREPOINT_SITE}:${SITE_PATH}:/drives`;
+  const endpoint = `https://graph.microsoft.com/v1.0/sites/${SHAREPOINT_HOST}:${SHAREPOINT_SITE_PATH}:/drives`;
   const res = await fetch(endpoint, {
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -876,59 +831,4 @@ async function moveProjectFolder(
   return moveRes.ok;
 }
 
-// =============================================================================
-// Utilities
-// =============================================================================
-
-function parseVariantPrefix(name: string): {
-  isVariant: boolean;
-  baseName: string;
-  suffix: string | null;
-} {
-  const match = name.match(PREFIX_PATTERN);
-  if (match) {
-    return {
-      isVariant: true,
-      baseName: name.slice(match[0].length).trim(),
-      suffix: match[1].toUpperCase(),
-    };
-  }
-  return { isVariant: false, baseName: name.trim(), suffix: null };
-}
-
-function parseStatusFromUrl(url: string | null): string | null {
-  if (!url) {
-    return null;
-  }
-  const decoded = decodeURIComponent(url);
-  const marker = "Customer Projects/";
-  const idx = decoded.indexOf(marker);
-  if (idx === -1) {
-    return null;
-  }
-  const afterMarker = decoded.slice(idx + marker.length);
-  const status = afterMarker.split("/")[0];
-  return VALID_STATUS_FOLDERS.has(status) ? status : null;
-}
-
-function extractUrl(text?: string): string | null {
-  if (!text) {
-    return null;
-  }
-  const match = text.match(URL_REGEX);
-  return match?.[0] ?? null;
-}
-
-function sanitizeName(name: string): string {
-  return name.replace(/["*:<>?/\\|#%~{}]/g, "_").trim();
-}
-
-function getLetterFolder(name: string): string {
-  const first = name.trim().charAt(0).toUpperCase();
-  return first >= "A" && first <= "Z" ? first : "_Numeric";
-}
-
-function buildSharePointUrl(path: string): string {
-  const encodedPath = path.split("/").map(encodeURIComponent).join("/");
-  return `https://${SHAREPOINT_SITE}${SITE_PATH}/Shared%20Documents/${encodedPath}`;
-}
+// Utilities now imported from @lib/sharepoint/paths

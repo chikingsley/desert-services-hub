@@ -7,11 +7,11 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/apps/web/frontend/components/ui/tooltip";
-import type { GeneratePDFOptions } from "@/lib/pdf/pdf-builder";
+import type { EstimatePDFOptions } from "@/lib/pdf/estimate/build-estimate-doc-definition";
 
 interface FloatingPdfOptionsProps {
-  options: GeneratePDFOptions;
-  onChange: (options: GeneratePDFOptions) => void;
+  options: EstimatePDFOptions;
+  onChange: (options: EstimatePDFOptions) => void;
 }
 
 export function FloatingPdfOptions({

@@ -39,6 +39,10 @@ export const COLORS = {
   ring: "#C2622D",
 } as const;
 
+// Font family names — shared by client (generate-client) and server (fonts.ts)
+export const FONT_BODY = "Roboto";
+export const FONT_TITLE = "Times";
+
 export const COMPANY = {
   name: "Desert Services LLC",
   /** Formatted phone: (480) 513-8986 */

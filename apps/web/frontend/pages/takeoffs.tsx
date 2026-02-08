@@ -2,9 +2,15 @@
  * Takeoffs List Page
  */
 import { Plus } from "lucide-react";
-import { Link, useLoaderData } from "react-router";
+import { Link } from "react-router";
+import useSWR from "swr";
 import { EmptyState } from "@/apps/web/frontend/components/empty-state";
 import { PageHeader } from "@/apps/web/frontend/components/page-header";
+import {
+  PageError,
+  PageLoading,
+} from "@/apps/web/frontend/components/page-loading";
+import { NewTakeoffDialog } from "@/apps/web/frontend/components/takeoffs/new-takeoff-dialog";
 import { Badge } from "@/apps/web/frontend/components/ui/badge";
 import { Button } from "@/apps/web/frontend/components/ui/button";
 import {
@@ -15,6 +21,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/apps/web/frontend/components/ui/table";
+import { fetcher } from "@/apps/web/frontend/lib/fetcher";
 import { formatDate } from "@/lib/utils";
 
 interface Takeoff {
@@ -25,17 +32,6 @@ interface Takeoff {
   created_at: string;
   updated_at: string;
 }
-
-// Loader function for fetching takeoffs
-export async function takeoffsLoader() {
-  const response = await fetch("/api/takeoffs");
-  if (!response.ok) {
-    throw new Error("Failed to load takeoffs");
-  }
-  return response.json();
-}
-
-import { NewTakeoffDialog } from "@/apps/web/frontend/components/takeoffs/new-takeoff-dialog";
 
 function TakeoffsHeaderActions() {
   return (
@@ -49,7 +45,11 @@ function TakeoffsHeaderActions() {
 }
 
 export function TakeoffsPage() {
-  const takeoffs = useLoaderData() as Takeoff[];
+  const { data, error, isLoading } = useSWR<Takeoff[]>(
+    "/api/takeoffs",
+    fetcher
+  );
+  const takeoffs = data ?? [];
 
   return (
     <div className="flex flex-1 flex-col">
@@ -59,60 +59,64 @@ export function TakeoffsPage() {
         title="Takeoffs"
       />
 
-      <div className="flex-1 p-6 lg:p-8">
-        <div className="page-transition">
-          {takeoffs.length === 0 ? (
-            <EmptyState
-              action={
-                <NewTakeoffDialog>
-                  <Button>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Upload PDF
-                  </Button>
-                </NewTakeoffDialog>
-              }
-              description="Upload a site plan PDF to start measuring and counting items."
-              title="No takeoffs yet"
-            />
-          ) : (
-            <div className="rounded-xl border border-border bg-card shadow-sm">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Created</TableHead>
-                    <TableHead>Updated</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {takeoffs.map((takeoff) => (
-                    <TableRow key={takeoff.id}>
-                      <TableCell>
-                        <Link
-                          className="font-medium text-primary hover:underline"
-                          to={`/takeoffs/${takeoff.id}`}
-                        >
-                          {takeoff.name}
-                        </Link>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{takeoff.status}</Badge>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {formatDate(takeoff.created_at)}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {formatDate(takeoff.updated_at)}
-                      </TableCell>
+      {error && <PageError message={error.message} />}
+      {!error && isLoading && <PageLoading />}
+      {!(error || isLoading) && (
+        <div className="flex-1 p-6 lg:p-8">
+          <div className="page-transition">
+            {takeoffs.length === 0 ? (
+              <EmptyState
+                action={
+                  <NewTakeoffDialog>
+                    <Button>
+                      <Plus className="mr-2 h-4 w-4" />
+                      Upload PDF
+                    </Button>
+                  </NewTakeoffDialog>
+                }
+                description="Upload a site plan PDF to start measuring and counting items."
+                title="No takeoffs yet"
+              />
+            ) : (
+              <div className="rounded-xl border border-border bg-card shadow-sm">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Created</TableHead>
+                      <TableHead>Updated</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
+                  </TableHeader>
+                  <TableBody>
+                    {takeoffs.map((takeoff) => (
+                      <TableRow key={takeoff.id}>
+                        <TableCell>
+                          <Link
+                            className="font-medium text-primary hover:underline"
+                            to={`/takeoffs/${takeoff.id}`}
+                          >
+                            {takeoff.name}
+                          </Link>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{takeoff.status}</Badge>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {formatDate(takeoff.created_at)}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {formatDate(takeoff.updated_at)}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

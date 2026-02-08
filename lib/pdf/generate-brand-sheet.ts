@@ -6,12 +6,12 @@
 import { resolve } from "node:path";
 import pdfmake from "pdfmake";
 import type { Content, TableCell } from "pdfmake/interfaces";
-import { COLORS, COMPANY } from "./brand";
-import { FONT_TITLE, initFonts } from "./fonts";
-import { buildFooter } from "./footer";
-import { buildHeader } from "./header";
-import { borderedLayout, cardLayout, noBordersLayout } from "./layouts";
-import { loadLogo } from "./logo";
+import { COLORS, COMPANY } from "./shared/brand";
+import { FONT_TITLE, initFonts } from "./shared/fonts";
+import { buildFooter } from "./shared/footer";
+import { buildHeader } from "./shared/header";
+import { borderedLayout, cardLayout, noBordersLayout } from "./shared/layouts";
+import { loadLogo } from "./shared/logo";
 
 initFonts();
 

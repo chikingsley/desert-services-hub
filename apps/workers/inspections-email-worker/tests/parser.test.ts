@@ -1,7 +1,7 @@
 import { describe, expect, it } from "bun:test";
+import { getProjectsFolder } from "@lib/sharepoint/paths";
 import {
   formatFilename,
-  getProjectsFolder,
   parseComplianceGoEmail,
   parseSiteName,
   shouldProcessEmail,

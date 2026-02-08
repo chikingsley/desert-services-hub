@@ -10,6 +10,7 @@
  *   bun cli/manual-upload.ts "https://cdn3.compliancego.com/..." "ARCO" "KTEC PHX"
  *   bun cli/manual-upload.ts "https://cdn3.compliancego.com/..." "ARCO" "KTEC PHX" "01.29.26"
  */
+import { getProjectsFolder } from "@lib/sharepoint/paths";
 import { SharePointClient } from "@sharepoint/client";
 import puppeteer from "puppeteer";
 
@@ -19,14 +20,6 @@ const INSPECTIONS_BASE = "SWPPP/INSPECTIONS/PROJECTS";
 const DATE_FORMAT_REGEX = /^\d{2}\.\d{2}\.\d{2}$/;
 const CHROME_PATH =
   "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
-
-function getProjectsFolder(contractor: string): string {
-  const firstChar = contractor.charAt(0).toUpperCase();
-  const isAM =
-    (firstChar >= "0" && firstChar <= "9") ||
-    (firstChar >= "A" && firstChar <= "M");
-  return isAM ? "PROJECTS A-M" : "PROJECTS N-Z";
-}
 
 function formatDate(date: Date = new Date()): string {
   const mm = String(date.getMonth() + 1).padStart(2, "0");

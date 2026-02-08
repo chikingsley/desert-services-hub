@@ -2,12 +2,15 @@
 // Run: bun test tests/lib/pdf/simple.test.ts
 
 import { describe, expect, test } from "bun:test";
-import { generatePDF, savePDF } from "@/lib/pdf/generate-pdf";
+import {
+  generateEstimatePDF,
+  saveEstimatePDF,
+} from "@/lib/pdf/estimate/generate-estimate-pdf.server";
 import { simpleQuote } from "./test-data";
 
 describe("PDF Generation - Simple Style", () => {
   test("generates valid PDF with flat line items", async () => {
-    const buffer = await generatePDF(simpleQuote, { style: "simple" });
+    const buffer = await generateEstimatePDF(simpleQuote, { style: "simple" });
 
     expect(buffer).toBeInstanceOf(Buffer);
     expect(buffer.length).toBeGreaterThan(0);
@@ -18,7 +21,7 @@ describe("PDF Generation - Simple Style", () => {
   });
 
   test("saves simple style PDF to file", async () => {
-    const outPath = await savePDF(simpleQuote, "test-pdf-simple.pdf", {
+    const outPath = await saveEstimatePDF(simpleQuote, "test-pdf-simple.pdf", {
       style: "simple",
     });
 

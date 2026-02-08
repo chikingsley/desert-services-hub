@@ -2,6 +2,7 @@
  * Estimate Repository
  */
 import { db } from "@lib/db/hub";
+import { likeSearch } from "@lib/db/search";
 import type { Estimate, UpsertEstimateData } from "@lib/db/types";
 
 function parseEstimateRow(row: Record<string, unknown>): Estimate {
@@ -209,15 +210,13 @@ export async function searchEstimates(
   query: string,
   limit = 50
 ): Promise<Estimate[]> {
-  const pattern = `%${query}%`;
-  const rows = await db
-    .query<Record<string, unknown>, [string, string, string, number]>(
-      `SELECT * FROM estimates
-       WHERE name LIKE ? OR estimate_number LIKE ? OR contractor LIKE ?
-       ORDER BY synced_at DESC
-       LIMIT ?`
-    )
-    .all(pattern, pattern, pattern, limit);
+  const rows = await likeSearch<Record<string, unknown>>({
+    table: "estimates",
+    columns: ["name", "estimate_number", "contractor"],
+    query,
+    orderBy: "synced_at DESC",
+    limit,
+  });
 
   return rows.map(parseEstimateRow);
 }

@@ -25,8 +25,11 @@ import {
   getEstimateTakeoff,
   updateEstimate,
 } from "@/api/estimates-by-id";
+import { listContracts } from "@/api/contracts";
 import { healthCheck } from "@/api/health";
 import { searchMonday } from "@/api/monday";
+import { listPermits } from "@/api/permits";
+import { listProjects } from "@/api/projects";
 import { createTakeoff, listTakeoffs } from "@/api/takeoffs";
 import {
   deleteTakeoff,
@@ -108,6 +111,21 @@ const server = serve({
       GET: h(getTakeoffItems),
     },
 
+    // Projects
+    "/api/projects": {
+      GET: h(listProjects),
+    },
+
+    // Dust Permits
+    "/api/permits": {
+      GET: h(listPermits),
+    },
+
+    // Contracts (Won estimates)
+    "/api/contracts": {
+      GET: h(listContracts),
+    },
+
     // Monday.com
     "/api/monday/search": {
       GET: h(searchMonday),
@@ -137,6 +155,10 @@ const server = serve({
     "/takeoffs/*": homepage,
     "/contracts": homepage,
     "/contracts/*": homepage,
+    "/projects": homepage,
+    "/projects/*": homepage,
+    "/permits": homepage,
+    "/permits/*": homepage,
     "/catalog": homepage,
     "/map": homepage,
     "/settings": homepage,
@@ -156,7 +178,7 @@ const server = serve({
 
     // SPA fallback - serve index.html for client-side routing
     // Note: HTMLBundle can't be returned from fetch(), only from routes
-    const indexHtml = file("./src/frontend/index.html");
+    const indexHtml = file("./apps/web/frontend/index.html");
     return new Response(indexHtml, {
       headers: { "Content-Type": "text/html" },
     });

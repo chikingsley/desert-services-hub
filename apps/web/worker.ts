@@ -5,13 +5,15 @@
  * Runs in-process alongside the Bun HTTP server.
  *
  * Job types:
- *   sync_item        -- Fetch a single item from Monday, upsert all fields into hub.db
- *   download_files   -- Download new files from a Monday item, run PDF extraction
- *   sync_full        -- Full board sync (all ~4800 estimates from Monday -> hub.db)
- *   contract_intake  -- Classify + extract data from IC contract PDFs via LLM
+ *   sync_item              -- Fetch a single item from Monday, upsert all fields into hub.db
+ *   download_files         -- Download new files from a Monday item, run PDF extraction
+ *   sync_full              -- Full board sync (all ~4800 estimates from Monday -> hub.db)
+ *   contract_intake        -- Classify + extract data from IC contract PDFs via LLM
+ *   dust_permit_payment    -- PointAndPay payment email → billing + submitted notifications
+ *   dust_permit_issued_email -- Maricopa issued email → issued notification with PDF
  */
-import { htmlToText } from "@contract/db/lib/html-to-text";
-import { isSpam } from "@contract/db/lib/spam-filter";
+import { htmlToText } from "@lib/html-to-text";
+import { isSpam } from "@lib/spam-filter";
 import type { GraphEmailClient } from "@email/client";
 import { createGraphClient } from "@email/sync/config";
 import { db } from "@lib/db/hub";
@@ -27,6 +29,15 @@ import { getItemRich } from "@monday/client";
 import { ESTIMATING_COLUMNS } from "@monday/types";
 import { itemHasFiles, processItemFiles } from "@/apps/web/pipeline";
 import { processContractIntake } from "@/apps/workers/contract-intake/lib/intake";
+import { processDustPermitIntake } from "@/apps/workers/dust-permit-intake/lib/intake";
+import type { DustPermitIntakePayload } from "@/apps/workers/dust-permit-intake/lib/intake";
+import {
+  detectDustPermitEmailTrigger,
+  handleIssuedEmail,
+  handlePaymentEmail,
+  type IssuedJobPayload,
+  type PaymentJobPayload,
+} from "@/apps/workers/notifications/lib/email-triggers";
 import { syncEstimates } from "@/apps/workers/estimate-poller/lib/sync";
 
 // ============================================================================
@@ -372,6 +383,24 @@ async function processEmailNotification(
   }
 
   console.log(`[worker] Webhook synced: "${email.subject}" in ${mailboxEmail}`);
+
+  // Dust permit email trigger detection
+  const trigger = detectDustPermitEmailTrigger(email.fromEmail, email.subject, fullText);
+  if (trigger === "pointandpay_payment") {
+    await enqueueJob.run(
+      "dust_permit_payment",
+      null,
+      JSON.stringify({ emailId, messageId, mailboxEmail, bodyText: fullText })
+    );
+    console.log(`[worker] Enqueued dust_permit_payment for invoice in email #${emailId}`);
+  } else if (trigger === "maricopa_issued") {
+    await enqueueJob.run(
+      "dust_permit_issued_email",
+      null,
+      JSON.stringify({ emailId, messageId, mailboxEmail, bodyText: fullText, subject: email.subject })
+    );
+    console.log(`[worker] Enqueued dust_permit_issued_email for email #${emailId}`);
+  }
 }
 
 // ============================================================================
@@ -386,8 +415,9 @@ async function processNextJob(): Promise<void> {
   }
 
   processing = true;
+  let job: WebhookJob | null = null;
   try {
-    const job = await dequeue();
+    job = await dequeue();
     if (!job) {
       return;
     }
@@ -451,6 +481,26 @@ async function processNextJob(): Promise<void> {
         break;
       }
 
+      case "dust_permit_intake": {
+        const dustPayload = JSON.parse(
+          job.payload
+        ) as DustPermitIntakePayload;
+        await processDustPermitIntake(dustPayload);
+        break;
+      }
+
+      case "dust_permit_payment": {
+        const paymentPayload = JSON.parse(job.payload) as PaymentJobPayload;
+        await handlePaymentEmail(paymentPayload);
+        break;
+      }
+
+      case "dust_permit_issued_email": {
+        const issuedPayload = JSON.parse(job.payload) as IssuedJobPayload;
+        await handleIssuedEmail(issuedPayload);
+        break;
+      }
+
       default:
         console.log(`[worker] Unknown job type: ${job.job_type}`);
     }
@@ -458,12 +508,11 @@ async function processNextJob(): Promise<void> {
     await completeJob.run(job.id);
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
-    console.error(`[worker] Job failed: ${msg}`);
-
-    // Try to fail the job if we have a reference to it
-    const staleCheck = await selectNextJob.get();
-    if (staleCheck?.status === "processing") {
-      await failJob.run(msg.slice(0, 1000), staleCheck.id);
+    if (job) {
+      console.error(`[worker] Job #${job.id} failed (attempt ${job.attempts}/${job.max_attempts}): ${msg}`);
+      await failJob.run(msg.slice(0, 1000), job.id);
+    } else {
+      console.error(`[worker] Job processing error: ${msg}`);
     }
   } finally {
     processing = false;

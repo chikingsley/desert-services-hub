@@ -1,6 +1,7 @@
 // Utility to convert takeoff annotations into estimate line items
+
+import type { EstimateLineItem } from "@lib/db/types";
 import type { TakeoffAnnotation } from "@/lib/takeoff/pdf-takeoff";
-import type { EstimateLineItem } from "@/lib/types";
 
 // Bundle item within a takeoff bundle
 export interface TakeoffBundleItem {

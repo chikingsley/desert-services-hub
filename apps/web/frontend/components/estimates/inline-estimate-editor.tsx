@@ -1,7 +1,9 @@
 "use client";
 
+import type { Catalog } from "@lib/catalog/types";
+import type { EditorEstimate, EditorLineItem } from "@lib/db/types";
 import { CalendarIcon, Plus } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CatalogCombobox } from "@/apps/web/frontend/components/estimates/catalog-combobox";
 import { ItemCombobox } from "@/apps/web/frontend/components/estimates/item-combobox";
 import { SectionCombobox } from "@/apps/web/frontend/components/estimates/section-combobox";
@@ -15,7 +17,6 @@ import {
   PopoverTrigger,
 } from "@/apps/web/frontend/components/ui/popover";
 import { useEstimateEditor } from "@/hooks/use-estimate-editor";
-import type { Catalog, EditorEstimate, EditorLineItem } from "@/lib/types";
 import { formatCurrency } from "@/lib/utils";
 
 interface InlineEstimateEditorProps {
@@ -331,21 +332,25 @@ export function InlineEstimateEditor({
   );
 
   // Single-pass grouping: build Map<sectionId, items[]> then derive both lists
-  const itemsBySectionId = new Map<string | undefined, EditorLineItem[]>();
-  for (const item of estimate.lineItems) {
-    const key = item.sectionId || undefined;
-    const group = itemsBySectionId.get(key);
-    if (group) {
-      group.push(item);
-    } else {
-      itemsBySectionId.set(key, [item]);
+  const { unsectioned, sectionGroups } = useMemo(() => {
+    const bySection = new Map<string | undefined, EditorLineItem[]>();
+    for (const item of estimate.lineItems) {
+      const key = item.sectionId || undefined;
+      const group = bySection.get(key);
+      if (group) {
+        group.push(item);
+      } else {
+        bySection.set(key, [item]);
+      }
     }
-  }
-  const unsectioned = itemsBySectionId.get(undefined) ?? [];
-  const sectionGroups = estimate.sections.map((section) => ({
-    section,
-    items: itemsBySectionId.get(section.id) ?? [],
-  }));
+    return {
+      unsectioned: bySection.get(undefined) ?? [],
+      sectionGroups: estimate.sections.map((section) => ({
+        section,
+        items: bySection.get(section.id) ?? [],
+      })),
+    };
+  }, [estimate.lineItems, estimate.sections]);
 
   return (
     <div className="flex flex-1 flex-col gap-6 overflow-y-auto p-6 pb-28 lg:p-8 lg:pb-8">

@@ -1,17 +1,17 @@
 "use client";
 
-import { Mountain } from "lucide-react";
-import { useMemo } from "react";
 import type {
-  Estimate,
   EstimateLineItem,
   EstimateSection,
   EstimateVersion,
-} from "@/lib/types";
+  QuotingEstimate,
+} from "@lib/db/types";
+import { Mountain } from "lucide-react";
+import { useMemo } from "react";
 import { cn, formatCurrency, formatDate } from "@/lib/utils";
 
 interface EstimatePDFPreviewProps {
-  estimate: Estimate;
+  estimate: QuotingEstimate;
   version: EstimateVersion;
   sections: EstimateSection[];
   lineItems: EstimateLineItem[];

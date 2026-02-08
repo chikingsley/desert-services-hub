@@ -3,59 +3,20 @@
  * Raw fetch — no SDK dependency. Works with Bun's built-in fetch.
  */
 
+import {
+  clearTokenCache,
+  getGraphTokenCached as getAccessToken,
+} from "@lib/graph/token";
+
 const GRAPH_BASE = "https://graph.microsoft.com/v1.0";
 
-let cachedToken: { token: string; expiresAt: number } | null = null;
+export { getAccessToken };
 
 export class DeltaExpiredError extends Error {
   constructor(message: string) {
     super(message);
     this.name = "DeltaExpiredError";
   }
-}
-
-export async function getAccessToken(): Promise<string> {
-  if (cachedToken && Date.now() < cachedToken.expiresAt - 300_000) {
-    return cachedToken.token;
-  }
-
-  const tenantId = process.env.AZURE_TENANT_ID;
-  const clientId = process.env.AZURE_CLIENT_ID;
-  const clientSecret = process.env.AZURE_CLIENT_SECRET;
-
-  if (!(tenantId && clientId && clientSecret)) {
-    throw new Error(
-      "Missing AZURE_TENANT_ID, AZURE_CLIENT_ID, or AZURE_CLIENT_SECRET"
-    );
-  }
-
-  const res = await fetch(
-    `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({
-        client_id: clientId,
-        client_secret: clientSecret,
-        scope: "https://graph.microsoft.com/.default",
-        grant_type: "client_credentials",
-      }).toString(),
-    }
-  );
-
-  if (!res.ok) {
-    throw new Error(`Token request failed: ${res.status} ${await res.text()}`);
-  }
-
-  const data = (await res.json()) as {
-    access_token: string;
-    expires_in: number;
-  };
-  cachedToken = {
-    token: data.access_token,
-    expiresAt: Date.now() + data.expires_in * 1000,
-  };
-  return data.access_token;
 }
 
 async function graphFetch(url: string, maxRetries = 3): Promise<Response> {
@@ -66,7 +27,7 @@ async function graphFetch(url: string, maxRetries = 3): Promise<Response> {
     });
 
     if (res.status === 401 && attempt === 0) {
-      cachedToken = null;
+      clearTokenCache();
       token = await getAccessToken();
       const retry = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` },

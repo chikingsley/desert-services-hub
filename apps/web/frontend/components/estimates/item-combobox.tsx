@@ -1,5 +1,6 @@
 "use client";
 
+import type { Catalog } from "@lib/catalog/types";
 import { ChevronsUpDown } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Button } from "@/apps/web/frontend/components/ui/button";
@@ -16,7 +17,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/apps/web/frontend/components/ui/popover";
-import type { Catalog } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 interface CatalogItemInfo {

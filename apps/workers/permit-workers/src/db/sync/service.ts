@@ -1,19 +1,23 @@
 /**
  * Sync Services
  *
- * Orchestrates synchronization of permit data from CSV files and XLS exports
- * into the local SQLite databases.
+ * Orchestrates synchronization of permit data from XLS exports
+ * into the hub Postgres database.
  *
  * @module src/db/sync/service
  */
 
-import { Database } from "bun:sqlite";
+import { db } from "@lib/db/hub";
+import { upsertMarketingPermit } from "@lib/db/repositories/marketing-permit";
+import { getMarketingPermitCount } from "@lib/db/repositories/marketing-permit";
+import {
+  getPermitCount,
+  upsertPermit,
+} from "@lib/db/repositories/dust-permit";
 import { downloadCompanyPermits } from "@/portal/sync-company";
 import { downloadMarketingPermits } from "@/portal/sync-marketing";
 import { withBrowser } from "@/portal/utils/browser";
-import type { PermitRow } from "./csv-parser";
 import { type PortalPermit, parsePermitExport } from "./permit-parser";
-import { getTableCount, insertPermits } from "./upsert";
 
 export interface SyncStats {
   newRecords: number;
@@ -29,15 +33,11 @@ export interface SyncResult {
 
 export type SyncOptions = Record<string, never>;
 
-// Database paths
-const COMPANY_PERMITS_DB_PATH = "src/db/company-permits.sqlite";
-const MARKETING_PERMITS_DB_PATH = "src/db/marketing-permits.sqlite";
-
 /**
- * Sync permits from CSV exports to SQLite databases.
+ * Sync permits from portal XLS exports to Postgres.
  */
 export async function runSync(_input: SyncOptions): Promise<SyncResult> {
-  console.log("🌐 Syncing from Maricopa Portal (Export to Excel)\n");
+  console.log("Syncing from Maricopa Portal (Export to Excel)\n");
 
   return await withBrowser<SyncResult>(
     { operation: "sync" },
@@ -47,19 +47,10 @@ export async function runSync(_input: SyncOptions): Promise<SyncResult> {
       const companyXlsPath = await downloadCompanyPermits(page);
       const marketingXlsPath = await downloadMarketingPermits(page);
 
-      const companyStats = await syncFromXls(
-        companyXlsPath,
-        COMPANY_PERMITS_DB_PATH,
-        "permits"
-      );
+      const companyStats = await syncFromXls(companyXlsPath, "company");
+      const marketingStats = await syncFromXls(marketingXlsPath, "marketing");
 
-      const marketingStats = await syncFromXls(
-        marketingXlsPath,
-        MARKETING_PERMITS_DB_PATH,
-        "scraped_permits"
-      );
-
-      console.log("\n🎉 Done!");
+      console.log("\nDone!");
 
       return {
         success: true,
@@ -71,55 +62,88 @@ export async function runSync(_input: SyncOptions): Promise<SyncResult> {
 }
 
 /**
- * Sync from a downloaded XLS file (Maricopa HTML Table format)
+ * Sync from a downloaded XLS file into Postgres.
  */
 export async function syncFromXls(
   xlsPath: string,
-  dbPath = COMPANY_PERMITS_DB_PATH,
-  tableName = "permits"
+  target: "company" | "marketing"
 ): Promise<SyncStats> {
-  console.log(`📂 Syncing from: ${xlsPath}`);
-  console.log(`   Target: ${dbPath} → ${tableName}`);
+  console.log(`Syncing from: ${xlsPath}`);
+  console.log(`  Target: ${target} permits (Postgres)`);
 
   const content = await Bun.file(xlsPath).text();
   const parsed = parsePermitExport(content, xlsPath);
 
-  const db = new Database(dbPath);
-
-  // Map PortalPermit (from xls-parser) to PermitRow format
-  const rows: PermitRow[] = parsed.map((p: PortalPermit) => ({
-    id: p.id,
-    project_name: p.projectName,
-    company_id: p.companyId,
-    company_name: p.companyName,
-    status: p.status,
-    submitted_date: p.submittedDate,
-    effective_date: p.effectiveDate,
-    expiration_date: p.expirationDate,
-    closed_date: p.closedDate,
-    previous_app_id: p.previousAppId,
-    project_start_date: p.projectStartDate,
-    project_end_date: p.projectEndDate,
-    address: p.address,
-    city: p.city,
-    parcel: p.parcel,
-    is_block_permit: p.isBlockPermit ? 1 : 0,
-    is_accelerated: p.isAccelerated ? 1 : 0,
-    invoice_number: p.invoiceNumber,
-    invoice_charges: p.invoiceCharges,
-    invoice_balance: p.invoiceBalance,
-  }));
-
-  if (rows.length > 0) {
-    insertPermits(db, rows, tableName);
-    console.log(`   ✅ Upserted ${rows.length} records`);
+  if (parsed.length > 0) {
+    await db.transaction(async () => {
+      for (const p of parsed) {
+        if (target === "company") {
+          await upsertCompanyPermit(p);
+        } else {
+          await upsertMarketingFromPortal(p);
+        }
+      }
+    });
+    console.log(`  Upserted ${parsed.length} records`);
   }
 
-  const totalInDb = getTableCount(db, tableName);
-  db.close();
+  const totalInDb =
+    target === "company"
+      ? await getPermitCount()
+      : await getMarketingPermitCount();
 
   return {
     newRecords: parsed.length,
     totalInDb,
   };
+}
+
+async function upsertCompanyPermit(p: PortalPermit): Promise<void> {
+  await upsertPermit({
+    id: p.id,
+    projectName: p.projectName,
+    companyName: p.companyName,
+    portalCompanyId: p.companyId,
+    status: p.status,
+    submittedDate: p.submittedDate,
+    effectiveDate: p.effectiveDate,
+    expirationDate: p.expirationDate,
+    closedDate: p.closedDate,
+    previousAppId: p.previousAppId,
+    projectStartDate: p.projectStartDate,
+    projectEndDate: p.projectEndDate,
+    address: p.address,
+    city: p.city,
+    parcel: p.parcel,
+    isBlockPermit: p.isBlockPermit,
+    isAccelerated: p.isAccelerated,
+    invoiceNumber: p.invoiceNumber,
+    invoiceCharges: p.invoiceCharges,
+    invoiceBalance: p.invoiceBalance,
+  });
+}
+
+async function upsertMarketingFromPortal(p: PortalPermit): Promise<void> {
+  await upsertMarketingPermit({
+    id: p.id,
+    projectName: p.projectName,
+    companyId: p.companyId,
+    companyName: p.companyName,
+    status: p.status,
+    submittedDate: p.submittedDate,
+    effectiveDate: p.effectiveDate,
+    expirationDate: p.expirationDate,
+    closedDate: p.closedDate,
+    previousAppId: p.previousAppId,
+    projectStartDate: p.projectStartDate,
+    projectEndDate: p.projectEndDate,
+    address: p.address,
+    city: p.city,
+    parcel: p.parcel,
+    isBlockPermit: p.isBlockPermit,
+    isAccelerated: p.isAccelerated,
+    invoiceNumber: p.invoiceNumber,
+    invoiceCharges: p.invoiceCharges,
+    invoiceBalance: p.invoiceBalance,
+  });
 }

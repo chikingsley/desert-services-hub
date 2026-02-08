@@ -34,6 +34,7 @@ import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { findItem } from "@lib/catalog";
+import type { EditorEstimate } from "@lib/db/types";
 import {
   applyLineItemChanges,
   type CreateEstimateInput,
@@ -48,8 +49,10 @@ import {
   listEstimates,
   updateEstimate,
 } from "@lib/estimating";
-import { generatePDF, getPDFFilename } from "@lib/pdf/generate-pdf";
-import type { EditorEstimate } from "@lib/types";
+import {
+  generateEstimatePDF,
+  getEstimatePDFFilename,
+} from "@lib/pdf/estimate/generate-estimate-pdf.server";
 
 const args = process.argv.slice(2);
 const command = args[0];
@@ -470,19 +473,19 @@ async function pdfCommand(argv: string[]): Promise<void> {
   const currentVersion = details.current_version;
 
   // Convert to EditorEstimate format for PDF generation
-  const editorLineItems = currentVersion.line_items.map((i) => ({
-    id: i.id,
-    item: i.item_name || i.description,
-    description: i.item_name ? i.description : "",
-    qty: i.quantity,
-    quantity: i.quantity,
-    uom: i.unit,
-    unit: i.unit,
-    cost: i.unit_cost,
-    unitCost: i.unit_cost,
-    total: i.quantity * i.unit_cost,
-    sectionId: i.section_id || undefined,
-  }));
+  const editorLineItems = currentVersion.line_items.map((i) => {
+    const unitPrice = i.unit_price ?? i.unit_cost;
+    return {
+      id: i.id,
+      item: i.item_name || i.description,
+      description: i.notes || "",
+      qty: i.quantity,
+      uom: i.unit,
+      cost: unitPrice,
+      total: i.quantity * unitPrice,
+      sectionId: i.section_id || undefined,
+    };
+  });
 
   // Compute total from line items (version total may be stale)
   const computedTotal = editorLineItems.reduce((sum, i) => sum + i.total, 0);
@@ -514,13 +517,15 @@ async function pdfCommand(argv: string[]): Promise<void> {
     total: computedTotal,
   };
 
-  const pdf = await generatePDF(estimate, { includeBackPage: true });
+  const pdf = await generateEstimatePDF(estimate, {
+    includeBackPage: opts.backpage === "true",
+  });
 
   let outputPath: string;
   if (opts.output) {
     outputPath = opts.output;
   } else {
-    const filename = getPDFFilename(estimate);
+    const filename = getEstimatePDFFilename(estimate);
     outputPath = join(process.cwd(), filename);
   }
 

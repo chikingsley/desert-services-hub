@@ -3,6 +3,7 @@
  * Used by agents and scripts to associate emails with estimates.
  */
 import { db } from "@lib/db/hub";
+import { likeSearch } from "@lib/db/search";
 
 /**
  * Link an email to an estimate.
@@ -124,28 +125,20 @@ export async function getEmailEstimates(emailId: number) {
  * Find estimate by number or name pattern.
  */
 export async function findEstimate(search: string) {
-  return await db
-    .query<
-      {
-        id: number;
-        name: string;
-        contractor: string | null;
-        estimate_number: string | null;
-        email_count: number;
-      },
-      [string, string]
-    >(`
-    SELECT
-      e.id,
-      e.name,
-      e.contractor,
-      e.estimate_number,
-      (SELECT COUNT(*) FROM estimate_emails ee WHERE ee.estimate_id = e.id) as email_count
-    FROM estimates e
-    WHERE e.estimate_number = ? OR LOWER(e.name) LIKE '%' || LOWER(?) || '%'
-    LIMIT 20
-  `)
-    .all(search, search);
+  return await likeSearch<{
+    id: number;
+    name: string;
+    contractor: string | null;
+    estimate_number: string | null;
+    email_count: number;
+  }>({
+    table: "estimates e",
+    select: `e.id, e.name, e.contractor, e.estimate_number,
+      (SELECT COUNT(*) FROM estimate_emails ee WHERE ee.estimate_id = e.id) as email_count`,
+    columns: ["e.estimate_number", "e.name"],
+    query: search,
+    limit: 20,
+  });
 }
 
 /**
@@ -166,21 +159,17 @@ export async function findEmail(search: string | number) {
       .get(search);
   }
 
-  return await db
-    .query<
-      {
-        id: number;
-        subject: string;
-        from_email: string;
-        received_at: string;
-      },
-      [string]
-    >(`
-    SELECT id, subject, from_email, received_at
-    FROM emails
-    WHERE LOWER(subject) LIKE '%' || LOWER(?) || '%'
-    ORDER BY received_at DESC
-    LIMIT 20
-  `)
-    .all(search);
+  return await likeSearch<{
+    id: number;
+    subject: string;
+    from_email: string;
+    received_at: string;
+  }>({
+    table: "emails",
+    select: "id, subject, from_email, received_at",
+    columns: ["subject"],
+    query: search,
+    orderBy: "received_at DESC",
+    limit: 20,
+  });
 }

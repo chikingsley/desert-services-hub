@@ -233,9 +233,9 @@ export interface ScrapeFlowConfig {
   /** Statuses to filter by */
   statuses?: ("Active" | "Closed" | "Rejected" | "Submitted" | "Superseded")[];
   /** Callback to check if permit exists in DB */
-  existsInDb: (permitId: string) => boolean;
+  existsInDb: (permitId: string) => boolean | Promise<boolean>;
   /** Callback to save permit to DB */
-  saveToDb: (data: PermitData) => void;
+  saveToDb: (data: PermitData) => void | Promise<void>;
 }
 
 /**

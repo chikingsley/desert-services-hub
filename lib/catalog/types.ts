@@ -23,9 +23,13 @@ export interface CatalogItem {
   defaultQty?: number;
 }
 
+export type SelectionMode = "pick-one" | "pick-many";
+
 export interface CatalogSubcategory {
   id: string;
   name: string;
+  selectionMode?: SelectionMode;
+  hidden?: boolean;
   items: CatalogItem[];
 }
 

@@ -3,6 +3,7 @@
  */
 import { db } from "@lib/db/hub";
 import { getEmailById, parseEmailRow } from "@lib/db/repositories/email";
+import { likeSearch, likeWhere } from "@lib/db/search";
 import type {
   Attachment,
   Email,
@@ -153,21 +154,16 @@ export async function searchAttachments(
   searchTerm: string,
   limit = 100
 ): Promise<Attachment[]> {
-  const pattern = `%${searchTerm}%`;
-
-  const rows = await db
-    .query<Record<string, unknown>, [string, string, string, number]>(
-      `SELECT a.*
-       FROM attachments a
-       JOIN emails e ON a.email_id = e.id
-       WHERE a.storage_path IS NOT NULL
-         AND (e.subject LIKE ?
-           OR e.project_name LIKE ?
-           OR e.contractor_name LIKE ?)
-       ORDER BY e.received_at DESC
-       LIMIT ?`
-    )
-    .all(pattern, pattern, pattern, limit);
+  const rows = await likeSearch<Record<string, unknown>>({
+    table: "attachments a",
+    select: "a.*",
+    joins: "JOIN emails e ON a.email_id = e.id",
+    columns: ["e.subject", "e.project_name", "e.contractor_name"],
+    query: searchTerm,
+    extraWhere: "a.storage_path IS NOT NULL",
+    orderBy: "e.received_at DESC",
+    limit,
+  });
 
   return rows.map(parseAttachmentRow);
 }
@@ -176,24 +172,21 @@ export async function searchEmailsFullText(
   query: string,
   limit = 50
 ): Promise<Array<Email & { matchSource: "subject" | "body" | "attachment" }>> {
-  const pattern = `%${query}%`;
+  const { clause, params } = likeWhere(["subject", "body_full"], query);
 
   const emailRows = await db
-    .query<
-      Record<string, unknown> & { match_source: string },
-      [string, string, string, number]
-    >(
+    .query<Record<string, unknown> & { match_source: string }, unknown[]>(
       `SELECT *,
         CASE
-          WHEN subject LIKE ? THEN 'subject'
+          WHEN subject ILIKE ? THEN 'subject'
           ELSE 'body'
         END as match_source
        FROM emails
-       WHERE subject LIKE ? OR body_full LIKE ?
+       WHERE ${clause}
        ORDER BY received_at DESC
        LIMIT ?`
     )
-    .all(pattern, pattern, pattern, limit);
+    .all(params[0], ...params, limit);
 
   const results: Array<
     Email & { matchSource: "subject" | "body" | "attachment" }
@@ -206,14 +199,19 @@ export async function searchEmailsFullText(
     });
   }
 
+  const { clause: attClause, params: attParams } = likeWhere(
+    ["extracted_text"],
+    query
+  );
+
   const attachmentRows = await db
-    .query<{ email_id: number }, [string, number]>(
+    .query<{ email_id: number }, unknown[]>(
       `SELECT DISTINCT email_id
        FROM attachments
-       WHERE extracted_text LIKE ?
+       WHERE ${attClause}
        LIMIT ?`
     )
-    .all(pattern, limit);
+    .all(...attParams, limit);
 
   for (const { email_id } of attachmentRows) {
     if (results.some((r) => r.id === email_id)) {

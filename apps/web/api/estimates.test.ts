@@ -10,7 +10,7 @@ import type {
   EstimateLineItemRow,
   EstimateRow,
   EstimateSectionRow,
-} from "@lib/types";
+} from "@lib/db/types";
 import { createEstimate, listEstimates } from "@/apps/web/api/estimates";
 import {
   deleteEstimate,
@@ -111,13 +111,18 @@ describe("listEstimates", () => {
     testEstimateIds.push(id);
 
     // List and find our estimate
-    const response = await listEstimates();
-    const estimates = (await response.json()) as Array<{
-      id: string;
-      job_name: string;
-      client_name: string | null;
-      versions: Array<{ total: number }>;
-    }>;
+    const response = await listEstimates(
+      new Request("http://localhost/api/estimates")
+    );
+    const body = (await response.json()) as {
+      estimates: Array<{
+        id: string;
+        job_name: string;
+        client_name: string | null;
+        versions: Array<{ total: number }>;
+      }>;
+    };
+    const estimates = body.estimates;
 
     const ourEstimate = estimates.find((q) => q.id === id);
 

@@ -12,7 +12,7 @@ import {
   deleteRecentPermits,
   permitExists,
   upsertPermit,
-} from "@/db/company-permits";
+} from "@lib/db/repositories/dust-permit";
 import { type PermitData, runScrapeFlow } from "@/portal/scrape";
 import { PortalHarness } from "./utils/harness";
 import { TIMEOUTS } from "./utils/timeouts";
@@ -29,7 +29,7 @@ describe("Scrape Flow", () => {
   test(
     "1. login",
     async () => {
-      deleteRecentPermits(TARGET_COUNT);
+      await deleteRecentPermits(TARGET_COUNT);
       await harness.setup();
       expect(harness.currentState).toBe("logged_in");
     },
@@ -62,7 +62,7 @@ describe("Scrape Flow", () => {
       const result = await runScrapeFlow(harness.page, {
         targetCount: TARGET_COUNT,
         statuses: ["Active", "Submitted"],
-        existsInDb: permitExists,
+        existsInDb: (id: string) => permitExists(id),
         saveToDb: (data: PermitData) =>
           upsertPermit({
             id: data.applicationId,
@@ -72,7 +72,7 @@ describe("Scrape Flow", () => {
             address: data.locations[0]?.address ?? null,
             city: null,
             parcel: null,
-            companyId: null,
+            portalCompanyId: null,
             submittedDate: null,
             effectiveDate: null,
             expirationDate: null,

@@ -15,6 +15,16 @@ export function formatCurrency(amount: number | string): string {
   }).format(num);
 }
 
+export function formatCompactCurrency(amount: number | string): string {
+  const num = typeof amount === "string" ? Number.parseFloat(amount) : amount;
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(num);
+}
+
 export function formatDate(dateString: string): string {
   return new Intl.DateTimeFormat("en-US", {
     month: "short",

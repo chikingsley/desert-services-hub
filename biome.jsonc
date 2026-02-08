@@ -32,7 +32,8 @@
     "includes": [
       "**/*",
       "!docs/_archive",
-      "!services/docusign-file-automation/_reference",
+      "!apps/workers/docusign-file-automation/_reference",
+      "!apps/workers/permit-workers/tests/e2e/screenshots",
       "!**/.wrangler",
       "!**/.cursor",
       "!**/inspections-app-idea"
@@ -42,7 +43,7 @@
     {
       "includes": [
         "docs/_archive/**",
-        "services/docusign-file-automation/_reference/**"
+        "apps/workers/docusign-file-automation/_reference/**"
       ],
       "linter": {
         "enabled": false

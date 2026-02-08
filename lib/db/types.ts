@@ -371,10 +371,379 @@ export interface UpsertPermitData {
 }
 
 // ============================================
+// Marketing Permits (Market Intelligence)
+// ============================================
+
+export interface MarketingPermit {
+  id: string;
+  projectName: string | null;
+  companyId: string | null;
+  companyName: string | null;
+  status: PermitStatus | null;
+  submittedDate: string | null;
+  effectiveDate: string | null;
+  expirationDate: string | null;
+  closedDate: string | null;
+  previousAppId: string | null;
+  projectStartDate: string | null;
+  projectEndDate: string | null;
+  address: string | null;
+  city: string | null;
+  parcel: string | null;
+  isBlockPermit: boolean;
+  isAccelerated: boolean;
+  invoiceNumber: string | null;
+  invoiceCharges: number | null;
+  invoiceBalance: number | null;
+  rawData: Record<string, unknown> | null;
+  scrapedAt: number | null;
+  detailScrapedAt: number | null;
+  createdAt: number;
+}
+
+export interface UpsertMarketingPermitData {
+  id: string;
+  projectName?: string | null;
+  companyId?: string | null;
+  companyName?: string | null;
+  status?: string | null;
+  submittedDate?: string | null;
+  effectiveDate?: string | null;
+  expirationDate?: string | null;
+  closedDate?: string | null;
+  previousAppId?: string | null;
+  projectStartDate?: string | null;
+  projectEndDate?: string | null;
+  address?: string | null;
+  city?: string | null;
+  parcel?: string | null;
+  isBlockPermit?: boolean;
+  isAccelerated?: boolean;
+  invoiceNumber?: string | null;
+  invoiceCharges?: number | null;
+  invoiceBalance?: number | null;
+  rawData?: Record<string, unknown> | null;
+}
+
+// ============================================
 // Statistics Types
 // ============================================
 
 export interface ClassificationStats {
   classification: EmailClassification | null;
   count: number;
+}
+
+// ============================================
+// Quoting App - SQLite Row Types
+// ============================================
+
+export interface EstimateRow {
+  id: string;
+  base_number: string;
+  takeoff_id: string | null;
+  job_name: string;
+  job_address: string | null;
+  client_name: string | null;
+  client_address: string | null;
+  client_email: string | null;
+  client_phone: string | null;
+  notes: string | null;
+  status: string;
+  is_locked: number;
+  estimator: string | null;
+  estimator_email: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EstimateVersionRow {
+  id: string;
+  estimate_id: string;
+  version_number: number;
+  total: number;
+  is_current: number;
+  created_at: string;
+}
+
+export interface EstimateSectionRow {
+  id: string;
+  version_id: string;
+  name: string;
+  title: string | null;
+  show_subtotal: number;
+  sort_order: number;
+  created_at: string;
+}
+
+export interface EstimateLineItemRow {
+  id: string;
+  version_id: string;
+  section_id: string | null;
+  description: string;
+  quantity: number;
+  unit: string;
+  unit_cost: number;
+  unit_price: number;
+  is_excluded: number;
+  notes: string | null;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+// ============================================
+// Quoting App - Application Types
+// ============================================
+
+export interface QuotingEstimate {
+  id: string;
+  base_number: string;
+  takeoff_id: string | null;
+  estimate_date: string;
+  estimator_name: string | null;
+  estimator_email: string | null;
+  job_name: string;
+  job_address: string | null;
+  client_name: string | null;
+  client_email: string | null;
+  client_phone: string | null;
+  client_address: string | null;
+  notes: string | null;
+  status: "draft" | "sent" | "accepted" | "declined";
+  is_locked: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EstimateVersion {
+  id: string;
+  estimate_id: string;
+  version_number: number;
+  change_summary: string | null;
+  total: number;
+  is_current: boolean;
+  created_at: string;
+}
+
+export interface EstimateSection {
+  id: string;
+  version_id: string;
+  name: string;
+  title: string | null;
+  show_subtotal: boolean;
+  sort_order: number;
+  created_at: string;
+}
+
+export interface EstimateLineItem {
+  id: string;
+  version_id: string;
+  section_id: string | null;
+  description: string;
+  quantity: number;
+  unit: string;
+  unit_cost: number;
+  unit_price: number;
+  is_excluded: boolean;
+  notes: string | null;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+// ============================================
+// Estimate Editor Types
+// ============================================
+
+export interface EditorLineItem {
+  id: string;
+  item: string;
+  description: string;
+  qty: number;
+  uom: string;
+  cost: number;
+  total: number;
+  sectionId?: string;
+  subcategoryId?: string;
+  isStruck?: boolean;
+}
+
+export interface EditorSection {
+  id: string;
+  name: string;
+  title?: string;
+  showSubtotal?: boolean;
+  catalogCategoryId?: string;
+}
+
+export interface EditorEstimate {
+  estimateNumber: string;
+  date: string;
+  estimator: string;
+  estimatorEmail: string;
+  billTo: {
+    companyName: string;
+    address: string;
+    email: string;
+    phone: string;
+  };
+  jobInfo: {
+    siteName: string;
+    address: string;
+  };
+  sections: EditorSection[];
+  lineItems: EditorLineItem[];
+  total: number;
+}
+
+// ============================================
+// NOI Extraction
+// ============================================
+
+export interface NOIExtraction {
+  id: number;
+  projectId: number | null;
+  sourceEmailId: number | null;
+  sourceAttachmentId: number | null;
+
+  filePath: string | null;
+  fileName: string | null;
+
+  permitId: string | null;
+  ltfNumber: string | null;
+
+  applicantName: string;
+  applicantAddress1: string | null;
+  applicantAddress2: string | null;
+  applicantCity: string | null;
+  applicantState: string | null;
+  applicantZip: string | null;
+
+  siteName: string;
+  siteAddress: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  acresDisturbed: number | null;
+
+  swpppContactFirstName: string | null;
+  swpppContactLastName: string | null;
+  swpppContactEmail: string | null;
+  swpppContactPhone: string | null;
+
+  extractionConfidence: string;
+  missingFields: string[];
+  warnings: string[];
+
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface InsertNOIData {
+  projectId?: number | null;
+  sourceEmailId?: number | null;
+  sourceAttachmentId?: number | null;
+  filePath?: string | null;
+  fileName?: string | null;
+  permitId?: string | null;
+  ltfNumber?: string | null;
+  applicantName: string;
+  applicantAddress1?: string | null;
+  applicantAddress2?: string | null;
+  applicantCity?: string | null;
+  applicantState?: string | null;
+  applicantZip?: string | null;
+  siteName: string;
+  siteAddress?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  acresDisturbed?: number | null;
+  swpppContactFirstName?: string | null;
+  swpppContactLastName?: string | null;
+  swpppContactEmail?: string | null;
+  swpppContactPhone?: string | null;
+  extractionConfidence?: string;
+  missingFields?: string[];
+  warnings?: string[];
+}
+
+// ============================================
+// Dust Permit Tier Pricing
+// ============================================
+
+export interface DustPermitTier {
+  min: number;
+  max: number;
+  price: number;
+  label: string;
+  adeqFee: number;
+  filingFee: number;
+}
+
+export const DUST_PERMIT_TIERS: DustPermitTier[] = [
+  {
+    min: 0.1,
+    max: 0.99,
+    price: 1070,
+    label: "<1 acre",
+    adeqFee: 570,
+    filingFee: 500,
+  },
+  {
+    min: 1,
+    max: 4.99,
+    price: 1630,
+    label: "1 - 5 acres",
+    adeqFee: 1130,
+    filingFee: 500,
+  },
+  {
+    min: 5,
+    max: 9.99,
+    price: 1630,
+    label: "5 - 10 acres",
+    adeqFee: 1130,
+    filingFee: 500,
+  },
+  {
+    min: 10,
+    max: 49,
+    price: 4870,
+    label: "10 - 49 acres",
+    adeqFee: 4120,
+    filingFee: 750,
+  },
+  {
+    min: 50,
+    max: 99,
+    price: 7870,
+    label: "50 - 99 acres",
+    adeqFee: 6870,
+    filingFee: 1000,
+  },
+  {
+    min: 100,
+    max: 499,
+    price: 11_560,
+    label: "100 - 499 acres",
+    adeqFee: 10_310,
+    filingFee: 1250,
+  },
+  {
+    min: 500,
+    max: Number.POSITIVE_INFINITY,
+    price: 18_490,
+    label: "500+ acres",
+    adeqFee: 16_490,
+    filingFee: 2000,
+  },
+];
+
+export function getDustPermitTier(acres: number): DustPermitTier | null {
+  for (const tier of DUST_PERMIT_TIERS) {
+    if (acres >= tier.min && acres <= tier.max) {
+      return tier;
+    }
+  }
+  return null;
 }

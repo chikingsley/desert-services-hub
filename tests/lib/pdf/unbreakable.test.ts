@@ -2,13 +2,16 @@
 // Run: bun test tests/lib/pdf/unbreakable.test.ts
 
 import { describe, expect, test } from "bun:test";
-import { generatePDF, savePDF } from "@/lib/pdf/generate-pdf";
+import {
+  generateEstimatePDF,
+  saveEstimatePDF,
+} from "@/lib/pdf/estimate/generate-estimate-pdf.server";
 import { maxCatalogQuote } from "./test-data";
 
 describe("PDF Generation - Unbreakable Sections", () => {
   test("generates PDF with unbreakable sections (default)", async () => {
     // unbreakableSections defaults to true
-    const buffer = await generatePDF(maxCatalogQuote, {
+    const buffer = await generateEstimatePDF(maxCatalogQuote, {
       style: "sectioned",
     });
 
@@ -20,7 +23,7 @@ describe("PDF Generation - Unbreakable Sections", () => {
   });
 
   test("generates PDF with unbreakable sections enabled", async () => {
-    const buffer = await generatePDF(maxCatalogQuote, {
+    const buffer = await generateEstimatePDF(maxCatalogQuote, {
       style: "sectioned",
       unbreakableSections: true,
     });
@@ -33,7 +36,7 @@ describe("PDF Generation - Unbreakable Sections", () => {
   });
 
   test("generates PDF with unbreakable sections disabled", async () => {
-    const buffer = await generatePDF(maxCatalogQuote, {
+    const buffer = await generateEstimatePDF(maxCatalogQuote, {
       style: "sectioned",
       unbreakableSections: false,
     });
@@ -46,7 +49,7 @@ describe("PDF Generation - Unbreakable Sections", () => {
   });
 
   test("saves PDF with unbreakable sections enabled to file", async () => {
-    const outPath = await savePDF(
+    const outPath = await saveEstimatePDF(
       maxCatalogQuote,
       "test-pdf-unbreakable-true.pdf",
       {
@@ -67,7 +70,7 @@ describe("PDF Generation - Unbreakable Sections", () => {
   });
 
   test("saves PDF with unbreakable sections disabled to file", async () => {
-    const outPath = await savePDF(
+    const outPath = await saveEstimatePDF(
       maxCatalogQuote,
       "test-pdf-unbreakable-false.pdf",
       {

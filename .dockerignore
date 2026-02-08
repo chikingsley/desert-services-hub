@@ -20,10 +20,14 @@
 # Workers
 !apps/workers/estimate-poller/lib/
 !apps/workers/contract-intake/lib/
+!apps/workers/dust-permit-intake/lib/
 
-# Contract utilities (html-to-text, spam-filter, extraction)
-!apps/contract/db/lib/
-!apps/contract/db/sync/extract-estimates.ts
+# Permit worker (browser automation)
+!apps/workers/permit-workers/package.json
+!apps/workers/permit-workers/tsconfig.json
+!apps/workers/permit-workers/bunfig.toml
+!apps/workers/permit-workers/src/
+!apps/workers/permit-workers/start-stack.sh
 
 # Shared libraries
 !lib/

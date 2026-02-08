@@ -5,7 +5,7 @@
  * used for auto-refresh when external updates are detected.
  */
 import { describe, expect, it } from "bun:test";
-import type { EditorEstimate } from "@/lib/types";
+import type { EditorEstimate } from "@lib/db/types";
 
 // ============================================================================
 // Types (matching estimate-workspace.tsx)

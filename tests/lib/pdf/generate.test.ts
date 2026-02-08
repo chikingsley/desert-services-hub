@@ -1,6 +1,9 @@
 import { describe, expect, test } from "bun:test";
 import { writeFileSync } from "node:fs";
-import { generatePDF, getPDFFilename } from "@/lib/pdf/generate-pdf";
+import {
+  generateEstimatePDF,
+  getEstimatePDFFilename,
+} from "@/lib/pdf/estimate/generate-estimate-pdf.server";
 
 const testQuote = {
   estimateNumber: "251227-01",
@@ -58,7 +61,7 @@ const testQuote = {
 
 describe("PDF Generation", () => {
   test("generates a valid PDF buffer", async () => {
-    const buffer = await generatePDF(testQuote);
+    const buffer = await generateEstimatePDF(testQuote);
 
     expect(buffer).toBeInstanceOf(Buffer);
     expect(buffer.length).toBeGreaterThan(0);
@@ -69,7 +72,7 @@ describe("PDF Generation", () => {
   });
 
   test("saves PDF to file", async () => {
-    const buffer = await generatePDF(testQuote);
+    const buffer = await generateEstimatePDF(testQuote);
     const outPath = "./example-estimate.pdf";
 
     writeFileSync(outPath, buffer);
@@ -78,7 +81,7 @@ describe("PDF Generation", () => {
   });
 
   test("generates correct filename", () => {
-    const filename = getPDFFilename(testQuote);
+    const filename = getEstimatePDFFilename(testQuote);
     expect(filename).toBe("Estimate-251227-01-abc-general-contractors.pdf");
   });
 });

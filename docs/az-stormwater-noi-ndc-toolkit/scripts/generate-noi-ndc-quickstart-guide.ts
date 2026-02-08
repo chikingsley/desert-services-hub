@@ -8,12 +8,12 @@
 import { resolve } from "node:path";
 import pdfmake from "pdfmake";
 import type { Content, TDocumentDefinitions } from "pdfmake/interfaces";
-import { COLORS } from "@/lib/pdf/brand";
-import { initFonts } from "@/lib/pdf/fonts";
-import { buildFooter } from "@/lib/pdf/footer";
-import { buildHeader } from "@/lib/pdf/header";
-import { cardLayout } from "@/lib/pdf/layouts";
-import { loadLogo } from "@/lib/pdf/logo";
+import { COLORS } from "@/lib/pdf/shared/brand";
+import { initFonts } from "@/lib/pdf/shared/fonts";
+import { buildFooter } from "@/lib/pdf/shared/footer";
+import { buildHeader } from "@/lib/pdf/shared/header";
+import { cardLayout } from "@/lib/pdf/shared/layouts";
+import { loadLogo } from "@/lib/pdf/shared/logo";
 
 type Margin = [number, number, number, number];
 

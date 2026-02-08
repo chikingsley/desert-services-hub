@@ -6,17 +6,12 @@
 
 import { afterAll, describe, expect, test } from "bun:test";
 import { unlink } from "node:fs/promises";
-import { resolve } from "node:path";
 import { syncFromXls } from "@/handlers/sync";
 import { downloadMarketingPermits } from "@/portal/sync-marketing";
 import { PortalHarness } from "./utils/harness";
 import { TIMEOUTS } from "./utils/timeouts";
 
 const harness = new PortalHarness();
-const MARKETING_DB = resolve(
-  import.meta.dir,
-  "../../src/db/marketing-permits.sqlite"
-);
 
 describe("Marketing Permits Sync Flow", () => {
   let downloadedPath: string | null = null;
@@ -59,12 +54,7 @@ describe("Marketing Permits Sync Flow", () => {
         throw new Error("No download path");
       }
 
-      // We use the marketing-permits.sqlite and the scraped_permits table
-      const result = await syncFromXls(
-        downloadedPath,
-        MARKETING_DB,
-        "scraped_permits"
-      );
+      const result = await syncFromXls(downloadedPath, "marketing");
 
       expect(result.newRecords).toBeGreaterThanOrEqual(0);
       expect(result.totalInDb).toBeGreaterThan(0);

@@ -67,6 +67,7 @@ export function MapPage() {
     });
 
     map.addControl(new maplibregl.NavigationControl(), "top-right");
+    map.addControl(new maplibregl.ScaleControl({ maxWidth: 200, unit: "imperial" }), "bottom-left");
 
     map.on("load", () => {
       // Capture base layer IDs before adding our custom layers
@@ -98,8 +99,62 @@ export function MapPage() {
         type: "raster",
         source: "parcels",
         paint: { "raster-opacity": 0.8 },
-        minzoom: 14,
+        minzoom: 13,
       });
+
+      // APN labels — lightweight centroid query, no geometry
+      map.addSource("apn-labels", { type: "geojson", data: EMPTY_FC });
+      map.addLayer({
+        id: "apn-labels",
+        type: "symbol",
+        source: "apn-labels",
+        minzoom: 15,
+        layout: {
+          "text-field": ["get", "APN"],
+          "text-size": ["interpolate", ["linear"], ["zoom"], 15, 9, 17, 13],
+          "text-font": ["Noto Sans Bold"],
+          "text-allow-overlap": false,
+        },
+        paint: {
+          "text-color": "#b71c1c",
+          "text-halo-color": "#ffffff",
+          "text-halo-width": 2,
+        },
+      });
+
+      // Fetch APN labels for visible parcels
+      let loadingLabels = false;
+      const updateLabels = async () => {
+        if (map.getZoom() < 15 || loadingLabels) return;
+        loadingLabels = true;
+        try {
+          const b = map.getBounds();
+          const params = new URLSearchParams({
+            geometry: `${b.getWest()},${b.getSouth()},${b.getEast()},${b.getNorth()}`,
+            geometryType: "esriGeometryEnvelope",
+            spatialRel: "esriSpatialRelIntersects",
+            inSR: "4326",
+            outSR: "4326",
+            outFields: "APN",
+            returnGeometry: "true",
+            f: "geojson",
+            resultRecordCount: "1000",
+          });
+          const res = await fetch(`${PARCEL_QUERY_URL}?${params}`);
+          if (res.ok) {
+            const fc = await res.json();
+            console.log("[map] labels loaded:", fc.features?.length);
+            const src = map.getSource("apn-labels") as maplibregl.GeoJSONSource | undefined;
+            if (src) src.setData(fc);
+          }
+        } catch (err) {
+          console.error("[map] label fetch failed:", err);
+        } finally {
+          loadingLabels = false;
+        }
+      };
+      map.on("moveend", updateLabels);
+      updateLabels();
 
       // Selected parcel highlight
       map.addSource("selected-parcel", { type: "geojson", data: EMPTY_FC });
@@ -179,9 +234,13 @@ export function MapPage() {
       }
     }
 
-    // Adjust parcel visibility for satellite
+    // Adjust parcel + label visibility for satellite
     if (map.getLayer("parcels")) {
       map.setPaintProperty("parcels", "raster-opacity", next ? 1.0 : 0.8);
+    }
+    if (map.getLayer("apn-labels")) {
+      map.setPaintProperty("apn-labels", "text-color", next ? "#ffffff" : "#b71c1c");
+      map.setPaintProperty("apn-labels", "text-halo-color", next ? "#000000" : "#ffffff");
     }
 
     console.log("[map] satellite:", next, "toggled", baseLayerIds.length, "base layers");
@@ -241,6 +300,18 @@ export function MapPage() {
 
   return (
     <div style={{ position: "relative", width: "100%", height: "100vh" }}>
+      <style>{`
+        .maplibregl-ctrl-scale {
+          background: rgba(255,255,255,0.85) !important;
+          border: 2px solid #333 !important;
+          border-top: none !important;
+          font-size: 12px !important;
+          font-weight: 600 !important;
+          padding: 2px 8px !important;
+          color: #1a1a1a !important;
+          letter-spacing: 0.3px;
+        }
+      `}</style>
       <div ref={containerRef} style={{ position: "absolute", inset: 0 }} />
 
       {/* Satellite toggle */}

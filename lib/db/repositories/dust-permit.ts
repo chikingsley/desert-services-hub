@@ -1,9 +1,10 @@
 /**
- * Permit Repository
+ * Dust Permit Repository
  *
- * CRUD and query operations for dust control dust_permits_filed_by_desert_services.
+ * CRUD and query operations for dust_permits_filed_by_desert_services.
  */
 import { db } from "@lib/db/hub";
+import { likeSearch } from "@lib/db/search";
 import type { Permit, PermitStatus, UpsertPermitData } from "@lib/db/types";
 
 function parsePermitRow(row: Record<string, unknown>): Permit {
@@ -170,14 +171,12 @@ export async function linkPermitToProject(
 }
 
 export async function searchPermits(query: string): Promise<Permit[]> {
-  const pattern = `%${query}%`;
-  const rows = await db
-    .query<Record<string, unknown>, [string, string, string, string]>(
-      `SELECT * FROM dust_permits_filed_by_desert_services
-       WHERE project_name LIKE ? OR company_name LIKE ? OR address LIKE ? OR id LIKE ?
-       ORDER BY submitted_date DESC`
-    )
-    .all(pattern, pattern, pattern, pattern);
+  const rows = await likeSearch<Record<string, unknown>>({
+    table: "dust_permits_filed_by_desert_services",
+    columns: ["project_name", "company_name", "address", "id"],
+    query,
+    orderBy: "submitted_date DESC",
+  });
   return rows.map(parsePermitRow);
 }
 
@@ -250,4 +249,100 @@ export async function getPermitStats(): Promise<{
     )?.count ?? 0;
 
   return { total, active, closed, linkedToAccount, linkedToProject };
+}
+
+export async function permitExists(id: string): Promise<boolean> {
+  const row = await db
+    .query<{ n: number }, [string]>(
+      "SELECT 1 as n FROM dust_permits_filed_by_desert_services WHERE id = ? LIMIT 1"
+    )
+    .get(id);
+  return row !== null;
+}
+
+export async function getExpiringPermits(
+  withinDays = 30
+): Promise<Permit[]> {
+  const rows = await db
+    .query<Record<string, unknown>, [number]>(
+      `SELECT * FROM dust_permits_filed_by_desert_services
+       WHERE status = 'Active'
+         AND expiration_date IS NOT NULL
+         AND expiration_date <= (CURRENT_DATE + MAKE_INTERVAL(days => ?))::text
+       ORDER BY expiration_date`
+    )
+    .all(withinDays);
+  return rows.map(parsePermitRow);
+}
+
+export async function getPermitsNeedingScrape(
+  limit = 100
+): Promise<Permit[]> {
+  const rows = await db
+    .query<Record<string, unknown>, [number]>(
+      `SELECT * FROM dust_permits_filed_by_desert_services
+       WHERE updated_at = created_at
+       ORDER BY created_at
+       LIMIT ?`
+    )
+    .all(limit);
+  return rows.map(parsePermitRow);
+}
+
+export async function markPermitScraped(
+  id: string,
+  details?: Partial<UpsertPermitData>
+): Promise<void> {
+  if (details) {
+    await upsertPermit({ id, ...details });
+  } else {
+    await db.run(
+      `UPDATE dust_permits_filed_by_desert_services
+       SET updated_at = (extract(epoch FROM now()))::bigint
+       WHERE id = ?`,
+      [id]
+    );
+  }
+}
+
+export async function getPermitCount(): Promise<number> {
+  const row = await db
+    .query<{ count: number }, []>(
+      "SELECT COUNT(*) as count FROM dust_permits_filed_by_desert_services"
+    )
+    .get();
+  return row?.count ?? 0;
+}
+
+export async function getPermitsByPortalCompany(
+  portalCompanyId: string
+): Promise<Permit[]> {
+  const rows = await db
+    .query<Record<string, unknown>, [string]>(
+      `SELECT * FROM dust_permits_filed_by_desert_services
+       WHERE portal_company_id = ?
+       ORDER BY submitted_date DESC`
+    )
+    .all(portalCompanyId);
+  return rows.map(parsePermitRow);
+}
+
+export async function deleteRecentPermits(
+  count: number
+): Promise<string[]> {
+  const rows = await db
+    .query<{ id: string }, [number]>(
+      "SELECT id FROM dust_permits_filed_by_desert_services ORDER BY created_at DESC LIMIT ?"
+    )
+    .all(count);
+  const ids = rows.map((r) => r.id);
+  if (ids.length > 0) {
+    for (const id of ids) {
+      await db.run(
+        "DELETE FROM dust_permits_filed_by_desert_services WHERE id = ?",
+        [id]
+      );
+    }
+  }
+  return ids;
 }

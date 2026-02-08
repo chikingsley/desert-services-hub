@@ -4,7 +4,7 @@
   "private": true,
   "workspaces": {
     "packages": [
-      "apps/**"
+      "apps/workers/*"
     ],
     "catalog": {
       "@azure/identity": "^4.13.0",
@@ -75,11 +75,12 @@
     "peopledatalabs": "^14.1.1",
     "playwright": "^1.58.2",
     "react": "19.1.0",
-    "react-day-picker": "9.13.0",
+    "react-day-picker": "9.13.1",
     "react-dom": "19.1.0",
     "react-rnd": "^10.5.2",
     "react-router": "^7.13.0",
     "sonner": "^2.0.7",
+    "swr": "^2.4.0",
     "tailwind-merge": "^3.4.0",
     "terra-draw": "^1.24.0",
     "terra-draw-maplibre-gl-adapter": "^1.3.0",

@@ -11,13 +11,18 @@ import {
   useRef,
   useState,
 } from "react";
-import type { LoaderFunctionArgs } from "react-router";
-import { useLoaderData, useNavigate, useParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import { toast } from "sonner";
+import useSWR from "swr";
 import { PageHeader } from "@/apps/web/frontend/components/page-header";
+import {
+  PageError,
+  PageLoading,
+} from "@/apps/web/frontend/components/page-loading";
 import { FloatingTools } from "@/apps/web/frontend/components/takeoffs/floating-tools";
 import { Button } from "@/apps/web/frontend/components/ui/button";
 import { Spinner } from "@/apps/web/frontend/components/ui/spinner";
+import { fetcher } from "@/apps/web/frontend/lib/fetcher";
 import type {
   TakeoffAnnotation,
   TakeoffToolType,
@@ -151,19 +156,14 @@ interface TakeoffData {
   status: string;
 }
 
-// Loader function
-export async function takeoffLoader({ params }: LoaderFunctionArgs) {
-  const response = await fetch(`/api/takeoffs/${params.id}`);
-  if (!response.ok) {
-    throw new Error("Failed to load takeoff");
-  }
-  return response.json();
-}
-
 export function TakeoffEditorPage() {
-  const takeoff = useLoaderData() as TakeoffData;
-  const navigate = useNavigate();
   const { id } = useParams();
+  const navigate = useNavigate();
+  const {
+    data: takeoff,
+    error,
+    isLoading,
+  } = useSWR<TakeoffData>(id ? `/api/takeoffs/${id}` : null, fetcher);
 
   const [pdfFile, setPdfFile] = useState<string | null>(null);
   const [selectedItem, setSelectedItem] = useState<PresetItem | null>(null);
@@ -176,11 +176,21 @@ export function TakeoffEditorPage() {
     base_number: string;
   } | null>(null);
 
-  // Annotations state
+  // Annotations state — init from SWR data when it arrives
   const [annotations, setAnnotationsInternal] = useState<TakeoffAnnotation[]>(
-    takeoff.annotations || []
+    []
   );
+  const initializedRef = useRef(false);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  // Sync SWR data into local state on first load
+  useEffect(() => {
+    if (takeoff && !initializedRef.current) {
+      initializedRef.current = true;
+      setAnnotationsInternal(takeoff.annotations || []);
+      setPageScales(takeoff.page_scales || {});
+    }
+  }, [takeoff]);
 
   // Wrapper to track unsaved changes
   const setAnnotations = useCallback(
@@ -196,9 +206,7 @@ export function TakeoffEditorPage() {
   );
 
   // Scale per page
-  const [pageScales, setPageScales] = useState<Record<number, string>>(
-    takeoff.page_scales || {}
-  );
+  const [pageScales, setPageScales] = useState<Record<number, string>>({});
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
@@ -213,6 +221,10 @@ export function TakeoffEditorPage() {
 
   // Load PDF URL and catalog items on mount
   useEffect(() => {
+    if (!(takeoff && id)) {
+      return;
+    }
+
     async function loadData() {
       // Load catalog items
       try {
@@ -229,8 +241,8 @@ export function TakeoffEditorPage() {
             }))
           );
         }
-      } catch (error) {
-        console.error("Error loading catalog items:", error);
+      } catch (err) {
+        console.error("Error loading catalog items:", err);
       }
 
       // Check for linked estimate
@@ -247,7 +259,7 @@ export function TakeoffEditorPage() {
       }
 
       // Load PDF URL
-      if (takeoff.pdf_url?.startsWith("minio://")) {
+      if (takeoff?.pdf_url?.startsWith("minio://")) {
         try {
           const pdfRes = await fetch(`/api/takeoffs/${id}/pdf`);
           if (pdfRes.ok) {
@@ -257,13 +269,13 @@ export function TakeoffEditorPage() {
         } catch {
           setPdfFile(null);
         }
-      } else if (takeoff.pdf_url) {
+      } else if (takeoff?.pdf_url) {
         setPdfFile(takeoff.pdf_url);
       }
     }
 
     loadData();
-  }, [id, takeoff.pdf_url]);
+  }, [id, takeoff]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -506,7 +518,7 @@ export function TakeoffEditorPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           takeoff_id: id,
-          job_name: takeoff.name || "Untitled Takeoff",
+          job_name: takeoff?.name || "Untitled Takeoff",
           status: "draft",
           sections: Array.from(sectionsMap.values()),
           line_items: lineItems,
@@ -527,6 +539,14 @@ export function TakeoffEditorPage() {
       );
     }
   };
+
+  if (error) {
+    return <PageError message={error.message} />;
+  }
+
+  if (isLoading || !takeoff) {
+    return <PageLoading />;
+  }
 
   const hasAnnotations = Array.isArray(annotations) && annotations.length > 0;
 

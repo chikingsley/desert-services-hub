@@ -4,7 +4,7 @@
  *
  * Searches the estimates table in hub.db (synced from Monday ESTIMATING board).
  */
-import { db } from "@lib/db/hub";
+import { likeSearch } from "@lib/db/search";
 
 // GET /api/monday/search - Search estimates
 export async function searchMonday(req: Request): Promise<Response> {
@@ -17,17 +17,15 @@ export async function searchMonday(req: Request): Promise<Response> {
       return Response.json([]);
     }
 
-    const likeQuery = `%${query}%`;
-    const items = await db
-      .prepare(
-        `SELECT id, monday_item_id, name, estimate_number, contractor,
-                bid_status, bid_value, awarded_value, group_title, monday_url
-         FROM estimates
-         WHERE name LIKE ? OR contractor LIKE ? OR estimate_number LIKE ?
-         ORDER BY updated_at DESC
-         LIMIT ?`
-      )
-      .all(likeQuery, likeQuery, likeQuery, limit);
+    const items = await likeSearch({
+      table: "estimates",
+      select: `id, monday_item_id, name, estimate_number, contractor,
+               bid_status, bid_value, awarded_value, group_title, monday_url`,
+      columns: ["name", "contractor", "estimate_number"],
+      query,
+      orderBy: "updated_at DESC",
+      limit,
+    });
 
     return Response.json(items);
   } catch (error) {

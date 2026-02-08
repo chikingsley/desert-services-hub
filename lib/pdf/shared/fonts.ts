@@ -1,15 +1,16 @@
-// Shared font initialization for pdfmake PDF generation
+// Server-side font initialization for pdfmake PDF generation
 // Registers Roboto (body) + Times (titles) once at module level
 
 import { join } from "node:path";
 import pdfmake from "pdfmake";
+import { FONT_BODY, FONT_TITLE } from "./brand";
 
-export const FONT_BODY = "Roboto";
-export const FONT_TITLE = "Times";
+export { FONT_BODY, FONT_TITLE } from "./brand";
 
 // Roboto TTFs bundled with pdfmake — portable, no system dependency
 const ROBOTO_DIR = join(
   import.meta.dir,
+  "..",
   "..",
   "..",
   "node_modules",

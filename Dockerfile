@@ -51,9 +51,10 @@ COPY apps/cli-tools/email-cli ./apps/cli-tools/email-cli
 COPY apps/workers/estimate-poller/lib ./apps/workers/estimate-poller/lib
 COPY apps/workers/contract-intake/lib ./apps/workers/contract-intake/lib
 
-# Contract utilities + extraction pipeline
-COPY apps/contract/db/lib ./apps/contract/db/lib
-COPY apps/contract/db/sync/extract-estimates.ts ./apps/contract/db/sync/
+# Dust permit intake worker
+COPY apps/workers/dust-permit-intake/lib ./apps/workers/dust-permit-intake/lib
+
+# PDF analysis pipeline (Python)
 COPY apps/cli-tools/pdf-analysis-cli ./apps/cli-tools/pdf-analysis-cli
 
 # Shared libraries + frontend dependencies

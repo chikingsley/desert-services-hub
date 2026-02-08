@@ -1,3 +1,4 @@
+import type { EditorEstimate } from "@lib/db/types";
 import {
   ChevronDown,
   Download,
@@ -23,8 +24,8 @@ import { useSidebar } from "@/apps/web/frontend/components/ui/sidebar";
 import { Spinner } from "@/apps/web/frontend/components/ui/spinner";
 import { useSettings } from "@/hooks/use-settings";
 import { catalog } from "@/lib/catalog";
-import type { GeneratePDFOptions } from "@/lib/pdf/pdf-builder";
-import type { EditorEstimate } from "@/lib/types";
+import type { EstimatePDFOptions } from "@/lib/pdf/estimate/build-estimate-doc-definition";
+import { generateEstimatePDFBlob } from "@/lib/pdf/estimate/generate-estimate-pdf.client";
 
 type SaveStatus = "saved" | "saving" | "unsaved";
 
@@ -71,6 +72,7 @@ interface EstimateWorkspaceProps {
   versionId: string;
   jobName: string;
   linkedTakeoff: { id: string; name: string } | null;
+  initialUpdatedAt?: string;
 }
 
 // Convert API response to EditorEstimate format
@@ -154,6 +156,7 @@ export function EstimateWorkspace({
   versionId: _versionId,
   jobName,
   linkedTakeoff,
+  initialUpdatedAt,
 }: EstimateWorkspaceProps) {
   const { isMobile, open, openMobile, setOpen, setOpenMobile } = useSidebar();
   const sidebarSnapshotRef = useRef<{
@@ -165,9 +168,10 @@ export function EstimateWorkspace({
 
   // PDF blob URL for iframe preview
   const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null);
+  const [pdfError, setPdfError] = useState<string | null>(null);
 
   // PDF generation options
-  const [pdfOptions, setPdfOptions] = useState<GeneratePDFOptions>({
+  const [pdfOptions, setPdfOptions] = useState<EstimatePDFOptions>({
     style: "sectioned",
     unbreakableSections: true,
     includeBackPage: false,
@@ -236,21 +240,13 @@ export function EstimateWorkspace({
     }
   }, [isPreviewOpen, autoHideSidebar, isMobile, setOpen, setOpenMobile]);
 
-  // Generate PDF blob when estimate or options change (debounced, lazy-loaded)
+  // Generate PDF blob when estimate or options change
   useEffect(() => {
     let currentUrl: string | null = null;
-    let cancelled = false;
+    setPdfError(null);
 
-    const timer = setTimeout(async () => {
-      try {
-        const { generatePDFBlob } = await import("@/lib/pdf/generate-client");
-        if (cancelled) {
-          return;
-        }
-        const blob = await generatePDFBlob(previewEstimate, pdfOptions);
-        if (cancelled) {
-          return;
-        }
+    generateEstimatePDFBlob(previewEstimate, pdfOptions)
+      .then((blob) => {
         currentUrl = URL.createObjectURL(blob);
         setPdfBlobUrl((prev) => {
           if (prev) {
@@ -258,35 +254,25 @@ export function EstimateWorkspace({
           }
           return currentUrl;
         });
-      } catch (err) {
-        if (!cancelled) {
-          console.error("PDF generation error:", err);
-        }
-      }
-    }, 500);
+      })
+      .catch((err) => {
+        console.error("PDF generation error:", err);
+        setPdfError(err instanceof Error ? err.message : String(err));
+      });
 
     return () => {
-      cancelled = true;
-      clearTimeout(timer);
       if (currentUrl) {
         URL.revokeObjectURL(currentUrl);
       }
     };
   }, [previewEstimate, pdfOptions]);
 
-  // Initialize last known timestamp on mount
+  // Initialize last known timestamp from loader data (no extra fetch needed)
   useEffect(() => {
-    const initTimestamp = async () => {
-      const res = await fetch(`/api/estimates/${estimateId}`);
-      if (res.ok) {
-        const data: ApiEstimateResponse = await res.json();
-        lastKnownUpdateRef.current = data.updated_at;
-      }
-    };
-    initTimestamp().catch(() => {
-      // Ignore initialization errors
-    });
-  }, [estimateId]);
+    if (initialUpdatedAt) {
+      lastKnownUpdateRef.current = initialUpdatedAt;
+    }
+  }, [initialUpdatedAt]);
 
   // Check for external updates when tab gains focus (uses ref to avoid listener churn)
   useEffect(() => {
@@ -516,13 +502,22 @@ export function EstimateWorkspace({
                 onChange={setPdfOptions}
                 options={pdfOptions}
               />
-              {pdfBlobUrl ? (
+              {pdfBlobUrl && (
                 <iframe
                   className="h-full w-full"
                   src={pdfBlobUrl}
                   title="PDF Preview"
                 />
-              ) : (
+              )}
+              {!pdfBlobUrl && pdfError && (
+                <div className="flex h-full items-center justify-center p-8 text-center text-destructive">
+                  <div>
+                    <p className="font-medium">PDF generation failed</p>
+                    <p className="mt-1 text-sm opacity-70">{pdfError}</p>
+                  </div>
+                </div>
+              )}
+              {!(pdfBlobUrl || pdfError) && (
                 <div className="flex h-full items-center justify-center text-muted-foreground">
                   <Spinner className="mr-2 h-4 w-4" />
                   Generating PDF...

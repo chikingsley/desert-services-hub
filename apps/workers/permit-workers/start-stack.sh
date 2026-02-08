@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-echo "Starting deployment container..."
+echo "Starting permit-worker container..."
 
 # 1. Start Xvnc (TigerVNC - provides both X server and VNC)
 echo "Starting Xvnc on $DISPLAY..."
@@ -23,12 +23,9 @@ websockify --web /usr/share/novnc 6080 localhost:5900 > /dev/null 2>&1 &
 
 # 4. Start the API Server (also serves frontend)
 echo "Starting Server..."
-# Ensure data directory exists
 mkdir -p /app/data
-export COMPANY_PERMITS_DB_PATH="/app/data/company-permits.sqlite"
-export MARKETING_PERMITS_DB_PATH="/app/data/marketing-permits.sqlite"
 cd /app
-bun run src/index.ts &
+bun run apps/workers/permit-workers/src/index.ts &
 SERVER_PID=$!
 
 echo "All services started."

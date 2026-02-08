@@ -8,10 +8,16 @@ Handles both CGP25 (newer) and older ADEQ NOI formats:
 
 from __future__ import annotations
 
+import asyncio
+import base64
+import os
 import re
 from pathlib import Path
+from tempfile import TemporaryDirectory
 
+import httpx
 import pdfplumber
+import pymupdf
 from pydantic import BaseModel, ConfigDict, Field
 
 # ---------------------------------------------------------------------------
@@ -140,10 +146,60 @@ def _first_match(pattern: re.Pattern[str], text: str) -> str | None:
 # Main extraction
 # ---------------------------------------------------------------------------
 
-def extract_noi(pdf_path: Path | str) -> NOIExtraction:
+async def _ocr_pdf(pdf_path: Path) -> str:
+    """OCR a PDF using glm-ocr via Ollama when pdfplumber can't extract text."""
+    endpoint = os.environ.get("OLLAMA_ENDPOINT", "https://ollama.peacockery.studio/v1").rstrip("/")
+    model = os.environ.get("OLLAMA_MODEL", "glm-ocr:latest")
+
+    doc = pymupdf.open(pdf_path)
+    try:
+        chunks: list[str] = []
+        with TemporaryDirectory(prefix="noi-ocr-") as temp_dir:
+            for page_num in range(len(doc)):
+                page = doc.load_page(page_num)
+                pix = page.get_pixmap(matrix=pymupdf.Matrix(2, 2))
+                img_path = Path(temp_dir) / f"page_{page_num}.png"
+                pix.save(str(img_path))
+
+                image_b64 = base64.b64encode(img_path.read_bytes()).decode()
+
+                async with httpx.AsyncClient(timeout=90.0) as client:
+                    resp = await client.post(
+                        f"{endpoint}/chat/completions",
+                        json={
+                            "model": model,
+                            "messages": [
+                                {
+                                    "role": "user",
+                                    "content": [
+                                        {
+                                            "type": "text",
+                                            "text": "Extract all visible text from this document page. "
+                                            "Preserve structure, labels, and field values exactly.",
+                                        },
+                                        {
+                                            "type": "image_url",
+                                            "image_url": {"url": f"data:image/png;base64,{image_b64}"},
+                                        },
+                                    ],
+                                }
+                            ],
+                        },
+                    )
+                    resp.raise_for_status()
+                    text = resp.json()["choices"][0]["message"]["content"]
+                    chunks.append(text.strip())
+
+        return "\n\n".join(chunks)
+    finally:
+        doc.close()
+
+
+def extract_noi(pdf_path: Path | str, *, ocr_fallback: bool = False) -> NOIExtraction:
     """Extract structured NOI data from an ADEQ NOI certificate PDF.
 
     Uses pdfplumber for text extraction and regex for field parsing.
+    Falls back to glm-ocr via Ollama when ocr_fallback=True and pdfplumber fails.
     """
     pdf_path = Path(pdf_path)
     warnings: list[str] = []
@@ -159,7 +215,16 @@ def extract_noi(pdf_path: Path | str) -> NOIExtraction:
     full_text = "\n".join(pages_text)
 
     if len(full_text.strip()) < 50:
-        raise ValueError(f"PDF appears to be scanned or empty — only {len(full_text.strip())} chars extracted")
+        if not ocr_fallback:
+            raise ValueError(
+                f"PDF appears to be scanned or empty — only {len(full_text.strip())} chars extracted"
+            )
+        full_text = asyncio.run(_ocr_pdf(pdf_path))
+        warnings.append("Used OCR fallback (scanned PDF)")
+        if len(full_text.strip()) < 50:
+            raise ValueError(
+                f"OCR also failed — only {len(full_text.strip())} chars extracted"
+            )
 
     # Split into logical sections
     sections = _parse_sections(full_text)

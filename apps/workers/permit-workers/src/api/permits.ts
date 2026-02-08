@@ -6,11 +6,11 @@
  */
 
 import { z } from "zod";
-import type { Permit as DbPermit } from "@/db/company-permits";
+import type { Permit as DbPermit } from "@lib/db/types";
 import {
   getActivePermits,
-  getPermit as getPermitFromDb,
-} from "@/db/company-permits";
+  getPermitById,
+} from "@lib/db/repositories/dust-permit";
 import { buildFormData, type DeepPartial, type FormData } from "@/form-data";
 import { closeSchema } from "@/handlers/close";
 import { createSchema } from "@/handlers/create";
@@ -140,16 +140,16 @@ function jsonSuccess(data: Record<string, unknown>): Response {
 /**
  * GET /api/permits - List all permits
  */
-export function handleListPermits(): Response {
-  const dbPermits = getActivePermits();
+export async function handleListPermits(): Promise<Response> {
+  const dbPermits = await getActivePermits();
   return Response.json(dbPermits.map(transformPermitForDashboard));
 }
 
 /**
  * GET /api/permits/:id - Get single permit
  */
-export function handleGetPermit(id: string): Response {
-  const permit = getPermitFromDb(id);
+export async function handleGetPermit(id: string): Promise<Response> {
+  const permit = await getPermitById(id);
 
   if (!permit) {
     return jsonError(`Permit ${id} not found`, 404);

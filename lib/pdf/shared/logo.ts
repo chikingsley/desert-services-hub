@@ -3,7 +3,7 @@
 
 import { join } from "node:path";
 
-const LOGO_PATH = join(import.meta.dir, "..", "assets", "logo.png");
+const LOGO_PATH = join(import.meta.dir, "..", "..", "assets", "logo.png");
 
 /**
  * Load the Desert Services logo as a base64 data URI.

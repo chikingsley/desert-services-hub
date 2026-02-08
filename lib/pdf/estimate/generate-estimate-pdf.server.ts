@@ -1,16 +1,19 @@
-// PDF generation for Desert Services estimates
+// Server-side PDF generation for Desert Services estimates
 // Uses pdfmake Node.js API with shared font/logo infrastructure
 
+import type { EditorEstimate } from "@lib/db/types";
 import { PDFDocument } from "pdf-lib";
 import pdfmake from "pdfmake";
-import type { EditorEstimate } from "@/lib/types";
-import { initFonts } from "./fonts";
-import { loadLogo } from "./logo";
-import type { GeneratePDFOptions } from "./pdf-builder";
-import { buildBackPageDocDefinition, buildDocDefinition } from "./pdf-builder";
+import { initFonts } from "../shared/fonts";
+import { loadLogo } from "../shared/logo";
+import type { EstimatePDFOptions } from "./build-estimate-doc-definition";
+import {
+  buildEstimateBackPageDocDefinition,
+  buildEstimateDocDefinition,
+} from "./build-estimate-doc-definition";
 
 // Re-export types for external use
-export type { GeneratePDFOptions } from "./pdf-builder";
+export type { EstimatePDFOptions } from "./build-estimate-doc-definition";
 
 // Initialize fonts once at module level
 initFonts();
@@ -35,21 +38,25 @@ async function concatenatePDFs(
 }
 
 // Generate estimate PDF (without back page)
-function generateEstimatePDF(
+function generateEstimateMainPDF(
   estimate: EditorEstimate,
   logoBase64: string,
-  options?: GeneratePDFOptions
+  options?: EstimatePDFOptions
 ): Promise<Buffer> {
-  const docDefinition = buildDocDefinition(estimate, logoBase64, options);
+  const docDefinition = buildEstimateDocDefinition(
+    estimate,
+    logoBase64,
+    options
+  );
   return pdfmake.createPdf(docDefinition).getBuffer();
 }
 
 /**
  * Generate standalone back page PDF
  */
-export async function generateBackPagePDF(): Promise<Buffer> {
+export async function generateEstimateBackPagePDF(): Promise<Buffer> {
   const logoBase64 = await loadLogo();
-  const docDefinition = buildBackPageDocDefinition(logoBase64);
+  const docDefinition = buildEstimateBackPageDocDefinition(logoBase64);
   return pdfmake.createPdf(docDefinition).getBuffer();
 }
 
@@ -57,15 +64,19 @@ export async function generateBackPagePDF(): Promise<Buffer> {
  * Generate PDF as Uint8Array (for API response)
  * Returns Uint8Array for web compatibility (Buffer extends Uint8Array)
  */
-export async function generatePDF(
+export async function generateEstimatePDF(
   estimate: EditorEstimate,
-  options?: GeneratePDFOptions
+  options?: EstimatePDFOptions
 ): Promise<Uint8Array> {
   const logoBase64 = await loadLogo();
-  const estimatePDF = await generateEstimatePDF(estimate, logoBase64, options);
+  const estimatePDF = await generateEstimateMainPDF(
+    estimate,
+    logoBase64,
+    options
+  );
 
   if (options?.includeBackPage) {
-    const backPagePDF = await generateBackPagePDF();
+    const backPagePDF = await generateEstimateBackPagePDF();
     return concatenatePDFs([estimatePDF, backPagePDF]);
   }
 
@@ -89,7 +100,7 @@ function slugify(text: string): string {
 /**
  * Generate PDF filename from quote data
  */
-export function getPDFFilename(quote: EditorEstimate): string {
+export function getEstimatePDFFilename(quote: EditorEstimate): string {
   const companySlug = slugify(quote.billTo.companyName);
   return `Estimate-${quote.estimateNumber}-${companySlug}.pdf`;
 }
@@ -97,13 +108,13 @@ export function getPDFFilename(quote: EditorEstimate): string {
 /**
  * Save PDF to file
  */
-export async function savePDF(
+export async function saveEstimatePDF(
   estimate: EditorEstimate,
   outputPath?: string,
-  options?: GeneratePDFOptions
+  options?: EstimatePDFOptions
 ): Promise<string> {
-  const buffer = await generatePDF(estimate, options);
-  const filename = outputPath ?? getPDFFilename(estimate);
+  const buffer = await generateEstimatePDF(estimate, options);
+  const filename = outputPath ?? getEstimatePDFFilename(estimate);
   await Bun.write(filename, buffer);
   return filename;
 }

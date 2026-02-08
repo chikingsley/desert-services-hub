@@ -5,13 +5,13 @@
  */
 
 import { z } from "zod";
+import type { Permit } from "@lib/db/types";
 import {
   getActivePermits,
   getExpiringPermits,
-  getPermit,
-  getPermitsByCompany,
-  type Permit,
-} from "@/db/company-permits";
+  getPermitById,
+  getPermitsByPortalCompany,
+} from "@lib/db/repositories/dust-permit";
 
 /**
  * Schema for list permits operation (AI-tool compatible)
@@ -49,17 +49,16 @@ export interface ListResult {
 
 /**
  * List permits from the database.
- *
- * @param input - List parameters
- * @returns Result with permits array
  */
-export function listPermits(input: ListInput = {}): ListResult {
+export async function listPermits(
+  input: ListInput = {}
+): Promise<ListResult> {
   const { status = "active", companyId, permitId, expiringDays = 30 } = input;
 
   try {
     // Single permit lookup
     if (permitId) {
-      const permit = getPermit(permitId);
+      const permit = await getPermitById(permitId);
       if (!permit) {
         return {
           success: false,
@@ -78,7 +77,7 @@ export function listPermits(input: ListInput = {}): ListResult {
 
     // Filter by company
     if (companyId) {
-      const permits = getPermitsByCompany(companyId);
+      const permits = await getPermitsByPortalCompany(companyId);
       return {
         success: true,
         permits,
@@ -93,16 +92,15 @@ export function listPermits(input: ListInput = {}): ListResult {
 
     switch (status) {
       case "expiring":
-        permits = getExpiringPermits(expiringDays);
+        permits = await getExpiringPermits(expiringDays);
         filter = `expiring within ${expiringDays} days`;
         break;
       case "all":
-        // For "all", we just get active permits (no closed/superseded filter in DB)
-        permits = getActivePermits();
+        permits = await getActivePermits();
         filter = "all active";
         break;
       default:
-        permits = getActivePermits();
+        permits = await getActivePermits();
         filter = "active";
         break;
     }

@@ -1,10 +1,15 @@
 /**
  * Catalog Page
  */
-import { useLoaderData } from "react-router";
+import useSWR from "swr";
 import type { Bundle } from "@/apps/web/frontend/components/catalog/bundles-section";
 import { CatalogContent } from "@/apps/web/frontend/components/catalog/catalog-content";
 import { PageHeader } from "@/apps/web/frontend/components/page-header";
+import {
+  PageError,
+  PageLoading,
+} from "@/apps/web/frontend/components/page-loading";
+import { fetcher } from "@/apps/web/frontend/lib/fetcher";
 
 interface CatalogData {
   categories: Array<{
@@ -51,17 +56,11 @@ interface CatalogData {
   readOnly?: boolean;
 }
 
-// Loader function for fetching catalog
-export async function catalogLoader() {
-  const response = await fetch("/api/catalog");
-  if (!response.ok) {
-    throw new Error("Failed to load catalog");
-  }
-  return response.json();
-}
-
 export function CatalogPage() {
-  const data = useLoaderData() as CatalogData;
+  const { data, error, isLoading } = useSWR<CatalogData>(
+    "/api/catalog",
+    fetcher
+  );
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -70,13 +69,17 @@ export function CatalogPage() {
         description="Service catalog (read-only)"
         title="Catalog"
       />
-      <div className="flex-1 overflow-auto p-6 lg:p-8">
-        <CatalogContent
-          initialBundles={data.bundles ?? []}
-          initialData={data.categories}
-          readOnly={data.readOnly ?? true}
-        />
-      </div>
+      {error && <PageError message={error.message} />}
+      {!error && (isLoading || !data) && <PageLoading />}
+      {!error && data && (
+        <div className="flex-1 overflow-auto p-6 lg:p-8">
+          <CatalogContent
+            initialBundles={data.bundles ?? []}
+            initialData={data.categories}
+            readOnly={data.readOnly ?? true}
+          />
+        </div>
+      )}
     </div>
   );
 }

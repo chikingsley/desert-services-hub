@@ -44,11 +44,11 @@ export default defineCommand({
     },
     ...outputArgs,
   },
-  run({ args }) {
+  async run({ args }) {
     const status = args.status as "active" | "expiring" | "all" | undefined;
     const expiringDays = args.days ? Number.parseInt(args.days, 10) : undefined;
 
-    const result = listPermits({
+    const result = await listPermits({
       status,
       companyId: args.company,
       permitId: args.permit,

@@ -43,16 +43,20 @@
       rel="stylesheet"
     >
 
-    <!-- PDF.js viewer CSS -->
+    <!-- PDF.js viewer CSS (lazy-loaded, non-render-blocking) -->
     <link
       href="https://unpkg.com/pdfjs-dist@5.4.624/web/pdf_viewer.css"
       rel="stylesheet"
+      media="print"
+      onload="this.media='all'"
     >
 
-    <!-- MapLibre GL CSS -->
+    <!-- MapLibre GL CSS (lazy-loaded, non-render-blocking) -->
     <link
       href="https://unpkg.com/maplibre-gl@5.17.0/dist/maplibre-gl.css"
       rel="stylesheet"
+      media="print"
+      onload="this.media='all'"
     >
 
     <!-- App styles loaded via JS import in App.tsx for Bun bundling -->

@@ -3,15 +3,15 @@
 
 import { describe, expect, test } from "bun:test";
 import {
-  generateBackPagePDF,
-  generatePDF,
-  savePDF,
-} from "@/lib/pdf/generate-pdf";
+  generateEstimateBackPagePDF,
+  generateEstimatePDF,
+  saveEstimatePDF,
+} from "@/lib/pdf/estimate/generate-estimate-pdf.server";
 import { maxCatalogQuote } from "./test-data";
 
 describe("PDF Generation - Back Page", () => {
   test("generates valid standalone back page PDF", async () => {
-    const buffer = await generateBackPagePDF();
+    const buffer = await generateEstimateBackPagePDF();
 
     expect(buffer).toBeInstanceOf(Buffer);
     expect(buffer.length).toBeGreaterThan(0);
@@ -22,7 +22,7 @@ describe("PDF Generation - Back Page", () => {
   });
 
   test("generates valid PDF with back page included", async () => {
-    const buffer = await generatePDF(maxCatalogQuote, {
+    const buffer = await generateEstimatePDF(maxCatalogQuote, {
       style: "sectioned",
       includeBackPage: true,
     });
@@ -36,12 +36,12 @@ describe("PDF Generation - Back Page", () => {
   });
 
   test("PDF with back page is larger than without", async () => {
-    const withoutBackPage = await generatePDF(maxCatalogQuote, {
+    const withoutBackPage = await generateEstimatePDF(maxCatalogQuote, {
       style: "sectioned",
       includeBackPage: false,
     });
 
-    const withBackPage = await generatePDF(maxCatalogQuote, {
+    const withBackPage = await generateEstimatePDF(maxCatalogQuote, {
       style: "sectioned",
       includeBackPage: true,
     });
@@ -51,7 +51,7 @@ describe("PDF Generation - Back Page", () => {
   });
 
   test("saves PDF with back page to file", async () => {
-    const outPath = await savePDF(
+    const outPath = await saveEstimatePDF(
       maxCatalogQuote,
       "test-pdf-with-backpage.pdf",
       {
@@ -73,7 +73,7 @@ describe("PDF Generation - Back Page", () => {
   });
 
   test("saves standalone back page to file", async () => {
-    const buffer = await generateBackPagePDF();
+    const buffer = await generateEstimateBackPagePDF();
     const outPath = "test-pdf-backpage-only.pdf";
     await Bun.write(outPath, buffer);
 

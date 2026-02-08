@@ -16,7 +16,6 @@
  *   --dry-run          Preview actions without creating/uploading
  */
 
-import { getItemsRich, type MondayColumnValue } from "@monday/client";
 import {
   CUSTOMER_PROJECTS_PATH,
   CUSTOMER_PROJECTS_PATH_REGEX,
@@ -25,10 +24,11 @@ import {
   getStatusFolder,
   parseStatusFromUrl,
   parseVariantPrefix,
-  SKIP_GROUPS,
-  sanitizeFolderName,
+  sanitizeName,
   VARIANT_FOLDER_REGEX,
-} from "@monday/sync/helpers";
+} from "@lib/sharepoint/paths";
+import { getItemsRich, type MondayColumnValue } from "@monday/client";
+import { SKIP_GROUPS } from "@monday/sync/helpers";
 import { resolveAccountNames } from "@monday/sync/monday-fetch";
 import {
   clearFolderCache,
@@ -71,7 +71,7 @@ function mapEstimate(
       mondayId: item.id,
       itemName: item.name,
       accountName: "Unknown",
-      projectName: sanitizeFolderName(item.name),
+      projectName: sanitizeName(item.name),
       statusFolder: getStatusFolder(bidStatus),
       letterFolder: "_Numeric",
       folderPath: "",
@@ -82,8 +82,8 @@ function mapEstimate(
     };
   }
 
-  const sanitizedAccountName = sanitizeFolderName(accountName);
-  const projectName = sanitizeFolderName(baseName);
+  const sanitizedAccountName = sanitizeName(accountName);
+  const projectName = sanitizeName(baseName);
   const statusFolder = getStatusFolder(bidStatus);
   const letterFolder = getLetterFolder(sanitizedAccountName);
   const folderPath = `${CUSTOMER_PROJECTS_PATH}/${statusFolder}/${letterFolder}/${sanitizedAccountName}/${projectName}`;

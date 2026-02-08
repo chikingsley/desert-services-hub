@@ -13,6 +13,7 @@
       "@monday/*": ["apps/cli-tools/monday-cli/src/*"],
       "@sharepoint/*": ["apps/cli-tools/sharepoint-cli/src/*"],
       "@email/*": ["apps/cli-tools/email-cli/src/*"],
+      "@aqdata/*": ["apps/cli-tools/aqdata-cli/src/*"],
       "@lib/*": ["lib/*"],
       "@/components/*": ["apps/web/frontend/components/*"],
       "@/pages/*": ["apps/web/frontend/pages/*"],
@@ -23,7 +24,7 @@
   "exclude": [
     "node_modules",
     "**/build.ts",
-    "services/docusign-file-automation/_reference",
+    "apps/workers/docusign-file-automation/_reference",
     "apps/workers/permit-workers"
   ]
 }

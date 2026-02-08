@@ -52,21 +52,21 @@ export async function listEstimates(): Promise<Estimate[]> {
   const rows = (await db
     .prepare(
       `SELECT q.*,
-        (SELECT json_group_array(json_object(
+        (SELECT COALESCE(json_agg(json_build_object(
           'id', v.id,
           'version_number', v.version_number,
           'total', v.total,
           'is_current', v.is_current,
           'created_at', v.created_at
-        )) FROM estimate_versions v WHERE v.estimate_id = q.id) as versions
+        )), '[]'::json) FROM estimate_versions v WHERE v.estimate_id = q.id) as versions
       FROM estimates q
       ORDER BY q.created_at DESC`
     )
-    .all()) as Array<Record<string, unknown> & { versions: string }>;
+    .all()) as Array<Record<string, unknown> & { versions: unknown }>;
 
   return rows.map((row) => ({
     ...row,
-    versions: JSON.parse(row.versions || "[]"),
+    versions: typeof row.versions === "string" ? JSON.parse(row.versions) : (row.versions ?? []),
   })) as Estimate[];
 }
 
@@ -75,17 +75,17 @@ export async function getEstimate(id: string): Promise<Estimate | null> {
   const quote = (await db
     .prepare(
       `SELECT q.*,
-        (SELECT json_group_array(json_object(
+        (SELECT COALESCE(json_agg(json_build_object(
           'id', v.id,
           'version_number', v.version_number,
           'total', v.total,
           'is_current', v.is_current,
           'created_at', v.created_at
-        )) FROM estimate_versions v WHERE v.estimate_id = q.id) as versions
+        )), '[]'::json) FROM estimate_versions v WHERE v.estimate_id = q.id) as versions
       FROM estimates q
       WHERE q.id = ?`
     )
-    .get(id)) as (Record<string, unknown> & { versions: string }) | null;
+    .get(id)) as (Record<string, unknown> & { versions: unknown }) | null;
 
   if (!quote) {
     return null;
@@ -93,7 +93,7 @@ export async function getEstimate(id: string): Promise<Estimate | null> {
 
   return {
     ...quote,
-    versions: JSON.parse(quote.versions || "[]"),
+    versions: typeof quote.versions === "string" ? JSON.parse(quote.versions) : (quote.versions ?? []),
   } as Estimate;
 }
 
@@ -104,18 +104,18 @@ export async function getEstimateByBaseNumber(
   const quote = (await db
     .prepare(
       `SELECT q.*,
-        (SELECT json_group_array(json_object(
+        (SELECT COALESCE(json_agg(json_build_object(
           'id', v.id,
           'version_number', v.version_number,
           'total', v.total,
           'is_current', v.is_current,
           'created_at', v.created_at
-        )) FROM estimate_versions v WHERE v.estimate_id = q.id) as versions
+        )), '[]'::json) FROM estimate_versions v WHERE v.estimate_id = q.id) as versions
       FROM estimates q
       WHERE q.base_number = ?`
     )
     .get(baseNumber)) as
-    | (Record<string, unknown> & { versions: string })
+    | (Record<string, unknown> & { versions: unknown })
     | null;
 
   if (!quote) {
@@ -124,7 +124,7 @@ export async function getEstimateByBaseNumber(
 
   return {
     ...quote,
-    versions: JSON.parse(quote.versions || "[]"),
+    versions: typeof quote.versions === "string" ? JSON.parse(quote.versions) : (quote.versions ?? []),
   } as Estimate;
 }
 

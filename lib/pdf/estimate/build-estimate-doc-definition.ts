@@ -1,20 +1,23 @@
-// Shared PDF building logic for Desert Services estimates
-// Used by both server (generate-pdf.ts) and client (generate-client.ts)
+// Estimate-specific PDF document definition builders
+// Used by both server and client estimate PDF generators
 
+import type {
+  EditorEstimate,
+  EditorLineItem,
+  EditorSection,
+} from "@lib/db/types";
 import type {
   Content,
   TableCell,
   TDocumentDefinitions,
 } from "pdfmake/interfaces";
 import { findItem } from "@/lib/catalog";
-import type {
-  EditorEstimate,
-  EditorLineItem,
-  EditorSection,
-} from "@/lib/types";
-import { COMPANY } from "./brand";
-import { FONT_TITLE } from "./fonts";
-import { borderedLayout, noBordersLayout, noPaddingLayout } from "./layouts";
+import { COMPANY, FONT_TITLE } from "../shared/brand";
+import {
+  borderedLayout,
+  noBordersLayout,
+  noPaddingLayout,
+} from "../shared/layouts";
 
 // Formatting helpers
 function formatCurrency(value: number): string {
@@ -302,7 +305,7 @@ function buildServiceBox(service: BackPageService): Content {
 }
 
 // Build the back page content (standalone, no page break)
-export function buildBackPageContent(logoBase64: string): Content[] {
+export function buildEstimateBackPageContent(logoBase64: string): Content[] {
   const rows: Content[] = [];
 
   for (let i = 0; i < BACK_PAGE_SERVICES.length; i += 2) {
@@ -501,7 +504,7 @@ function buildItemRow(rowNumber: number, item: EditorLineItem): TableCell[] {
       alignment: "center",
       noWrap: true,
     },
-    { text: item.uom, style: "tableCell", alignment: "center", noWrap: true },
+    { text: item.uom, style: "tableCell", alignment: "center" },
     {
       text: formatCurrency(item.cost),
       style: "tableCell",
@@ -573,9 +576,10 @@ function buildSectionTables(
     }
 
     // Create table for this section
-    // Only mark unbreakable when there's a section header to protect from orphaning
+    // Only mark unbreakable for small sections — large ones must break across pages
     const sectionTable: Content = {
-      unbreakable: unbreakable && group.section !== null,
+      unbreakable:
+        unbreakable && group.section !== null && group.items.length <= 6,
       table: {
         headerRows: isFirst ? 1 : 0,
         dontBreakRows: true,
@@ -630,7 +634,7 @@ function buildSimpleLineItems(lineItems: EditorLineItem[]): Content[] {
 // Document Definition
 // ============================================
 
-export interface GeneratePDFOptions {
+export interface EstimatePDFOptions {
   /** Include back page with catalog pricing */
   includeBackPage?: boolean;
   /** "simple" = flat line items, "sectioned" = grouped with headers (default) */
@@ -639,10 +643,10 @@ export interface GeneratePDFOptions {
   unbreakableSections?: boolean;
 }
 
-export function buildDocDefinition(
+export function buildEstimateDocDefinition(
   estimate: EditorEstimate,
   logoBase64: string,
-  options?: GeneratePDFOptions
+  options?: EstimatePDFOptions
 ): TDocumentDefinitions {
   // Filter out struck items - they shouldn't appear on the PDF
   const visibleItems = estimate.lineItems;
@@ -651,13 +655,25 @@ export function buildDocDefinition(
   const style = options?.style ?? "sectioned";
   const unbreakable = options?.unbreakableSections ?? true;
 
-  const contentTables =
-    style === "simple"
-      ? buildSimpleLineItems(visibleItems)
-      : buildSectionTables(
-          groupItemsBySection(visibleItems, estimate.sections),
-          unbreakable
-        );
+  let contentTables: Content[];
+  if (visibleItems.length === 0) {
+    contentTables = [
+      {
+        text: "No line items",
+        italics: true,
+        color: "#999",
+        alignment: "center" as const,
+        margin: [0, 20, 0, 0] as [number, number, number, number],
+      } as Content,
+    ];
+  } else if (style === "simple") {
+    contentTables = buildSimpleLineItems(visibleItems);
+  } else {
+    contentTables = buildSectionTables(
+      groupItemsBySection(visibleItems, estimate.sections),
+      unbreakable
+    );
+  }
 
   return {
     pageSize: "LETTER",
@@ -982,12 +998,12 @@ export function buildDocDefinition(
 }
 
 // Build back page document definition
-export function buildBackPageDocDefinition(
+export function buildEstimateBackPageDocDefinition(
   logoBase64: string
 ): TDocumentDefinitions {
   return {
     pageSize: "LETTER",
     pageMargins: [40, 40, 40, 40],
-    content: buildBackPageContent(logoBase64),
+    content: buildEstimateBackPageContent(logoBase64),
   };
 }

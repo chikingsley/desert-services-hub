@@ -3,7 +3,6 @@
  * Routes: /api/estimates/:id, /api/estimates/:id/pdf, /api/estimates/:id/duplicate, /api/estimates/:id/takeoff
  */
 import { db } from "@lib/db/hub";
-import { generatePDF, getPDFFilename } from "@lib/pdf/generate-pdf";
 import type {
   EditorEstimate,
   EditorLineItem,
@@ -13,7 +12,11 @@ import type {
   EstimateSection,
   EstimateSectionRow,
   EstimateVersionRow,
-} from "@lib/types";
+} from "@lib/db/types";
+import {
+  generateEstimatePDF,
+  getEstimatePDFFilename,
+} from "@lib/pdf/estimate/generate-estimate-pdf.server";
 import { generateBaseNumber } from "@lib/utils";
 
 // Bun extends Request with params from route matching
@@ -120,9 +123,11 @@ export async function updateEstimate(req: BunRequest): Promise<Response> {
     const body = (await req.json()) as Record<string, unknown>;
 
     // Update estimate metadata
+    const jobName = (body.job_name as string) || "Untitled Estimate";
     const updateFields = [
       "base_number = ?",
       "job_name = ?",
+      "name = ?",
       "job_address = ?",
       "client_name = ?",
       "client_email = ?",
@@ -133,7 +138,8 @@ export async function updateEstimate(req: BunRequest): Promise<Response> {
     ];
     const updateValues: (string | null)[] = [
       body.base_number as string,
-      (body.job_name as string) || "Untitled Estimate",
+      jobName,
+      jobName,
       (body.job_address as string) || null,
       (body.client_name as string) || null,
       (body.client_email as string) || null,
@@ -162,27 +168,27 @@ export async function updateEstimate(req: BunRequest): Promise<Response> {
       .get(id)) as { id: string } | undefined;
 
     if (version) {
-      // Delete existing sections and line items
-      await db
-        .prepare("DELETE FROM estimate_line_items WHERE version_id = ?")
-        .run(version.id);
-      await db
-        .prepare("DELETE FROM estimate_sections WHERE version_id = ?")
-        .run(version.id);
+      await db.transaction(async () => {
+        // Delete existing sections and line items
+        await db
+          .prepare("DELETE FROM estimate_line_items WHERE version_id = ?")
+          .run(version.id);
+        await db
+          .prepare("DELETE FROM estimate_sections WHERE version_id = ?")
+          .run(version.id);
 
-      // Re-create sections
-      const sectionIdMap = new Map<string, string>();
-      const sections = body.sections as EstimateSection[] | undefined;
-      if (sections) {
-        let sortOrder = 0;
-        for (const section of sections) {
-          const sectionId = crypto.randomUUID();
-          await db
-            .prepare(
-              `INSERT INTO estimate_sections (id, version_id, name, title, show_subtotal, sort_order)
-             VALUES (?, ?, ?, ?, ?, ?)`
-            )
-            .run(
+        // Re-create sections
+        const sectionIdMap = new Map<string, string>();
+        const sections = body.sections as EstimateSection[] | undefined;
+        if (sections && sections.length > 0) {
+          const sectionValues: unknown[] = [];
+          const sectionPlaceholders: string[] = [];
+          let sortOrder = 0;
+          for (const section of sections) {
+            const sectionId = crypto.randomUUID();
+            sectionIdMap.set(section.id, sectionId);
+            sectionPlaceholders.push("(?, ?, ?, ?, ?, ?)");
+            sectionValues.push(
               sectionId,
               version.id,
               section.name,
@@ -190,24 +196,27 @@ export async function updateEstimate(req: BunRequest): Promise<Response> {
               section.show_subtotal ? 1 : 0,
               sortOrder
             );
-          sectionIdMap.set(section.id, sectionId);
-          sortOrder += 1;
+            sortOrder += 1;
+          }
+          await db.run(
+            `INSERT INTO estimate_sections (id, version_id, name, title, show_subtotal, sort_order) VALUES ${sectionPlaceholders.join(", ")}`,
+            sectionValues
+          );
         }
-      }
 
-      // Re-create line items
-      const lineItems = body.line_items as EstimateLineItemInput[] | undefined;
-      if (lineItems) {
-        let sortOrder = 0;
-        for (const item of lineItems) {
-          const lineItemId = crypto.randomUUID();
-          const cost = item.cost ?? 0;
-          await db
-            .prepare(
-              `INSERT INTO estimate_line_items (id, version_id, section_id, description, quantity, unit, unit_cost, unit_price, notes, sort_order)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-            )
-            .run(
+        // Re-create line items
+        const lineItems = body.line_items as
+          | EstimateLineItemInput[]
+          | undefined;
+        if (lineItems && lineItems.length > 0) {
+          const itemValues: unknown[] = [];
+          const itemPlaceholders: string[] = [];
+          let sortOrder = 0;
+          for (const item of lineItems) {
+            const lineItemId = crypto.randomUUID();
+            const cost = item.cost ?? 0;
+            itemPlaceholders.push("(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            itemValues.push(
               lineItemId,
               version.id,
               item.section_id
@@ -228,17 +237,27 @@ export async function updateEstimate(req: BunRequest): Promise<Response> {
                 null,
               sortOrder
             );
-          sortOrder += 1;
+            sortOrder += 1;
+          }
+          await db.run(
+            `INSERT INTO estimate_line_items (id, version_id, section_id, description, quantity, unit, unit_cost, unit_price, notes, sort_order) VALUES ${itemPlaceholders.join(", ")}`,
+            itemValues
+          );
         }
-      }
 
-      // Update version total
-      await db
-        .prepare("UPDATE estimate_versions SET total = ? WHERE id = ?")
-        .run((body.total as number) || 0, version.id);
+        // Update version total
+        await db
+          .prepare("UPDATE estimate_versions SET total = ? WHERE id = ?")
+          .run((body.total as number) || 0, version.id);
+      });
     }
 
-    return Response.json({ success: true });
+    // Get updated timestamp to return to client
+    const updated = (await db
+      .prepare("SELECT updated_at FROM estimates WHERE id = ?")
+      .get(id)) as { updated_at: string } | null;
+
+    return Response.json({ success: true, updated_at: updated?.updated_at });
   } catch (error) {
     console.error("Failed to update estimate:", error);
     return Response.json(
@@ -350,8 +369,8 @@ export async function getEstimatePdf(req: BunRequest): Promise<Response> {
       total,
     };
 
-    const pdfBytes = await generatePDF(editorEstimate);
-    const filename = getPDFFilename(editorEstimate);
+    const pdfBytes = await generateEstimatePDF(editorEstimate);
+    const filename = getEstimatePDFFilename(editorEstimate);
 
     return new Response(Buffer.from(pdfBytes), {
       headers: {
@@ -404,88 +423,98 @@ export async function duplicateEstimate(req: BunRequest): Promise<Response> {
       )
       .all(originalVersion.id)) as EstimateLineItemRow[];
 
-    // Create new estimate
-    const newEstimateId = crypto.randomUUID();
+    // Create new estimate in a transaction
     const newBaseNumber = await getNextBaseNumber();
 
-    await db
-      .prepare(
-        `INSERT INTO estimates (id, base_number, takeoff_id, job_name, job_address, client_name, client_email, client_phone, notes, status, is_locked)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-      )
-      .run(
-        newEstimateId,
-        newBaseNumber,
-        originalEstimate.takeoff_id,
-        `${originalEstimate.job_name} (Copy)`,
-        originalEstimate.job_address,
-        originalEstimate.client_name,
-        originalEstimate.client_email,
-        originalEstimate.client_phone,
-        originalEstimate.notes,
-        "draft",
-        0
+    const result = await db.transaction(async () => {
+      const insertResult = await db.run(
+        `INSERT INTO estimates (base_number, takeoff_id, job_name, name, job_address, client_name, client_email, client_phone, notes, status, is_locked)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+         RETURNING id`,
+        [
+          newBaseNumber,
+          originalEstimate.takeoff_id,
+          `${originalEstimate.job_name} (Copy)`,
+          `${originalEstimate.job_name} (Copy)`,
+          originalEstimate.job_address,
+          originalEstimate.client_name,
+          originalEstimate.client_email,
+          originalEstimate.client_phone,
+          originalEstimate.notes,
+          "draft",
+          0,
+        ]
       );
+      const newEstimateId = (
+        insertResult as unknown as Array<{ id: number }>
+      )[0].id;
 
-    // Create new version
-    const newVersionId = crypto.randomUUID();
-    await db
-      .prepare(
-        `INSERT INTO estimate_versions (id, estimate_id, version_number, total, is_current)
-       VALUES (?, ?, 1, ?, 1)`
-      )
-      .run(newVersionId, newEstimateId, originalVersion.total);
-
-    // Copy sections
-    const sectionIdMap = new Map<string, string>();
-    for (const section of originalSections) {
-      const newSectionId = crypto.randomUUID();
+      // Create new version
+      const newVersionId = crypto.randomUUID();
       await db
         .prepare(
-          `INSERT INTO estimate_sections (id, version_id, name, title, show_subtotal, sort_order)
-         VALUES (?, ?, ?, ?, ?, ?)`
+          `INSERT INTO estimate_versions (id, estimate_id, version_number, total, is_current)
+         VALUES (?, ?, 1, ?, 1)`
         )
-        .run(
-          newSectionId,
-          newVersionId,
-          section.name,
-          section.title,
-          section.show_subtotal,
-          section.sort_order
+        .run(newVersionId, newEstimateId, originalVersion.total);
+
+      // Copy sections (batch insert)
+      const sectionIdMap = new Map<string, string>();
+      if (originalSections.length > 0) {
+        const sectionValues: unknown[] = [];
+        const sectionPlaceholders: string[] = [];
+        for (const section of originalSections) {
+          const newSectionId = crypto.randomUUID();
+          sectionIdMap.set(section.id, newSectionId);
+          sectionPlaceholders.push("(?, ?, ?, ?, ?, ?)");
+          sectionValues.push(
+            newSectionId,
+            newVersionId,
+            section.name,
+            section.title,
+            section.show_subtotal,
+            section.sort_order
+          );
+        }
+        await db.run(
+          `INSERT INTO estimate_sections (id, version_id, name, title, show_subtotal, sort_order) VALUES ${sectionPlaceholders.join(", ")}`,
+          sectionValues
         );
-      sectionIdMap.set(section.id, newSectionId);
-    }
+      }
 
-    // Copy line items
-    for (const item of originalLineItems) {
-      const newLineItemId = crypto.randomUUID();
-      const newSectionId = item.section_id
-        ? (sectionIdMap.get(item.section_id) ?? null)
-        : null;
-
-      await db
-        .prepare(
-          `INSERT INTO estimate_line_items (id, version_id, section_id, description, quantity, unit, unit_cost, unit_price, notes, sort_order)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-        )
-        .run(
-          newLineItemId,
-          newVersionId,
-          newSectionId,
-          item.description,
-          item.quantity,
-          item.unit,
-          item.unit_cost,
-          item.unit_price,
-          item.notes,
-          item.sort_order
+      // Copy line items (batch insert)
+      if (originalLineItems.length > 0) {
+        const itemValues: unknown[] = [];
+        const itemPlaceholders: string[] = [];
+        for (const item of originalLineItems) {
+          const newLineItemId = crypto.randomUUID();
+          const newSectionId = item.section_id
+            ? (sectionIdMap.get(item.section_id) ?? null)
+            : null;
+          itemPlaceholders.push("(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+          itemValues.push(
+            newLineItemId,
+            newVersionId,
+            newSectionId,
+            item.description,
+            item.quantity,
+            item.unit,
+            item.unit_cost,
+            item.unit_price,
+            item.notes,
+            item.sort_order
+          );
+        }
+        await db.run(
+          `INSERT INTO estimate_line_items (id, version_id, section_id, description, quantity, unit, unit_cost, unit_price, notes, sort_order) VALUES ${itemPlaceholders.join(", ")}`,
+          itemValues
         );
-    }
+      }
 
-    return Response.json({
-      id: newEstimateId,
-      base_number: newBaseNumber,
+      return { id: newEstimateId, base_number: newBaseNumber };
     });
+
+    return Response.json(result);
   } catch (error) {
     console.error("Failed to duplicate estimate:", error);
     return Response.json(

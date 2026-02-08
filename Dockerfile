@@ -65,6 +65,9 @@ COPY lib ./lib
 COPY hooks ./hooks
 COPY styles ./styles
 
+# Static assets (logo, etc.)
+COPY public ./public
+
 # Install Python deps for pdf-analysis
 RUN cd apps/cli-tools/pdf-analysis-cli && uv sync --frozen 2>/dev/null || uv sync
 

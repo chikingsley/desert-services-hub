@@ -1,0 +1,10 @@
+services:
+  web:
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+  webhooks:
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+  permit-worker:
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

@@ -161,6 +161,7 @@ const server = serve({
     "/permits/*": homepage,
     "/catalog": homepage,
     "/map": homepage,
+    "/automation": homepage,
     "/settings": homepage,
   },
 

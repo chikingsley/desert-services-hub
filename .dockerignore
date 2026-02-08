@@ -39,6 +39,9 @@
 !hooks/
 !styles/
 
+# Static assets (logo, etc.)
+!public/
+
 # Exclude heavy data from lib/ (databases, downloaded files, logs)
 lib/**/*.db
 lib/**/*.db-journal

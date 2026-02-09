@@ -42,6 +42,7 @@ services:
       MONDAY_FILES_DIR: /app/data/monday-files
     volumes:
       - webhooks-data:/app/data
+      - /home/simon/.local/share/opencode/auth.json:/root/.local/share/opencode/auth.json:ro
     healthcheck:
       test: ["CMD", "bun", "-e", "const r = await fetch('http://localhost:4747/api/health'); if (!r.ok) process.exit(1);"]
       interval: 10s

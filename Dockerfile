@@ -71,6 +71,9 @@ COPY public ./public
 # Install Python deps for pdf-analysis
 RUN cd apps/cli-tools/pdf-analysis-cli && uv sync --frozen 2>/dev/null || uv sync
 
+# Install opencode CLI (used for Kimi K2.5 reconciliation in parse pipeline)
+RUN bun add -g opencode-ai
+
 # Data + temp directories
 RUN mkdir -p /app/data /app/tmp
 

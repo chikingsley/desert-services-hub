@@ -10,7 +10,7 @@ import type { GraphEmailClient } from "@email/client";
 import { db } from "@lib/db/hub";
 import { getAttachmentsForEmail } from "@lib/db/repositories";
 import { getPermitById, upsertPermit } from "@lib/db/repositories/dust-permit";
-import type { Permit } from "@lib/db/types";
+import { DUST_PERMIT_TIERS, type Permit } from "@lib/db/types";
 import {
   createDraftClientFromEnv,
   createNotificationDraft,
@@ -36,7 +36,7 @@ const POINT_AND_PAY_INVOICE_RE = /Account Number:\s*(IV\d+)/i;
 const POINT_AND_PAY_AMOUNT_RE = /Amount:\s*(\$[\d,]+\.\d{2})/i;
 const POINT_AND_PAY_CONFIRMATION_RE = /Confirmation ID:\s*(\d+)/i;
 const POINT_AND_PAY_CARD_RE = /Account Last Four:\s*(\d{4})/i;
-const POINT_AND_PAY_DATE_RE = /Payment Date:\s*(.+?)(?:\n|Customer Phone)/i;
+const POINT_AND_PAY_DATE_RE = /Payment Date:\s*([^\r\n]+)/i;
 const POINT_AND_PAY_PHONE_RE = /Customer Phone Number:\s*\(?([\d() -]+)\)?/i;
 const MARICOPA_PERMIT_NUMBER_RE = /application\s+(D\d{7})/i;
 const MARICOPA_FACILITY_ID_RE = /Facility ID#?:\s*(\w+)/i;
@@ -165,6 +165,164 @@ export interface IssuedJobPayload {
   subject: string;
 }
 
+// ============================================================================
+// Cost Breakdown
+// ============================================================================
+
+interface CostBreakdown {
+  permitCost: string; // ADEQ fee (what was paid to county)
+  adminFee: string; // Desert Services admin/filing fee
+  scheduleValue: string; // Total customer charge
+  isAccelerated: boolean;
+}
+
+function formatUSD(amount: number): string {
+  return `$${amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}`;
+}
+
+function parseDollarAmount(str: string | null): number | null {
+  if (!str) return null;
+  const cleaned = str.replace(/[,$]/g, "");
+  const num = Number.parseFloat(cleaned);
+  return Number.isNaN(num) ? null : num;
+}
+
+/**
+ * Compute the customer cost breakdown for a dust permit billing notification.
+ *
+ * Uses the ADEQ fee (from the PointAndPay email amount) + DUST_PERMIT_TIERS
+ * to determine permitCost, adminFee, and scheduleValue.
+ *
+ * For accelerated permits, the ADEQ fee is doubled so we halve it
+ * to find the base tier. The admin fee stays the same.
+ */
+function computeCostBreakdown(
+  adeqFeeStr: string | null,
+  isAccelerated: boolean
+): CostBreakdown | null {
+  const adeqFee = parseDollarAmount(adeqFeeStr);
+  if (adeqFee == null || adeqFee <= 0) return null;
+
+  // For accelerated permits, the ADEQ fee is doubled — halve to find base tier
+  const baseFee = isAccelerated ? adeqFee / 2 : adeqFee;
+
+  // Match against the tier table by ADEQ fee
+  const tier = DUST_PERMIT_TIERS.find((t) => t.adeqFee === baseFee);
+  if (!tier) return null;
+
+  return {
+    permitCost: formatUSD(adeqFee),
+    adminFee: formatUSD(tier.filingFee),
+    scheduleValue: formatUSD(adeqFee + tier.filingFee),
+    isAccelerated,
+  };
+}
+
+// ============================================================================
+// Enrichment — Acreage, Facility ID, PDF
+// ============================================================================
+
+const FEATURE_SERVER_URL =
+  "https://gis.maricopa.gov/arcgis/rest/services/AQD/DustControl/FeatureServer";
+const SQ_METERS_TO_ACRES = 0.000_247_105;
+const PERMIT_WORKER_URL = "http://permit-worker:47822";
+
+interface FeatureServerResponse {
+  features?: Array<{
+    attributes?: Record<string, unknown>;
+  }>;
+}
+
+/**
+ * Fetch project acreage from Maricopa FeatureServer (public REST API).
+ * Queries layer 3 (disturbed area polygons) for Shape__Area and converts to acres.
+ */
+async function fetchAcreage(permitId: string): Promise<number | null> {
+  try {
+    const params = new URLSearchParams({
+      where: `ImpactID='${permitId}'`,
+      outFields: "Shape__Area",
+      returnGeometry: "false",
+      f: "json",
+    });
+    const url = `${FEATURE_SERVER_URL}/3/query?${params.toString()}`;
+    const response = await fetch(url);
+    const data = (await response.json()) as FeatureServerResponse;
+
+    const area = data?.features?.[0]?.attributes?.Shape__Area;
+    if (typeof area !== "number" || area <= 0) return null;
+    return area * SQ_METERS_TO_ACRES;
+  } catch (err) {
+    console.error("[email-trigger] Failed to fetch acreage:", err);
+    return null;
+  }
+}
+
+/**
+ * Look up the facility ID for a renewal by checking the previous permit's
+ * "dust_permit_issued" notification metadata.
+ */
+async function lookupFacilityIdForRenewal(
+  previousAppId: string
+): Promise<string | null> {
+  try {
+    const row = await db
+      .query<{ metadata: string | null }, [string]>(
+        `SELECT metadata FROM notifications
+         WHERE event_type = 'dust_permit_issued'
+           AND ref_id = ?
+           AND status IN ('drafted', 'sent')
+         ORDER BY created_at DESC LIMIT 1`
+      )
+      .get(previousAppId);
+
+    if (!row?.metadata) return null;
+    const meta = JSON.parse(row.metadata) as Record<string, unknown>;
+    return typeof meta.facilityId === "string" ? meta.facilityId : null;
+  } catch (err) {
+    console.error("[email-trigger] Failed to look up facility ID:", err);
+    return null;
+  }
+}
+
+/**
+ * Fetch the dust application PDF from the permit-worker API.
+ * The permit-worker uses Playwright to scrape the portal and generate a PDF.
+ */
+async function fetchPermitApplicationPdf(
+  permitId: string
+): Promise<PdfAttachmentForDraft | null> {
+  try {
+    const response = await fetch(`${PERMIT_WORKER_URL}/api/scrape/pdf`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ permitId }),
+    });
+
+    if (!response.ok) {
+      console.error(
+        `[email-trigger] Permit-worker PDF request failed: ${response.status}`
+      );
+      return null;
+    }
+
+    const result = (await response.json()) as {
+      success: boolean;
+      pdfBase64?: string;
+    };
+    if (!result.success || !result.pdfBase64) return null;
+
+    return {
+      name: `${permitId}-Application.pdf`,
+      contentType: "application/pdf",
+      contentBytes: result.pdfBase64,
+    };
+  } catch (err) {
+    console.error("[email-trigger] Failed to fetch permit PDF:", err);
+    return null;
+  }
+}
+
 /**
  * Handle a PointAndPay payment email.
  *
@@ -203,6 +361,17 @@ export async function handlePaymentEmail(
     `[email-trigger] Matched invoice ${payment.invoiceNumber} → permit ${permit.id} (${permit.projectName})`
   );
 
+  // Cost breakdown from tier table
+  const costBreakdown = computeCostBreakdown(
+    payment.amount,
+    permit.isAccelerated
+  );
+  if (costBreakdown) {
+    console.log(
+      `[email-trigger] Cost breakdown: permit=${costBreakdown.permitCost} admin=${costBreakdown.adminFee} schedule=${costBreakdown.scheduleValue} accelerated=${costBreakdown.isAccelerated}`
+    );
+  }
+
   // Build shared metadata
   const sharedMeta = {
     permitId: permit.id,
@@ -226,18 +395,51 @@ export async function handlePaymentEmail(
       confirmationId: payment.confirmationId,
       cardLastFour: payment.cardLastFour,
       paymentDate: payment.paymentDate,
+      acceleratedProcessing: permit.isAccelerated ? "Yes" : "No",
+      permitCost: costBreakdown?.permitCost,
+      adminFee: costBreakdown?.adminFee,
+      scheduleValue: costBreakdown?.scheduleValue,
     },
   };
 
   await createAndDeliverNotification(billingEvent, payload.mailboxEmail);
 
-  // 2. Submitted stakeholder notification
+  // 2. Submitted stakeholder notification — enrich with acreage, facility ID, PDF
+  console.log(
+    `[email-trigger] Enriching submitted notification for ${permit.id}...`
+  );
+
+  const isRenewal = !!permit.previousAppId;
+  const [acreage, facilityId, pdfAttachment] = await Promise.all([
+    fetchAcreage(permit.id),
+    isRenewal && permit.previousAppId
+      ? lookupFacilityIdForRenewal(permit.previousAppId)
+      : Promise.resolve(null),
+    fetchPermitApplicationPdf(permit.id),
+  ]);
+
+  if (acreage != null) {
+    console.log(`[email-trigger] Acreage: ${acreage.toFixed(2)} acres`);
+  }
+  if (facilityId) {
+    console.log(`[email-trigger] Facility ID (renewal): ${facilityId}`);
+  }
+  if (pdfAttachment) {
+    console.log(`[email-trigger] PDF attached: ${pdfAttachment.name}`);
+  }
+
   const submittedEvent: PendingEvent = {
     eventType: "dust_permit_submitted",
     refType: "permit",
     refId: permit.id,
     subject: `Dust Permit Submitted - ${permit.projectName ?? permit.id}`,
-    metadata: sharedMeta,
+    metadata: {
+      ...sharedMeta,
+      acreage: acreage != null ? acreage.toFixed(2) : null,
+      facilityId,
+      isRenewal,
+      attachments: pdfAttachment ? [pdfAttachment] : [],
+    },
   };
 
   await createAndDeliverNotification(submittedEvent, payload.mailboxEmail);

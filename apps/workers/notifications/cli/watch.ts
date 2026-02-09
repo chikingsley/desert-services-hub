@@ -7,7 +7,7 @@
  * estimate wins, etc.) and creates notification entries or Outlook drafts.
  *
  * Usage:
- *   bun cli/watch.ts                                  # Continuous polling
+ *   bun cli/watch.ts                                  # Continuous polling (log-only by default)
  *   bun cli/watch.ts --once                           # Single check then exit
  *   bun cli/watch.ts --interval=60000                 # Custom interval (ms)
  *   bun cli/watch.ts --delivery=log                   # Log only (no drafts)
@@ -43,7 +43,7 @@ function parseDeliveryMode(
   value: string | undefined
 ): NotificationDeliveryMode {
   if (!value) {
-    return "draft";
+    return "log";
   }
   if (value === "log" || value === "draft") {
     return value;

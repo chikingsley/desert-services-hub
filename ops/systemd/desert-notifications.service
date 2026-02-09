@@ -8,7 +8,8 @@ Type=simple
 WorkingDirectory=%h/github/desert-services-hub
 Environment=PATH=%h/.bun/bin:/usr/local/bin:/usr/bin:/bin
 EnvironmentFile=-%h/github/desert-services-hub/.env
-ExecStart=%h/.bun/bin/bun run apps/workers/notifications/cli/watch.ts
+# Default to safe mode: do not create Outlook drafts unless explicitly changed.
+ExecStart=%h/.bun/bin/bun run apps/workers/notifications/cli/watch.ts --delivery=log
 Restart=always
 RestartSec=10
 

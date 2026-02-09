@@ -35,22 +35,14 @@ solely by the Arizona Department of Environmental Quality (ADEQ). All discharges
 shall be consistent with the terms and conditions of this permit. Permit coverage is required from the “commencement
 of construction activities” until “final stabilization” as these terms are defined and described in this permit.
 
-
-
 This general permit is effective on August 29, 2025.
 
-
 This general permit and the authorization to discharge expire at midnight on August 28, 2030.
-
 
 Signed on: 8/28/2025
 ---
 
-
-
-
 ### ARIZONA DEPARTMENT OF ENVIRONMENTAL QUALITY
-
 
 ---
                                           Josephine Maressa, Deputy Director
@@ -62,13 +54,7 @@ Signed on: 8/28/2025
 
                                             AZG2025-001 CGP
 
-
-
-
 ***This page left intentionally blank ***
-
-
-
 
                                                   Page 2 of 64
 
@@ -78,57 +64,101 @@ Signed on: 8/28/2025
 
                                                                                                                                    AZG2025-001 CGP
 
-
-
 ### TABLE OF CONTENTS
-### 1.0      COVERAGE UNDER THIS GENERAL PERMIT .............................................................................. 5
-### 1.1      PERMIT AREA ................................................................................................................................... 5
-### 1.2      ELIGIBILITY ....................................................................................................................................... 5
-### 1.3      AUTHORIZED DISCHARGES ................................................................................................................ 5
-### 1.4      PROHIBITED DISCHARGES ................................................................................................................. 7
-### 1.5      LIMITATIONS OF COVERAGE ............................................................................................................... 7
-### 1.6      EROSIVITY WAIVERS FOR SMALL CONSTRUCTION ACTIVITIES .............................................................. 8
-### 2.0      AUTHORIZATION UNDER THIS GENERAL PERMIT ..................................................................... 9
-### 2.1      RESPONSIBILITIES OF OPERATORS .................................................................................................... 9
-### 2.2      PREREQUISITES FOR SUBMITTING A NOTICE OF INTENT (NOI) ............................................................. 9
-### 2.3      SUBMITTING AN NOI........................................................................................................................ 10
-### 2.4      FEE REQUIREMENTS ....................................................................................................................... 12
-### 2.5      AUTHORIZATION OF EMERGENCY-RELATED CONSTRUCTION ACTIVITIES ............................................ 12
-### 2.6      TERMINATING COVERAGE ................................................................................................................ 12
-### 3.0      CONSTRUCTION AND DEVELOPMENT EFFLUENT GUIDELINES AND WATER QUALITY
-### STANDARDS .................................................................................................................................. 14
-### 3.1      NON-NUMERIC EFFLUENT LIMITATIONS AND ASSOCIATED CONTROL MEASURES................................. 14
-### 3.2      GENERAL MAINTENANCE REQUIREMENTS ........................................................................................ 14
-### 3.3      EROSION AND SEDIMENT CONTROL REQUIREMENTS ......................................................................... 14
-### 3.4      SITE STABILIZATION REQUIREMENTS ................................................................................................ 20
-### 3.5      POLLUTION PREVENTION REQUIREMENTS ........................................................................................ 22
-### 3.6      CONTROLS FOR DEWATERING ACTIVITIES ........................................................................................ 27
-### 3.7      SURFACE OUTLETS ......................................................................................................................... 27
-### 3.8      SURFACE WATER QUALITY STANDARDS (SWQS) ............................................................................ 27
-### 4.0      INSPECTIONS ................................................................................................................................. 29
-### 4.1      INSPECTOR QUALIFICATIONS ........................................................................................................... 29
-### 4.2      INSPECTION SCHEDULE ................................................................................................................... 29
-### 4.3      SCOPE OF INSPECTIONS .................................................................................................................. 31
-### 4.4      INSPECTION REPORT FORM ............................................................................................................. 32
-### 4.5      INSPECTION FOLLOW-UP ................................................................................................................. 32
-### 5.0      CORRECTIVE ACTIONS ................................................................................................................ 34
-### 5.1      CORRECTIVE ACTION TRIGGERS ...................................................................................................... 34
-### 5.2      CORRECTIVE ACTION DEADLINES .................................................................................................... 34
-### 5.3      CORRECTIVE ACTION REPORT ......................................................................................................... 34
-### 6.0      STORMWATER POLLUTION PREVENTION PLAN ...................................................................... 35
-### 6.1      GENERAL INFORMATION .................................................................................................................. 35
-### 6.2      TYPES OF OPERATORS.................................................................................................................... 35
-### 6.3      SWPPP CONTENTS........................................................................................................................ 36
-### 6.4      DOCUMENTATION REQUIREMENTS INCLUDING PERMIT RELATED RECORDS........................................ 41
-### 6.5      SWPPP UPDATES AND REVISION REQUIREMENTS ........................................................................... 42
-### 6.6      DEFICIENCIES IN THE SWPPP ......................................................................................................... 43
-### 6.7      POSTING, SWPPP REVIEW AND MAKING SWPPPS AVAILABLE ........................................................ 43
-### 7.0      STORMWATER MONITORING ....................................................................................................... 44
-### 7.1      MONITORING PROGRAM .................................................................................................................. 44
-### 7.2      SAMPLING AND ANALYSIS PLAN (SAP) ............................................................................................. 44
-### 7.3      ANALYTICAL MONITORING REQUIREMENTS ....................................................................................... 44
-### 8.0 RECORDKEEPING ............................................................................................................................ 47
 
+### 1.0      COVERAGE UNDER THIS GENERAL PERMIT .............................................................................. 5
+
+### 1.1      PERMIT AREA ................................................................................................................................... 5
+
+### 1.2      ELIGIBILITY ....................................................................................................................................... 5
+
+### 1.3      AUTHORIZED DISCHARGES ................................................................................................................ 5
+
+### 1.4      PROHIBITED DISCHARGES ................................................................................................................. 7
+
+### 1.5      LIMITATIONS OF COVERAGE ............................................................................................................... 7
+
+### 1.6      EROSIVITY WAIVERS FOR SMALL CONSTRUCTION ACTIVITIES .............................................................. 8
+
+### 2.0      AUTHORIZATION UNDER THIS GENERAL PERMIT ..................................................................... 9
+
+### 2.1      RESPONSIBILITIES OF OPERATORS .................................................................................................... 9
+
+### 2.2      PREREQUISITES FOR SUBMITTING A NOTICE OF INTENT (NOI) ............................................................. 9
+
+### 2.3      SUBMITTING AN NOI........................................................................................................................ 10
+
+### 2.4      FEE REQUIREMENTS ....................................................................................................................... 12
+
+### 2.5      AUTHORIZATION OF EMERGENCY-RELATED CONSTRUCTION ACTIVITIES ............................................ 12
+
+### 2.6      TERMINATING COVERAGE ................................................................................................................ 12
+
+### 3.0      CONSTRUCTION AND DEVELOPMENT EFFLUENT GUIDELINES AND WATER QUALITY
+
+### STANDARDS .................................................................................................................................. 14
+
+### 3.1      NON-NUMERIC EFFLUENT LIMITATIONS AND ASSOCIATED CONTROL MEASURES................................. 14
+
+### 3.2      GENERAL MAINTENANCE REQUIREMENTS ........................................................................................ 14
+
+### 3.3      EROSION AND SEDIMENT CONTROL REQUIREMENTS ......................................................................... 14
+
+### 3.4      SITE STABILIZATION REQUIREMENTS ................................................................................................ 20
+
+### 3.5      POLLUTION PREVENTION REQUIREMENTS ........................................................................................ 22
+
+### 3.6      CONTROLS FOR DEWATERING ACTIVITIES ........................................................................................ 27
+
+### 3.7      SURFACE OUTLETS ......................................................................................................................... 27
+
+### 3.8      SURFACE WATER QUALITY STANDARDS (SWQS) ............................................................................ 27
+
+### 4.0      INSPECTIONS ................................................................................................................................. 29
+
+### 4.1      INSPECTOR QUALIFICATIONS ........................................................................................................... 29
+
+### 4.2      INSPECTION SCHEDULE ................................................................................................................... 29
+
+### 4.3      SCOPE OF INSPECTIONS .................................................................................................................. 31
+
+### 4.4      INSPECTION REPORT FORM ............................................................................................................. 32
+
+### 4.5      INSPECTION FOLLOW-UP ................................................................................................................. 32
+
+### 5.0      CORRECTIVE ACTIONS ................................................................................................................ 34
+
+### 5.1      CORRECTIVE ACTION TRIGGERS ...................................................................................................... 34
+
+### 5.2      CORRECTIVE ACTION DEADLINES .................................................................................................... 34
+
+### 5.3      CORRECTIVE ACTION REPORT ......................................................................................................... 34
+
+### 6.0      STORMWATER POLLUTION PREVENTION PLAN ...................................................................... 35
+
+### 6.1      GENERAL INFORMATION .................................................................................................................. 35
+
+### 6.2      TYPES OF OPERATORS.................................................................................................................... 35
+
+### 6.3      SWPPP CONTENTS........................................................................................................................ 36
+
+### 6.4      DOCUMENTATION REQUIREMENTS INCLUDING PERMIT RELATED RECORDS........................................ 41
+
+### 6.5      SWPPP UPDATES AND REVISION REQUIREMENTS ........................................................................... 42
+
+### 6.6      DEFICIENCIES IN THE SWPPP ......................................................................................................... 43
+
+### 6.7      POSTING, SWPPP REVIEW AND MAKING SWPPPS AVAILABLE ........................................................ 43
+
+### 7.0      STORMWATER MONITORING ....................................................................................................... 44
+
+### 7.1      MONITORING PROGRAM .................................................................................................................. 44
+
+### 7.2      SAMPLING AND ANALYSIS PLAN (SAP) ............................................................................................. 44
+
+### 7.3      ANALYTICAL MONITORING REQUIREMENTS ....................................................................................... 44
+
+### 8.0 RECORDKEEPING ............................................................................................................................ 47
 
                                                                                                                                                Page 3 of 64
 
@@ -138,14 +168,11 @@ Signed on: 8/28/2025
 
                                                                                                                                  AZG2025-001 CGP
 
-
-
 ### 8.1      RECORDS ....................................................................................................................................... 47
+
 ### APPENDIX A: DEFINITIONS ..................................................................................................................... 48
+
 ### APPENDIX B: STANDARD PERMIT CONDITIONS ................................................................................. 56
-
-
-
 
                                                                                                                                              Page 4 of 64
 
@@ -155,8 +182,8 @@ Signed on: 8/28/2025
 
                                                                                                  AZG2025-001 CGP
 
-
 ### 1.0   COVERAGE UNDER THIS GENERAL PERMIT
+
 1.1   Permit Area
       This general permit covers the state of Arizona.
       1.1.1    This permit is not authorized for use on sites with stormwater discharges associated with
@@ -172,7 +199,9 @@ Signed on: 8/28/2025
                on the protected surface waters list, including discharges to waters of the U.S. (WOTUS) and non-
                WOTUS protected surface waters. The requirements applicable to discharges to non-WOTUS
                protected surface waters are adopted pursuant to state law and are enforceable solely by ADEQ. See
+
 ### A.R.S. 49-221(G)(1).
+
       1.2.2    This general permit authorizes stormwater discharges associated with “construction activities” to
                protected surface waters, either directly or by way of a conveyance, that will disturb one or more
                acres of land, or will disturb less than one acre of land that is part of a common plan of development
@@ -202,7 +231,6 @@ Signed on: 8/28/2025
       Reclaimed water may be used for dust control, soil compaction, or landscape irrigation if a valid reuse permit
       is obtained and there are no discharges of reclaimed water off-site. Reclaimed Water Permits shall be obtained
       from ADEQ prior to start of construction. See the 2025 CGP Fact Sheet for more information.
-
 
                                                                                                          Page 5 of 64
 
@@ -357,9 +385,6 @@ Signed on: 8/28/2025
                b.     Terminate the Erosivity Waiver in myDEQ.
                c.     Submit a NOI as required under parts 2.3 and 6.0.
 
-
-
-
                                                                                                           Page 8 of 64
 
 ---
@@ -369,6 +394,7 @@ Signed on: 8/28/2025
                                                                                                   AZG2025-001 CGP
 
 ### 2.0   AUTHORIZATION UNDER THIS GENERAL PERMIT
+
       The operator shall review all the conditions and requirements of the permit, including the Standard Permit
       Conditions in Appendix B, before submitting any documentation described in Part 2.
 2.1   Responsibilities of Operators
@@ -412,7 +438,6 @@ Signed on: 8/28/2025
                      more outfalls 1/4 mile upstream of a protected surface water that is a WOTUS and is listed
                      as an impaired, or not-attaining water, or an OAW, as described in Part 1.5.3. The SWPPP
                      shall be retained and made available in accordance with Part 6.7.
-
 
                                                                                                            Page 9 of 64
 
@@ -596,9 +621,6 @@ Signed on: 8/28/2025
         the operator terminates the NOI in myDEQ and receives the Notice of Termination (NOT)
         acknowledgement in myDEQ, which includes the termination date.
 
-
-
-
                                                                                             Page 13 of 64
 
 ---
@@ -608,6 +630,7 @@ Signed on: 8/28/2025
                                                                                                   AZG2025-001 CGP
 
 ### 3.0   CONSTRUCTION AND DEVELOPMENT EFFLUENT GUIDELINES AND WATER QUALITY
+
       STANDARDS
       The control measures in this Part incorporate the technology-based effluent limitation guidelines to meet
       water quality standards that, where applicable, apply to all stormwater and allowable non-stormwater
@@ -874,9 +897,6 @@ d.           If existing control measures need to be repaired, or modified, or i
         The operator is not required to enhance the quality of the vegetation that already exists in the buffer,
         or provide vegetation if none exists.
 
-
-
-
                                                                                                        Page 18 of 64
 
 ---
@@ -926,9 +946,6 @@ c.      Exceptions:
               required because the intended function of a specific area of the site dictates that it be
               compacted. Preserve topsoil, unless preserving topsoil is not required because the intended
               function of a specific area of the site dictates that the topsoil be disturbed or removed.
-
-
-
 
                                                                                              Page 19 of 64
 
@@ -1150,7 +1167,6 @@ d.   Fueling and maintenance of equipment or vehicles: Any operator that conduct
             of used liquids.
      iii.   Use drip pans and absorbents under leaky vehicles.
 
-
                                                                                        Page 23 of 64
 
 ---
@@ -1204,8 +1220,6 @@ d.   Fueling and maintenance of equipment or vehicles: Any operator that conduct
                       b.    Applying at a rate and in amounts consistent with manufacturer’s specifications,
                             and in accordance with licensing requirements from the Arizona Department of
                             Agriculture, Pest Management Division.
-
-
 
                                                                                                     Page 24 of 64
 
@@ -1261,7 +1275,6 @@ iv.    For hazardous or toxic waste:
        d.     Dispose of hazardous or toxic waste in accordance with the manufacturer’s
               recommended method of disposal and in compliance with federal, state, tribal,
               and local requirements.
-
 
                                                                                  Page 25 of 64
 
@@ -1388,9 +1401,6 @@ established TMDL (for any parameter) or to otherwise control a discharge to not 
 an exceedance of applicable surface water quality standards, the operator shall continue to
 implement such controls as part of this permit.
 
-
-
-
                                                                                       Page 28 of 64
 
 ---
@@ -1400,6 +1410,7 @@ implement such controls as part of this permit.
                                                                                                 AZG2025-001 CGP
 
 ### 4.0   INSPECTIONS
+
 4.1   Inspector Qualifications
       The operator shall provide qualified personnel (as defined in Appendix A) to perform inspections of the site
       in accordance with Parts 4.2 through 4.5 of this permit.
@@ -1622,9 +1633,6 @@ implement such controls as part of this permit.
         operator shall determine and implement appropriate corrective actions, and meet the applicable
         deadlines pursuant to Part 5.
 
-
-
-
                                                                                          Page 33 of 64
 
 ---
@@ -1634,6 +1642,7 @@ implement such controls as part of this permit.
                                                                                                 AZG2025-001 CGP
 
 ### 5.0   CORRECTIVE ACTIONS
+
 5.1   Corrective Action Triggers
       Corrective actions are actions the operator takes in compliance with this Part to modify, or replace any control
       measure that failed to meet the conditions of Part 3. Routine maintenance or repairs do not constitute
@@ -1688,9 +1697,8 @@ implement such controls as part of this permit.
 
                                                                                                  AZG2025-001 CGP
 
-
-
 ### 6.0   STORMWATER POLLUTION PREVENTION PLAN
+
 6.1   General Information
       6.1.1    A site specific SWPPP shall be developed by a “qualified person” before the operator may submit
                the NOI for permit coverage, and before conducting any construction activity. Any SWPPP prepared
@@ -1730,9 +1738,6 @@ implement such controls as part of this permit.
                       the SWPPP are notified of such revisions in a timely manner.
                iii.   The SWPPP indicates the name(s) of the person(s) with day-to-day operational control of
                       those activities necessary to ensure compliance with the SWPPP or other permit conditions.
-
-
-
 
                                                                                                         Page 35 of 64
 
@@ -1893,7 +1898,6 @@ implement such controls as part of this permit.
         l.    Areas where final stabilization has been accomplished and no further construction permit
               requirements apply (if none, the SWPPP shall indicate so).
         m.    Location and boundaries of buffer zones to be preserved.
-
 
                                                                                                Page 38 of 64
 
@@ -2144,7 +2148,7 @@ implement such controls as part of this permit.
                the authorization number(s) must be posted near the entrance where most of the construction activity
                is occurring.
       b.       The operator must post the following statement with the Authorization #: “For stormwater
-               complaints, please visit www.azdeq.gov.” Lettering must be 2” or greater.
+               complaints, please visit <www.azdeq.gov.”> Lettering must be 2” or greater.
       c.       A copy of the SWPPP shall be on-site or at an easily accessible location, whenever construction or
                support activities are actively underway, and shall be available to ADEQ or any other federal, state
                or local authority having jurisdiction over the site at any reasonable time (generally Monday through
@@ -2160,9 +2164,6 @@ implement such controls as part of this permit.
                authority having stormwater program authority, within 48-hours of request. If otherwise requested
                by ADEQ, the operator shall submit copies of these documents within 14-calendar days of request.
 
-
-
-
                                                                                                         Page 43 of 64
 
 ---
@@ -2171,8 +2172,8 @@ implement such controls as part of this permit.
 
                                                                                                  AZG2025-001 CGP
 
-
 ### 7.0   STORMWATER MONITORING
+
       The provisions of Part 7 apply to:
       a.       Construction sites with one or more outfalls within 1/4 mile upstream of a protected surface water
                that is a WOTUS and is listed as impaired or not-attaining or an Outstanding Arizona Water (OAW),
@@ -2217,7 +2218,6 @@ implement such controls as part of this permit.
       7.3.1    When to Sample: The operator shall conduct analytical monitoring, a minimum of two (2) times per
                wet season, throughout the duration of permit coverage. Analytical monitoring is only required when
 
-
                                                                                                         Page 44 of 64
 
 ---
@@ -2238,7 +2238,6 @@ implement such controls as part of this permit.
         be documented in the SWPPP.
 7.3.3   Where to Sample: The operator shall conduct analytical monitoring at outfalls observed or suspected
         to contain the greatest pollutant load resulting from construction activities, using Table 1 below:
-
 
                          Table 1: Minimum Number of Samples to Collect
 
@@ -2322,9 +2321,6 @@ d.     Discharge Monitoring Report:
               summer wet season on or before November 30.
       ii.     At the time the conditions in Part 2.6 have been met and a NOT is submitted in myDEQ.
 
-
-
-
                                                                                          Page 46 of 64
 
 ---
@@ -2334,13 +2330,14 @@ d.     Discharge Monitoring Report:
                                                                                               AZG2025-001 CGP
 
 ### 8.0 RECORDKEEPING
+
 8.1   Records
       8.1.1     Address for Submittal of All Forms and Reports:
                 All documents required by this permit (NOIs, SWPPPs, NOTs, and DMRs) shall be submitted, in
                 electronic format, in myDEQ.
                 Any other written correspondence, such as Corrective Action Forms (see Part 5.3) shall be signed and
                 dated in accordance with Appendix B, Subsection 9 of this permit and submitted to ADEQ via email at
-                azpdes@azdeq.gov or via U.S.P.S. at the address below:
+                <azpdes@azdeq.gov> or via U.S.P.S. at the address below:
                                      Arizona Department of Environmental Quality
                                             Surface Water Protection Section
                                                1110 W. Washington Street
@@ -2349,9 +2346,6 @@ d.     Discharge Monitoring Report:
                 The operator shall retain records of all stormwater monitoring information, corrective actions,
                 inspection and other reports with the SWPPP for a period of at least three (3) years from the date
                 the NOT was submitted to ADEQ.
-
-
-
 
                                                                                                      Page 47 of 64
 
@@ -2362,14 +2356,15 @@ d.     Discharge Monitoring Report:
                                                                                                       AZG2025-001 CGP
 
 ### APPENDIX A: DEFINITIONS
+
 24-hour Period – any consecutive 24-hours.
 
 Anticipated Storm Event – any storm event with at least a 30% chance of precipitation as predicted by the National
 Weather Service for the area local to the construction site.
 
 Arid Areas – the parts of Arizona that receive an average annual rainfall of 0 to 10 inches. To determine average
-annual rainfall in specific locations, see the following links: https://www.ncdc.noaa.gov/cag/national/mapping and
-https://www.epa.gov/enviroatlas.
+annual rainfall in specific locations, see the following links: <https://www.ncdc.noaa.gov/cag/national/mapping> and
+<https://www.epa.gov/enviroatlas>.
 
 AZPDES – The Arizona Pollutant Discharge Elimination System program as adopted under section 402(b) of the
 Clean Water Act for WOTUS; and under Section 49-255.04 for non-WOTUS protected surface waters.
@@ -2464,7 +2459,7 @@ that any of the following conditions are likely:
 2.       Drought ongoing, some improvement
 3.       Drought likely to improve, impacts ease
 4.       Drought development likely
-See http://www.cpc.ncep.noaa.gov/products/expert_assessment/sdo_summary.php
+See <http://www.cpc.ncep.noaa.gov/products/expert_assessment/sdo_summary.php>
 
 Earth-Disturbing Activity – actions taken to alter the existing vegetation and/or underlying soil of a site, such as
 clearing, grading, site preparation (e.g., excavating, grubbing, cutting, and filling), soil compaction, and movement
@@ -2548,7 +2543,6 @@ barren ground that exists prior to commencement of earth-disturbing activities.
 
 Natural Vegetation – vegetation that occurs spontaneously without regular management, maintenance, or species
 introductions or removals, and that generally has a strong component of native species.
-
 
                                                                                                             Page 50 of 64
 
@@ -2656,7 +2650,7 @@ prevent problems before they result in equipment failure.
 Run-on – stormwater that drains from land located upslope or upstream from the regulated site in question.
 
 Seasonally Dry Period – a month in which the long-term average total precipitation is less than or equal to 0.5 inches.
-See U.S. EPA’s Seasonally Dry Period Locator at https://www.epa.gov/npdes/construction-general-permit-resources-
+See U.S. EPA’s Seasonally Dry Period Locator at <https://www.epa.gov/npdes/construction-general-permit-resources->
 tools-and-templates.
 
 Sediment Control – measures designed to intercept and settle out soil particles that have become detached and
@@ -2780,9 +2774,6 @@ saturated soil conditions. A wetland includes a swamp, marsh, bog, cienega, tina
 
 Work Day – a calendar day on which construction activities will take place.
 
-
-
-
                                                                                                           Page 54 of 64
 
 ---
@@ -2857,8 +2848,8 @@ Acronyms
 
                                                                                               AZG2025-001 CGP
 
-
 ### APPENDIX B: STANDARD PERMIT CONDITIONS
+
      Standard permit conditions in Appendix B are consistent with the general permit provisions required under
      40 CFR 122.41 and A.A.C. R-18-9-A905(A)(3).
 
@@ -3064,7 +3055,7 @@ Acronyms
             i.      Monitoring results must be reported on a Discharge Monitoring Report (DMR)
                     provided online by ADEQ. Pursuant to Section 7.4, all monitoring data collected
                     pursuant to Part 7 must be submitted electronically to ADEQ using the e-Discharge
-                    Monitoring Report (e-DMR) form, available at www.azdeq.gov/mydeq.
+                    Monitoring Report (e-DMR) form, available at <www.azdeq.gov/mydeq>.
             ii.     If the operator monitors any pollutant more frequently than required by the permit
                     using test procedures approved under 40 CFR Part 136 unless otherwise specified in
                     40 CFR Part 503, or as specified in the permit, the results of this monitoring shall be
@@ -3324,8 +3315,5 @@ b.   Criminal Penalties: Any operator who violates a condition of this general p
      a provision under A.R.S. Title 49, Chapter 2, Article 3.1, or A.A.C. Title 18, Chapter 2,
      Article 9 is subject to the enforcement actions established under A.R.S. Title 49, Chapter 2,
      Article 4, which may include the possibility of fines and/or imprisonment.
-
-
-
 
                                                                                     Page 64 of 64

@@ -9,6 +9,8 @@ Handles all known template variations:
 - Multiple permit filings, backflow items, dust control signs
 """
 
+# mypy: disable-error-code=prop-decorator
+
 from __future__ import annotations
 
 import re
@@ -16,6 +18,7 @@ from enum import Enum
 from pathlib import Path
 
 import pdfplumber
+import pdfplumber.page
 from pydantic import BaseModel, Field, computed_field
 
 # ---------------------------------------------------------------------------

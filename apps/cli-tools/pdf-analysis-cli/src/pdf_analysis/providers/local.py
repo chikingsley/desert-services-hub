@@ -11,12 +11,16 @@ import pymupdf
 
 from pdf_analysis.config import Settings
 from pdf_analysis.types import (
+    DocumentType,
     ExtractResult,
     IdentifyResult,
     OCRResult,
     PlanAnalysisResult,
     PlanFinding,
+    PlanFindingType,
     ProviderName,
+    is_document_type,
+    is_plan_finding_type,
 )
 from pdf_analysis.utils import extract_json_from_text, sanitize_filename
 
@@ -121,11 +125,7 @@ class LocalProvider(BaseProvider):
         started = time.perf_counter()
         ocr_result = await self.ocr(pdf_path)
 
-        schema_text = (
-            f"\nJSON schema:\n{schema}\n"
-            if schema is not None
-            else ""
-        )
+        schema_text = f"\nJSON schema:\n{schema}\n" if schema is not None else ""
 
         extraction_prompt = (
             f"{prompt}\n\n"
@@ -157,8 +157,8 @@ class LocalProvider(BaseProvider):
         )
         result = await self.extract(pdf_path, prompt)
 
-        doc_type = str(result.data.get("document_type", "unknown")).lower()
-        if doc_type not in {
+        doc_type_raw = str(result.data.get("document_type", "unknown")).lower()
+        if doc_type_raw not in {
             "contract",
             "estimate",
             "loi",
@@ -169,8 +169,10 @@ class LocalProvider(BaseProvider):
             "grading_plan",
             "drainage_plan",
             "unknown",
-        }:
-            doc_type = "unknown"
+        } or not is_document_type(doc_type_raw):
+            doc_type: DocumentType = "unknown"
+        else:
+            doc_type = doc_type_raw
 
         doc_name = str(result.data.get("document_name", "Unknown Document"))
         suggested = f"{sanitize_filename(doc_type)}_{sanitize_filename(doc_name)}{pdf_path.suffix}"
@@ -204,9 +206,11 @@ class LocalProvider(BaseProvider):
             for finding in findings_raw:
                 if not isinstance(finding, dict):
                     continue
-                finding_type = str(finding.get("type", "info"))
-                if finding_type not in {"info", "warning", "critical"}:
-                    finding_type = "info"
+                finding_type_raw = str(finding.get("type", "info")).lower()
+                if not is_plan_finding_type(finding_type_raw):
+                    finding_type: PlanFindingType = "info"
+                else:
+                    finding_type = finding_type_raw
                 findings.append(
                     PlanFinding(
                         type=finding_type,
@@ -258,7 +262,9 @@ class LocalProvider(BaseProvider):
         finally:
             doc.close()
 
-    async def _chat_completion(self, prompt: str, image_base64: str | None = None, model_override: str | None = None) -> str:
+    async def _chat_completion(
+        self, prompt: str, image_base64: str | None = None, model_override: str | None = None
+    ) -> str:
         if image_base64 is None:
             message_content: str | list[dict[str, Any]] = prompt
         else:

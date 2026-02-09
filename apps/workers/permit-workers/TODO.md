@@ -3,10 +3,12 @@
 ## 🔥 Critical: Architecture Consolidation
 
 ### API/Handler Unification
+
 - [x] ~~**Consolidate API to use Handlers**~~: API now imports and uses handler Zod schemas for validation. Types are shared via `lib/types.ts`.
 - [x] ~~**Add revise handler**~~: `src/handlers/revise.ts` - Fully implemented with CLI, API, UI modal, and AI tools.
 
 ### Sync Reimplementation
+
 - [x] ~~**Real sync workflow**~~: Implemented portal sync:
   1. Download XLS exports from Maricopa portal (authenticated)
   2. Convert XLS → JSON (using xls-parser)
@@ -15,6 +17,7 @@
 - [x] ~~Mark current `sync` command as deprecated or rename to `import-csv`~~: Replaced CSV sync with Portal sync.
 
 ### Extract Deprecation (Claude Code Path)
+
 - [x] ~~**Evaluate extract redundancy**~~: Claude Code skills now handle NOI/plan extraction; old Jina→Gemini pipeline removed.
 - [x] ~~Decide on `extract` fallback~~: `extract` handler/command/endpoint removed in favor of skills + validators.
 
@@ -23,16 +26,19 @@
 ## 🚀 Post-v1.0.0 Roadmap
 
 ### Core Automation
+
 - [ ] **Optimize `resume.ts`**: Refine logic for resuming interrupted applications.
 - [ ] **PDF Generator Workflow**: Implement workflow for generating permit summary PDFs.
 - [ ] **Retry logic at handler level**: Portal helpers have retries, but handlers should gracefully retry full operations on transient failures.
 - [ ] **Error recovery for failed jobs**: Jobs table exists but no recovery mechanism.
 
 ### Dashboard & UI
+
 - [ ] **Production Optimization**: Audit Dashboard React app for production builds.
 - [ ] **Wire up revise modal**: Connect `src/components/revise-modal.tsx` to backend once handler exists.
 
 ### Integrations
+
 - [ ] **MCP Server**: Wrap API/handlers in Model Context Protocol server.
   - Enable AI agents (Claude, Cursor) to call `create`, `revise`, `status` tools directly.
   - Handlers already have Zod schemas compatible with tool calling.
@@ -40,6 +46,7 @@
 - [ ] **Notion sync**: Update Notion records with permit status.
 
 ### Observability
+
 - [ ] **Robust Sentry usage**: Currently initialized but underutilized. Add:
   - Breadcrumbs for each portal operation
   - User context (company, permit ID)
@@ -47,6 +54,7 @@
 - [ ] **Real-time progress tracking**: WebSocket or SSE for operation progress.
 
 ### Notifications
+
 - [ ] **Auto-email on permit actions**: Per `docs/workflows.md` gap analysis.
 - [ ] **Expiration reminders**: Cron job to check permits expiring within 30 days.
 
@@ -55,6 +63,7 @@
 ## 📁 File Organization
 
 ### Target Structure
+
 ```
 src/
 ├── cli.ts                 # CLI entry point

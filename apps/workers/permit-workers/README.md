@@ -32,6 +32,7 @@
 The system is packaged as a single Docker image available on GitHub Container Registry.
 
 ### Prerequisites
+
 *   Docker & Docker Compose
 *   `docker-compose.yml` (provided in repo)
 *   `.env` file with secrets
@@ -50,13 +51,15 @@ The system is packaged as a single Docker image available on GitHub Container Re
     ```
 
 ### Access Points
-*   **Dashboard**: http://localhost:47823
-*   **API**: http://localhost:47822
-*   **VNC View**: http://localhost:47821
+
+*   **Dashboard**: <http://localhost:47823>
+*   **API**: <http://localhost:47822>
+*   **VNC View**: <http://localhost:47821>
 
 ## 🏗️ Development
 
 ### Local Setup
+
 ```bash
 # Install dependencies
 bun install
@@ -66,6 +69,7 @@ bun run dev
 ```
 
 ### Running Tests
+
 ```bash
 # Run typecheck + lint
 bun run check
@@ -98,4 +102,5 @@ Logged metrics:
 The warm summary prints once per run with `min`, `median`, `p95`, and `avg`.
 
 ## 📝 License
+
 Private.

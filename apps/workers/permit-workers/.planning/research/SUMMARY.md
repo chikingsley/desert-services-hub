@@ -106,6 +106,7 @@ The system follows a **pipeline architecture** with clear separation between ing
 Based on research, suggested phase structure aligns with dependency chain and pitfall mitigation:
 
 ### Phase 1: Webhook Infrastructure
+
 **Rationale:** Everything depends on receiving email events reliably. Microsoft Graph webhooks are the entry point and have the most critical pitfall (silent subscription expiration). Must build foundation correctly before any downstream processing.
 
 **Delivers:**
@@ -127,6 +128,7 @@ Based on research, suggested phase structure aligns with dependency chain and pi
 ---
 
 ### Phase 2: Email Processing Pipeline
+
 **Rationale:** After webhook delivers events, need to fetch full email and determine what it's about. Classification requires project context, so this phase combines fetching, classification, and linking. Idempotency and thread handling are critical here.
 
 **Delivers:**
@@ -150,6 +152,7 @@ Based on research, suggested phase structure aligns with dependency chain and pi
 ---
 
 ### Phase 3: Action Resolution & Execution
+
 **Rationale:** With classified and linked emails, need to map intent + project state to specific actions and execute safely. Race condition prevention is critical here — portal sessions can't handle concurrent actions on same project.
 
 **Delivers:**
@@ -172,6 +175,7 @@ Based on research, suggested phase structure aligns with dependency chain and pi
 ---
 
 ### Phase 4: Confidence Gate & Routing
+
 **Rationale:** With action resolution complete, need to decide which actions auto-execute vs require human review. Conservative thresholds prevent costly errors while maintaining automation value.
 
 **Delivers:**
@@ -191,6 +195,7 @@ Based on research, suggested phase structure aligns with dependency chain and pi
 ---
 
 ### Phase 5: Human Review Queue
+
 **Rationale:** After routing decisions made, need UI for humans to review and approve low-confidence items. This is last because only needed when automation defers — not on critical path for high-confidence auto-execution.
 
 **Delivers:**

@@ -175,8 +175,7 @@ export async function handleScrapePdf(body: unknown): Promise<Response> {
     }
 
     log(`   Generating PDF to ${pdfPath}...`);
-    await page.pdf({
-      path: pdfPath,
+    const pdfBuffer = await page.pdf({
       format: "A4",
       printBackground: true,
       margin: {
@@ -186,11 +185,15 @@ export async function handleScrapePdf(body: unknown): Promise<Response> {
         right: "0.5in",
       },
     });
+
+    // Save to disk
+    await Bun.write(pdfPath, pdfBuffer);
     log(`   ✓ PDF generated: ${pdfPath}`);
 
     return jsonSuccess({
       permitId,
       pdfPath,
+      pdfBase64: Buffer.from(pdfBuffer).toString("base64"),
       data,
     });
   } catch (error) {

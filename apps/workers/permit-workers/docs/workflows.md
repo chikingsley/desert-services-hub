@@ -76,7 +76,7 @@ Dust permit requests typically arrive via:
 ### Example: Desert Sky Apartments
 
 **Email received:** "Fw: Desert Sky: Dust Control Permit"
-**From:** rick@desertservices.net
+**From:** <rick@desertservices.net>
 **Request:** Submit dust permit for 6903 W Thomas Rd, Phoenix, AZ 85033
 
 **Documents located:**

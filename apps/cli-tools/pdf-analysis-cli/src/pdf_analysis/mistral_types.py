@@ -70,9 +70,7 @@ class OCRResult(BaseModel):
     @property
     def full_text(self) -> str:
         """Get all page text concatenated with page markers."""
-        parts = [
-            f"--- Page {page.index + 1} ---\n{page.markdown}" for page in self.pages
-        ]
+        parts = [f"--- Page {page.index + 1} ---\n{page.markdown}" for page in self.pages]
         return "\n\n".join(parts)
 
     @property

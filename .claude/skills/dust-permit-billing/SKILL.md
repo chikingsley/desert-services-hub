@@ -31,7 +31,7 @@ Send internal billing notification to billing team after a dust permit is submit
 
 ## HTML Formatting Rules
 
-See `.claude/skills/draft-email/html-reference.md` for full reference.
+See [`.claude/skills/draft-email/html-reference.md`](../draft-email/html-reference.md) for full reference.
 
 - Use `<b>` not `<strong>`
 - Use plain `<ul>` with NO style attribute
@@ -50,7 +50,7 @@ Correct list pattern:
 
 ## Template
 
-`services/email/email-templates/dust-permit-billing.hbs`
+`apps/cli-tools/email-cli/src/email-templates/dust-permit-billing.hbs`
 
 Variables: `recipientName`, `accountName`, `projectName`, `address`, `applicationNumber`, `permitNumber`, `acceleratedProcessing`, `vendorName`, `permitCost`, `acceleratedFee`, `scheduleValue`, `paymentMethod`, `paymentDate`, `confirmationId`, `cardLastFour`, `cardholderName`, `invoiceNumber`, `invoiceDate`
 

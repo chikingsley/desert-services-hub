@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Literal
+from typing import Any, Literal, TypeGuard
 
 
 class ProviderName(str, Enum):
@@ -43,6 +43,38 @@ DocumentType = Literal[
     "checklist",
     "unknown",
 ]
+
+PlanFindingType = Literal["info", "warning", "critical"]
+
+_DOCUMENT_TYPES: set[str] = {
+    "contract",
+    "estimate",
+    "loi",
+    "po",
+    "work_order",
+    "noi",
+    "swppp_plan",
+    "dust_permit",
+    "civil_plan",
+    "grading_plan",
+    "drainage_plan",
+    "insurance",
+    "tax_form",
+    "lien_waiver",
+    "prelien",
+    "checklist",
+    "unknown",
+}
+
+_PLAN_FINDING_TYPES: set[str] = {"info", "warning", "critical"}
+
+
+def is_document_type(value: str) -> TypeGuard[DocumentType]:
+    return value in _DOCUMENT_TYPES
+
+
+def is_plan_finding_type(value: str) -> TypeGuard[PlanFindingType]:
+    return value in _PLAN_FINDING_TYPES
 
 
 @dataclass(slots=True)
@@ -91,7 +123,7 @@ class IdentifyResult:
 
 @dataclass(slots=True)
 class PlanFinding:
-    type: Literal["info", "warning", "critical"]
+    type: PlanFindingType
     message: str
     location: str | None = None
 

@@ -154,13 +154,25 @@ async function buildDustPermitDraft(
       applicationNumber: stringValue(metadata.permitId, event.refId),
       siteAddress: stringValue(metadata.address, "TBD"),
       acreage: stringValue(metadata.acreage, "N/A"),
+      facilityId: metadata.facilityId
+        ? stringValue(metadata.facilityId)
+        : null,
     });
+
+    // Include the dust application PDF if available
+    const fileAttachments = Array.isArray(metadata.attachments)
+      ? (metadata.attachments as Array<{
+          name: string;
+          contentType: string;
+          contentBytes: string;
+        }>)
+      : [];
 
     return {
       body,
       bodyType: "html",
       skipSignature: true,
-      attachments: [logo],
+      attachments: [logo, ...fileAttachments],
     };
   }
 
@@ -213,7 +225,8 @@ async function buildDustPermitDraft(
       permitNumber: stringValue(metadata.permitNumber, "Pending"),
       acceleratedProcessing: stringValue(metadata.acceleratedProcessing, "No"),
       vendorName: "Maricopa County Air Quality Department",
-      permitCost: stringValue(metadata.amount, "N/A"),
+      permitCost: stringValue(metadata.permitCost ?? metadata.amount, "N/A"),
+      adminFee: stringValue(metadata.adminFee),
       scheduleValue: stringValue(metadata.scheduleValue, "N/A"),
       paymentMethod: metadata.cardLastFour
         ? `Card ending ${stringValue(metadata.cardLastFour)}`

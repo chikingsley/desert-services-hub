@@ -70,6 +70,7 @@ System architecture for the Auto Dust Permit Application.
 **Entry Point**: `bun src/cli.ts <command> [options]`
 
 **Commands**:
+
 | Command | Description |
 |---------|-------------|
 | `list` | List permits from database |
@@ -123,6 +124,7 @@ export async function renewPermit(input: RenewInput): Promise<RenewResult> {
 ```
 
 **Modules**:
+
 | File | Calls |
 |------|-------|
 | `create.ts` | `portal/create.ts` → `createApplicationFull()` |
@@ -191,6 +193,7 @@ POST   /api/browser/stop               # Stop browser
 **Purpose**: ALL browser automation for Maricopa County Dust Control Portal
 
 **Modules**:
+
 | File | Purpose | Key Exports |
 |------|---------|-------------|
 | `create.ts` | Application flows | `createApplicationFull()`, `renewPermitFull()`, `revisePermitFull()` |
@@ -236,6 +239,7 @@ deleteDrafts(page, context)
 - **Google Gemini**: Text → structured JSON
 
 **Modules**:
+
 | File | Purpose |
 |------|---------|
 | `service.ts` | Main extraction orchestrator |
@@ -257,6 +261,7 @@ deleteDrafts(page, context)
 **Purpose**: Local SQLite databases for data storage
 
 **Modules**:
+
 | File | Purpose |
 |------|---------|
 | `dust.ts` | Dust permit database |

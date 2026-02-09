@@ -28,7 +28,7 @@ def _manager() -> ProviderManager:
 
 
 def _to_dict(value: Any) -> Any:
-    if is_dataclass(value):
+    if is_dataclass(value) and not isinstance(value, type):
         return asdict(value)
     return value
 
@@ -100,6 +100,44 @@ def _write_or_echo(output: str, output_path: Path | None) -> None:
         typer.echo(f"Wrote output: {output_path}")
     else:
         typer.echo(output)
+
+
+def _output_extension(output_format: OutputFormat) -> str:
+    if output_format == OutputFormat.JSON:
+        return ".json"
+    if output_format == OutputFormat.MARKDOWN:
+        return ".md"
+    return ".txt"
+
+
+def _resolve_output_path(
+    output: Path | None,
+    result_filename: str,
+    output_format: OutputFormat,
+    multiple_results: bool,
+) -> Path | None:
+    if output is None:
+        return None
+
+    stem = Path(result_filename).stem
+    extension = _output_extension(output_format)
+
+    if output.exists() and output.is_dir():
+        return output / f"{stem}{extension}"
+
+    if multiple_results:
+        if output.exists() and output.is_file():
+            raise typer.BadParameter(
+                "When parsing multiple PDFs, --output must be a directory path."
+            )
+        if output.suffix:
+            raise typer.BadParameter(
+                "When parsing multiple PDFs, --output must be a directory path (no file extension)."
+            )
+        output.mkdir(parents=True, exist_ok=True)
+        return output / f"{stem}{extension}"
+
+    return output
 
 
 @app.command()
@@ -290,7 +328,9 @@ def classify(
         lines = ["| File | Type | Confidence | Indicators |", "| --- | --- | --- | --- |"]
         for r in results:
             indicators = ", ".join(r.indicators)
-            lines.append(f"| {r.filename} | {r.document_type} | {r.confidence:.0%} | {indicators} |")
+            lines.append(
+                f"| {r.filename} | {r.document_type} | {r.confidence:.0%} | {indicators} |"
+            )
         rendered = "\n".join(lines)
     else:
         lines = []
@@ -384,7 +424,10 @@ def ingest(
         rendered = "\n".join(lines)
     else:
         rendered = json.dumps(
-            [{"filename": r.filename, "type": r.document_type, "summary": r.summary} for r in results],
+            [
+                {"filename": r.filename, "type": r.document_type, "summary": r.summary}
+                for r in results
+            ],
             indent=2,
         )
 
@@ -394,7 +437,9 @@ def ingest(
 @app.command()
 def noi(
     pdf_path: Path = typer.Argument(..., exists=True, readable=True, dir_okay=False),
-    ocr_fallback: bool = typer.Option(False, "--ocr-fallback", help="Use glm-ocr if pdfplumber fails"),
+    ocr_fallback: bool = typer.Option(
+        False, "--ocr-fallback", help="Use glm-ocr if pdfplumber fails"
+    ),
     output_format: OutputFormat = typer.Option(OutputFormat.JSON, "--format", "-f"),
     output: Path | None = typer.Option(None, "--output", "-o"),
 ) -> None:
@@ -429,8 +474,7 @@ def noi(
         lines.append("")
         lines.append("SWPPP Contact:")
         lines.append(
-            f"  {result.swppp_contact_first_name or ''} "
-            f"{result.swppp_contact_last_name or ''}"
+            f"  {result.swppp_contact_first_name or ''} {result.swppp_contact_last_name or ''}"
         )
         if result.swppp_contact_email:
             lines.append(f"  {result.swppp_contact_email}")
@@ -439,6 +483,83 @@ def noi(
         rendered = "\n".join(lines)
 
     _write_or_echo(rendered, output)
+
+
+@app.command()
+def parse(
+    pdf_path: Path = typer.Argument(..., exists=True, readable=True),
+    ocr_provider: ProviderSelector = typer.Option(
+        ProviderSelector.LOCAL, "--ocr", help="OCR provider (local=glm-ocr)"
+    ),
+    reconcile: str = typer.Option(
+        "kimi-for-coding/k2p5",
+        "--reconcile",
+        "-r",
+        help="OpenCode model for reconciliation, or 'local' for granite4",
+    ),
+    output_format: OutputFormat = typer.Option(OutputFormat.MARKDOWN, "--format", "-f"),
+    output: Path | None = typer.Option(None, "--output", "-o"),
+    raw: bool = typer.Option(False, "--raw", help="Also output raw pdfplumber + OCR text"),
+) -> None:
+    """Parse a PDF using pdfplumber + OCR, reconcile into clean markdown.
+
+    Runs BOTH text-layer extraction (pdfplumber) and vision-based OCR,
+    then uses kimi-k2.5 (via opencode) to combine them into one structured
+    markdown document. Works on single files or directories.
+
+    OCR defaults to local (glm-ocr). Reconciliation defaults to
+    kimi-for-coding/k2p5 via opencode CLI. Use --reconcile local
+    for offline granite4.
+    """
+    from pdf_analysis.parse import ParseResult, parse_dir, parse_pdf
+
+    results: list[ParseResult]
+    if pdf_path.is_dir():
+        results = asyncio.run(
+            parse_dir(pdf_path, ocr_provider=ocr_provider, reconcile_model=reconcile)
+        )
+    else:
+        results = [
+            asyncio.run(parse_pdf(pdf_path, ocr_provider=ocr_provider, reconcile_model=reconcile))
+        ]
+
+    multiple_results = len(results) > 1
+    for result in results:
+        if output_format == OutputFormat.JSON:
+            import dataclasses
+
+            data = dataclasses.asdict(result)
+            if not raw:
+                data.pop("pdfplumber_text", None)
+                data.pop("ocr_text", None)
+            rendered = json.dumps(data, indent=2)
+        elif output_format == OutputFormat.MARKDOWN:
+            parts = [result.reconciled_markdown]
+            if raw:
+                parts.append("\n\n---\n\n## Raw: pdfplumber\n\n" + result.pdfplumber_text)
+                parts.append("\n\n---\n\n## Raw: OCR\n\n" + result.ocr_text)
+            rendered = "\n".join(parts)
+        else:
+            rendered = result.reconciled_markdown
+
+        if multiple_results and not output:
+            typer.echo(f"\n{'=' * 60}\n{result.filename}\n{'=' * 60}\n")
+
+        output_path = _resolve_output_path(
+            output,
+            result.filename,
+            output_format,
+            multiple_results,
+        )
+        _write_or_echo(rendered, output_path)
+
+    if not output:
+        for result in results:
+            typer.echo(
+                f"\n[{result.filename}: {result.page_count} pages, "
+                f"{result.processing_time_ms}ms, ocr={result.ocr_model}, reconcile={result.reconcile_model}]",
+                err=True,
+            )
 
 
 def main() -> None:

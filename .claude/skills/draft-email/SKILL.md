@@ -34,7 +34,7 @@ Output the **body-only HTML** (no signature — Outlook adds it).
 Then **create the draft using the CLI**:
 
 ```bash
-bun services/email/cli.ts draft \
+bun apps/cli-tools/email-cli/bin/cli.ts draft \
   --to "recipient@example.com" \
   --cc "cc@example.com" \
   --subject "Subject line" \

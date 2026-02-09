@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **OFFICIAL RELEASE:** `auto-dust-permit` is now live!
 
 ### 🚀 Major Features
+
 - **Containerized Stack**: Single Docker image (`ghcr.io/chikingsley/auto-dust-permit`) running Server, Dashboard, and VNC.
 - **Full Automation**: Complete support for Creating, Revising, Renewing, and Closing permits.
 - **Intelligent Filling**: Hybrid approach using robust selectors with AI-powered PDF extraction for input data.
@@ -18,11 +19,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **API First**: REST API for all major operations (Create, Extract, Revise, etc.).
 
 ### 🏗️ Infrastructure
+
 - **Deployment**: Simply copy `docker-compose.yml` and `.env` to any machine to deploy.
 - **Performance**: Optimized Puppeteer/Playwright scripts with smart waiting and frame handling.
 - **Database**: SQLite with WAL mode for reliable local state management.
 
 ### Removed
+
 - **Cloudflare Tunnels**: Moved to direct container deployment.
 - **Notion Integration**: Legacy webhook code removed in favor of direct API.
 

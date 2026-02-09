@@ -30,6 +30,196 @@ import {
   zoomToPolygonExtent,
 } from "./map";
 
+// ============================================================================
+// Location Table: Parse & Select by Parcel
+// ============================================================================
+
+/** A single row from the Page 2 locations table */
+interface LocationRow {
+  index: number;
+  radioSelector: string;
+  address: string;
+  city: string;
+  zip: string;
+  parcel: string;
+  latitude: string;
+  longitude: string;
+}
+
+/**
+ * Wait for the locations table to load after map save.
+ *
+ * The portal shows "Loading project site drawing data" while computing
+ * parcel intersections. We poll until that message disappears and
+ * radio buttons appear.
+ *
+ * @returns Number of location rows found, or 0 if timeout
+ */
+async function waitForLocationsTable(
+  page: Page,
+  timeoutMs = 60_000
+): Promise<number> {
+  const startTime = Date.now();
+  while (Date.now() - startTime < timeoutMs) {
+    const loading = await page
+      .locator('text="Loading project site drawing data"')
+      .count();
+    const radioCount = await page
+      .locator('input[type="radio"][id*="locations"]')
+      .count();
+
+    if (loading === 0 && radioCount > 0) {
+      return radioCount;
+    }
+    await sleep(2000);
+  }
+  return 0;
+}
+
+/**
+ * Parse all rows from the Page 2 locations table.
+ *
+ * ADF nests the radio button inside: data-TR > TD > TABLE > TR > TD > SPAN > INPUT
+ * So `radio.closest("tr")` finds the inner wrapper TR (1 child, empty text),
+ * not the outer data TR (10 children, has all cell data).
+ *
+ * We walk up from each radio to find the TR with multiple children (the data row).
+ *
+ * Columns: Select | Address | City | County | State | Zip | Parcel | Lat | Lng | MCR#
+ */
+async function parseLocationsTable(page: Page): Promise<LocationRow[]> {
+  return await page.evaluate(() => {
+    const rows: {
+      index: number;
+      radioSelector: string;
+      address: string;
+      city: string;
+      zip: string;
+      parcel: string;
+      latitude: string;
+      longitude: string;
+    }[] = [];
+
+    const radios = document.querySelectorAll<HTMLInputElement>(
+      'input[type="radio"][id*="locations"][id*="selectRadio"]'
+    );
+
+    for (const radio of radios) {
+      const match = radio.id.match(/locations:(\d+):selectRadio/);
+      if (!match) continue;
+      const index = Number.parseInt(match[1], 10);
+
+      // Walk up to find the data row TR (the one with multiple TD children)
+      let el: HTMLElement | null = radio;
+      let dataRow: HTMLElement | null = null;
+      while (el) {
+        el = el.parentElement;
+        if (el?.tagName === "TR" && el.children.length >= 5) {
+          dataRow = el;
+          break;
+        }
+      }
+
+      if (!dataRow) continue;
+
+      // Extract text from each direct TD child
+      const cells = dataRow.querySelectorAll(":scope > td");
+      const cellTexts: string[] = [];
+      for (const cell of cells) {
+        cellTexts.push((cell as HTMLElement).innerText?.trim() ?? "");
+      }
+
+      // Columns: [0]=Select [1]=Address [2]=City [3]=County [4]=State [5]=Zip [6]=Parcel [7]=Lat [8]=Lng [9]=MCR#
+      rows.push({
+        index,
+        radioSelector: `[id="${radio.id}"]`,
+        address: cellTexts[1] ?? "",
+        city: cellTexts[2] ?? "",
+        zip: cellTexts[5] ?? "",
+        parcel: cellTexts[6] ?? "",
+        latitude: cellTexts[7] ?? "",
+        longitude: cellTexts[8] ?? "",
+      });
+    }
+
+    return rows;
+  });
+}
+
+/**
+ * Select a location by parcel number (APN).
+ *
+ * Waits for the locations table to load, parses all rows, finds the
+ * row matching the target parcel, and clicks its radio button.
+ *
+ * @param page - Playwright Page instance
+ * @param targetParcel - APN to match (e.g., "141-58-015")
+ * @returns Object with success flag, matched row info, and all available rows
+ */
+export async function selectLocationByParcel(
+  page: Page,
+  targetParcel: string
+): Promise<{
+  success: boolean;
+  matched?: LocationRow;
+  allRows: LocationRow[];
+  error?: string;
+}> {
+  console.log(`  Selecting location by parcel: ${targetParcel}`);
+
+  // Wait for the locations table to load
+  const radioCount = await waitForLocationsTable(page);
+  if (radioCount === 0) {
+    return {
+      success: false,
+      allRows: [],
+      error: "Locations table did not load (no radio buttons found)",
+    };
+  }
+  console.log(`  Found ${radioCount} location rows`);
+
+  // Parse all rows
+  const rows = await parseLocationsTable(page);
+  if (rows.length === 0) {
+    return {
+      success: false,
+      allRows: [],
+      error: "Could not parse location rows from table",
+    };
+  }
+
+  // Log all available options
+  for (const row of rows) {
+    console.log(
+      `    [${row.index}] ${row.parcel} - ${row.address || "(no address)"}, ${row.city} ${row.zip}`
+    );
+  }
+
+  // Find matching parcel (normalize both sides: trim, case-insensitive)
+  const normalized = targetParcel.trim().toLowerCase();
+  const match = rows.find(
+    (r) => r.parcel.trim().toLowerCase() === normalized
+  );
+
+  if (!match) {
+    return {
+      success: false,
+      allRows: rows,
+      error: `Parcel "${targetParcel}" not found in ${rows.length} location rows`,
+    };
+  }
+
+  console.log(
+    `  ✓ Matched row ${match.index}: ${match.parcel} - ${match.address || "(no address)"}, ${match.city} ${match.zip}`
+  );
+
+  // Click the matching radio button
+  await clickRadio(page, match.radioSelector);
+  console.log(`  ✓ Selected location ${match.index} (${match.parcel})`);
+
+  return { success: true, matched: match, allRows: rows };
+}
+
 /**
  * Fill Page 2 - Project Location (simple mode).
  *
@@ -59,59 +249,94 @@ export async function fillPage2(page: Page): Promise<boolean> {
 /**
  * Fill Page 2 - Project Location (renewal mode).
  *
- * For renewals, location data is copied from the source permit.
- * Opens the map popup with copied data, then saves and closes.
+ * For renewals (re-applications), the portal copies form data (Pages 1, 3, 4)
+ * but does NOT copy map/site drawing data. We must fetch the original polygon
+ * from the FeatureServer API and redraw it on the new application's map.
  *
- * The portal copies map data when the popup is opened with the copyId URL param.
- * Since renewals copy from an existing permit, the map should have data.
+ * Flow:
+ * 1. If Edit button exists → map data already present, skip
+ * 2. Otherwise fetch polygon from FeatureServer for the source permit
+ * 3. Use fillPage2WithMapData() to draw the polygon on the map
+ * 4. Verify location is present, click Next
  *
  * @param page - Playwright Page instance
  * @param context - Browser context for popup handling
- * @returns True if page was handled and Next was clicked successfully
+ * @param sourcePermitId - Optional source permit ID for FeatureServer lookup
+ * @returns True if location/map data confirmed and Next clicked successfully
  */
 export async function fillPage2Renew(
   page: Page,
-  context: BrowserContext
+  context: BrowserContext,
+  sourcePermitId?: string,
+  targetParcel?: string
 ): Promise<boolean> {
   console.log("\n[FILL PAGE 2 RENEW - Project Location]");
+  if (targetParcel) {
+    console.log(`  Target parcel: ${targetParcel}`);
+  }
 
   try {
-    // Select first location if available (copied from source permit)
-    const hasLocation =
-      (await page.locator(portal.page2.selectFirstLocation).count()) > 0;
-    if (hasLocation) {
-      await clickRadio(page, portal.page2.selectFirstLocation);
-      console.log("  ✓ Selected first location (copied from source)");
-    } else {
-      console.log("  ⚠ No location found - may need to add manually");
-    }
-
     // Check for existing map data via Edit button
     const hasEditBtn =
       (await page.locator(portal.page2.editSiteDrawingBtn).count()) > 0;
     if (hasEditBtn) {
-      console.log("  ✓ Map data exists (Edit button present)");
+      console.log("  ✓ Map data already exists (Edit button present)");
+    } else if (sourcePermitId) {
+      // Fetch polygon from FeatureServer and draw it
+      console.log(
+        `  No map data found. Fetching from FeatureServer for ${sourcePermitId}...`
+      );
+      const { queryPermitMapFeatures } = await import("@/lib/dust-features");
+      const mapData = await queryPermitMapFeatures(sourcePermitId);
+
+      if (!mapData.disturbedArea) {
+        console.log(
+          `  ✗ No polygon data on FeatureServer for ${sourcePermitId} - FAILING`
+        );
+        return false;
+      }
+
+      console.log(
+        `  ✓ Found polygon: ${mapData.disturbedArea.latLngCoordinates.length} vertices, ` +
+          `${mapData.accessPoints.length} access points, ` +
+          `${mapData.acreage?.toFixed(2) ?? "?"} acres`
+      );
+
+      // Draw the polygon on the map
+      // fillPage2WithMapData handles: draw, save, select location, click Next
+      const drawSuccess = await fillPage2WithMapData(
+        page,
+        context,
+        mapData,
+        targetParcel
+      );
+      if (!drawSuccess) {
+        console.log("  ✗ Failed to draw map data - FAILING");
+        return false;
+      }
+      console.log("  ✓ Map data drawn and Page 2 completed via FeatureServer");
+      return true;
     } else {
-      // No existing map data - open map popup and save
-      // This handles the case where map data needs to be created
-      console.log("  Opening map popup to initialize site drawing...");
-      const mapPopup = await openMapPopup(page, context);
-      if (mapPopup) {
-        console.log("  ✓ Map popup opened");
+      console.log(
+        "  ✗ No map data and no source permit ID to fetch from - FAILING"
+      );
+      return false;
+    }
 
-        // Import and use saveAndCloseMapPopup
-        const { saveAndCloseMapPopup } = await import("./map");
-        const saved = await saveAndCloseMapPopup(mapPopup);
-        if (saved) {
-          console.log("  ✓ Map saved and closed");
-        } else {
-          console.log("  ⚠ Could not save map - continuing anyway");
-        }
-
-        // Wait for popup to close
-        await page.waitForTimeout(2000);
-      } else {
-        console.log("  ⚠ Could not open map popup - continuing anyway");
+    // If Edit button was present, select location and proceed
+    await sleep(1000);
+    if (targetParcel) {
+      const result = await selectLocationByParcel(page, targetParcel);
+      if (!result.success) {
+        console.log(`  ✗ ${result.error}`);
+        return false;
+      }
+    } else {
+      const hasLocation =
+        (await page.locator(portal.page2.selectFirstLocation).count()) > 0;
+      if (hasLocation) {
+        await clickRadio(page, portal.page2.selectFirstLocation);
+        console.log("  ⚠ No target parcel - selected first location");
       }
     }
 
@@ -249,7 +474,8 @@ async function drawAccessPoints(
 export async function fillPage2WithMapData(
   page: Page,
   context: BrowserContext,
-  mapData: PermitMapData
+  mapData: PermitMapData,
+  targetParcel?: string
 ): Promise<boolean> {
   console.log("\n[FILL PAGE 2 WITH MAP DATA]");
 
@@ -375,19 +601,39 @@ export async function fillPage2WithMapData(
   await goToPage(page, 2);
   await sleep(1000);
 
-  // Select the location radio button (required before Next works)
-  const locationRadio = page.locator(portal.page2.selectFirstLocation);
-  try {
-    await locationRadio.waitFor({ state: "visible", timeout: 10_000 });
-    await clickRadio(page, portal.page2.selectFirstLocation);
-    console.log("  ✓ Selected first location");
-  } catch {
-    console.log("  ⚠ No location radio found after refresh");
-    await page
-      .screenshot({
-        path: "tests/e2e/screenshots/DEBUG-page2-no-location.png",
-      })
-      .catch(() => undefined);
+  // Select the correct location radio button
+  if (targetParcel) {
+    const result = await selectLocationByParcel(page, targetParcel);
+    if (!result.success) {
+      console.log(`  ✗ Location selection failed: ${result.error}`);
+      console.log("  Available parcels:");
+      for (const row of result.allRows) {
+        console.log(`    [${row.index}] ${row.parcel} - ${row.address}`);
+      }
+      await page
+        .screenshot({
+          path: "tests/e2e/screenshots/DEBUG-page2-parcel-mismatch.png",
+        })
+        .catch(() => undefined);
+      return false;
+    }
+  } else {
+    // No target parcel — fall back to first location with warning
+    const radioCount = await waitForLocationsTable(page);
+    if (radioCount > 0) {
+      await clickRadio(page, portal.page2.selectFirstLocation);
+      console.log(
+        `  ⚠ No target parcel specified - selected first of ${radioCount} locations`
+      );
+    } else {
+      console.log("  ✗ No locations found after map save");
+      await page
+        .screenshot({
+          path: "tests/e2e/screenshots/DEBUG-page2-no-location.png",
+        })
+        .catch(() => undefined);
+      return false;
+    }
   }
 
   console.log("  Page 2 complete, clicking Next...");

@@ -22,7 +22,7 @@ To request a token, use the contact form on the website and select "API Question
 
 ## Base URL
 
-All endpoints use the base URL: `[mcassessor.maricopa.gov`](https://mcassessor.maricopa.gov`)
+All endpoints use the base URL: `[mcassessor.maricopa.gov`](<https://mcassessor.maricopa.gov`>)
 
 - --
 

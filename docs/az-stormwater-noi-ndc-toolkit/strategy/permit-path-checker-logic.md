@@ -1,6 +1,7 @@
 # Permit Path Checker Logic (NOI vs NDC)
 
 ## What It Is
+
 A lightweight decision engine that asks a short set of project questions and returns:
 
 - likely path (`NOI`, `NDC`, `Possible Exemption`, or `Needs Manual Review`)
@@ -10,6 +11,7 @@ A lightweight decision engine that asks a short set of project questions and ret
 It is not a legal opinion tool. It is an operational pre-check to reduce filing errors.
 
 ## Inputs Collected
+
 - disturbed acreage
 - part of larger common plan (yes/no)
 - can stormwater leave site boundary (yes/no/unsure)
@@ -20,12 +22,14 @@ It is not a legal opinion tool. It is an operational pre-check to reduce filing 
 - SWPPP status (prepared/not prepared)
 
 ## Decision Outcomes
+
 - `NOI likely required`: any off-site discharge, potential discharge, or uncertainty
 - `NDC possible`: no off-site discharge and controls keep stormwater on-site
 - `Possible exemption`: less than 1 acre and not part of a 1+ acre common plan (requires confirmation)
 - `Needs manual review`: conflicting answers, missing signer authority, or unclear discharge path
 
 ## Output Package
+
 - one-line recommendation
 - reason summary (2-4 bullets)
 - data checklist for myDEQ submission
@@ -33,6 +37,7 @@ It is not a legal opinion tool. It is an operational pre-check to reduce filing 
 - CTA: file internally or escalate to Desert Services support
 
 ## Decision Tree (MVP)
+
 ```mermaid
 flowchart TD
   A["Start"] --> B{"Disturb >= 1 acre?"}
@@ -52,6 +57,7 @@ flowchart TD
 ```
 
 ## MVP Rule Notes
+
 - if answer is `unsure` on discharge, default to `NOI likely required`
 - if signer role is missing, block final recommendation as actionable submission
 - preserve all answers as audit metadata with timestamp and source version

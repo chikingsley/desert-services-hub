@@ -7,23 +7,32 @@ from typing import Any
 
 from pdf_analysis.config import Settings
 from pdf_analysis.types import (
+    DocumentType,
     ExtractResult,
     IdentifyResult,
     OCRResult,
     PlanAnalysisResult,
     PlanFinding,
+    PlanFindingType,
     ProviderName,
+    is_document_type,
+    is_plan_finding_type,
 )
 from pdf_analysis.utils import extract_json_from_text, sanitize_filename
 
 from .base import BaseProvider
 
+genai: Any = None
+types: Any = None
+
 try:
-    from google import genai
-    from google.genai import types
+    from google import genai as _genai
+    from google.genai import types as _types
 except Exception:  # pragma: no cover - optional dependency guard
-    genai = None
-    types = None
+    pass
+else:
+    genai = _genai
+    types = _types
 
 
 class GeminiProvider(BaseProvider):
@@ -33,10 +42,9 @@ class GeminiProvider(BaseProvider):
     def __init__(self, settings: Settings):
         self.settings = settings
         self.model = settings.gemini_model
+        self.client: Any | None = None
         if genai is not None and settings.gemini_api_key:
             self.client = genai.Client(api_key=settings.gemini_api_key)
-        else:
-            self.client = None
 
     async def is_available(self) -> bool:
         return self.client is not None
@@ -93,6 +101,25 @@ class GeminiProvider(BaseProvider):
             raw_text=raw,
         )
 
+    async def chat(self, prompt: str) -> ExtractResult:
+        """Text-only chat completion using Gemini (no PDF)."""
+        started = time.perf_counter()
+        if self.client is None or types is None:
+            raise RuntimeError("Gemini provider is unavailable (missing GEMINI_API_KEY)")
+
+        raw = await asyncio.to_thread(self._generate_text, prompt)
+        data = extract_json_from_text(raw)
+
+        elapsed_ms = int((time.perf_counter() - started) * 1000)
+        return ExtractResult(
+            provider=self.name,
+            data=data,
+            processing_time_ms=elapsed_ms,
+            model=self.model,
+            confidence=0.9,
+            raw_text=raw,
+        )
+
     async def identify(self, pdf_path: Path) -> IdentifyResult:
         started = time.perf_counter()
         prompt = (
@@ -102,7 +129,7 @@ class GeminiProvider(BaseProvider):
         )
         result = await self.extract(pdf_path, prompt)
 
-        doc_type = str(result.data.get("document_type", "unknown")).lower()
+        doc_type_raw = str(result.data.get("document_type", "unknown")).lower()
         valid_types = {
             "contract",
             "estimate",
@@ -115,8 +142,10 @@ class GeminiProvider(BaseProvider):
             "drainage_plan",
             "unknown",
         }
-        if doc_type not in valid_types:
-            doc_type = "unknown"
+        if doc_type_raw not in valid_types or not is_document_type(doc_type_raw):
+            doc_type: DocumentType = "unknown"
+        else:
+            doc_type = doc_type_raw
 
         doc_name = str(result.data.get("document_name", "Unknown Document"))
         suggested = f"{sanitize_filename(doc_type)}_{sanitize_filename(doc_name)}{pdf_path.suffix}"
@@ -146,9 +175,11 @@ class GeminiProvider(BaseProvider):
         for item in result.data.get("findings", []):
             if not isinstance(item, dict):
                 continue
-            kind = str(item.get("type", "info"))
-            if kind not in {"info", "warning", "critical"}:
-                kind = "info"
+            kind_raw = str(item.get("type", "info")).lower()
+            if not is_plan_finding_type(kind_raw):
+                kind: PlanFindingType = "info"
+            else:
+                kind = kind_raw
             findings.append(
                 PlanFinding(
                     type=kind,
@@ -170,16 +201,33 @@ class GeminiProvider(BaseProvider):
             confidence=float(result.data.get("confidence", 0.9) or 0.9),
         )
 
+    def _generate_text(self, prompt: str) -> str:
+        """Text-only generation (no PDF attachment)."""
+        if self.client is None or types is None:
+            raise RuntimeError("Gemini SDK is not available")
+
+        response = self.client.models.generate_content(
+            model=self.model,
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                temperature=0.2,
+                max_output_tokens=8192,
+            ),
+        )
+
+        return response.text or ""
+
     def _generate_pdf_text(self, pdf_path: Path, prompt: str) -> str:
         if self.client is None or types is None:
             raise RuntimeError("Gemini SDK is not available")
 
         pdf_bytes = pdf_path.read_bytes()
         part = types.Part.from_bytes(data=pdf_bytes, mime_type="application/pdf")
+        contents: list[str | Any] = [part, prompt]
 
         response = self.client.models.generate_content(
             model=self.model,
-            contents=[part, prompt],
+            contents=contents,
             config=types.GenerateContentConfig(
                 temperature=0.2,
                 max_output_tokens=8192,

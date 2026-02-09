@@ -14,9 +14,10 @@
       {{#if permitNumber}}<li><div><b>Permit # (Facility ID):</b> {{permitNumber}}</div></li>{{/if}}
       <li><div><b>Accelerated Processing:</b> {{acceleratedProcessing}}</div></li>
       <li><div><b>Vendor Paid:</b> {{vendorName}}</div></li>
-      <li><div><b>Permit Cost:</b> {{permitCost}}</div></li>
+      <li><div><b>Permit Cost (ADEQ):</b> {{permitCost}}</div></li>
       {{#if acceleratedFee}}<li><div><b>Accelerated Fee:</b> {{acceleratedFee}}</div></li>{{/if}}
-      <li><div><b>Schedule Value:</b> {{scheduleValue}}</div></li>
+      {{#if adminFee}}<li><div><b>Admin Fee:</b> {{adminFee}}</div></li>{{/if}}
+      <li><div><b>Schedule Charge:</b> {{scheduleValue}}</div></li>
       <li><div><b>Payment Method:</b> {{paymentMethod}}</div></li>
       {{#if paymentDate}}<li><div><b>Payment Date:</b> {{paymentDate}}</div></li>{{/if}}
       {{#if confirmationId}}<li><div><b>Confirmation #:</b> {{confirmationId}}</div></li>{{/if}}

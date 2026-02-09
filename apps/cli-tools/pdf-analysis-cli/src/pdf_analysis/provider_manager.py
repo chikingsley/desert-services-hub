@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
-from dataclasses import replace
 from pathlib import Path
 from typing import TypeVar
 
@@ -21,7 +20,8 @@ from .providers.gemini import GeminiProvider
 from .providers.local import LocalProvider
 from .providers.mistral import MistralProvider
 
-TResult = TypeVar("TResult", OCRResult, ExtractResult, IdentifyResult, PlanAnalysisResult)
+ProviderResult = OCRResult | ExtractResult | IdentifyResult | PlanAnalysisResult
+TResult = TypeVar("TResult", bound=ProviderResult)
 
 
 class ProviderManager:
@@ -163,22 +163,7 @@ class ProviderManager:
             "attempted_order": attempted_order,
         }
 
-        if isinstance(result, OCRResult):
-            merged = {**result.metadata, **metadata_payload}
-            return replace(result, metadata=merged)  # type: ignore[return-value]
-
-        if isinstance(result, ExtractResult):
-            merged = {**result.metadata, **metadata_payload}
-            return replace(result, metadata=merged)  # type: ignore[return-value]
-
-        if isinstance(result, IdentifyResult):
-            merged = {**result.metadata, **metadata_payload}
-            return replace(result, metadata=merged)  # type: ignore[return-value]
-
-        if isinstance(result, PlanAnalysisResult):
-            merged = {**result.metadata, **metadata_payload}
-            return replace(result, metadata=merged)  # type: ignore[return-value]
-
+        result.metadata = {**result.metadata, **metadata_payload}
         return result
 
     def _pick_order(self, provider: ProviderSelector) -> list[ProviderName]:

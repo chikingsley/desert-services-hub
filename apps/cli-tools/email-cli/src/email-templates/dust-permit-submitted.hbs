@@ -22,7 +22,7 @@
       <li><div>Application #: {{applicationNumber}}</div></li>
       <li>
         <div>
-          Permit # (Facility ID): <span style="color:red">Pending</span>
+          Permit # (Facility ID): {{#if facilityId}}{{facilityId}} (Renewal){{else}}<span style="color:red">Pending</span>{{/if}}
         </div>
       </li>
       <li><div>Project Name: {{projectName}}</div></li>

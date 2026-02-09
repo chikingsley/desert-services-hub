@@ -153,9 +153,7 @@ class MistralClient:
             OCRResult with extracted content.
         """
         # Determine document type based on extension
-        is_image = any(
-            url.lower().endswith(ext) for ext in [".png", ".jpg", ".jpeg", ".avif"]
-        )
+        is_image = any(url.lower().endswith(ext) for ext in [".png", ".jpg", ".jpeg", ".avif"])
 
         # Use proper SDK types
         document: DocumentURLChunk | ImageURLChunk
@@ -527,9 +525,7 @@ class MistralClient:
         # Convert usage_info object to dict
         raw_usage = getattr(response, "usage_info", None)
         if raw_usage is not None and hasattr(raw_usage, "__dict__"):
-            usage_info = {
-                k: v for k, v in vars(raw_usage).items() if not k.startswith("_")
-            }
+            usage_info = {k: v for k, v in vars(raw_usage).items() if not k.startswith("_")}
         elif isinstance(raw_usage, dict):
             usage_info = raw_usage
         else:

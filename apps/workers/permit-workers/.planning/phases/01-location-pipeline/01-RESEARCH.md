@@ -21,6 +21,7 @@ The research confirms the approach outlined in the project SUMMARY.md is sound:
 The established libraries/tools for this domain:
 
 ### Core
+
 | Library | Version | Purpose | Why Standard |
 |---------|---------|---------|--------------|
 | proj4 | ^2.12.0 | Coordinate transformation WGS84 <-> Web Mercator | Industry standard, predefined EPSG:3857/4326 |
@@ -28,6 +29,7 @@ The established libraries/tools for this domain:
 | zod | ^4.3.4 | Schema validation for extracted data | Already in deps, native JSON Schema for Gemini |
 
 ### Supporting
+
 | Library | Version | Purpose | When to Use |
 |---------|---------|---------|-------------|
 | @turf/centroid | ^7.0.0 | Calculate polygon centroids | When parcel polygons need center point |
@@ -35,6 +37,7 @@ The established libraries/tools for this domain:
 | haversine-distance | ^1.2.1 | Distance between coordinates | Alternative to inline haversine |
 
 ### Alternatives Considered
+
 | Instead of | Could Use | Tradeoff |
 |------------|-----------|----------|
 | proj4 | Manual formulas | proj4 handles datum transformations and edge cases |
@@ -49,6 +52,7 @@ bun add proj4 @types/proj4 @turf/centroid @turf/boolean-point-in-polygon
 ## Architecture Patterns
 
 ### Recommended Project Structure
+
 ```
 src/
 ├── lib/
@@ -67,6 +71,7 @@ src/
 ```
 
 ### Pattern 1: Typed Coordinate System
+
 **What:** Branded types for coordinate systems to prevent mixing
 **When to use:** All coordinate handling code
 
@@ -90,6 +95,7 @@ export const screenCoord = (x: number, y: number): ScreenCoord =>
 ```
 
 ### Pattern 2: Location Signal with Confidence
+
 **What:** Each location source has typed confidence and provenance
 **When to use:** All geocoding and aggregation
 
@@ -120,6 +126,7 @@ export interface LocationSignal {
 ```
 
 ### Pattern 3: Pipeline Result with Confidence Gate
+
 **What:** Pipeline returns structured result with overall confidence score
 **When to use:** End of location pipeline
 
@@ -153,6 +160,7 @@ export interface LocationCluster {
 ```
 
 ### Anti-Patterns to Avoid
+
 - **Raw number coordinates:** Never use `{ x: number, y: number }` without branded type - leads to coordinate system confusion
 - **Geocoding in loops without batching:** Each geocode is an API call; batch where possible
 - **Ignoring geocode failures:** A failed geocode should reduce confidence, not crash pipeline
@@ -175,6 +183,7 @@ Problems that look simple but have existing solutions:
 ## Common Pitfalls
 
 ### Pitfall 1: Zod v4 + zodToJsonSchema Incompatibility
+
 **What goes wrong:** Using `zodToJsonSchema()` from `zod-to-json-schema` with Zod v4 returns incomplete schemas - only `{ "$schema": "..." }` without properties
 **Why it happens:** zod-to-json-schema v3.25 was built for Zod v3; it silently fails with v4
 **How to avoid:** Use Zod v4's native `z.toJSONSchema()` method instead
@@ -191,6 +200,7 @@ const jsonSchema = z.toJSONSchema(mySchema); // Works correctly
 ```
 
 ### Pitfall 2: Coordinate System Confusion (WGS84 vs Web Mercator)
+
 **What goes wrong:** Treating lat/lng as x/y in meters causes 40km+ positioning errors
 **Why it happens:** Both are represented as `{ x: number, y: number }` or `[number, number]`
 **How to avoid:** Use branded types; always convert explicitly through transform functions
@@ -206,6 +216,7 @@ const map = geoToMap(geo);                   // Explicitly converted
 ```
 
 ### Pitfall 3: Geocoding Rate Limits and Failures
+
 **What goes wrong:** Pipeline crashes when geocoding fails or rate limits hit
 **Why it happens:** External APIs are unreliable; not all addresses geocode
 **How to avoid:** Wrap geocoding in try-catch; return null coords; reduce confidence for failures
@@ -221,12 +232,14 @@ const signal = await geocodeWithFallback(address);
 ```
 
 ### Pitfall 4: Clustering with Too Few Points
+
 **What goes wrong:** DBSCAN requires minPts parameter; with 2-3 signals all become noise
 **Why it happens:** DBSCAN designed for large datasets; our pipeline has 3-10 signals typically
 **How to avoid:** Use simple greedy clustering instead of DBSCAN for small signal counts
 **Warning signs:** All signals marked as outliers; empty clusters array
 
 ### Pitfall 5: PDF Extraction Returning Wrong Address
+
 **What goes wrong:** System uses contractor office address instead of construction site
 **Why it happens:** PDFs contain 5-10 addresses; naive extraction picks first one found
 **How to avoid:** Extract ALL addresses with context (title block vs body vs footer); weight by context
@@ -237,6 +250,7 @@ const signal = await geocodeWithFallback(address);
 Verified patterns from official sources:
 
 ### proj4 Coordinate Transformation
+
 ```typescript
 // Source: https://github.com/proj4js/proj4js
 import proj4 from "proj4";
@@ -258,6 +272,7 @@ export function mapToGeo(map: MapCoord): GeoCoord {
 ```
 
 ### Haversine Distance (Inline Implementation)
+
 ```typescript
 // Source: https://www.movable-type.co.uk/scripts/latlong.html
 const EARTH_RADIUS_METERS = 6371e3;
@@ -279,6 +294,7 @@ export function haversineDistance(a: GeoCoord, b: GeoCoord): number {
 ```
 
 ### Gemini PDF Extraction with Zod v4
+
 ```typescript
 // Source: https://ai.google.dev/gemini-api/docs/structured-output + Zod v4 docs
 import { GoogleGenAI, createPartFromUri, createUserContent } from "@google/genai";
@@ -343,6 +359,7 @@ export async function extractLocationsFromPDF(
 ```
 
 ### Simple Greedy Clustering
+
 ```typescript
 // Source: Simplified from density-clustering DBSCAN for small datasets
 const CLUSTER_RADIUS_METERS = 500;
@@ -417,6 +434,7 @@ function calculateMaxRadius(
 ```
 
 ### ESRI MapView Coordinate Conversion (iframe)
+
 ```typescript
 // Source: https://developers.arcgis.com/javascript/latest/api-reference/esri-views-MapView.html
 // This runs INSIDE the ESRI iframe via frame.evaluate()
@@ -488,6 +506,7 @@ Things that couldn't be fully resolved:
 ## Sources
 
 ### Primary (HIGH confidence)
+
 - [proj4js GitHub](https://github.com/proj4js/proj4js) - Coordinate transformation API, TypeScript types
 - [Gemini Document Understanding](https://ai.google.dev/gemini-api/docs/document-processing) - PDF processing limits and patterns
 - [Gemini Structured Output](https://ai.google.dev/gemini-api/docs/structured-output) - JSON Schema with Zod integration
@@ -496,12 +515,14 @@ Things that couldn't be fully resolved:
 - [Movable Type Haversine](https://www.movable-type.co.uk/scripts/latlong.html) - Reference implementation
 
 ### Secondary (MEDIUM confidence)
+
 - [density-clustering GitHub](https://github.com/uhho/density-clustering) - DBSCAN API (not using, but reference)
 - [GeoDBSCAN](https://github.com/HyperARCo/GeoDBSCAN) - TypeScript geospatial clustering
 - [Zod v4 Gemini Fix Blog](https://www.buildwithmatija.com/blog/zod-v4-gemini-fix-structured-output-z-tojsonschema) - zodToJsonSchema incompatibility explained
 - [Google Structured Outputs Announcement](https://blog.google/technology/developers/gemini-api-structured-outputs/) - propertyOrdering support
 
 ### Tertiary (LOW confidence - needs validation)
+
 - Existing `docs/auto-custom-map-for-dust-permit/TODO-2024-12-27-317pm.md` - Architecture design (not implemented, needs validation)
 - WebSearch results for clustering algorithms - General patterns, not verified against this use case
 

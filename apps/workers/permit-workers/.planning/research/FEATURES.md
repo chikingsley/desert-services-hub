@@ -216,24 +216,28 @@ confidence confidence
 For MVP, prioritize:
 
 ### Phase 1: Webhook Infrastructure (Table Stakes)
+
 1. **Microsoft Graph webhook endpoint** - Entry point for email events
 2. **Subscription lifecycle management** - Auto-renew before expiry
 3. **Message queue for processing** - Decouple webhook from classification
 4. **Processed email tracking** - Idempotency via message ID
 
 ### Phase 2: Classification Pipeline (Table Stakes)
+
 5. **Project linking** - Match email to project/permit via fuzzy search
 6. **Permit state lookup** - Inject current permit status into context
 7. **Enhanced classification** - Existing classifier with project state context
 8. **Confidence threshold routing** - 80%+ auto-execute, <80% review queue
 
 ### Phase 3: Execution & Review (Table Stakes + Key Differentiator)
+
 9. **Handler orchestration** - Call existing handlers based on intent
 10. **Review queue** - Simple list with email context, project state, suggested action
 11. **One-click approve/reject** - Human decision captured and executed
 12. **Audit trail** - Log all decisions with reasoning
 
 ### Defer to post-MVP:
+
 - **Thread summarization** - Nice to have, adds complexity
 - **Proactive document request** - High complexity, manual works for now
 - **Multi-signal confidence** - Start with LLM confidence alone, iterate
@@ -255,21 +259,25 @@ For MVP, prioritize:
 ## Implementation Risks
 
 ### Risk 1: Webhook Endpoint Hosting
+
 **Risk:** System needs publicly accessible HTTPS endpoint for Microsoft Graph webhooks
 **Mitigation:** Use existing infrastructure (Vercel, Cloudflare Workers) or expose via ngrok for development
 **Impact if unmitigated:** Cannot receive push notifications, must fall back to polling
 
 ### Risk 2: Classification Accuracy
+
 **Risk:** LLM misclassifies email intent, wrong action executed
 **Mitigation:** Conservative confidence threshold (80%+), human review for edge cases, continuous monitoring
 **Impact if unmitigated:** Permit errors, customer trust damage
 
 ### Risk 3: Project Linking Accuracy
+
 **Risk:** Email matched to wrong project, action executed on wrong permit
 **Mitigation:** Fuzzy matching with confidence score, require exact match for auto-execute
 **Impact if unmitigated:** Most dangerous failure mode - action on wrong permit
 
 ### Risk 4: Rate Limiting
+
 **Risk:** Microsoft Graph API throttling under high email volume
 **Mitigation:** Queue-based processing with backoff, batch operations where possible
 **Impact if unmitigated:** Delayed processing, missed emails during throttle period
@@ -279,6 +287,7 @@ For MVP, prioritize:
 ## Sources
 
 ### Verified (HIGH confidence)
+
 - Existing codebase: `/Users/chiejimofor/Documents/Github/auto-permit/src/lib/email-classifier.ts`
 - Existing codebase: `/Users/chiejimofor/Documents/Github/auto-permit/src/handlers/*.ts`
 - Existing codebase: `/Users/chiejimofor/Documents/Github/auto-permit/src/email/types.ts`
@@ -286,6 +295,7 @@ For MVP, prioritize:
 - [Microsoft Graph Outlook Change Notifications](https://learn.microsoft.com/en-us/graph/outlook-change-notifications-overview)
 
 ### WebSearch (MEDIUM confidence)
+
 - [Zapier: Human-in-the-Loop Patterns](https://zapier.com/blog/human-in-the-loop/) - Confidence-based routing patterns
 - [n8n: Human in the Loop Automation](https://blog.n8n.io/human-in-the-loop-automation/) - HITL workflow design
 - [AWS: Amazon Connect Email Workflows](https://aws.amazon.com/blogs/contact-center/boost-customer-service-with-amazon-connect-ai-enhanced-email-workflows/) - Confidence scoring deductions
@@ -297,6 +307,7 @@ For MVP, prioritize:
 - [FlowWright: Email Classification Automation](https://www.flowwright.com/email-classification-using-flowwright-ai) - Intent-based routing
 
 ### WebSearch (LOW confidence - need validation)
+
 - Global email automation market $15B by 2026 - verify with market research
 - Autonomous workflow agents reduce routine approvals by 65% (UiPath claim) - verify source
 - AI email assistance cuts composition time by 50% - anecdotal, varies by use case

@@ -20,6 +20,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 ## Phase Details
 
 ### Phase 1: Location Pipeline & Coordinate Foundation
+
 **Goal**: Establish WHERE to draw and HOW to transform coordinates — the foundation for all subsequent automation.
 
 **Depends on**: Nothing (first phase)
@@ -46,6 +47,7 @@ Plans:
 ---
 
 ### Phase 2: Drawing Engine
+
 **Goal**: Execute polygon drawing on the ESRI map using coordinate data from Phase 1.
 
 **Depends on**: Phase 1 (requires consensus location and coordinate transformer)
@@ -86,6 +88,7 @@ Plans:
 ---
 
 ### Phase 3: Confidence Gate & Auto-Commit
+
 **Goal**: Tie location confidence to drawing success and decide whether to auto-commit or trigger human handoff.
 
 **Depends on**: Phase 2 (requires drawing engine and location confidence from Phase 1)
@@ -108,6 +111,7 @@ Plans:
 ---
 
 ### Phase 4: Human Handoff Dashboard
+
 **Goal**: Provide graceful degradation with a dashboard showing reference materials and AI hints for manual drawing completion.
 
 **Depends on**: Phase 3 (triggered by confidence gate)

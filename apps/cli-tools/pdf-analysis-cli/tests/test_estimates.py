@@ -12,10 +12,11 @@ import pytest
 
 from pdf_analysis.estimates import (
     Estimate,
+    EstimateLineItem,
     SectionType,
-    extract_estimate,
     _is_taxable,
     _parse_money,
+    extract_estimate,
 )
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent.parent
@@ -71,7 +72,7 @@ class TestIsTaxable:
 # ---------------------------------------------------------------------------
 
 
-def find_item(est: Estimate, name: str) -> dict | None:
+def find_item(est: Estimate, name: str) -> EstimateLineItem | None:
     """Find first line item whose item field contains `name` (case-insensitive)."""
     lower = name.lower()
     for li in est.line_items:
@@ -80,7 +81,7 @@ def find_item(est: Estimate, name: str) -> dict | None:
     return None
 
 
-def find_items(est: Estimate, name: str) -> list:
+def find_items(est: Estimate, name: str) -> list[EstimateLineItem]:
     """Find all line items matching name."""
     lower = name.lower()
     return [li for li in est.line_items if lower in li.item.lower()]

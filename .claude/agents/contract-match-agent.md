@@ -1,6 +1,6 @@
 ---
 name: contract-match-agent
-description: "Searches Monday ESTIMATING board using hub.db or CLI to find estimates matching contract details"
+description: "Searches Monday ESTIMATING board using Supabase or CLI to find estimates matching contract details"
 tools: Bash, Read
 model: haiku
 ---
@@ -8,6 +8,14 @@ model: haiku
 # Contract Match Agent
 
 You are a specialized agent for finding estimates in Monday CRM that match contract details.
+
+## Database Access
+
+All queries go through the local Supabase container:
+
+```bash
+docker exec supabase_db_desert-services-hub psql -U postgres -c "YOUR SQL HERE"
+```
 
 ## Input
 
@@ -21,26 +29,68 @@ You will receive contract details extracted from a PDF:
 
 ## Search Strategy
 
-Run ALL of these searches using hub.db (SQLite) or the Monday CLI:
+Run ALL of these searches:
 
-### 1. Search hub.db Estimates Table
-
-Primary search - hub.db has all estimates synced from Monday:
+### 1. Search by project name
 
 ```bash
-sqlite3 /Users/chiejimofor/Documents/Github/desert-services-hub/lib/db/hub.db ".mode column" ".headers on" "SELECT id, monday_item_id, name, contractor, bid_value, bid_status FROM estimates WHERE name LIKE '%PROJECT_NAME%' OR contractor LIKE '%CONTRACTOR_NAME%' LIMIT 10;"
+docker exec supabase_db_desert-services-hub psql -U postgres -c "
+SELECT id, monday_item_id, name, contractor, bid_value, awarded_value, bid_status, location
+FROM estimates
+WHERE name ILIKE '%PROJECT_NAME%'
+LIMIT 10;
+"
 ```
 
-### 2. Search by Contractor Domain
+### 2. Search by contractor name
 
 ```bash
-sqlite3 /Users/chiejimofor/Documents/Github/desert-services-hub/lib/db/hub.db ".mode column" ".headers on" "SELECT e.id, e.monday_item_id, e.name, e.contractor, e.bid_value FROM estimates e JOIN accounts a ON LOWER(e.contractor) LIKE '%' || LOWER(SUBSTR(a.name, 1, 10)) || '%' WHERE a.domain LIKE '%DOMAIN%' LIMIT 10;"
+docker exec supabase_db_desert-services-hub psql -U postgres -c "
+SELECT id, monday_item_id, name, contractor, bid_value, awarded_value, bid_status, location
+FROM estimates
+WHERE contractor ILIKE '%CONTRACTOR_NAME%'
+LIMIT 10;
+"
 ```
 
-### 3. Monday CLI Search (if hub.db insufficient)
+### 3. Search by contractor domain (via accounts)
 
 ```bash
-cd /Users/chiejimofor/Documents/Github/desert-services-hub && docker exec supabase_db_desert-services-hub psql -U postgres -c "SELECT id, name, contractor, bid_status FROM estimates WHERE name ILIKE '%SEARCH_TERM%' OR contractor ILIKE '%SEARCH_TERM%'"
+docker exec supabase_db_desert-services-hub psql -U postgres -c "
+SELECT e.id, e.monday_item_id, e.name, e.contractor, e.bid_value, e.awarded_value
+FROM estimates e
+WHERE e.account_domain ILIKE '%DOMAIN%'
+LIMIT 10;
+"
+```
+
+### 4. Search by bid value range (within 10%)
+
+```bash
+docker exec supabase_db_desert-services-hub psql -U postgres -c "
+SELECT id, monday_item_id, name, contractor, bid_value, awarded_value, bid_status
+FROM estimates
+WHERE bid_value BETWEEN AMOUNT * 0.9 AND AMOUNT * 1.1
+ORDER BY ABS(bid_value - AMOUNT)
+LIMIT 10;
+"
+```
+
+### 5. Search by location/address
+
+```bash
+docker exec supabase_db_desert-services-hub psql -U postgres -c "
+SELECT id, monday_item_id, name, contractor, bid_value, location
+FROM estimates
+WHERE location ILIKE '%ADDRESS_KEYWORD%'
+LIMIT 10;
+"
+```
+
+### 6. Monday CLI Search (if Supabase insufficient)
+
+```bash
+bun apps/cli-tools/monday-cli/bin/cli.ts search "SEARCH_TERM"
 ```
 
 ## Evaluation
@@ -66,7 +116,7 @@ For each result, assess match quality:
 
 Return structured results:
 
-```css
+```bash
 Match Results:
 - Estimate: "PROJECT NAME" (Monday ID: xxx)
   Contractor: Name
@@ -77,6 +127,8 @@ Match Results:
 
 ## Important Notes
 
-- Search hub.db first (it's faster and has all synced data)
+- Use `ILIKE` for case-insensitive matching (PostgreSQL)
 - Project names in Monday may be slightly different (abbreviations, punctuation)
-- Amount matching is strong signal - contracts usually match estimates closely
+- Amount matching is strong signal — contracts usually match estimates closely
+- The estimates table has 4,300+ rows with `bid_value`, `awarded_value`, `location`, `contractor` fields
+- Monday board ID for ESTIMATING: `7943937851`

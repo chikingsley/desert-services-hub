@@ -218,9 +218,7 @@ def extract_pages(
 
         # Generate output path if not provided
         if output_path is None:
-            output_path = str(
-                path.parent / f"{path.stem}_pages_{start_page}-{end_page}.pdf"
-            )
+            output_path = str(path.parent / f"{path.stem}_pages_{start_page}-{end_page}.pdf")
 
         # Create extracted PDF
         new_doc = pymupdf.open()

@@ -10,7 +10,6 @@ No hardcoded document types — the model figures it out.
 
 from __future__ import annotations
 
-import json
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -21,8 +20,6 @@ import pdfplumber
 from pdf_analysis.config import Settings
 from pdf_analysis.provider_manager import ProviderManager
 from pdf_analysis.types import ProviderSelector
-from pdf_analysis.utils import extract_json_from_text
-
 
 # ---------------------------------------------------------------------------
 # Result types
@@ -87,9 +84,7 @@ def extract_text(pdf_path: Path, max_pages: int = 0) -> TextResult:
             else:
                 pages_text.append("")
 
-    full_text = "\n\n".join(
-        f"--- Page {i + 1} ---\n{t}" for i, t in enumerate(pages_text) if t
-    )
+    full_text = "\n\n".join(f"--- Page {i + 1} ---\n{t}" for i, t in enumerate(pages_text) if t)
 
     return TextResult(
         text=full_text,

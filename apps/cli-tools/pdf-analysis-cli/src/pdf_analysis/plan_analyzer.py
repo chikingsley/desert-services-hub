@@ -7,7 +7,7 @@ import json
 import os
 import tempfile
 from dataclasses import asdict, dataclass
-from typing import Any
+from typing import Any, cast
 
 # Gemini 3 Flash imports
 from google import genai
@@ -85,13 +85,14 @@ class PlanAnalyzer:
             data=image_bytes,
             mime_type="image/jpeg" if image_path.endswith(".jpg") else "image/png",
         )
+        contents = cast(Any, [image, prompt])
 
         # Execute analysis with code execution enabled
         response = self.client.models.generate_content(
             model=self.model,
-            contents=[image, prompt],
+            contents=contents,
             config=types.GenerateContentConfig(
-                tools=[types.Tool(code_execution=types.ToolCodeExecution)],
+                tools=[types.Tool(code_execution=types.ToolCodeExecution())],
                 temperature=0.2,
                 max_output_tokens=4096,
             ),
@@ -99,7 +100,7 @@ class PlanAnalyzer:
 
         # Parse structured results
         return self._parse_analysis_response(
-            response_text=response.text,
+            response_text=response.text or "",
             plan_type=plan_type,
             analysis_focus=analysis_focus,
         )
@@ -158,12 +159,13 @@ Return your findings in structured JSON format with:
             data=image_bytes,
             mime_type="image/jpeg" if image_path.endswith(".jpg") else "image/png",
         )
+        contents = cast(Any, [image, full_prompt])
 
         response = self.client.models.generate_content(
             model=self.model,
-            contents=[image, full_prompt],
+            contents=contents,
             config=types.GenerateContentConfig(
-                tools=[types.Tool(code_execution=types.ToolCodeExecution)],
+                tools=[types.Tool(code_execution=types.ToolCodeExecution())],
                 temperature=0.1,
                 max_output_tokens=8192,
             ),
@@ -171,8 +173,8 @@ Return your findings in structured JSON format with:
 
         return {
             "inspection_prompt": inspection_prompt,
-            "raw_analysis": response.text,
-            "parsed_findings": self._extract_json_from_response(response.text),
+            "raw_analysis": response.text or "",
+            "parsed_findings": self._extract_json_from_response(response.text or ""),
         }
 
     def _build_analysis_prompt(
@@ -314,13 +316,13 @@ Return results in this JSON structure:
     def _pdf_to_image(self, pdf_path: str, page: int = 0) -> str:
         """Convert PDF page to image for analysis"""
         try:
-            import fitz  # PyMuPDF
+            import pymupdf
 
-            doc = fitz.open(pdf_path)
+            doc = pymupdf.open(pdf_path)
             page_obj = doc[page]
 
             # Render at high resolution for detail inspection
-            mat = fitz.Matrix(2, 2)  # 2x zoom
+            mat = pymupdf.Matrix(2, 2)  # 2x zoom
             pix = page_obj.get_pixmap(matrix=mat)
 
             # Save to temp file
@@ -332,7 +334,7 @@ Return results in this JSON structure:
             return temp_path
         except ImportError as err:
             raise ImportError(
-                "PyMuPDF (fitz) required for PDF conversion. Install: pip install PyMuPDF"
+                "PyMuPDF (pymupdf) required for PDF conversion. Install: pip install pymupdf"
             ) from err
 
     def export_report(self, result: AnalysisResult, output_path: str):

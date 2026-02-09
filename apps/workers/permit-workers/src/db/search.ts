@@ -1,8 +1,9 @@
 /**
- * Company Lookup Utilities
+ * Permit & Company Lookup Utilities
  *
- * Searches for portal companies by looking at distinct company names
- * in the dust permits table.
+ * Searches the dust permits table in hub.db for:
+ * - Company names → portal company IDs
+ * - Permit IDs → parcel numbers, addresses
  */
 
 import { db } from "@lib/db/hub";
@@ -56,4 +57,27 @@ export async function searchCompany(
   }
 
   return null;
+}
+
+/**
+ * Look up a permit's parcel number and address from hub.db.
+ * Returns null if the permit isn't found or has no parcel.
+ */
+export async function lookupPermitParcel(
+  permitId: string
+): Promise<{ parcel: string; address: string | null } | null> {
+  const row = await db
+    .query<{ parcel: string | null; address: string | null }, [string]>(
+      `SELECT parcel, address
+       FROM dust_permits_filed_by_desert_services
+       WHERE id = ?
+       LIMIT 1`
+    )
+    .get(permitId);
+
+  if (!row?.parcel) {
+    return null;
+  }
+
+  return { parcel: row.parcel, address: row.address };
 }

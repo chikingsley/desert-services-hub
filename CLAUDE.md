@@ -1,32 +1,158 @@
 # Desert Services Hub
 
-## Remote Database Access (gmk-server)
+Monorepo for Desert Services operations: estimating, dust permits, contracts, notifications, email processing.
 
-The Supabase stack runs on `gmk-server`. Access from any machine on Tailscale:
-
-### Direct psql
-
-```bash
-psql -h gmk-server -p 54322 -U postgres
-# Password: postgres
-```
-
-### SSH + docker exec
-
-```bash
-ssh gmk-server "docker exec supabase_db_desert-services-hub psql -U postgres -c 'YOUR SQL HERE'"
-```
-
-### Supabase Studio (web UI)
+## Monorepo Structure
 
 ```text
-http://gmk-server:54323
+apps/
+  web/                    # Frontend SPA + API + background worker (estimates, catalog, notifications)
+  workers/
+    permit-workers/       # Maricopa County dust permit browser automation (Playwright)
+    notifications/        # Email notification triggers, delivery, stakeholder routing
+    email-sync/           # Outlook email sync via Microsoft Graph
+    inspections-email-worker/  # ComplianceGo → SharePoint (Cloudflare Worker)
+    docusign-file-automation/  # DocuSign contract dispatch (Cloudflare Worker)
+    dust-permit-intake/   # Permit request intake processing
+    contracts-email-intake/
+    contract-intake/
+    estimate-poller/
+    estimates-sync-worker/
+    monday-status-sync-worker/
+    outlook-folder-watcher/
+    swppp-sync/
+  cli-tools/
+    email-cli/            # Email templates (Handlebars), subscription management
+    aqdata-cli/           # Air quality data scraping
+    monday-cli/           # Monday.com API operations
+    sharepoint-cli/       # SharePoint file operations
+    pdf-analysis-cli/     # PDF extraction with Gemini
+    quoting-cli/          # Estimate quoting tools
+  contract/               # Contract parsing and management
+
+lib/                      # Shared libraries (imported by all apps)
+  catalog/                # Service catalog with pricing (dust permit fee schedule, etc.)
+  db/                     # Database client (hub.db), repositories, types
+  graph/                  # Microsoft Graph API client
+  sharepoint/             # SharePoint file operations
+  estimating/             # Estimating logic
+  pdf/                    # PDF generation utilities
+  pdf-takeoff/            # PDF quantity takeoff
+  takeoff/                # Takeoff calculations
+  assets/                 # Shared assets (logos, etc.)
 ```
 
-### Supabase API (PostgREST)
+## Docker Services
+
+All services run on gmk-server. **Claude Code runs directly on gmk-server — never SSH into it.**
+
+| Service | Container | Port | Purpose |
+|---------|-----------|------|---------|
+| `web` | `desert-web` | 3000 | Frontend + API + background job worker |
+| `webhooks` | `desert-webhooks` | 4747 | Monday + Outlook webhook receiver |
+| `permit-worker` | `desert-permit-worker` | 47822 (API), 47821 (VNC) | Browser automation for Maricopa permits |
+| `tunnel` | `desert-tunnel` | — | Cloudflare tunnel (exposes webhooks + web) |
+
+### Public URLs (via Cloudflare Tunnel)
+
+- `webhooks.desertservices.app` → webhooks container (port 4747)
+- `web.desertservices.app` → web container (port 3000)
+
+### Inter-Container Networking
+
+All containers share `desert-services-hub_default` Docker network. Use **service names** for internal calls:
 
 ```text
-http://gmk-server:54321
+web → permit-worker:47822    # Scrape permits, generate PDFs
+web → host.docker.internal:54322  # Postgres (Supabase)
+webhooks → host.docker.internal:54322  # Postgres
 ```
 
-**Do NOT try to run `docker exec` locally** — the containers are on gmk-server, not your local machine.
+### Commands
+
+```bash
+# Build & deploy
+docker compose build web webhooks permit-worker
+docker compose up -d
+
+# Rebuild single service
+docker compose build web && docker compose up -d web
+
+# Logs
+docker compose logs -f web
+docker compose logs -f webhooks
+docker compose logs -f permit-worker
+
+# Restart
+docker compose restart web
+```
+
+## Permit-Worker API (port 47822)
+
+The web container calls the permit-worker for browser automation tasks. Key endpoints:
+
+| Method | Endpoint | Purpose | Returns |
+|--------|----------|---------|---------|
+| `POST` | `/api/scrape/pdf` | Scrape permit + generate PDF | `{ data: PermitData, pdfPath, pdfBase64 }` |
+| `GET` | `/api/scrape/:id` | Scrape permit data only | `{ data: PermitData }` |
+| `POST` | `/api/permits/create` | Create new permit application | `{ applicationId }` |
+| `POST` | `/api/permits/:id/renew` | Renew a permit | `{ applicationId }` |
+| `POST` | `/api/permits/:id/close` | Close a permit | `{ success }` |
+| `POST` | `/api/sync` | Sync permits from portal | `{ synced }` |
+| `GET` | `/api/browser/status` | Browser session status | `{ isRunning, isLoggedIn }` |
+
+**`PermitData` key fields** (returned by scrape endpoints):
+- `applicationId`, `projectName`, `companyName`, `status`
+- `disturbedArea` — acreage string (e.g. "64.3 Acres"). **Never null for valid permits.**
+- `locations[]` — address, city, parcel (APN), lat/lng
+- `contact`, `applicantCompany`, `applicantOwner`, `primaryContact`
+- `project` — name, description, start/end dates
+- `issueDate`, `expirationDate`, `createdDate`
+
+## Notification Pipeline
+
+```text
+Email arrives → Graph webhook → POST /api/webhooks/outlook
+  → enqueue email_notification job → worker syncs email
+  → detectDustPermitEmailTrigger() matches sender/body patterns
+  → enqueue dust_permit_payment or dust_permit_issued job
+  → handler enriches metadata (cost breakdown, acreage, PDF)
+  → createNotificationDraft() → Outlook draft via Graph API
+```
+
+**Trigger types:**
+- `pointandpay_payment` — PointAndPay payment confirmation → billing + submitted notifications
+- `maricopa_issued` — "Dust Permit Issued" from Maricopa → issued notification
+
+**Email templates:** `apps/cli-tools/email-cli/src/email-templates/*.hbs`
+
+## Shared Libraries (`lib/`)
+
+| Library | Key Exports | Usage |
+|---------|-------------|-------|
+| `@lib/catalog` | `getAllItems()` | Service pricing, dust permit fee schedule by acreage tier |
+| `@lib/db/hub` | `db` | Bun SQLite database client for hub.db |
+| `@lib/db/repositories` | `getPermitById()`, `upsertPermit()`, etc. | Permit CRUD operations |
+| `@lib/db/types` | `Permit`, `NotificationEventType` | TypeScript interfaces |
+| `@email/client` | `GraphEmailClient` | Microsoft Graph email operations |
+| `@email/email-templates` | `getTemplate()`, `getLogoAttachment()` | Handlebars template rendering |
+
+## Database
+
+Supabase Postgres on port 54322. Key tables:
+
+- `dust_permits_filed_by_desert_services` — all permits (id, project, company, status, dates, invoice, acreage tier)
+- `emails` — synced Outlook emails
+- `notifications` — notification event log (type, status, metadata JSON, draft ID)
+- `outlook_subscriptions` — Graph webhook subscriptions per mailbox
+- `estimates` — bid estimates from Monday.com
+
+```bash
+# Direct psql (from gmk-server)
+docker exec supabase_db_desert-services-hub psql -U postgres
+
+# From other machines on Tailscale
+psql -h gmk-server -p 54322 -U postgres  # password: postgres
+```
+
+Supabase Studio: `http://gmk-server:54323`

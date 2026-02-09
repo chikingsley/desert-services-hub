@@ -571,33 +571,39 @@ Mistakes that cause annoyance but are fixable.
 ## Sources
 
 ### Microsoft Graph Documentation
+
 - [Lifecycle Events for Subscriptions](https://learn.microsoft.com/en-us/graph/change-notifications-lifecycle-events)
 - [Receive Change Notifications via Webhooks](https://learn.microsoft.com/en-us/graph/change-notifications-delivery-webhooks)
 - [Subscription Resource Type](https://learn.microsoft.com/en-us/graph/api/resources/subscription?view=graph-rest-1.0)
 - [Microsoft Graph Known Issues](https://developer.microsoft.com/en-us/graph/known-issues)
 
 ### Microsoft Q&A (Real User Issues)
+
 - [Subscription Expiring in 1 Day](https://learn.microsoft.com/en-us/answers/questions/5525734/microsoft-graph-email-webhook-subscriptions-expiri)
 - [Reauthorization Loop Issues](https://learn.microsoft.com/en-us/answers/questions/5574982/graph-api-webhook-receiving-constant-reauthorizati)
 - [Change Notifications Stop Being Delivered](https://learn.microsoft.com/en-us/answers/questions/2070499/microsoft-graph-change-notifications-not-working-w)
 - [Subscription Validation Timeout](https://github.com/microsoftgraph/msgraph-sdk-dotnet/issues/2805)
 
 ### Webhook & Idempotency Patterns
+
 - [Hookdeck: Implement Webhook Idempotency](https://hookdeck.com/webhooks/guides/implement-webhook-idempotency)
 - [DEV: Webhooks at Scale](https://dev.to/art_light/webhooks-at-scale-designing-an-idempotent-replay-safe-and-observable-webhook-system-7lk)
 - [Hookdeck: Webhooks Best Practices](https://hookdeck.com/blog/webhooks-at-scale)
 
 ### LLM Confidence & Human-in-the-Loop
+
 - [arXiv: Agentic Confidence Calibration](https://arxiv.org/html/2601.15778)
 - [Permit.io: Human-in-the-Loop for AI Agents](https://www.permit.io/blog/human-in-the-loop-for-ai-agents-best-practices-frameworks-use-cases-and-demo)
 - [Zapier: Human-in-the-Loop Patterns](https://zapier.com/blog/human-in-the-loop/)
 - [arXiv: Overconfidence in LLM-as-a-Judge](https://arxiv.org/html/2508.06225v2)
 
 ### Race Conditions
+
 - [Imperva: Race Condition Prevention](https://www.imperva.com/learn/application-security/race-condition/)
 - [CodeCurated: Mastering Race Conditions](https://www.codecurated.com/blog/mastering-race-conditions-strategies-for-reliable-software-systems/)
 
 ### Project-Specific
+
 - Existing email client: `/Users/chiejimofor/Documents/Github/auto-permit/src/email/client.ts`
 - Existing classifier: `/Users/chiejimofor/Documents/Github/auto-permit/src/lib/email-classifier.ts`
 - Existing handlers: `/Users/chiejimofor/Documents/Github/auto-permit/src/handlers/`

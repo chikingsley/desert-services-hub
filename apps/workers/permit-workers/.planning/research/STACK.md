@@ -276,30 +276,36 @@ Send approval request email with approve/reject links. Links route to webhook en
 ## Sources
 
 ### Microsoft Graph Webhooks
+
 - [Receive change notifications through webhooks](https://learn.microsoft.com/en-us/graph/change-notifications-delivery-webhooks) - Official documentation, HIGH confidence
 - [subscription resource type](https://learn.microsoft.com/en-us/graph/api/resources/subscription?view=graph-rest-1.0) - Subscription limits and properties
 - [Microsoft Graph Webhooks Best Practices](https://www.voitanos.io/blog/microsoft-graph-webhook-delta-query/) - Lifecycle management patterns
 
 ### Bun Runtime
+
 - [Bun HTTP Server](https://bun.sh/docs/api/http) - Official Bun.serve() documentation
 - [Is Bun Production-Ready in 2026?](https://dev.to/last9/is-bun-production-ready-in-2026-a-practical-assessment-181h) - Production assessment
 - [Bun 1.3 Release](https://www.infoq.com/news/2026/01/bun-v3-1-release/) - Latest features including routes
 
 ### Claude Structured Outputs
+
 - [Structured outputs - Claude Docs](https://platform.claude.com/docs/en/build-with-claude/structured-outputs) - Official documentation, HIGH confidence
 - [Tool use with Claude](https://docs.anthropic.com/en/docs/agents-and-tools/tool-use/overview) - Tool use patterns
 - [@anthropic-ai/sdk](https://www.npmjs.com/package/@anthropic-ai/sdk) - TypeScript SDK
 
 ### Human-in-the-Loop
+
 - [Human-in-the-loop in AI workflows](https://zapier.com/blog/human-in-the-loop/) - Patterns and best practices
 - [Human in the loop automation](https://blog.n8n.io/human-in-the-loop-automation/) - Confidence threshold strategies
 - [HITL Guide 2026](https://parseur.com/blog/human-in-the-loop-ai) - Current best practices
 
 ### Zod
+
 - [Zod v4 Release Notes](https://zod.dev/v4) - Performance improvements (6.5x faster)
 - [zod-gpt](https://github.com/dzhng/zod-gpt) - Zod + LLM integration patterns
 
 ### Tunneling
+
 - [Cloudflare Tunnel vs ngrok](https://dev.to/mechcloud_academy/cloudflare-tunnel-vs-ngrok-vs-tailscale-choosing-the-right-secure-tunneling-solution-4inm) - Comparison
 - [Top 10 ngrok alternatives 2026](https://pinggy.io/blog/best_ngrok_alternatives/) - Options overview
 

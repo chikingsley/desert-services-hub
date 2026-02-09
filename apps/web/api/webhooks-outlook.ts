@@ -29,16 +29,28 @@ const enqueueStmt = db.prepare(
   "INSERT INTO webhook_jobs (job_type, payload) VALUES ('email_notification', ?)"
 );
 
-const RESOURCE_RE = /^users\/([^/]+)\/messages/;
+const RESOURCE_RE = /^users\/([^/]+)\/messages/i;
 
 /**
  * Extract mailbox email from resource string.
  * Format: "users/chi@desertservices.net/messages/AAMkAGI2..."
+ *    or:  "Users/84245868-0b0f-439b-a67c-.../Messages/AAMk..."
+ *
+ * Microsoft may return a GUID instead of the email address.
+ * If the captured segment doesn't look like an email, return null
+ * so the caller can fall back to subscriptionId lookup.
  */
 function parseMailboxFromResource(resource: string): string | null {
   const match = resource.match(RESOURCE_RE);
-  return match?.[1] ?? null;
+  const segment = match?.[1];
+  if (!segment) return null;
+  // Only return if it looks like an email; GUIDs will fall through
+  return segment.includes("@") ? segment : null;
 }
+
+const lookupMailboxBySubscription = db.query<{ mailbox_email: string }>(
+  "SELECT mailbox_email FROM outlook_subscriptions WHERE subscription_id = ? LIMIT 1"
+);
 
 export async function handleOutlookWebhook(req: Request): Promise<Response> {
   const url = new URL(req.url);
@@ -81,8 +93,16 @@ export async function handleOutlookWebhook(req: Request): Promise<Response> {
   // Enqueue each notification as a job
   let enqueued = 0;
   for (const notification of notifications) {
-    const mailboxEmail = parseMailboxFromResource(notification.resource);
+    let mailboxEmail = parseMailboxFromResource(notification.resource);
     const messageId = notification.resourceData?.id;
+
+    // Fall back to subscription lookup when Microsoft returns a GUID
+    if (!mailboxEmail && notification.subscriptionId) {
+      const row = await lookupMailboxBySubscription.get(
+        notification.subscriptionId
+      );
+      mailboxEmail = row?.mailbox_email ?? null;
+    }
 
     if (!(mailboxEmail && messageId)) {
       console.warn(

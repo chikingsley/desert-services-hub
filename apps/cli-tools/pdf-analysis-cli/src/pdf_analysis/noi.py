@@ -24,6 +24,7 @@ from pydantic import BaseModel, ConfigDict, Field
 # Models
 # ---------------------------------------------------------------------------
 
+
 class ExtractionMeta(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
@@ -87,6 +88,7 @@ _OUTFALL = re.compile(r"^[A-Z][\w\s/]+\|\s*([\d.-]+)\s*\|\s*([\d.-]+)", re.MULTI
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _strip(value: str | None) -> str | None:
     """Strip whitespace, return None for empty strings."""
     if value is None:
@@ -146,6 +148,7 @@ def _first_match(pattern: re.Pattern[str], text: str) -> str | None:
 # Main extraction
 # ---------------------------------------------------------------------------
 
+
 async def _ocr_pdf(pdf_path: Path) -> str:
     """OCR a PDF using glm-ocr via Ollama when pdfplumber can't extract text."""
     endpoint = os.environ.get("OLLAMA_ENDPOINT", "https://ollama.peacockery.studio/v1").rstrip("/")
@@ -179,7 +182,9 @@ async def _ocr_pdf(pdf_path: Path) -> str:
                                         },
                                         {
                                             "type": "image_url",
-                                            "image_url": {"url": f"data:image/png;base64,{image_b64}"},
+                                            "image_url": {
+                                                "url": f"data:image/png;base64,{image_b64}"
+                                            },
                                         },
                                     ],
                                 }
@@ -222,9 +227,7 @@ def extract_noi(pdf_path: Path | str, *, ocr_fallback: bool = False) -> NOIExtra
         full_text = asyncio.run(_ocr_pdf(pdf_path))
         warnings.append("Used OCR fallback (scanned PDF)")
         if len(full_text.strip()) < 50:
-            raise ValueError(
-                f"OCR also failed — only {len(full_text.strip())} chars extracted"
-            )
+            raise ValueError(f"OCR also failed — only {len(full_text.strip())} chars extracted")
 
     # Split into logical sections
     sections = _parse_sections(full_text)
@@ -283,7 +286,11 @@ def extract_noi(pdf_path: Path | str, *, ocr_fallback: bool = False) -> NOIExtra
         site_state = _first_match(_STATE, site_info) or "AZ"
         site_zip = _first_match(_ZIP, site_info)
 
-        parts = [p for p in [site_addr1, site_city, f"{site_state} {site_zip}" if site_zip else None] if p]
+        parts = [
+            p
+            for p in [site_addr1, site_city, f"{site_state} {site_zip}" if site_zip else None]
+            if p
+        ]
         if parts:
             site_address = ", ".join(parts)
 
@@ -318,27 +325,29 @@ def extract_noi(pdf_path: Path | str, *, ocr_fallback: bool = False) -> NOIExtra
     critical_present = all([applicant_name, site_name, email])
     confidence = "high" if critical_present else "medium"
 
-    return NOIExtraction(
-        applicant_name=applicant_name or "UNKNOWN",
-        applicant_address1=applicant_addr1,
-        applicant_address2=applicant_addr2,
-        applicant_city=applicant_city,
-        applicant_state=applicant_state,
-        applicant_zip=applicant_zip,
-        site_name=site_name or "UNKNOWN",
-        site_address=site_address,
-        latitude=latitude,
-        longitude=longitude,
-        acres_disturbed=acres_disturbed,
-        swppp_contact_first_name=first_name,
-        swppp_contact_last_name=last_name,
-        swppp_contact_email=email,
-        swppp_contact_phone=phone,
-        permit_id=permit_id,
-        ltf_number=ltf_number,
-        extraction_meta=ExtractionMeta(
-            confidence=confidence,
-            missing_fields=missing,
-            warnings=warnings,
-        ),
+    return NOIExtraction.model_validate(
+        {
+            "applicant_name": applicant_name or "UNKNOWN",
+            "applicant_address1": applicant_addr1,
+            "applicant_address2": applicant_addr2,
+            "applicant_city": applicant_city,
+            "applicant_state": applicant_state,
+            "applicant_zip": applicant_zip,
+            "site_name": site_name or "UNKNOWN",
+            "site_address": site_address,
+            "latitude": latitude,
+            "longitude": longitude,
+            "acres_disturbed": acres_disturbed,
+            "swppp_contact_first_name": first_name,
+            "swppp_contact_last_name": last_name,
+            "swppp_contact_email": email,
+            "swppp_contact_phone": phone,
+            "permit_id": permit_id,
+            "ltf_number": ltf_number,
+            "extraction_meta": {
+                "confidence": confidence,
+                "missing_fields": missing,
+                "warnings": warnings,
+            },
+        }
     )

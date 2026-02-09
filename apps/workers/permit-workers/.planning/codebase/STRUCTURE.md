@@ -386,4 +386,3 @@ auto-permit/
 - Generated: Yes (by `/gsd:map-codebase`)
 - Committed: Yes
 - Contents: ARCHITECTURE.md, STRUCTURE.md, TESTING.md, etc.
-

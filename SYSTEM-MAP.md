@@ -107,6 +107,7 @@ Desert Services provides environmental compliance services (SWPPP, dust control,
 | `dust_permit_issued_email` | DONE | Maricopa issued email → notification |
 
 **Periodic Timers:**
+
 | Timer | Interval | Status |
 |-------|----------|--------|
 | Job poller | 5 sec | RUNNING |
@@ -191,6 +192,7 @@ Desert Services provides environmental compliance services (SWPPP, dust control,
 ## The Gaps
 
 ### GAP 1: No Automated Project Lifecycle
+
 **Problem:** When an estimate is won on Monday, nothing automatically happens. No project record is created, no permits are initiated, no folder structure is set up, no stakeholders are notified.
 
 **Current state:** Projects exist in Postgres (92 rows) but are manually created/linked. The `projects` table has fields for contract_status, dust_permit_status, noi_status, swppp_status, signs_status — but nothing populates them automatically.
@@ -203,6 +205,7 @@ Desert Services provides environmental compliance services (SWPPP, dust control,
 5. Notify relevant stakeholders
 
 ### GAP 2: CLI Pollers Not Running as Services
+
 **Problem:** Three important workers are built but only run when manually started:
 - **notifications** — Checks for expiring permits, estimate wins, creates Outlook drafts
 - **swppp-sync** — Syncs SWPPP Master Excel from SharePoint
@@ -211,6 +214,7 @@ Desert Services provides environmental compliance services (SWPPP, dust control,
 **What's needed:** Add these as Docker services (or systemd units on gmk-server) that run continuously. They're all CLI pollers with `--watch` modes already built.
 
 ### GAP 3: Contract Intake Pipeline Incomplete
+
 **Problem:** The `contract-intake` worker has the framework (job queue integration, file processing structure) but the actual LLM extraction pipeline is incomplete.
 
 **Current state:** Internal Contracts (IC) group emails are synced. PDFs are downloaded. But automatic classification + structured extraction isn't finishing.
@@ -218,6 +222,7 @@ Desert Services provides environmental compliance services (SWPPP, dust control,
 **What's needed:** Complete the contract-intake worker: PDF → OCR → classify (is this a subcontract? insurance cert? change order?) → extract fields → store in contracts table → link to estimate.
 
 ### GAP 4: No Permit Renewal Automation
+
 **Problem:** The permit worker can renew permits via browser automation, but nothing watches for expiring permits and triggers renewal.
 
 **Current state:** `getExpiringPermits()` exists in the dust-permit repository. The notifications worker can detect expirations. The permit worker can execute renewals. But they're not connected.
@@ -228,11 +233,13 @@ Desert Services provides environmental compliance services (SWPPP, dust control,
 3. Optionally auto-initiates renewal via permit worker API
 
 ### GAP 5: Takeoff PDF Upload Broken
+
 **Problem:** Both `/api/upload/pdf` and `/api/takeoffs/:id/pdf` return 501 — "storage migrated to SharePoint." The takeoff editor works (annotations, measurements) but you can't upload new PDFs to start a takeoff.
 
 **What's needed:** Implement SharePoint-based PDF upload for takeoffs. Upload to SharePoint → store URL in takeoff record → serve via SharePoint URL.
 
 ### GAP 6: No Business Dashboard
+
 **Problem:** The dashboard (`/`) is a static landing page with workflow steps. No real-time metrics.
 
 **What's needed:** A dashboard showing:
@@ -244,11 +251,13 @@ Desert Services provides environmental compliance services (SWPPP, dust control,
 - Revenue pipeline
 
 ### GAP 7: AQ Data CLI Has No Commands
+
 **Problem:** The aqdata-cli has a working client (`AQDataClient`) that can navigate the Maricopa AQ portal, search dust applications, export to Excel, parse results — but no CLI commands are wired up. The `src/commands/` directory is empty.
 
 **What's needed:** Wire up CLI commands: `search`, `export`, `sync-to-db`. This enables market intelligence — track all dust permits in Maricopa County, identify potential customers, monitor competitors.
 
 ### GAP 8: Marketing Permits Not Being Collected
+
 **Problem:** The `marketing_permits` table and repository exist for tracking ALL Maricopa County permits (not just Desert Services'), but there's no active scraping/sync filling it.
 
 **Current state:** Repository has `upsertMarketingPermit()`, `getActivePermitsByCompany()`, `getPermitsNeedingDetailScrape()`. The AQ data client can search and export all dust applications. They're not connected.
@@ -260,11 +269,13 @@ Desert Services provides environmental compliance services (SWPPP, dust control,
 4. Identifies companies with active permits as sales prospects
 
 ### GAP 9: Insurance Gap Checking Not Automated
+
 **Problem:** `lib/db/insurance.ts` has `checkCoverage()` that compares contract requirements against Desert Services' insurance. But it's never called automatically.
 
 **What's needed:** When a new contract comes in (contract-intake), automatically check if DS's current insurance meets the contract requirements. Alert if there's a gap.
 
 ### GAP 10: No Email → Estimate Auto-Linking
+
 **Problem:** Emails and estimates exist in the same database but linking is manual or based on simple text matching. Many emails about estimates aren't linked.
 
 **Current state:** `estimate_emails` table exists. `findEstimate()` can search by number/name. Worker does some thread-based linking. But there's no comprehensive auto-linking.
@@ -272,6 +283,7 @@ Desert Services provides environmental compliance services (SWPPP, dust control,
 **What's needed:** An agent that periodically scans unlinked emails, uses subject line / sender / content to match them to estimates, and creates links. Could use local LLM (granite4) for fuzzy matching.
 
 ### GAP 11: No Project Compliance Tracking Dashboard
+
 **Problem:** Projects have status fields for: contract, dust_permit, noi, swppp, signs — but there's no view that shows "here are all the things that need to happen for this project and what's done."
 
 **What's needed:** A project detail page showing compliance checklist:
@@ -283,6 +295,7 @@ Desert Services provides environmental compliance services (SWPPP, dust control,
 - [ ] First inspection scheduled
 
 ### GAP 12: Stale/Legacy Code
+
 **Problem:** Several integrations are configured but dead:
 - Notion (7 DB IDs in .env, no code uses them)
 - OpenAI (API key in .env, replaced by Gemini/Ollama)
@@ -296,23 +309,27 @@ Desert Services provides environmental compliance services (SWPPP, dust control,
 ## Priority Matrix
 
 ### Must-Have (Close the loop on core business flow)
+
 1. **GAP 1** — Automated project lifecycle (estimate won → project created → permits initiated)
 2. **GAP 2** — Deploy notifications + swppp-sync as services
 3. **GAP 3** — Complete contract intake pipeline
 4. **GAP 4** — Permit renewal automation
 
 ### Should-Have (Improve existing capabilities)
+
 5. **GAP 5** — Fix takeoff PDF upload
 6. **GAP 6** — Business metrics dashboard
 7. **GAP 10** — Email → estimate auto-linking
 8. **GAP 11** — Project compliance tracking
 
 ### Nice-to-Have (Growth + intelligence)
+
 9. **GAP 7** — AQ data CLI commands
 10. **GAP 8** — Marketing permits collection (competitor intelligence)
 11. **GAP 9** — Insurance gap checking
 
 ### Cleanup
+
 12. **GAP 12** — Remove dead integrations from .env
 
 ---

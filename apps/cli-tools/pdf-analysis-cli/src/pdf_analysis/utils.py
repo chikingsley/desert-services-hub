@@ -125,6 +125,6 @@ def _extract_first_balanced_json(text: str) -> str | None:
 
 
 def dataclass_to_dict(value: Any) -> Any:
-    if is_dataclass(value):
+    if is_dataclass(value) and not isinstance(value, type):
         return asdict(value)
     return value

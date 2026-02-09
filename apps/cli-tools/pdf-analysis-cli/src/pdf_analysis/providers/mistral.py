@@ -3,6 +3,7 @@ from __future__ import annotations
 import tempfile
 import time
 from pathlib import Path
+from typing import Any
 
 import pymupdf
 
@@ -10,12 +11,16 @@ from pdf_analysis.config import Settings
 from pdf_analysis.mistral_client import MistralClient, get_api_key
 from pdf_analysis.split_ocr import split_and_ocr
 from pdf_analysis.types import (
+    DocumentType,
     ExtractResult,
     IdentifyResult,
     OCRResult,
     PlanAnalysisResult,
     PlanFinding,
+    PlanFindingType,
     ProviderName,
+    is_document_type,
+    is_plan_finding_type,
 )
 from pdf_analysis.utils import extract_json_from_text, sanitize_filename
 
@@ -175,7 +180,11 @@ class MistralProvider(BaseProvider):
             "invoice": "unknown",
             "correspondence": "unknown",
         }
-        doc_type = mapping.get(doc_type_normalized, "unknown")
+        doc_type_raw = mapping.get(doc_type_normalized, "unknown")
+        if not is_document_type(doc_type_raw):
+            doc_type: DocumentType = "unknown"
+        else:
+            doc_type = doc_type_raw
 
         project_name = str(parsed.get("project_name", "Unknown Document"))
         gc_company = str(parsed.get("gc_company", ""))
@@ -220,9 +229,11 @@ class MistralProvider(BaseProvider):
             for finding in raw_findings:
                 if not isinstance(finding, dict):
                     continue
-                finding_type = str(finding.get("type", "info"))
-                if finding_type not in {"info", "warning", "critical"}:
-                    finding_type = "info"
+                finding_type_raw = str(finding.get("type", "info")).lower()
+                if not is_plan_finding_type(finding_type_raw):
+                    finding_type: PlanFindingType = "info"
+                else:
+                    finding_type = finding_type_raw
                 findings.append(
                     PlanFinding(
                         type=finding_type,
@@ -270,7 +281,7 @@ class MistralProvider(BaseProvider):
             source_doc.close()
 
     @staticmethod
-    def _to_float_map(value: object) -> dict[str, float]:
+    def _to_float_map(value: Any) -> dict[str, float]:
         if not isinstance(value, dict):
             return {}
         out: dict[str, float] = {}
@@ -282,7 +293,7 @@ class MistralProvider(BaseProvider):
         return out
 
     @staticmethod
-    def _to_int_map(value: object) -> dict[str, int]:
+    def _to_int_map(value: Any) -> dict[str, int]:
         if not isinstance(value, dict):
             return {}
         out: dict[str, int] = {}
@@ -294,7 +305,7 @@ class MistralProvider(BaseProvider):
         return out
 
     @staticmethod
-    def _normalize_compliance(value: object) -> dict[str, list[str]]:
+    def _normalize_compliance(value: Any) -> dict[str, list[str]]:
         if not isinstance(value, dict):
             return {"passed": [], "failed": [], "warnings": []}
 

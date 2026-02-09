@@ -1,5 +1,11 @@
 import type { BrowserContext, Page } from "playwright";
-import { DEFAULTS, type DeepPartial, type FormData } from "@/form-data";
+import {
+  DEFAULTS,
+  type DeepPartial,
+  type FormData,
+  today,
+  oneYearFromNow,
+} from "@/form-data";
 import type { CreateResult, FullCreateResult } from "@/portal/types";
 import {
   clickNext,
@@ -228,7 +234,8 @@ export async function renewPermitFull(
   context: BrowserContext,
   permitId: string,
   companyName: string,
-  formData?: FormData
+  formData?: FormData,
+  targetParcel?: string
 ): Promise<{ success: boolean; applicationId?: string; error?: string }> {
   console.log(`\n=== RENEWING PERMIT: ${permitId} ===`);
   console.log(`    Company: ${companyName}`);
@@ -266,34 +273,84 @@ export async function renewPermitFull(
     result.applicationId || (await getCreatedApplicationId(page)) || undefined;
   console.log(`  ✓ Created new application: ${appId}\n`);
 
-  // 3. Navigate through pages, applying FormData overrides if provided
+  if (targetParcel) {
+    console.log(`  Target parcel: ${targetParcel}`);
+  } else {
+    console.log("  ⚠ No target parcel provided - will select first location");
+  }
+
+  // 3. Navigate through pages, applying renewal overrides
+  // For renewals, ALWAYS override: contact info (Page 1), dates (Page 3)
+  // These are non-negotiable even when copying from an existing permit
+  const renewalOverrides: DeepPartial<FormData> = {
+    permitContact: {
+      email: formData?.permitContact?.email ?? DEFAULTS.permitContact.email,
+      name: formData?.permitContact?.name ?? DEFAULTS.permitContact.name,
+      phone: formData?.permitContact?.phone ?? DEFAULTS.permitContact.phone,
+    },
+    primaryContact: {
+      firstName: formData?.primaryContact?.firstName ?? "Chi",
+      lastName: formData?.primaryContact?.lastName ?? "Ejimofor",
+      email: formData?.primaryContact?.email ?? DEFAULTS.permitContact.email,
+      phone: formData?.primaryContact?.phone ?? "3044052446",
+    },
+    project: {
+      startDate: formData?.project?.startDate ?? today(),
+      endDate: formData?.project?.endDate ?? oneYearFromNow(),
+    },
+  };
+
+  // Merge user formData on top of renewal defaults
+  const effectiveData: DeepPartial<FormData> = formData
+    ? { ...renewalOverrides, ...formData }
+    : renewalOverrides;
+
+  console.log("[3/3] Filling forms and navigating...");
   console.log(
-    `[3/3] ${formData ? "Filling forms and navigating" : "Navigating through pages"}...`
+    `    Contact: ${effectiveData.permitContact?.name} (${effectiveData.permitContact?.email})`
+  );
+  console.log(
+    `    Dates: ${effectiveData.project?.startDate} → ${effectiveData.project?.endDate}`
   );
 
   await sleep(SETTLE_MS);
 
-  // Page 1 - Apply overrides if provided
-  if (formData) {
-    console.log("  Filling Page 1...");
-    await fillPage1(page, formData, "partial");
-  }
+  // Page 1 - ALWAYS override contact info for renewals
+  console.log("  Filling Page 1 (contact override)...");
+  await fillPage1(page, effectiveData, "partial");
   await clickNext(page);
   await sleep(SETTLE_MS);
 
   // Page 2 (map) - Handle location and map for renewals
+  // Map data is a HARD REQUIREMENT - no map = invalid permit
   console.log("  Handling Page 2 (Project Location)...");
-  const page2Success = await fillPage2Renew(page, context);
+  const page2Success = await fillPage2Renew(
+    page,
+    context,
+    permitId,
+    targetParcel
+  );
   if (!page2Success) {
-    console.log("  ⚠ Page 2 handling had issues, continuing...");
+    console.log(
+      "\n=== ✗ RENEWAL FAILED: Page 2 (Project Location) ==="
+    );
+    console.log("    Map/location data was not confirmed.");
+    console.log(
+      "    A permit without map data is invalid and cannot be submitted."
+    );
+    console.log(`    Application ${appId} was created but is incomplete.\n`);
+    return {
+      success: false,
+      applicationId: appId,
+      error:
+        "Page 2 failed: location/map data not confirmed. Application created but incomplete.",
+    };
   }
   await sleep(SETTLE_MS);
 
-  // Page 3 - Apply overrides if provided
-  if (formData) {
-    console.log("  Filling Page 3...");
-    await fillPage3(page, formData);
-  }
+  // Page 3 - ALWAYS override dates and primary contact for renewals
+  console.log("  Filling Page 3 (dates + primary contact)...");
+  await fillPage3(page, effectiveData);
   await clickNext(page);
   await sleep(SETTLE_MS);
 

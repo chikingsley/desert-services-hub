@@ -117,9 +117,7 @@ async def split_and_ocr(
 
         # Filter to only pages we haven't done yet
         chunks_to_process = [
-            chunk
-            for chunk in split_result.chunks
-            if chunk.start_page not in completed_pages
+            chunk for chunk in split_result.chunks if chunk.start_page not in completed_pages
         ]
 
         if not chunks_to_process:

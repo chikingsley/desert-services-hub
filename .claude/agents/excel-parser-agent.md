@@ -25,7 +25,12 @@ Parse the specified sheet and extract contractor/project data into a standardize
 
 ```csv
 source,source_table,contractor_name,project_name,job_id,azcon_number,swppp_number,contact_name,contact_phone,contact_email,address,city,state,zip,raw_json
-```css
+```
+
+## Parsing Approach
+
+Use bun with the `xlsx` package (SheetJS):
+
 ```typescript
 import * as XLSX from 'xlsx';
 
@@ -37,9 +42,16 @@ const data = XLSX.utils.sheet_to_json(sheet);
 // Write CSV output...
 ```
 
+If `xlsx` is not installed, install it first:
+
+```bash
+cd /home/simon/github/desert-services-hub && bun add xlsx
+```
+
 ## Important
 
 - Handle null/undefined values gracefully
 - Skip rows where contractor_name is empty
 - Trim whitespace from all string values
 - Convert Excel date serial numbers to readable dates where applicable
+- Clean up any temp files or packages installed solely for this task when done

@@ -10,14 +10,8 @@ pages: 44
 
                                                  2025 CGP Fact Sheet
 
-
-
-
 Arizona Pollutant Discharge Elimination System
                   (AZPDES)
-
-
-
 
                  FACT SHEET
 
@@ -41,13 +35,7 @@ Arizona Pollutant Discharge Elimination System
 
                                                2025 CGP Fact Sheet
 
-
-
-
 **** This page intentionally left blank ****
-
-
-
 
                  Page 2 of 44
 
@@ -56,7 +44,6 @@ Arizona Pollutant Discharge Elimination System
 ## Page 3
 
                                                                                                                        2025 CGP Fact Sheet
-
 
 Contents
 I. Background ................................................................................................................................... 5
@@ -94,7 +81,6 @@ II. Change Table ...............................................................
     5.1 Corrective Action Triggers.................................................................................................. 33
     5.2 Corrective Action Deadlines............................................................................................... 34
 
-
                                                                          Page 3 of 44
 
 ---
@@ -102,7 +88,6 @@ II. Change Table ...............................................................
 ## Page 4
 
                                                                                                                   2025 CGP Fact Sheet
-
 
   5.3 Corrective Action Report ................................................................................................... 34
 6.0      Stormwater Pollution Prevention Plan (SWPPP) .............................................................. 35
@@ -123,9 +108,6 @@ II. Change Table ...............................................................
 10.0     Applicable Forms............................................................................................................... 43
 11.0     The No Discharge Certification ......................................................................................... 44
 
-
-
-
                                                                      Page 4 of 44
 
 ---
@@ -133,7 +115,6 @@ II. Change Table ...............................................................
 ## Page 5
 
                                                                                           2025 CGP Fact Sheet
-
 
 I. Background
 The Clean Water Act (“CWA”) establishes a comprehensive program “to restore and maintain the chemical,
@@ -151,9 +132,7 @@ Operators of construction sites that both (1) disturb one or more acres of land 
 development that will disturb one or more acres), and (2) discharge stormwater to waters of the U.S. (WOTUS)
 included in Arizona’s protected surface waters program, are required to obtain AZPDES permit coverage.
 
-
 II. Change Table
-
 
     Permit Part         2020 Requirement                              2025 Requirement
 
@@ -194,7 +173,6 @@ II. Change Table
 
                                                                                          2025 CGP Fact Sheet
 
-
 1.0      Coverage Under This General Permit
 ADEQ develops and issues general permits to cover multiple facilities (or sites) within a specific category, industry,
 or area. The vast majority of discharges associated with construction activity are covered under the AZPDES
@@ -229,7 +207,7 @@ Additionally, this permit is not eligible for federal sites that are designated 
 Jurisdiction” or LEFJ. “Lands of Exclusive Federal Jurisdiction are lands in the U.S. where the Federal government
 retains exclusive jurisdiction in relevant respects. Not all Federal lands are Lands of Exclusive Federal jurisdiction.
 Rather, exclusive Federal jurisdiction is established only under limited circumstances pursuant to the Enclave
-Clause of the U.S. Constitution, article 1, section 8, clause 17 (https://www.epa.gov/npdes/cgp-permitting-lands-
+Clause of the U.S. Constitution, article 1, section 8, clause 17 (<https://www.epa.gov/npdes/cgp-permitting-lands->
 exclusive-federal-jurisdiction).” EPA Region 9 has the authority to issue stormwater permits on these sites.
 1.2      Eligibility
 Any construction project that has stormwater discharges associated with construction activity, in accordance with
@@ -241,7 +219,6 @@ Construction activity in this permit includes:
          than one (1) acre of land, but the construction activities are part of a larger common plan of development
          or sale, and the entire project will ultimately disturb one (1) or more acres.
 
-
                                                        Page 6 of 44
 
 ---
@@ -249,7 +226,6 @@ Construction activity in this permit includes:
 ## Page 7
 
                                                                                        2025 CGP Fact Sheet
-
 
 - On-site and off-site activities directly supporting the construction project (such as construction materials
         or equipment storage or maintenance, soil piles, and borrow areas).
@@ -304,7 +280,6 @@ Common Plan of Development. A “larger common plan of development or sale” is
 
                                                                                       2025 CGP Fact Sheet
 
-
 2.      Where there is any documentation or announcement (including a sign, public notice or hearing, sales
         pitch, advertisement, drawing, permit application, zoning request, etc.) that links the separate
         construction activities or project phases together under a common project plan.
@@ -321,7 +296,7 @@ potable and reclaimed water systems, subterranean dewatering, well development, 
 testing of specific pipelines, residential cooling water, charitable car washes, building and street washing, and
 dechlorinated swimming pool water. Authorization under the DMGP requires the permittee to implement various
 control measures, and in many cases to conduct discharge monitoring based on the type of discharge activity and
-the type of protected surface water. More information on the DMGP is available at www.azdeq.gov.
+the type of protected surface water. More information on the DMGP is available at <www.azdeq.gov>.
 Several allowable non-stormwater discharges are listed in Part 1.3.2 and do not require separate De-Minimis
 general permit coverage.
 Individual Permit Requirements. When the activity does not conform to the general permit requirements or if
@@ -352,7 +327,6 @@ c.      The support activity does not continue to operate beyond the completion 
 d.      Stormwater controls are implemented in accordance with Parts 3.1 through 3.8, for discharges from the
         support activity areas.
 
-
                                                      Page 8 of 44
 
 ---
@@ -360,7 +334,6 @@ d.      Stormwater controls are implemented in accordance with Parts 3.1 through
 ## Page 9
 
                                                                                       2025 CGP Fact Sheet
-
 
 Allowable non-stormwater discharges lists the non-stormwater discharges that are allowed under this permit.
 Operators are prohibited from discharging any non-stormwater from their construction sites to an Outstanding
@@ -464,9 +437,6 @@ calculated and based on the locational and climate data that affect the erosivit
 continues past this end date, the waiver is no longer valid and the continued activity is in violation of the permit.
 The operator shall develop a SWPPP and file an NOI in myDEQ for permit coverage
 
-
-
-
                                                         Page 10 of 44
 
 ---
@@ -474,7 +444,6 @@ The operator shall develop a SWPPP and file an NOI in myDEQ for permit coverage
 ## Page 11
 
                                                                                         2025 CGP Fact Sheet
-
 
 2.0      Authorization Under This General Permit
 2.1      Responsibilities of Operators
@@ -521,9 +490,6 @@ one acre but is part of a common plan of development or sale that will ultimatel
 project’s discharges have been designated by U.S. EPA as needing a permit under 40 CFR Part 122.26(a)(1)(v) or 40
 CFR Part 122.26(b)(15)(ii).
 
-
-
-
                                                      Page 11 of 44
 
 ---
@@ -531,7 +497,6 @@ CFR Part 122.26(b)(15)(ii).
 ## Page 12
 
                                                                                        2025 CGP Fact Sheet
-
 
 2.2     Prerequisites for Submitting a Notice of Intent (NOI)
 A Notice of Intent (NOI) for a general permit is similar to a permit application, and is a request for AZPDES permit
@@ -589,7 +554,6 @@ follows:
 
                                                                                        2025 CGP Fact Sheet
 
-
 Identify the closest WOTUS protected surface water(s) to the site. If stormwater runoff could discharge to or reach
 more than one protected surface water, list all protected surface waters. Some protected surface waters may be
 unnamed washes or tributaries.
@@ -637,8 +601,6 @@ responsible for meeting the terms and conditions of this permit until the constr
 terminated. The operator may submit a NOT in myDEQ after the conditions below have been met. Paper NOT
 forms will not be accepted.
 
-
-
                                                      Page 13 of 44
 
 ---
@@ -647,7 +609,6 @@ forms will not be accepted.
 
                                                                                       2025 CGP Fact Sheet
 
-
 Conditions for Terminating Permit Coverage. Each operator must submit a complete and accurate NOT in myDEQ.
 Authorization to discharge terminates under this permit when the permittee submits the NOT in myDEQ and
 receives the termination acknowledgement certificate. The requirements in Part 2.6.1 provide operators with a list
@@ -655,7 +616,6 @@ of all of the triggering conditions for terminating permit coverage. These condi
 satisfied before a NOT can be filed and permit coverage terminated, as the conditions emphasize the importance
 of leaving the site not only stabilized, but in a condition that no longer requires temporary stormwater controls or
 pollution prevention practices.
-
 
 3.0      Construction and Development Effluent Guidelines and Surface Water Quality Standards
 
@@ -697,7 +657,6 @@ more significant work to correct or that require the design, purchase, and insta
 .If an inspection shows perimeter controls are damaged, repairs must be completed by the end of the next work
 day. The same would be true if the operator finds that a sediment control measure requires routine maintenance
 
-
                                                      Page 14 of 44
 
 ---
@@ -705,7 +664,6 @@ day. The same would be true if the operator finds that a sediment control measur
 ## Page 15
 
                                                                                          2025 CGP Fact Sheet
-
 
 to remove accumulated sediment so that the control will operate effectively during the next storm event. By
 comparison, if a more significant repair is required, such as the complete removal and replacement of a device, the
@@ -821,7 +779,6 @@ Sediment Basins and Traps. If an operator installs a sediment basin, the followi
 
                                                                                    2025 CGP Fact Sheet
 
-
 2.   Maintenance requirements
           - Keep sediment basins and traps in effective operating condition and remove accumulated
                 sediment to maintain at least 50% of the design capacity at all times.
@@ -869,8 +826,6 @@ Sediment Basins and Traps. If an operator installs a sediment basin, the followi
               vendor/supplier. Use treatment chemicals in accordance with good engineering practices, and with
               dosing specifications and sediment removal design specifications provided by the provider/supplier
               of the applicable chemicals, or document specific departures from these practices or specifications
-
-
 
                                                   Page 17 of 44
 
@@ -928,9 +883,6 @@ SWPPP. Examples of perimeter controls include, but are not limited to, filter be
 diversion dikes. This requirement instructs operators where to install down slope sediment controls so the controls
 are effectively situated to minimize the discharge of pollutants.
 
-
-
-
                                                      Page 18 of 44
 
 ---
@@ -938,7 +890,6 @@ are effectively situated to minimize the discharge of pollutants.
 ## Page 19
 
                                                                                          2025 CGP Fact Sheet
-
 
 Perimeter controls are not required for individual lots within a construction site if stormwater from those lots is
 conveyed to an on-site sediment basin.
@@ -989,7 +940,6 @@ construction. These control measures reduce the amount of sediment-laden stormwa
 inlets, and ultimately being discharged to protected surface waters. Inlet protection measures should be kept in
 working condition to maintain efficiency at reducing the discharge of pollutants.
 
-
                                                       Page 19 of 44
 
 ---
@@ -997,7 +947,6 @@ working condition to maintain efficiency at reducing the discharge of pollutants
 ## Page 20
 
                                                                                      2025 CGP Fact Sheet
-
 
 Maintain Natural Buffers. Maintain natural buffers adjacent to protected surface waters and direct stormwater to
 vegetated areas to increase sediment removal, unless infeasible.
@@ -1109,8 +1058,6 @@ d.   “Small residential lot” construction (a subset of “Small construction
      and sediment controls that provide the equivalent protection of the 50-foot buffer due to limited
      technical resources.
 
-
-
                                            Page 21 of 44
 
 ---
@@ -1167,7 +1114,6 @@ Preserve Topsoil
 Topsoil helps to maintain the soil structure on construction sites and provides a growing medium for vegetative
 stabilization measures. Better vegetative stabilization reduces erosion rates of the underlying soil and also
 
-
                                                     Page 22 of 44
 
 ---
@@ -1175,7 +1121,6 @@ stabilization measures. Better vegetative stabilization reduces erosion rates of
 ## Page 23
 
                                                                                          2025 CGP Fact Sheet
-
 
 increases the infiltrative capacity of the soil, thereby reducing the amount of sediment transported to downslope
 sediment and perimeter controls. Topsoil can be preserved by stockpiling the native topsoil on the site for later use
@@ -1235,7 +1180,6 @@ activities have permanently or temporarily ceased on any portion of the site. Th
 
                                                                                          2025 CGP Fact Sheet
 
-
 2.       When the site is using vegetative stabilization and is located in an area of the state experiencing drought
          conditions (see Appendix A), vegetative stabilization measures shall be initiated as soon as practicable,
          when growing conditions are best for planting or seeding.
@@ -1285,7 +1229,6 @@ included in this section. By comparison, non-vegetative practices can be install
 certain deadline, because the establishment of non-vegetative practices is typically more straightforward in terms
 of their application or installation. The 14-calendar day deadline better recognizes potential conflicts such as site
 
-
                                                       Page 24 of 44
 
 ---
@@ -1293,7 +1236,6 @@ of their application or installation. The 14-calendar day deadline better recogn
 ## Page 25
 
                                                                                         2025 CGP Fact Sheet
-
 
 scheduling constraints or unexpected weather-related delays. The 14-calendar day deadline will be just as
 protective in most cases because operators will still be required to initialize stabilization immediately after the
@@ -1344,8 +1286,6 @@ generating activities that may result in pollutant discharges:
 - Washing of applicators and containers used for paint, concrete, or other materials.
 - Storage, handling, and disposal of construction materials, products, and wastes.
 
-
-
                                                       Page 25 of 44
 
 ---
@@ -1353,7 +1293,6 @@ generating activities that may result in pollutant discharges:
 ## Page 26
 
                                                                                        2025 CGP Fact Sheet
-
 
 - Fueling and maintenance of equipment or vehicles.
 
@@ -1412,7 +1351,6 @@ this requirement, the operator must:
 
                                                                                       2025 CGP Fact Sheet
 
-
 Fueling and Maintenance of Equipment or Vehicles. If the operator will conduct fueling and/or maintenance of
 equipment or vehicles at the site, an effective means must be provided to eliminate the discharge of spilled or
 leaked chemicals, including fuel, from the area where these activities will take place.
@@ -1462,7 +1400,6 @@ stormwater. The permit clarifies that the staging or storage of construction mat
 which are either not a source of contamination to stormwater or are designed to be exposed to stormwater, are
 not held to this requirement.
 
-
                                                     Page 27 of 44
 
 ---
@@ -1470,7 +1407,6 @@ not held to this requirement.
 ## Page 28
 
                                                                                         2025 CGP Fact Sheet
-
 
 For instance, materials such as bricks, blocks, pipeline, electrical equipment, structural steel, and utility poles can
 generally be stored outside making it unnecessary to provide secondary containment or equivalent control
@@ -1529,7 +1465,6 @@ improperly applied fertilizers:
 
                                                                                          2025 CGP Fact Sheet
 
-
 3.6      Controls for Allowable Non-Stormwater Discharges and Dewatering Activities
 This section clarifies that control measures are required for stormwater and non-stormwater discharges and is
 linked to Part 1.3.2 of the permit, “Allowable Non-Stormwater Discharges.” Operators are required to minimize the
@@ -1577,8 +1512,6 @@ ADEQ may also impose additional water quality-based limitations on a site-specif
 to obtain coverage under an individual permit, if information in the NOI, required reports, or from other sources
 indicates that discharges are not controlled as necessary to meet applicable surface water quality standards. This
 
-
-
                                                       Page 29 of 44
 
 ---
@@ -1586,7 +1519,6 @@ indicates that discharges are not controlled as necessary to meet applicable sur
 ## Page 30
 
                                                                                         2025 CGP Fact Sheet
-
 
 includes situations where additional controls are necessary to comply with a wasteload allocation in an U.S. EPA-
 approved or established TMDL.
@@ -1626,7 +1558,7 @@ installed to meet the requirements of the permit.
 Although inspectors are not required to be certified, ADEQ strongly recommends training in the knowledge and
 practices of erosion and sediment controls and conducting inspections. For the purposes of this permit, on the job
 training is an acceptable form of training. The U.S. EPA offers a Construction Inspection Training Course
-(https://www.epa.gov/npdes/construction-inspection-training-course) which consists of five modules and an
+(<https://www.epa.gov/npdes/construction-inspection-training-course>) which consists of five modules and an
 exam. While ADEQ does not require this course, it provides the basic skills to perform inspections and a general
 knowledge of stormwater permitting requirements.
 4.2      Inspection Schedule
@@ -1635,9 +1567,6 @@ of a rain gauge or weather station that is representative of the location is nec
 threshold that will trigger an inspection, the operator must be consistent to use the same source of rainfall data
 (I.e., a local weather station or rain gauge on site) throughout the life of the construction project.
 
-
-
-
                                                       Page 30 of 44
 
 ---
@@ -1645,7 +1574,6 @@ threshold that will trigger an inspection, the operator must be consistent to us
 ## Page 31
 
                                                                                          2025 CGP Fact Sheet
-
 
 If the project site is large, operators have the flexibility with the rain gauge location within the area of operational
 control for the permitted site. However, if relying on a local weather station to determine rainfall, the same station
@@ -1693,9 +1621,6 @@ Each of these represents situations of comparatively lower risk for discharges t
          freezing temperatures or rain on snow events) make discharges likely; at which time the operator must
          resume one of the routine inspection schedules.
 
-
-
-
                                                       Page 31 of 44
 
 ---
@@ -1703,7 +1628,6 @@ Each of these represents situations of comparatively lower risk for discharges t
 ## Page 32
 
                                                                                        2025 CGP Fact Sheet
-
 
 Inspection Schedule for Sites within 1/4 mile upstream of Impaired Waters or OAWs Operators must modify their
 inspection frequencies to once every seven (7) calendar days for that portion of any site that is located within 1/4
@@ -1751,9 +1675,6 @@ forms or drawings, as necessary.
 Signature Requirements. Each inspection report must be signed in accordance with Appendix B, Subsection 9 of
 the permit.
 
-
-
-
                                                      Page 32 of 44
 
 ---
@@ -1761,7 +1682,6 @@ the permit.
 ## Page 33
 
                                                                                       2025 CGP Fact Sheet
-
 
 Recordkeeping Requirements. All inspection reports must be kept at least 3 years from the date permit coverage
 expires or is terminated, and the reports must be accessible at the site to be available upon request by ADEQ or
@@ -1808,9 +1728,6 @@ The following are examples of routine maintenance and corrective actions:
         the bottom of one area, into an adjacent street and determines that the fencing material is not buried
         below the surface. This is a corrective action, as the silt fencing was not installed properly.
 
-
-
-
                                                     Page 33 of 44
 
 ---
@@ -1818,7 +1735,6 @@ The following are examples of routine maintenance and corrective actions:
 ## Page 34
 
                                                                                        2025 CGP Fact Sheet
-
 
 - Example 2: A roll-off dumpster is used for concrete washout on the site and during a routine inspection,
         the operator realizes that it is over half full, and arranges for it to be removed and replaced by the vendor.
@@ -1834,7 +1750,6 @@ The following are examples of routine maintenance and corrective actions:
         collect sediment from rain events while the rest of the site is being worked. While inspecting after a storm
         event, the operator realizes that the basin is close to full and arranges to have it cleaned out. This is
         routine maintenance.
-
 
 5.2     Corrective Action Deadlines
 The permit establishes a specific timeframe for completing corrective actions. Operators must install a new or
@@ -1869,7 +1784,6 @@ Report Schedule. Within seven (7) calendar days of discovering the occurrence of
 conditions, the operator must complete a report that documents progress made in completing corrective actions.
 This document should be filed with the SWPPP.
 
-
                                                     Page 34 of 44
 
 ---
@@ -1877,7 +1791,6 @@ This document should be filed with the SWPPP.
 ## Page 35
 
                                                                                       2025 CGP Fact Sheet
-
 
 Signature Requirements. Each inspection report must be signed in accordance with Appendix B, Subsection 9 of
 the permit. This provides documentation of compliance with the corrective action requirements in the permit.
@@ -1927,8 +1840,6 @@ that all other permittees implementing portions of the SWPPP impacted by any cha
 notified of such modifications in a timely manner and ensure that the SWPPP contains the appropriate information
 indicating who has operational control.
 
-
-
                                                      Page 35 of 44
 
 ---
@@ -1936,7 +1847,6 @@ indicating who has operational control.
 ## Page 36
 
                                                                                          2025 CGP Fact Sheet
-
 
 Operators with Control over Day-to-Day Activities. An operator that is responsible for the day-to-day operational
 control of the activities at a project site necessary to ensure compliance with the SWPPP must ensure the SWPPP
@@ -1986,7 +1896,6 @@ construction activities at the site, and the areas of the site over which each o
 this is to provide both staff members and ADEQ with a notice of any other persons that are responsible for specific
 areas of the construction site and other persons that are responsible for permit compliance.
 
-
                                                       Page 36 of 44
 
 ---
@@ -1994,7 +1903,6 @@ areas of the construction site and other persons that are responsible for permit
 ## Page 37
 
                                                                                             2025 CGP Fact Sheet
-
 
 Nature of Construction Activities. This section of the SWPPP is intended to provide general information about the
 construction project, which can be readily understood by an ADEQ inspector or other third party who may be
@@ -2045,7 +1953,6 @@ protected by the buffer requirements, stockpiled materials, and construction sup
 provide construction operators with a “big picture” understanding of the areas impacted by construction within
 their larger property area. This part of the site map should also assist permittees with selecting and designing the
 
-
                                                         Page 37 of 44
 
 ---
@@ -2053,7 +1960,6 @@ their larger property area. This part of the site map should also assist permitt
 ## Page 38
 
                                                                                       2025 CGP Fact Sheet
-
 
 stormwater control measures necessary to meet the various erosion and sediment, stabilization, and pollution
 prevention requirements.
@@ -2104,9 +2010,6 @@ such as fueling and maintenance operations, materials stored on-site, waste pile
 Documentation in the SWPPP of all non-stormwater discharges from the site provides operators with information
 that will help to minimize pollutants in the non-stormwater discharges and to ensure that only allowable non-
 
-
-
-
                                                     Page 38 of 44
 
 ---
@@ -2114,7 +2017,6 @@ that will help to minimize pollutants in the non-stormwater discharges and to en
 ## Page 39
 
                                                                                       2025 CGP Fact Sheet
-
 
 stormwater discharges occur. Allowable non-stormwater discharges are restricted to only those listed in Part 1.3.2
 of the permit.
@@ -2163,7 +2065,6 @@ The SWPPP must also be amended if inspections or investigations by site staff or
 determine that the SWPPP is ineffective in eliminating or significantly minimizing pollutants in storm water
 discharges from the construction site.
 
-
                                                     Page 39 of 44
 
 ---
@@ -2171,7 +2072,6 @@ discharges from the construction site.
 ## Page 40
 
                                                                                       2025 CGP Fact Sheet
-
 
 All necessary revisions to the SWPPP must be made within seven (7) calendar days following the inspection. If
 control measures need to be modified or if additional measures are necessary, implementation must be completed
@@ -2206,7 +2106,7 @@ Posting. The operator must post the authorization number(s) in a conspicuous loc
 the construction site and retain a copy of the authorization certificate in the SWPPP. For linear construction
 activities, the authorization number(s) must be posted near the active part of the construction site (e.g., where a
 pipeline project crosses a public road). The operator must post the following statement with the authorization
-number: “For stormwater complaints, please visit www.azdeq.gov.” Lettering must be 2” or greater.
+number: “For stormwater complaints, please visit <www.azdeq.gov.”> Lettering must be 2” or greater.
 Make the SWPPP Available. The SWPPP is critical to managing discharges from the project site. Accordingly, a
 current copy must be on-site whenever construction or support activities are actively underway. This will allow
 personnel the opportunity to reference the plan at any time to respond to changing site conditions, storm events,
@@ -2215,13 +2115,12 @@ and other situations that may arise. At the time of an on-site inspection by ADE
 SWPPP for review.
 Arizona’s Public Records laws (A.R.S Title 39, Chapters 1 and 2) allow access to an operator’s SWPPP. If a member
 of the public wishes to have access to portions of the SWPPP, a public records request must be made to ADEQ’s
-Record Center (https://azdeq.gov/records). ADEQ will contact the operator and the SWPPP must be provided to
+Record Center (<https://azdeq.gov/records>). ADEQ will contact the operator and the SWPPP must be provided to
 ADEQ within seven (7) calendar days of ADEQ’s request, or at an agreed upon time by the operator and ADEQ. The
 mechanism for providing ADEQ with a copy is at the discretion of the operator (i.e., electronic or hard copy). ADEQ
 will provide access to the SWPPP with the exception of any qualifying confidential information (as defined in A.R.S.
 § 49-205). The copy provided by the operator to ADEQ will remain with ADEQ. All photocopying expenses made
 from that copy are the responsibility of the person requesting the SWPPP.
-
 
                                                     Page 40 of 44
 
@@ -2231,7 +2130,6 @@ from that copy are the responsibility of the person requesting the SWPPP.
 
                                                                                          2025 CGP Fact Sheet
 
-
 For inactive/unstaffed sites, it is understood that SWPPPs are generally not kept at inactive and unstaffed sites.
 However, the SWPPP must still be kept up to date and be made available by the operator identified on the NOI
 when appropriate site inspections are conducted. Furthermore, the SWPPP must be locally available within the
@@ -2240,7 +2138,6 @@ ADEQ or other authority. SWPPPs and associated documents (i.e., inspections, cor
 kept in an electronic format on site, as long as there is available staff with the ability to view these documents, as
 necessary; and to provide the documents to ADEQ or other local authorities upon request. See previous paragraph,
 Make the SWPPP Available.
-
 
 7.0      Monitoring
 The provisions of Part 7 apply only to operators of construction sites with one or more outfalls within 1/4 mile
@@ -2282,8 +2179,6 @@ chlorine, oil, gasoline, pesticides, etc. Some of these pollutants may not be ad
 may be in the on-site soils and prone to increased discharge during site disturbances (in particular metals and
 pesticides). The operator must consider all pollutants that may be on-site. Of course, operators are not expected
 
-
-
                                                       Page 41 of 44
 
 ---
@@ -2291,7 +2186,6 @@ pesticides). The operator must consider all pollutants that may be on-site. Of c
 ## Page 42
 
                                                                                       2025 CGP Fact Sheet
-
 
 to implement control measures for any pollutants that are not in the site soils, non-stormwater discharges, or
 transported to the site during any construction activity.
@@ -2340,8 +2234,6 @@ results and determine impacts of stormwater runoff into impaired, not-attaining 
 8.0     Recordkeeping
 8.1      Records
 
-
-
                                                     Page 42 of 44
 
 ---
@@ -2350,12 +2242,10 @@ results and determine impacts of stormwater runoff into impaired, not-attaining 
 
                                                                                       2025 CGP Fact Sheet
 
-
 1.      Address for Submittal of All Forms and Reports. All documents required by this permit (NOIs, SWPPPs, NOTs,
         and DMRs) shall be submitted, in electronic format, in myDEQ.
         Any other written correspondence, such as the Corrective Action Form shall be signed and dated in accordance
         with Appendix B, Subsection 9 of this permit and submitted electronically to AZPDES@azdeq.gov.
-
 
 For correspondence that cannot be submitted via myDEQ or electronically via email, please send to ADEQ at the address
          below:
@@ -2368,7 +2258,6 @@ For correspondence that cannot be submitted via myDEQ or electronically via emai
         actions, inspection and other reports with the SWPPP for a period of at least three years from the date
         the NOT was submitted to ADEQ.
 
-
 9.0     Appendices
 A.      Definitions and Acronyms (Appendix A)
         Appendix A of the permit includes definitions of terms and a list of acronyms used throughout the
@@ -2376,7 +2265,6 @@ A.      Definitions and Acronyms (Appendix A)
 B.      Standard Permit Conditions (Appendix B)
         Appendix B includes the standard AZPDES permit conditions, which are consistent with 40 CFR 122.41.
         These standard permit conditions must be followed during all phases of construction.
-
 
 10.0    Applicable Forms
         All forms are briefly described below. Some forms are only available in the myDEQ Permitting Portal,
@@ -2397,9 +2285,6 @@ B.      Standard Permit Conditions (Appendix B)
         - Corrective Action Form: The Corrective Action form will be available on the ADEQ website, CGP page.
              Confirm submission requirements in Permit Part 5.2.
 
-
-
-
                                                     Page 43 of 44
 
 ---
@@ -2407,7 +2292,6 @@ B.      Standard Permit Conditions (Appendix B)
 ## Page 44
 
                                                                                         2025 CGP Fact Sheet
-
 
 11.0       The No Discharge Certification
 Pursuant to Arizona Revised Statutes (A.R.S.) 49-255.01L:
@@ -2435,8 +2319,5 @@ stormwater flows from leaving the site. Please note:
        - The NDC is given a 5-year term and will expire 5 years from the date issued, regardless of the status of the
            CGP term or reissuance.
        - Once the construction is completed, operators must cancel the NDC in myDEQ.
-
-
-
 
                                                       Page 44 of 44

@@ -127,27 +127,6 @@
           }
         }
       }
-    },
-    {
-      "includes": [
-        "apps/cli-tools/sharepoint-cli/src/swppp/swppp-labor/model-refresh-2026-02-06/**/*.ts",
-        "apps/cli-tools/sharepoint-cli/src/swppp/swppp-labor/recompute-model.ts",
-        "apps/workers/inspections-email-worker/sharepoint-cli/swppp/swppp-labor/model-refresh-2026-02-06/**/*.ts",
-        "apps/workers/inspections-email-worker/sharepoint-cli/swppp/swppp-labor/recompute-model.ts"
-      ],
-      "linter": {
-        "rules": {
-          "performance": {
-            "useTopLevelRegex": "off"
-          },
-          "suspicious": {
-            "noBitwiseOperators": "off"
-          },
-          "style": {
-            "noNestedTernary": "off"
-          }
-        }
-      }
     }
   ]
 }

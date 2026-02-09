@@ -199,6 +199,6 @@ export async function executeTool(
   const parsed = schema.parse(input);
 
   // Execute the tool and await the result
-  // biome-ignore lint/suspicious/noExplicitAny: Tool input types are validated by Zod
-  return await tool(parsed as any);
+  const execute = tool as (payload: unknown) => Promise<unknown>;
+  return await execute(parsed);
 }

@@ -1,5 +1,5 @@
 import { FileText, GripVertical, Layers, Ungroup } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/apps/web/frontend/components/ui/button";
 import {
   Tooltip,
@@ -20,28 +20,52 @@ export function FloatingPdfOptions({
 }: FloatingPdfOptionsProps) {
   const [position, setPosition] = useState({ x: 16, y: 16 });
   const [isDragging, setIsDragging] = useState(false);
+  const [pointerId, setPointerId] = useState<number | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
 
-  const handleMouseDown = (e: React.MouseEvent) => {
+  const handlePointerDown = (e: React.PointerEvent<HTMLButtonElement>) => {
+    e.preventDefault();
     setIsDragging(true);
+    setPointerId(e.pointerId);
     setDragOffset({
       x: e.clientX - position.x,
       y: e.clientY - position.y,
     });
+    e.currentTarget.setPointerCapture(e.pointerId);
   };
 
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (isDragging) {
+  useEffect(() => {
+    if (!isDragging || pointerId === null) {
+      return;
+    }
+
+    const handleWindowPointerMove = (e: PointerEvent) => {
+      if (e.pointerId !== pointerId) {
+        return;
+      }
       setPosition({
         x: e.clientX - dragOffset.x,
         y: e.clientY - dragOffset.y,
       });
-    }
-  };
+    };
+    const handleWindowPointerUp = (e: PointerEvent) => {
+      if (e.pointerId !== pointerId) {
+        return;
+      }
+      setIsDragging(false);
+      setPointerId(null);
+    };
 
-  const handleMouseUp = () => {
-    setIsDragging(false);
-  };
+    window.addEventListener("pointermove", handleWindowPointerMove);
+    window.addEventListener("pointerup", handleWindowPointerUp);
+    window.addEventListener("pointercancel", handleWindowPointerUp);
+
+    return () => {
+      window.removeEventListener("pointermove", handleWindowPointerMove);
+      window.removeEventListener("pointerup", handleWindowPointerUp);
+      window.removeEventListener("pointercancel", handleWindowPointerUp);
+    };
+  }, [dragOffset.x, dragOffset.y, isDragging, pointerId]);
 
   const toggleStyle = () => {
     onChange({
@@ -69,20 +93,18 @@ export function FloatingPdfOptions({
   const hasBackPage = options.includeBackPage ?? false;
 
   return (
-    // biome-ignore lint/a11y/noNoninteractiveElementInteractions: Draggable toolbar needs mouse events
     <div
       aria-label="PDF options"
       className="absolute z-50 rounded-lg border bg-background/95 shadow-lg backdrop-blur"
-      onMouseLeave={handleMouseUp}
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
       role="toolbar"
       style={{ left: position.x, top: position.y }}
     >
       {/* Drag handle */}
       <button
-        className="flex w-full cursor-move items-center justify-center border-b px-3 py-1.5"
-        onMouseDown={handleMouseDown}
+        aria-grabbed={isDragging}
+        aria-label="Drag PDF options toolbar"
+        className="flex w-full cursor-move touch-none items-center justify-center border-b px-3 py-1.5"
+        onPointerDown={handlePointerDown}
         type="button"
       >
         <GripVertical className="h-4 w-4 text-muted-foreground" />

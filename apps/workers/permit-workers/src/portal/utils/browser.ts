@@ -20,6 +20,56 @@ export interface BrowserOptions {
   headless?: boolean;
   operation: keyof typeof config.scripts;
   keepOpen?: boolean;
+  keepOpenTimeoutMs?: number;
+}
+
+const DEFAULT_KEEP_OPEN_TIMEOUT_MS = 15 * 60 * 1000;
+const MIN_KEEP_OPEN_TIMEOUT_MS = 30_000;
+
+function getKeepOpenTimeoutMs(timeoutMs?: number): number {
+  if (!(timeoutMs && Number.isFinite(timeoutMs))) {
+    return DEFAULT_KEEP_OPEN_TIMEOUT_MS;
+  }
+  return Math.max(MIN_KEEP_OPEN_TIMEOUT_MS, Math.trunc(timeoutMs));
+}
+
+function waitForManualClose(timeoutMs: number): Promise<"signal" | "timeout"> {
+  return new Promise((resolve) => {
+    const finish = (reason: "signal" | "timeout") => {
+      clearTimeout(timer);
+      process.off("SIGINT", onSignal);
+      process.off("SIGTERM", onSignal);
+      resolve(reason);
+    };
+
+    const onSignal = () => finish("signal");
+    const timer = setTimeout(() => finish("timeout"), timeoutMs);
+
+    process.once("SIGINT", onSignal);
+    process.once("SIGTERM", onSignal);
+  });
+}
+
+async function holdForManualReview(
+  operation: string,
+  timeoutMs: number,
+  reason?: string
+): Promise<void> {
+  const timeoutMinutes = (timeoutMs / 60_000).toFixed(1);
+  const prefix = `\n[${operation.toUpperCase()}]`;
+  if (reason) {
+    console.log(`${prefix} ${reason}`);
+  }
+  console.log(
+    `${prefix} Keeping browser open for manual review (Ctrl+C to close, auto-close in ${timeoutMinutes} min).`
+  );
+
+  const closeReason = await waitForManualClose(timeoutMs);
+  if (closeReason === "timeout") {
+    console.log(`${prefix} Manual-review timeout reached, closing browser.`);
+  } else {
+    console.log(`${prefix} Close signal received, closing browser.`);
+  }
 }
 
 /**
@@ -32,7 +82,8 @@ export async function withBrowser<
   options: BrowserOptions,
   fn: (instance: BrowserInstance) => Promise<T>
 ): Promise<T> {
-  const { operation, headless, keepOpen = false } = options;
+  const { operation, headless, keepOpen = false, keepOpenTimeoutMs } = options;
+  const manualReviewTimeoutMs = getKeepOpenTimeoutMs(keepOpenTimeoutMs);
   let instance: BrowserInstance | null = null;
 
   try {
@@ -44,9 +95,15 @@ export async function withBrowser<
     // 2. Login
     const loggedIn = await login(instance.page);
     if (!loggedIn) {
-      if (!keepOpen) {
-        await closeBrowser(instance);
+      if (keepOpen) {
+        await holdForManualReview(
+          operation,
+          manualReviewTimeoutMs,
+          "Login failed."
+        );
       }
+      await closeBrowser(instance);
+      instance = null;
       return {
         success: false,
         error: "Failed to login to portal",
@@ -58,19 +115,22 @@ export async function withBrowser<
 
     // 4. Handle cleanup or keeping open
     if (keepOpen) {
-      console.log(
-        `\n[${operation.toUpperCase()}] Operation complete, keeping browser open for manual review...`
-      );
-      // biome-ignore lint/suspicious/noEmptyBlockStatements: Intentionally never resolves
-      await new Promise(() => {});
-    } else {
-      await closeBrowser(instance);
+      await holdForManualReview(operation, manualReviewTimeoutMs);
     }
+    await closeBrowser(instance);
+    instance = null;
 
     return result;
   } catch (error) {
-    if (instance && !keepOpen) {
+    if (instance) {
       try {
+        if (keepOpen) {
+          await holdForManualReview(
+            operation,
+            manualReviewTimeoutMs,
+            "Operation failed."
+          );
+        }
         await closeBrowser(instance);
       } catch {
         // Ignore secondary errors during cleanup

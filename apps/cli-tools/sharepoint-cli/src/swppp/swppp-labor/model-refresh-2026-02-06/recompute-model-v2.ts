@@ -147,6 +147,16 @@ interface SegmentedSummary {
   adminCoefficients: FeatureMap;
 }
 
+const MAINTENANCE_ACTION_RE =
+  /(?:\bfix(?:ed)?\b|\brepair(?:ed)?\b|\bre-?adjust\b|\bstood up\b|\btipped over\b|\bwalked the fence line\b|\bcleanup\b|\bswept\b|\bzip tied\b|\bmissing or damaged\b|\breplace\/clean\b|\bfluffed\b)/i;
+const STICKER_RE = /\bsticker\b/i;
+const NARRATIVE_RE = /\bnarrative\b/i;
+const DELIVERY_RE = /\b(deliver(?:ed|y)?|pick(?:ed)? up)\b/i;
+const TRIP_CHARGE_RE = /\btrip charge\b/i;
+const MOBILIZATION_RE = /\bmobilization\b/i;
+const LCG32_MODULUS = 2_147_483_647;
+const LCG32_MULTIPLIER = 16_807;
+
 function cleanText(input: string): string {
   return input.toLowerCase().replace(/\s+/g, " ").trim();
 }
@@ -253,12 +263,7 @@ function extractLegacyFeatures(raw: string): Record<LegacyFeature, number> {
     /protect(?:ed)?\s*\(?\s*(\d[\d,]*(?:\.\d+)?)\s*\)?[^.;]{0,30}\binlets?\b/gi
   );
 
-  const maintenanceFlag =
-    /(?:\bfix(?:ed)?\b|\brepair(?:ed)?\b|\bre-?adjust\b|\bstood up\b|\btipped over\b|\bwalked the fence line\b|\bcleanup\b|\bswept\b|\bzip tied\b|\bmissing or damaged\b|\breplace\/clean\b|\bfluffed\b)/i.test(
-      text
-    )
-      ? 1
-      : 0;
+  const maintenanceFlag = MAINTENANCE_ACTION_RE.test(text) ? 1 : 0;
 
   return {
     install_panels: installPanels,
@@ -325,31 +330,31 @@ function extractExpandedFeatures(raw: string): Record<ExpandedFeature, number> {
     text,
     /(?:install(?:ed)?|replace(?:d)?)\s*\(?\s*(\d[\d,]*(?:\.\d+)?)\s*\)?[^.;]{0,80}\bstickers?\b/gi
   );
-  const stickersCount =
-    stickerQty > 0 ? stickerQty : /\bsticker\b/i.test(text) ? 1 : 0;
+  let stickersCount = stickerQty;
+  if (stickerQty <= 0 && STICKER_RE.test(text)) {
+    stickersCount = 1;
+  }
 
-  const narrativeCount = /\bnarrative\b/i.test(text) ? 1 : 0;
-  const deliveryFlag = /\b(deliver(?:ed|y)?|pick(?:ed)? up)\b/i.test(text)
-    ? 1
-    : 0;
+  const narrativeCount = NARRATIVE_RE.test(text) ? 1 : 0;
+  const deliveryFlag = DELIVERY_RE.test(text) ? 1 : 0;
 
   const tripChargeQty = sumGroupOne(
     text,
     /trip charge\s*\(?\s*(\d[\d,]*(?:\.\d+)?)\s*\)?/gi
   );
-  const tripChargeCount =
-    tripChargeQty > 0 ? tripChargeQty : /\btrip charge\b/i.test(text) ? 1 : 0;
+  let tripChargeCount = tripChargeQty;
+  if (tripChargeQty <= 0 && TRIP_CHARGE_RE.test(text)) {
+    tripChargeCount = 1;
+  }
 
   const mobilizationQty = sumGroupOne(
     text,
     /mobilization(?: charge)?\s*\(?\s*(\d[\d,]*(?:\.\d+)?)\s*\)?/gi
   );
-  const mobilizationCount =
-    mobilizationQty > 0
-      ? mobilizationQty
-      : /\bmobilization\b/i.test(text)
-        ? 1
-        : 0;
+  let mobilizationCount = mobilizationQty;
+  if (mobilizationQty <= 0 && MOBILIZATION_RE.test(text)) {
+    mobilizationCount = 1;
+  }
 
   return {
     ...legacy,
@@ -390,19 +395,20 @@ function isProductionSample(sample: Sample): boolean {
   return signal > 0;
 }
 
-function mulberry32(seed: number): () => number {
-  let s = seed >>> 0;
+function lcg32(seed: number): () => number {
+  let s = Math.trunc(Math.abs(seed)) % LCG32_MODULUS;
+  if (s === 0) {
+    s = 1;
+  }
   return () => {
-    s += 0x6d_2b_79_f5;
-    let t = Math.imul(s ^ (s >>> 15), 1 | s);
-    t ^= t + Math.imul(t ^ (t >>> 7), 61 | t);
-    return ((t ^ (t >>> 14)) >>> 0) / 4_294_967_296;
+    s = (s * LCG32_MULTIPLIER) % LCG32_MODULUS;
+    return s / LCG32_MODULUS;
   };
 }
 
 function shuffle<T>(items: T[], seed: number): T[] {
   const out = [...items];
-  const rand = mulberry32(seed);
+  const rand = lcg32(seed);
   for (let i = out.length - 1; i > 0; i--) {
     const j = Math.floor(rand() * (i + 1));
     const tmp = out[i];

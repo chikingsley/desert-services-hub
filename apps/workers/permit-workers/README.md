@@ -77,5 +77,25 @@ bun test
 bun run create
 ```
 
+### Page 4 Evaluator Benchmark (E2E)
+
+Page 4 state checks now use a Bun-built browser evaluator module injected into
+the Playwright page (no runtime `new Function` reconstruction).
+
+To benchmark cold vs warm calls during E2E:
+
+```bash
+PAGE4_STATE_BENCH=1 PAGE4_STATE_BENCH_ITERATIONS=20 bun test --max-concurrency 1 tests/e2e/create-fresh.test.ts
+```
+
+Logged metrics:
+
+- `scriptMs`: time waiting for bundled evaluator script (includes first build)
+- `injectMs`: time to inject evaluator into the page (`addInitScript` + `addScriptTag`)
+- `evalMs`: pure in-browser state evaluation time
+- `totalMs`: end-to-end `getPage4State()` call time
+
+The warm summary prints once per run with `min`, `median`, `p95`, and `avg`.
+
 ## 📝 License
 Private.

@@ -1108,8 +1108,7 @@ export async function navigateToPage5(
   page: Page,
   log?: (message: string) => void
 ): Promise<{ currentPage: number | null; atPage5: boolean }> {
-  // biome-ignore lint/suspicious/noEmptyBlockStatements: No-op default logger
-  const logFn = log ?? (() => {});
+  const logFn = log ?? (() => undefined);
 
   await sleep(SETTLE_MS);
   let currentPage = await getCurrentPage(page);

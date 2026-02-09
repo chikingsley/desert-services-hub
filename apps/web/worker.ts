@@ -28,6 +28,7 @@ import { htmlToText } from "@lib/html-to-text";
 import { isSpam } from "@lib/spam-filter";
 import { getItemRich } from "@monday/client";
 import { ESTIMATING_COLUMNS } from "@monday/types";
+import { z } from "zod";
 import { itemHasFiles, processItemFiles } from "@/apps/web/pipeline";
 import { processContractIntake } from "@/apps/workers/contract-intake/lib/intake";
 import type { DustPermitIntakePayload } from "@/apps/workers/dust-permit-intake/lib/intake";
@@ -62,6 +63,38 @@ const INTERNAL_DOMAINS = new Set([
 ]);
 
 const FWD_RE = /^(fw|fwd|forwarded):/i;
+const NON_EMPTY_STRING_SCHEMA = z.string().trim().min(1);
+const EMAIL_NOTIFICATION_PAYLOAD_SCHEMA = z.object({
+  messageId: NON_EMPTY_STRING_SCHEMA,
+  mailboxEmail: NON_EMPTY_STRING_SCHEMA,
+  changeType: NON_EMPTY_STRING_SCHEMA,
+});
+const CONTRACT_INTAKE_PAYLOAD_SCHEMA = z.object({
+  emailId: z.number().int().positive(),
+  subject: NON_EMPTY_STRING_SCHEMA,
+  pdfPaths: z.array(NON_EMPTY_STRING_SCHEMA),
+});
+const DUST_PERMIT_INTAKE_PAYLOAD_SCHEMA: z.ZodType<DustPermitIntakePayload> =
+  z.object({
+    originalSubject: NON_EMPTY_STRING_SCHEMA,
+    originalFrom: NON_EMPTY_STRING_SCHEMA,
+    bodyText: z.string(),
+    attachmentPaths: z.array(NON_EMPTY_STRING_SCHEMA),
+    forwarderEmail: NON_EMPTY_STRING_SCHEMA,
+  });
+const PAYMENT_PAYLOAD_SCHEMA: z.ZodType<PaymentJobPayload> = z.object({
+  emailId: z.number().int().positive(),
+  messageId: NON_EMPTY_STRING_SCHEMA,
+  mailboxEmail: NON_EMPTY_STRING_SCHEMA,
+  bodyText: z.string(),
+});
+const ISSUED_PAYLOAD_SCHEMA: z.ZodType<IssuedJobPayload> = z.object({
+  emailId: z.number().int().positive(),
+  messageId: NON_EMPTY_STRING_SCHEMA,
+  mailboxEmail: NON_EMPTY_STRING_SCHEMA,
+  bodyText: z.string(),
+  subject: NON_EMPTY_STRING_SCHEMA,
+});
 
 // Lazy Graph client for email notification processing
 let _graphClient: GraphEmailClient | null = null;
@@ -135,6 +168,33 @@ async function dequeue(): Promise<WebhookJob | null> {
   }
 
   return { ...job, status: "processing", attempts: job.attempts + 1 };
+}
+
+function parseJobPayload<T>(job: WebhookJob, schema: z.ZodType<T>): T {
+  let rawPayload: unknown;
+  try {
+    rawPayload = JSON.parse(job.payload);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(
+      `Invalid JSON payload for ${job.job_type} (job #${job.id}): ${message}`
+    );
+  }
+
+  const parsed = schema.safeParse(rawPayload);
+  if (!parsed.success) {
+    const details = parsed.error.issues
+      .map((issue) => {
+        const path = issue.path.length > 0 ? issue.path.join(".") : "(root)";
+        return `${path}: ${issue.message}`;
+      })
+      .join("; ");
+    throw new Error(
+      `Invalid payload for ${job.job_type} (job #${job.id}): ${details}`
+    );
+  }
+
+  return parsed.data;
 }
 
 // ============================================================================
@@ -475,41 +535,40 @@ async function processNextJob(): Promise<void> {
       }
 
       case "email_notification": {
-        const { messageId, mailboxEmail, changeType } = JSON.parse(
-          job.payload
-        ) as {
-          messageId: string;
-          mailboxEmail: string;
-          changeType: string;
-        };
+        const { messageId, mailboxEmail, changeType } = parseJobPayload(
+          job,
+          EMAIL_NOTIFICATION_PAYLOAD_SCHEMA
+        );
         await processEmailNotification(messageId, mailboxEmail, changeType);
         break;
       }
 
       case "contract_intake": {
-        const { emailId, subject, pdfPaths } = JSON.parse(job.payload) as {
-          emailId: number;
-          subject: string;
-          pdfPaths: string[];
-        };
+        const { emailId, subject, pdfPaths } = parseJobPayload(
+          job,
+          CONTRACT_INTAKE_PAYLOAD_SCHEMA
+        );
         await processContractIntake(emailId, subject, pdfPaths);
         break;
       }
 
       case "dust_permit_intake": {
-        const dustPayload = JSON.parse(job.payload) as DustPermitIntakePayload;
+        const dustPayload = parseJobPayload(
+          job,
+          DUST_PERMIT_INTAKE_PAYLOAD_SCHEMA
+        );
         await processDustPermitIntake(dustPayload);
         break;
       }
 
       case "dust_permit_payment": {
-        const paymentPayload = JSON.parse(job.payload) as PaymentJobPayload;
+        const paymentPayload = parseJobPayload(job, PAYMENT_PAYLOAD_SCHEMA);
         await handlePaymentEmail(paymentPayload);
         break;
       }
 
       case "dust_permit_issued_email": {
-        const issuedPayload = JSON.parse(job.payload) as IssuedJobPayload;
+        const issuedPayload = parseJobPayload(job, ISSUED_PAYLOAD_SCHEMA);
         await handleIssuedEmail(issuedPayload);
         break;
       }

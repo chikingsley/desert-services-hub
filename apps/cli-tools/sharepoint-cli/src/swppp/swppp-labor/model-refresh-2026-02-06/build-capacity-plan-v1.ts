@@ -194,6 +194,27 @@ interface DailySummary {
   overload: boolean;
 }
 
+const MAINTENANCE_ACTION_RE =
+  /(?:\bfix(?:ed)?\b|\brepair(?:ed)?\b|\bre-?adjust\b|\bstood up\b|\btipped over\b|\bwalked the fence line\b|\bcleanup\b|\bswept\b|\bzip tied\b|\bmissing or damaged\b|\breplace\/clean\b|\bfluffed\b)/i;
+const STICKER_RE = /\bsticker\b/i;
+const NARRATIVE_RE = /\bnarrative\b/i;
+const DELIVERY_RE = /\b(deliver(?:ed|y)?|pick(?:ed)? up)\b/i;
+const TRIP_CHARGE_RE = /\btrip charge\b/i;
+const MOBILIZATION_RE = /\bmobilization\b/i;
+const PHOENIX_CORE_RE =
+  /(tempe|phoenix|mesa|scottsdale|chandler|gilbert|paradise valley)/i;
+const PHOENIX_OUTER_RE =
+  /(glendale|peoria|surprise|goodyear|avondale|buckeye|litchfield|queen creek|san tan|apache junction|maricopa|casa grande|sun city|el mirage|tolleson)/i;
+const TUCSON_REGION_RE = /(tucson|marana|oro valley|sahuarita|vail)/i;
+const OTHER_AZ_RE =
+  /(yuma|flagstaff|prescott|sedona|payson|show low|kingman|winslow)/i;
+const WATER_SETUP_RE = /(backflow|water ramp|hydrant|meter|certify)/i;
+const RISK_INSPECTION_RE = /\binspections?\b/;
+const RISK_RESERVES_RE = /\breserves?\b/;
+const RISK_SWPPP_PLAN_RE = /\bswppp plan\b/;
+const RISK_CONTINUE_RE = /\bcontinue\b/;
+const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
 function cleanText(input: string): string {
   return input.toLowerCase().replace(/\s+/g, " ").trim();
 }
@@ -282,12 +303,7 @@ function extractLegacyFeatures(raw: string): Record<LegacyFeature, number> {
     /protect(?:ed)?\s*\(?\s*(\d[\d,]*(?:\.\d+)?)\s*\)?[^.;]{0,30}\binlets?\b/gi
   );
 
-  const maintenanceFlag =
-    /(?:\bfix(?:ed)?\b|\brepair(?:ed)?\b|\bre-?adjust\b|\bstood up\b|\btipped over\b|\bwalked the fence line\b|\bcleanup\b|\bswept\b|\bzip tied\b|\bmissing or damaged\b|\breplace\/clean\b|\bfluffed\b)/i.test(
-      text
-    )
-      ? 1
-      : 0;
+  const maintenanceFlag = MAINTENANCE_ACTION_RE.test(text) ? 1 : 0;
 
   return {
     install_panels: installPanels,
@@ -354,31 +370,31 @@ function extractExpandedFeatures(raw: string): Record<ExpandedFeature, number> {
     text,
     /(?:install(?:ed)?|replace(?:d)?)\s*\(?\s*(\d[\d,]*(?:\.\d+)?)\s*\)?[^.;]{0,80}\bstickers?\b/gi
   );
-  const stickersCount =
-    stickerQty > 0 ? stickerQty : /\bsticker\b/i.test(text) ? 1 : 0;
+  let stickersCount = stickerQty;
+  if (stickerQty <= 0 && STICKER_RE.test(text)) {
+    stickersCount = 1;
+  }
 
-  const narrativeCount = /\bnarrative\b/i.test(text) ? 1 : 0;
-  const deliveryFlag = /\b(deliver(?:ed|y)?|pick(?:ed)? up)\b/i.test(text)
-    ? 1
-    : 0;
+  const narrativeCount = NARRATIVE_RE.test(text) ? 1 : 0;
+  const deliveryFlag = DELIVERY_RE.test(text) ? 1 : 0;
 
   const tripChargeQty = sumGroupOne(
     text,
     /trip charge\s*\(?\s*(\d[\d,]*(?:\.\d+)?)\s*\)?/gi
   );
-  const tripChargeCount =
-    tripChargeQty > 0 ? tripChargeQty : /\btrip charge\b/i.test(text) ? 1 : 0;
+  let tripChargeCount = tripChargeQty;
+  if (tripChargeQty <= 0 && TRIP_CHARGE_RE.test(text)) {
+    tripChargeCount = 1;
+  }
 
   const mobilizationQty = sumGroupOne(
     text,
     /mobilization(?: charge)?\s*\(?\s*(\d[\d,]*(?:\.\d+)?)\s*\)?/gi
   );
-  const mobilizationCount =
-    mobilizationQty > 0
-      ? mobilizationQty
-      : /\bmobilization\b/i.test(text)
-        ? 1
-        : 0;
+  let mobilizationCount = mobilizationQty;
+  if (mobilizationQty <= 0 && MOBILIZATION_RE.test(text)) {
+    mobilizationCount = 1;
+  }
 
   return {
     ...legacy,
@@ -473,28 +489,16 @@ function getTravelBand(address: string): TravelBand {
     return "unknown";
   }
 
-  if (
-    /(tempe|phoenix|mesa|scottsdale|chandler|gilbert|paradise valley)/i.test(
-      text
-    )
-  ) {
+  if (PHOENIX_CORE_RE.test(text)) {
     return "phoenix_core";
   }
-  if (
-    /(glendale|peoria|surprise|goodyear|avondale|buckeye|litchfield|queen creek|san tan|apache junction|maricopa|casa grande|sun city|el mirage|tolleson)/i.test(
-      text
-    )
-  ) {
+  if (PHOENIX_OUTER_RE.test(text)) {
     return "phoenix_outer";
   }
-  if (/(tucson|marana|oro valley|sahuarita|vail)/i.test(text)) {
+  if (TUCSON_REGION_RE.test(text)) {
     return "tucson_region";
   }
-  if (
-    /(yuma|flagstaff|prescott|sedona|payson|show low|kingman|winslow)/i.test(
-      text
-    )
-  ) {
+  if (OTHER_AZ_RE.test(text)) {
     return "other_az";
   }
   return "unknown";
@@ -553,7 +557,7 @@ function getSpecialistRoles(
     roles.add("rock_delivery_coordination");
   }
 
-  if (/(backflow|water ramp|hydrant|meter|certify)/i.test(normalized)) {
+  if (WATER_SETUP_RE.test(normalized)) {
     roles.add("water_setup_tech");
   }
 
@@ -564,16 +568,16 @@ function getRiskFlags(text: string): string[] {
   const normalized = cleanText(text);
   const flags: string[] = [];
 
-  if (/\binspections?\b/.test(normalized)) {
+  if (RISK_INSPECTION_RE.test(normalized)) {
     flags.push("inspection_count_unmodeled");
   }
-  if (/\breserves?\b/.test(normalized)) {
+  if (RISK_RESERVES_RE.test(normalized)) {
     flags.push("reserves_unmodeled");
   }
-  if (/\bswppp plan\b/.test(normalized)) {
+  if (RISK_SWPPP_PLAN_RE.test(normalized)) {
     flags.push("plan_task_unmodeled");
   }
-  if (/\bcontinue\b/.test(normalized)) {
+  if (RISK_CONTINUE_RE.test(normalized)) {
     flags.push("continued_scope_uncertain");
   }
   return flags;
@@ -591,7 +595,7 @@ function toIsoDate(raw: string | null): string | null {
   if (text.length === 0) {
     return null;
   }
-  if (/^\d{4}-\d{2}-\d{2}$/.test(text)) {
+  if (ISO_DATE_RE.test(text)) {
     return text;
   }
   const d = new Date(text);

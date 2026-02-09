@@ -34,6 +34,14 @@ const FEATURE_NAMES: FeatureName[] = [
 
 const DB_PATH = join(import.meta.dir, "../../../../swppp/swppp-master.db");
 const OUTPUT_DIR = join(import.meta.dir, "model-refresh-2026-02-06");
+const MAINTENANCE_ACTION_RE =
+  /(?:\bfix(?:ed)?\b|\brepair(?:ed)?\b|\bre-?adjust\b|\bstood up\b|\btipped over\b|\bwalked the fence line\b|\bcleanup\b|\bswept\b|\bzip tied\b|\bmissing or damaged\b|\breplace\/clean\b|\bfluffed\b)/i;
+const CORE_ACTIVITY_EXCLUSION_RE =
+  /(?:\bnarrative\b|\bdelivery\b|\bdeliver(?:ed)?\b|\bspill kit\b|\bfire access sign\b|\bdust sign\b|\bswppp sign\b|\bpermit\b|\binspection(?:s)?\b|\btrip charge\b|\bmobilization\b|\bwater truck\b|\bgorilla snot\b|\bbackflow\b|\bgrate\b|\btank\b|\bpump\b|\blandfill\b|\btrash\b|\bsweep(?:ing|t)?\b|\bpipe\b|\bhydrant\b|\bmeter\b)/i;
+const STRICT_PRODUCTION_EXCLUSION_RE =
+  /(?:\bnarrative\b|\bdelivery\b|\bdeliver(?:ed)?\b|\bspill kit\b|\bfire access sign\b|\bdust sign\b|\bswppp sign\b|\bpermit\b|\binspection(?:s)?\b|\btrip charge\b|\bmobilization\b|\bwater truck\b|\bgorilla snot\b|\bbackflow\b|\bgrate\b|\btank\b|\bpump\b|\blandfill\b|\btrash\b|\bsweep(?:ing|t)?\b|\bpipe\b|\bhydrant\b|\bmeter\b|\bprivacy screening\b|\bscreening\b|\bsilt fence\b|\bwire backed\b|\brock entrance\b)/i;
+const LCG32_MODULUS = 2_147_483_647;
+const LCG32_MULTIPLIER = 16_807;
 
 const CURRENT_RATES = {
   install_panels: 12.7,
@@ -191,12 +199,7 @@ function extractFeatures(workCompleted: string): FeatureVector {
     /protect(?:ed)?\s*\(?\s*(\d[\d,]*(?:\.\d+)?)\s*\)?[^.;]{0,30}\binlets?\b/gi
   );
 
-  const maintenanceFlag =
-    /(?:\bfix(?:ed)?\b|\brepair(?:ed)?\b|\bre-?adjust\b|\bstood up\b|\btipped over\b|\bwalked the fence line\b|\bcleanup\b|\bswept\b|\bzip tied\b|\bmissing or damaged\b|\breplace\/clean\b|\bfluffed\b)/i.test(
-      text
-    )
-      ? 1
-      : 0;
+  const maintenanceFlag = MAINTENANCE_ACTION_RE.test(text) ? 1 : 0;
 
   return {
     install_panels: installPanels,
@@ -225,9 +228,7 @@ function featureSignal(features: FeatureVector): number {
 function isCoreActivityText(rawText: string): boolean {
   const text = cleanText(rawText);
   // Exclude non-production or mixed admin/service rows that inflate intercepts.
-  return !/(?:\bnarrative\b|\bdelivery\b|\bdeliver(?:ed)?\b|\bspill kit\b|\bfire access sign\b|\bdust sign\b|\bswppp sign\b|\bpermit\b|\binspection(?:s)?\b|\btrip charge\b|\bmobilization\b|\bwater truck\b|\bgorilla snot\b|\bbackflow\b|\bgrate\b|\btank\b|\bpump\b|\blandfill\b|\btrash\b|\bsweep(?:ing|t)?\b|\bpipe\b|\bhydrant\b|\bmeter\b)/i.test(
-    text
-  );
+  return !CORE_ACTIVITY_EXCLUSION_RE.test(text);
 }
 
 function isStrictProductionSample(sample: Sample): boolean {
@@ -245,24 +246,23 @@ function isStrictProductionSample(sample: Sample): boolean {
   }
 
   // Keep rows focused on panel/sock/inlet operations.
-  return !/(?:\bnarrative\b|\bdelivery\b|\bdeliver(?:ed)?\b|\bspill kit\b|\bfire access sign\b|\bdust sign\b|\bswppp sign\b|\bpermit\b|\binspection(?:s)?\b|\btrip charge\b|\bmobilization\b|\bwater truck\b|\bgorilla snot\b|\bbackflow\b|\bgrate\b|\btank\b|\bpump\b|\blandfill\b|\btrash\b|\bsweep(?:ing|t)?\b|\bpipe\b|\bhydrant\b|\bmeter\b|\bprivacy screening\b|\bscreening\b|\bsilt fence\b|\bwire backed\b|\brock entrance\b)/i.test(
-    text
-  );
+  return !STRICT_PRODUCTION_EXCLUSION_RE.test(text);
 }
 
-function mulberry32(seed: number): () => number {
-  let s = seed >>> 0;
+function lcg32(seed: number): () => number {
+  let s = Math.trunc(Math.abs(seed)) % LCG32_MODULUS;
+  if (s === 0) {
+    s = 1;
+  }
   return () => {
-    s += 0x6d_2b_79_f5;
-    let t = Math.imul(s ^ (s >>> 15), 1 | s);
-    t ^= t + Math.imul(t ^ (t >>> 7), 61 | t);
-    return ((t ^ (t >>> 14)) >>> 0) / 4_294_967_296;
+    s = (s * LCG32_MULTIPLIER) % LCG32_MODULUS;
+    return s / LCG32_MODULUS;
   };
 }
 
 function shuffleDeterministic<T>(items: T[], seed = 42): T[] {
   const out = [...items];
-  const rand = mulberry32(seed);
+  const rand = lcg32(seed);
   for (let i = out.length - 1; i > 0; i--) {
     const j = Math.floor(rand() * (i + 1));
     const tmp = out[i];

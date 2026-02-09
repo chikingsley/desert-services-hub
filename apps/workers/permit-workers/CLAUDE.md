@@ -56,6 +56,16 @@ Default to using Bun instead of Node.js.
 
 Use `bun test` to run tests.
 
+### Page 4 State Evaluator (E2E)
+
+- `tests/e2e/utils/page4-state/index.ts` uses a Bun-built browser evaluator module.
+- Runtime `new Function` is intentionally not used.
+- Bench logging is opt-in:
+  - `PAGE4_STATE_BENCH=1`
+  - `PAGE4_STATE_BENCH_ITERATIONS=<n>` (default `8`)
+- Example:
+  - `PAGE4_STATE_BENCH=1 PAGE4_STATE_BENCH_ITERATIONS=20 bun test --max-concurrency 1 tests/e2e/create-fresh.test.ts`
+
 ### Test Principles
 
 - **Tests verify, they don't fix.** Tests should only check behavior, never retry or work around failures. If something fails, the test fails - no `page.reload()` and retry, no silent early returns, no "helping the test pass."

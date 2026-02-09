@@ -9,6 +9,7 @@
  *   bun apps/workers/contract-intake/cli/run.ts --once   # process one job and exit
  */
 import { db } from "@lib/db/hub";
+import { z } from "zod";
 import { processContractIntake } from "@/apps/workers/contract-intake/lib/intake";
 
 const POLL_INTERVAL_MS = 10_000; // 10s — LLM processing is slow anyway
@@ -40,6 +41,43 @@ const failJob = db.prepare(
   "UPDATE webhook_jobs SET status = 'failed', error = ? WHERE id = ?"
 );
 
+const CONTRACT_INTAKE_PAYLOAD_SCHEMA = z.object({
+  emailId: z.number().int().positive(),
+  subject: z.string().trim().min(1),
+  pdfPaths: z.array(z.string().trim().min(1)),
+});
+
+function parseContractIntakePayload(job: WebhookJob): {
+  emailId: number;
+  subject: string;
+  pdfPaths: string[];
+} {
+  let rawPayload: unknown;
+  try {
+    rawPayload = JSON.parse(job.payload);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(
+      `Invalid JSON payload for contract_intake job #${job.id}: ${message}`
+    );
+  }
+
+  const parsed = CONTRACT_INTAKE_PAYLOAD_SCHEMA.safeParse(rawPayload);
+  if (!parsed.success) {
+    const details = parsed.error.issues
+      .map((issue) => {
+        const path = issue.path.length > 0 ? issue.path.join(".") : "(root)";
+        return `${path}: ${issue.message}`;
+      })
+      .join("; ");
+    throw new Error(
+      `Invalid payload for contract_intake job #${job.id}: ${details}`
+    );
+  }
+
+  return parsed.data;
+}
+
 async function processNext(): Promise<boolean> {
   const job = await selectNextJob.get();
   if (!job) {
@@ -54,11 +92,7 @@ async function processNext(): Promise<boolean> {
   console.log(`[contract-intake] Processing job #${job.id}`);
 
   try {
-    const { emailId, subject, pdfPaths } = JSON.parse(job.payload) as {
-      emailId: number;
-      subject: string;
-      pdfPaths: string[];
-    };
+    const { emailId, subject, pdfPaths } = parseContractIntakePayload(job);
 
     await processContractIntake(emailId, subject, pdfPaths);
     await completeJob.run(job.id);

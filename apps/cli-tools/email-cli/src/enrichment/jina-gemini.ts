@@ -14,8 +14,8 @@
  *   const result = await enrichProvider("DX", "roll-off dumpster");
  */
 
+import { read, searchJson } from "@email/services/jina/client";
 import { GoogleGenAI } from "@google/genai";
-import { read, searchJson } from "@/services/jina/client";
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 

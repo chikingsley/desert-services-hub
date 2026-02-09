@@ -399,12 +399,12 @@ export async function cleanCompany(
       website: params.website ? cleanWebsiteUrl(params.website) : undefined,
       profile: params.profile,
     });
+    type CleanerRequest = Parameters<typeof client.company.cleaner>[0];
 
     // Call PDL Company Cleaner API
     // Note: The SDK accepts any combination of name/website/profile
     const response = await client.company.cleaner(
-      // biome-ignore lint/suspicious/noExplicitAny: PDL SDK has complex union types that require any
-      cleanerParams as unknown as any
+      cleanerParams as CleanerRequest
     );
 
     const data = response as unknown as {

@@ -7,8 +7,14 @@
  */
 
 import { z } from "zod";
-import { runSync, type SyncResult } from "@/db/sync/service";
+import {
+  type CompanySyncResult,
+  runCompanySync,
+  runSync,
+  type SyncResult,
+} from "@/db/sync/service";
 
+export type { CompanySyncResult, SyncResult } from "@/db/sync/service";
 export { syncFromXls } from "@/db/sync/service";
 
 /**
@@ -23,4 +29,10 @@ export type SyncInput = z.infer<typeof syncSchema>;
  */
 export async function syncPermits(input: SyncInput): Promise<SyncResult> {
   return await runSync(input);
+}
+
+export async function syncCompanyPermits(
+  input: SyncInput
+): Promise<CompanySyncResult> {
+  return await runCompanySync(input);
 }

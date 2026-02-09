@@ -15,10 +15,16 @@ import { buildFormData, type DeepPartial, type FormData } from "@/form-data";
 import { closeSchema } from "@/handlers/close";
 import { createSchema } from "@/handlers/create";
 import { renewSchema } from "@/handlers/renew";
+import {
+  deleteAllDraftPermitRecords,
+  deletePermitRecord,
+  markPermitClosedRecord,
+  persistDraftPermitRecord,
+} from "@/lib/permit-records";
 import type { Permit as DashboardPermit } from "@/lib/types";
 import { closePermit } from "@/portal/close";
 import { createApplicationFull, renewPermitFull } from "@/portal/create";
-import { deleteByApplicationId, deleteSingleDraft } from "@/portal/delete";
+import { deleteAllDrafts, deleteByApplicationId } from "@/portal/delete";
 import {
   getOrCreateBrowserSession,
   getSessionPageAndContext,
@@ -202,6 +208,16 @@ export async function handleCreatePermit(body: unknown): Promise<Response> {
       return jsonError(result.error || "Create failed", 500);
     }
 
+    if (result.applicationId) {
+      await persistDraftPermitRecord({
+        applicationId: result.applicationId,
+        flow,
+        sourcePermitId: copyFromApp ?? null,
+        formData,
+        companyName,
+      });
+    }
+
     return jsonSuccess({
       applicationId: result.applicationId,
       flow,
@@ -250,6 +266,19 @@ export async function handleRenewPermit(
       parsed.data.companyName
     );
 
+    if (!result.success) {
+      return jsonError(result.error || "Renew failed", 500);
+    }
+
+    if (result.applicationId) {
+      await persistDraftPermitRecord({
+        applicationId: result.applicationId,
+        flow: "renew",
+        sourcePermitId: id,
+        companyName: parsed.data.companyName,
+      });
+    }
+
     return jsonSuccess(result);
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : String(error);
@@ -287,6 +316,12 @@ export async function handleClosePermit(
       id,
       parsed.data.reason
     );
+
+    if (!result.success) {
+      return jsonError(result.error || "Close failed", 500);
+    }
+
+    await markPermitClosedRecord(id);
 
     return jsonSuccess(result);
   } catch (error) {
@@ -365,6 +400,14 @@ export async function handleRevisePermit(
       return jsonError(result.error || "Revision failed", 500);
     }
 
+    if (result.applicationId) {
+      await persistDraftPermitRecord({
+        applicationId: result.applicationId,
+        flow: "revise",
+        sourcePermitId: id,
+      });
+    }
+
     return jsonSuccess({
       applicationId: result.applicationId,
       permitId: id,
@@ -395,6 +438,7 @@ export async function handleDeletePermit(id: string): Promise<Response> {
     const deleted = await deleteByApplicationId(page, context, id);
 
     if (deleted) {
+      await deletePermitRecord(id);
       log(`   ✓ Delete completed for ${id}`);
       return jsonSuccess({ message: `Permit ${id} deleted successfully` });
     }
@@ -421,17 +465,17 @@ export async function handleDeleteAllDrafts(): Promise<Response> {
     }
 
     const { page, context } = sessionResult.page;
-    let deletedCount = 0;
-
-    while (await deleteSingleDraft(page, context)) {
-      deletedCount++;
-      log(`   ✓ Deleted draft ${deletedCount}`);
+    const success = await deleteAllDrafts(page, context);
+    if (!success) {
+      return jsonError("Delete all drafts failed", 500);
     }
 
-    log(`   ✓ Deleted ${deletedCount} total drafts`);
+    const deletedDbCount = await deleteAllDraftPermitRecords();
+    log("   ✓ Deleted all portal drafts");
     return jsonSuccess({
-      message: `Deleted ${deletedCount} drafts`,
-      deletedCount,
+      message: "Deleted all drafts",
+      deletedAll: true,
+      deletedDbCount,
     });
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : String(error);

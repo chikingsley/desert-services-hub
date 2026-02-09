@@ -202,6 +202,7 @@ export type PermitStatus =
 export interface Permit {
   id: string;
   projectName: string | null;
+  facilityId: string | null;
   accountId: number | null;
   projectId: number | null;
   companyName: string | null;
@@ -348,6 +349,7 @@ export interface UpsertEstimateData {
 export interface UpsertPermitData {
   id: string;
   projectName?: string | null;
+  facilityId?: string | null;
   accountId?: number | null;
   projectId?: number | null;
   companyName?: string | null;

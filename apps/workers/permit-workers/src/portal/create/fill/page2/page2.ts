@@ -30,6 +30,8 @@ import {
   zoomToPolygonExtent,
 } from "./map";
 
+const LOCATION_SELECT_RADIO_ID_RE = /locations:(\d+):selectRadio/;
+
 // ============================================================================
 // Location Table: Parse & Select by Parcel
 // ============================================================================
@@ -44,6 +46,33 @@ interface LocationRow {
   parcel: string;
   latitude: string;
   longitude: string;
+}
+
+function pickFallbackLocationRow(
+  rows: LocationRow[],
+  targetParcel: string
+): LocationRow | null {
+  if (rows.length === 0) {
+    return null;
+  }
+
+  const targetPrefix = targetParcel
+    .split("-")
+    .slice(0, 2)
+    .join("-")
+    .trim()
+    .toLowerCase();
+
+  const prefixMatches = targetPrefix
+    ? rows.filter((row) =>
+        row.parcel.trim().toLowerCase().startsWith(targetPrefix)
+      )
+    : [];
+
+  const candidates = prefixMatches.length > 0 ? prefixMatches : rows;
+  const withAddress =
+    candidates.find((row) => row.address.trim().length > 0) ?? candidates[0];
+  return withAddress ?? null;
 }
 
 /**
@@ -88,7 +117,9 @@ async function waitForLocationsTable(
  * Columns: Select | Address | City | County | State | Zip | Parcel | Lat | Lng | MCR#
  */
 async function parseLocationsTable(page: Page): Promise<LocationRow[]> {
-  return await page.evaluate(() => {
+  return await page.evaluate((selectRadioReSource) => {
+    const selectRadioRe = new RegExp(selectRadioReSource);
+
     const rows: {
       index: number;
       radioSelector: string;
@@ -105,8 +136,10 @@ async function parseLocationsTable(page: Page): Promise<LocationRow[]> {
     );
 
     for (const radio of radios) {
-      const match = radio.id.match(/locations:(\d+):selectRadio/);
-      if (!match) continue;
+      const match = radio.id.match(selectRadioRe);
+      if (!match) {
+        continue;
+      }
       const index = Number.parseInt(match[1], 10);
 
       // Walk up to find the data row TR (the one with multiple TD children)
@@ -120,7 +153,9 @@ async function parseLocationsTable(page: Page): Promise<LocationRow[]> {
         }
       }
 
-      if (!dataRow) continue;
+      if (!dataRow) {
+        continue;
+      }
 
       // Extract text from each direct TD child
       const cells = dataRow.querySelectorAll(":scope > td");
@@ -143,7 +178,7 @@ async function parseLocationsTable(page: Page): Promise<LocationRow[]> {
     }
 
     return rows;
-  });
+  }, LOCATION_SELECT_RADIO_ID_RE.source);
 }
 
 /**
@@ -197,9 +232,7 @@ export async function selectLocationByParcel(
 
   // Find matching parcel (normalize both sides: trim, case-insensitive)
   const normalized = targetParcel.trim().toLowerCase();
-  const match = rows.find(
-    (r) => r.parcel.trim().toLowerCase() === normalized
-  );
+  const match = rows.find((r) => r.parcel.trim().toLowerCase() === normalized);
 
   if (!match) {
     return {
@@ -610,12 +643,21 @@ export async function fillPage2WithMapData(
       for (const row of result.allRows) {
         console.log(`    [${row.index}] ${row.parcel} - ${row.address}`);
       }
-      await page
-        .screenshot({
-          path: "tests/e2e/screenshots/DEBUG-page2-parcel-mismatch.png",
-        })
-        .catch(() => undefined);
-      return false;
+
+      const fallback = pickFallbackLocationRow(result.allRows, targetParcel);
+      if (!fallback) {
+        await page
+          .screenshot({
+            path: "tests/e2e/screenshots/DEBUG-page2-parcel-mismatch.png",
+          })
+          .catch(() => undefined);
+        return false;
+      }
+
+      console.log(
+        `  ⚠ Falling back to row ${fallback.index}: ${fallback.parcel} - ${fallback.address || "(no address)"}`
+      );
+      await clickRadio(page, fallback.radioSelector);
     }
   } else {
     // No target parcel — fall back to first location with warning

@@ -83,6 +83,7 @@ Available MCP servers:
 ### Prerequisites
 
 - [Bun](https://bun.sh) (v1.3.5 or later)
+- [just](https://github.com/casey/just) (for task recipes)
 - [Python](https://www.python.org/) (3.11+)
 - [uv](https://docs.astral.sh/uv/) for Python package management
 
@@ -100,6 +101,34 @@ bun run dev
 
 # Run tests
 bun run test
+```
+
+### Operations Quick Commands
+
+```bash
+# Full startup on server: compose + poller services + strict health check
+just up
+
+# Human-readable runtime status (docker + HTTP + systemd pollers)
+just status
+
+# Strict local-runtime gate (non-zero on failures)
+just check
+
+# Cloudflare worker deployment check (best effort)
+just cf-check
+
+# (Optional) install/restart user systemd poller services from templates
+just services-install
+
+# Code quality (repo-level)
+just code-check
+just fix
+
+# Equivalent npm/bun scripts:
+bun run ops:up
+bun run ops:health
+bun run ops:check
 ```
 
 ## Local Postgres (Supabase) Migration Track

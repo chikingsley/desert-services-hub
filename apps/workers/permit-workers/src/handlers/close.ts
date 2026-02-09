@@ -5,6 +5,7 @@
  */
 
 import { z } from "zod";
+import { markPermitClosedRecord } from "@/lib/permit-records";
 import {
   cancelClosePermit,
   clickClosePermitButton,
@@ -124,6 +125,8 @@ export async function closePermit(
           error: "Could not confirm permit closure",
         };
       }
+
+      await markPermitClosedRecord(permitId);
 
       return {
         success: true,

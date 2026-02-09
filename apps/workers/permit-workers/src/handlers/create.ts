@@ -6,6 +6,7 @@
 
 import { z } from "zod";
 import { buildFormData, type DeepPartial, type FormData } from "@/form-data";
+import { persistDraftPermitRecord } from "@/lib/permit-records";
 import { createApplicationFull } from "@/portal/create";
 import { withBrowser } from "@/portal/utils/browser";
 
@@ -150,6 +151,15 @@ export async function createPermit(
 
       if (!result.success) {
         return { success: false, flow, error: result.error ?? "Create failed" };
+      }
+
+      if (result.applicationId) {
+        await persistDraftPermitRecord({
+          applicationId: result.applicationId,
+          flow,
+          formData,
+          companyName: companyName ?? null,
+        });
       }
 
       log(4, 5, `Application created: ${result.applicationId}`);

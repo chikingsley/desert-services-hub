@@ -4,9 +4,9 @@
  * Thin wrapper that calls portal/create/flow.ts → renewPermitFull()
  */
 
-import { SQL } from "bun";
 import { z } from "zod";
-import { buildFormData, type FormData } from "@/form-data";
+import type { DeepPartial, FormData } from "@/form-data";
+import { persistDraftPermitRecord } from "@/lib/permit-records";
 import { renewPermitFull } from "@/portal/create";
 import { withBrowser } from "@/portal/utils/browser";
 
@@ -55,39 +55,14 @@ export async function renewPermit(input: RenewInput): Promise<RenewResult> {
     keepOpen = false,
   } = input;
 
-  // Load FormData from file if provided
-  let formData: FormData | undefined;
+  // Load partial overrides from file if provided.
+  // Do NOT merge with defaults for renewals, otherwise default project dates
+  // can overwrite copied values on page 3.
+  let formDataOverrides: DeepPartial<FormData> | undefined;
   if (formDataPath) {
     const file = Bun.file(formDataPath);
     const text = await file.text();
-    const overrides = JSON.parse(text);
-    formData = buildFormData({ overrides });
-  }
-
-  // Look up parcel BEFORE browser launches (avoids DB connection timeout)
-  // Uses explicit SQL connection since Bun's global sql has connection issues
-  const DB_URL =
-    process.env.DATABASE_URL ??
-    "postgresql://postgres:postgres@127.0.0.1:54322/postgres";
-  let targetParcel: string | undefined;
-  try {
-    const sql = new SQL({ url: DB_URL });
-    const rows =
-      await sql`SELECT parcel, address FROM dust_permits_filed_by_desert_services WHERE id = ${permitId} LIMIT 1`;
-    await sql.close();
-    const row = rows[0] as
-      | { parcel: string | null; address: string | null }
-      | undefined;
-    if (row?.parcel) {
-      targetParcel = row.parcel;
-      console.log(
-        `[renew] Source parcel: ${targetParcel} (${row.address ?? "no address"})`
-      );
-    } else {
-      console.log(`[renew] ⚠ No parcel found in hub.db for ${permitId}`);
-    }
-  } catch (e) {
-    console.log(`[renew] ⚠ Could not look up parcel: ${e}`);
+    formDataOverrides = JSON.parse(text) as DeepPartial<FormData>;
   }
 
   return await withBrowser<RenewResult>(
@@ -100,9 +75,18 @@ export async function renewPermit(input: RenewInput): Promise<RenewResult> {
         context,
         permitId,
         companyName,
-        formData,
-        targetParcel
+        formDataOverrides
       );
+
+      if (result.success && result.applicationId) {
+        await persistDraftPermitRecord({
+          applicationId: result.applicationId,
+          flow: "renew",
+          sourcePermitId: permitId,
+          formData: formDataOverrides,
+          companyName,
+        });
+      }
 
       return {
         success: result.success,

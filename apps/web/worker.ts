@@ -8,10 +8,9 @@
  *   sync_item              -- Fetch a single item from Monday, upsert all fields into hub.db
  *   download_files         -- Download new files from a Monday item, run PDF extraction
  *   sync_full              -- Full board sync (all ~4800 estimates from Monday -> hub.db)
- *   contract_intake             -- Classify + extract data from IC contract PDFs via LLM
- *   contracts_email_intake      -- Parse PDFs from contracts@desertservices.app emails
- *   dust_permit_payment         -- PointAndPay payment email → billing + submitted notifications
- *   dust_permit_issued_email    -- Maricopa issued email → issued notification with PDF
+ *   contract_intake        -- Classify + extract data from IC contract PDFs via LLM
+ *   dust_permit_payment    -- PointAndPay payment email → billing + submitted notifications
+ *   dust_permit_issued_email -- Maricopa issued email → issued notification with PDF
  */
 
 import type { GraphEmailClient } from "@email/client";
@@ -32,8 +31,6 @@ import { ESTIMATING_COLUMNS } from "@monday/types";
 import { z } from "zod";
 import { itemHasFiles, processItemFiles } from "@/apps/web/pipeline";
 import { processContractIntake } from "@/apps/workers/contract-intake/lib/intake";
-import type { ContractsEmailIntakePayload } from "@/apps/workers/contract-intake/lib/parse-intake";
-import { processContractsEmailIntake } from "@/apps/workers/contract-intake/lib/parse-intake";
 import type { DustPermitIntakePayload } from "@/apps/workers/dust-permit-intake/lib/intake";
 import { processDustPermitIntake } from "@/apps/workers/dust-permit-intake/lib/intake";
 import { syncEstimates } from "@/apps/workers/estimate-poller/lib/sync";
@@ -49,11 +46,43 @@ import {
 // Config
 // ============================================================================
 
-const POLL_INTERVAL_MS = 5000;
+const parsedPollInterval = Number.parseInt(
+  process.env.WORKER_POLL_INTERVAL_MS ?? "250",
+  10
+);
+const POLL_INTERVAL_MS = Number.isFinite(parsedPollInterval)
+  ? Math.max(50, parsedPollInterval)
+  : 250;
+const parsedMaxConcurrency = Number.parseInt(
+  process.env.WORKER_MAX_CONCURRENCY ?? "4",
+  10
+);
+const MAX_CONCURRENT_JOBS = Number.isFinite(parsedMaxConcurrency)
+  ? Math.max(1, parsedMaxConcurrency)
+  : 4;
 const FULL_SYNC_INTERVAL_MS = 30 * 60 * 1000;
 const RENEWAL_INTERVAL_MS = 60 * 60 * 1000; // 1 hour
 const GROUP_SYNC_INTERVAL_MS = 15 * 60 * 1000; // 15 minutes
 const STALE_JOB_MINUTES = 5;
+const PERMIT_WORKER_URL = (
+  process.env.PERMIT_WORKER_URL ?? "http://permit-worker:47822"
+).replace(/\/$/, "");
+const parsedPaymentSyncCooldown = Number.parseInt(
+  process.env.PAYMENT_PERMIT_SYNC_COOLDOWN_MS ?? "0",
+  10
+);
+const PAYMENT_PERMIT_SYNC_COOLDOWN_MS = Number.isFinite(
+  parsedPaymentSyncCooldown
+)
+  ? Math.max(0, parsedPaymentSyncCooldown)
+  : 0;
+const parsedPaymentSyncTimeout = Number.parseInt(
+  process.env.PAYMENT_PERMIT_SYNC_TIMEOUT_MS ?? "180000",
+  10
+);
+const PAYMENT_PERMIT_SYNC_TIMEOUT_MS = Number.isFinite(parsedPaymentSyncTimeout)
+  ? Math.max(10_000, parsedPaymentSyncTimeout)
+  : 180_000;
 const SKIP_GROUPS = new Set([
   "Shell Estimates ( Do Not Move)",
   "Sales Team Estimates",
@@ -66,6 +95,7 @@ const INTERNAL_DOMAINS = new Set([
 ]);
 
 const FWD_RE = /^(fw|fwd|forwarded):/i;
+const POINT_AND_PAY_INVOICE_RE = /Account Number:\s*(IV\d+)/i;
 const NON_EMPTY_STRING_SCHEMA = z.string().trim().min(1);
 const EMAIL_NOTIFICATION_PAYLOAD_SCHEMA = z.object({
   messageId: NON_EMPTY_STRING_SCHEMA,
@@ -77,14 +107,6 @@ const CONTRACT_INTAKE_PAYLOAD_SCHEMA = z.object({
   subject: NON_EMPTY_STRING_SCHEMA,
   pdfPaths: z.array(NON_EMPTY_STRING_SCHEMA),
 });
-const CONTRACTS_EMAIL_INTAKE_PAYLOAD_SCHEMA: z.ZodType<ContractsEmailIntakePayload> =
-  z.object({
-    originalSubject: NON_EMPTY_STRING_SCHEMA,
-    originalFrom: z.string(), // may be empty if forwarded without header
-    bodyText: z.string(),
-    attachmentPaths: z.array(NON_EMPTY_STRING_SCHEMA),
-    forwarderEmail: NON_EMPTY_STRING_SCHEMA,
-  });
 const DUST_PERMIT_INTAKE_PAYLOAD_SCHEMA: z.ZodType<DustPermitIntakePayload> =
   z.object({
     originalSubject: NON_EMPTY_STRING_SCHEMA,
@@ -109,11 +131,128 @@ const ISSUED_PAYLOAD_SCHEMA: z.ZodType<IssuedJobPayload> = z.object({
 
 // Lazy Graph client for email notification processing
 let _graphClient: GraphEmailClient | null = null;
+let permitSyncInFlight: Promise<void> | null = null;
+let lastPermitSyncCompletedAt = 0;
 function getGraphClient(): GraphEmailClient {
   if (!_graphClient) {
     _graphClient = createGraphClient();
   }
   return _graphClient;
+}
+
+function extractPointAndPayInvoiceNumber(bodyText: string): string | null {
+  const match = bodyText.match(POINT_AND_PAY_INVOICE_RE);
+  return match?.[1] ?? null;
+}
+
+async function getPermitSyncWatermark(): Promise<number> {
+  const row = await permitSyncWatermark.get();
+  return Number(row?.updated_at ?? 0);
+}
+
+async function waitForPermitSyncWatermarkAdvance(
+  previousWatermark: number,
+  timeoutMs: number
+): Promise<boolean> {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    const currentWatermark = await getPermitSyncWatermark();
+    if (currentWatermark > previousWatermark) {
+      return true;
+    }
+    await Bun.sleep(2000);
+  }
+  return false;
+}
+
+async function runPermitSyncNow(): Promise<void> {
+  const startedAt = Date.now();
+  const previousWatermark = await getPermitSyncWatermark();
+
+  const fetchTimeoutMs = Math.min(60_000, PAYMENT_PERMIT_SYNC_TIMEOUT_MS);
+  const controller = new AbortController();
+  const fetchTimer = setTimeout(() => controller.abort(), fetchTimeoutMs);
+
+  try {
+    const response = await fetch(`${PERMIT_WORKER_URL}/api/sync/company`, {
+      method: "POST",
+      signal: controller.signal,
+    });
+
+    const rawBody = await response.text().catch(() => "");
+    let payload: { success?: unknown; error?: unknown } | null = null;
+    try {
+      const parsed = rawBody ? (JSON.parse(rawBody) as unknown) : null;
+      payload =
+        parsed && typeof parsed === "object" && !Array.isArray(parsed)
+          ? (parsed as { success?: unknown; error?: unknown })
+          : null;
+    } catch {
+      payload = null;
+    }
+
+    if (!response.ok) {
+      const snippet = rawBody.slice(0, 200);
+      throw new Error(
+        `Permit company sync HTTP ${response.status}: ${snippet || "(empty)"}`
+      );
+    }
+
+    if (payload && typeof payload.success === "boolean" && !payload.success) {
+      const err =
+        typeof payload.error === "string" && payload.error.trim().length > 0
+          ? payload.error.trim()
+          : "unknown error";
+      throw new Error(`Permit company sync failed: ${err}`);
+    }
+
+    lastPermitSyncCompletedAt = Date.now();
+    return;
+  } catch (error) {
+    if (error instanceof Error && error.name === "AbortError") {
+      console.warn(
+        "[worker] Permit company sync request timed out; waiting for watermark..."
+      );
+    } else {
+      const msg = error instanceof Error ? error.message : String(error);
+      console.warn(`[worker] Permit company sync request failed: ${msg}`);
+      throw error;
+    }
+  } finally {
+    clearTimeout(fetchTimer);
+  }
+
+  const remainingMs = Math.max(
+    0,
+    PAYMENT_PERMIT_SYNC_TIMEOUT_MS - (Date.now() - startedAt)
+  );
+  const advanced = await waitForPermitSyncWatermarkAdvance(
+    previousWatermark,
+    remainingMs
+  );
+
+  if (!advanced) {
+    throw new Error("Permit sync did not complete in time");
+  }
+
+  lastPermitSyncCompletedAt = Date.now();
+}
+
+async function ensurePermitSyncForPayment(): Promise<void> {
+  if (
+    lastPermitSyncCompletedAt > 0 &&
+    Date.now() - lastPermitSyncCompletedAt < PAYMENT_PERMIT_SYNC_COOLDOWN_MS
+  ) {
+    return;
+  }
+
+  if (!permitSyncInFlight) {
+    permitSyncInFlight = runPermitSyncNow().finally(() => {
+      permitSyncInFlight = null;
+    });
+  }
+
+  await permitSyncInFlight;
 }
 
 // ============================================================================
@@ -134,7 +273,9 @@ interface WebhookJob {
 const selectNextJob = db.query<WebhookJob>(`
   SELECT * FROM webhook_jobs
   WHERE status = 'pending' OR (status = 'failed' AND attempts < max_attempts)
-  ORDER BY created_at ASC
+  ORDER BY
+    CASE WHEN job_type = 'email_notification' THEN 0 ELSE 1 END,
+    created_at ASC
   LIMIT 1
 `);
 
@@ -165,6 +306,12 @@ const enqueueFullSync = db.prepare(
 
 const pendingFullSyncCount = db.query<{ count: number }>(
   "SELECT COUNT(*) as count FROM webhook_jobs WHERE job_type = 'sync_full' AND status IN ('pending', 'processing')"
+);
+const permitSyncWatermark = db.query<{ updated_at: number }>(
+  "SELECT COALESCE(MAX(updated_at), 0) as updated_at FROM dust_permits_filed_by_desert_services"
+);
+const permitIdByInvoice = db.query<{ id: string }, [string]>(
+  "SELECT id FROM dust_permits_filed_by_desert_services WHERE invoice_number = ? LIMIT 1"
 );
 
 async function dequeue(): Promise<WebhookJob | null> {
@@ -493,14 +640,14 @@ async function processEmailNotification(
 // Job Processing
 // ============================================================================
 
-let processing = false;
+let activeJobs = 0;
 
 async function processNextJob(): Promise<void> {
-  if (processing) {
+  if (activeJobs >= MAX_CONCURRENT_JOBS) {
     return;
   }
 
-  processing = true;
+  activeJobs += 1;
   let job: WebhookJob | null = null;
   try {
     job = await dequeue();
@@ -563,15 +710,6 @@ async function processNextJob(): Promise<void> {
         break;
       }
 
-      case "contracts_email_intake": {
-        const contractsPayload = parseJobPayload(
-          job,
-          CONTRACTS_EMAIL_INTAKE_PAYLOAD_SCHEMA
-        );
-        await processContractsEmailIntake(contractsPayload);
-        break;
-      }
-
       case "dust_permit_intake": {
         const dustPayload = parseJobPayload(
           job,
@@ -583,6 +721,24 @@ async function processNextJob(): Promise<void> {
 
       case "dust_permit_payment": {
         const paymentPayload = parseJobPayload(job, PAYMENT_PAYLOAD_SCHEMA);
+
+        const invoiceNumber = extractPointAndPayInvoiceNumber(
+          paymentPayload.bodyText
+        );
+
+        if (invoiceNumber) {
+          let permit = await permitIdByInvoice.get(invoiceNumber);
+          if (!permit) {
+            await ensurePermitSyncForPayment();
+            permit = await permitIdByInvoice.get(invoiceNumber);
+            if (!permit) {
+              throw new Error(
+                `No permit found for invoice ${invoiceNumber} after permit sync`
+              );
+            }
+          }
+        }
+
         await handlePaymentEmail(paymentPayload);
         break;
       }
@@ -609,7 +765,7 @@ async function processNextJob(): Promise<void> {
       console.error(`[worker] Job processing error: ${msg}`);
     }
   } finally {
-    processing = false;
+    activeJobs -= 1;
   }
 }
 
@@ -625,7 +781,7 @@ let groupSyncTimer: ReturnType<typeof setInterval> | null = null;
 export async function startWorker(): Promise<void> {
   console.log("[worker] Starting background job processor");
   console.log(
-    `[worker] Poll interval: ${POLL_INTERVAL_MS / 1000}s, Full sync interval: ${FULL_SYNC_INTERVAL_MS / 60_000}min`
+    `[worker] Poll interval: ${POLL_INTERVAL_MS}ms, max concurrency: ${MAX_CONCURRENT_JOBS}, Full sync interval: ${FULL_SYNC_INTERVAL_MS / 60_000}min`
   );
 
   // Recover stale jobs from previous crashes
@@ -651,8 +807,18 @@ export async function startWorker(): Promise<void> {
 
   // Poll for jobs
   pollTimer = setInterval(() => {
-    processNextJob().catch((err) => console.error("[worker] Poll error:", err));
+    const availableSlots = Math.max(0, MAX_CONCURRENT_JOBS - activeJobs);
+    for (let i = 0; i < availableSlots; i++) {
+      processNextJob().catch((err) =>
+        console.error("[worker] Poll error:", err)
+      );
+    }
   }, POLL_INTERVAL_MS);
+
+  // Kick off initial workers immediately so we don't wait for first timer tick.
+  for (let i = 0; i < MAX_CONCURRENT_JOBS; i++) {
+    processNextJob().catch((err) => console.error("[worker] Poll error:", err));
+  }
 
   // Periodic full sync
   fullSyncTimer = setInterval(async () => {

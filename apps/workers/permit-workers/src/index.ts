@@ -23,16 +23,24 @@ import {
   handleRevisePermit,
 } from "@/api/permits";
 import { handleScrapePdf, handleScrapePermit } from "@/api/scrape";
-import { handleSync } from "@/api/sync";
+import { handleCompanySync, handleSync } from "@/api/sync";
 import { initSentry } from "@/portal/utils/sentry";
 
 initSentry();
 
 const PORT = Number(process.env.PORT) || 47_822;
+const parsedIdleTimeoutSeconds = Number.parseInt(
+  process.env.PERMIT_WORKER_IDLE_TIMEOUT_SECONDS ?? "180",
+  10
+);
+const IDLE_TIMEOUT_SECONDS = Number.isFinite(parsedIdleTimeoutSeconds)
+  ? Math.max(10, parsedIdleTimeoutSeconds)
+  : 180;
 
 const server = serve({
   port: PORT,
   hostname: "0.0.0.0",
+  idleTimeout: IDLE_TIMEOUT_SECONDS,
   routes: {
     "/health": {
       GET: handleHealthCheck,
@@ -97,6 +105,13 @@ const server = serve({
     "/api/sync": {
       POST() {
         return handleSync();
+      },
+    },
+
+    // Sync API (company-only)
+    "/api/sync/company": {
+      POST() {
+        return handleCompanySync();
       },
     },
 

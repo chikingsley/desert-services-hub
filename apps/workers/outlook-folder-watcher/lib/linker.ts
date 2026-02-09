@@ -148,7 +148,7 @@ export async function checkDustPermitIssued(
     // Link permit to project
     await db.run(
       `UPDATE dust_permits_filed_by_desert_services
-       SET project_id = ?, updated_at = unixepoch()
+       SET project_id = ?, updated_at = (extract(epoch FROM now()))::bigint
        WHERE id = ? AND (project_id IS NULL OR project_id != ?)`,
       [hubProjectId, permitId, hubProjectId]
     );

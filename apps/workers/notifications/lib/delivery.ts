@@ -154,9 +154,7 @@ async function buildDustPermitDraft(
       applicationNumber: stringValue(metadata.permitId, event.refId),
       siteAddress: stringValue(metadata.address, "TBD"),
       acreage: stringValue(metadata.acreage, "N/A"),
-      facilityId: metadata.facilityId
-        ? stringValue(metadata.facilityId)
-        : null,
+      facilityId: metadata.facilityId ? stringValue(metadata.facilityId) : "",
     });
 
     // Include the dust application PDF if available

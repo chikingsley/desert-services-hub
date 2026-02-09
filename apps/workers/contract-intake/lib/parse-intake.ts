@@ -155,9 +155,7 @@ async function runClassify(pdfPath: string): Promise<ClassifyOutput> {
 // Process a single PDF
 // ============================================================================
 
-async function processSinglePdf(
-  pdfPath: string
-): Promise<ParseIntakeResult> {
+async function processSinglePdf(pdfPath: string): Promise<ParseIntakeResult> {
   const fileName = pdfPath.split("/").pop() ?? pdfPath;
 
   try {

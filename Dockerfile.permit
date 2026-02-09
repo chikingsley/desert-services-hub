@@ -23,7 +23,7 @@ RUN bun install || true
 # -----------------------------------------------------------------------------
 # Stage 2: Production image (Playwright + VNC + Bun)
 # -----------------------------------------------------------------------------
-FROM mcr.microsoft.com/playwright:v1.57.0-noble AS runner
+FROM mcr.microsoft.com/playwright:v1.58.2-noble AS runner
 
 # Install VNC components + unzip (needed for Bun)
 RUN apt-get update && apt-get install -y --no-install-recommends \

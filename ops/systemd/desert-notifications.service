@@ -1,0 +1,16 @@
+[Unit]
+Description=Desert Services Notifications Worker
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/github/desert-services-hub
+Environment=PATH=%h/.bun/bin:/usr/local/bin:/usr/bin:/bin
+EnvironmentFile=-%h/github/desert-services-hub/.env
+ExecStart=%h/.bun/bin/bun run apps/workers/notifications/cli/watch.ts
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=default.target

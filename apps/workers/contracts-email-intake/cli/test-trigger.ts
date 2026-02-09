@@ -34,7 +34,8 @@ const INTAKE_DIR = join(import.meta.dir, "../../../../data/contracts-intake");
 
 async function webhookMode(pdfPaths: string[]): Promise<void> {
   const webhookUrl =
-    process.env.WEBHOOK_URL || "http://localhost:4747/api/webhooks/contracts-intake";
+    process.env.WEBHOOK_URL ||
+    "http://localhost:4747/api/webhooks/contracts-intake";
 
   // Build payload matching what the CF worker sends
   const attachments = pdfPaths.map((p) => {
@@ -71,7 +72,9 @@ async function webhookMode(pdfPaths: string[]): Promise<void> {
 }
 
 async function processMode(pdfPaths: string[]): Promise<void> {
-  console.log(`${LOG} Running parse pipeline directly on ${pdfPaths.length} PDF(s)...\n`);
+  console.log(
+    `${LOG} Running parse pipeline directly on ${pdfPaths.length} PDF(s)...\n`
+  );
 
   const results = await processContractsEmailIntake({
     originalSubject: "Test — Direct Process",
@@ -129,12 +132,18 @@ async function enqueueMode(pdfPaths: string[]): Promise<void> {
 const command = process.argv[2];
 const pdfPaths = process.argv.slice(3);
 
-if (!command || !["webhook", "process", "enqueue"].includes(command)) {
-  console.log("Usage: bun cli/test-trigger.ts <webhook|process|enqueue> <pdf...>");
+if (!(command && ["webhook", "process", "enqueue"].includes(command))) {
+  console.log(
+    "Usage: bun cli/test-trigger.ts <webhook|process|enqueue> <pdf...>"
+  );
   console.log("");
   console.log("  webhook  — POST PDFs as base64 to the local webhook endpoint");
-  console.log("  process  — Run the parse pipeline directly (classify + parse → DB)");
-  console.log("  enqueue  — Save PDFs and enqueue a job for the background worker");
+  console.log(
+    "  process  — Run the parse pipeline directly (classify + parse → DB)"
+  );
+  console.log(
+    "  enqueue  — Save PDFs and enqueue a job for the background worker"
+  );
   process.exit(1);
 }
 
@@ -161,4 +170,7 @@ switch (command) {
   case "enqueue":
     await enqueueMode(pdfPaths);
     break;
+  default:
+    // Should be unreachable due to CLI validation above.
+    throw new Error(`Unknown command: ${command}`);
 }

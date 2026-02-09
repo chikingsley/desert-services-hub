@@ -105,6 +105,8 @@ export async function linkContractorsToAccounts(): Promise<{
     UPDATE swppp_work_orders SET account_id = (
       SELECT a.id FROM accounts a
       WHERE LOWER(TRIM(a.name)) = LOWER(TRIM(swppp_work_orders.contractor))
+      ORDER BY a.id
+      LIMIT 1
     ) WHERE account_id IS NULL
       AND contractor IS NOT NULL
       AND contractor <> ''
@@ -115,6 +117,8 @@ export async function linkContractorsToAccounts(): Promise<{
     UPDATE swppp_work_orders SET account_id = (
       SELECT ca.account_id FROM company_aliases ca
       WHERE LOWER(ca.alias) = LOWER(TRIM(swppp_work_orders.contractor))
+      ORDER BY ca.account_id
+      LIMIT 1
     ) WHERE account_id IS NULL
       AND contractor IS NOT NULL
       AND contractor <> ''

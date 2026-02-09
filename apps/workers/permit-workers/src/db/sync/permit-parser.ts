@@ -13,6 +13,7 @@ import { readFile, utils } from "xlsx";
 export interface PortalPermit {
   id: string;
   projectName: string | null;
+  facilityId: string | null;
   companyId: string | null;
   companyName: string | null;
   status: string | null;
@@ -67,6 +68,7 @@ const PERMIT_SPLIT_REGEX = /<tr><td>D(?=\d)/i;
 // Invoice table: find data row with IV prefix (handles both with/without tbody)
 const INVOICE_TABLE_REGEX =
   /<tr>\s*<td>(IV[^<]*)<\/td>\s*<td>([^<]*)<\/td>\s*<td>([^<]*)<\/td>/i;
+const FACILITY_ID_REGEX = /^F\d{5,}$/i;
 
 /**
  * Detects file format and parses accordingly.
@@ -136,6 +138,7 @@ export function parseXlsxFile(filePath: string): PortalPermit[] {
       currentPermit = {
         id,
         projectName: nullIfEmpty(row[COL.PROJECT_NAME]),
+        facilityId: extractFacilityId(row),
         companyId: nullIfEmpty(row[COL.COMPANY_ID]),
         companyName: nullIfEmpty(row[COL.COMPANY_NAME]),
         status: nullIfEmpty(row[COL.STATUS]),
@@ -224,6 +227,7 @@ export function parseHtmlExport(content: string): PortalPermit[] {
     const permit: PortalPermit = {
       id: cells[0] ?? "",
       projectName: nullIfEmpty(cells[1]),
+      facilityId: extractFacilityId(cells),
       companyId: nullIfEmpty(cells[2]),
       companyName: nullIfEmpty(cells[3]),
       status: nullIfEmpty(cells[4]),
@@ -292,6 +296,16 @@ function parseNumber(value: unknown): number | null {
   }
   const num = Number.parseFloat(str);
   return Number.isNaN(num) ? null : num;
+}
+
+function extractFacilityId(values: readonly unknown[]): string | null {
+  for (const value of values) {
+    const str = String(value ?? "").trim();
+    if (FACILITY_ID_REGEX.test(str)) {
+      return str.toUpperCase();
+    }
+  }
+  return null;
 }
 
 /**

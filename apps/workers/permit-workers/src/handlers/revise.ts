@@ -9,6 +9,7 @@
 
 import { z } from "zod";
 import type { DeepPartial, FormData } from "@/form-data";
+import { persistDraftPermitRecord } from "@/lib/permit-records";
 import { revisePermitFull } from "@/portal/create";
 import { withBrowser } from "@/portal/utils/browser";
 
@@ -120,6 +121,14 @@ export async function revisePermit(input: ReviseInput): Promise<ReviseResult> {
         revisionPurpose,
         formData
       );
+
+      if (result.success && result.applicationId) {
+        await persistDraftPermitRecord({
+          applicationId: result.applicationId,
+          flow: "revise",
+          sourcePermitId: permitId,
+        });
+      }
 
       return {
         success: result.success,

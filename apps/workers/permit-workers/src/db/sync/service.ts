@@ -60,6 +60,42 @@ export async function runSync(_input: SyncOptions): Promise<SyncResult> {
   );
 }
 
+export interface CompanySyncResult {
+  success: boolean;
+  companyPermits: SyncStats;
+  error?: string;
+}
+
+/**
+ * Sync only company permits from portal XLS export to Postgres.
+ *
+ * Used by payment-triggered flows which only need invoice/permit mapping.
+ */
+export async function runCompanySync(
+  _input: SyncOptions
+): Promise<CompanySyncResult> {
+  console.log(
+    "Syncing COMPANY permits from Maricopa Portal (Export to Excel)\n"
+  );
+
+  return await withBrowser<CompanySyncResult>(
+    { operation: "sync" },
+    async (instance) => {
+      const { page } = instance;
+
+      const companyXlsPath = await downloadCompanyPermits(page);
+      const companyStats = await syncFromXls(companyXlsPath, "company");
+
+      console.log("\nDone!");
+
+      return {
+        success: true,
+        companyPermits: companyStats,
+      };
+    }
+  );
+}
+
 /**
  * Sync from a downloaded XLS file into Postgres.
  */
@@ -101,6 +137,7 @@ async function upsertCompanyPermit(p: PortalPermit): Promise<void> {
   await upsertPermit({
     id: p.id,
     projectName: p.projectName,
+    facilityId: p.facilityId,
     companyName: p.companyName,
     portalCompanyId: p.companyId,
     status: p.status,

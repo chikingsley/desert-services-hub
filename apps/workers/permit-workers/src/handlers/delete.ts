@@ -5,6 +5,7 @@
  */
 
 import { z } from "zod";
+import { deleteAllDraftPermitRecords } from "@/lib/permit-records";
 import { deleteAllDrafts } from "@/portal/delete";
 import { withBrowser } from "@/portal/utils/browser";
 
@@ -27,6 +28,7 @@ export type DeleteInput = z.infer<typeof deleteSchema>;
 export interface DeleteResult {
   success: boolean;
   deletedAll?: boolean;
+  deletedDbCount?: number;
   error?: string;
 }
 
@@ -56,6 +58,7 @@ export async function deleteDrafts(input: DeleteInput): Promise<DeleteResult> {
       console.log("========================================\n");
 
       const success = await deleteAllDrafts(page, context);
+      const deletedDbCount = await deleteAllDraftPermitRecords();
 
       if (success) {
         console.log("\n--- FINISHED: All drafts deleted successfully ---\n");
@@ -68,6 +71,7 @@ export async function deleteDrafts(input: DeleteInput): Promise<DeleteResult> {
       return {
         success,
         deletedAll: success,
+        deletedDbCount,
       };
     }
   );

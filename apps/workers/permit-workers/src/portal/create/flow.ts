@@ -1,10 +1,12 @@
+import { getPermitById } from "@lib/db/repositories/dust-permit";
 import type { BrowserContext, Page } from "playwright";
 import {
   DEFAULTS,
   type DeepPartial,
+  deepMerge,
   type FormData,
-  today,
   oneYearFromNow,
+  today,
 } from "@/form-data";
 import type { CreateResult, FullCreateResult } from "@/portal/types";
 import {
@@ -234,13 +236,50 @@ export async function renewPermitFull(
   context: BrowserContext,
   permitId: string,
   companyName: string,
-  formData?: FormData,
-  targetParcel?: string
+  formData?: DeepPartial<FormData>
 ): Promise<{ success: boolean; applicationId?: string; error?: string }> {
+  const renewalStartDate = today();
+  const renewalEndDate = oneYearFromNow();
+  const renewalDefaults: DeepPartial<FormData> = {
+    permitContact: {
+      email: DEFAULTS.permitContact.email,
+      name: DEFAULTS.permitContact.name,
+      phone: DEFAULTS.permitContact.phone,
+    },
+    project: {
+      startDate: renewalStartDate,
+      endDate: renewalEndDate,
+    },
+  };
+  const renewalOverrides = deepMerge({} as FormData, renewalDefaults, formData);
+  // Always enforce permit contact + renewal date window for renewals.
+  renewalOverrides.permitContact = {
+    email: DEFAULTS.permitContact.email,
+    name: DEFAULTS.permitContact.name,
+    phone: DEFAULTS.permitContact.phone,
+  };
+  renewalOverrides.project = {
+    ...renewalOverrides.project,
+    startDate: renewalStartDate,
+    endDate: renewalEndDate,
+  };
+
   console.log(`\n=== RENEWING PERMIT: ${permitId} ===`);
   console.log(`    Company: ${companyName}`);
+  console.log(
+    `    Permit Contact: ${renewalOverrides.permitContact.name} (${renewalOverrides.permitContact.email})`
+  );
+  console.log(`    Renewal Dates: ${renewalStartDate} → ${renewalEndDate}`);
   if (formData) {
-    console.log("    With FormData overrides");
+    console.log("    With additional FormData overrides");
+  }
+
+  const sourcePermit = await getPermitById(permitId);
+  const sourceParcel = sourcePermit?.parcel?.trim() || undefined;
+  const sourceAddress = sourcePermit?.address?.trim() || "";
+  if (sourceParcel) {
+    const locationSuffix = sourceAddress ? ` (${sourceAddress})` : "";
+    console.log(`[renew] Source parcel: ${sourceParcel}${locationSuffix}`);
   }
   console.log("");
 
@@ -273,72 +312,28 @@ export async function renewPermitFull(
     result.applicationId || (await getCreatedApplicationId(page)) || undefined;
   console.log(`  ✓ Created new application: ${appId}\n`);
 
-  if (targetParcel) {
-    console.log(`  Target parcel: ${targetParcel}`);
-  } else {
-    console.log("  ⚠ No target parcel provided - will select first location");
-  }
-
-  // 3. Navigate through pages, applying renewal overrides
-  // For renewals, ALWAYS override: contact info (Page 1), dates (Page 3)
-  // These are non-negotiable even when copying from an existing permit
-  const renewalOverrides: DeepPartial<FormData> = {
-    permitContact: {
-      email: formData?.permitContact?.email ?? DEFAULTS.permitContact.email,
-      name: formData?.permitContact?.name ?? DEFAULTS.permitContact.name,
-      phone: formData?.permitContact?.phone ?? DEFAULTS.permitContact.phone,
-    },
-    primaryContact: {
-      firstName: formData?.primaryContact?.firstName ?? "Chi",
-      lastName: formData?.primaryContact?.lastName ?? "Ejimofor",
-      email: formData?.primaryContact?.email ?? DEFAULTS.permitContact.email,
-      phone: formData?.primaryContact?.phone ?? "3044052446",
-    },
-    project: {
-      startDate: formData?.project?.startDate ?? today(),
-      endDate: formData?.project?.endDate ?? oneYearFromNow(),
-    },
-  };
-
-  // Merge user formData on top of renewal defaults
-  const effectiveData: DeepPartial<FormData> = formData
-    ? { ...renewalOverrides, ...formData }
-    : renewalOverrides;
-
-  console.log("[3/3] Filling forms and navigating...");
+  // 3. Navigate through pages, applying FormData overrides if provided
   console.log(
-    `    Contact: ${effectiveData.permitContact?.name} (${effectiveData.permitContact?.email})`
-  );
-  console.log(
-    `    Dates: ${effectiveData.project?.startDate} → ${effectiveData.project?.endDate}`
+    `[3/3] ${formData ? "Filling forms and navigating" : "Navigating through pages"}...`
   );
 
   await sleep(SETTLE_MS);
 
-  // Page 1 - ALWAYS override contact info for renewals
-  console.log("  Filling Page 1 (contact override)...");
-  await fillPage1(page, effectiveData, "partial");
+  // Page 1 - Apply overrides if provided
+  console.log("  Filling Page 1...");
+  await fillPage1(page, renewalOverrides, "partial");
   await clickNext(page);
   await sleep(SETTLE_MS);
 
   // Page 2 (map) - Handle location and map for renewals
-  // Map data is a HARD REQUIREMENT - no map = invalid permit
   console.log("  Handling Page 2 (Project Location)...");
   const page2Success = await fillPage2Renew(
     page,
     context,
     permitId,
-    targetParcel
+    sourceParcel
   );
   if (!page2Success) {
-    console.log(
-      "\n=== ✗ RENEWAL FAILED: Page 2 (Project Location) ==="
-    );
-    console.log("    Map/location data was not confirmed.");
-    console.log(
-      "    A permit without map data is invalid and cannot be submitted."
-    );
-    console.log(`    Application ${appId} was created but is incomplete.\n`);
     return {
       success: false,
       applicationId: appId,
@@ -348,9 +343,9 @@ export async function renewPermitFull(
   }
   await sleep(SETTLE_MS);
 
-  // Page 3 - ALWAYS override dates and primary contact for renewals
-  console.log("  Filling Page 3 (dates + primary contact)...");
-  await fillPage3(page, effectiveData);
+  // Page 3 - Apply overrides if provided
+  console.log("  Filling Page 3...");
+  await fillPage3(page, renewalOverrides);
   await clickNext(page);
   await sleep(SETTLE_MS);
 

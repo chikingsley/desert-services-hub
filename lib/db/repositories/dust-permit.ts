@@ -11,6 +11,7 @@ function parsePermitRow(row: Record<string, unknown>): Permit {
   return {
     id: row.id as string,
     projectName: row.project_name as string | null,
+    facilityId: row.facility_id as string | null,
     accountId: row.account_id as number | null,
     projectId: row.project_id as number | null,
     companyName: row.company_name as string | null,
@@ -39,14 +40,15 @@ function parsePermitRow(row: Record<string, unknown>): Permit {
 export async function upsertPermit(data: UpsertPermitData): Promise<void> {
   await db.run(
     `INSERT INTO dust_permits_filed_by_desert_services (
-      id, project_name, account_id, project_id, company_name, portal_company_id,
+      id, project_name, facility_id, account_id, project_id, company_name, portal_company_id,
       status, submitted_date, effective_date, expiration_date, closed_date,
       previous_app_id, project_start_date, project_end_date,
       address, city, parcel, is_block_permit, is_accelerated,
       invoice_number, invoice_charges, invoice_balance
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(id) DO UPDATE SET
       project_name = COALESCE(excluded.project_name, dust_permits_filed_by_desert_services.project_name),
+      facility_id = COALESCE(excluded.facility_id, dust_permits_filed_by_desert_services.facility_id),
       account_id = COALESCE(excluded.account_id, dust_permits_filed_by_desert_services.account_id),
       project_id = COALESCE(excluded.project_id, dust_permits_filed_by_desert_services.project_id),
       company_name = COALESCE(excluded.company_name, dust_permits_filed_by_desert_services.company_name),
@@ -67,10 +69,11 @@ export async function upsertPermit(data: UpsertPermitData): Promise<void> {
       invoice_number = COALESCE(excluded.invoice_number, dust_permits_filed_by_desert_services.invoice_number),
       invoice_charges = COALESCE(excluded.invoice_charges, dust_permits_filed_by_desert_services.invoice_charges),
       invoice_balance = COALESCE(excluded.invoice_balance, dust_permits_filed_by_desert_services.invoice_balance),
-      updated_at = unixepoch()`,
+      updated_at = (extract(epoch FROM now()))::bigint`,
     [
       data.id,
       data.projectName ?? null,
+      data.facilityId ?? null,
       data.accountId ?? null,
       data.projectId ?? null,
       data.companyName ?? null,
@@ -155,7 +158,7 @@ export async function linkPermitToAccount(
   accountId: number
 ): Promise<void> {
   await db.run(
-    "UPDATE dust_permits_filed_by_desert_services SET account_id = ?, updated_at = unixepoch() WHERE id = ?",
+    "UPDATE dust_permits_filed_by_desert_services SET account_id = ?, updated_at = (extract(epoch FROM now()))::bigint WHERE id = ?",
     [accountId, permitId]
   );
 }
@@ -165,7 +168,7 @@ export async function linkPermitToProject(
   projectId: number
 ): Promise<void> {
   await db.run(
-    "UPDATE dust_permits_filed_by_desert_services SET project_id = ?, updated_at = unixepoch() WHERE id = ?",
+    "UPDATE dust_permits_filed_by_desert_services SET project_id = ?, updated_at = (extract(epoch FROM now()))::bigint WHERE id = ?",
     [projectId, permitId]
   );
 }

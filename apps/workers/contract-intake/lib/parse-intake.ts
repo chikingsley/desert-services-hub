@@ -1,0 +1,255 @@
+/**
+ * Contract Email Intake — Parse Pipeline Processing
+ *
+ * Processes PDF attachments from forwarded emails using the parse pipeline:
+ *   pdfplumber (text) + GLM OCR (vision) + Kimi K2.5 (reconciliation)
+ *
+ * Also runs classify to determine document type.
+ *
+ * Results are stored in the contracts table with the reconciled markdown
+ * as the summary and the full parse output as raw_extraction.
+ */
+import { join } from "node:path";
+import { db } from "@lib/db/hub";
+
+// ============================================================================
+// Config
+// ============================================================================
+
+const PDF_ANALYSIS_CWD = join(
+  import.meta.dir,
+  "../../../../apps/cli-tools/pdf-analysis-cli"
+);
+
+const LOG = "[contracts-parse]";
+
+// ============================================================================
+// Types
+// ============================================================================
+
+interface ParseOutput {
+  filename: string;
+  reconciled_markdown: string;
+  page_count: number;
+  processing_time_ms: number;
+  ocr_model: string;
+  reconcile_model: string;
+  metadata: Record<string, unknown>;
+}
+
+interface ClassifyOutput {
+  document_type: string;
+  confidence: number;
+  indicators: string[];
+  page_count: number;
+  filename: string;
+  first_page_snippet: string;
+}
+
+export interface ContractsEmailIntakePayload {
+  originalSubject: string;
+  originalFrom: string;
+  bodyText: string;
+  attachmentPaths: string[];
+  forwarderEmail: string;
+}
+
+export interface ParseIntakeResult {
+  contractId: number | null;
+  fileName: string;
+  documentType: string;
+  pageCount: number;
+  processingTimeMs: number;
+  error?: string;
+}
+
+// ============================================================================
+// Prepared Statements
+// ============================================================================
+
+const insertContract = db.prepare(`
+  INSERT INTO contracts (
+    document_type, file_path, file_name,
+    summary, raw_extraction,
+    model, processing_time_ms,
+    extraction_status
+  ) VALUES (
+    ?, ?, ?,
+    ?, ?::jsonb,
+    ?, ?,
+    'success'
+  )
+  RETURNING id
+`);
+
+const insertContractError = db.prepare(`
+  INSERT INTO contracts (
+    file_path, file_name,
+    extraction_status, extraction_error
+  ) VALUES (?, ?, 'failed', ?)
+  RETURNING id
+`);
+
+// ============================================================================
+// Core — Spawn pdf-analysis CLI
+// ============================================================================
+
+async function runParse(pdfPath: string): Promise<ParseOutput> {
+  const proc = Bun.spawn(
+    ["uv", "run", "pdf-analysis", "parse", pdfPath, "--format", "json"],
+    {
+      cwd: PDF_ANALYSIS_CWD,
+      stdout: "pipe",
+      stderr: "pipe",
+      env: { ...process.env, PATH: process.env.PATH ?? "" },
+    }
+  );
+
+  const timeout = setTimeout(() => proc.kill(), 300_000); // 5min for OCR + reconciliation
+  const stdout = await new Response(proc.stdout).text();
+  const stderr = await new Response(proc.stderr).text();
+  const exitCode = await proc.exited;
+  clearTimeout(timeout);
+
+  if (exitCode !== 0) {
+    throw new Error(
+      `pdf-analysis parse exit ${exitCode}: ${stderr.trim().slice(0, 500)}`
+    );
+  }
+
+  return JSON.parse(stdout) as ParseOutput;
+}
+
+async function runClassify(pdfPath: string): Promise<ClassifyOutput> {
+  const proc = Bun.spawn(
+    ["uv", "run", "pdf-analysis", "classify", pdfPath, "--format", "json"],
+    {
+      cwd: PDF_ANALYSIS_CWD,
+      stdout: "pipe",
+      stderr: "pipe",
+      env: { ...process.env, PATH: process.env.PATH ?? "" },
+    }
+  );
+
+  const timeout = setTimeout(() => proc.kill(), 30_000); // 30s — classify is fast
+  const stdout = await new Response(proc.stdout).text();
+  const stderr = await new Response(proc.stderr).text();
+  const exitCode = await proc.exited;
+  clearTimeout(timeout);
+
+  if (exitCode !== 0) {
+    throw new Error(
+      `pdf-analysis classify exit ${exitCode}: ${stderr.trim().slice(0, 500)}`
+    );
+  }
+
+  // classify outputs a JSON array (one per file)
+  const results = JSON.parse(stdout) as ClassifyOutput[];
+  if (!results[0]) {
+    throw new Error("pdf-analysis classify returned empty results");
+  }
+  return results[0];
+}
+
+// ============================================================================
+// Process a single PDF
+// ============================================================================
+
+async function processSinglePdf(
+  pdfPath: string
+): Promise<ParseIntakeResult> {
+  const fileName = pdfPath.split("/").pop() ?? pdfPath;
+
+  try {
+    // Run classify (fast) and parse (slow) — classify first for quick feedback
+    console.log(`${LOG}   Classifying: ${fileName}`);
+    const classified = await runClassify(pdfPath);
+    console.log(
+      `${LOG}   Type: ${classified.document_type} (${(classified.confidence * 100).toFixed(0)}%)`
+    );
+
+    console.log(`${LOG}   Parsing: ${fileName}`);
+    const parsed = await runParse(pdfPath);
+    console.log(
+      `${LOG}   Parsed: ${parsed.page_count} pages, ${parsed.processing_time_ms}ms`
+    );
+
+    // Store in contracts table
+    const rawExtraction = {
+      reconciled_markdown: parsed.reconciled_markdown,
+      classify: {
+        document_type: classified.document_type,
+        confidence: classified.confidence,
+        indicators: classified.indicators,
+      },
+      ocr_model: parsed.ocr_model,
+      reconcile_model: parsed.reconcile_model,
+      page_count: parsed.page_count,
+      metadata: parsed.metadata,
+    };
+
+    const row = (await insertContract.get(
+      classified.document_type,
+      pdfPath,
+      fileName,
+      parsed.reconciled_markdown,
+      JSON.stringify(rawExtraction),
+      parsed.reconcile_model,
+      parsed.processing_time_ms
+    )) as { id: number } | null;
+
+    const contractId = row?.id ?? null;
+
+    console.log(
+      `${LOG}   Stored contract #${contractId}: ${classified.document_type}`
+    );
+
+    return {
+      contractId,
+      fileName,
+      documentType: classified.document_type,
+      pageCount: parsed.page_count,
+      processingTimeMs: parsed.processing_time_ms,
+    };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error(`${LOG}   Failed ${fileName}: ${msg}`);
+    await insertContractError.run(pdfPath, fileName, msg.slice(0, 1000));
+
+    return {
+      contractId: null,
+      fileName,
+      documentType: "error",
+      pageCount: 0,
+      processingTimeMs: 0,
+      error: msg,
+    };
+  }
+}
+
+// ============================================================================
+// Main entry point — called by worker.ts
+// ============================================================================
+
+export async function processContractsEmailIntake(
+  payload: ContractsEmailIntakePayload
+): Promise<ParseIntakeResult[]> {
+  const { attachmentPaths, originalSubject, originalFrom } = payload;
+
+  console.log(
+    `${LOG} Processing ${attachmentPaths.length} PDF(s) from "${originalSubject}" (${originalFrom})`
+  );
+
+  const results: ParseIntakeResult[] = [];
+  for (const pdfPath of attachmentPaths) {
+    const result = await processSinglePdf(pdfPath);
+    results.push(result);
+  }
+
+  const succeeded = results.filter((r) => !r.error).length;
+  console.log(
+    `${LOG} Done: ${succeeded}/${results.length} parsed successfully`
+  );
+
+  return results;
+}

@@ -8,9 +8,10 @@
  *   sync_item              -- Fetch a single item from Monday, upsert all fields into hub.db
  *   download_files         -- Download new files from a Monday item, run PDF extraction
  *   sync_full              -- Full board sync (all ~4800 estimates from Monday -> hub.db)
- *   contract_intake        -- Classify + extract data from IC contract PDFs via LLM
- *   dust_permit_payment    -- PointAndPay payment email → billing + submitted notifications
- *   dust_permit_issued_email -- Maricopa issued email → issued notification with PDF
+ *   contract_intake             -- Classify + extract data from IC contract PDFs via LLM
+ *   contracts_email_intake      -- Parse PDFs from contracts@desertservices.app emails
+ *   dust_permit_payment         -- PointAndPay payment email → billing + submitted notifications
+ *   dust_permit_issued_email    -- Maricopa issued email → issued notification with PDF
  */
 
 import type { GraphEmailClient } from "@email/client";
@@ -31,6 +32,8 @@ import { ESTIMATING_COLUMNS } from "@monday/types";
 import { z } from "zod";
 import { itemHasFiles, processItemFiles } from "@/apps/web/pipeline";
 import { processContractIntake } from "@/apps/workers/contract-intake/lib/intake";
+import type { ContractsEmailIntakePayload } from "@/apps/workers/contract-intake/lib/parse-intake";
+import { processContractsEmailIntake } from "@/apps/workers/contract-intake/lib/parse-intake";
 import type { DustPermitIntakePayload } from "@/apps/workers/dust-permit-intake/lib/intake";
 import { processDustPermitIntake } from "@/apps/workers/dust-permit-intake/lib/intake";
 import { syncEstimates } from "@/apps/workers/estimate-poller/lib/sync";
@@ -74,6 +77,14 @@ const CONTRACT_INTAKE_PAYLOAD_SCHEMA = z.object({
   subject: NON_EMPTY_STRING_SCHEMA,
   pdfPaths: z.array(NON_EMPTY_STRING_SCHEMA),
 });
+const CONTRACTS_EMAIL_INTAKE_PAYLOAD_SCHEMA: z.ZodType<ContractsEmailIntakePayload> =
+  z.object({
+    originalSubject: NON_EMPTY_STRING_SCHEMA,
+    originalFrom: z.string(), // may be empty if forwarded without header
+    bodyText: z.string(),
+    attachmentPaths: z.array(NON_EMPTY_STRING_SCHEMA),
+    forwarderEmail: NON_EMPTY_STRING_SCHEMA,
+  });
 const DUST_PERMIT_INTAKE_PAYLOAD_SCHEMA: z.ZodType<DustPermitIntakePayload> =
   z.object({
     originalSubject: NON_EMPTY_STRING_SCHEMA,
@@ -549,6 +560,15 @@ async function processNextJob(): Promise<void> {
           CONTRACT_INTAKE_PAYLOAD_SCHEMA
         );
         await processContractIntake(emailId, subject, pdfPaths);
+        break;
+      }
+
+      case "contracts_email_intake": {
+        const contractsPayload = parseJobPayload(
+          job,
+          CONTRACTS_EMAIL_INTAKE_PAYLOAD_SCHEMA
+        );
+        await processContractsEmailIntake(contractsPayload);
         break;
       }
 

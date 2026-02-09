@@ -72,12 +72,14 @@ const insertContract = db.prepare(`
     document_type, file_path, file_name,
     summary, raw_extraction,
     model, processing_time_ms,
-    extraction_status
+    extraction_status,
+    original_from, original_subject, forwarder_email
   ) VALUES (
-    ?, ?, ?,
-    ?, ?::jsonb,
-    ?, ?,
-    'success'
+    $1, $2, $3,
+    $4, $5::jsonb,
+    $6, $7,
+    'success',
+    $8, $9, $10
   )
   RETURNING id
 `);
@@ -85,8 +87,9 @@ const insertContract = db.prepare(`
 const insertContractError = db.prepare(`
   INSERT INTO contracts (
     file_path, file_name,
-    extraction_status, extraction_error
-  ) VALUES (?, ?, 'failed', ?)
+    extraction_status, extraction_error,
+    original_from, original_subject, forwarder_email
+  ) VALUES (?, ?, 'failed', ?, ?, ?, ?)
   RETURNING id
 `);
 
@@ -155,7 +158,16 @@ async function runClassify(pdfPath: string): Promise<ClassifyOutput> {
 // Process a single PDF
 // ============================================================================
 
-async function processSinglePdf(pdfPath: string): Promise<ParseIntakeResult> {
+interface EmailMeta {
+  originalFrom: string;
+  originalSubject: string;
+  forwarderEmail: string;
+}
+
+async function processSinglePdf(
+  pdfPath: string,
+  emailMeta: EmailMeta
+): Promise<ParseIntakeResult> {
   const fileName = pdfPath.split("/").pop() ?? pdfPath;
 
   try {
@@ -193,7 +205,10 @@ async function processSinglePdf(pdfPath: string): Promise<ParseIntakeResult> {
       parsed.reconciled_markdown,
       JSON.stringify(rawExtraction),
       parsed.reconcile_model,
-      parsed.processing_time_ms
+      parsed.processing_time_ms,
+      emailMeta.originalFrom || null,
+      emailMeta.originalSubject || null,
+      emailMeta.forwarderEmail || null
     )) as { id: number } | null;
 
     const contractId = row?.id ?? null;
@@ -232,15 +247,22 @@ async function processSinglePdf(pdfPath: string): Promise<ParseIntakeResult> {
 export async function processContractsEmailIntake(
   payload: ContractsEmailIntakePayload
 ): Promise<ParseIntakeResult[]> {
-  const { attachmentPaths, originalSubject, originalFrom } = payload;
+  const { attachmentPaths, originalSubject, originalFrom, forwarderEmail } =
+    payload;
 
   console.log(
     `${LOG} Processing ${attachmentPaths.length} PDF(s) from "${originalSubject}" (${originalFrom})`
   );
 
+  const emailMeta: EmailMeta = {
+    originalFrom: originalFrom ?? "",
+    originalSubject: originalSubject ?? "",
+    forwarderEmail: forwarderEmail ?? "",
+  };
+
   const results: ParseIntakeResult[] = [];
   for (const pdfPath of attachmentPaths) {
-    const result = await processSinglePdf(pdfPath);
+    const result = await processSinglePdf(pdfPath, emailMeta);
     results.push(result);
   }
 

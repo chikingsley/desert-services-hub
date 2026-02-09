@@ -40,6 +40,7 @@ services:
       WEBHOOK_PORT: 4747
       DATABASE_URL: postgresql://postgres:postgres@host.docker.internal:54322/postgres
       MONDAY_FILES_DIR: /app/data/monday-files
+      OLLAMA_ENDPOINT: http://host.docker.internal:11434/v1
     volumes:
       - webhooks-data:/app/data
       - /home/simon/.local/share/opencode/auth.json:/root/.local/share/opencode/auth.json:ro

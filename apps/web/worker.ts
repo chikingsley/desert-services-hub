@@ -31,6 +31,8 @@ import { ESTIMATING_COLUMNS } from "@monday/types";
 import { z } from "zod";
 import { itemHasFiles, processItemFiles } from "@/apps/web/pipeline";
 import { processContractIntake } from "@/apps/workers/contract-intake/lib/intake";
+import type { ContractsEmailIntakePayload } from "@/apps/workers/contract-intake/lib/parse-intake";
+import { processContractsEmailIntake } from "@/apps/workers/contract-intake/lib/parse-intake";
 import type { DustPermitIntakePayload } from "@/apps/workers/dust-permit-intake/lib/intake";
 import { processDustPermitIntake } from "@/apps/workers/dust-permit-intake/lib/intake";
 import { syncEstimates } from "@/apps/workers/estimate-poller/lib/sync";
@@ -107,6 +109,14 @@ const CONTRACT_INTAKE_PAYLOAD_SCHEMA = z.object({
   subject: NON_EMPTY_STRING_SCHEMA,
   pdfPaths: z.array(NON_EMPTY_STRING_SCHEMA),
 });
+const CONTRACTS_EMAIL_INTAKE_PAYLOAD_SCHEMA: z.ZodType<ContractsEmailIntakePayload> =
+  z.object({
+    originalSubject: z.string(),
+    originalFrom: z.string(),
+    bodyText: z.string(),
+    attachmentPaths: z.array(NON_EMPTY_STRING_SCHEMA),
+    forwarderEmail: z.string(),
+  });
 const DUST_PERMIT_INTAKE_PAYLOAD_SCHEMA: z.ZodType<DustPermitIntakePayload> =
   z.object({
     originalSubject: NON_EMPTY_STRING_SCHEMA,
@@ -238,8 +248,13 @@ async function runPermitSyncNow(): Promise<void> {
   lastPermitSyncCompletedAt = Date.now();
 }
 
-async function ensurePermitSyncForPayment(): Promise<void> {
+async function ensurePermitSyncForPayment(options?: {
+  force?: boolean;
+}): Promise<void> {
+  const force = options?.force ?? false;
+
   if (
+    !force &&
     lastPermitSyncCompletedAt > 0 &&
     Date.now() - lastPermitSyncCompletedAt < PAYMENT_PERMIT_SYNC_COOLDOWN_MS
   ) {
@@ -637,6 +652,145 @@ async function processEmailNotification(
 }
 
 // ============================================================================
+// Contract → Project Auto-Linking
+// ============================================================================
+
+/**
+ * After a contract PDF is parsed, try to find the source email in the emails
+ * table and inherit its project_id. Also stores email metadata on the contract.
+ *
+ * Matching strategy (in priority order):
+ *   1. normalized_subject ILIKE match + from_email match → highest confidence
+ *   2. normalized_subject ILIKE match alone → medium confidence
+ *   3. conversation_id from a subject-matched email → thread-based
+ */
+const findEmailBySubjectAndSender = db.query<{
+  id: number;
+  project_id: number | null;
+  conversation_id: string | null;
+}>(
+  `SELECT id, project_id, conversation_id FROM emails
+   WHERE normalized_subject ILIKE '%' || $1 || '%'
+     AND from_email = $2
+   ORDER BY received_at DESC LIMIT 1`
+);
+
+const findEmailBySubject = db.query<{
+  id: number;
+  project_id: number | null;
+  conversation_id: string | null;
+}>(
+  `SELECT id, project_id, conversation_id FROM emails
+   WHERE normalized_subject ILIKE '%' || $1 || '%'
+   ORDER BY received_at DESC LIMIT 1`
+);
+
+const findProjectByConversation = db.query<{ project_id: number }>(
+  `SELECT project_id FROM emails
+   WHERE conversation_id = $1 AND project_id IS NOT NULL
+   LIMIT 1`
+);
+
+const updateContractLink = db.prepare(
+  `UPDATE contracts SET
+     email_id = COALESCE($2, email_id),
+     project_id = COALESCE($3, project_id),
+     original_from = $4,
+     original_subject = $5,
+     forwarder_email = $6
+   WHERE id = $1`
+);
+
+async function autoLinkContract(
+  contractId: number,
+  originalSubject: string,
+  originalFrom: string,
+  forwarderEmail: string
+): Promise<void> {
+  // Strip FW:/RE: prefixes for matching
+  const normalized = originalSubject
+    .replace(/^(?:fw|fwd|re|forwarded):\s*/gi, "")
+    .trim();
+
+  if (!normalized) {
+    // Still store metadata even if we can't match
+    await updateContractLink.run(
+      contractId,
+      null,
+      null,
+      originalFrom || null,
+      originalSubject || null,
+      forwarderEmail || null
+    );
+    return;
+  }
+
+  let emailId: number | null = null;
+  let projectId: number | null = null;
+
+  // Strategy 1: subject + sender match
+  if (originalFrom) {
+    const match = await findEmailBySubjectAndSender.get(
+      normalized,
+      originalFrom
+    );
+    if (match) {
+      emailId = match.id;
+      projectId = match.project_id;
+      // If no project_id on this email, try conversation thread
+      if (!projectId && match.conversation_id) {
+        const convMatch = await findProjectByConversation.get(
+          match.conversation_id
+        );
+        if (convMatch) {
+          projectId = convMatch.project_id;
+        }
+      }
+    }
+  }
+
+  // Strategy 2: subject match only
+  if (!emailId) {
+    const match = await findEmailBySubject.get(normalized);
+    if (match) {
+      emailId = match.id;
+      projectId = match.project_id;
+      if (!projectId && match.conversation_id) {
+        const convMatch = await findProjectByConversation.get(
+          match.conversation_id
+        );
+        if (convMatch) {
+          projectId = convMatch.project_id;
+        }
+      }
+    }
+  }
+
+  await updateContractLink.run(
+    contractId,
+    emailId,
+    projectId,
+    originalFrom || null,
+    originalSubject || null,
+    forwarderEmail || null
+  );
+
+  if (projectId) {
+    console.log(
+      `[contracts-link] Contract #${contractId} → project #${projectId} (via email #${emailId})`
+    );
+  } else if (emailId) {
+    console.log(
+      `[contracts-link] Contract #${contractId} → email #${emailId} (no project yet)`
+    );
+  } else {
+    console.log(
+      `[contracts-link] Contract #${contractId}: no matching email found for "${normalized}"`
+    );
+  }
+}
+
+// ============================================================================
 // Job Processing
 // ============================================================================
 
@@ -710,6 +864,26 @@ async function processNextJob(): Promise<void> {
         break;
       }
 
+      case "contracts_email_intake": {
+        const contractsPayload = parseJobPayload(
+          job,
+          CONTRACTS_EMAIL_INTAKE_PAYLOAD_SCHEMA
+        );
+        const results = await processContractsEmailIntake(contractsPayload);
+        // Auto-link contracts to projects via email matching
+        for (const r of results) {
+          if (r.contractId && contractsPayload.originalSubject) {
+            await autoLinkContract(
+              r.contractId,
+              contractsPayload.originalSubject,
+              contractsPayload.originalFrom,
+              contractsPayload.forwarderEmail
+            );
+          }
+        }
+        break;
+      }
+
       case "dust_permit_intake": {
         const dustPayload = parseJobPayload(
           job,
@@ -727,19 +901,42 @@ async function processNextJob(): Promise<void> {
         );
 
         if (invoiceNumber) {
-          let permit = await permitIdByInvoice.get(invoiceNumber);
-          if (!permit) {
-            await ensurePermitSyncForPayment();
-            permit = await permitIdByInvoice.get(invoiceNumber);
-            if (!permit) {
-              throw new Error(
-                `No permit found for invoice ${invoiceNumber} after permit sync`
-              );
+          const preSyncPermit = await permitIdByInvoice.get(invoiceNumber);
+
+          // Best-effort pre-sync (keeps portal-export state fresh for invoice/permit mapping).
+          try {
+            // If we *don't* have the mapping yet, force a sync even if a cooldown is set.
+            await ensurePermitSyncForPayment({ force: !preSyncPermit });
+          } catch (error) {
+            if (!preSyncPermit) {
+              throw error;
             }
+            const msg = error instanceof Error ? error.message : String(error);
+            console.warn(
+              `[worker] Permit company sync failed (non-fatal; mapping already present): ${msg}`
+            );
+          }
+
+          const postSyncPermit = await permitIdByInvoice.get(invoiceNumber);
+          if (!postSyncPermit) {
+            throw new Error(
+              `No permit found for invoice ${invoiceNumber} after permit sync`
+            );
           }
         }
 
         await handlePaymentEmail(paymentPayload);
+
+        // Best-effort post-sync: capture any portal-side changes (e.g. invoice balance)
+        // without risking duplicate notification drafts on retry.
+        if (invoiceNumber) {
+          try {
+            await ensurePermitSyncForPayment();
+          } catch (error) {
+            const msg = error instanceof Error ? error.message : String(error);
+            console.warn(`[worker] Post-payment permit sync failed: ${msg}`);
+          }
+        }
         break;
       }
 

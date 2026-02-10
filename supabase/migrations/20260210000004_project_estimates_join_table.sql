@@ -41,7 +41,10 @@ BEGIN
       e.id AS estimate_id,
       'projects.linked_estimate_ids' AS source
     FROM public.projects p
-    CROSS JOIN LATERAL regexp_matches(p.linked_estimate_ids, E'\\m([0-9]{6,})\\M', 'g') AS m(match)
+    -- linked_estimate_ids was a free-form string that usually contained a JSON-ish
+    -- array of Monday item IDs (e.g. ["9646558866"]). We just extract long digit
+    -- sequences (>= 6) to avoid relying on brittle word-boundary escapes.
+    CROSS JOIN LATERAL regexp_matches(p.linked_estimate_ids, '([0-9]{6,})', 'g') AS m(match)
     JOIN public.estimates e ON e.monday_item_id = m.match[1]
     ON CONFLICT DO NOTHING;
   END IF;

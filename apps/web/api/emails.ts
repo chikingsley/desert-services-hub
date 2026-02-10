@@ -73,16 +73,27 @@ export async function listEmails(req: Request): Promise<Response> {
       conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
     const offset = (page - 1) * limit;
 
-    // Dedup: same email received by multiple mailboxes → show once with recipient count
+    // Dedup key: for platform senders that generate unique emails per recipient,
+    // group by content (subject+sender+hour). For everything else, group by Message-ID.
+    const DEDUP_KEY = `CASE
+        WHEN from_domain IN (
+          'buildingconnected.com','planhub.com','cyberhoot.com',
+          'texturacorp.com','worklio.com','avanan-mail.net'
+        ) OR from_domain LIKE '%bidmail.com'
+          OR from_domain LIKE '%procoretech.com'
+        THEN normalized_subject || '|' || COALESCE(from_name,'') || '|' || date_trunc('hour', received_at)
+        ELSE COALESCE(internet_message_id, message_id)::text
+      END`;
+
     const dedupQuery = `
       WITH filtered AS (
         SELECT ${LIST_COLUMNS},
           ROW_NUMBER() OVER (
-            PARTITION BY COALESCE(internet_message_id, message_id)
+            PARTITION BY ${DEDUP_KEY}
             ORDER BY id
           ) AS rn,
           COUNT(*) OVER (
-            PARTITION BY COALESCE(internet_message_id, message_id)
+            PARTITION BY ${DEDUP_KEY}
           ) AS recipient_count
         FROM emails
         ${where}
@@ -98,7 +109,7 @@ export async function listEmails(req: Request): Promise<Response> {
       WITH filtered AS (
         SELECT
           ROW_NUMBER() OVER (
-            PARTITION BY COALESCE(internet_message_id, message_id)
+            PARTITION BY ${DEDUP_KEY}
             ORDER BY id
           ) AS rn
         FROM emails

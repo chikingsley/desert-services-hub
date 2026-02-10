@@ -53,6 +53,7 @@ const SPAM_DOMAINS = [
   // Social/marketing/industry newsletters
   "nextdoor.com",
   "wastetodaymagazine.com",
+  "fromyouflowers.com",
 ];
 
 const SPAM_SENDER_PATTERNS = [

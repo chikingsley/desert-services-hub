@@ -8,6 +8,7 @@ import {
   ExternalLink,
   Mail,
   Paperclip,
+  Users,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import useSWR from "swr";
@@ -57,12 +58,13 @@ export function EmailDetailPanel({
   open,
   onClose,
 }: EmailDetailPanelProps) {
-  const { data, isLoading } = useSWR<{ email: Email }>(
-    emailId && open ? `/api/emails/${emailId}` : null,
-    fetcher
-  );
+  const { data, isLoading } = useSWR<{
+    email: Email;
+    recipients: { mailbox: string; receivedAt: string }[];
+  }>(emailId && open ? `/api/emails/${emailId}` : null, fetcher);
 
   const email = data?.email;
+  const recipients = data?.recipients ?? [];
 
   // Auto-resize iframe to content height
   const [iframeHeight, setIframeHeight] = useState(400);
@@ -159,6 +161,25 @@ export function EmailDetailPanel({
                   </>
                 )}
               </div>
+
+              {/* Recipients (dedup) */}
+              {recipients.length > 1 && (
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-muted-foreground text-sm flex items-center gap-1">
+                    <Users className="h-3.5 w-3.5" />
+                    Received by {recipients.length} mailboxes:
+                  </span>
+                  {recipients.map((r) => (
+                    <Badge
+                      className="bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300 font-normal"
+                      key={r.mailbox}
+                      variant="outline"
+                    >
+                      {r.mailbox.split("@")[0]}
+                    </Badge>
+                  ))}
+                </div>
+              )}
 
               {/* Attachments */}
               {email.hasAttachments && email.attachmentNames.length > 0 && (

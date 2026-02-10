@@ -5,20 +5,54 @@
  */
 
 const SPAM_DOMAINS = [
+  // Retail/marketing
   "emdeals.michaels.com",
   "em.michaelscustomframing.com",
+  "send.michaels.com",
   "e-email.guns.com",
+  "e-info.guns.com",
   "em.azcardinals.com",
   "campaign.eventbrite.com",
+  "order.eventbrite.com",
+  "event.eventbrite.com",
+  // Newsletter platforms
   "e.shrm.org",
   "news.pitchbook.com",
   "rfg.realfinancialgain.com",
   "ccsend.com",
   "mail.beehiiv.com",
   "email.mg1.substack.com",
+  "substack.com",
   "mailchimp.com",
   "sendgrid.net",
   "klaviyo.com",
+  // Political spam
+  "keyprofitstrategy.com",
+  "restninvest.com",
+  "stockexchangeinsiders.com",
+  "rnchq.com",
+  "profitpeakstrategy.com",
+  "unshakeableconservatives.com",
+  "historyoftheday.com",
+  "stopdemocrats.net",
+  "americanlibertyalert.com",
+  "seal-pac.com",
+  "winningrightpac.com",
+  // Investment spam
+  "thetrustnest.com",
+  "mastersofthestockmarket.com",
+  "safeinvestzone.com",
+  "economicinsightreport.com",
+  "insidetradingtalks.com",
+  "opendealsreport.com",
+  "theinvestormanifesto.com",
+  "futuremoneyorbit.com",
+  "shadowfinanceforce.com",
+  "dividenddriveclub.com",
+  "increasingnetworth.com",
+  // Social/marketing/industry newsletters
+  "nextdoor.com",
+  "wastetodaymagazine.com",
 ];
 
 const SPAM_SENDER_PATTERNS = [

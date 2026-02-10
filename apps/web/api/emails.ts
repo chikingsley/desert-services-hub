@@ -20,7 +20,7 @@ const LIST_COLUMNS = `
   is_excluded, created_at
 `;
 
-// GET /api/emails — paginated list with search + filters
+// GET /api/emails — paginated, deduplicated, spam-filtered list
 export async function listEmails(req: Request): Promise<Response> {
   try {
     const url = new URL(req.url);
@@ -31,12 +31,19 @@ export async function listEmails(req: Request): Promise<Response> {
     );
     const search = url.searchParams.get("search")?.trim() || "";
     const from = url.searchParams.get("from")?.trim() || "";
-    const classification = url.searchParams.get("classification")?.trim() || "";
+    const classification =
+      url.searchParams.get("classification")?.trim() || "";
     const hasAttachments = url.searchParams.get("has_attachments");
+    const showExcluded = url.searchParams.get("show_excluded");
 
-    // Build WHERE clause
+    // Build WHERE clause (applied before dedup)
     const conditions: string[] = [];
     const params: unknown[] = [];
+
+    // Spam filter: exclude by default
+    if (showExcluded !== "1" && showExcluded !== "true") {
+      conditions.push("is_excluded = 0");
+    }
 
     if (search) {
       conditions.push("search_document @@ plainto_tsquery('english', ?)");
@@ -44,7 +51,6 @@ export async function listEmails(req: Request): Promise<Response> {
     }
 
     if (from) {
-      // If it looks like a domain (no @), match from_domain; otherwise ILIKE on from_email
       if (from.includes("@")) {
         conditions.push("from_email ILIKE ?");
         params.push(`%${from}%`);
@@ -67,18 +73,51 @@ export async function listEmails(req: Request): Promise<Response> {
       conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
     const offset = (page - 1) * limit;
 
+    // Dedup: same email received by multiple mailboxes → show once with recipient count
+    const dedupQuery = `
+      WITH filtered AS (
+        SELECT ${LIST_COLUMNS},
+          ROW_NUMBER() OVER (
+            PARTITION BY COALESCE(internet_message_id, message_id)
+            ORDER BY id
+          ) AS rn,
+          COUNT(*) OVER (
+            PARTITION BY COALESCE(internet_message_id, message_id)
+          ) AS recipient_count
+        FROM emails
+        ${where}
+      )
+      SELECT *, recipient_count
+      FROM filtered
+      WHERE rn = 1
+      ORDER BY received_at DESC
+      LIMIT ? OFFSET ?
+    `;
+
+    const dedupCountQuery = `
+      WITH filtered AS (
+        SELECT
+          ROW_NUMBER() OVER (
+            PARTITION BY COALESCE(internet_message_id, message_id)
+            ORDER BY id
+          ) AS rn
+        FROM emails
+        ${where}
+      )
+      SELECT count(*)::int AS total FROM filtered WHERE rn = 1
+    `;
+
+    const statsWhere =
+      showExcluded !== "1" && showExcluded !== "true"
+        ? "WHERE is_excluded = 0"
+        : "";
+
     const [emails, countResult, statsResult] = await Promise.all([
       db
-        .prepare(
-          `SELECT ${LIST_COLUMNS}
-           FROM emails
-           ${where}
-           ORDER BY received_at DESC
-           LIMIT ? OFFSET ?`
-        )
+        .prepare(dedupQuery)
         .all(...params, limit, offset) as Promise<Record<string, unknown>[]>,
       db
-        .prepare(`SELECT count(*)::int as total FROM emails ${where}`)
+        .prepare(dedupCountQuery)
         .get(...params) as Promise<{ total: number } | null>,
       db
         .prepare(
@@ -89,8 +128,9 @@ export async function listEmails(req: Request): Promise<Response> {
             count(*) FILTER (WHERE classification = 'INVOICE')::int as invoices,
             count(*) FILTER (WHERE classification = 'INTERNAL')::int as internal,
             count(*) FILTER (WHERE from_domain = 'docusign.net')::int as docusign,
-            count(*) FILTER (WHERE has_attachments = 1)::int as with_attachments
-          FROM emails`
+            count(*) FILTER (WHERE has_attachments = 1)::int as with_attachments,
+            (SELECT count(*)::int FROM emails WHERE is_excluded = 1) as excluded
+          FROM emails ${statsWhere}`
         )
         .get() as Promise<{
         total: number;
@@ -100,20 +140,25 @@ export async function listEmails(req: Request): Promise<Response> {
         internal: number;
         docusign: number;
         with_attachments: number;
+        excluded: number;
       } | null>,
     ]);
 
     const total = countResult?.total ?? 0;
 
-    // Parse rows — parseEmailRow handles JSON arrays, boolean conversion, etc.
-    // We set body_full/body_html to null since we didn't select them
-    const parsed = emails.map((row) =>
-      parseEmailRow({ ...row, body_full: null, body_html: null })
-    );
+    const parsed = emails.map((row) => ({
+      ...parseEmailRow({ ...row, body_full: null, body_html: null }),
+      recipientCount: Number(row.recipient_count) || 1,
+    }));
 
     return Response.json({
       emails: parsed,
-      pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
       stats: {
         total: statsResult?.total ?? 0,
         contracts: statsResult?.contracts ?? 0,
@@ -122,6 +167,7 @@ export async function listEmails(req: Request): Promise<Response> {
         internal: statsResult?.internal ?? 0,
         docusign: statsResult?.docusign ?? 0,
         withAttachments: statsResult?.with_attachments ?? 0,
+        excluded: statsResult?.excluded ?? 0,
       },
     });
   } catch (error) {
@@ -133,7 +179,7 @@ export async function listEmails(req: Request): Promise<Response> {
   }
 }
 
-// GET /api/emails/:id — single email with full body
+// GET /api/emails/:id — single email with full body + sibling recipients
 export async function getEmail(req: Request): Promise<Response> {
   try {
     const url = new URL(req.url);
@@ -143,15 +189,41 @@ export async function getEmail(req: Request): Promise<Response> {
       return Response.json({ error: "Invalid email ID" }, { status: 400 });
     }
 
-    const row = await db
+    const row = (await db
       .prepare("SELECT * FROM emails WHERE id = ?")
-      .get(Number(id)) as Record<string, unknown> | null;
+      .get(Number(id))) as Record<string, unknown> | null;
 
     if (!row) {
       return Response.json({ error: "Email not found" }, { status: 404 });
     }
 
-    return Response.json({ email: parseEmailRow(row) });
+    const internetMsgId = row.internet_message_id as string | null;
+    let recipients: { mailbox: string; receivedAt: string }[] = [];
+
+    if (internetMsgId) {
+      const siblings = (await db
+        .prepare(
+          `SELECT m.email as mailbox, e.received_at
+           FROM emails e
+           JOIN mailboxes m ON m.id = e.mailbox_id
+           WHERE e.internet_message_id = ?
+           ORDER BY m.email`
+        )
+        .all(internetMsgId)) as {
+        mailbox: string;
+        received_at: string;
+      }[];
+
+      recipients = siblings.map((s) => ({
+        mailbox: s.mailbox,
+        receivedAt: s.received_at,
+      }));
+    }
+
+    return Response.json({
+      email: parseEmailRow(row),
+      recipients,
+    });
   } catch (error) {
     console.error("Failed to fetch email:", error);
     return Response.json(

@@ -10,6 +10,7 @@ import {
   Paperclip,
   RefreshCw,
   Search,
+  Users,
 } from "lucide-react";
 import { useState } from "react";
 import { useSearchParams } from "react-router";
@@ -59,8 +60,10 @@ interface Pagination {
   totalPages: number;
 }
 
+type EmailWithDedup = Email & { recipientCount: number };
+
 interface EmailsApiResponse {
-  emails: Email[];
+  emails: EmailWithDedup[];
   pagination: Pagination;
   stats: EmailStats;
 }
@@ -277,8 +280,19 @@ export function EmailsPage() {
                         >
                           <TableCell>
                             <div className="max-w-[220px]">
-                              <div className="truncate font-medium text-sm">
-                                {email.fromName || email.fromEmail || "—"}
+                              <div className="flex items-center gap-1.5">
+                                <span className="truncate font-medium text-sm">
+                                  {email.fromName || email.fromEmail || "—"}
+                                </span>
+                                {email.recipientCount > 1 && (
+                                  <Badge
+                                    className="gap-0.5 bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300 shrink-0"
+                                    variant="outline"
+                                  >
+                                    <Users className="h-3 w-3" />
+                                    {email.recipientCount}
+                                  </Badge>
+                                )}
                               </div>
                               {email.fromName && email.fromEmail && (
                                 <div className="truncate text-muted-foreground text-xs">

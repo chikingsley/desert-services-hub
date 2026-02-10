@@ -42,8 +42,7 @@ const MIME_MAP: Record<string, string> = {
   ".csv": "text/csv",
   ".docx":
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  ".xlsx":
-    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  ".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 };
 
 // ============================================================================
@@ -109,7 +108,7 @@ async function processMode(filePaths: string[]): Promise<void> {
       console.log(`  FAIL  ${r.fileName}: ${r.error}`);
     } else {
       console.log(
-        `  OK    ${r.fileName}: ${r.documentType}, ${r.pageCount} pages, ${r.processingTimeMs}ms → contract #${r.contractId}`
+        `  OK    ${r.fileName}: ${r.documentType}, ${r.pageCount} pages, ${r.processingTimeMs}ms → document #${r.documentId}`
       );
     }
   }
@@ -155,7 +154,9 @@ if (!(command && ["webhook", "process", "enqueue"].includes(command))) {
     "Usage: bun cli/test-trigger.ts <webhook|process|enqueue> <file...>"
   );
   console.log("");
-  console.log("  webhook  — POST files as base64 to the local webhook endpoint");
+  console.log(
+    "  webhook  — POST files as base64 to the local webhook endpoint"
+  );
   console.log(
     "  process  — Run the parse pipeline directly (classify + parse → DB)"
   );

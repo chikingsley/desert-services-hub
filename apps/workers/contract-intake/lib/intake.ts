@@ -9,7 +9,7 @@
  *   2. Enqueues contract_intake job (emailId, subject, pdfPaths)
  *   3. This module processes each PDF:
  *      - Spawns pdf-analysis ingest (pdfplumber → LLM classification + extraction)
- *      - Stores result in contracts table
+ *      - Stores result in documents table
  *      - Matches to estimate by reference number if found
  */
 import { join } from "node:path";

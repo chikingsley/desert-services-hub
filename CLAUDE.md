@@ -132,7 +132,7 @@ Email arrives → Graph webhook → POST /api/webhooks/outlook
 | Library | Key Exports | Usage |
 |---------|-------------|-------|
 | `@lib/catalog` | `getAllItems()` | Service pricing, dust permit fee schedule by acreage tier |
-| `@lib/db/hub` | `db` | Bun SQLite database client for hub.db |
+| `@lib/db/hub` | `db` | Postgres client (Bun.sql) with SQLite-compatible API |
 | `@lib/db/repositories` | `getPermitById()`, `upsertPermit()`, etc. | Permit CRUD operations |
 | `@lib/db/types` | `Permit`, `NotificationEventType` | TypeScript interfaces |
 | `@email/client` | `GraphEmailClient` | Microsoft Graph email operations |
@@ -154,7 +154,7 @@ Connection: `@lib/db/hub` provides a Postgres client with SQLite-compatible API 
 | `emails` | Synced Outlook emails |
 | `estimates` | Bid estimates from Monday.com |
 | `dust_permits_filed_by_desert_services` | Maricopa dust permits |
-| `contracts` | Contract documents and status |
+| `documents` | Parsed documents (contracts/LOIs/etc.) + extraction JSON |
 | `accounts` | Contractor/company accounts |
 | `contacts` | People (email, phone, title) |
 | `notifications` | Notification event log (type, status, metadata, draft ID) |

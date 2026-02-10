@@ -155,7 +155,7 @@ Desert Services provides environmental compliance services (SWPPP, dust control,
 | `lib/db/hub.ts` | Postgres connection (Bun.sql) | DONE |
 | `lib/db/repositories/` | 11 repository modules (account, project, email, estimate, permit, etc.) | DONE |
 | `lib/db/search.ts` | ILIKE query builder | DONE |
-| `lib/db/insurance.ts` | Coverage gap analysis | BUILT — not automated |
+| `lib/db/_legacy/insurance.ts` | (archived) Coverage gap analysis prototype | ARCHIVED — not automated |
 | `lib/catalog/` | 2026 pricing catalog + bundles + helpers | DONE |
 | `lib/pdf/` | Estimate PDF generation (pdfmake) | DONE |
 | `lib/takeoff/` | PDF measurement + annotation tools | DONE |
@@ -215,7 +215,7 @@ Desert Services provides environmental compliance services (SWPPP, dust control,
 
 **Current state:** Renamed to `files-email-intake`. Email → estimate auto-linking works via contracts pipeline. PDFs are downloaded. But automatic classification + structured extraction isn't finishing.
 
-**What's needed:** Complete the pipeline: PDF → OCR → classify (subcontract? insurance cert? change order?) → extract fields → store in contracts table.
+**What's needed:** Complete the pipeline: PDF → OCR → classify (subcontract? insurance cert? change order?) → extract fields → store in documents table (`documents.summary` + `documents.raw_extraction`).
 
 ### GAP 4: No Permit Renewal Automation
 
@@ -252,23 +252,22 @@ Desert Services provides environmental compliance services (SWPPP, dust control,
 
 **What's needed:** Wire up CLI commands: `search`, `export`, `sync-to-db`. This enables market intelligence — track all dust permits in Maricopa County, identify potential customers, monitor competitors.
 
-### GAP 8: Marketing Permits Not Being Collected
+### GAP 8: Marketing Permits Prospecting Not Automated
 
-**Problem:** The `marketing_permits` table and repository exist for tracking ALL Maricopa County permits (not just Desert Services'), but there's no active scraping/sync filling it.
+**Problem:** `marketing_permits` is populated via permit-workers sync, but there's no scheduled refresh + prospecting workflow (alerts, outreach lists, UI).
 
-**Current state:** Repository has `upsertMarketingPermit()`, `getActivePermitsByCompany()`, `getPermitsNeedingDetailScrape()`. The AQ data client can search and export all dust applications. They're not connected.
+**Current state:** `permit-workers` upserts `marketing_permits` from the AQ data portal. Repositories exist for queries (`getActivePermitsByCompany()`, `getPermitsNeedingDetailScrape()`), but there's no recurring agent turning this into sales ops.
 
-**What's needed:** A scheduled job that:
-1. Uses aqdata-cli to export all dust applications
-2. Parses the export
-3. Upserts into marketing_permits
-4. Identifies companies with active permits as sales prospects
+**What's needed:** A scheduled job/agent that:
+1. Runs a full portal sync (all permits) on a cadence
+2. Performs detail scrape for new/changed permits
+3. Generates a prospect list + notifications (new Active permits by company, expiring permits, etc.)
 
-### GAP 9: Insurance Gap Checking Not Automated
+### GAP 9: Insurance Gap Checking (Archived)
 
-**Problem:** `lib/db/insurance.ts` has `checkCoverage()` that compares contract requirements against Desert Services' insurance. But it's never called automatically.
+**Current state:** Prototype exists at `lib/db/_legacy/insurance.ts` and legacy tables (`company_insurance`, `contract_insurance_requirements`). We're dropping those tables and not running this automatically.
 
-**What's needed:** When a new contract comes in (contract-intake), automatically check if DS's current insurance meets the contract requirements. Alert if there's a gap.
+**If we revive this:** Store insurance requirements + COIs as `documents` rows (type `INSURANCE_REQUIREMENTS` / `COI`) with structured fields in `documents.raw_extraction`, then run a check during file intake and notify on gaps.
 
 ### GAP 10: No Email → Estimate Auto-Linking
 
@@ -316,8 +315,8 @@ Only harmless reference remaining: `supabase/config.toml` has `openai_api_key = 
 ### Nice-to-Have (Growth + intelligence)
 
 9. **GAP 7** — AQ data CLI commands
-10. **GAP 8** — Marketing permits collection (competitor intelligence)
-11. **GAP 9** — Insurance gap checking
+10. **GAP 8** — Marketing permits prospecting (competitor intelligence)
+11. **GAP 9** — Insurance gap checking (archived)
 
 ### Done
 
@@ -352,5 +351,5 @@ These gaps are ideal for autonomous agents running on gmk-server:
 
 **Agent 5: Contract Processing Agent**
 - Trigger: New email in IC group with PDF attachments
-- Actions: OCR PDF, classify document type, extract fields, link to estimate, check insurance
-- Uses: pdf-analysis-cli, Ollama/Gemini, Postgres (contracts, estimates, insurance)
+- Actions: OCR PDF, classify document type, extract fields, link to estimate/project
+- Uses: pdf-analysis-cli, Ollama/Gemini, Postgres (documents, estimates)

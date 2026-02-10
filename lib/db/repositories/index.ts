@@ -93,13 +93,6 @@ export {
   markDetailScraped,
   upsertMarketingPermit,
 } from "@lib/db/repositories/marketing-permit";
-// NOI
-export {
-  getAllNOIs,
-  getNOIByPermitId,
-  getNOIByProject,
-  insertNOI,
-} from "@lib/db/repositories/noi";
 // Project
 export {
   addProjectAlias,

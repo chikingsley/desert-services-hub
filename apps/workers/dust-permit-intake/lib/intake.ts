@@ -3,12 +3,11 @@
  *
  * Processes forwarded emails with PDF attachments:
  *   1. Run NOI extraction on each PDF
- *   2. Store result in noi_extractions table
+ *   2. Store PDF + extraction blob in documents table
  *   3. Match to project and update noi_status
  */
 import { join } from "node:path";
 import { db } from "@lib/db/hub";
-import { insertNOI } from "@lib/db/repositories/noi";
 import {
   createSharePointClientFromEnv,
   uploadLocalFileToProjectSubfolder,
@@ -61,12 +60,48 @@ interface NOIResult {
 }
 
 interface IntakeResult {
-  noiId: number | null;
+  documentId: number | null;
   projectId: number | null;
   projectName: string | null;
   fileName: string;
   error?: string;
 }
+
+// ============================================================================
+// DB Writes (documents)
+// ============================================================================
+
+const insertNoiDocument = db.prepare(`
+  INSERT INTO documents (
+    project_id, document_type, summary, raw_extraction,
+    file_path, file_name,
+    model, processing_time_ms,
+    extraction_status,
+    original_from, original_subject, forwarder_email
+  ) VALUES (
+    $1, 'NOI', $2, $3::jsonb,
+    $4, $5,
+    $6, $7,
+    'success',
+    $8, $9, $10
+  )
+  RETURNING id
+`);
+
+const insertNoiDocumentError = db.prepare(`
+  INSERT INTO documents (
+    project_id, document_type,
+    file_path, file_name,
+    extraction_status, extraction_error,
+    original_from, original_subject, forwarder_email
+  ) VALUES (
+    $1, 'NOI',
+    $2, $3,
+    'failed', $4,
+    $5, $6, $7
+  )
+  RETURNING id
+`);
 
 // ============================================================================
 // NOI Extraction via Python CLI
@@ -114,43 +149,48 @@ async function runNOIExtraction(pdfPath: string): Promise<NOIResult> {
 
 async function processSinglePdf(
   pdfPath: string,
-  originalSubject: string,
+  emailMeta: Pick<
+    DustPermitIntakePayload,
+    "originalSubject" | "originalFrom" | "forwarderEmail"
+  >,
   sp: SharePointClient | null
 ): Promise<IntakeResult> {
   const fileName = pdfPath.split("/").pop() ?? pdfPath;
 
   try {
+    const started = performance.now();
     const result = await runNOIExtraction(pdfPath);
+    const elapsed = Math.round(performance.now() - started);
     const meta = result._extraction;
 
     // Match to project
-    const project = await matchProject(originalSubject, result.siteName);
+    const project = await matchProject(
+      emailMeta.originalSubject,
+      result.siteName
+    );
 
-    const noiId = await insertNOI({
-      projectId: project?.id ?? null,
-      filePath: pdfPath,
+    const summary = [
+      result.siteName,
+      result.permitId ? `(${result.permitId})` : null,
+      `${meta.confidence} confidence`,
+    ]
+      .filter(Boolean)
+      .join(" ");
+
+    const row = (await insertNoiDocument.get(
+      project?.id ?? null,
+      summary,
+      JSON.stringify(result),
+      pdfPath,
       fileName,
-      permitId: result.permitId,
-      ltfNumber: result.ltfNumber,
-      applicantName: result.applicantName,
-      applicantAddress1: result.applicantAddress1,
-      applicantAddress2: result.applicantAddress2,
-      applicantCity: result.applicantCity,
-      applicantState: result.applicantState,
-      applicantZip: result.applicantZip,
-      siteName: result.siteName,
-      siteAddress: result.siteAddress,
-      latitude: result.latitude,
-      longitude: result.longitude,
-      acresDisturbed: result.acresDisturbed,
-      swpppContactFirstName: result.swpppContactFirstName,
-      swpppContactLastName: result.swpppContactLastName,
-      swpppContactEmail: result.swpppContactEmail,
-      swpppContactPhone: result.swpppContactPhone,
-      extractionConfidence: meta.confidence,
-      missingFields: meta.missingFields,
-      warnings: meta.warnings,
-    });
+      "pdf-analysis/noi",
+      elapsed,
+      emailMeta.originalFrom || null,
+      emailMeta.originalSubject || null,
+      emailMeta.forwarderEmail || null
+    )) as { id: number } | null;
+
+    const documentId = row?.id ?? null;
 
     // Update project noi_status if linked
     if (project) {
@@ -159,22 +199,22 @@ async function processSinglePdf(
         [project.id]
       );
       console.log(
-        `${LOG} NOI #${noiId} linked to project: ${project.name} (id=${project.id})`
+        `${LOG} NOI document #${documentId} linked to project: ${project.name} (id=${project.id})`
       );
     } else {
       console.log(
-        `${LOG} NOI #${noiId} stored — no project match for "${originalSubject}"`
+        `${LOG} NOI document #${documentId} stored — no project match for "${emailMeta.originalSubject}"`
       );
     }
 
-    if (project && sp) {
+    if (project && sp && documentId) {
       try {
         const uploaded = await uploadLocalFileToProjectSubfolder(sp, {
           projectId: project.id,
           subfolder: "NOI",
           localPath: pdfPath,
           originalFileName: fileName,
-          stableSuffix: String(noiId),
+          stableSuffix: String(documentId),
         });
 
         if (uploaded) {
@@ -193,7 +233,7 @@ async function processSinglePdf(
     );
 
     return {
-      noiId,
+      documentId,
       projectId: project?.id ?? null,
       projectName: project?.name ?? null,
       fileName,
@@ -201,8 +241,34 @@ async function processSinglePdf(
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error(`${LOG} Failed ${fileName}: ${msg}`);
+
+    try {
+      const row = (await insertNoiDocumentError.get(
+        null,
+        pdfPath,
+        fileName,
+        msg.slice(0, 1000),
+        emailMeta.originalFrom || null,
+        emailMeta.originalSubject || null,
+        emailMeta.forwarderEmail || null
+      )) as { id: number } | null;
+
+      return {
+        documentId: row?.id ?? null,
+        projectId: null,
+        projectName: null,
+        fileName,
+        error: msg,
+      };
+    } catch (dbErr) {
+      const dbMsg = dbErr instanceof Error ? dbErr.message : String(dbErr);
+      console.warn(
+        `${LOG} Failed to store error record for ${fileName}: ${dbMsg}`
+      );
+    }
+
     return {
-      noiId: null,
+      documentId: null,
       projectId: null,
       projectName: null,
       fileName,
@@ -227,7 +293,7 @@ export async function processDustPermitIntake(
 
   const results: IntakeResult[] = [];
   for (const pdfPath of attachmentPaths) {
-    const result = await processSinglePdf(pdfPath, originalSubject, sp);
+    const result = await processSinglePdf(pdfPath, payload, sp);
     results.push(result);
   }
 

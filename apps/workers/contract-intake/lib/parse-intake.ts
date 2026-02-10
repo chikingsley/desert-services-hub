@@ -6,7 +6,7 @@
  *
  * Also runs classify to determine document type.
  *
- * Results are stored in the contracts table with the reconciled markdown
+ * Results are stored in the documents table with the reconciled markdown
  * as the summary and the full parse output as raw_extraction.
  */
 import { join } from "node:path";
@@ -184,7 +184,7 @@ async function processSinglePdf(
       `${LOG}   Parsed: ${parsed.page_count} pages, ${parsed.processing_time_ms}ms`
     );
 
-    // Store in contracts table
+    // Store in documents table
     const rawExtraction = {
       reconciled_markdown: parsed.reconciled_markdown,
       classify: {

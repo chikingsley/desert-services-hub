@@ -60,6 +60,8 @@ const SPAM_DOMAINS = [
   // Recruiting spam
   "tradex-select.com",
   "roberthalf.com",
+  // Apple marketing newsletter
+  "insideapple.apple.com",
 ];
 
 const SPAM_SENDER_PATTERNS = [

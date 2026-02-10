@@ -154,6 +154,16 @@ export function EmailsPage() {
     setDetailOpen(true);
   };
 
+  const handleSpam = async (domain: string) => {
+    await fetch("/api/emails/spam", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ domain }),
+    });
+    setDetailOpen(false);
+    mutate();
+  };
+
   const stats = data?.stats ?? {
     total: 0,
     contracts: 0,
@@ -393,6 +403,7 @@ export function EmailsPage() {
       <EmailDetailPanel
         emailId={selectedEmailId}
         onClose={() => setDetailOpen(false)}
+        onSpam={handleSpam}
         open={detailOpen}
       />
     </div>

@@ -17,7 +17,7 @@ import {
 } from "@/api/archive";
 import { getCatalog, getTakeoffItems } from "@/api/catalog";
 import { listContracts } from "@/api/contracts";
-import { getEmail, listEmails } from "@/api/emails";
+import { getEmail, listEmails, markDomainAsSpam } from "@/api/emails";
 import { createEstimate, listEstimates } from "@/api/estimates";
 import {
   deleteEstimate,
@@ -130,6 +130,9 @@ const server = serve({
     // Emails
     "/api/emails": {
       GET: h(listEmails),
+    },
+    "/api/emails/spam": {
+      POST: h(markDomainAsSpam),
     },
     "/api/emails/:id": {
       GET: h(getEmail),

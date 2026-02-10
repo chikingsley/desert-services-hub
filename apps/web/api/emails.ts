@@ -243,3 +243,42 @@ export async function getEmail(req: Request): Promise<Response> {
     );
   }
 }
+
+// POST /api/emails/spam — mark all emails from a domain as excluded
+export async function markDomainAsSpam(req: Request): Promise<Response> {
+  try {
+    const body = (await req.json()) as { domain?: string };
+    const domain = body.domain?.trim().toLowerCase();
+
+    if (!domain) {
+      return Response.json({ error: "domain is required" }, { status: 400 });
+    }
+
+    const result = await db
+      .prepare(
+        `UPDATE emails SET is_excluded = 1
+         WHERE is_excluded = 0 AND from_domain = ?`
+      )
+      .run(domain) as unknown as { changes: number };
+
+    // Also catch subdomains (e.g. clear.keyprofitstrategy.com)
+    const subResult = await db
+      .prepare(
+        `UPDATE emails SET is_excluded = 1
+         WHERE is_excluded = 0 AND from_domain LIKE ?`
+      )
+      .run(`%.${domain}`) as unknown as { changes: number };
+
+    const total = (result.changes ?? 0) + (subResult.changes ?? 0);
+
+    console.log(`[spam] Marked ${total} emails from ${domain} as excluded`);
+
+    return Response.json({ domain, excluded: total });
+  } catch (error) {
+    console.error("Failed to mark domain as spam:", error);
+    return Response.json(
+      { error: "Failed to mark domain as spam" },
+      { status: 500 }
+    );
+  }
+}

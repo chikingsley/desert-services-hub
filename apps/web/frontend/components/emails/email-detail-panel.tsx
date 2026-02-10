@@ -5,6 +5,7 @@
  * Shows full email body (HTML or plain text), metadata, and actions.
  */
 import {
+  Ban,
   ExternalLink,
   Mail,
   Paperclip,
@@ -31,6 +32,7 @@ interface EmailDetailPanelProps {
   emailId: number | null;
   open: boolean;
   onClose: () => void;
+  onSpam?: (domain: string) => void;
 }
 
 const CLASSIFICATION_COLORS: Record<string, string> = {
@@ -57,6 +59,7 @@ export function EmailDetailPanel({
   emailId,
   open,
   onClose,
+  onSpam,
 }: EmailDetailPanelProps) {
   const { data, isLoading } = useSWR<{
     email: Email;
@@ -209,6 +212,16 @@ export function EmailDetailPanel({
                       <ExternalLink className="mr-1.5 h-3.5 w-3.5" />
                       Open in Outlook
                     </a>
+                  </Button>
+                )}
+                {onSpam && email.fromDomain && (
+                  <Button
+                    onClick={() => onSpam(email.fromDomain!)}
+                    size="sm"
+                    variant="destructive"
+                  >
+                    <Ban className="mr-1.5 h-3.5 w-3.5" />
+                    Block {email.fromDomain}
                   </Button>
                 )}
               </div>

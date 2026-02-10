@@ -34,6 +34,11 @@ const BODY_MARICOPA_ISSUED_RE =
   /application\s+D\d{7}\s+has been processed and approved/i;
 const POINT_AND_PAY_INVOICE_RE = /Account Number:\s*(IV\d+)/i;
 const POINT_AND_PAY_COUNTY_INVOICE_NUMBER_RE = /Invoice Number:\s*(\d+)/i;
+const POINT_AND_PAY_PRODUCT_LINE_RE =
+  /Product:\s*Invoices\s*-\s*Account Number:\s*(IV\d+)\s*-\s*Amount:\s*(\$[\d,]+\.\d{2})/i;
+const POINT_AND_PAY_SUBTOTAL_RE =
+  /^[ \t]*Sub Total:\s*(\$[\d,]+\.\d{2})/im;
+const POINT_AND_PAY_TOTAL_RE = /^[ \t]*Total:\s*(\$[\d,]+\.\d{2})/im;
 const POINT_AND_PAY_AMOUNT_RE = /Amount:\s*(\$[\d,]+\.\d{2})/i;
 const POINT_AND_PAY_CONFIRMATION_RE = /Confirmation ID:\s*(\d+)/i;
 const POINT_AND_PAY_CARD_RE = /Account Last Four:\s*(\d{4})/i;
@@ -101,16 +106,52 @@ export interface PointAndPayData {
 export function parsePointAndPayEmail(body: string): PointAndPayData {
   const invoiceMatch = body.match(POINT_AND_PAY_INVOICE_RE);
   const countyInvoiceMatch = body.match(POINT_AND_PAY_COUNTY_INVOICE_NUMBER_RE);
-  const amountMatch = body.match(POINT_AND_PAY_AMOUNT_RE);
   const confirmationMatch = body.match(POINT_AND_PAY_CONFIRMATION_RE);
   const cardMatch = body.match(POINT_AND_PAY_CARD_RE);
   const dateMatch = body.match(POINT_AND_PAY_DATE_RE);
   const phoneMatch = body.match(POINT_AND_PAY_PHONE_RE);
 
+  const invoiceNumber = invoiceMatch?.[1] ?? null;
+  const countyInvoiceNumber = countyInvoiceMatch?.[1] ?? null;
+
+  // PointAndPay can list the same invoice multiple times (e.g., accelerated
+  // processing shows two identical line items). Prefer summing Product lines
+  // for the detected invoice; fall back to Sub Total / Total / first Amount.
+  let amount: string | null = null;
+
+  if (invoiceNumber) {
+    const productLineRe = new RegExp(POINT_AND_PAY_PRODUCT_LINE_RE.source, "gi");
+    let sum = 0;
+    let count = 0;
+    for (const match of body.matchAll(productLineRe)) {
+      if (match[1] !== invoiceNumber) {
+        continue;
+      }
+      const parsed = parseDollarAmount(match[2] ?? null);
+      if (parsed == null) {
+        continue;
+      }
+      sum += parsed;
+      count += 1;
+    }
+
+    if (count > 0) {
+      // Avoid floating point artifacts for currency.
+      amount = formatUSD(Math.round(sum * 100) / 100);
+    }
+  }
+
+  if (!amount) {
+    const subTotalMatch = body.match(POINT_AND_PAY_SUBTOTAL_RE);
+    const totalMatch = body.match(POINT_AND_PAY_TOTAL_RE);
+    const amountMatch = body.match(POINT_AND_PAY_AMOUNT_RE);
+    amount = subTotalMatch?.[1] ?? totalMatch?.[1] ?? amountMatch?.[1] ?? null;
+  }
+
   return {
-    invoiceNumber: invoiceMatch?.[1] ?? null,
-    countyInvoiceNumber: countyInvoiceMatch?.[1] ?? null,
-    amount: amountMatch?.[1] ?? null,
+    invoiceNumber,
+    countyInvoiceNumber,
+    amount,
     confirmationId: confirmationMatch?.[1] ?? null,
     cardLastFour: cardMatch?.[1] ?? null,
     paymentDate: dateMatch?.[1]?.trim() ?? null,

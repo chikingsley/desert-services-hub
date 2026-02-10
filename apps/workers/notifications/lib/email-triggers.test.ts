@@ -75,6 +75,43 @@ const POINTANDPAY_BODY_LARGE = POINTANDPAY_BODY_CRLF.replace(
   .replace("190018295", "190100200")
   .replace("8113", "9999");
 
+/** PointAndPay accelerated processing (same invoice appears twice) */
+const POINTANDPAY_BODY_ACCELERATED = [
+  "Your Maricopa County Air Quality Department payment has been authorized and will be processed soon.",
+  "",
+  "Please see below for the details of your payment:",
+  "",
+  "Product: Invoices - Account Number: IV088327 - Amount: $1,130.00",
+  "Product: Invoices - Account Number: IV088327 - Amount: $1,130.00",
+  "",
+  "",
+  "Sub Total: $2,260.00",
+  "",
+  "Fee: $0.00",
+  "",
+  "Total: $2,260.00",
+  "~~~~~~~~~~~~~~~~~~~~~~",
+  "",
+  "Payment Details:",
+  "",
+  "Confirmation ID: 191576822",
+  "",
+  "Invoice Number: 88327",
+  "",
+  "Facility Name:",
+  "",
+  "Company Name:",
+  "",
+  "Payment Date: 02/10/2026 02:15 PM US Mountain Time",
+  "",
+  "Account Last Four: 8113",
+  "",
+  "Customer Phone Number: (304) 405-2446",
+  "",
+  "~~~~~~~~~~~~~~~~~~~~~~~",
+  "Thank you.",
+].join("\r\n");
+
 /** Maricopa issued email — clean \n format (as in test-trigger.ts) */
 const MARICOPA_BODY_LF = `Dust Permit Issued -- Lexington 420 - Northern Pkwy Logistics Bldg. D,
 
@@ -208,6 +245,16 @@ describe("parsePointAndPayEmail", () => {
       "01/14/2026 09:06 AM US Mountain Time"
     );
     expect(data.customerPhone).toBeTruthy();
+  });
+
+  test("parses accelerated processing email (duplicate invoice line items)", () => {
+    const data = parsePointAndPayEmail(POINTANDPAY_BODY_ACCELERATED);
+    expect(data.invoiceNumber).toBe("IV088327");
+    expect(data.amount).toBe("$2,260.00");
+    expect(data.confirmationId).toBe("191576822");
+    expect(data.countyInvoiceNumber).toBe("88327");
+    expect(data.cardLastFour).toBe("8113");
+    expect(data.paymentDate).toBe("02/10/2026 02:15 PM US Mountain Time");
   });
 
   test("parses all fields from LF body", () => {

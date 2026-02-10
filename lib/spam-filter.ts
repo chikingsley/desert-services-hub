@@ -54,6 +54,12 @@ const SPAM_DOMAINS = [
   "nextdoor.com",
   "wastetodaymagazine.com",
   "fromyouflowers.com",
+  // Retail/shopping marketing
+  "myphotos.walmart.com",
+  "anthropologie.com",
+  // Recruiting spam
+  "tradex-select.com",
+  "roberthalf.com",
 ];
 
 const SPAM_SENDER_PATTERNS = [
@@ -76,6 +82,8 @@ const SPAM_NOREPLY_DOMAINS = [
   "campaign.eventbrite.com",
   "t-mobileforbusiness.t-mobile.com",
   "tenstreet.com",
+  "yardi.com",
+  "desertservices.net",
 ];
 
 const SPAM_SUBJECT_PATTERNS = [
@@ -88,6 +96,7 @@ const SPAM_SUBJECT_PATTERNS = [
   /unsubscribe/i,
   /your order has shipped/i,
   /your .* is on the way/i,
+  /verification code/i,
   /🧶|🎁|💖|🛒|🛍️/,
 ];
 
@@ -120,7 +129,7 @@ export function isSpam(
   subject: string | null | undefined
 ): SpamCheckResult {
   if (!fromEmail) {
-    return { isSpam: false };
+    return { isSpam: true, reason: "no_sender" };
   }
 
   const email = fromEmail.toLowerCase();

@@ -8,6 +8,7 @@ import type {
   EmailClassification,
   InsertEmailData,
 } from "@lib/db/types";
+import { isSpam } from "@lib/spam-filter";
 
 // ============================================
 // Row Parser
@@ -98,13 +99,14 @@ function normalizeSubjectInternal(subject: string | null): string | null {
 
 export async function insertEmail(data: InsertEmailData): Promise<number> {
   const normalized = normalizeSubjectInternal(data.subject ?? null);
+  const excluded = isSpam(data.fromEmail, data.subject).isSpam ? 1 : 0;
 
   await db.run(
     `INSERT INTO emails (
       message_id, internet_message_id, mailbox_id, conversation_id, subject, normalized_subject, from_email, from_name,
       to_emails, cc_emails, received_at, has_attachments, attachment_names,
-      body_preview, body_full, body_html, web_url, categories
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      body_preview, body_full, body_html, web_url, categories, is_excluded
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(message_id) DO UPDATE SET
       internet_message_id = excluded.internet_message_id,
       subject = excluded.subject,
@@ -118,7 +120,8 @@ export async function insertEmail(data: InsertEmailData): Promise<number> {
       body_preview = excluded.body_preview,
       body_full = excluded.body_full,
       body_html = excluded.body_html,
-      categories = excluded.categories`,
+      categories = excluded.categories,
+      is_excluded = excluded.is_excluded`,
     [
       data.messageId,
       data.internetMessageId ?? null,
@@ -138,6 +141,7 @@ export async function insertEmail(data: InsertEmailData): Promise<number> {
       data.bodyHtml ?? null,
       data.webUrl ?? null,
       JSON.stringify(data.categories ?? []),
+      excluded,
     ]
   );
 

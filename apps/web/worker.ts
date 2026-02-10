@@ -31,8 +31,8 @@ import { ESTIMATING_COLUMNS } from "@monday/types";
 import { z } from "zod";
 import { itemHasFiles, processItemFiles } from "@/apps/web/pipeline";
 import { processContractIntake } from "@/apps/workers/contract-intake/lib/intake";
-import type { ContractsEmailIntakePayload } from "@/apps/workers/contract-intake/lib/parse-intake";
-import { processContractsEmailIntake } from "@/apps/workers/contract-intake/lib/parse-intake";
+import type { ContractsEmailIntakePayload } from "@/apps/workers/contract-intake/lib/files-intake";
+import { processFilesIntake } from "@/apps/workers/contract-intake/lib/files-intake";
 import type { DustPermitIntakePayload } from "@/apps/workers/dust-permit-intake/lib/intake";
 import { processDustPermitIntake } from "@/apps/workers/dust-permit-intake/lib/intake";
 import { syncEstimates } from "@/apps/workers/estimate-poller/lib/sync";
@@ -864,20 +864,20 @@ async function processNextJob(): Promise<void> {
         break;
       }
 
+      case "files_intake":
       case "contracts_email_intake": {
-        const contractsPayload = parseJobPayload(
+        const filesPayload = parseJobPayload(
           job,
           CONTRACTS_EMAIL_INTAKE_PAYLOAD_SCHEMA
         );
-        const results = await processContractsEmailIntake(contractsPayload);
-        // Auto-link contracts to projects via email matching
+        const results = await processFilesIntake(filesPayload);
         for (const r of results) {
-          if (r.contractId && contractsPayload.originalSubject) {
+          if (r.contractId && filesPayload.originalSubject) {
             await autoLinkContract(
               r.contractId,
-              contractsPayload.originalSubject,
-              contractsPayload.originalFrom,
-              contractsPayload.forwarderEmail
+              filesPayload.originalSubject,
+              filesPayload.originalFrom,
+              filesPayload.forwarderEmail
             );
           }
         }

@@ -1,10 +1,10 @@
 /**
- * Contracts Pipeline — Integration Tests
+ * Files Intake Pipeline — Integration Tests
  *
- * Tests the full flow: webhook → job queue → parse → auto-link
+ * Tests the full flow: webhook → job queue → process → auto-link
+ * Covers PDFs (existing) and the new files-intake endpoint.
  *
- * Run: bun test tests/contracts-pipeline.test.ts
- * Run verbose: bun test tests/contracts-pipeline.test.ts --verbose
+ * Run: bun test ./tests/files-pipeline.test.ts --verbose
  */
 import { afterAll, beforeAll, describe, expect, it } from "bun:test";
 import { db } from "@lib/db/hub";
@@ -53,10 +53,10 @@ async function waitForJobCompletion(
 }
 
 // ============================================================================
-// Tests
+// PDF Pipeline Tests (via /api/webhooks/files-intake)
 // ============================================================================
 
-describe("contracts pipeline", () => {
+describe("files pipeline — PDF", () => {
   let testPdfPath: string;
   let jobId: number;
 
@@ -65,25 +65,23 @@ describe("contracts pipeline", () => {
     console.log(`Using test PDF: ${testPdfPath}`);
   });
 
-  // --------------------------------------------------------------------------
-  // Step 1: Webhook accepts PDF and enqueues job
-  // --------------------------------------------------------------------------
   it("webhook accepts PDF and enqueues job", async () => {
     const pdfBuffer = await Bun.file(testPdfPath).arrayBuffer();
     const base64 = Buffer.from(pdfBuffer).toString("base64");
     const fileName = testPdfPath.split("/").pop()!;
 
     const response = await fetch(
-      `${WEBHOOK_URL}/api/webhooks/contracts-intake`,
+      `${WEBHOOK_URL}/api/webhooks/files-intake`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           forwarderEmail: "test-runner@desertservices.app",
           forwardedAt: new Date().toISOString(),
-          originalSubject: `Test Pipeline ${Date.now()}`,
+          originalSubject: `Test Files Pipeline ${Date.now()}`,
           originalFrom: "vendor@example.com",
           bodyText: "Test email body for pipeline verification",
+          bodyHasContent: false,
           attachments: [
             {
               filename: fileName,
@@ -100,23 +98,19 @@ describe("contracts pipeline", () => {
     const body = (await response.json()) as {
       ok: boolean;
       jobId: number;
-      pdfs: number;
+      files: number;
     };
     expect(body.ok).toBe(true);
-    expect(body.pdfs).toBe(1);
+    expect(body.files).toBe(1);
     expect(body.jobId).toBeGreaterThan(0);
 
     jobId = body.jobId;
     console.log(`  Job #${jobId} enqueued`);
   });
 
-  // --------------------------------------------------------------------------
-  // Step 2: Job gets picked up and processed
-  // --------------------------------------------------------------------------
   it(
     "background worker processes the job",
     async () => {
-      // Bump to front of queue so we don't wait behind email_notification jobs
       await db.run(
         "UPDATE webhook_jobs SET created_at = '2019-01-01' WHERE id = $1",
         [jobId]
@@ -134,11 +128,7 @@ describe("contracts pipeline", () => {
     { timeout: PARSE_TIMEOUT_MS + 10_000 }
   );
 
-  // --------------------------------------------------------------------------
-  // Step 3: Contract record exists with parsed data
-  // --------------------------------------------------------------------------
-  it("contract record is stored with parsed data", async () => {
-    // Find the contract created by this job
+  it("file record is stored with parsed data", async () => {
     const contract = await db
       .query<{
         id: number;
@@ -150,14 +140,13 @@ describe("contracts pipeline", () => {
         original_from: string | null;
         original_subject: string | null;
         forwarder_email: string | null;
-        email_id: number | null;
-        project_id: number | null;
       }>(
         `SELECT id, document_type, summary, model, processing_time_ms,
                 extraction_status, original_from, original_subject,
-                forwarder_email, email_id, project_id
+                forwarder_email
          FROM contracts
          WHERE forwarder_email = 'test-runner@desertservices.app'
+           AND extraction_status = 'success'
          ORDER BY id DESC LIMIT 1`
       )
       .get();
@@ -169,58 +158,41 @@ describe("contracts pipeline", () => {
     expect(contract!.summary!.length).toBeGreaterThan(100);
     expect(contract!.model).toBeTruthy();
     expect(contract!.processing_time_ms).toBeGreaterThan(0);
-
-    // Email metadata should be stored
     expect(contract!.original_from).toBe("vendor@example.com");
-    expect(contract!.forwarder_email).toBe(
-      "test-runner@desertservices.app"
-    );
+    expect(contract!.forwarder_email).toBe("test-runner@desertservices.app");
 
-    console.log(`  Contract #${contract!.id}:`);
+    console.log(`  Record #${contract!.id}:`);
     console.log(`    Type: ${contract!.document_type}`);
     console.log(`    Model: ${contract!.model}`);
     console.log(`    Time: ${contract!.processing_time_ms}ms`);
     console.log(`    Summary: ${contract!.summary!.length} chars`);
-    console.log(
-      `    Email link: ${contract!.email_id ? `#${contract!.email_id}` : "none"}`
-    );
-    console.log(
-      `    Project link: ${contract!.project_id ? `#${contract!.project_id}` : "none"}`
-    );
   });
 
-  // --------------------------------------------------------------------------
-  // Step 4: Auto-linking attempted
-  // --------------------------------------------------------------------------
-  it("auto-linking stores metadata on contract", async () => {
-    const contract = await db
-      .query<{
-        original_from: string | null;
-        original_subject: string | null;
-        forwarder_email: string | null;
-      }>(
-        `SELECT original_from, original_subject, forwarder_email
-         FROM contracts
-         WHERE forwarder_email = 'test-runner@desertservices.app'
-         ORDER BY id DESC LIMIT 1`
-      )
-      .get();
-
-    expect(contract).toBeTruthy();
-    expect(contract!.original_from).toBe("vendor@example.com");
-    expect(contract!.original_subject).toContain("Test Pipeline");
-    expect(contract!.forwarder_email).toBe(
-      "test-runner@desertservices.app"
+  it("backward compat: old endpoint still works", async () => {
+    const response = await fetch(
+      `${WEBHOOK_URL}/api/webhooks/contracts-intake`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          forwarderEmail: "test-runner@desertservices.app",
+          forwardedAt: new Date().toISOString(),
+          originalSubject: "Backward Compat Test",
+          originalFrom: "test@example.com",
+          bodyText: "",
+          attachments: [],
+        }),
+      }
     );
+
+    // Should get 400 (no files) but NOT 404 (route not found)
+    expect(response.status).toBe(400);
   });
 
-  // --------------------------------------------------------------------------
-  // Cleanup: remove test contracts
-  // --------------------------------------------------------------------------
   afterAll(async () => {
     await db.run(
       "DELETE FROM contracts WHERE forwarder_email = 'test-runner@desertservices.app'"
     );
-    console.log("  Cleaned up test contracts");
+    console.log("  Cleaned up test records");
   });
 });

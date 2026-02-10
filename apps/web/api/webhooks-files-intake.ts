@@ -1,17 +1,18 @@
 /**
- * Contracts Email Intake Webhook Handler
+ * Files Intake Webhook Handler
  *
- * Route: POST /api/webhooks/contracts-intake
+ * Route: POST /api/webhooks/files-intake
  *
- * Receives forwarded email data from the Cloudflare contracts-email-intake
- * worker. Saves PDF attachments to disk, enqueues a contracts_email_intake
- * job for processing via the parse pipeline (pdfplumber + OCR + reconciliation).
+ * Receives forwarded email data from the Cloudflare files-email-intake
+ * worker. Saves ALL attachments to disk (not just PDFs), optionally
+ * saves email body text, and enqueues a files_intake job for processing.
  */
 import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import { db } from "@lib/db/hub";
 
-const INTAKE_DIR = join(import.meta.dir, "../../../data/contracts-intake");
+const INTAKE_DIR = join(import.meta.dir, "../../../data/files-intake");
+const LOG = "[webhook:files-intake]";
 
 interface IncomingAttachment {
   filename: string;
@@ -26,14 +27,17 @@ interface IncomingPayload {
   originalSubject: string;
   originalFrom: string;
   bodyText: string;
+  bodyHasContent?: boolean;
   attachments: IncomingAttachment[];
 }
 
 const enqueueStmt = db.prepare(
-  "INSERT INTO webhook_jobs (job_type, payload) VALUES ('contracts_email_intake', ?) RETURNING id"
+  "INSERT INTO webhook_jobs (job_type, payload) VALUES ('files_intake', ?) RETURNING id"
 );
 
-export async function handleContractsWebhook(req: Request): Promise<Response> {
+export async function handleFilesIntakeWebhook(
+  req: Request
+): Promise<Response> {
   let body: IncomingPayload;
   try {
     body = (await req.json()) as IncomingPayload;
@@ -41,20 +45,12 @@ export async function handleContractsWebhook(req: Request): Promise<Response> {
     return new Response("Bad Request", { status: 400 });
   }
 
-  if (!body.attachments?.length) {
-    return Response.json({ error: "No attachments provided" }, { status: 400 });
-  }
+  const hasAttachments = (body.attachments?.length ?? 0) > 0;
+  const hasBody = body.bodyHasContent === true;
 
-  // Filter to PDFs only
-  const pdfs = body.attachments.filter(
-    (a) =>
-      a.contentType === "application/pdf" ||
-      a.filename.toLowerCase().endsWith(".pdf")
-  );
-
-  if (pdfs.length === 0) {
+  if (!hasAttachments && !hasBody) {
     return Response.json(
-      { error: "No PDF attachments found" },
+      { error: "No attachments or body content provided" },
       { status: 400 }
     );
   }
@@ -64,13 +60,20 @@ export async function handleContractsWebhook(req: Request): Promise<Response> {
   const jobDir = join(INTAKE_DIR, jobId);
   await mkdir(jobDir, { recursive: true });
 
-  // Save PDFs to disk
+  // Save ALL attachments to disk
   const attachmentPaths: string[] = [];
-  for (const pdf of pdfs) {
-    const filePath = join(jobDir, pdf.filename);
-    const buffer = Buffer.from(pdf.content, "base64");
+  for (const att of body.attachments ?? []) {
+    const filePath = join(jobDir, att.filename);
+    const buffer = Buffer.from(att.content, "base64");
     await Bun.write(filePath, buffer);
     attachmentPaths.push(filePath);
+  }
+
+  // Save body text as a file if it has meaningful content
+  if (hasBody && body.bodyText.trim().length > 0) {
+    const bodyPath = join(jobDir, "email-body.txt");
+    await Bun.write(bodyPath, body.bodyText);
+    attachmentPaths.push(bodyPath);
   }
 
   // Enqueue job
@@ -86,11 +89,11 @@ export async function handleContractsWebhook(req: Request): Promise<Response> {
   const jobDbId = row?.id ?? null;
 
   console.log(
-    `[webhook:contracts] Enqueued job #${jobDbId}: ${pdfs.length} PDF(s) from "${body.originalSubject}"`
+    `${LOG} Enqueued job #${jobDbId}: ${attachmentPaths.length} file(s) from "${body.originalSubject}"`
   );
 
   return Response.json(
-    { ok: true, jobId: jobDbId, pdfs: pdfs.length },
+    { ok: true, jobId: jobDbId, files: attachmentPaths.length },
     { status: 202 }
   );
 }

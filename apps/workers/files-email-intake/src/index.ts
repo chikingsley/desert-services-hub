@@ -1,12 +1,13 @@
 /**
- * Contracts Email Intake Worker
+ * Files Email Intake Worker
  *
- * Receives emails forwarded to contracts@desertservices.app via
- * Cloudflare Email Routing. Parses attachments, POSTs to hub webhook
- * for PDF parsing (pdfplumber + OCR + reconciliation).
+ * Receives emails forwarded to files@desertservices.app (and
+ * contracts@desertservices.app) via Cloudflare Email Routing.
+ * Extracts all attachments and meaningful body text, POSTs to
+ * hub webhook for processing (OCR, classification, extraction).
  *
- * Email: contracts@desertservices.app
- * Worker: contracts-email-intake.cheez2012.workers.dev
+ * Email: files@desertservices.app, contracts@desertservices.app
+ * Worker: files-email-intake.cheez2012.workers.dev
  */
 
 import PostalMime from "postal-mime";
@@ -20,11 +21,14 @@ export interface Env {
   HUB_WEBHOOK_URL: string;
 }
 
-const HUB_PATH = "/api/webhooks/contracts-intake";
-const LOG = "[contracts-email-intake]";
+const HUB_PATH = "/api/webhooks/files-intake";
+const LOG = "[files-email-intake]";
 
 const FWD_PREFIX_RE = /^(?:fw|fwd|re|forwarded):\s*/gi;
 const ORIGINAL_SENDER_RE = /From:\s*(?:.*?<([^>]+)>|([^\s<]+@[^\s>]+))/i;
+
+/** Body text shorter than this is considered boilerplate (just FWD headers) */
+const MIN_BODY_LENGTH = 50;
 
 // =============================================================================
 // Worker Entry Point
@@ -39,7 +43,7 @@ export default {
     }
 
     return new Response(
-      "Contracts Email Intake Worker\n\nEndpoints:\n  GET /health",
+      "Files Email Intake Worker\n\nEndpoints:\n  GET /health",
       { headers: { "Content-Type": "text/plain" } }
     );
   },
@@ -59,27 +63,28 @@ export default {
       const rawBuffer = await streamToArrayBuffer(message.raw);
       const parsed = await new PostalMime().parse(rawBuffer);
 
-      // Extract PDF attachments as base64
-      const pdfAttachments = (parsed.attachments ?? [])
-        .filter(
-          (a) =>
-            a.mimeType === "application/pdf" ||
-            (a.filename ?? "").toLowerCase().endsWith(".pdf")
-        )
-        .map((a) => ({
-          filename: a.filename ?? "document.pdf",
-          contentType: a.mimeType ?? "application/pdf",
-          size: a.content.byteLength,
-          content: arrayBufferToBase64(a.content),
-        }));
+      // Extract ALL attachments (not just PDFs)
+      const attachments = (parsed.attachments ?? []).map((a) => ({
+        filename: a.filename ?? `attachment.${guessExtension(a.mimeType)}`,
+        contentType: a.mimeType ?? "application/octet-stream",
+        size: a.content.byteLength,
+        content: arrayBufferToBase64(a.content),
+      }));
 
-      if (pdfAttachments.length === 0) {
-        console.log(`${LOG} No PDF attachments found, forwarding only`);
+      const bodyText = parsed.text ?? "";
+      const bodyHasContent =
+        bodyText.replace(FWD_PREFIX_RE, "").trim().length >= MIN_BODY_LENGTH;
+
+      // Proceed if we have any attachments OR meaningful body text
+      if (attachments.length === 0 && !bodyHasContent) {
+        console.log(`${LOG} No attachments or body content, forwarding only`);
         await message.forward("chi@desertservices.net");
         return;
       }
 
-      console.log(`${LOG} Found ${pdfAttachments.length} PDF attachment(s)`);
+      console.log(
+        `${LOG} Found ${attachments.length} attachment(s)${bodyHasContent ? " + body text" : ""}`
+      );
 
       // Build payload
       const originalSubject = subject.replace(FWD_PREFIX_RE, "").trim();
@@ -88,8 +93,9 @@ export default {
         forwardedAt: new Date().toISOString(),
         originalSubject,
         originalFrom: extractOriginalSender(parsed.text ?? parsed.html ?? ""),
-        bodyText: parsed.text ?? "",
-        attachments: pdfAttachments,
+        bodyText,
+        bodyHasContent,
+        attachments,
       };
 
       // POST to hub webhook
@@ -131,10 +137,10 @@ async function postToHub(
     if (response.ok) {
       const result = (await response.json()) as {
         jobId?: number;
-        pdfs?: number;
+        files?: number;
       };
       console.log(
-        `${LOG} Hub accepted: job #${result.jobId}, ${result.pdfs} PDF(s)`
+        `${LOG} Hub accepted: job #${result.jobId}, ${result.files} file(s)`
       );
     } else {
       const text = await response.text();
@@ -154,6 +160,25 @@ async function postToHub(
 function extractOriginalSender(body: string): string {
   const fromMatch = body.match(ORIGINAL_SENDER_RE);
   return fromMatch?.[1] ?? fromMatch?.[2] ?? "";
+}
+
+function guessExtension(mimeType?: string): string {
+  if (!mimeType) return "bin";
+  const map: Record<string, string> = {
+    "application/pdf": "pdf",
+    "image/png": "png",
+    "image/jpeg": "jpg",
+    "image/gif": "gif",
+    "image/tiff": "tiff",
+    "image/webp": "webp",
+    "text/plain": "txt",
+    "text/csv": "csv",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+      "docx",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
+      "xlsx",
+  };
+  return map[mimeType] ?? "bin";
 }
 
 function arrayBufferToBase64(buffer: ArrayBuffer): string {

@@ -10,7 +10,7 @@
 import { serve } from "bun";
 import { healthCheck } from "@/api/health";
 import { handleMondayWebhook } from "@/api/webhooks";
-import { handleContractsWebhook } from "@/api/webhooks-contracts";
+import { handleFilesIntakeWebhook } from "@/api/webhooks-files-intake";
 import { handleDustPermitWebhook } from "@/api/webhooks-dust-permit";
 import { handleOutlookWebhook } from "@/api/webhooks-outlook";
 import { startWorker } from "@/apps/web/worker";
@@ -30,8 +30,11 @@ const server = serve({
     "/api/webhooks/outlook": {
       POST: h(handleOutlookWebhook),
     },
+    "/api/webhooks/files-intake": {
+      POST: h(handleFilesIntakeWebhook),
+    },
     "/api/webhooks/contracts-intake": {
-      POST: h(handleContractsWebhook),
+      POST: h(handleFilesIntakeWebhook), // backward compat alias
     },
     "/api/webhooks/dust-permit-intake": {
       POST: h(handleDustPermitWebhook),

@@ -1,4 +1,4 @@
-name = "contracts-email-intake"
+name = "files-email-intake"
 main = "src/index.ts"
 compatibility_date = "2026-02-09"
 compatibility_flags = ["nodejs_compat_v2"]
@@ -10,8 +10,8 @@ send_email = [
 [observability]
 enabled = true
 
-# Email routing: contracts@desertservices.app → this worker
-# Workers.dev URL: contracts-email-intake.cheez2012.workers.dev
+# Email routing: files@desertservices.app + contracts@desertservices.app → this worker
+# Workers.dev URL: files-email-intake.cheez2012.workers.dev
 #
 # Secrets (set via `wrangler secret put`):
 # - HUB_WEBHOOK_URL (https://monday-estimates.desertservices.app)

@@ -8,6 +8,7 @@
  *   bun apps/workers/estimate-email-linker/cli/run.ts --once --dry-run
  *   bun apps/workers/estimate-email-linker/cli/run.ts --interval=60000
  *   bun apps/workers/estimate-email-linker/cli/run.ts --min-id=0 --once
+ *   bun apps/workers/estimate-email-linker/cli/run.ts --min-id=0 --batches=0 --enable-project-single
  */
 
 import { pollEstimateEmailLinker } from "@/apps/workers/estimate-email-linker/lib/poll";
@@ -20,6 +21,7 @@ const intervalArg = args.find((a) => a.startsWith("--interval="));
 const batchArg = args.find((a) => a.startsWith("--batch="));
 const batchesArg = args.find((a) => a.startsWith("--batches="));
 const minIdArg = args.find((a) => a.startsWith("--min-id="));
+const enableProjectSingle = args.includes("--enable-project-single");
 
 const interval = intervalArg
   ? Number.parseInt(intervalArg.split("=")[1] ?? "60000", 10)
@@ -40,6 +42,7 @@ async function runOnce() {
     batchSize,
     maxBatches,
     minEmailId,
+    enableProjectSingle,
   });
 
   console.log(
@@ -55,7 +58,7 @@ async function runOnce() {
 }
 
 console.log(
-  `[estimate-email-linker] start | once=${once} dryRun=${dryRun} interval=${interval}ms batch=${batchSize} batches=${maxBatches}${minEmailId != null ? ` minId=${minEmailId}` : ""}`
+  `[estimate-email-linker] start | once=${once} dryRun=${dryRun} interval=${interval}ms batch=${batchSize} batches=${maxBatches}${minEmailId != null ? ` minId=${minEmailId}` : ""} projectSingle=${enableProjectSingle}`
 );
 
 if (once) {
@@ -71,4 +74,3 @@ while (true) {
   }
   await Bun.sleep(interval);
 }
-

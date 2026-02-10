@@ -207,6 +207,7 @@ export interface PollOptions {
   batchSize?: number;
   maxBatches?: number;
   minEmailId?: number;
+  enableProjectSingle?: boolean;
 }
 
 export interface PollStats {
@@ -222,7 +223,10 @@ export async function pollEstimateEmailLinker(
 ): Promise<PollStats> {
   const dryRun = Boolean(opts.dryRun);
   const batchSize = Math.max(50, Math.min(5000, opts.batchSize ?? 500));
-  const maxBatches = Math.max(1, opts.maxBatches ?? 10);
+  const maxBatchesRaw = opts.maxBatches ?? 10;
+  const maxBatches =
+    maxBatchesRaw <= 0 ? Number.POSITIVE_INFINITY : Math.max(1, maxBatchesRaw);
+  const enableProjectSingle = Boolean(opts.enableProjectSingle);
 
   const { byMondayItemId, byEstimateNumber } = await buildEstimateIndex();
 
@@ -380,7 +384,7 @@ export async function pollEstimateEmailLinker(
       // -------------------------------------------------------------------
       // Strategy 3: Project→estimate (only when single estimate on project).
       // -------------------------------------------------------------------
-      if (projectEstimateIds.length === 1) {
+      if (enableProjectSingle && projectEstimateIds.length === 1) {
         const estId = projectEstimateIds[0]!;
         if (!dryRun) {
           const r = await insertLink.run(

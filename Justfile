@@ -88,6 +88,7 @@ _services_install start_after_install:
       "desert-outlook-folder-watcher.service"
       "desert-notifications.service"
       "desert-swppp-sync.service"
+      "desert-estimate-email-linker.service"
     )
 
     mkdir -p "$DST_DIR"

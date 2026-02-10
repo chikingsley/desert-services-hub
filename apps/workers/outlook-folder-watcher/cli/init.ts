@@ -20,7 +20,6 @@ import { findProjectByFolder } from "@/apps/workers/outlook-folder-watcher/lib/p
 import {
   addTrackedFolder,
   getTrackedFolders,
-  openStateDb,
   setConfig,
 } from "@/apps/workers/outlook-folder-watcher/lib/state";
 
@@ -44,8 +43,6 @@ const watchFolderName = getArg("watch", "Active");
 
 console.log(`[Init] Mailbox: ${mailbox}`);
 console.log(`[Init] Looking for: ${rootFolderName}/${watchFolderName}/`);
-
-const db = openStateDb();
 
 // Step 1: Find the root folder (e.g., "Projects")
 console.log("[Init] Fetching top-level folders...");
@@ -86,12 +83,12 @@ console.log(
 );
 
 // Step 3: Store config
-setConfig(db, "mailbox", mailbox);
-setConfig(db, "root_folder_name", rootFolderName);
-setConfig(db, "root_folder_id", rootFolder.id);
-setConfig(db, "watch_folder_name", watchFolderName);
-setConfig(db, "watch_folder_id", watchFolder.id);
-setConfig(db, "poll_interval_ms", "60000");
+await setConfig("mailbox", mailbox);
+await setConfig("root_folder_name", rootFolderName);
+await setConfig("root_folder_id", rootFolder.id);
+await setConfig("watch_folder_name", watchFolderName);
+await setConfig("watch_folder_id", watchFolder.id);
+await setConfig("poll_interval_ms", "60000");
 
 // Step 4: List project folders under Active/
 console.log(`[Init] Fetching project folders under "${watchFolderName}"...`);
@@ -105,8 +102,7 @@ let unmatched = 0;
 for (const folder of projectFolders) {
   const projectId = await findProjectByFolder(folder.displayName);
 
-  addTrackedFolder(
-    db,
+  await addTrackedFolder(
     folder.id,
     folder.displayName,
     folder.parentFolderId,
@@ -122,7 +118,7 @@ for (const folder of projectFolders) {
   }
 }
 
-const tracked = getTrackedFolders(db);
+const tracked = await getTrackedFolders();
 
 console.log("\n[Init] Complete.");
 console.log(`  Tracked folders: ${tracked.length}`);

@@ -4,8 +4,8 @@
  * Folder Watcher — Main Poll Loop
  *
  * Polls Microsoft Graph delta APIs to detect:
- * 1. New folders under Projects/Active/ → matches to existing projects
- * 2. New messages in tracked folders → links emails in hub.db
+ * 1. New folders under Projects/Active/ → matches/creates projects
+ * 2. New messages in tracked folders → links emails to projects
  *
  * Usage:
  *   bun cli/watch.ts                    # Continuous polling (60s default)
@@ -13,6 +13,7 @@
  *   bun cli/watch.ts --interval=30000   # Custom interval (ms)
  */
 
+import { db as hubDb } from "@lib/db/hub";
 import {
   DeltaExpiredError,
   type FolderChange,
@@ -25,30 +26,31 @@ import {
   checkDustPermitIssued,
   linkMessages,
 } from "@/apps/workers/outlook-folder-watcher/lib/linker";
-import { findProjectByFolder } from "@/apps/workers/outlook-folder-watcher/lib/projects";
+import {
+  findProjectByFolder,
+  parseFolderName,
+} from "@/apps/workers/outlook-folder-watcher/lib/projects";
 import {
   addTrackedFolder,
   getConfig,
   getTrackedFolders,
   logEvent,
-  openStateDb,
   removeTrackedFolder,
   setConfig,
   updateTrackedFolder,
 } from "@/apps/workers/outlook-folder-watcher/lib/state";
 
-const db = openStateDb();
-
 // Parse CLI args
 const args = process.argv.slice(2);
 const once = args.includes("--once");
 const intervalArg = args.find((a) => a.startsWith("--interval="));
+const configInterval = await getConfig("poll_interval_ms");
 const interval = intervalArg
   ? Number.parseInt(intervalArg.split("=")[1] ?? "60000", 10)
-  : Number.parseInt(getConfig(db, "poll_interval_ms") ?? "60000", 10);
+  : Number.parseInt(configInterval ?? "60000", 10);
 
-const _mailbox = getConfig(db, "mailbox");
-const watchFolderId = getConfig(db, "watch_folder_id");
+const _mailbox = await getConfig("mailbox");
+const watchFolderId = await getConfig("watch_folder_id");
 
 if (!(_mailbox && watchFolderId)) {
   console.error("[Watch] Not initialized. Run: bun cli/init.ts");
@@ -64,8 +66,7 @@ async function handleNewFolder(folder: FolderChange): Promise<void> {
 
   const projectId = await findProjectByFolder(folder.displayName);
 
-  addTrackedFolder(
-    db,
+  await addTrackedFolder(
     folder.id,
     folder.displayName,
     folder.parentFolderId,
@@ -74,11 +75,9 @@ async function handleNewFolder(folder: FolderChange): Promise<void> {
 
   if (projectId) {
     console.log(`  → Linked to project #${projectId}`);
-  } else {
-    console.log("  → No matching project found");
   }
 
-  logEvent(db, "folder_created", folder.id, folder.displayName, {
+  await logEvent("folder_created", folder.id, folder.displayName, {
     projectId,
     matched: projectId !== null,
   });
@@ -89,22 +88,46 @@ async function handleRenamedFolder(
   oldName: string
 ): Promise<void> {
   console.log(`[Renamed] "${oldName}" → "${folder.displayName}"`);
-  updateTrackedFolder(db, folder.id, { display_name: folder.displayName });
 
-  // Re-match project on rename
-  const projectId = await findProjectByFolder(folder.displayName);
-  if (projectId) {
-    updateTrackedFolder(db, folder.id, { project_id: projectId });
+  const tracked = await hubDb
+    .query<{ project_id: number | null }, [string]>(
+      "SELECT project_id FROM tracked_folders WHERE folder_id = ?"
+    )
+    .get(folder.id);
+
+  await updateTrackedFolder(folder.id, { display_name: folder.displayName });
+
+  // If already linked, update the project to reflect the rename
+  if (tracked?.project_id) {
+    const { projectName, contractor } = parseFolderName(folder.displayName);
+    const normalized = projectName.toLowerCase().replace(/[^a-z0-9]/g, "");
+    await hubDb.run(
+      "UPDATE projects SET name = ?, normalized_name = ?, outlook_folder = ?, contractor = COALESCE(?, contractor), updated_at = now() WHERE id = ?",
+      [
+        projectName,
+        normalized,
+        folder.displayName,
+        contractor,
+        tracked.project_id,
+      ]
+    );
+    console.log(`  → Updated project #${tracked.project_id}: "${projectName}"`);
+  } else {
+    // No linked project yet — find or create
+    const projectId = await findProjectByFolder(folder.displayName);
+    if (projectId) {
+      await updateTrackedFolder(folder.id, { project_id: projectId });
+    }
   }
 
-  logEvent(db, "folder_renamed", folder.id, folder.displayName, {
+  await logEvent("folder_renamed", folder.id, folder.displayName, {
     oldName,
-    projectId,
+    projectId: tracked?.project_id,
   });
 }
 
-function handleDeletedFolder(folder: FolderChange): void {
-  const tracked = db
+async function handleDeletedFolder(folder: FolderChange): Promise<void> {
+  const tracked = await hubDb
     .query<{ display_name: string; project_id: number | null }, [string]>(
       "SELECT display_name, project_id FROM tracked_folders WHERE folder_id = ?"
     )
@@ -112,8 +135,8 @@ function handleDeletedFolder(folder: FolderChange): void {
 
   if (tracked) {
     console.log(`[Deleted] "${tracked.display_name}"`);
-    removeTrackedFolder(db, folder.id);
-    logEvent(db, "folder_deleted", folder.id, tracked.display_name, {
+    await removeTrackedFolder(folder.id);
+    await logEvent("folder_deleted", folder.id, tracked.display_name, {
       projectId: tracked.project_id,
     });
   }
@@ -136,9 +159,9 @@ async function handleNewMessages(
 
   if (stats.directLinks > 0 || stats.threadExpanded > 0) {
     console.log(
-      `[Link] "${folderName}": ${stats.directLinks} direct, ${stats.threadExpanded} via threads, ${stats.notFound} not in hub.db`
+      `[Link] "${folderName}": ${stats.directLinks} direct, ${stats.threadExpanded} via threads, ${stats.notFound} not found`
     );
-    logEvent(db, "emails_linked", folderId, folderName, {
+    await logEvent("emails_linked", folderId, folderName, {
       ...stats,
       hubProjectId,
     });
@@ -147,7 +170,7 @@ async function handleNewMessages(
   // Check for dust permit issued emails
   const dustUpdated = await checkDustPermitIssued(hubProjectId);
   if (dustUpdated > 0) {
-    logEvent(db, "dust_permit_issued", folderId, folderName, {
+    await logEvent("dust_permit_issued", folderId, folderName, {
       permitsMarked: dustUpdated,
     });
   }
@@ -159,7 +182,7 @@ async function poll(): Promise<void> {
   const startTime = Date.now();
 
   // Step 1: Folder changes
-  const currentFolderDelta = getConfig(db, "folders_delta_link");
+  const currentFolderDelta = await getConfig("folders_delta_link");
   let folderResult: FolderDeltaResult;
 
   try {
@@ -167,7 +190,7 @@ async function poll(): Promise<void> {
   } catch (err) {
     if (err instanceof DeltaExpiredError) {
       console.warn("[Watch] Folder delta token expired, doing full resync");
-      setConfig(db, "folders_delta_link", "");
+      await setConfig("folders_delta_link", "");
       folderResult = await foldersDelta(mailbox, null);
     } else {
       throw err;
@@ -181,11 +204,11 @@ async function poll(): Promise<void> {
 
   for (const folder of relevantFolderChanges) {
     if (folder["@removed"]) {
-      handleDeletedFolder(folder);
+      await handleDeletedFolder(folder);
       continue;
     }
 
-    const tracked = db
+    const tracked = await hubDb
       .query<{ display_name: string }, [string]>(
         "SELECT display_name FROM tracked_folders WHERE folder_id = ?"
       )
@@ -198,10 +221,10 @@ async function poll(): Promise<void> {
     }
   }
 
-  setConfig(db, "folders_delta_link", folderResult.deltaLink);
+  await setConfig("folders_delta_link", folderResult.deltaLink);
 
   // Step 2: Message changes per tracked folder
-  const tracked = getTrackedFolders(db);
+  const tracked = await getTrackedFolders();
 
   for (const folder of tracked) {
     // Skip folders without a matched project
@@ -227,7 +250,7 @@ async function poll(): Promise<void> {
         );
       }
 
-      updateTrackedFolder(db, folder.folder_id, {
+      await updateTrackedFolder(folder.folder_id, {
         messages_delta_link: msgResult.deltaLink,
         last_synced_at: new Date().toISOString(),
       });
@@ -236,22 +259,22 @@ async function poll(): Promise<void> {
         console.warn(
           `[Watch] Message delta expired for "${folder.display_name}", will resync`
         );
-        updateTrackedFolder(db, folder.folder_id, {
+        await updateTrackedFolder(folder.folder_id, {
           messages_delta_link: null,
         });
-        logEvent(db, "delta_expired", folder.folder_id, folder.display_name, {
+        await logEvent("delta_expired", folder.folder_id, folder.display_name, {
           type: "messages",
         });
       } else {
         console.error(`[Watch] Error polling "${folder.display_name}":`, err);
-        logEvent(db, "error", folder.folder_id, folder.display_name, {
+        await logEvent("error", folder.folder_id, folder.display_name, {
           error: String(err),
         });
       }
     }
   }
 
-  setConfig(db, "last_poll_at", new Date().toISOString());
+  await setConfig("last_poll_at", new Date().toISOString());
 
   const elapsed = Date.now() - startTime;
   console.log(
@@ -273,7 +296,7 @@ if (once) {
       await poll();
     } catch (err) {
       console.error("[Watch] Poll error:", err);
-      logEvent(db, "error", null, null, { error: String(err) });
+      await logEvent("error", null, null, { error: String(err) });
     }
     await Bun.sleep(interval);
   }

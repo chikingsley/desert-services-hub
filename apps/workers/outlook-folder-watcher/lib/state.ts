@@ -1,58 +1,8 @@
 /**
- * State DB for folder watcher.
- * Stores delta tokens, tracked folders, and event log.
- * Separate from hub.db and projects.db — operational state only.
+ * State management for folder watcher.
+ * Stores delta tokens, tracked folders, and event log in Postgres.
  */
-
-import { Database } from "bun:sqlite";
-
-const DB_PATH = `${import.meta.dir}/../folder-watcher.db`;
-
-let _db: InstanceType<typeof Database> | null = null;
-
-export function openStateDb(): InstanceType<typeof Database> {
-  if (_db) {
-    return _db;
-  }
-
-  _db = new Database(DB_PATH, { create: true });
-  _db.run("PRAGMA busy_timeout = 5000;");
-  _db.run("PRAGMA journal_mode = WAL;");
-
-  _db.run(`
-    CREATE TABLE IF NOT EXISTS config (
-      key TEXT PRIMARY KEY,
-      value TEXT NOT NULL
-    )
-  `);
-
-  _db.run(`
-    CREATE TABLE IF NOT EXISTS tracked_folders (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      folder_id TEXT UNIQUE NOT NULL,
-      display_name TEXT NOT NULL,
-      parent_folder_id TEXT NOT NULL,
-      project_id INTEGER,
-      messages_delta_link TEXT,
-      message_count INTEGER DEFAULT 0,
-      last_synced_at TEXT,
-      created_at TEXT DEFAULT (datetime('now'))
-    )
-  `);
-
-  _db.run(`
-    CREATE TABLE IF NOT EXISTS events (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      event_type TEXT NOT NULL,
-      folder_id TEXT,
-      folder_name TEXT,
-      details TEXT,
-      created_at TEXT DEFAULT (datetime('now'))
-    )
-  `);
-
-  return _db;
-}
+import { db } from "@lib/db/hub";
 
 export interface TrackedFolder {
   id: number;
@@ -66,56 +16,45 @@ export interface TrackedFolder {
   created_at: string;
 }
 
-export function getConfig(
-  db: InstanceType<typeof Database>,
-  key: string
-): string | null {
-  const row = db
+export async function getConfig(key: string): Promise<string | null> {
+  const row = await db
     .query<{ value: string }, [string]>(
-      "SELECT value FROM config WHERE key = ?"
+      "SELECT value FROM folder_watcher_config WHERE key = ?"
     )
     .get(key);
   return row?.value ?? null;
 }
 
-export function setConfig(
-  db: InstanceType<typeof Database>,
-  key: string,
-  value: string
-): void {
-  db.run("INSERT OR REPLACE INTO config (key, value) VALUES (?, ?)", [
-    key,
-    value,
-  ]);
+export async function setConfig(key: string, value: string): Promise<void> {
+  await db.run(
+    "INSERT INTO folder_watcher_config (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value",
+    [key, value]
+  );
 }
 
-export function getTrackedFolders(
-  db: InstanceType<typeof Database>
-): TrackedFolder[] {
-  return db
+export async function getTrackedFolders(): Promise<TrackedFolder[]> {
+  return await db
     .query<TrackedFolder, []>(
       "SELECT * FROM tracked_folders ORDER BY display_name"
     )
     .all();
 }
 
-export function addTrackedFolder(
-  db: InstanceType<typeof Database>,
+export async function addTrackedFolder(
   folderId: string,
   displayName: string,
   parentFolderId: string,
   projectId: number | null
-): void {
-  db.run(
-    `INSERT OR IGNORE INTO tracked_folders
-     (folder_id, display_name, parent_folder_id, project_id)
-     VALUES (?, ?, ?, ?)`,
+): Promise<void> {
+  await db.run(
+    `INSERT INTO tracked_folders (folder_id, display_name, parent_folder_id, project_id)
+     VALUES ($1, $2, $3, $4)
+     ON CONFLICT (folder_id) DO NOTHING`,
     [folderId, displayName, parentFolderId, projectId]
   );
 }
 
-export function updateTrackedFolder(
-  db: InstanceType<typeof Database>,
+export async function updateTrackedFolder(
   folderId: string,
   updates: Partial<{
     display_name: string;
@@ -124,13 +63,15 @@ export function updateTrackedFolder(
     last_synced_at: string;
     project_id: number;
   }>
-): void {
+): Promise<void> {
   const sets: string[] = [];
   const values: (string | number | null)[] = [];
+  let i = 1;
 
   for (const [key, val] of Object.entries(updates)) {
-    sets.push(`${key} = ?`);
+    sets.push(`${key} = $${i}`);
     values.push(val);
+    i++;
   }
 
   if (sets.length === 0) {
@@ -138,43 +79,38 @@ export function updateTrackedFolder(
   }
 
   values.push(folderId);
-  db.run(
-    `UPDATE tracked_folders SET ${sets.join(", ")} WHERE folder_id = ?`,
+  await db.run(
+    `UPDATE tracked_folders SET ${sets.join(", ")} WHERE folder_id = $${i}`,
     values
   );
 }
 
-export function removeTrackedFolder(
-  db: InstanceType<typeof Database>,
-  folderId: string
-): void {
-  db.run("DELETE FROM tracked_folders WHERE folder_id = ?", [folderId]);
+export async function removeTrackedFolder(folderId: string): Promise<void> {
+  await db.run("DELETE FROM tracked_folders WHERE folder_id = $1", [folderId]);
 }
 
-export function logEvent(
-  db: InstanceType<typeof Database>,
+export async function logEvent(
   eventType: string,
   folderId: string | null,
   folderName: string | null,
   details: Record<string, unknown>
-): void {
-  db.run(
-    "INSERT INTO events (event_type, folder_id, folder_name, details) VALUES (?, ?, ?, ?)",
+): Promise<void> {
+  await db.run(
+    "INSERT INTO folder_watcher_events (event_type, folder_id, folder_name, details) VALUES ($1, $2, $3, $4)",
     [eventType, folderId, folderName, JSON.stringify(details)]
   );
 }
 
-export function getRecentEvents(
-  db: InstanceType<typeof Database>,
-  limit = 20
-): Array<{
-  id: number;
-  event_type: string;
-  folder_name: string | null;
-  details: string;
-  created_at: string;
-}> {
-  return db
+export async function getRecentEvents(limit = 20): Promise<
+  Array<{
+    id: number;
+    event_type: string;
+    folder_name: string | null;
+    details: string;
+    created_at: string;
+  }>
+> {
+  return await db
     .query<
       {
         id: number;
@@ -184,6 +120,6 @@ export function getRecentEvents(
         created_at: string;
       },
       [number]
-    >("SELECT * FROM events ORDER BY id DESC LIMIT ?")
+    >("SELECT * FROM folder_watcher_events ORDER BY id DESC LIMIT ?")
     .all(limit);
 }

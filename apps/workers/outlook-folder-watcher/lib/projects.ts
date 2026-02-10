@@ -1,7 +1,6 @@
 /**
- * Project lookup for the folder watcher.
- * Matches Outlook folder names to existing hub.db projects.
- * NEVER creates projects — lookup only.
+ * Project lookup and creation for the folder watcher.
+ * Matches Outlook folder names to Postgres projects, creating if needed.
  */
 import { db } from "@lib/db/hub";
 
@@ -31,9 +30,8 @@ export function parseFolderName(name: string): {
 }
 
 /**
- * Find an existing hub.db project matching a folder name.
- * Tries: outlook_folder exact match → normalized_name → project_aliases.
- * Returns project ID or null. Never creates.
+ * Find a project matching a folder name, or create one.
+ * Tries: outlook_folder exact → normalized_name → project_aliases → create new.
  */
 export async function findProjectByFolder(
   folderName: string
@@ -49,8 +47,6 @@ export async function findProjectByFolder(
   }
 
   // 2. Full folder name against normalized_name
-  //    Handles cases like "Fox Residence - 6505 N 43rd Place" where the full
-  //    string IS the project name (not "PROJECT - CONTRACTOR" format)
   const fullNormalized = folderName.toLowerCase().replace(/[^a-z0-9]/g, "");
   const byFullName = await db
     .query<{ id: number }, [string]>(
@@ -62,7 +58,7 @@ export async function findProjectByFolder(
   }
 
   // 3. Parsed project name (strips contractor suffix) against normalized_name
-  const { projectName } = parseFolderName(folderName);
+  const { projectName, contractor } = parseFolderName(folderName);
   const normalized = projectName.toLowerCase().replace(/[^a-z0-9]/g, "");
   if (normalized !== fullNormalized) {
     const byParsedName = await db
@@ -91,5 +87,38 @@ export async function findProjectByFolder(
     }
   }
 
-  return null;
+  // 5. No match — create the project
+  return createProjectFromFolder(
+    folderName,
+    projectName,
+    normalized,
+    contractor
+  );
+}
+
+/**
+ * Create a new project from an Outlook folder name.
+ */
+async function createProjectFromFolder(
+  folderName: string,
+  projectName: string,
+  normalizedName: string,
+  contractor: string | null
+): Promise<number> {
+  const row = await db
+    .query<{ id: number }, [string, string, string, string | null]>(
+      `INSERT INTO projects (name, normalized_name, outlook_folder, contractor)
+       VALUES (?, ?, ?, ?)
+       RETURNING id`
+    )
+    .get(projectName, normalizedName, folderName, contractor);
+
+  const id = row?.id;
+  if (!id) {
+    throw new Error(`Failed to create project for folder: ${folderName}`);
+  }
+  console.log(
+    `  → Created project #${id}: "${projectName}"${contractor ? ` (${contractor})` : ""}`
+  );
+  return id;
 }

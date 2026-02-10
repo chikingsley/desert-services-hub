@@ -13,14 +13,12 @@ import {
   getConfig,
   getRecentEvents,
   getTrackedFolders,
-  openStateDb,
 } from "@/apps/workers/outlook-folder-watcher/lib/state";
 
-const db = openStateDb();
 const subcommand = process.argv[2];
 
 if (subcommand === "events") {
-  const events = getRecentEvents(db, 50);
+  const events = await getRecentEvents(50);
   if (events.length === 0) {
     console.log("No events recorded.");
   } else {
@@ -35,7 +33,7 @@ if (subcommand === "events") {
     }
   }
 } else if (subcommand === "folders") {
-  const folders = getTrackedFolders(db);
+  const folders = await getTrackedFolders();
   if (folders.length === 0) {
     console.log("No tracked folders. Run: bun cli/init.ts");
   } else {
@@ -51,13 +49,13 @@ if (subcommand === "events") {
   }
 } else {
   // Overview
-  const mailbox = getConfig(db, "mailbox");
-  const watchFolderName = getConfig(db, "watch_folder_name");
-  const watchFolderId = getConfig(db, "watch_folder_id");
-  const pollInterval = getConfig(db, "poll_interval_ms");
-  const lastPoll = getConfig(db, "last_poll_at");
-  const foldersDeltaLink = getConfig(db, "folders_delta_link");
-  const tracked = getTrackedFolders(db);
+  const mailbox = await getConfig("mailbox");
+  const watchFolderName = await getConfig("watch_folder_name");
+  const watchFolderId = await getConfig("watch_folder_id");
+  const pollInterval = await getConfig("poll_interval_ms");
+  const lastPoll = await getConfig("last_poll_at");
+  const foldersDeltaLink = await getConfig("folders_delta_link");
+  const tracked = await getTrackedFolders();
   const withProject = tracked.filter((f) => f.project_id !== null).length;
   const totalMessages = tracked.reduce((sum, f) => sum + f.message_count, 0);
 
@@ -74,7 +72,7 @@ if (subcommand === "events") {
   console.log(`  Without:        ${tracked.length - withProject}`);
   console.log(`Total messages:   ${totalMessages}`);
 
-  const events = getRecentEvents(db, 5);
+  const events = await getRecentEvents(5);
   if (events.length > 0) {
     console.log("\nRecent Events:");
     for (const evt of events) {

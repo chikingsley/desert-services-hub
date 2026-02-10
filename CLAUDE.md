@@ -139,13 +139,32 @@ Email arrives → Graph webhook → POST /api/webhooks/outlook
 
 ## Database
 
-Supabase Postgres on port 54322. Key tables:
+**All persistent state lives in Supabase Postgres (port 54322). No SQLite for operational data.**
 
-- `dust_permits_filed_by_desert_services` — all permits (id, project, company, status, dates, invoice, acreage tier)
-- `emails` — synced Outlook emails
-- `notifications` — notification event log (type, status, metadata JSON, draft ID)
-- `outlook_subscriptions` — Graph webhook subscriptions per mailbox
-- `estimates` — bid estimates from Monday.com
+If you need to store worker state, event logs, config, or any persistent data — add a table to Postgres. Do NOT create local SQLite databases. The only acceptable SQLite usage is for throwaway CLI caches (e.g., SharePoint SWPPP cache, one-time data extracts).
+
+Connection: `@lib/db/hub` provides a Postgres client with SQLite-compatible API (`db.query().get()`, `db.query().all()`, `db.run()`).
+
+### Key Tables
+
+| Table | Purpose |
+|-------|---------|
+| `projects` | All projects (name, contractor, outlook_folder, permit/contract status) |
+| `emails` | Synced Outlook emails |
+| `estimates` | Bid estimates from Monday.com |
+| `dust_permits_filed_by_desert_services` | Maricopa dust permits |
+| `contracts` | Contract documents and status |
+| `accounts` | Contractor/company accounts |
+| `contacts` | People (email, phone, title) |
+| `notifications` | Notification event log (type, status, metadata, draft ID) |
+| `outlook_subscriptions` | Graph webhook subscriptions per mailbox |
+| `tracked_folders` | Outlook folder watcher — tracked mail folders + delta tokens |
+| `folder_watcher_config` | Outlook folder watcher — config (mailbox, poll interval, delta links) |
+| `folder_watcher_events` | Outlook folder watcher — event log |
+| `estimate_poller_config` | Estimate poller — config (sync timestamps) |
+| `estimate_poller_events` | Estimate poller — event log |
+| `project_aliases` | Alternative names for project matching |
+| `webhook_jobs` | Background job queue for webhook processing |
 
 ```bash
 # Direct psql (from gmk-server)

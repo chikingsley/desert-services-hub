@@ -24,7 +24,6 @@ import {
   getConfig,
   getTrackedFolders,
   logEvent,
-  openStateDb,
   updateTrackedFolder,
 } from "@/apps/workers/outlook-folder-watcher/lib/state";
 
@@ -36,15 +35,14 @@ const folderFilter = args
   .slice(1)
   .join("=");
 
-const db = openStateDb();
-const mailbox = getConfig(db, "mailbox");
+const mailbox = await getConfig("mailbox");
 
 if (!mailbox) {
   console.error("[Backfill] Not initialized. Run: bun cli/init.ts");
   process.exit(1);
 }
 
-let folders = getTrackedFolders(db);
+let folders = await getTrackedFolders();
 
 if (folderFilter) {
   const filter = folderFilter.toLowerCase();
@@ -73,12 +71,12 @@ let skippedNoProject = 0;
 for (const folder of folders) {
   console.log(`--- ${folder.display_name} ---`);
 
-  // Resolve project ID (refresh from hub.db each time)
+  // Resolve project ID (refresh each time)
   let projectId = folder.project_id;
   if (!projectId) {
     projectId = await findProjectByFolder(folder.display_name);
     if (projectId) {
-      updateTrackedFolder(db, folder.folder_id, { project_id: projectId });
+      await updateTrackedFolder(folder.folder_id, { project_id: projectId });
       console.log(`  Matched to project #${projectId}`);
     }
   }
@@ -122,26 +120,26 @@ for (const folder of folders) {
     totalNotFound += stats.notFound;
 
     console.log(
-      `  Linked: ${stats.directLinks} direct, ${stats.threadExpanded} via threads, ${stats.notFound} not in hub.db`
+      `  Linked: ${stats.directLinks} direct, ${stats.threadExpanded} via threads, ${stats.notFound} not found`
     );
 
     // Check for dust permit issued emails
     await checkDustPermitIssued(projectId);
 
     // Save delta link for future incremental polls
-    updateTrackedFolder(db, folder.folder_id, {
+    await updateTrackedFolder(folder.folder_id, {
       messages_delta_link: result.deltaLink,
       message_count: stats.directLinks + stats.threadExpanded,
       last_synced_at: new Date().toISOString(),
     });
 
-    logEvent(db, "backfill", folder.folder_id, folder.display_name, {
+    await logEvent("backfill", folder.folder_id, folder.display_name, {
       messagesInFolder: messages.length,
       ...stats,
     });
   } catch (err) {
     console.error(`  Error: ${err}`);
-    logEvent(db, "error", folder.folder_id, folder.display_name, {
+    await logEvent("error", folder.folder_id, folder.display_name, {
       error: String(err),
       phase: "backfill",
     });
@@ -154,5 +152,5 @@ console.log(`  Skipped (no project): ${skippedNoProject}`);
 if (!dryRun) {
   console.log(`  Direct links: ${totalDirectLinks}`);
   console.log(`  Thread expanded: ${totalThreadExpanded}`);
-  console.log(`  Not found in hub.db: ${totalNotFound}`);
+  console.log(`  Not found: ${totalNotFound}`);
 }

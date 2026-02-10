@@ -3,9 +3,9 @@ main = "src/index.ts"
 compatibility_date = "2026-01-21"
 compatibility_flags = ["nodejs_compat_v2"]
 
-# Cron trigger - runs every hour
-[triggers]
-crons = ["0 * * * *"]
+# Cron disabled — sync now runs in web container (worker.ts sync_full job)
+# [triggers]
+# crons = ["0 * * * *"]
 
 # Observability
 [observability]

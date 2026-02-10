@@ -40,6 +40,7 @@ import { processFilesIntake } from "@/apps/workers/contract-intake/lib/files-int
 import type { DustPermitIntakePayload } from "@/apps/workers/dust-permit-intake/lib/intake";
 import { processDustPermitIntake } from "@/apps/workers/dust-permit-intake/lib/intake";
 import { syncEstimates } from "@/apps/workers/estimate-poller/lib/sync";
+import { syncSharePointFolders } from "@/apps/workers/estimates-sync-worker/lib/sharepoint-sync";
 import { pollFolderWatcher } from "@/apps/workers/outlook-folder-watcher/lib/poll";
 import {
   detectDustPermitEmailTrigger,
@@ -67,7 +68,7 @@ const parsedMaxConcurrency = Number.parseInt(
 const MAX_CONCURRENT_JOBS = Number.isFinite(parsedMaxConcurrency)
   ? Math.max(1, parsedMaxConcurrency)
   : 4;
-const FULL_SYNC_INTERVAL_MS = 30 * 60 * 1000;
+const FULL_SYNC_INTERVAL_MS = 10 * 60 * 1000; // 10 minutes
 const FOLDER_WATCHER_INTERVAL_MS = 30 * 1000; // 30 seconds
 const RENEWAL_INTERVAL_MS = 60 * 60 * 1000; // 1 hour
 const GROUP_SYNC_INTERVAL_MS = 15 * 60 * 1000; // 15 minutes
@@ -867,14 +868,29 @@ async function processNextJob(): Promise<void> {
       }
 
       case "sync_full": {
-        const result = await syncEstimates();
-        console.log(
-          `[worker] Full sync: ${result.fetched} fetched, ${result.upserted} upserted, ${result.changes.length} changes`
-        );
-        for (const change of result.changes) {
+        // Step 1: Monday → Postgres
+        try {
+          const result = await syncEstimates();
           console.log(
-            `[worker]   ${change.name}: ${change.oldStatus ?? "(none)"} -> ${change.newStatus ?? "(none)"}`
+            `[worker] Full sync: ${result.fetched} fetched, ${result.upserted} upserted, ${result.changes.length} changes`
           );
+          for (const change of result.changes) {
+            console.log(
+              `[worker]   ${change.name}: ${change.oldStatus ?? "(none)"} -> ${change.newStatus ?? "(none)"}`
+            );
+          }
+        } catch (err) {
+          console.error("[worker] Estimate sync failed:", err);
+        }
+
+        // Step 2: Monday → SharePoint (folders, files)
+        try {
+          const spResult = await syncSharePointFolders();
+          console.log(
+            `[worker] SharePoint sync: ${spResult.processed} processed, ${spResult.created} created, ${spResult.moved} moved, ${spResult.filesUploaded} files uploaded, ${spResult.errors.length} errors`
+          );
+        } catch (err) {
+          console.error("[worker] SharePoint sync failed:", err);
         }
         break;
       }

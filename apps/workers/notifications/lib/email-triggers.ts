@@ -33,17 +33,20 @@ const BODY_POINT_AND_PAY_CONFIRMATION_RE = /Confirmation ID:\s*\d+/i;
 const BODY_MARICOPA_ISSUED_RE =
   /application\s+D\d{7}\s+has been processed and approved/i;
 const POINT_AND_PAY_INVOICE_RE = /Account Number:\s*(IV\d+)/i;
+const POINT_AND_PAY_COUNTY_INVOICE_NUMBER_RE = /Invoice Number:\s*(\d+)/i;
 const POINT_AND_PAY_AMOUNT_RE = /Amount:\s*(\$[\d,]+\.\d{2})/i;
 const POINT_AND_PAY_CONFIRMATION_RE = /Confirmation ID:\s*(\d+)/i;
 const POINT_AND_PAY_CARD_RE = /Account Last Four:\s*(\d{4})/i;
 const POINT_AND_PAY_DATE_RE = /Payment Date:\s*([^\r\n]+)/i;
 const POINT_AND_PAY_PHONE_RE = /Customer Phone Number:\s*\(?([\d() -]+)\)?/i;
 const MARICOPA_PERMIT_NUMBER_RE = /application\s+(D\d{7})/i;
-const MARICOPA_FACILITY_ID_RE = /Facility ID#?:\s*(\w+)/i;
-const MARICOPA_FACILITY_NAME_RE = /Facility Name:\s*(.+?)(?:\n|$)/i;
+const MARICOPA_FACILITY_ID_RE = /Facility ID#?:\s*(F\d+)/i;
+const MARICOPA_FACILITY_NAME_RE =
+  /Facility Name:\s*(.+?)(?=\s*Facility Address|\r?\n|$)/i;
 const MARICOPA_SUBJECT_FACILITY_NAME_RE =
   /Dust Permit Issued\s*--\s*(.+?)(?:,|$)/i;
-const MARICOPA_FACILITY_ADDRESS_RE = /Facility Address:\s*(.+?)(?:\n|$)/i;
+const MARICOPA_FACILITY_ADDRESS_RE =
+  /Facility Address:\s*(.+?)(?=\s*Dust control|\r?\n|$)/i;
 
 export function detectDustPermitEmailTrigger(
   fromEmail: string,
@@ -87,6 +90,7 @@ export function detectDustPermitEmailTrigger(
 
 export interface PointAndPayData {
   invoiceNumber: string | null;
+  countyInvoiceNumber: string | null;
   amount: string | null;
   confirmationId: string | null;
   cardLastFour: string | null;
@@ -96,6 +100,7 @@ export interface PointAndPayData {
 
 export function parsePointAndPayEmail(body: string): PointAndPayData {
   const invoiceMatch = body.match(POINT_AND_PAY_INVOICE_RE);
+  const countyInvoiceMatch = body.match(POINT_AND_PAY_COUNTY_INVOICE_NUMBER_RE);
   const amountMatch = body.match(POINT_AND_PAY_AMOUNT_RE);
   const confirmationMatch = body.match(POINT_AND_PAY_CONFIRMATION_RE);
   const cardMatch = body.match(POINT_AND_PAY_CARD_RE);
@@ -104,6 +109,7 @@ export function parsePointAndPayEmail(body: string): PointAndPayData {
 
   return {
     invoiceNumber: invoiceMatch?.[1] ?? null,
+    countyInvoiceNumber: countyInvoiceMatch?.[1] ?? null,
     amount: amountMatch?.[1] ?? null,
     confirmationId: confirmationMatch?.[1] ?? null,
     cardLastFour: cardMatch?.[1] ?? null,
@@ -169,7 +175,7 @@ export interface IssuedJobPayload {
 // Cost Breakdown
 // ============================================================================
 
-interface CostBreakdown {
+export interface CostBreakdown {
   permitCost: string; // ADEQ fee (what was paid to county)
   adminFee: string; // Desert Services admin/filing fee
   scheduleValue: string; // Total customer charge
@@ -181,7 +187,9 @@ function formatUSD(amount: number): string {
 }
 
 function parseDollarAmount(str: string | null): number | null {
-  if (!str) return null;
+  if (!str) {
+    return null;
+  }
   const cleaned = str.replace(/[,$]/g, "");
   const num = Number.parseFloat(cleaned);
   return Number.isNaN(num) ? null : num;
@@ -196,19 +204,23 @@ function parseDollarAmount(str: string | null): number | null {
  * For accelerated permits, the ADEQ fee is doubled so we halve it
  * to find the base tier. The admin fee stays the same.
  */
-function computeCostBreakdown(
+export function computeCostBreakdown(
   adeqFeeStr: string | null,
   isAccelerated: boolean
 ): CostBreakdown | null {
   const adeqFee = parseDollarAmount(adeqFeeStr);
-  if (adeqFee == null || adeqFee <= 0) return null;
+  if (adeqFee == null || adeqFee <= 0) {
+    return null;
+  }
 
   // For accelerated permits, the ADEQ fee is doubled — halve to find base tier
   const baseFee = isAccelerated ? adeqFee / 2 : adeqFee;
 
   // Match against the tier table by ADEQ fee
   const tier = DUST_PERMIT_TIERS.find((t) => t.adeqFee === baseFee);
-  if (!tier) return null;
+  if (!tier) {
+    return null;
+  }
 
   return {
     permitCost: formatUSD(adeqFee),
@@ -250,7 +262,9 @@ async function fetchAcreage(permitId: string): Promise<number | null> {
     const data = (await response.json()) as FeatureServerResponse;
 
     const area = data?.features?.[0]?.attributes?.Shape__Area;
-    if (typeof area !== "number" || area <= 0) return null;
+    if (typeof area !== "number" || area <= 0) {
+      return null;
+    }
     return area * SQ_METERS_TO_ACRES;
   } catch (err) {
     console.error("[email-trigger] Failed to fetch acreage:", err);
@@ -258,27 +272,23 @@ async function fetchAcreage(permitId: string): Promise<number | null> {
   }
 }
 
+// TODO: facility_id is sparsely populated (1/2040 permits as of Feb 2026).
+// Currently only set when handleIssuedEmail() processes a Maricopa issued email.
+// Future: bulk-sync facility IDs from the portal or FeatureServer.
 /**
- * Look up the facility ID for a renewal by checking the previous permit's
- * "dust_permit_issued" notification metadata.
+ * Look up the facility ID for a renewal from the previous permit's DB record.
  */
 async function lookupFacilityIdForRenewal(
   previousAppId: string
 ): Promise<string | null> {
   try {
     const row = await db
-      .query<{ metadata: string | null }, [string]>(
-        `SELECT metadata FROM notifications
-         WHERE event_type = 'dust_permit_issued'
-           AND ref_id = ?
-           AND status IN ('drafted', 'sent')
-         ORDER BY created_at DESC LIMIT 1`
+      .query<{ facility_id: string | null }, [string]>(
+        "SELECT facility_id FROM dust_permits_filed_by_desert_services WHERE id = ?"
       )
       .get(previousAppId);
 
-    if (!row?.metadata) return null;
-    const meta = JSON.parse(row.metadata) as Record<string, unknown>;
-    return typeof meta.facilityId === "string" ? meta.facilityId : null;
+    return row?.facility_id ?? null;
   } catch (err) {
     console.error("[email-trigger] Failed to look up facility ID:", err);
     return null;
@@ -310,7 +320,9 @@ async function fetchPermitApplicationPdf(
       success: boolean;
       pdfBase64?: string;
     };
-    if (!result.success || !result.pdfBase64) return null;
+    if (!(result.success && result.pdfBase64)) {
+      return null;
+    }
 
     return {
       name: `${permitId}-Application.pdf`,
@@ -319,6 +331,46 @@ async function fetchPermitApplicationPdf(
     };
   } catch (err) {
     console.error("[email-trigger] Failed to fetch permit PDF:", err);
+    return null;
+  }
+}
+
+/**
+ * Fetch the invoice PDF from the permit-worker API.
+ * The permit-worker uses Playwright to search invoices and download the PDF bytes.
+ */
+async function fetchInvoicePdf(
+  invoiceNumber: string
+): Promise<PdfAttachmentForDraft | null> {
+  try {
+    const response = await fetch(`${PERMIT_WORKER_URL}/api/invoices/pdf`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ invoiceNumber }),
+    });
+
+    if (!response.ok) {
+      console.error(
+        `[email-trigger] Permit-worker invoice PDF request failed: ${response.status}`
+      );
+      return null;
+    }
+
+    const result = (await response.json()) as {
+      success: boolean;
+      pdfBase64?: string;
+    };
+    if (!(result.success && result.pdfBase64)) {
+      return null;
+    }
+
+    return {
+      name: `${invoiceNumber}-Invoice.pdf`,
+      contentType: "application/pdf",
+      contentBytes: result.pdfBase64,
+    };
+  } catch (err) {
+    console.error("[email-trigger] Failed to fetch invoice PDF:", err);
     return null;
   }
 }
@@ -361,6 +413,20 @@ export async function handlePaymentEmail(
     `[email-trigger] Matched invoice ${payment.invoiceNumber} → permit ${permit.id} (${permit.projectName})`
   );
 
+  // Fetch invoice PDF (attach to billing draft when available)
+  let invoicePdfAttachment = await fetchInvoicePdf(payment.invoiceNumber);
+  if (!invoicePdfAttachment && payment.countyInvoiceNumber) {
+    invoicePdfAttachment = await fetchInvoicePdf(payment.countyInvoiceNumber);
+  }
+  if (invoicePdfAttachment) {
+    // Always name the attachment using the portal account number (IV...) since
+    // that's what our DB mapping uses, even if we had to search by numeric id.
+    invoicePdfAttachment.name = `${payment.invoiceNumber}-Invoice.pdf`;
+    console.log(
+      `[email-trigger] Invoice PDF attached: ${invoicePdfAttachment.name}`
+    );
+  }
+
   // Cost breakdown from tier table
   const costBreakdown = computeCostBreakdown(
     payment.amount,
@@ -399,6 +465,7 @@ export async function handlePaymentEmail(
       permitCost: costBreakdown?.permitCost,
       adminFee: costBreakdown?.adminFee,
       scheduleValue: costBreakdown?.scheduleValue,
+      attachments: invoicePdfAttachment ? [invoicePdfAttachment] : [],
     },
   };
 

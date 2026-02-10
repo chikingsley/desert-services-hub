@@ -503,13 +503,13 @@ def _print_audit(title: str, audit: dict[str, Any]) -> None:
     print(f"\n{title}")
     print(f"  total evaluated: {total}")
     print("  contacts:")
-    print(f"    direct:      {c[direct]:6d} ({pct(c[direct])})")
-    print(f"    legacy_only: {c[legacy_only]:6d} ({pct(c[legacy_only])})")
-    print(f"    unresolved:  {c[unresolved]:6d} ({pct(c[unresolved])})")
+    print(f"    direct:      {c['direct']:6d} ({pct(c['direct'])})")
+    print(f"    legacy_only: {c['legacy_only']:6d} ({pct(c['legacy_only'])})")
+    print(f"    unresolved:  {c['unresolved']:6d} ({pct(c['unresolved'])})")
     print("  contractors:")
-    print(f"    direct:                   {a[direct]:6d} ({pct(a[direct])})")
-    print(f"    contact_fallback_possible: {a[contact_fallback_possible]:6d} ({pct(a[contact_fallback_possible])})")
-    print(f"    unresolved:               {a[unresolved]:6d} ({pct(a[unresolved])})")
+    print(f"    direct:                   {a['direct']:6d} ({pct(a['direct'])})")
+    print(f"    contact_fallback_possible: {a['contact_fallback_possible']:6d} ({pct(a['contact_fallback_possible'])})")
+    print(f"    unresolved:               {a['unresolved']:6d} ({pct(a['unresolved'])})")
 
 
 def main() -> int:

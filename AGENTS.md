@@ -5,16 +5,19 @@ This repo runs as a split runtime:
 - **systemd (user units)** on the host for long-running poller workers.
 
 ## Where This Runs
+
 - Primary host: `gmk-server`
 - Repo path: `/home/simon/github/desert-services-hub`
 
 ## First Commands (Ops)
+
 - `just up`        : build + start docker stack, install/restart pollers, strict health gate
 - `just status`    : human-readable snapshot (docker + HTTP + pollers + best-effort CF)
 - `just check`     : strict health gate (non-zero if core runtime is down)
 - `just services-install` : (re)install poller unit files from `ops/systemd/`
 
 ## Code Quality
+
 - `just code-check` : typecheck + lint
 - `just fix`        : autofix lint issues
 
@@ -34,6 +37,7 @@ Host pollers (systemd user units, see `ops/systemd/*.service`):
 - `desert-swppp-sync.service`
 
 ## Debugging Shortcuts
+
 - Docker:
   - `docker compose ps`
   - `docker compose logs -f web|webhooks|permit-worker`
@@ -42,5 +46,6 @@ Host pollers (systemd user units, see `ops/systemd/*.service`):
   - `journalctl --user -u desert-outlook-folder-watcher.service -n 200 --no-pager`
 
 ## Docs
+
 - `SYSTEM-MAP.md` for the current runtime map and data flows.
 - `CLAUDE.md` for detailed conventions and testing rules.

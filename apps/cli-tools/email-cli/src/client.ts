@@ -763,6 +763,7 @@ export class GraphEmailClient {
       return {
         id: (msg.id as string) ?? "",
         internetMessageId: (msg.internetMessageId as string) ?? undefined,
+        parentFolderId: (msg.parentFolderId as string) ?? undefined,
         subject: (msg.subject as string) ?? "",
         receivedDateTime: msg.receivedDateTime
           ? new Date(msg.receivedDateTime as string)
@@ -1040,7 +1041,7 @@ export class GraphEmailClient {
       const msg = await client
         .api(`${basePath}/messages/${messageId}`)
         .select(
-          "id,internetMessageId,subject,receivedDateTime,from,toRecipients,ccRecipients,body,hasAttachments,conversationId,categories"
+          "id,internetMessageId,parentFolderId,subject,receivedDateTime,from,toRecipients,ccRecipients,body,hasAttachments,conversationId,categories"
         )
         .get();
 
@@ -1915,25 +1916,35 @@ export class GraphEmailClient {
   ): Promise<EmailMessage[]> {
     const client = this.getClient();
     const messagesPath = this.getMessagesPath(userId);
+    const selectFields =
+      "id,internetMessageId,parentFolderId,subject,receivedDateTime,from,conversationId";
+    const all: EmailMessage[] = [];
 
     try {
+      await this.rateLimiter.throttle();
+
       // Note: orderby causes "InefficientFilter" error with conversationId filter
-      const response = await client
+      let response = await client
         .api(messagesPath)
         .filter(`conversationId eq '${conversationId}'`)
-        .select(
-          "id,internetMessageId,subject,receivedDateTime,from,toRecipients,ccRecipients,body,hasAttachments,conversationId,categories"
-        )
+        .top(100)
+        .select(selectFields)
         .get();
 
-      if (!response?.value) {
-        return [];
+      while (response?.value) {
+        all.push(...this.parseMessagesWithAttachments(response.value));
+
+        const nextLink = response["@odata.nextLink"];
+        if (!nextLink) {
+          break;
+        }
+
+        await this.rateLimiter.throttle();
+        response = await client.api(nextLink).get();
       }
 
-      const emails = this.parseMessagesWithAttachments(response.value);
-
       // Sort by receivedDateTime ascending (oldest first)
-      return emails.sort(
+      return all.sort(
         (a, b) =>
           new Date(a.receivedDateTime).getTime() -
           new Date(b.receivedDateTime).getTime()
@@ -2245,6 +2256,40 @@ export class GraphEmailClient {
   }
 
   /**
+   * Get a single mail folder by ID.
+   *
+   * Useful for resolving parentFolderId -> displayName without listing the whole folder tree.
+   */
+  async getFolderById(
+    folderId: string,
+    userId?: string
+  ): Promise<{ id: string; displayName: string; parentFolderId: string | null } | null> {
+    const client = this.getClient();
+    const basePath = this.getBasePath(userId);
+
+    try {
+      await this.rateLimiter.throttle();
+      const folder = await client
+        .api(`${basePath}/mailFolders/${folderId}`)
+        .select("id,displayName,parentFolderId")
+        .get();
+
+      if (!folder?.id) {
+        return null;
+      }
+
+      return {
+        id: folder.id as string,
+        displayName: folder.displayName as string,
+        parentFolderId: (folder.parentFolderId as string) ?? null,
+      };
+    } catch (error) {
+      console.error("Error fetching folder:", error);
+      return null;
+    }
+  }
+
+  /**
    * Recursively list all mail folders including subfolders.
    *
    * @param userId - Email address of the mailbox (required for app auth)
@@ -2321,6 +2366,7 @@ export class GraphEmailClient {
     const basePath = this.getBasePath(userId);
 
     try {
+      await this.rateLimiter.throttle();
       await client
         .api(`${basePath}/messages/${messageId}/move`)
         .post({ destinationId: "archive" });
@@ -2354,14 +2400,27 @@ export class GraphEmailClient {
     messageId: string,
     destinationId: string,
     userId?: string
-  ): Promise<void> {
+  ): Promise<{
+    id: string;
+    internetMessageId?: string;
+    parentFolderId?: string;
+    conversationId?: string;
+  }> {
     const client = this.getClient();
     const basePath = this.getBasePath(userId);
 
     try {
-      await client
+      await this.rateLimiter.throttle();
+      const response = await client
         .api(`${basePath}/messages/${messageId}/move`)
         .post({ destinationId });
+
+      return {
+        id: (response.id as string) ?? "",
+        internetMessageId: (response.internetMessageId as string) ?? undefined,
+        parentFolderId: (response.parentFolderId as string) ?? undefined,
+        conversationId: (response.conversationId as string) ?? undefined,
+      };
     } catch (error) {
       console.error("Error moving email:", error);
       throw error;
@@ -2852,6 +2911,7 @@ export class GraphEmailClient {
       : `${basePath}/mailFolders`;
 
     try {
+      await this.rateLimiter.throttle();
       const response = await client.api(apiPath).post({ displayName });
       return {
         id: response.id as string,

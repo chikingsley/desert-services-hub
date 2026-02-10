@@ -63,7 +63,7 @@ export interface IngestOutput {
 }
 
 export interface IntakeResult {
-  contractId: number | null;
+  documentId: number | null;
   fileName: string;
   documentType: string;
   summary: string;
@@ -75,32 +75,24 @@ export interface IntakeResult {
 // Prepared Statements
 // ============================================================================
 
-const insertContract = db.prepare(`
-  INSERT INTO contracts (
-    email_id, document_type, contractor, subcontractor,
-    project_name, project_address, project_number,
-    contract_value, retainage_pct, scope,
-    effective_date, start_date, completion_date, payment_terms,
-    estimate_reference, summary, line_items, requirements,
-    raw_extraction, file_path, file_name, model, processing_time_ms,
+const insertDocument = db.prepare(`
+  INSERT INTO documents (
+    email_id, document_type, summary, raw_extraction,
+    file_path, file_name, model, processing_time_ms,
     extraction_status
   ) VALUES (
-    ?, ?, ?, ?,
-    ?, ?, ?,
-    ?, ?, ?,
-    ?, ?, ?, ?,
-    ?, ?, ?::jsonb, ?::jsonb,
-    ?::jsonb, ?, ?, ?, ?,
+    $1, $2, $3, $4::jsonb,
+    $5, $6, $7, $8,
     'success'
   )
   RETURNING id
 `);
 
-const insertContractError = db.prepare(`
-  INSERT INTO contracts (
+const insertDocumentError = db.prepare(`
+  INSERT INTO documents (
     email_id, file_path, file_name,
     extraction_status, extraction_error
-  ) VALUES (?, ?, ?, 'failed', ?)
+  ) VALUES ($1, $2, $3, 'failed', $4)
   RETURNING id
 `);
 
@@ -108,8 +100,8 @@ const matchEstimateByRef = db.query<{ id: number; name: string }>(
   "SELECT id, name FROM estimates WHERE estimate_number = ? LIMIT 1"
 );
 
-const linkContractToEstimate = db.prepare(
-  "UPDATE contracts SET estimate_id = ? WHERE id = ?"
+const linkDocumentToEstimate = db.prepare(
+  "UPDATE documents SET estimate_id = $1 WHERE id = $2"
 );
 
 // ============================================================================
@@ -173,25 +165,10 @@ async function processSinglePdf(
     const result = await runIngest(pdfPath);
     const ext = result.extracted;
 
-    const contractRow = await insertContract.get(
+    const documentRow = await insertDocument.get(
       emailId,
       result.document_type,
-      ext.parties?.contractor ?? null,
-      ext.parties?.subcontractor ?? null,
-      ext.project?.name ?? null,
-      ext.project?.address ?? null,
-      ext.project?.number ?? null,
-      ext.financial?.contract_value ?? null,
-      ext.financial?.retainage_pct ?? null,
-      ext.scope ?? null,
-      ext.dates?.effective_date ?? null,
-      ext.dates?.start_date ?? null,
-      ext.dates?.completion_date ?? null,
-      ext.financial?.payment_terms ?? null,
-      ext.estimate_reference ?? null,
       result.summary,
-      JSON.stringify(ext.line_items ?? []),
-      JSON.stringify(ext.requirements ?? []),
       JSON.stringify(ext),
       pdfPath,
       fileName,
@@ -199,14 +176,14 @@ async function processSinglePdf(
       result.processing_time_ms
     );
 
-    const contractId = (contractRow as { id: number } | null)?.id ?? null;
+    const documentId = (documentRow as { id: number } | null)?.id ?? null;
     let estimateLinked = false;
 
     // Try to match to estimate by reference
-    if (contractId && ext.estimate_reference) {
+    if (documentId && ext.estimate_reference) {
       const estimate = await matchEstimateByRef.get(ext.estimate_reference);
       if (estimate) {
-        await linkContractToEstimate.run(estimate.id, contractId);
+        await linkDocumentToEstimate.run(estimate.id, documentId);
         estimateLinked = true;
         console.log(
           `[contract-intake]   Linked to estimate: ${estimate.name} (ref: ${ext.estimate_reference})`
@@ -219,7 +196,7 @@ async function processSinglePdf(
     );
 
     return {
-      contractId,
+      documentId,
       fileName,
       documentType: result.document_type,
       summary: result.summary,
@@ -228,7 +205,7 @@ async function processSinglePdf(
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error(`[contract-intake]   Failed ${fileName}: ${msg}`);
-    await insertContractError.run(
+    await insertDocumentError.run(
       emailId,
       pdfPath,
       fileName,
@@ -236,7 +213,7 @@ async function processSinglePdf(
     );
 
     return {
-      contractId: null,
+      documentId: null,
       fileName,
       documentType: "error",
       summary: msg,

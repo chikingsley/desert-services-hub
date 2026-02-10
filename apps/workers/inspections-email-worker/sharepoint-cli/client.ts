@@ -404,8 +404,11 @@ export class SharePointClient {
   }
 
   /**
-   * Create a folder (idempotent — uses "rename" conflict behavior which
-   * returns the existing folder without error if it already exists)
+   * Create a folder (idempotent).
+   *
+   * Graph conflictBehavior="rename" will create "Folder 1" duplicates when a
+   * folder already exists. We instead use conflictBehavior="fail" and, on 409,
+   * fetch and return the existing folder.
    */
   async createFolder(
     driveId: string,
@@ -417,13 +420,26 @@ export class SharePointClient {
       ? `/drives/${driveId}/root/children`
       : `/drives/${driveId}/root:/${parentPath}:/children`;
 
-    const response = await this.client.api(apiPath).post({
-      name: folderName,
-      folder: {},
-      "@microsoft.graph.conflictBehavior": "rename",
-    });
+    try {
+      const response = await this.client.api(apiPath).post({
+        name: folderName,
+        folder: {},
+        "@microsoft.graph.conflictBehavior": "fail",
+      });
 
-    return this.parseItem(response);
+      return this.parseItem(response);
+    } catch (error: unknown) {
+      const statusCode = (error as { statusCode?: unknown }).statusCode;
+      const code = (error as { code?: unknown }).code;
+      if (statusCode === 409 || code === "nameAlreadyExists") {
+        const folderPath = isRoot ? folderName : `${parentPath}/${folderName}`;
+        const existing = await this.client
+          .api(`/drives/${driveId}/root:/${folderPath}`)
+          .get();
+        return this.parseItem(existing as Record<string, unknown>);
+      }
+      throw error;
+    }
   }
 
   private isRootPath(path: string): boolean {

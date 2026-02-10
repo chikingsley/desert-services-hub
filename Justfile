@@ -60,6 +60,10 @@ code-check:
 fix:
     @{{BUN}} run fix
 
+# Webhook Jobs: inspect / requeue background jobs in the `webhook_jobs` table.
+jobs *args:
+    @{{BUN}} apps/web/cli/webhook-jobs.ts {{args}}
+
 [private]
 _services_install start_after_install:
     #!/usr/bin/env bash

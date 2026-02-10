@@ -17,6 +17,7 @@ import {
 } from "@/api/archive";
 import { getCatalog, getTakeoffItems } from "@/api/catalog";
 import { listContracts } from "@/api/contracts";
+import { getEmail, listEmails } from "@/api/emails";
 import { createEstimate, listEstimates } from "@/api/estimates";
 import {
   deleteEstimate,
@@ -126,6 +127,14 @@ const server = serve({
       GET: h(listContracts),
     },
 
+    // Emails
+    "/api/emails": {
+      GET: h(listEmails),
+    },
+    "/api/emails/:id": {
+      GET: h(getEmail),
+    },
+
     // Monday.com
     "/api/monday/search": {
       GET: h(searchMonday),
@@ -159,6 +168,8 @@ const server = serve({
     "/projects/*": homepage,
     "/permits": homepage,
     "/permits/*": homepage,
+    "/emails": homepage,
+    "/emails/*": homepage,
     "/catalog": homepage,
     "/map": homepage,
     "/automation": homepage,

@@ -1,6 +1,7 @@
 import {
   FileCheck,
   FileText,
+  Mail,
   MapPin,
   Monitor,
   Package,
@@ -34,6 +35,7 @@ const mainNavItems = [
 ];
 
 const manageItems = [
+  { title: "Emails", href: "/emails", icon: Mail },
   { title: "Catalog", href: "/catalog", icon: Package },
   { title: "Map", href: "/map", icon: MapPin },
   { title: "Automation", href: "/automation", icon: Monitor },

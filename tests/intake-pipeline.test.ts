@@ -1,10 +1,10 @@
 /**
- * Files Intake Pipeline — Integration Tests
+ * Intake Pipeline — Integration Tests
  *
  * Tests the full flow: webhook → job queue → process → auto-link
- * Covers PDFs (existing) and the new files-intake endpoint.
+ * Covers PDFs and the intake endpoint with backward compat aliases.
  *
- * Run: bun test ./tests/files-pipeline.test.ts --verbose
+ * Run: bun test ./tests/intake-pipeline.test.ts --verbose
  */
 import { afterAll, beforeAll, describe, expect, it } from "bun:test";
 import { db } from "@lib/db/hub";
@@ -53,10 +53,10 @@ async function waitForJobCompletion(
 }
 
 // ============================================================================
-// PDF Pipeline Tests (via /api/webhooks/files-intake)
+// PDF Pipeline Tests (via /api/webhooks/intake)
 // ============================================================================
 
-describe("files pipeline — PDF", () => {
+describe("intake pipeline — PDF", () => {
   let testPdfPath: string;
   let jobId: number;
 
@@ -71,14 +71,14 @@ describe("files pipeline — PDF", () => {
     const fileName = testPdfPath.split("/").pop()!;
 
     const response = await fetch(
-      `${WEBHOOK_URL}/api/webhooks/files-intake`,
+      `${WEBHOOK_URL}/api/webhooks/intake`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           forwarderEmail: "test-runner@desertservices.app",
           forwardedAt: new Date().toISOString(),
-          originalSubject: `Test Files Pipeline ${Date.now()}`,
+          originalSubject: `Test Intake Pipeline ${Date.now()}`,
           originalFrom: "vendor@example.com",
           bodyText: "Test email body for pipeline verification",
           bodyHasContent: false,
@@ -144,7 +144,7 @@ describe("files pipeline — PDF", () => {
         `SELECT id, document_type, summary, model, processing_time_ms,
                 extraction_status, original_from, original_subject,
                 forwarder_email
-         FROM contracts
+         FROM documents
          WHERE forwarder_email = 'test-runner@desertservices.app'
            AND extraction_status = 'success'
          ORDER BY id DESC LIMIT 1`
@@ -168,8 +168,28 @@ describe("files pipeline — PDF", () => {
     console.log(`    Summary: ${contract!.summary!.length} chars`);
   });
 
-  it("backward compat: old endpoint still works", async () => {
-    const response = await fetch(
+  it("backward compat: old endpoints still work", async () => {
+    // Test /api/webhooks/files-intake alias
+    const res1 = await fetch(
+      `${WEBHOOK_URL}/api/webhooks/files-intake`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          forwarderEmail: "test-runner@desertservices.app",
+          forwardedAt: new Date().toISOString(),
+          originalSubject: "Backward Compat Test - files-intake",
+          originalFrom: "test@example.com",
+          bodyText: "",
+          attachments: [],
+        }),
+      }
+    );
+    // Should get 400 (no files) but NOT 404 (route not found)
+    expect(res1.status).toBe(400);
+
+    // Test /api/webhooks/contracts-intake alias
+    const res2 = await fetch(
       `${WEBHOOK_URL}/api/webhooks/contracts-intake`,
       {
         method: "POST",
@@ -177,21 +197,37 @@ describe("files pipeline — PDF", () => {
         body: JSON.stringify({
           forwarderEmail: "test-runner@desertservices.app",
           forwardedAt: new Date().toISOString(),
-          originalSubject: "Backward Compat Test",
+          originalSubject: "Backward Compat Test - contracts-intake",
           originalFrom: "test@example.com",
           bodyText: "",
           attachments: [],
         }),
       }
     );
+    expect(res2.status).toBe(400);
 
-    // Should get 400 (no files) but NOT 404 (route not found)
-    expect(response.status).toBe(400);
+    // Test /api/webhooks/dust-permit-intake alias
+    const res3 = await fetch(
+      `${WEBHOOK_URL}/api/webhooks/dust-permit-intake`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          forwarderEmail: "test-runner@desertservices.app",
+          forwardedAt: new Date().toISOString(),
+          originalSubject: "Backward Compat Test - dust-permit-intake",
+          originalFrom: "test@example.com",
+          bodyText: "",
+          attachments: [],
+        }),
+      }
+    );
+    expect(res3.status).toBe(400);
   });
 
   afterAll(async () => {
     await db.run(
-      "DELETE FROM contracts WHERE forwarder_email = 'test-runner@desertservices.app'"
+      "DELETE FROM documents WHERE forwarder_email = 'test-runner@desertservices.app'"
     );
     console.log("  Cleaned up test records");
   });

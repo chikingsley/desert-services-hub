@@ -17,6 +17,10 @@ import type { GraphEmailClient } from "@email/client";
 import { createGraphClient } from "@email/sync/config";
 import { db } from "@lib/db/hub";
 import {
+  createSharePointClientFromEnv,
+  uploadLocalFileToProjectSubfolder,
+} from "@lib/sharepoint/intake-upload";
+import {
   getEmailByMessageId,
   getOrCreateMailbox,
   insertAttachment,
@@ -141,6 +145,14 @@ const ISSUED_PAYLOAD_SCHEMA: z.ZodType<IssuedJobPayload> = z.object({
 
 // Lazy Graph client for email notification processing
 let _graphClient: GraphEmailClient | null = null;
+let _sharePointClient: ReturnType<typeof createSharePointClientFromEnv> | undefined =
+  undefined;
+function getSharePointClient(): ReturnType<typeof createSharePointClientFromEnv> {
+  if (_sharePointClient === undefined) {
+    _sharePointClient = createSharePointClientFromEnv();
+  }
+  return _sharePointClient;
+}
 let permitSyncInFlight: Promise<void> | null = null;
 let lastPermitSyncCompletedAt = 0;
 function getGraphClient(): GraphEmailClient {
@@ -691,8 +703,8 @@ const findProjectByConversation = db.query<{ project_id: number }>(
    LIMIT 1`
 );
 
-const updateContractLink = db.prepare(
-  `UPDATE contracts SET
+const updateDocumentLink = db.prepare(
+  `UPDATE documents SET
      email_id = COALESCE($2, email_id),
      project_id = COALESCE($3, project_id),
      original_from = $4,
@@ -701,8 +713,27 @@ const updateContractLink = db.prepare(
    WHERE id = $1`
 );
 
-async function autoLinkContract(
-  contractId: number,
+const getDocumentUploadMeta = db.query<{
+  project_id: number | null;
+  file_path: string | null;
+  file_name: string | null;
+  document_type: string | null;
+}>(
+  "SELECT project_id, file_path, file_name, document_type FROM documents WHERE id = ?"
+);
+
+function docTypeToSharePointSubfolder(
+  documentType: string | null
+): string {
+  const t = (documentType ?? "").toLowerCase();
+  if (t.includes("noi")) return "NOI";
+  if (t.includes("plan")) return "Plans";
+  if (t.includes("estimate")) return "Estimates";
+  return "Contracts";
+}
+
+async function autoLinkDocument(
+  documentId: number,
   originalSubject: string,
   originalFrom: string,
   forwarderEmail: string
@@ -714,8 +745,8 @@ async function autoLinkContract(
 
   if (!normalized) {
     // Still store metadata even if we can't match
-    await updateContractLink.run(
-      contractId,
+    await updateDocumentLink.run(
+      documentId,
       null,
       null,
       originalFrom || null,
@@ -766,8 +797,8 @@ async function autoLinkContract(
     }
   }
 
-  await updateContractLink.run(
-    contractId,
+  await updateDocumentLink.run(
+    documentId,
     emailId,
     projectId,
     originalFrom || null,
@@ -777,15 +808,15 @@ async function autoLinkContract(
 
   if (projectId) {
     console.log(
-      `[contracts-link] Contract #${contractId} → project #${projectId} (via email #${emailId})`
+      `[doc-link] Document #${documentId} → project #${projectId} (via email #${emailId})`
     );
   } else if (emailId) {
     console.log(
-      `[contracts-link] Contract #${contractId} → email #${emailId} (no project yet)`
+      `[doc-link] Document #${documentId} → email #${emailId} (no project yet)`
     );
   } else {
     console.log(
-      `[contracts-link] Contract #${contractId}: no matching email found for "${normalized}"`
+      `[doc-link] Document #${documentId}: no matching email found for "${normalized}"`
     );
   }
 }
@@ -864,6 +895,7 @@ async function processNextJob(): Promise<void> {
         break;
       }
 
+      case "intake":
       case "files_intake":
       case "contracts_email_intake": {
         const filesPayload = parseJobPayload(
@@ -872,13 +904,45 @@ async function processNextJob(): Promise<void> {
         );
         const results = await processFilesIntake(filesPayload);
         for (const r of results) {
-          if (r.contractId && filesPayload.originalSubject) {
-            await autoLinkContract(
-              r.contractId,
+          if (r.documentId && filesPayload.originalSubject) {
+            await autoLinkDocument(
+              r.documentId,
               filesPayload.originalSubject,
               filesPayload.originalFrom,
               filesPayload.forwarderEmail
             );
+
+            // Best-effort SharePoint upload once the document has a project_id.
+            try {
+              const sp = getSharePointClient();
+              if (sp) {
+                const row = await getDocumentUploadMeta.get(r.documentId);
+                if (row?.project_id && row.file_path && row.file_name) {
+                  const subfolder = docTypeToSharePointSubfolder(
+                    row.document_type ?? null
+                  );
+
+                  const uploaded = await uploadLocalFileToProjectSubfolder(sp, {
+                    projectId: row.project_id,
+                    subfolder,
+                    localPath: row.file_path,
+                    originalFileName: row.file_name,
+                    stableSuffix: String(r.documentId),
+                  });
+
+                  if (uploaded) {
+                    console.log(
+                      `[doc-sharepoint] Document #${r.documentId} uploaded to ${uploaded.folderUrl}`
+                    );
+                  }
+                }
+              }
+            } catch (error) {
+              const msg = error instanceof Error ? error.message : String(error);
+              console.warn(
+                `[doc-sharepoint] Upload failed for document #${r.documentId}: ${msg}`
+              );
+            }
           }
         }
         break;

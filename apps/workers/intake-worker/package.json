@@ -1,5 +1,5 @@
 {
-  "name": "files-email-intake",
+  "name": "intake-worker",
   "version": "1.0.0",
   "private": true,
   "scripts": {

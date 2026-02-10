@@ -65,7 +65,7 @@ function getFileCategory(filePath: string): FileCategory {
 // ============================================================================
 
 const insertFileRecord = db.prepare(`
-  INSERT INTO contracts (
+  INSERT INTO documents (
     document_type, file_path, file_name,
     summary, raw_extraction,
     model, processing_time_ms,
@@ -82,7 +82,7 @@ const insertFileRecord = db.prepare(`
 `);
 
 const insertFileError = db.prepare(`
-  INSERT INTO contracts (
+  INSERT INTO documents (
     file_path, file_name,
     extraction_status, extraction_error,
     original_from, original_subject, forwarder_email
@@ -91,7 +91,7 @@ const insertFileError = db.prepare(`
 `);
 
 const insertUnsupported = db.prepare(`
-  INSERT INTO contracts (
+  INSERT INTO documents (
     document_type, file_path, file_name,
     extraction_status,
     original_from, original_subject, forwarder_email
@@ -179,7 +179,7 @@ async function processImage(
     );
 
     return {
-      contractId: row?.id ?? null,
+      documentId: row?.id ?? null,
       fileName,
       documentType: "image_ocr",
       pageCount: 1,
@@ -197,7 +197,7 @@ async function processImage(
       emailMeta.forwarderEmail || null
     );
     return {
-      contractId: null,
+      documentId: null,
       fileName,
       documentType: "error",
       pageCount: 0,
@@ -250,7 +250,7 @@ async function processTextFile(
     );
 
     return {
-      contractId: row?.id ?? null,
+      documentId: row?.id ?? null,
       fileName,
       documentType: docType,
       pageCount: 0,
@@ -268,7 +268,7 @@ async function processTextFile(
       emailMeta.forwarderEmail || null
     );
     return {
-      contractId: null,
+      documentId: null,
       fileName,
       documentType: "error",
       pageCount: 0,
@@ -299,7 +299,7 @@ async function processUnsupported(
   console.log(`${LOG}   Stored unsupported file #${row?.id}: ${fileName}`);
 
   return {
-    contractId: row?.id ?? null,
+    documentId: row?.id ?? null,
     fileName,
     documentType: "unsupported",
     pageCount: 0,

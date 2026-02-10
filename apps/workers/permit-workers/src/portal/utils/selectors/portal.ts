@@ -30,6 +30,18 @@ export const nav = {
   navDustSearch: "text=Dust Application Search",
 } as const;
 
+/** Invoice pages */
+export const invoice = {
+  search: {
+    invoiceNumberLabel: 'label:has-text("Invoice Number")',
+    submitButton: 'a[id*="invoiceSearchBtn"]',
+    firstResultDetailLink: 'a[href*="invoiceDetail.jsf"]',
+  },
+  detail: {
+    downloadPrintButton: '[id="invoiceDetail:DownloadPrintButton"]',
+  },
+} as const;
+
 /** My Dust Applications page (landing page after login) */
 export const dustApps = {
   newApplicationBtn: 'img[alt="New Application"]',
@@ -299,6 +311,7 @@ export const portal = {
   login,
   loggedIn,
   nav,
+  invoice,
   dustApps,
   dustSearch,
   newAppPopup,

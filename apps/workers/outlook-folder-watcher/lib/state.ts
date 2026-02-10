@@ -27,7 +27,7 @@ export async function getConfig(key: string): Promise<string | null> {
 
 export async function setConfig(key: string, value: string): Promise<void> {
   await db.run(
-    "INSERT INTO folder_watcher_config (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value",
+    "INSERT INTO folder_watcher_config (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = now()",
     [key, value]
   );
 }

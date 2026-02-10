@@ -30,6 +30,8 @@ The permit-worker runs a Bun.serve() HTTP API. Other containers call it via `htt
 | `GET` | `/api/permits` | List all permits |
 | `GET` | `/api/permits/:id` | Get single permit |
 | `POST` | `/api/sync` | Sync from portal export |
+| `POST` | `/api/sync/company` | Sync only company permits from portal export |
+| `POST` | `/api/invoices/pdf` | Download invoice PDF by invoice number |
 | `GET` | `/api/browser/status` | Browser session status |
 | `POST` | `/api/browser/start` | Start browser session |
 | `POST` | `/api/browser/stop` | Stop browser session |

@@ -21,7 +21,7 @@ const PDF_ANALYSIS_CWD = join(
   "../../../../apps/cli-tools/pdf-analysis-cli"
 );
 
-const LOG = "[contracts-parse]";
+const LOG = "[doc-parse]";
 
 // ============================================================================
 // Types
@@ -55,7 +55,7 @@ export interface ContractsEmailIntakePayload {
 }
 
 export interface ParseIntakeResult {
-  contractId: number | null;
+  documentId: number | null;
   fileName: string;
   documentType: string;
   pageCount: number;
@@ -67,8 +67,8 @@ export interface ParseIntakeResult {
 // Prepared Statements
 // ============================================================================
 
-const insertContract = db.prepare(`
-  INSERT INTO contracts (
+const insertDocument = db.prepare(`
+  INSERT INTO documents (
     document_type, file_path, file_name,
     summary, raw_extraction,
     model, processing_time_ms,
@@ -84,8 +84,8 @@ const insertContract = db.prepare(`
   RETURNING id
 `);
 
-const insertContractError = db.prepare(`
-  INSERT INTO contracts (
+const insertDocumentError = db.prepare(`
+  INSERT INTO documents (
     file_path, file_name,
     extraction_status, extraction_error,
     original_from, original_subject, forwarder_email
@@ -198,7 +198,7 @@ async function processSinglePdf(
       metadata: parsed.metadata,
     };
 
-    const row = (await insertContract.get(
+    const row = (await insertDocument.get(
       classified.document_type,
       pdfPath,
       fileName,
@@ -211,14 +211,14 @@ async function processSinglePdf(
       emailMeta.forwarderEmail || null
     )) as { id: number } | null;
 
-    const contractId = row?.id ?? null;
+    const documentId = row?.id ?? null;
 
     console.log(
-      `${LOG}   Stored contract #${contractId}: ${classified.document_type}`
+      `${LOG}   Stored document #${documentId}: ${classified.document_type}`
     );
 
     return {
-      contractId,
+      documentId,
       fileName,
       documentType: classified.document_type,
       pageCount: parsed.page_count,
@@ -227,10 +227,10 @@ async function processSinglePdf(
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error(`${LOG}   Failed ${fileName}: ${msg}`);
-    await insertContractError.run(pdfPath, fileName, msg.slice(0, 1000));
+    await insertDocumentError.run(pdfPath, fileName, msg.slice(0, 1000));
 
     return {
-      contractId: null,
+      documentId: null,
       fileName,
       documentType: "error",
       pageCount: 0,

@@ -10,8 +10,7 @@
 import { serve } from "bun";
 import { healthCheck } from "@/api/health";
 import { handleMondayWebhook } from "@/api/webhooks";
-import { handleFilesIntakeWebhook } from "@/api/webhooks-files-intake";
-import { handleDustPermitWebhook } from "@/api/webhooks-dust-permit";
+import { handleIntakeWebhook } from "@/api/webhooks-intake";
 import { handleOutlookWebhook } from "@/api/webhooks-outlook";
 import { startWorker } from "@/apps/web/worker";
 
@@ -30,14 +29,18 @@ const server = serve({
     "/api/webhooks/outlook": {
       POST: h(handleOutlookWebhook),
     },
+    "/api/webhooks/intake": {
+      POST: h(handleIntakeWebhook),
+    },
+    // Backward compat aliases (old CF Workers may still POST here)
     "/api/webhooks/files-intake": {
-      POST: h(handleFilesIntakeWebhook),
+      POST: h(handleIntakeWebhook),
     },
     "/api/webhooks/contracts-intake": {
-      POST: h(handleFilesIntakeWebhook), // backward compat alias
+      POST: h(handleIntakeWebhook),
     },
     "/api/webhooks/dust-permit-intake": {
-      POST: h(handleDustPermitWebhook),
+      POST: h(handleIntakeWebhook),
     },
   },
 

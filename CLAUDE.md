@@ -14,8 +14,8 @@ apps/
     inspections-email-worker/  # ComplianceGo → SharePoint (Cloudflare Worker)
     docusign-file-automation/  # DocuSign contract dispatch (Cloudflare Worker)
     dust-permit-intake/   # Permit request intake processing
-    contracts-email-intake/
-    contract-intake/
+    files-email-intake/       # Email file auto-linking pipeline
+    contract-intake/          # Contract LLM extraction (WIP)
     estimate-poller/
     estimates-sync-worker/
     monday-status-sync-worker/
@@ -98,6 +98,7 @@ The web container calls the permit-worker for browser automation tasks. Key endp
 | `POST` | `/api/permits/create` | Create new permit application | `{ applicationId }` |
 | `POST` | `/api/permits/:id/renew` | Renew a permit | `{ applicationId }` |
 | `POST` | `/api/permits/:id/close` | Close a permit | `{ success }` |
+| `POST` | `/api/invoices/pdf` | Search & download invoice PDF | `{ success, pdfBase64 }` |
 | `POST` | `/api/sync` | Sync permits from portal | `{ synced }` |
 | `GET` | `/api/browser/status` | Browser session status | `{ isRunning, isLoggedIn }` |
 

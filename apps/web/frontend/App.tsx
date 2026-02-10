@@ -27,6 +27,7 @@ import { CatalogPage } from "@/apps/web/frontend/pages/catalog";
 import { ContractsPage } from "@/apps/web/frontend/pages/contracts";
 // Pages
 import { DashboardPage } from "@/apps/web/frontend/pages/dashboard";
+import { EmailsPage } from "@/apps/web/frontend/pages/emails";
 import { EstimateEditorPage } from "@/apps/web/frontend/pages/estimate-editor";
 import { EstimatesPage } from "@/apps/web/frontend/pages/estimates";
 import { PermitsPage } from "@/apps/web/frontend/pages/permits";
@@ -125,6 +126,10 @@ const router = createBrowserRouter([
       {
         path: "permits",
         element: <PermitsPage />,
+      },
+      {
+        path: "emails",
+        element: <EmailsPage />,
       },
       {
         path: "catalog",

@@ -1,13 +1,12 @@
 /**
- * Files Email Intake Worker
+ * Intake Worker
  *
- * Receives emails forwarded to files@desertservices.app (and
- * contracts@desertservices.app) via Cloudflare Email Routing.
- * Extracts all attachments and meaningful body text, POSTs to
- * hub webhook for processing (OCR, classification, extraction).
+ * Receives emails forwarded to intake@desertservices.app via Cloudflare
+ * Email Routing. Extracts attachments, detects file-sharing links
+ * (OneDrive, Egnyte, Dropbox), and POSTs to hub webhook for processing.
  *
- * Email: files@desertservices.app, contracts@desertservices.app
- * Worker: files-email-intake.cheez2012.workers.dev
+ * Email: intake@desertservices.app (also contracts@, dustpermits@)
+ * Worker: intake-worker.cheez2012.workers.dev
  */
 
 import PostalMime from "postal-mime";
@@ -21,8 +20,13 @@ export interface Env {
   HUB_WEBHOOK_URL: string;
 }
 
-const HUB_PATH = "/api/webhooks/files-intake";
-const LOG = "[files-email-intake]";
+interface FileLink {
+  url: string;
+  source: "onedrive" | "egnyte" | "dropbox";
+}
+
+const HUB_PATH = "/api/webhooks/intake";
+const LOG = "[intake]";
 
 const FWD_PREFIX_RE = /^(?:fw|fwd|re|forwarded):\s*/gi;
 const ORIGINAL_SENDER_RE = /From:\s*(?:.*?<([^>]+)>|([^\s<]+@[^\s>]+))/i;
@@ -43,7 +47,7 @@ export default {
     }
 
     return new Response(
-      "Files Email Intake Worker\n\nEndpoints:\n  GET /health",
+      "Intake Worker\n\nEndpoints:\n  GET /health",
       { headers: { "Content-Type": "text/plain" } }
     );
   },
@@ -71,19 +75,22 @@ export default {
         content: arrayBufferToBase64(a.content),
       }));
 
+      // Extract file-sharing links from HTML/text body
+      const fileLinks = extractFileLinks(parsed.html ?? "", parsed.text ?? "");
+
       const bodyText = parsed.text ?? "";
       const bodyHasContent =
         bodyText.replace(FWD_PREFIX_RE, "").trim().length >= MIN_BODY_LENGTH;
 
-      // Proceed if we have any attachments OR meaningful body text
-      if (attachments.length === 0 && !bodyHasContent) {
-        console.log(`${LOG} No attachments or body content, forwarding only`);
+      // Proceed if we have attachments, links, OR meaningful body text
+      if (attachments.length === 0 && fileLinks.length === 0 && !bodyHasContent) {
+        console.log(`${LOG} No attachments, links, or body content, forwarding only`);
         await message.forward("chi@desertservices.net");
         return;
       }
 
       console.log(
-        `${LOG} Found ${attachments.length} attachment(s)${bodyHasContent ? " + body text" : ""}`
+        `${LOG} Found ${attachments.length} attachment(s) + ${fileLinks.length} link(s)${bodyHasContent ? " + body text" : ""}`
       );
 
       // Build payload
@@ -96,6 +103,7 @@ export default {
         bodyText,
         bodyHasContent,
         attachments,
+        fileLinks,
       };
 
       // POST to hub webhook
@@ -115,6 +123,53 @@ export default {
 };
 
 // =============================================================================
+// Link Extraction
+// =============================================================================
+
+const ONEDRIVE_RE = /https:\/\/[^\s"<>]*sharepoint\.com\/:[a-z]:\/[^\s"<>]*/gi;
+const EGNYTE_RE = /https:\/\/[^\s"<>]+\.egnyte\.com\/fl\/[^\s"<>]*/gi;
+const DROPBOX_RE = /https:\/\/(?:www\.)?dropbox\.com\/[^\s"<>]*/gi;
+
+/**
+ * Extract file sharing links from email HTML and text body.
+ * Supports OneDrive/SharePoint, Egnyte, Dropbox.
+ */
+function extractFileLinks(html: string, text: string): FileLink[] {
+  const links: FileLink[] = [];
+  const seen = new Set<string>();
+
+  // Search both HTML and text (HTML has full URLs, text may have some too)
+  const combined = (html || "") + "\n" + (text || "");
+
+  for (const match of combined.matchAll(ONEDRIVE_RE)) {
+    // Clean trailing HTML artifacts (quotes, angle brackets)
+    const url = match[0].replace(/['">\s]+$/, "");
+    if (!seen.has(url)) {
+      seen.add(url);
+      links.push({ url, source: "onedrive" });
+    }
+  }
+
+  for (const match of combined.matchAll(EGNYTE_RE)) {
+    const url = match[0].replace(/['">\s]+$/, "");
+    if (!seen.has(url)) {
+      seen.add(url);
+      links.push({ url, source: "egnyte" });
+    }
+  }
+
+  for (const match of combined.matchAll(DROPBOX_RE)) {
+    const url = match[0].replace(/['">\s]+$/, "");
+    if (!seen.has(url)) {
+      seen.add(url);
+      links.push({ url, source: "dropbox" });
+    }
+  }
+
+  return links;
+}
+
+// =============================================================================
 // Hub Communication
 // =============================================================================
 
@@ -124,7 +179,7 @@ async function postToHub(
   _subject: string
 ): Promise<void> {
   const hubUrl =
-    (env.HUB_WEBHOOK_URL || "https://monday-estimates.desertservices.app") +
+    (env.HUB_WEBHOOK_URL || "https://webhooks.desertservices.app") +
     HUB_PATH;
 
   try {

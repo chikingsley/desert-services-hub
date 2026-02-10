@@ -42,6 +42,8 @@ export interface EmailMessage {
   id: string;
   /** RFC 2822 Message-ID - same across all mailboxes for cross-mailbox matching */
   internetMessageId?: string;
+  /** Folder containing this message (Graph folder ID). Useful for move/organize tooling. */
+  parentFolderId?: string;
   /** Email subject line */
   subject: string;
   /** Timestamp when the email was received */

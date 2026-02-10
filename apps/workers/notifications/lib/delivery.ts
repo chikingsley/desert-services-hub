@@ -237,11 +237,19 @@ async function buildDustPermitDraft(
       invoiceDate: stringValue(metadata.paymentDate, "N/A"),
     });
 
+    const fileAttachments = Array.isArray(metadata.attachments)
+      ? (metadata.attachments as Array<{
+          name: string;
+          contentType: string;
+          contentBytes: string;
+        }>)
+      : [];
+
     return {
       body,
       bodyType: "html",
       skipSignature: true,
-      attachments: [logo],
+      attachments: [logo, ...fileAttachments],
     };
   }
 

@@ -11,6 +11,7 @@ import {
   handleBrowserStatus,
   handleBrowserStop,
 } from "@/api/browser";
+import { handleInvoicePdf } from "@/api/invoices";
 import {
   handleClosePermit,
   handleCreatePermit,
@@ -98,6 +99,14 @@ const server = serve({
     "/api/scrape/:id": {
       GET(req) {
         return handleScrapePermit(req.params.id);
+      },
+    },
+
+    // Invoices API
+    "/api/invoices/pdf": {
+      async POST(req) {
+        const body = await req.json();
+        return handleInvoicePdf(body);
       },
     },
 

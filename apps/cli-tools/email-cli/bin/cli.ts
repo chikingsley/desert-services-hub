@@ -15,6 +15,7 @@ import { draftHandlers } from "@email/commands/draft";
 import { foldersHandlers } from "@email/commands/folders";
 import { groupHandlers } from "@email/commands/groups";
 import { mailboxHandlers } from "@email/commands/mailboxes";
+import { organizeHandlers } from "@email/commands/organize";
 import { readHandlers } from "@email/commands/read";
 import { searchHandlers } from "@email/commands/search";
 import { sendHandlers } from "@email/commands/send";
@@ -31,6 +32,7 @@ const handlers: Record<string, CommandHandler> = {
   ...readHandlers,
   ...draftHandlers,
   ...foldersHandlers,
+  ...organizeHandlers,
   ...templateHandlers,
   ...groupHandlers,
   ...mailboxHandlers,
@@ -49,6 +51,13 @@ Usage: bun apps/cli-tools/email-cli/bin/cli.ts <command> [options]
 Email Commands:
   search <query>              Search emails in your mailbox (supports --folder)
   search-all <query>          Search across all org mailboxes
+  move <messageId>            Move a message to a folder (requires --dest, use --apply)
+  move-thread <messageId>     Move all messages in a thread (requires --dest folderId, use --apply)
+  project-hydrate <project>   Move all emails linked to a project into its Outlook folder (use --apply)
+  project-hydrate-tracked     Hydrate all tracked project folders (batch mode, use --apply)
+  project-folders             List tracked Outlook project folders (from hub.db)
+  project-folder-create <project>  Create a missing Outlook folder for a project (use --apply)
+  project-folder-mkdir <name> Create a new Outlook Projects/Active folder by name (use --apply)
   send                        Send an email (supports attachments)
   send-template <name>        Send email using HTML template
   reply <messageId>           Reply to an email (sends immediately)
@@ -89,6 +98,11 @@ Known Mailboxes: contracts, estimating, chi, tim
 
 Options:
   --user, -u <email>          Mailbox to search (default: ${DEFAULT_USER})
+  --dest, -d <folderId>       Destination folder ID (for move/move-thread)
+  --apply                     Actually perform write operations (default: dry-run)
+  --quiet                     Reduce output (useful for batch hydration)
+  --concurrency <n>           Parallelism for move operations (default varies by command)
+  --max-projects <n>          Limit batch hydration to N projects (project-hydrate-tracked)
   --to <emails>               Recipients (comma-separated)
   --cc <emails>               CC recipients (comma-separated)
   --subject, -s <text>        Email subject

@@ -9,6 +9,11 @@
 import { join } from "node:path";
 import { db } from "@lib/db/hub";
 import { insertNOI } from "@lib/db/repositories/noi";
+import {
+  createSharePointClientFromEnv,
+  uploadLocalFileToProjectSubfolder,
+} from "@lib/sharepoint/intake-upload";
+import type { SharePointClient } from "@sharepoint/client";
 import { matchProject } from "@/apps/workers/dust-permit-intake/lib/project-matcher";
 
 const PDF_ANALYSIS_CWD = join(
@@ -109,7 +114,8 @@ async function runNOIExtraction(pdfPath: string): Promise<NOIResult> {
 
 async function processSinglePdf(
   pdfPath: string,
-  originalSubject: string
+  originalSubject: string,
+  sp: SharePointClient | null
 ): Promise<IntakeResult> {
   const fileName = pdfPath.split("/").pop() ?? pdfPath;
 
@@ -161,6 +167,27 @@ async function processSinglePdf(
       );
     }
 
+    if (project && sp) {
+      try {
+        const uploaded = await uploadLocalFileToProjectSubfolder(sp, {
+          projectId: project.id,
+          subfolder: "NOI",
+          localPath: pdfPath,
+          originalFileName: fileName,
+          stableSuffix: String(noiId),
+        });
+
+        if (uploaded) {
+          console.log(
+            `${LOG} Uploaded NOI to SharePoint: ${uploaded.sharepointPath}`
+          );
+        }
+      } catch (error) {
+        const msg = error instanceof Error ? error.message : String(error);
+        console.warn(`${LOG} SharePoint upload failed for ${fileName}: ${msg}`);
+      }
+    }
+
     console.log(
       `${LOG} ${fileName}: ${result.siteName} | ${result.permitId ?? "no permit ID"} | ${meta.confidence} confidence`
     );
@@ -192,6 +219,7 @@ export async function processDustPermitIntake(
   payload: DustPermitIntakePayload
 ): Promise<IntakeResult[]> {
   const { originalSubject, attachmentPaths } = payload;
+  const sp = createSharePointClientFromEnv();
 
   console.log(
     `${LOG} Processing ${attachmentPaths.length} PDF(s) from "${originalSubject}"`
@@ -199,7 +227,7 @@ export async function processDustPermitIntake(
 
   const results: IntakeResult[] = [];
   for (const pdfPath of attachmentPaths) {
-    const result = await processSinglePdf(pdfPath, originalSubject);
+    const result = await processSinglePdf(pdfPath, originalSubject, sp);
     results.push(result);
   }
 

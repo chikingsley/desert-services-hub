@@ -10,40 +10,11 @@
  * Free tier: 10,000/month - we have 3,580 accounts = ~36% of limit
  * Runtime: ~6 hours for all accounts (rate limited)
  */
-import { Database } from "bun:sqlite";
+
 import { cleanCompany } from "@email/enrichment/pdl/company";
+import { db } from "@lib/db/hub";
 
-const HUB_DB_PATH = "lib/db/hub.db";
 const RATE_LIMIT_DELAY_MS = 6500; // 6.5 seconds between calls (safe margin)
-
-// ============================================================================
-// Database setup
-// ============================================================================
-
-function getDb(): Database {
-  const db = new Database(HUB_DB_PATH);
-  ensureColumns(db);
-  return db;
-}
-
-function ensureColumns(db: Database): void {
-  // Add pdl_enrichment column if it doesn't exist
-  const columns = db
-    .query<{ name: string }, []>("PRAGMA table_info(accounts)")
-    .all();
-
-  const hasEnrichment = columns.some((c) => c.name === "pdl_enrichment");
-  if (!hasEnrichment) {
-    db.run("ALTER TABLE accounts ADD COLUMN pdl_enrichment TEXT");
-    console.log("Added pdl_enrichment column to accounts table");
-  }
-
-  const hasEnrichedAt = columns.some((c) => c.name === "pdl_enriched_at");
-  if (!hasEnrichedAt) {
-    db.run("ALTER TABLE accounts ADD COLUMN pdl_enriched_at TEXT");
-    console.log("Added pdl_enriched_at column to accounts table");
-  }
-}
 
 // ============================================================================
 // Status check
@@ -57,16 +28,16 @@ interface StatusRow {
   without_domain: number;
 }
 
-function getStatus(db: Database): StatusRow {
-  const row = db
+async function getStatus(): Promise<StatusRow> {
+  const row = await db
     .query<StatusRow, []>(
       `
     SELECT
-      COUNT(*) as total,
-      SUM(CASE WHEN pdl_enrichment IS NOT NULL THEN 1 ELSE 0 END) as enriched,
-      SUM(CASE WHEN pdl_enrichment IS NULL THEN 1 ELSE 0 END) as pending,
-      SUM(CASE WHEN domain IS NOT NULL AND domain <> '' THEN 1 ELSE 0 END) as with_domain,
-      SUM(CASE WHEN domain IS NULL OR domain = '' THEN 1 ELSE 0 END) as without_domain
+      COUNT(*)::int as total,
+      SUM(CASE WHEN pdl_enrichment IS NOT NULL THEN 1 ELSE 0 END)::int as enriched,
+      SUM(CASE WHEN pdl_enrichment IS NULL THEN 1 ELSE 0 END)::int as pending,
+      SUM(CASE WHEN domain IS NOT NULL AND domain <> '' THEN 1 ELSE 0 END)::int as with_domain,
+      SUM(CASE WHEN domain IS NULL OR domain = '' THEN 1 ELSE 0 END)::int as without_domain
     FROM accounts
   `
     )
@@ -83,8 +54,8 @@ function getStatus(db: Database): StatusRow {
   );
 }
 
-function printStatus(db: Database): void {
-  const status = getStatus(db);
+async function printStatus(): Promise<void> {
+  const status = await getStatus();
   const pct =
     status.total > 0
       ? ((status.enriched / status.total) * 100).toFixed(1)
@@ -116,7 +87,7 @@ interface AccountRow {
   domain: string | null;
 }
 
-function getPendingAccounts(db: Database, limit?: number): AccountRow[] {
+async function getPendingAccounts(limit?: number): Promise<AccountRow[]> {
   const sql = `
     SELECT id, name, domain
     FROM accounts
@@ -124,17 +95,18 @@ function getPendingAccounts(db: Database, limit?: number): AccountRow[] {
     ORDER BY id
     ${limit ? `LIMIT ${limit}` : ""}
   `;
-  return db.query<AccountRow, []>(sql).all();
+  return await db.query<AccountRow, []>(sql).all();
 }
 
-function saveEnrichment(db: Database, accountId: number, result: object): void {
-  db.run(
-    `
-    UPDATE accounts
-    SET pdl_enrichment = ?,
-        pdl_enriched_at = datetime('now')
-    WHERE id = ?
-  `,
+async function saveEnrichment(
+  accountId: number,
+  result: object
+): Promise<void> {
+  await db.run(
+    `UPDATE accounts
+     SET pdl_enrichment = $1::jsonb,
+         pdl_enriched_at = now()
+     WHERE id = $2`,
     [JSON.stringify(result), accountId]
   );
 }
@@ -147,7 +119,6 @@ function serializeError(err: unknown): string {
     return err.message;
   }
   if (err && typeof err === "object") {
-    // Handle PDL error responses which may be objects
     const obj = err as Record<string, unknown>;
     if (obj.message) {
       return String(obj.message);
@@ -167,7 +138,6 @@ function serializeError(err: unknown): string {
 async function enrichAccount(
   account: AccountRow
 ): Promise<{ success: boolean; data?: object; error?: string }> {
-  // Use name + website if we have domain, otherwise just name
   const params = account.domain?.trim()
     ? { name: account.name, website: account.domain }
     : { name: account.name };
@@ -198,15 +168,15 @@ async function enrichAccount(
   };
 }
 
-async function runEnrichment(db: Database, batchSize?: number): Promise<void> {
-  const pending = getPendingAccounts(db, batchSize);
+async function runEnrichment(batchSize?: number): Promise<void> {
+  const pending = await getPendingAccounts(batchSize);
 
   if (pending.length === 0) {
     console.log("All accounts already enriched!");
     return;
   }
 
-  const status = getStatus(db);
+  const status = await getStatus();
   console.log(`\nStarting enrichment: ${pending.length} accounts to process`);
   console.log(`Already enriched: ${status.enriched}/${status.total}`);
   console.log(`Rate limit: ${RATE_LIMIT_DELAY_MS}ms between calls\n`);
@@ -221,25 +191,23 @@ async function runEnrichment(db: Database, batchSize?: number): Promise<void> {
 
     try {
       const result = await enrichAccount(account);
-
-      // Save immediately (durable!)
-      saveEnrichment(db, account.id, result.data ?? {});
+      await saveEnrichment(account.id, result.data ?? {});
 
       if (result.success) {
         successCount++;
-        console.log(`${progress} ✓ ${account.name}`);
+        console.log(`${progress} + ${account.name}`);
       } else {
         errorCount++;
-        console.log(`${progress} ✗ ${account.name}: ${result.error}`);
+        console.log(`${progress} x ${account.name}: ${result.error}`);
       }
     } catch (err) {
       errorCount++;
       const errorMsg = serializeError(err);
-      saveEnrichment(db, account.id, {
+      await saveEnrichment(account.id, {
         input: { name: account.name },
         error: errorMsg,
       });
-      console.log(`${progress} ✗ ${account.name}: ${errorMsg}`);
+      console.log(`${progress} x ${account.name}: ${errorMsg}`);
     }
 
     // Progress report every 50 accounts
@@ -270,10 +238,9 @@ async function runEnrichment(db: Database, batchSize?: number): Promise<void> {
 
 async function main(): Promise<void> {
   const args = process.argv.slice(2);
-  const db = getDb();
 
   if (args.includes("--status") || args.includes("-s")) {
-    printStatus(db);
+    await printStatus();
     return;
   }
 
@@ -299,8 +266,8 @@ Options:
   // Test mode
   if (args.includes("--test")) {
     console.log("Test mode: processing 3 accounts\n");
-    await runEnrichment(db, 3);
-    printStatus(db);
+    await runEnrichment(3);
+    await printStatus();
     return;
   }
 
@@ -312,15 +279,15 @@ Options:
       console.error("Invalid batch size");
       process.exit(1);
     }
-    await runEnrichment(db, batchSize);
-    printStatus(db);
+    await runEnrichment(batchSize);
+    await printStatus();
     return;
   }
 
   // Full run
-  printStatus(db);
-  await runEnrichment(db);
-  printStatus(db);
+  await printStatus();
+  await runEnrichment();
+  await printStatus();
 }
 
 main().catch((err) => {

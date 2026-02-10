@@ -71,7 +71,7 @@ Usage:
   bun apps/cli-tools/quoting-cli/bin/cli.ts pdf <estimate-id> [--output ./path/to/file.pdf]
 
 Environment:
-  DATABASE_PATH - Path to SQLite database (default: lib/db/hub.db)
+  DATABASE_URL - Postgres connection string (default: from .env)
 
 Examples:
   # List recent estimates

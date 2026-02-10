@@ -12,7 +12,7 @@ const LIST_COLUMNS = `
   to_emails, cc_emails, received_at,
   has_attachments, attachment_names, body_preview, web_url, categories,
   classification, classification_confidence, classification_method,
-  project_name, contractor_name, account_id, project_id, estimate_id,
+  project_name, contractor_name, account_id, project_id,
   thread_id, is_internal, is_forwarded,
   original_sender_email, original_sender_domain,
   is_platform_email, platform_name,
@@ -183,10 +183,7 @@ export async function listEmails(req: Request): Promise<Response> {
     });
   } catch (error) {
     console.error("Failed to fetch emails:", error);
-    return Response.json(
-      { error: "Failed to fetch emails" },
-      { status: 500 }
-    );
+    return Response.json({ error: "Failed to fetch emails" }, { status: 500 });
   }
 }
 
@@ -237,10 +234,7 @@ export async function getEmail(req: Request): Promise<Response> {
     });
   } catch (error) {
     console.error("Failed to fetch email:", error);
-    return Response.json(
-      { error: "Failed to fetch email" },
-      { status: 500 }
-    );
+    return Response.json({ error: "Failed to fetch email" }, { status: 500 });
   }
 }
 

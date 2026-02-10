@@ -26,7 +26,6 @@ function parseProjectRow(row: Record<string, unknown>): Project {
     signsStatus: (row.signs_status as string) ?? "Not Needed",
     outlookFolder: row.outlook_folder as string | null,
     notes: row.notes as string | null,
-    linkedEstimateIds: row.linked_estimate_ids as string | null,
     emailCount: (row.email_count as number) ?? 0,
     firstSeen: row.first_seen as string | null,
     lastSeen: row.last_seen as string | null,
@@ -43,17 +42,16 @@ export async function createProject(
 ): Promise<Project> {
   const normalized = name.toLowerCase().replace(/[^a-z0-9]/g, "");
 
-  await db.run(
-    `INSERT INTO projects (name, normalized_name, account_id, address)
-     VALUES (?, ?, ?, ?)`,
-    [name, normalized, accountId ?? null, address ?? null]
-  );
-
   const row = await db
-    .query<Record<string, unknown>, []>(
-      "SELECT * FROM projects WHERE id = last_insert_rowid()"
+    .query<
+      Record<string, unknown>,
+      [string, string, number | null, string | null]
+    >(
+      `INSERT INTO projects (name, normalized_name, account_id, address)
+       VALUES (?, ?, ?, ?)
+       RETURNING *`
     )
-    .get();
+    .get(name, normalized, accountId ?? null, address ?? null);
 
   if (!row) {
     throw new Error(`Failed to create project: ${name}`);

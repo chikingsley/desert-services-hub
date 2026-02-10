@@ -52,7 +52,6 @@ export function parseEmailRow(row: Record<string, unknown>): Email {
     // Foreign key relationships
     accountId: row.account_id as number | null,
     projectId: row.project_id as number | null,
-    estimateId: row.estimate_id as number | null,
 
     // Threading
     threadId: row.thread_id as string | null,

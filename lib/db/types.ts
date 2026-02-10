@@ -65,7 +65,6 @@ export interface Project {
   signsStatus: string;
   outlookFolder: string | null;
   notes: string | null;
-  linkedEstimateIds: string | null;
   emailCount: number;
   firstSeen: string | null;
   lastSeen: string | null;
@@ -120,7 +119,6 @@ export interface Email {
   // Foreign key relationships
   accountId: number | null;
   projectId: number | null;
-  estimateId: number | null;
 
   // Threading
   threadId: string | null;

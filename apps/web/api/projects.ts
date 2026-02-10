@@ -23,7 +23,6 @@ interface ProjectRow {
   first_seen: string | null;
   last_seen: string | null;
   monday_item_id: string | null;
-  linked_estimate_ids: string | null;
   notes: string | null;
   account_id: number | null;
   account_name: string | null;

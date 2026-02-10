@@ -152,7 +152,9 @@ Connection: `@lib/db/hub` provides a Postgres client with SQLite-compatible API 
 |-------|---------|
 | `projects` | All projects (name, contractor, outlook_folder, permit/contract status) |
 | `emails` | Synced Outlook emails |
+| `estimate_emails` | Canonical email ↔ estimate links (join table) |
 | `estimates` | Bid estimates from Monday.com |
+| `project_estimates` | Canonical project ↔ estimate links (join table) |
 | `dust_permits_filed_by_desert_services` | Maricopa dust permits |
 | `documents` | Parsed documents (contracts/LOIs/etc.) + extraction JSON |
 | `accounts` | Contractor/company accounts |

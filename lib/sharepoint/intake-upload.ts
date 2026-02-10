@@ -3,6 +3,7 @@ import { existsSync } from "node:fs";
 import { db } from "@lib/db/hub";
 import { getEstimateByMondayId } from "@lib/db/repositories/estimate";
 import { getProjectById } from "@lib/db/repositories/project";
+import { getEstimatesForProject } from "@lib/db/repositories/project-estimate";
 import type { Project } from "@lib/db/types";
 import {
   buildSharePointUrl,
@@ -20,6 +21,9 @@ const getAccountNameById = db.query<{ name: string }>(
 );
 
 const STATUS_CANDIDATES = ["Active", "Submitted", "Lost", "Finished"] as const;
+
+const LEADING_SLASHES_RE = /^\/+/;
+const TRAILING_SLASHES_RE = /\/+$/;
 
 export function createSharePointClientFromEnv(): SharePointClient | null {
   const { AZURE_TENANT_ID, AZURE_CLIENT_ID, AZURE_CLIENT_SECRET } = process.env;
@@ -50,7 +54,9 @@ export function parseDocumentLibraryPathFromSharePointUrl(
     const idx = decodedPath.indexOf(marker);
     if (idx !== -1) {
       const after = decodedPath.slice(idx + marker.length);
-      const cleaned = after.replace(/^\/+/, "").replace(/\/+$/, "");
+      const cleaned = after
+        .replace(LEADING_SLASHES_RE, "")
+        .replace(TRAILING_SLASHES_RE, "");
       return cleaned.length > 0 ? cleaned : null;
     }
   } catch {
@@ -68,7 +74,9 @@ export function parseDocumentLibraryPathFromSharePointUrl(
   const withoutQuery = after.split("?")[0]?.split("#")[0] ?? after;
   try {
     const decoded = decodeURIComponent(withoutQuery);
-    const cleaned = decoded.replace(/^\/+/, "").replace(/\/+$/, "");
+    const cleaned = decoded
+      .replace(LEADING_SLASHES_RE, "")
+      .replace(TRAILING_SLASHES_RE, "");
     return cleaned.length > 0 ? cleaned : null;
   } catch {
     return null;
@@ -118,25 +126,26 @@ export async function resolveCustomerProjectsFolderPath(
   // Fallback: use bid_status to pick the status folder and probe for an existing folder.
   let preferredStatus = DEFAULT_STATUS;
 
-  const mondayItemId = project.mondayItemId?.trim() ?? null;
-  if (mondayItemId) {
-    const estimate = await getEstimateByMondayId(mondayItemId);
+  const linkedEstimates = await getEstimatesForProject(project.id);
 
-    if (estimate?.sharepointUrl) {
+  for (const linked of linkedEstimates) {
+    if (linked.sharepointUrl) {
       const parsed = parseDocumentLibraryPathFromSharePointUrl(
-        estimate.sharepointUrl
+        linked.sharepointUrl
       );
       if (parsed) {
         return parsed;
       }
     }
+  }
 
-    preferredStatus = getStatusFolder(estimate?.bidStatus ?? null);
-  } else if (project.linkedEstimateIds) {
-    const match = project.linkedEstimateIds.match(/\b\d{6,}\b/);
-    const linkedMondayId = match?.[0] ?? null;
-    if (linkedMondayId) {
-      const estimate = await getEstimateByMondayId(linkedMondayId);
+  if (linkedEstimates[0]) {
+    preferredStatus = getStatusFolder(linkedEstimates[0].bidStatus ?? null);
+  } else {
+    // Legacy fallback: some rows stored an estimate monday_item_id on projects.monday_item_id.
+    const mondayItemId = project.mondayItemId?.trim() ?? null;
+    if (mondayItemId) {
+      const estimate = await getEstimateByMondayId(mondayItemId);
 
       if (estimate?.sharepointUrl) {
         const parsed = parseDocumentLibraryPathFromSharePointUrl(
@@ -207,14 +216,11 @@ export async function uploadLocalFileToProjectSubfolder(
     originalFileName: string;
     stableSuffix?: string;
   }
-): Promise<
-  | {
-      webUrl: string | null;
-      sharepointPath: string;
-      folderUrl: string;
-    }
-  | null
-> {
+): Promise<{
+  webUrl: string | null;
+  sharepointPath: string;
+  folderUrl: string;
+} | null> {
   const project = await getProjectById(options.projectId);
   if (!project) {
     return null;

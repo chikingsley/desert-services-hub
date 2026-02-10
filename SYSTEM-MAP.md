@@ -273,7 +273,7 @@ Desert Services provides environmental compliance services (SWPPP, dust control,
 
 **Problem:** Emails and estimates exist in the same database but linking is manual or based on simple text matching. Many emails about estimates aren't linked.
 
-**Current state:** `estimate_emails` table exists. `findEstimate()` can search by number/name. Worker does some thread-based linking. But there's no comprehensive auto-linking.
+**Current state:** `estimate_emails` table exists (canonical link table). `findEstimate()` can search by number/name. Worker does some thread-based linking. But there's no comprehensive auto-linking.
 
 **What's needed:** An agent that periodically scans unlinked emails, uses subject line / sender / content to match them to estimates, and creates links. Could use local LLM (granite4) for fuzzy matching.
 

@@ -35,26 +35,40 @@ export async function listContracts(req: Request): Promise<Response> {
     const statusFilter = url.searchParams.get("status");
     const search = url.searchParams.get("q");
 
-    let query = `SELECT e.id, e.monday_item_id, e.name, e.estimate_number,
+    let query = `SELECT
+            e.id, e.monday_item_id, e.name, e.estimate_number,
             e.contractor, e.group_id, e.bid_status, e.bid_value,
             e.awarded_value, e.due_date, e.location,
-            p.id as project_id, p.name as project_name,
-            p.contract_status, p.dust_permit_status,
+            proj.project_id, proj.project_name,
+            proj.contract_status, proj.dust_permit_status,
             e.created_at, e.updated_at
          FROM estimates e
-         LEFT JOIN projects p ON p.linked_estimate_ids LIKE '%' || e.monday_item_id || '%'
+         LEFT JOIN LATERAL (
+            SELECT
+              p.id as project_id,
+              p.name as project_name,
+              p.contract_status,
+              p.dust_permit_status
+            FROM project_estimates pe
+            JOIN projects p ON p.id = pe.project_id
+            WHERE pe.estimate_id = e.id
+            ORDER BY pe.created_at DESC NULLS LAST, p.id DESC
+            LIMIT 1
+         ) proj ON true
          WHERE e.bid_status = 'Won'`;
 
     const params: unknown[] = [];
 
     if (statusFilter && statusFilter !== "all") {
-      query += ` AND p.contract_status = $${params.length + 1}`;
+      query += " AND proj.contract_status = ?";
       params.push(statusFilter);
     }
 
     if (search) {
-      query += ` AND (e.name ILIKE $${params.length + 1} OR e.contractor ILIKE $${params.length + 1} OR e.estimate_number ILIKE $${params.length + 1})`;
-      params.push(`%${search}%`);
+      query +=
+        " AND (e.name ILIKE ? OR e.contractor ILIKE ? OR e.estimate_number ILIKE ?)";
+      const like = `%${search}%`;
+      params.push(like, like, like);
     }
 
     query += " ORDER BY e.updated_at DESC";
@@ -76,11 +90,18 @@ export async function listContracts(req: Request): Promise<Response> {
     // Contract status breakdown (from linked projects)
     const pipelineStats = (await db
       .prepare(
-        `SELECT p.contract_status, COUNT(*) as count
+        `SELECT proj.contract_status, COUNT(*) as count
          FROM estimates e
-         LEFT JOIN projects p ON p.linked_estimate_ids LIKE '%' || e.monday_item_id || '%'
+         LEFT JOIN LATERAL (
+            SELECT p.contract_status
+            FROM project_estimates pe
+            JOIN projects p ON p.id = pe.project_id
+            WHERE pe.estimate_id = e.id
+            ORDER BY pe.created_at DESC NULLS LAST, p.id DESC
+            LIMIT 1
+         ) proj ON true
          WHERE e.bid_status = 'Won'
-         GROUP BY p.contract_status`
+         GROUP BY proj.contract_status`
       )
       .all()) as { contract_status: string | null; count: number }[];
 

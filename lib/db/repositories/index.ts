@@ -108,6 +108,11 @@ export {
   getProjectsForAccount,
   linkEmailToProject,
 } from "@lib/db/repositories/project";
+// Project ↔ Estimate
+export {
+  getEstimatesForProject,
+  linkEstimateToProject,
+} from "@lib/db/repositories/project-estimate";
 // Statistics & Cleanup
 export {
   clearAllData,

@@ -40,6 +40,7 @@ import { processFilesIntake } from "@/apps/workers/contract-intake/lib/files-int
 import type { DustPermitIntakePayload } from "@/apps/workers/dust-permit-intake/lib/intake";
 import { processDustPermitIntake } from "@/apps/workers/dust-permit-intake/lib/intake";
 import { syncEstimates } from "@/apps/workers/estimate-poller/lib/sync";
+import { pollFolderWatcher } from "@/apps/workers/outlook-folder-watcher/lib/poll";
 import {
   detectDustPermitEmailTrigger,
   handleIssuedEmail,
@@ -67,6 +68,7 @@ const MAX_CONCURRENT_JOBS = Number.isFinite(parsedMaxConcurrency)
   ? Math.max(1, parsedMaxConcurrency)
   : 4;
 const FULL_SYNC_INTERVAL_MS = 30 * 60 * 1000;
+const FOLDER_WATCHER_INTERVAL_MS = 30 * 1000; // 30 seconds
 const RENEWAL_INTERVAL_MS = 60 * 60 * 1000; // 1 hour
 const GROUP_SYNC_INTERVAL_MS = 15 * 60 * 1000; // 15 minutes
 const STALE_JOB_MINUTES = 5;
@@ -1036,13 +1038,14 @@ async function processNextJob(): Promise<void> {
 
 let pollTimer: ReturnType<typeof setInterval> | null = null;
 let fullSyncTimer: ReturnType<typeof setInterval> | null = null;
+let folderWatcherTimer: ReturnType<typeof setInterval> | null = null;
 let renewalTimer: ReturnType<typeof setInterval> | null = null;
 let groupSyncTimer: ReturnType<typeof setInterval> | null = null;
 
 export async function startWorker(): Promise<void> {
   console.log("[worker] Starting background job processor");
   console.log(
-    `[worker] Poll interval: ${POLL_INTERVAL_MS}ms, max concurrency: ${MAX_CONCURRENT_JOBS}, Full sync interval: ${FULL_SYNC_INTERVAL_MS / 60_000}min`
+    `[worker] Poll interval: ${POLL_INTERVAL_MS}ms, max concurrency: ${MAX_CONCURRENT_JOBS}, Full sync: ${FULL_SYNC_INTERVAL_MS / 60_000}min, Folder watcher: ${FOLDER_WATCHER_INTERVAL_MS / 1000}s`
   );
 
   // Recover stale jobs from previous crashes
@@ -1090,6 +1093,24 @@ export async function startWorker(): Promise<void> {
     }
   }, FULL_SYNC_INTERVAL_MS);
 
+  // Outlook folder watcher — polls Graph deltas for folder/message changes (every 30s)
+  let folderWatcherRunning = false;
+  folderWatcherTimer = setInterval(async () => {
+    if (folderWatcherRunning) return; // skip if previous poll still in-flight
+    folderWatcherRunning = true;
+    try {
+      await pollFolderWatcher();
+    } catch (err) {
+      console.error("[worker] Folder watcher error:", err);
+    } finally {
+      folderWatcherRunning = false;
+    }
+  }, FOLDER_WATCHER_INTERVAL_MS);
+  // Run first poll immediately
+  pollFolderWatcher().catch((err) =>
+    console.error("[worker] Folder watcher initial poll error:", err)
+  );
+
   // Renew expiring Outlook subscriptions (every hour)
   renewalTimer = setInterval(async () => {
     try {
@@ -1133,6 +1154,10 @@ export function stopWorker(): void {
   if (fullSyncTimer) {
     clearInterval(fullSyncTimer);
     fullSyncTimer = null;
+  }
+  if (folderWatcherTimer) {
+    clearInterval(folderWatcherTimer);
+    folderWatcherTimer = null;
   }
   if (renewalTimer) {
     clearInterval(renewalTimer);

@@ -50,6 +50,7 @@ COPY apps/cli-tools/email-cli ./apps/cli-tools/email-cli
 # Workers
 COPY apps/workers/estimate-poller/lib ./apps/workers/estimate-poller/lib
 COPY apps/workers/contract-intake/lib ./apps/workers/contract-intake/lib
+COPY apps/workers/outlook-folder-watcher/lib ./apps/workers/outlook-folder-watcher/lib
 
 # Dust permit intake worker
 COPY apps/workers/dust-permit-intake/lib ./apps/workers/dust-permit-intake/lib

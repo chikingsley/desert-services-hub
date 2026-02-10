@@ -21,6 +21,7 @@
 !apps/workers/estimate-poller/lib/
 !apps/workers/contract-intake/lib/
 !apps/workers/dust-permit-intake/lib/
+!apps/workers/outlook-folder-watcher/lib/
 
 # Notifications worker
 !apps/workers/notifications/lib/

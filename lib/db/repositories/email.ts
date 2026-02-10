@@ -98,14 +98,32 @@ function normalizeSubjectInternal(subject: string | null): string | null {
 
 export async function insertEmail(data: InsertEmailData): Promise<number> {
   const normalized = normalizeSubjectInternal(data.subject ?? null);
-  const excluded = isSpam(data.fromEmail, data.subject).isSpam ? 1 : 0;
+
+  // Check domain_rules table for classification + exclusion
+  const fromDomain = data.fromEmail?.split("@")[1]?.toLowerCase() ?? "";
+  const rule = fromDomain
+    ? ((await db
+        .prepare(
+          `SELECT classification, is_excluded FROM domain_rules
+           WHERE ? LIKE '%' || domain ORDER BY length(domain) DESC LIMIT 1`
+        )
+        .get(fromDomain)) as {
+        classification: string | null;
+        is_excluded: boolean;
+      } | null)
+    : null;
+
+  // Excluded if: code-level spam check OR domain_rules says so
+  const excluded =
+    isSpam(data.fromEmail, data.subject).isSpam || rule?.is_excluded ? 1 : 0;
+  const classification = rule?.classification ?? null;
 
   await db.run(
     `INSERT INTO emails (
       message_id, internet_message_id, mailbox_id, conversation_id, subject, normalized_subject, from_email, from_name,
       to_emails, cc_emails, received_at, has_attachments, attachment_names,
-      body_preview, body_full, body_html, web_url, categories, is_excluded
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      body_preview, body_full, body_html, web_url, categories, is_excluded, classification, classification_method
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(message_id) DO UPDATE SET
       internet_message_id = excluded.internet_message_id,
       subject = excluded.subject,
@@ -141,6 +159,8 @@ export async function insertEmail(data: InsertEmailData): Promise<number> {
       data.webUrl ?? null,
       JSON.stringify(data.categories ?? []),
       excluded,
+      classification,
+      classification ? "domain_rule" : null,
     ]
   );
 

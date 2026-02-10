@@ -17,7 +17,13 @@ import {
 } from "@/api/archive";
 import { getCatalog, getTakeoffItems } from "@/api/catalog";
 import { listContracts } from "@/api/contracts";
-import { getEmail, listEmails, markDomainAsSpam } from "@/api/emails";
+import {
+  getEmail,
+  listDomainRules,
+  listEmails,
+  markDomainAsSpam,
+  setDomainRule,
+} from "@/api/emails";
 import { createEstimate, listEstimates } from "@/api/estimates";
 import {
   deleteEstimate,
@@ -133,6 +139,10 @@ const server = serve({
     },
     "/api/emails/spam": {
       POST: h(markDomainAsSpam),
+    },
+    "/api/emails/domain-rules": {
+      GET: h(listDomainRules),
+      POST: h(setDomainRule),
     },
     "/api/emails/:id": {
       GET: h(getEmail),

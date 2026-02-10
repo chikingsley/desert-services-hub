@@ -134,9 +134,12 @@ export async function listEmails(req: Request): Promise<Response> {
         .prepare(
           `SELECT
             count(*)::int as total,
+            count(*) FILTER (WHERE classification = 'ESTIMATE')::int as estimates,
             count(*) FILTER (WHERE classification = 'CONTRACT')::int as contracts,
             count(*) FILTER (WHERE classification = 'DUST_PERMIT')::int as dust_permits,
             count(*) FILTER (WHERE classification = 'INVOICE')::int as invoices,
+            count(*) FILTER (WHERE classification = 'PAYMENT')::int as payments,
+            count(*) FILTER (WHERE classification = 'HR')::int as hr,
             count(*) FILTER (WHERE classification = 'INTERNAL')::int as internal,
             count(*) FILTER (WHERE from_domain = 'docusign.net')::int as docusign,
             count(*) FILTER (WHERE has_attachments = 1)::int as with_attachments,
@@ -145,9 +148,12 @@ export async function listEmails(req: Request): Promise<Response> {
         )
         .get() as Promise<{
         total: number;
+        estimates: number;
         contracts: number;
         dust_permits: number;
         invoices: number;
+        payments: number;
+        hr: number;
         internal: number;
         docusign: number;
         with_attachments: number;
@@ -172,9 +178,12 @@ export async function listEmails(req: Request): Promise<Response> {
       },
       stats: {
         total: statsResult?.total ?? 0,
+        estimates: statsResult?.estimates ?? 0,
         contracts: statsResult?.contracts ?? 0,
         dustPermits: statsResult?.dust_permits ?? 0,
         invoices: statsResult?.invoices ?? 0,
+        payments: statsResult?.payments ?? 0,
+        hr: statsResult?.hr ?? 0,
         internal: statsResult?.internal ?? 0,
         docusign: statsResult?.docusign ?? 0,
         withAttachments: statsResult?.with_attachments ?? 0,
@@ -238,41 +247,100 @@ export async function getEmail(req: Request): Promise<Response> {
   }
 }
 
-// POST /api/emails/spam — mark all emails from a domain as excluded
-export async function markDomainAsSpam(req: Request): Promise<Response> {
+// POST /api/emails/domain-rule — set classification or spam for a domain
+// Body: { domain: string, classification?: string, is_excluded?: boolean }
+export async function setDomainRule(req: Request): Promise<Response> {
   try {
-    const body = (await req.json()) as { domain?: string };
+    const body = (await req.json()) as {
+      domain?: string;
+      classification?: string | null;
+      is_excluded?: boolean;
+    };
     const domain = body.domain?.trim().toLowerCase();
 
     if (!domain) {
       return Response.json({ error: "domain is required" }, { status: 400 });
     }
 
-    const result = await db
-      .prepare(
-        `UPDATE emails SET is_excluded = 1
-         WHERE is_excluded = 0 AND from_domain = ?`
-      )
-      .run(domain) as unknown as { changes: number };
+    const classification = body.classification ?? null;
+    const isExcluded = body.is_excluded ?? false;
 
-    // Also catch subdomains (e.g. clear.keyprofitstrategy.com)
-    const subResult = await db
-      .prepare(
-        `UPDATE emails SET is_excluded = 1
-         WHERE is_excluded = 0 AND from_domain LIKE ?`
-      )
-      .run(`%.${domain}`) as unknown as { changes: number };
+    // Upsert the domain rule
+    await db.run(
+      `INSERT INTO domain_rules (domain, classification, is_excluded)
+       VALUES (?, ?, ?)
+       ON CONFLICT (domain) DO UPDATE SET
+         classification = excluded.classification,
+         is_excluded = excluded.is_excluded`,
+      [domain, classification, isExcluded]
+    );
 
-    const total = (result.changes ?? 0) + (subResult.changes ?? 0);
+    // Apply to existing emails: exact domain + subdomains
+    const domainCondition = `(from_domain = ? OR from_domain LIKE ?)`;
+    const domainParams = [domain, `%.${domain}`];
 
-    console.log(`[spam] Marked ${total} emails from ${domain} as excluded`);
+    if (isExcluded) {
+      await db
+        .prepare(
+          `UPDATE emails SET is_excluded = 1 WHERE is_excluded = 0 AND ${domainCondition}`
+        )
+        .run(...domainParams);
+    }
 
-    return Response.json({ domain, excluded: total });
+    if (classification) {
+      await db
+        .prepare(
+          `UPDATE emails SET classification = ?, classification_method = 'domain_rule'
+           WHERE ${domainCondition}`
+        )
+        .run(classification, ...domainParams);
+    }
+
+    console.log(
+      `[domain-rule] ${domain}: classification=${classification}, excluded=${isExcluded}`
+    );
+
+    return Response.json({ domain, classification, is_excluded: isExcluded });
   } catch (error) {
-    console.error("Failed to mark domain as spam:", error);
+    console.error("Failed to set domain rule:", error);
     return Response.json(
-      { error: "Failed to mark domain as spam" },
+      { error: "Failed to set domain rule" },
       { status: 500 }
     );
   }
+}
+
+// GET /api/emails/domain-rules — list all domain rules
+export async function listDomainRules(_req: Request): Promise<Response> {
+  try {
+    const rules = (await db
+      .prepare(
+        "SELECT domain, classification, is_excluded, created_at FROM domain_rules ORDER BY domain"
+      )
+      .all()) as {
+      domain: string;
+      classification: string | null;
+      is_excluded: boolean;
+      created_at: string;
+    }[];
+
+    return Response.json({ rules });
+  } catch (error) {
+    console.error("Failed to list domain rules:", error);
+    return Response.json(
+      { error: "Failed to list domain rules" },
+      { status: 500 }
+    );
+  }
+}
+
+// POST /api/emails/spam — convenience wrapper for blocking a domain
+export async function markDomainAsSpam(req: Request): Promise<Response> {
+  const body = (await req.json()) as { domain?: string };
+  const spamReq = new Request(req.url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ domain: body.domain, is_excluded: true }),
+  });
+  return setDomainRule(spamReq);
 }

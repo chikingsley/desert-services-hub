@@ -5,11 +5,14 @@
  * Click a row to view full email in a slide-in panel.
  */
 import {
+  Ban,
   ChevronLeft,
   ChevronRight,
+  MoreHorizontal,
   Paperclip,
   RefreshCw,
   Search,
+  Tag,
   Users,
 } from "lucide-react";
 import { useState } from "react";
@@ -25,6 +28,13 @@ import {
 import { StatCard } from "@/apps/web/frontend/components/stat-card";
 import { Badge } from "@/apps/web/frontend/components/ui/badge";
 import { Button } from "@/apps/web/frontend/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/apps/web/frontend/components/ui/dropdown-menu";
 import { Input } from "@/apps/web/frontend/components/ui/input";
 import {
   Table,
@@ -45,9 +55,12 @@ import type { Email } from "@lib/db/types";
 
 interface EmailStats {
   total: number;
+  estimates: number;
   contracts: number;
   dustPermits: number;
   invoices: number;
+  payments: number;
+  hr: number;
   internal: number;
   docusign: number;
   withAttachments: number;
@@ -71,10 +84,13 @@ interface EmailsApiResponse {
 // Tab config — each tab maps to a query param strategy
 const FILTER_TABS = [
   { value: "all", label: "All" },
+  { value: "ESTIMATE", label: "Estimate" },
   { value: "docusign", label: "DocuSign" },
   { value: "CONTRACT", label: "Contract" },
   { value: "DUST_PERMIT", label: "Dust Permit" },
   { value: "INVOICE", label: "Invoice" },
+  { value: "PAYMENT", label: "Payment" },
+  { value: "HR", label: "HR" },
   { value: "INTERNAL", label: "Internal" },
 ] as const;
 
@@ -94,9 +110,26 @@ const CLASSIFICATION_COLORS: Record<string, string> = {
     "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300",
   VENDOR: "bg-teal-100 text-teal-800 dark:bg-teal-900/40 dark:text-teal-300",
   SWPPP: "bg-lime-100 text-lime-800 dark:bg-lime-900/40 dark:text-lime-300",
+  PAYMENT:
+    "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300",
+  HR: "bg-pink-100 text-pink-800 dark:bg-pink-900/40 dark:text-pink-300",
   SPAM: "bg-zinc-100 text-zinc-400 dark:bg-zinc-800/20 dark:text-zinc-500",
   UNKNOWN: "bg-muted text-muted-foreground",
 };
+
+// Categories available for domain-level classification
+const CLASSIFY_OPTIONS = [
+  { value: "ESTIMATE", label: "Estimate" },
+  { value: "CONTRACT", label: "Contract" },
+  { value: "DUST_PERMIT", label: "Dust Permit" },
+  { value: "INVOICE", label: "Invoice" },
+  { value: "PAYMENT", label: "Payment" },
+  { value: "HR", label: "HR" },
+  { value: "INTERNAL", label: "Internal" },
+  { value: "INSURANCE", label: "Insurance" },
+  { value: "SCHEDULE", label: "Schedule" },
+  { value: "VENDOR", label: "Vendor" },
+] as const;
 
 function buildApiUrl(
   page: number,
@@ -155,30 +188,45 @@ export function EmailsPage() {
   };
 
   const handleSpam = async (domain: string) => {
-    await fetch("/api/emails/spam", {
+    await fetch("/api/emails/domain-rules", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ domain }),
+      body: JSON.stringify({ domain, is_excluded: true }),
     });
     setDetailOpen(false);
     mutate();
   };
 
+  const handleClassify = async (domain: string, classification: string) => {
+    await fetch("/api/emails/domain-rules", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ domain, classification }),
+    });
+    mutate();
+  };
+
   const stats = data?.stats ?? {
     total: 0,
+    estimates: 0,
     contracts: 0,
     dustPermits: 0,
     invoices: 0,
+    payments: 0,
+    hr: 0,
     internal: 0,
     docusign: 0,
     withAttachments: 0,
   };
 
   const statForTab: Record<string, number> = {
+    ESTIMATE: stats.estimates,
     docusign: stats.docusign,
     CONTRACT: stats.contracts,
     DUST_PERMIT: stats.dustPermits,
     INVOICE: stats.invoices,
+    PAYMENT: stats.payments,
+    HR: stats.hr,
     INTERNAL: stats.internal,
   };
 
@@ -339,9 +387,54 @@ export function EmailsPage() {
                             )}
                           </TableCell>
                           <TableCell>
-                            {email.hasAttachments && (
-                              <Paperclip className="h-4 w-4 text-muted-foreground" />
-                            )}
+                            <div className="flex items-center gap-1">
+                              {email.hasAttachments && (
+                                <Paperclip className="h-4 w-4 text-muted-foreground" />
+                              )}
+                              {email.fromDomain && (
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button
+                                      className="h-7 w-7 opacity-0 group-hover:opacity-100"
+                                      onClick={(e) => e.stopPropagation()}
+                                      size="icon"
+                                      variant="ghost"
+                                    >
+                                      <MoreHorizontal className="h-4 w-4" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent
+                                    align="end"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    {CLASSIFY_OPTIONS.map((opt) => (
+                                      <DropdownMenuItem
+                                        key={opt.value}
+                                        onClick={() =>
+                                          handleClassify(
+                                            email.fromDomain!,
+                                            opt.value
+                                          )
+                                        }
+                                      >
+                                        <Tag className="mr-2 h-3.5 w-3.5" />
+                                        {opt.label}
+                                      </DropdownMenuItem>
+                                    ))}
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem
+                                      className="text-destructive"
+                                      onClick={() =>
+                                        handleSpam(email.fromDomain!)
+                                      }
+                                    >
+                                      <Ban className="mr-2 h-3.5 w-3.5" />
+                                      Block {email.fromDomain}
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              )}
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -349,7 +442,7 @@ export function EmailsPage() {
                         <TableRow>
                           <TableCell
                             className="py-12 text-center text-muted-foreground"
-                            colSpan={5}
+                            colSpan={6}
                           >
                             {search || filterTab !== "all"
                               ? "No emails match your filters."

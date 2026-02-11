@@ -49,3 +49,22 @@ Host pollers (systemd user units, see `ops/systemd/*.service`):
 
 - `SYSTEM-MAP.md` for the current runtime map and data flows.
 - `CLAUDE.md` for detailed conventions and testing rules.
+
+## Safety Docs Ops (SSSP/SDS)
+
+- Primary SSSP input for current LGE packet:
+  - `data/triage/1400-w-3rd/sssp-input.json`
+- Generate SSSP PDF:
+  - `bun apps/cli-tools/sssp-cli/bin/cli.ts generate --in <input.json> --out <output.pdf>`
+- Contact policy for this flow:
+  - Project lead defaults to the assigned Site Services Manager (SSM) from current sales-territory assignment, unless user overrides.
+  - For lead/field/dispatcher contacts, format phone as two lines:
+    - `C: (###) ###-####`
+    - `O: (###) ###-####`
+  - Do not wrap phone numbers within a line.
+- Work Mac delivery:
+  - Use SSH alias `work-mac` from `~/.ssh/config`.
+  - Copy outputs to project folder:
+    - `~/Downloads/1400w3rd/`
+  - Open with Preview via AppleScript:
+    - `osascript -e 'tell application "Preview" to open POSIX file "...pdf"'`

@@ -32,7 +32,7 @@ apps/
 
 lib/                      # Shared libraries (imported by all apps)
   catalog/                # Service catalog with pricing (dust permit fee schedule, etc.)
-  db/                     # Database client (hub.db), repositories, types
+  db/                     # Database client (Supabase Postgres), repositories, types
   graph/                  # Microsoft Graph API client
   sharepoint/             # SharePoint file operations
   estimating/             # Estimating logic
@@ -178,3 +178,38 @@ psql -h gmk-server -p 54322 -U postgres  # password: postgres
 ```
 
 Supabase Studio: `http://gmk-server:54323`
+
+## SSSP / SDS Workflow Standard
+
+Use this when users request Site-Specific Safety Plans (SSSP) or Safety Data Sheets (SDS) packets.
+
+### Source of Truth
+
+- SSSP generator:
+  - `apps/cli-tools/sssp-cli/`
+  - `lib/pdf/sssp/`
+- Current LGE working packet:
+  - `data/triage/1400-w-3rd/`
+  - SSSP input: `data/triage/1400-w-3rd/sssp-input.json`
+
+### Contact Assignment Rule
+
+- If user asks who should be listed as project lead, default to the assigned Site Services Manager from the latest sales-territory file/email.
+- For this 1400 W 3rd packet, `LGE Design Build` maps to `Lacie Slevin`.
+- If user provides an override, always prefer user instruction.
+
+### Contact Formatting Rule
+
+- For lead/field/dispatcher rows, phone should be split into two lines:
+  - `C: (###) ###-####`
+  - `O: (###) ###-####`
+- Keep phone-number style consistent across rows (parentheses format).
+- Phone lines should not wrap mid-number.
+
+### Delivery Rule (Work Mac)
+
+- Claude runs on server; open files on work Mac via SSH:
+  - `scp <file> work-mac:~/Downloads/1400w3rd/<final-name>.pdf`
+  - `ssh work-mac 'osascript -e "tell application \"Preview\" to open POSIX file \"/Users/chiejimofor/Downloads/1400w3rd/<final-name>.pdf\""'`
+- Keep final, client-facing names in `~/Downloads/1400w3rd/`.
+- Move intermediate revisions (`rNN`) into `~/Downloads/1400w3rd/archive/`.

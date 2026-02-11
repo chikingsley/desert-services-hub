@@ -1,0 +1,4 @@
+interface:
+  display_name: "Safety Docs (SSSP/SDS)"
+  short_description: "Generate/revise SSSP and SDS packets"
+  default_prompt: "Use $safety-docs-sssp-sds to update the SSSP/SDS packet, fix contacts/phones, and deliver/open the final PDF on work-mac."

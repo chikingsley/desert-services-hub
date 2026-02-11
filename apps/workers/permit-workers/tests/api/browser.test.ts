@@ -83,3 +83,28 @@ describe("handleBrowserStop", () => {
     expect(typeof data.success).toBe("boolean");
   });
 });
+
+describe("handleBrowserClipboardPaste", () => {
+  it("rejects empty clipboard payload", async () => {
+    const req = new Request("http://localhost/api/browser/clipboard/paste", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ text: "" }),
+    });
+    const response = await api.handleBrowserClipboardPaste(req);
+    expect(response.status).toBe(400);
+
+    const data = await response.json();
+    expect(data.success).toBe(false);
+  });
+});
+
+describe("handleBrowserClipboardCopy", () => {
+  it("returns response with success field", async () => {
+    const response = await api.handleBrowserClipboardCopy();
+    expect(response.headers.get("content-type")).toContain("application/json");
+
+    const data = await response.json();
+    expect(typeof data.success).toBe("boolean");
+  });
+});

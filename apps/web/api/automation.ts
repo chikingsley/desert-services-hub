@@ -8,7 +8,7 @@
 const DEFAULT_PERMIT_WORKER_URL =
   process.env.PERMIT_WORKER_URL ?? "http://permit-worker:47822";
 const DEFAULT_VNC_QUERY =
-  "autoconnect=true&resize=scale&reconnect=true&reconnect_delay=2000";
+  "autoconnect=true&resize=scale&reconnect=true&reconnect_delay=2000&view_only=false&shared=true";
 const TRAILING_SLASH_RE = /\/$/;
 
 function getPermitWorkerBaseUrl(): string {
@@ -26,9 +26,15 @@ function getVncUrl(req: Request): string {
   return `${requestUrl.protocol}//${requestUrl.hostname}:${port}/vnc.html?${DEFAULT_VNC_QUERY}`;
 }
 
-async function proxyJson(path: string, method: "GET" | "POST") {
+async function proxyJson(path: string, method: "GET" | "POST", body?: unknown) {
   const upstreamUrl = `${getPermitWorkerBaseUrl()}${path}`;
-  const response = await fetch(upstreamUrl, { method });
+  const headers =
+    body === undefined ? undefined : { "content-type": "application/json" };
+  const response = await fetch(upstreamUrl, {
+    method,
+    headers,
+    body: body === undefined ? undefined : JSON.stringify(body),
+  });
 
   const payload = await response.json().catch(async () => {
     const body = await response.text().catch(() => "");
@@ -115,6 +121,40 @@ export async function postAutomationKeepAlive(): Promise<Response> {
 export async function postAutomationStop(): Promise<Response> {
   try {
     const { response, payload } = await proxyJson("/api/browser/stop", "POST");
+    return Response.json(payload, { status: response.status });
+  } catch (error) {
+    return proxyError(error);
+  }
+}
+
+/**
+ * POST /api/automation/clipboard/paste
+ */
+export async function postAutomationClipboardPaste(
+  req: Request
+): Promise<Response> {
+  try {
+    const body = await req.json().catch(() => ({}));
+    const { response, payload } = await proxyJson(
+      "/api/browser/clipboard/paste",
+      "POST",
+      body
+    );
+    return Response.json(payload, { status: response.status });
+  } catch (error) {
+    return proxyError(error);
+  }
+}
+
+/**
+ * POST /api/automation/clipboard/copy
+ */
+export async function postAutomationClipboardCopy(): Promise<Response> {
+  try {
+    const { response, payload } = await proxyJson(
+      "/api/browser/clipboard/copy",
+      "POST"
+    );
     return Response.json(payload, { status: response.status });
   } catch (error) {
     return proxyError(error);

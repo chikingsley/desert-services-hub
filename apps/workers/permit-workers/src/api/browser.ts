@@ -6,10 +6,12 @@
 
 import {
   closeBrowserSession,
+  copyBrowserSelectionText,
   ensureBrowserSessionReady,
   getOrCreateBrowserSession,
   getSessionStatus,
   keepBrowserSessionAlive,
+  pasteBrowserClipboardText,
 } from "@/portal/utils/browser";
 
 function jsonSuccess(data: Record<string, unknown>): Response {
@@ -107,6 +109,47 @@ export async function handleBrowserStop(): Promise<Response> {
   try {
     await closeBrowserSession();
     return jsonSuccess({ status: getSessionStatus() });
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    return jsonError(errorMsg);
+  }
+}
+
+/**
+ * POST /api/browser/clipboard/paste - Paste local clipboard text into browser
+ */
+export async function handleBrowserClipboardPaste(
+  req: Request
+): Promise<Response> {
+  try {
+    const body = (await req.json().catch(() => ({}))) as { text?: unknown };
+    const text = typeof body.text === "string" ? body.text : "";
+    if (!text.length) {
+      return jsonError("Clipboard text is required", 400);
+    }
+
+    const result = await pasteBrowserClipboardText(text);
+    return jsonSuccess({
+      clipboard: result,
+      status: getSessionStatus(),
+    });
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    return jsonError(errorMsg);
+  }
+}
+
+/**
+ * POST /api/browser/clipboard/copy - Read selected text from browser
+ */
+export async function handleBrowserClipboardCopy(): Promise<Response> {
+  try {
+    const result = await copyBrowserSelectionText();
+    return jsonSuccess({
+      text: result.text,
+      clipboard: result,
+      status: getSessionStatus(),
+    });
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : String(error);
     return jsonError(errorMsg);

@@ -7,6 +7,7 @@ import {
   isRouteErrorResponse,
   Outlet,
   RouterProvider,
+  useLocation,
   useNavigate,
   useRouteError,
 } from "react-router";
@@ -75,17 +76,31 @@ function RouteErrorBoundary() {
   );
 }
 
+function isMaricopaPortalPath(pathname: string): boolean {
+  return pathname === "/maricopa" || pathname === "/automation";
+}
+
 // Root layout with sidebar
 function RootLayout() {
+  const location = useLocation();
+  const maricopaVisible = isMaricopaPortalPath(location.pathname);
+
   return (
     <SidebarProvider className="h-svh overflow-hidden">
       <AppSidebar />
-      <SidebarInset className="texture-noise overflow-auto bg-desert-gradient">
-        <Outlet />
+      <SidebarInset className="texture-noise relative overflow-auto bg-desert-gradient">
+        <div className={maricopaVisible ? "hidden" : "flex h-full flex-col"}>
+          <Outlet />
+        </div>
+        <AutomationPage visible={maricopaVisible} />
       </SidebarInset>
       <Toaster richColors />
     </SidebarProvider>
   );
+}
+
+function PlaceholderRoute() {
+  return null;
 }
 
 // Router configuration — all data fetching via SWR inside components
@@ -137,11 +152,11 @@ const router = createBrowserRouter([
       },
       {
         path: "maricopa",
-        element: <AutomationPage />,
+        element: <PlaceholderRoute />,
       },
       {
         path: "automation",
-        element: <AutomationPage />,
+        element: <PlaceholderRoute />,
       },
       {
         path: "map",

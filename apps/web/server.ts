@@ -17,6 +17,8 @@ import {
 } from "@/api/archive";
 import {
   getAutomationStatus,
+  postAutomationClipboardCopy,
+  postAutomationClipboardPaste,
   postAutomationKeepAlive,
   postAutomationReady,
   postAutomationStart,
@@ -157,6 +159,12 @@ const server = serve({
     },
     "/api/automation/stop": {
       POST: h(postAutomationStop),
+    },
+    "/api/automation/clipboard/paste": {
+      POST: h(postAutomationClipboardPaste),
+    },
+    "/api/automation/clipboard/copy": {
+      POST: h(postAutomationClipboardCopy),
     },
 
     // Contracts (Won estimates)

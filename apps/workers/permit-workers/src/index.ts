@@ -7,6 +7,8 @@
 
 import { serve } from "bun";
 import {
+  handleBrowserClipboardCopy,
+  handleBrowserClipboardPaste,
   handleBrowserKeepAlive,
   handleBrowserReady,
   handleBrowserStart,
@@ -148,6 +150,16 @@ const server = serve({
     "/api/browser/stop": {
       POST() {
         return handleBrowserStop();
+      },
+    },
+    "/api/browser/clipboard/paste": {
+      POST(req) {
+        return handleBrowserClipboardPaste(req);
+      },
+    },
+    "/api/browser/clipboard/copy": {
+      POST() {
+        return handleBrowserClipboardCopy();
       },
     },
   },

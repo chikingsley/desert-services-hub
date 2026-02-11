@@ -233,6 +233,18 @@ export interface BrowserKeepAliveResult {
   reloginSucceeded?: boolean;
 }
 
+export interface BrowserClipboardWriteResult {
+  success: boolean;
+  inserted: boolean;
+  reason?: string;
+}
+
+export interface BrowserClipboardReadResult {
+  success: boolean;
+  text: string;
+  reason?: string;
+}
+
 function touchSessionActivity(): void {
   if (!globalSession) {
     return;
@@ -589,6 +601,79 @@ export async function keepBrowserSessionAlive(options?: {
   } finally {
     keepAliveInFlight = null;
   }
+}
+
+/**
+ * Paste provided text into the active element of the browser session.
+ */
+export async function pasteBrowserClipboardText(
+  text: string
+): Promise<BrowserClipboardWriteResult> {
+  if (!text.length) {
+    return {
+      success: false,
+      inserted: false,
+      reason: "Clipboard text is empty",
+    };
+  }
+
+  const session = await ensureBrowserSessionReady();
+  return await withBrowserSessionOperation("clipboard-paste", async () => {
+    try {
+      await session.instance.page.keyboard.insertText(text);
+      touchSessionActivity();
+      return {
+        success: true,
+        inserted: true,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        inserted: false,
+        reason: error instanceof Error ? error.message : String(error),
+      };
+    }
+  });
+}
+
+/**
+ * Read selected text from the active element/window selection.
+ */
+export async function copyBrowserSelectionText(): Promise<BrowserClipboardReadResult> {
+  const session = await ensureBrowserSessionReady();
+  return await withBrowserSessionOperation("clipboard-copy", async () => {
+    try {
+      const text = await session.instance.page.evaluate(() => {
+        const active = document.activeElement;
+
+        if (
+          active instanceof HTMLInputElement ||
+          active instanceof HTMLTextAreaElement
+        ) {
+          const start = active.selectionStart ?? 0;
+          const end = active.selectionEnd ?? 0;
+          if (end > start) {
+            return active.value.slice(start, end);
+          }
+          return "";
+        }
+
+        return window.getSelection()?.toString() ?? "";
+      });
+
+      touchSessionActivity();
+      return {
+        success: true,
+        text: typeof text === "string" ? text : "",
+      };
+    } catch (error) {
+      return {
+        success: false,
+        text: "",
+        reason: error instanceof Error ? error.message : String(error),
+      };
+    }
+  });
 }
 
 /**

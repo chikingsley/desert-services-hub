@@ -4,7 +4,14 @@
  * Always-on embedded VNC view of the permit-worker browser session.
  */
 
-import { CheckCircle2, Loader2, RefreshCw, Square } from "lucide-react";
+import {
+  CheckCircle2,
+  ClipboardPaste,
+  Copy,
+  Loader2,
+  RefreshCw,
+  Square,
+} from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import useSWR from "swr";
@@ -35,10 +42,19 @@ type AutomationActionEndpoint =
   | "/api/automation/start"
   | "/api/automation/ready"
   | "/api/automation/keepalive"
-  | "/api/automation/stop";
+  | "/api/automation/stop"
+  | "/api/automation/clipboard/paste"
+  | "/api/automation/clipboard/copy";
 
 interface RunActionOptions {
   silentSuccess?: boolean;
+  body?: unknown;
+}
+
+interface AutomationActionPayload {
+  success?: boolean;
+  error?: string;
+  text?: string;
 }
 
 function formatTimestamp(value: string | null): string {
@@ -52,7 +68,11 @@ function formatTimestamp(value: string | null): string {
   return date.toLocaleString();
 }
 
-export function AutomationPage() {
+interface AutomationPageProps {
+  visible?: boolean;
+}
+
+export function AutomationPage({ visible = true }: AutomationPageProps) {
   const [action, setAction] = useState<AutomationActionEndpoint | null>(null);
   const previousPortalReady = useRef<boolean | null>(null);
   const previousBusy = useRef<boolean | null>(null);
@@ -61,7 +81,7 @@ export function AutomationPage() {
     "/api/automation/status",
     fetcher,
     {
-      refreshInterval: 5000,
+      refreshInterval: visible ? 5000 : 0,
       dedupingInterval: 2000,
       shouldRetryOnError: true,
     }
@@ -69,10 +89,40 @@ export function AutomationPage() {
 
   const fallbackVncUrl = useMemo(
     () =>
-      `${window.location.protocol}//${window.location.hostname}:47821/vnc.html?autoconnect=true&resize=scale&reconnect=true&reconnect_delay=2000`,
+      `${window.location.protocol}//${window.location.hostname}:47821/vnc.html?autoconnect=true&resize=scale&reconnect=true&reconnect_delay=2000&view_only=false&shared=true`,
     []
   );
   const vncUrl = data?.vncUrl || fallbackVncUrl;
+
+  const postAutomation = useCallback(
+    async (
+      endpoint: AutomationActionEndpoint,
+      options?: RunActionOptions
+    ): Promise<AutomationActionPayload> => {
+      const headers =
+        options?.body === undefined
+          ? undefined
+          : { "content-type": "application/json" };
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers,
+        body:
+          options?.body === undefined
+            ? undefined
+            : JSON.stringify(options.body),
+      });
+      const payload = (await response.json().catch(() => ({}))) as
+        | AutomationActionPayload
+        | undefined;
+      if (!response.ok || payload?.success === false) {
+        throw new Error(
+          payload?.error || `Request failed with status ${response.status}`
+        );
+      }
+      return payload ?? {};
+    },
+    []
+  );
 
   const runAction = useCallback(
     async (
@@ -82,16 +132,7 @@ export function AutomationPage() {
     ): Promise<void> => {
       setAction(endpoint);
       try {
-        const response = await fetch(endpoint, { method: "POST" });
-        const payload = (await response.json().catch(() => ({}))) as {
-          success?: boolean;
-          error?: string;
-        };
-        if (!response.ok || payload.success === false) {
-          throw new Error(
-            payload.error || `Request failed with status ${response.status}`
-          );
-        }
+        await postAutomation(endpoint, options);
         if (!options?.silentSuccess) {
           toast.success(successMessage);
         }
@@ -106,18 +147,93 @@ export function AutomationPage() {
         setAction(null);
       }
     },
-    [mutate]
+    [mutate, postAutomation]
   );
 
+  const pasteFromLocalClipboard = useCallback(async (): Promise<void> => {
+    setAction("/api/automation/clipboard/paste");
+    try {
+      if (!navigator.clipboard?.readText) {
+        throw new Error("Clipboard read is not available in this browser");
+      }
+      const text = await navigator.clipboard.readText();
+      if (!text.length) {
+        toast.message("Clipboard is empty");
+        return;
+      }
+
+      await postAutomation("/api/automation/clipboard/paste", {
+        body: { text },
+      });
+      toast.success("Pasted local clipboard into portal");
+      await mutate();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      toast.error(message);
+    } finally {
+      setAction(null);
+    }
+  }, [mutate, postAutomation]);
+
+  const copySelectionToLocalClipboard = useCallback(async (): Promise<void> => {
+    setAction("/api/automation/clipboard/copy");
+    try {
+      if (!navigator.clipboard?.writeText) {
+        throw new Error("Clipboard write is not available in this browser");
+      }
+      const payload = await postAutomation("/api/automation/clipboard/copy");
+      const text = payload.text ?? "";
+      if (!text.length) {
+        toast.message("No selected portal text to copy");
+        return;
+      }
+
+      await navigator.clipboard.writeText(text);
+      toast.success("Copied portal selection to local clipboard");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      toast.error(message);
+    } finally {
+      setAction(null);
+    }
+  }, [postAutomation]);
+
   useEffect(() => {
-    if (autoEnsureAttempted.current) {
+    if (!visible) {
+      return;
+    }
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (!(event.ctrlKey || event.metaKey) || event.altKey) {
+        return;
+      }
+
+      const key = event.key.toLowerCase();
+      if (key === "v") {
+        event.preventDefault();
+        pasteFromLocalClipboard().catch(() => undefined);
+        return;
+      }
+
+      if (key === "c") {
+        event.preventDefault();
+        copySelectionToLocalClipboard().catch(() => undefined);
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [copySelectionToLocalClipboard, pasteFromLocalClipboard, visible]);
+
+  useEffect(() => {
+    if (!visible || autoEnsureAttempted.current) {
       return;
     }
     autoEnsureAttempted.current = true;
     runAction("/api/automation/ready", "Portal session is ready", {
       silentSuccess: true,
     }).catch(() => undefined);
-  }, [runAction]);
+  }, [runAction, visible]);
 
   useEffect(() => {
     if (!data) {
@@ -172,15 +288,18 @@ export function AutomationPage() {
   }
   const actionPending = action !== null;
   const busyLabel = data?.busy ? data.currentOperation || "Running" : "Idle";
+  const rootClassName = visible
+    ? "flex min-h-full flex-1 flex-col"
+    : "pointer-events-none fixed inset-0 -z-10 opacity-0";
 
   return (
-    <div className="flex flex-1 flex-col">
+    <div aria-hidden={!visible} className={rootClassName}>
       <PageHeader
         breadcrumbs={[{ label: "Maricopa Portal" }]}
         title="Maricopa County Dust Portal"
       />
 
-      <div className="flex-1 p-6 lg:p-8">
+      <div className="flex min-h-0 flex-1 flex-col p-6 lg:p-8">
         <div className="mb-4 rounded-2xl border border-border bg-card p-4">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
             <div className="inline-flex items-center gap-2 rounded-full border border-border px-3 py-1.5 font-medium text-sm">
@@ -235,6 +354,36 @@ export function AutomationPage() {
                 )}
                 Stop Session
               </Button>
+              <Button
+                className="gap-2"
+                disabled={actionPending}
+                onClick={() => {
+                  pasteFromLocalClipboard().catch(() => undefined);
+                }}
+                variant="outline"
+              >
+                {action === "/api/automation/clipboard/paste" ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <ClipboardPaste className="h-4 w-4" />
+                )}
+                Paste Clipboard
+              </Button>
+              <Button
+                className="gap-2"
+                disabled={actionPending}
+                onClick={() => {
+                  copySelectionToLocalClipboard().catch(() => undefined);
+                }}
+                variant="outline"
+              >
+                {action === "/api/automation/clipboard/copy" ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Copy className="h-4 w-4" />
+                )}
+                Copy Selection
+              </Button>
             </div>
           </div>
 
@@ -273,10 +422,10 @@ export function AutomationPage() {
           )}
         </div>
 
-        <div className="relative overflow-hidden rounded-2xl border border-border bg-black">
+        <div className="relative min-h-0 flex-1 overflow-hidden rounded-2xl border border-border bg-black">
           <iframe
-            allow="clipboard-read; clipboard-write"
-            className="h-[72vh] w-full border-0"
+            allow="clipboard-read; clipboard-write; fullscreen"
+            className="h-full w-full border-0"
             src={vncUrl}
             title="Maricopa County Dust Portal"
           />

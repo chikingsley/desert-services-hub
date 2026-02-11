@@ -1,0 +1,43 @@
+{
+  "version": 1,
+  "compose": {
+    "required": [
+      "web",
+      "webhooks",
+      "permit-worker",
+      "notifications",
+      "swppp-sync"
+    ],
+    "optional": ["tunnel"]
+  },
+  "legacySystemdOverlapUnits": [
+    "desert-notifications.service",
+    "desert-swppp-sync.service",
+    "desert-estimate-email-linker.service",
+    "desert-outlook-folder-watcher.service"
+  ],
+  "cloudflare": {
+    "deploymentWorkers": [
+      {
+        "dir": "apps/workers/intake-worker",
+        "name": "intake-worker",
+        "url": "https://intake-worker.cheez2012.workers.dev/health"
+      },
+      {
+        "dir": "apps/workers/estimates-sync-worker",
+        "name": "estimates-sync",
+        "url": "https://estimates-sync.cheez2012.workers.dev/"
+      },
+      {
+        "dir": "apps/workers/monday-status-sync-worker",
+        "name": "monday-status-sync",
+        "url": "https://monday-status-sync.cheez2012.workers.dev/"
+      },
+      {
+        "dir": "apps/workers/inspections-email-worker",
+        "name": "inspection-router",
+        "url": "https://inspection-router.cheez2012.workers.dev/"
+      }
+    ]
+  }
+}

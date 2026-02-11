@@ -1,11 +1,12 @@
 /**
- * Dust Permit Intake Email Worker
+ * Dust Permit Intake Email Worker (Deprecated)
  *
  * Receives emails forwarded to dustpermits@desertservices.app via
  * Cloudflare Email Routing. Parses attachments, POSTs to hub webhook
  * for NOI extraction and project linking.
  *
- * Email: dustpermits@desertservices.app
+ * DEPRECATED: dustpermits@ now routes to intake-worker.
+ * Email: dustpermits@desertservices.app (legacy fallback only)
  * Worker: dust-permit-intake.cheez2012.workers.dev
  */
 

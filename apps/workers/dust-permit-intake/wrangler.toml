@@ -10,7 +10,8 @@ send_email = [
 [observability]
 enabled = true
 
-# Email routing: dustpermits@desertservices.app → this worker
+# DEPRECATED: dustpermits@ routing moved to intake-worker.
+# Keep only as emergency fallback during migration window.
 # Workers.dev URL: dust-permit-intake.cheez2012.workers.dev
 #
 # Secrets (set via `wrangler secret put`):

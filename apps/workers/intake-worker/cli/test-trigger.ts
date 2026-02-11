@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 
 /**
- * Test Trigger — Manually fire the files email intake pipeline.
+ * Test Trigger — Manually fire the canonical intake pipeline.
  *
  * Modes:
  *   webhook <file...>    Post file(s) directly to the local webhook endpoint (saves + enqueues job)
@@ -24,7 +24,7 @@ import { processContractsEmailIntake } from "@/apps/workers/contract-intake/lib/
 const LOG = "[test-trigger]";
 
 const enqueueStmt = db.prepare(
-  "INSERT INTO webhook_jobs (job_type, payload) VALUES ('files_intake', ?) RETURNING id"
+  "INSERT INTO webhook_jobs (job_type, payload) VALUES ('intake', ?) RETURNING id"
 );
 
 const INTAKE_DIR = join(import.meta.dir, "../../../../data/files-intake");
@@ -51,8 +51,7 @@ const MIME_MAP: Record<string, string> = {
 
 async function webhookMode(filePaths: string[]): Promise<void> {
   const webhookUrl =
-    process.env.WEBHOOK_URL ||
-    "http://localhost:4747/api/webhooks/files-intake";
+    process.env.WEBHOOK_URL || "http://localhost:4747/api/webhooks/intake";
 
   const attachments = filePaths.map((p) => {
     const bytes = readFileSync(p);

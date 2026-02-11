@@ -8,12 +8,10 @@ BUN := `command -v bun 2>/dev/null || echo "$HOME/.bun/bin/bun"`
 default:
     @just --list
 
-# Full project startup: docker stack + user poller services + strict health gate.
+# Full project startup: docker stack + strict health gate.
 up:
     @echo "Bringing up Docker services..."
     docker compose up -d --build
-    @echo
-    @just services-install
     @echo
     @just check
 
@@ -23,22 +21,22 @@ status:
     @echo
     @just _cf_check "0"
 
-# Strict local-runtime health gate (non-zero if core stack or poller services are down).
+# Strict local-runtime health gate (non-zero if core runtime is down or legacy overlap exists).
 check:
     @just _health "1"
     @echo
     @just _cf_check "0"
 
-# Install and restart user-level systemd services from ops/systemd templates.
+# Legacy no-op (host pollers migrated to Docker Compose).
 services-install:
-    @just _services_install "1"
+    @echo "No user systemd pollers to install. Pollers run as Docker Compose services."
 
-# Install/enable services but do not restart.
+# Legacy no-op alias.
 services-enable-only:
-    @just _services_install "0"
+    @just services-install
 
 services-status:
-    @systemctl --user status desert-outlook-folder-watcher.service desert-notifications.service desert-swppp-sync.service --no-pager -n 40
+    @docker compose ps notifications swppp-sync
 
 # Cloudflare worker deployment checks (best effort; requires token scope for deployments list).
 cf-check:
@@ -64,55 +62,17 @@ fix:
 jobs *args:
     @{{BUN}} apps/web/cli/webhook-jobs.ts {{args}}
 
-[private]
-_services_install start_after_install:
-    #!/usr/bin/env bash
-    set -euo pipefail
+# Deterministic project triage audit (linkage/completeness/DOD).
+triage-audit project_id:
+    @scripts/triage-audit.sh --project-id {{project_id}}
 
-    START_AFTER_INSTALL="{{start_after_install}}"
-    ROOT_DIR="{{justfile_directory()}}"
-    SRC_DIR="${ROOT_DIR}/ops/systemd"
-    DST_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/systemd/user"
+# Refresh deduplicated project-email materialized view.
+email-dedup-refresh:
+    @docker exec supabase_db_desert-services-hub psql -U postgres -d postgres -c "REFRESH MATERIALIZED VIEW CONCURRENTLY public.project_email_dedup_mv;"
 
-    if ! command -v systemctl >/dev/null 2>&1; then
-      echo "systemctl is required for service installation."
-      exit 1
-    fi
-
-    if ! systemctl --user show-environment >/dev/null 2>&1; then
-      echo "systemctl --user is not available in this shell."
-      exit 1
-    fi
-
-    units=(
-      "desert-outlook-folder-watcher.service"
-      "desert-notifications.service"
-      "desert-swppp-sync.service"
-      "desert-estimate-email-linker.service"
-    )
-
-    mkdir -p "$DST_DIR"
-    for unit in "${units[@]}"; do
-      install -m 0644 "${SRC_DIR}/${unit}" "${DST_DIR}/${unit}"
-      echo "[OK] Installed ${unit}"
-    done
-
-    systemctl --user daemon-reload
-
-    for unit in "${units[@]}"; do
-      systemctl --user enable "$unit" >/dev/null
-      if [[ "$START_AFTER_INSTALL" == "1" ]]; then
-        systemctl --user restart "$unit"
-      fi
-    done
-
-    echo
-    echo "User services ready."
-    for unit in "${units[@]}"; do
-      active="$(systemctl --user is-active "$unit" 2>/dev/null || true)"
-      enabled="$(systemctl --user is-enabled "$unit" 2>/dev/null || true)"
-      echo "  - ${unit}: active=${active}, enabled=${enabled}"
-    done
+# Show deduplicated project-email summary and top duplicates.
+email-dedup-report project_id limit="30" refresh="":
+    @scripts/project-email-dedup-report.sh --project-id {{project_id}} --limit {{limit}} {{refresh}}
 
 [private]
 _health strict:
@@ -122,6 +82,18 @@ _health strict:
     STRICT="{{strict}}"
     ROOT_DIR="{{justfile_directory()}}"
     cd "$ROOT_DIR" || exit 1
+    BUN_CMD="$(command -v bun 2>/dev/null || true)"
+    if [[ -z "$BUN_CMD" && -x "$HOME/.bun/bin/bun" ]]; then
+      BUN_CMD="$HOME/.bun/bin/bun"
+    fi
+
+    read_registry_lines() {
+      local key="$1"
+      if [[ -z "$BUN_CMD" ]]; then
+        return 1
+      fi
+      "$BUN_CMD" "$ROOT_DIR/scripts/runtime-registry.ts" "$key"
+    }
 
     PASS_COUNT=0
     WARN_COUNT=0
@@ -176,9 +148,18 @@ _health strict:
     echo "== Docker Compose =="
     if command -v docker >/dev/null 2>&1 && docker compose version >/dev/null 2>&1; then
       running_services="$(docker compose ps --status running --services 2>/dev/null || true)"
+      mapfile -t required_docker_services < <(read_registry_lines "compose.required" 2>/dev/null || true)
+      mapfile -t optional_docker_services < <(read_registry_lines "compose.optional" 2>/dev/null || true)
 
-      required_docker_services=(web webhooks permit-worker)
-      optional_docker_services=(tunnel)
+      if [[ ${#required_docker_services[@]} -eq 0 ]]; then
+        required_docker_services=(web webhooks permit-worker notifications swppp-sync)
+        warn "runtime registry unavailable for compose.required; using fallback defaults"
+      fi
+
+      if [[ ${#optional_docker_services[@]} -eq 0 ]]; then
+        optional_docker_services=(tunnel)
+        warn "runtime registry unavailable for compose.optional; using fallback defaults"
+      fi
 
       for service in "${required_docker_services[@]}"; do
         if is_running_service "$service" "$running_services"; then
@@ -206,43 +187,34 @@ _health strict:
     check_http_health "permit-worker" "http://localhost:47822/health" required
 
     echo
-    echo "== User Systemd Pollers =="
-    required_units=(
-      "desert-outlook-folder-watcher.service"
-      "desert-notifications.service"
-      "desert-swppp-sync.service"
-    )
+    echo "== Legacy User Systemd Overlap =="
+    mapfile -t legacy_units < <(read_registry_lines "legacySystemdOverlapUnits" 2>/dev/null || true)
+    if [[ ${#legacy_units[@]} -eq 0 ]]; then
+      legacy_units=(
+        "desert-notifications.service"
+        "desert-swppp-sync.service"
+        "desert-estimate-email-linker.service"
+        "desert-outlook-folder-watcher.service"
+      )
+      warn "runtime registry unavailable for legacySystemdOverlapUnits; using fallback defaults"
+    fi
 
     if command -v systemctl >/dev/null 2>&1; then
       if systemctl --user show-environment >/dev/null 2>&1; then
-        unit_listing="$(systemctl --user list-unit-files --type=service --no-legend 2>/dev/null | awk '{print $1}')"
-
-        for unit in "${required_units[@]}"; do
-          if ! printf '%s\n' "$unit_listing" | grep -Fxq "$unit"; then
-            fail "${unit} is missing (run: just services-install)"
-            continue
-          fi
-
+        for unit in "${legacy_units[@]}"; do
           active_state="$(systemctl --user is-active "$unit" 2>/dev/null || true)"
           enabled_state="$(systemctl --user is-enabled "$unit" 2>/dev/null || true)"
-
-          if [[ "$active_state" == "active" ]]; then
-            ok "${unit} is active"
+          if [[ "$active_state" == "active" || "$enabled_state" == "enabled" ]]; then
+            fail "${unit} still active/enabled (disable to avoid duplicate polling)"
           else
-            fail "${unit} is not active (state: ${active_state})"
-          fi
-
-          if [[ "$enabled_state" == "enabled" ]]; then
-            ok "${unit} is enabled"
-          else
-            fail "${unit} is not enabled (state: ${enabled_state})"
+            ok "${unit} is not active/enabled"
           fi
         done
       else
-        warn "systemctl --user bus is not available in this shell; skipping poller checks"
+        warn "systemctl --user bus is not available in this shell; skipping legacy-overlap checks"
       fi
     else
-      warn "systemctl is not installed; skipping poller checks"
+      warn "systemctl is not installed; skipping legacy-overlap checks"
     fi
 
     echo
@@ -260,6 +232,18 @@ _cf_check strict:
     STRICT="{{strict}}"
     ROOT_DIR="{{justfile_directory()}}"
     cd "$ROOT_DIR" || exit 1
+    BUN_CMD="$(command -v bun 2>/dev/null || true)"
+    if [[ -z "$BUN_CMD" && -x "$HOME/.bun/bin/bun" ]]; then
+      BUN_CMD="$HOME/.bun/bin/bun"
+    fi
+
+    read_registry_lines() {
+      local key="$1"
+      if [[ -z "$BUN_CMD" ]]; then
+        return 1
+      fi
+      "$BUN_CMD" "$ROOT_DIR/scripts/runtime-registry.ts" "$key"
+    }
 
     PASS=0
     WARN=0
@@ -316,21 +300,35 @@ _cf_check strict:
       exit 0
     fi
 
-    workers=(
-      "apps/workers/estimates-sync-worker:estimates-sync"
-      "apps/workers/monday-status-sync-worker:monday-status-sync"
-      "apps/workers/inspections-email-worker:inspection-router"
-      "apps/workers/dust-permit-intake:dust-permit-intake"
-      "apps/workers/docusign-file-automation/ds-contracts-dispatcher:contracts-dispatcher"
-    )
+    mapfile -t workers < <(read_registry_lines "cloudflare.deploymentWorkers" 2>/dev/null || true)
+    if [[ ${#workers[@]} -eq 0 ]]; then
+      workers=(
+        "apps/workers/intake-worker|intake-worker|https://intake-worker.cheez2012.workers.dev/health"
+        "apps/workers/estimates-sync-worker|estimates-sync|https://estimates-sync.cheez2012.workers.dev/"
+        "apps/workers/monday-status-sync-worker|monday-status-sync|https://monday-status-sync.cheez2012.workers.dev/"
+        "apps/workers/inspections-email-worker|inspection-router|https://inspection-router.cheez2012.workers.dev/"
+      )
+      warn "runtime registry unavailable for cloudflare.deploymentWorkers; using fallback defaults"
+    fi
 
     for worker in "${workers[@]}"; do
-      dir="${worker%%:*}"
-      name="${worker##*:}"
+      IFS='|' read -r dir name url <<< "$worker"
 
       if [[ ! -d "$dir" ]]; then
         warn "${name}: directory missing (${dir})"
         continue
+      fi
+
+      if [[ -n "${url:-}" ]]; then
+        if command -v curl >/dev/null 2>&1; then
+          if curl -fsS --max-time 8 "$url" >/dev/null 2>&1; then
+            ok "${name}: reachable (${url})"
+            continue
+          fi
+          warn "${name}: not reachable (${url})"
+        else
+          warn "curl is missing; cannot verify ${name} URL (${url})"
+        fi
       fi
 
       output="$(cd "$dir" && "$BUNX" --bun wrangler deployments list --json 2>&1)"

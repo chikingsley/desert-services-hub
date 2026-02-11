@@ -31,8 +31,8 @@ import type { InsertAttachmentData, InsertEmailData } from "@lib/db/types";
 
 const IC_GROUP_EMAIL = "internalcontracts@desertservices.net";
 
-const enqueueContractIntake = db.prepare(
-  "INSERT INTO webhook_jobs (job_type, payload) VALUES ('contract_intake', ?)"
+const enqueueIntake = db.prepare(
+  "INSERT INTO webhook_jobs (job_type, payload) VALUES ('intake', ?)"
 );
 
 const ATTACHMENTS_DIR = join(
@@ -244,13 +244,19 @@ async function syncGroup(
             }
           }
 
-          // Enqueue contract intake for IC posts with PDF attachments
+          // Enqueue canonical intake job for IC posts with PDF attachments.
+          // Keep a legacy-mode flag so worker-side processing can preserve
+          // existing contract extraction + estimate-link behavior during transition.
           if (groupEmail === IC_GROUP_EMAIL && pdfPaths.length > 0) {
-            await enqueueContractIntake.run(
+            await enqueueIntake.run(
               JSON.stringify({
                 emailId,
-                subject: conv.topic,
-                pdfPaths,
+                legacyContractIntake: true,
+                originalSubject: conv.topic ?? "(no subject)",
+                originalFrom: post.from.address ?? "",
+                bodyText: fullText,
+                attachmentPaths: pdfPaths,
+                forwarderEmail: groupEmail,
               })
             );
           }

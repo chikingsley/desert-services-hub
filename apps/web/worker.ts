@@ -8,7 +8,8 @@
  *   sync_item              -- Fetch a single item from Monday, upsert all fields into Supabase Postgres
  *   download_files         -- Download new files from a Monday item, run PDF extraction
  *   sync_full              -- Full board sync (all ~4800 estimates from Monday -> Supabase Postgres)
- *   contract_intake        -- Classify + extract data from IC contract PDFs via LLM
+ *   intake                 -- Canonical file/email intake processing path
+ *   contract_intake        -- Legacy contract intake (compat only; being deprecated)
  *   dust_permit_payment    -- PointAndPay payment email → billing + submitted notifications
  *   dust_permit_issued_email -- Maricopa issued email → issued notification with PDF
  */
@@ -23,6 +24,7 @@ import {
   insertEmail,
   linkEmailToProject,
 } from "@lib/db/repositories";
+import { ensureEstimateHasCurrentVersion } from "@lib/db/repositories/estimate-version";
 import type { InsertAttachmentData, InsertEmailData } from "@lib/db/types";
 import { htmlToText } from "@lib/html-to-text";
 import {
@@ -33,12 +35,12 @@ import { isSpam } from "@lib/spam-filter";
 import { getItemRich } from "@monday/client";
 import { ESTIMATING_COLUMNS } from "@monday/types";
 import { z } from "zod";
+import { runEstimateExtractionTriage } from "@/apps/web/lib/estimate-extraction-triage";
 import { itemHasFiles, processItemFiles } from "@/apps/web/pipeline";
 import type { ContractsEmailIntakePayload } from "@/apps/workers/contract-intake/lib/files-intake";
 import { processFilesIntake } from "@/apps/workers/contract-intake/lib/files-intake";
 import { processContractIntake } from "@/apps/workers/contract-intake/lib/intake";
-import type { DustPermitIntakePayload } from "@/apps/workers/dust-permit-intake/lib/intake";
-import { processDustPermitIntake } from "@/apps/workers/dust-permit-intake/lib/intake";
+import { pollEstimateEmailLinker } from "@/apps/workers/estimate-email-linker/lib/poll";
 import { syncEstimates } from "@/apps/workers/estimate-poller/lib/sync";
 import { syncSharePointFolders } from "@/apps/workers/estimates-sync-worker/lib/sharepoint-sync";
 import { processUnprocessedAttachments } from "@/apps/workers/files-email-intake/lib/attachment-backfill";
@@ -71,9 +73,32 @@ const MAX_CONCURRENT_JOBS = Number.isFinite(parsedMaxConcurrency)
   : 4;
 const FULL_SYNC_INTERVAL_MS = 10 * 60 * 1000; // 10 minutes
 const FOLDER_WATCHER_INTERVAL_MS = 30 * 1000; // 30 seconds
+const ESTIMATE_LINKER_INTERVAL_MS = 60 * 1000; // 60 seconds
 const ATTACHMENT_BACKFILL_INTERVAL_MS = 2 * 60 * 1000; // 2 minutes
 const RENEWAL_INTERVAL_MS = 60 * 60 * 1000; // 1 hour
 const GROUP_SYNC_INTERVAL_MS = 15 * 60 * 1000; // 15 minutes
+const ESTIMATE_TRIAGE_ENABLED = !["0", "false", "no", "off"].includes(
+  (process.env.ESTIMATE_TRIAGE_ENABLED ?? "1").trim().toLowerCase()
+);
+const parsedEstimateTriageInterval = Number.parseInt(
+  process.env.ESTIMATE_TRIAGE_INTERVAL_MS ?? "300000",
+  10
+);
+const ESTIMATE_TRIAGE_INTERVAL_MS = Number.isFinite(
+  parsedEstimateTriageInterval
+)
+  ? Math.max(30_000, parsedEstimateTriageInterval)
+  : 300_000;
+const parsedEstimateTriageMaxRows = Number.parseInt(
+  process.env.ESTIMATE_TRIAGE_MAX_ROWS ?? "4",
+  10
+);
+const ESTIMATE_TRIAGE_MAX_ROWS = Number.isFinite(parsedEstimateTriageMaxRows)
+  ? Math.max(1, parsedEstimateTriageMaxRows)
+  : 4;
+const ESTIMATE_TRIAGE_PROVIDER = (
+  process.env.ESTIMATE_TRIAGE_PROVIDER ?? "mistral"
+).trim();
 const STALE_JOB_MINUTES = 5;
 const PERMIT_WORKER_URL = (
   process.env.PERMIT_WORKER_URL ?? "http://permit-worker:47822"
@@ -94,6 +119,16 @@ const parsedPaymentSyncTimeout = Number.parseInt(
 const PAYMENT_PERMIT_SYNC_TIMEOUT_MS = Number.isFinite(parsedPaymentSyncTimeout)
   ? Math.max(10_000, parsedPaymentSyncTimeout)
   : 180_000;
+const parsedEstimateSweepBatchSize = Number.parseInt(
+  process.env.ESTIMATE_FILE_SWEEP_BATCH_SIZE ?? "150",
+  10
+);
+const ESTIMATE_FILE_SWEEP_BATCH_SIZE = Number.isFinite(
+  parsedEstimateSweepBatchSize
+)
+  ? Math.max(1, parsedEstimateSweepBatchSize)
+  : 150;
+const ESTIMATE_FILE_SWEEP_CURSOR_KEY = "estimate_file_sweep_offset_v1";
 const SKIP_GROUPS = new Set([
   "Shell Estimates ( Do Not Move)",
   "Sales Team Estimates",
@@ -118,22 +153,20 @@ const CONTRACT_INTAKE_PAYLOAD_SCHEMA = z.object({
   subject: NON_EMPTY_STRING_SCHEMA,
   pdfPaths: z.array(NON_EMPTY_STRING_SCHEMA),
 });
-const CONTRACTS_EMAIL_INTAKE_PAYLOAD_SCHEMA: z.ZodType<ContractsEmailIntakePayload> =
-  z.object({
-    originalSubject: z.string(),
-    originalFrom: z.string(),
-    bodyText: z.string(),
-    attachmentPaths: z.array(NON_EMPTY_STRING_SCHEMA),
-    forwarderEmail: z.string(),
-  });
-const DUST_PERMIT_INTAKE_PAYLOAD_SCHEMA: z.ZodType<DustPermitIntakePayload> =
-  z.object({
-    originalSubject: NON_EMPTY_STRING_SCHEMA,
-    originalFrom: NON_EMPTY_STRING_SCHEMA,
-    bodyText: z.string(),
-    attachmentPaths: z.array(NON_EMPTY_STRING_SCHEMA),
-    forwarderEmail: NON_EMPTY_STRING_SCHEMA,
-  });
+type IntakeJobPayload = ContractsEmailIntakePayload & {
+  emailId?: number;
+  legacyContractIntake?: boolean;
+};
+
+const INTAKE_PAYLOAD_SCHEMA: z.ZodType<IntakeJobPayload> = z.object({
+  originalSubject: z.string(),
+  originalFrom: z.string(),
+  bodyText: z.string(),
+  attachmentPaths: z.array(NON_EMPTY_STRING_SCHEMA),
+  forwarderEmail: z.string(),
+  emailId: z.number().int().positive().optional(),
+  legacyContractIntake: z.boolean().optional(),
+});
 const PAYMENT_PAYLOAD_SCHEMA: z.ZodType<PaymentJobPayload> = z.object({
   emailId: z.number().int().positive(),
   messageId: NON_EMPTY_STRING_SCHEMA,
@@ -335,6 +368,17 @@ const enqueueJob = db.prepare(
   "INSERT INTO webhook_jobs (job_type, monday_item_id, payload) VALUES (?, ?, ?)"
 );
 
+const enqueueDownloadFilesIfNotQueued = db.prepare(`
+  INSERT INTO webhook_jobs (job_type, monday_item_id, payload)
+  SELECT 'download_files', ?, '{}'
+  WHERE NOT EXISTS (
+    SELECT 1 FROM webhook_jobs
+    WHERE job_type = 'download_files'
+      AND monday_item_id = ?
+      AND status IN ('pending', 'processing')
+  )
+`);
+
 const enqueueFullSync = db.prepare(
   "INSERT INTO webhook_jobs (job_type, payload) VALUES ('sync_full', '{}')"
 );
@@ -347,6 +391,12 @@ const permitSyncWatermark = db.query<{ updated_at: number }>(
 );
 const permitIdByInvoice = db.query<{ id: string }, [string]>(
   "SELECT id FROM dust_permits_filed_by_desert_services WHERE invoice_number = ? LIMIT 1"
+);
+const getEstimatePollerConfigValue = db.query<{ value: string }>(
+  "SELECT value FROM estimate_poller_config WHERE key = ?"
+);
+const setEstimatePollerConfigValue = db.prepare(
+  "INSERT INTO estimate_poller_config (key, value) VALUES (?, ?) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value"
 );
 
 async function dequeue(): Promise<WebhookJob | null> {
@@ -388,6 +438,48 @@ function parseJobPayload<T>(job: WebhookJob, schema: z.ZodType<T>): T {
   }
 
   return parsed.data;
+}
+
+async function enqueueEstimateFileSweep(
+  mondayItemIds: string[]
+): Promise<{ queued: number; batched: number; total: number }> {
+  const ids = [...new Set(mondayItemIds)];
+  if (ids.length === 0) {
+    return { queued: 0, batched: 0, total: 0 };
+  }
+
+  const batchSize = Math.min(ESTIMATE_FILE_SWEEP_BATCH_SIZE, ids.length);
+  const offsetRow = await getEstimatePollerConfigValue.get(
+    ESTIMATE_FILE_SWEEP_CURSOR_KEY
+  );
+  let offset = Number.parseInt(offsetRow?.value ?? "0", 10);
+  if (!Number.isFinite(offset) || offset < 0) {
+    offset = 0;
+  }
+  if (offset >= ids.length) {
+    offset = 0;
+  }
+
+  const batch: string[] = [];
+  for (let i = 0; i < batchSize; i++) {
+    batch.push(ids[(offset + i) % ids.length] as string);
+  }
+
+  let queued = 0;
+  for (const itemId of batch) {
+    const result = await enqueueDownloadFilesIfNotQueued.run(itemId, itemId);
+    if (result.count > 0) {
+      queued++;
+    }
+  }
+
+  const nextOffset = (offset + batchSize) % ids.length;
+  await setEstimatePollerConfigValue.run(
+    ESTIMATE_FILE_SWEEP_CURSOR_KEY,
+    String(nextOffset)
+  );
+
+  return { queued, batched: batch.length, total: ids.length };
 }
 
 // ============================================================================
@@ -456,6 +548,7 @@ const upsertEstimate = db.prepare(`
     sharepoint_url = COALESCE(excluded.sharepoint_url, estimates.sharepoint_url),
     synced_at = now(),
     updated_at = now()
+  RETURNING id
 `);
 
 async function syncItem(mondayItemId: string): Promise<void> {
@@ -484,7 +577,9 @@ async function syncItem(mondayItemId: string): Promise<void> {
       .replace(WWW_RE, "");
   }
 
-  await upsertEstimate.run(
+  const bidValue = parseNumber(cols[ESTIMATING_COLUMNS.BID_VALUE.id]);
+
+  const upsertResult = (await upsertEstimate.run(
     item.id,
     item.name,
     cols[ESTIMATING_COLUMNS.ESTIMATE_ID.id] ?? null,
@@ -495,14 +590,22 @@ async function syncItem(mondayItemId: string): Promise<void> {
     accountMondayId,
     accountDomain,
     cols[ESTIMATING_COLUMNS.BID_STATUS.id] ?? null,
-    parseNumber(cols[ESTIMATING_COLUMNS.BID_VALUE.id]),
+    bidValue,
     parseNumber(cols[ESTIMATING_COLUMNS.AWARDED_VALUE.id]),
     cols[ESTIMATING_COLUMNS.BID_SOURCE.id] ?? null,
     cols[ESTIMATING_COLUMNS.AWARDED.id] === "Yes" ? 1 : 0,
     cols[ESTIMATING_COLUMNS.DUE_DATE.id] ?? null,
     cols[ESTIMATING_COLUMNS.LOCATION.id] ?? null,
     sharepointUrl
-  );
+  )) as Array<{ id: number }>;
+
+  const estimateId = upsertResult[0]?.id;
+  if (estimateId) {
+    await ensureEstimateHasCurrentVersion(estimateId, {
+      source: "sync",
+      total: bidValue ?? 0,
+    });
+  }
 
   console.log(`[worker] Synced: ${item.name} (${item.id})`);
 
@@ -833,6 +936,80 @@ async function autoLinkDocument(
   }
 }
 
+type FilesIntakeResult = Awaited<ReturnType<typeof processFilesIntake>>[number];
+
+function startIntakePostProcessing(
+  results: FilesIntakeResult[],
+  filesPayload: ContractsEmailIntakePayload
+): void {
+  (async () => {
+    let linkedCount = 0;
+    for (const r of results) {
+      if (!(r.documentId && filesPayload.originalSubject)) {
+        continue;
+      }
+
+      try {
+        await autoLinkDocument(
+          r.documentId,
+          filesPayload.originalSubject,
+          filesPayload.originalFrom,
+          filesPayload.forwarderEmail
+        );
+        linkedCount++;
+      } catch (error) {
+        const msg = error instanceof Error ? error.message : String(error);
+        console.warn(`[doc-link] Failed for document #${r.documentId}: ${msg}`);
+      }
+
+      // Best-effort SharePoint upload once the document has a project_id.
+      try {
+        const sp = getSharePointClient();
+        if (!sp) {
+          continue;
+        }
+
+        const row = await getDocumentUploadMeta.get(r.documentId);
+        if (!(row?.project_id && row.file_path && row.file_name)) {
+          continue;
+        }
+
+        const subfolder = docTypeToSharePointSubfolder(
+          row.document_type ?? null
+        );
+
+        const uploaded = await uploadLocalFileToProjectSubfolder(sp, {
+          projectId: row.project_id,
+          subfolder,
+          localPath: row.file_path,
+          originalFileName: row.file_name,
+          stableSuffix: String(r.documentId),
+        });
+
+        if (uploaded) {
+          console.log(
+            `[doc-sharepoint] Document #${r.documentId} uploaded to ${uploaded.folderUrl}`
+          );
+        }
+      } catch (error) {
+        const msg = error instanceof Error ? error.message : String(error);
+        console.warn(
+          `[doc-sharepoint] Upload failed for document #${r.documentId}: ${msg}`
+        );
+      }
+    }
+
+    if (linkedCount > 0) {
+      console.log(
+        `[doc-link] Intake post-processing linked ${linkedCount} document(s)`
+      );
+    }
+  })().catch((error) => {
+    const msg = error instanceof Error ? error.message : String(error);
+    console.error(`[worker] Intake post-processing crashed: ${msg}`);
+  });
+}
+
 // ============================================================================
 // Job Processing
 // ============================================================================
@@ -877,13 +1054,15 @@ async function processNextJob(): Promise<void> {
       }
 
       case "sync_full": {
+        let syncResult: Awaited<ReturnType<typeof syncEstimates>> | null = null;
+
         // Step 1: Monday → Postgres
         try {
-          const result = await syncEstimates();
+          syncResult = await syncEstimates();
           console.log(
-            `[worker] Full sync: ${result.fetched} fetched, ${result.upserted} upserted, ${result.changes.length} changes`
+            `[worker] Full sync: ${syncResult.fetched} fetched, ${syncResult.upserted} upserted, ${syncResult.changes.length} changes`
           );
-          for (const change of result.changes) {
+          for (const change of syncResult.changes) {
             console.log(
               `[worker]   ${change.name}: ${change.oldStatus ?? "(none)"} -> ${change.newStatus ?? "(none)"}`
             );
@@ -892,7 +1071,23 @@ async function processNextJob(): Promise<void> {
           console.error("[worker] Estimate sync failed:", err);
         }
 
-        // Step 2: Monday → SharePoint (folders, files)
+        // Step 2: enqueue estimate file coverage sweep (rotating batch)
+        if (syncResult) {
+          try {
+            const sweep = await enqueueEstimateFileSweep(
+              syncResult.estimateFileItemIds
+            );
+            if (sweep.total > 0) {
+              console.log(
+                `[worker] Estimate extraction sweep: queued ${sweep.queued}/${sweep.batched} items (total with estimate files: ${sweep.total})`
+              );
+            }
+          } catch (err) {
+            console.error("[worker] Estimate extraction sweep failed:", err);
+          }
+        }
+
+        // Step 3: Monday → SharePoint (folders, files)
         try {
           const spResult = await syncSharePointFolders();
           console.log(
@@ -914,6 +1109,9 @@ async function processNextJob(): Promise<void> {
       }
 
       case "contract_intake": {
+        console.warn(
+          "[worker] Deprecated job_type `contract_intake` encountered; process and migrate enqueue sources to `intake`."
+        );
         const { emailId, subject, pdfPaths } = parseJobPayload(
           job,
           CONTRACT_INTAKE_PAYLOAD_SCHEMA
@@ -922,66 +1120,29 @@ async function processNextJob(): Promise<void> {
         break;
       }
 
-      case "intake":
       case "files_intake":
-      case "contracts_email_intake": {
-        const filesPayload = parseJobPayload(
-          job,
-          CONTRACTS_EMAIL_INTAKE_PAYLOAD_SCHEMA
-        );
-        const results = await processFilesIntake(filesPayload);
-        for (const r of results) {
-          if (r.documentId && filesPayload.originalSubject) {
-            await autoLinkDocument(
-              r.documentId,
-              filesPayload.originalSubject,
-              filesPayload.originalFrom,
-              filesPayload.forwarderEmail
-            );
-
-            // Best-effort SharePoint upload once the document has a project_id.
-            try {
-              const sp = getSharePointClient();
-              if (sp) {
-                const row = await getDocumentUploadMeta.get(r.documentId);
-                if (row?.project_id && row.file_path && row.file_name) {
-                  const subfolder = docTypeToSharePointSubfolder(
-                    row.document_type ?? null
-                  );
-
-                  const uploaded = await uploadLocalFileToProjectSubfolder(sp, {
-                    projectId: row.project_id,
-                    subfolder,
-                    localPath: row.file_path,
-                    originalFileName: row.file_name,
-                    stableSuffix: String(r.documentId),
-                  });
-
-                  if (uploaded) {
-                    console.log(
-                      `[doc-sharepoint] Document #${r.documentId} uploaded to ${uploaded.folderUrl}`
-                    );
-                  }
-                }
-              }
-            } catch (error) {
-              const msg =
-                error instanceof Error ? error.message : String(error);
-              console.warn(
-                `[doc-sharepoint] Upload failed for document #${r.documentId}: ${msg}`
-              );
-            }
-          }
+      case "contracts_email_intake":
+      case "dust_permit_intake":
+      case "intake": {
+        if (job.job_type !== "intake") {
+          console.warn(
+            `[worker] Deprecated intake alias job_type \`${job.job_type}\` encountered; canonical type is \`intake\`.`
+          );
         }
-        break;
-      }
 
-      case "dust_permit_intake": {
-        const dustPayload = parseJobPayload(
-          job,
-          DUST_PERMIT_INTAKE_PAYLOAD_SCHEMA
-        );
-        await processDustPermitIntake(dustPayload);
+        const filesPayload = parseJobPayload(job, INTAKE_PAYLOAD_SCHEMA);
+
+        if (filesPayload.legacyContractIntake && filesPayload.emailId) {
+          await processContractIntake(
+            filesPayload.emailId,
+            filesPayload.originalSubject,
+            filesPayload.attachmentPaths
+          );
+          break;
+        }
+
+        const results = await processFilesIntake(filesPayload);
+        startIntakePostProcessing(results, filesPayload);
         break;
       }
 
@@ -1043,6 +1204,7 @@ async function processNextJob(): Promise<void> {
     }
 
     await completeJob.run(job.id);
+    console.log(`[worker] Completed job #${job.id}: ${job.job_type}`);
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
     if (job) {
@@ -1065,6 +1227,8 @@ async function processNextJob(): Promise<void> {
 let pollTimer: ReturnType<typeof setInterval> | null = null;
 let fullSyncTimer: ReturnType<typeof setInterval> | null = null;
 let folderWatcherTimer: ReturnType<typeof setInterval> | null = null;
+let estimateLinkerTimer: ReturnType<typeof setInterval> | null = null;
+let estimateTriageTimer: ReturnType<typeof setInterval> | null = null;
 let attachmentBackfillTimer: ReturnType<typeof setInterval> | null = null;
 let renewalTimer: ReturnType<typeof setInterval> | null = null;
 let groupSyncTimer: ReturnType<typeof setInterval> | null = null;
@@ -1072,7 +1236,7 @@ let groupSyncTimer: ReturnType<typeof setInterval> | null = null;
 export async function startWorker(): Promise<void> {
   console.log("[worker] Starting background job processor");
   console.log(
-    `[worker] Poll interval: ${POLL_INTERVAL_MS}ms, max concurrency: ${MAX_CONCURRENT_JOBS}, Full sync: ${FULL_SYNC_INTERVAL_MS / 60_000}min, Folder watcher: ${FOLDER_WATCHER_INTERVAL_MS / 1000}s, Attachment backfill: ${ATTACHMENT_BACKFILL_INTERVAL_MS / 60_000}min`
+    `[worker] Poll interval: ${POLL_INTERVAL_MS}ms, max concurrency: ${MAX_CONCURRENT_JOBS}, Full sync: ${FULL_SYNC_INTERVAL_MS / 60_000}min, Folder watcher: ${FOLDER_WATCHER_INTERVAL_MS / 1000}s, Estimate linker backfill: ${ESTIMATE_LINKER_INTERVAL_MS / 1000}s, Estimate triage: ${ESTIMATE_TRIAGE_ENABLED ? `${ESTIMATE_TRIAGE_INTERVAL_MS / 1000}s (${ESTIMATE_TRIAGE_MAX_ROWS}/run via ${ESTIMATE_TRIAGE_PROVIDER || "mistral"})` : "disabled"}, Attachment backfill: ${ATTACHMENT_BACKFILL_INTERVAL_MS / 60_000}min`
   );
 
   // Recover stale jobs from previous crashes
@@ -1139,6 +1303,74 @@ export async function startWorker(): Promise<void> {
   pollFolderWatcher().catch((err) =>
     console.error("[worker] Folder watcher initial poll error:", err)
   );
+
+  // Estimate linker backfill — continuously populate estimate_emails for unlinked emails (every 60s)
+  let estimateLinkerRunning = false;
+  estimateLinkerTimer = setInterval(async () => {
+    if (estimateLinkerRunning) {
+      return;
+    }
+    estimateLinkerRunning = true;
+    try {
+      const stats = await pollEstimateEmailLinker({
+        enableProjectSingle: false,
+      });
+      if (
+        stats.processedEmails > 0 ||
+        stats.linksInserted > 0 ||
+        stats.skippedAmbiguous > 0
+      ) {
+        console.log(
+          `[worker] Estimate linker: ${stats.linksInserted} linked, ${stats.processedEmails} processed, ${stats.skippedAmbiguous} ambiguous, ${stats.skippedNoSignal} no-signal`
+        );
+      }
+    } catch (err) {
+      console.error("[worker] Estimate linker error:", err);
+    } finally {
+      estimateLinkerRunning = false;
+    }
+  }, ESTIMATE_LINKER_INTERVAL_MS);
+  pollEstimateEmailLinker({ enableProjectSingle: false }).catch((err) =>
+    console.error("[worker] Estimate linker initial poll error:", err)
+  );
+
+  // Estimate extraction triage — classify failed rows and retry estimate-like docs.
+  if (ESTIMATE_TRIAGE_ENABLED) {
+    let estimateTriageRunning = false;
+    const runTriage = async () => {
+      if (estimateTriageRunning) {
+        return;
+      }
+      estimateTriageRunning = true;
+      try {
+        const result = await runEstimateExtractionTriage({
+          provider: ESTIMATE_TRIAGE_PROVIDER || "mistral",
+          maxRows: ESTIMATE_TRIAGE_MAX_ROWS,
+          includeNullNonPdf: true,
+          onlyUntaggedFailed: true,
+          log: (line) => console.log(`[worker] ${line}`),
+        });
+
+        if (result.candidateRows > 0) {
+          console.log(
+            `[worker] Estimate extraction triage summary: candidates=${result.candidateRows}, fixed=${result.fixedByRetry}, non_estimate=${result.markedNonEstimate}, non_pdf=${result.markedNonPdf}, unknown=${result.markedUnknown}, retry_failed=${result.retryStillFailed}, no_asset=${result.skippedNoAsset}`
+          );
+        }
+      } catch (err) {
+        console.error("[worker] Estimate extraction triage error:", err);
+      } finally {
+        estimateTriageRunning = false;
+      }
+    };
+
+    estimateTriageTimer = setInterval(runTriage, ESTIMATE_TRIAGE_INTERVAL_MS);
+    runTriage().catch((err) =>
+      console.error(
+        "[worker] Estimate extraction triage initial run error:",
+        err
+      )
+    );
+  }
 
   // Attachment backfill — process unprocessed email attachments (every 2 min)
   let backfillRunning = false;
@@ -1208,6 +1440,14 @@ export function stopWorker(): void {
   if (folderWatcherTimer) {
     clearInterval(folderWatcherTimer);
     folderWatcherTimer = null;
+  }
+  if (estimateLinkerTimer) {
+    clearInterval(estimateLinkerTimer);
+    estimateLinkerTimer = null;
+  }
+  if (estimateTriageTimer) {
+    clearInterval(estimateTriageTimer);
+    estimateTriageTimer = null;
   }
   if (attachmentBackfillTimer) {
     clearInterval(attachmentBackfillTimer);

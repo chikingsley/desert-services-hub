@@ -1,122 +1,216 @@
-"""Test scanner against real ground truth contract PDFs.
+"""Test scanner against real ground truth contracts.
 
-These tests run the scanner against actual contracts from ground-truth/test-fixtures/.
-Add assertions here as rules are added to the scanner.
+Each fixture must have a reconciled.md (GLM OCR + kimi reconciliation output).
 """
 
 from __future__ import annotations
 
 from pathlib import Path
 
-import pdfplumber
-
 from contract_review.scanner import scan
 
-# Ground truth directory
 _FIXTURES = Path(__file__).resolve().parents[2] / "ground-truth" / "test-fixtures"
 
 
-def _extract_pdf_text(pdf_path: Path) -> str:
-    """Extract all text from a PDF using pdfplumber."""
-    pages: list[str] = []
-    with pdfplumber.open(pdf_path) as pdf:
-        for page in pdf.pages:
-            text = page.extract_text()
-            if text:
-                pages.append(text)
-    return "\n\n".join(pages)
+def _load_text(fixture_name: str) -> str | None:
+    """Load reconciled contract text."""
+    md = _FIXTURES / fixture_name / "reconciled.md"
+    if not md.exists():
+        return None
+    return md.read_text()
+
+
+def _print_flags(label: str, text: str | None) -> None:
+    if text is None:
+        return
+    result = scan(text)
+    by_rule: dict[str, int] = {}
+    for f in result.active_flags:
+        by_rule[f.rule_id] = by_rule.get(f.rule_id, 0) + 1
+    summary = ", ".join(f"{k}={v}" for k, v in sorted(by_rule.items()))
+    print(f"\n  {label}: {len(result.active_flags)} flags ({summary})")
 
 
 class TestGreenwayEmbrey:
-    """Embrey Builders — Greenway Pkwy PHX SWPPP & Garage Cleaning ($46,021)."""
+    """Embrey Builders - Greenway Pkwy PHX SWPPP & Garage Cleaning ($46,021)."""
 
     @classmethod
     def setup_class(cls) -> None:
-        pdf = _FIXTURES / "greenway-embrey" / "contract.pdf"
-        if not pdf.exists():
-            cls.text = None
-            return
-        cls.text = _extract_pdf_text(pdf)
+        cls.text = _load_text("greenway-embrey")
 
     def test_has_text(self) -> None:
         assert self.text is not None, "Contract PDF not found"
         assert len(self.text) > 1000
 
-    def test_print_flags(self) -> None:
-        """Print whatever the scanner finds — for iterating on rules."""
+    def test_scope_creep_present(self) -> None:
         if self.text is None:
             return
         result = scan(self.text)
-        print(f"\n  === Greenway: {len(result.active_flags)} flags ===")
-        for f in result.active_flags:
-            print(f"  [{f.severity:8s}] {f.rule_id}: {f.keyword[:60]}")
+        scope = [f for f in result.active_flags if f.rule_id == "SCOPE_CREEP"]
+        assert len(scope) >= 20
+
+    def test_no_company_issues(self) -> None:
+        if self.text is None:
+            return
+        result = scan(self.text)
+        company = [f for f in result.active_flags if f.rule_id in ("FORMER_COMPANY", "COMPANY_MISSPELLING")]
+        assert len(company) == 0
+
+    def test_print_flags(self) -> None:
+        _print_flags("Greenway Embrey", self.text)
 
 
 class TestKiwanisCaliente:
-    """Caliente Construction — Kiwanis SWPPP/Dust ($10,547.50)."""
+    """Caliente Construction - Kiwanis SWPPP/Dust ($10,547.50)."""
 
     @classmethod
     def setup_class(cls) -> None:
-        pdf = _FIXTURES / "kiwanis-caliente" / "contract.pdf"
-        if not pdf.exists():
-            cls.text = None
-            return
-        cls.text = _extract_pdf_text(pdf)
+        cls.text = _load_text("kiwanis-caliente")
 
     def test_has_text(self) -> None:
         assert self.text is not None, "Contract PDF not found"
         assert len(self.text) > 500
 
     def test_print_flags(self) -> None:
-        if self.text is None:
-            return
-        result = scan(self.text)
-        print(f"\n  === Kiwanis: {len(result.active_flags)} flags ===")
-        for f in result.active_flags:
-            print(f"  [{f.severity:8s}] {f.rule_id}: {f.keyword[:60]}")
+        _print_flags("Kiwanis Caliente", self.text)
 
 
 class TestModeraPV:
-    """MCRT Southwest — Modera Paradise Valley SWPPP ($75,555).
-
-    Known egregious contract: "maintain and remove" in every BMP section,
-    broad permit language, maintenance scope creep throughout.
-    """
+    """MCRT Southwest - Modera Paradise Valley SWPPP ($75,555)."""
 
     @classmethod
     def setup_class(cls) -> None:
-        pdf = _FIXTURES / "modera-paradise-valley" / "contract.pdf"
-        if not pdf.exists():
-            cls.text = None
-            return
-        cls.text = _extract_pdf_text(pdf)
+        cls.text = _load_text("modera-paradise-valley")
 
     def test_has_text(self) -> None:
         assert self.text is not None, "Contract PDF not found"
         assert len(self.text) > 1000
 
     def test_scope_creep_flags(self) -> None:
-        """Modera PV should have MANY scope creep flags — maintain/remove in every BMP section."""
         if self.text is None:
             return
         result = scan(self.text)
         scope = [f for f in result.active_flags if f.rule_id == "SCOPE_CREEP"]
-        # Known from redlines: maintain, remove, repair, amend, adjust all present
-        assert len(scope) >= 10, f"Expected many scope creep flags, got {len(scope)}"
+        assert len(scope) >= 10
 
     def test_detects_former_company(self) -> None:
-        """Contract uses 'IDG/Innovative Development Group LLC DBA: Desert Services'."""
         if self.text is None:
             return
         result = scan(self.text)
         idg = [f for f in result.active_flags if f.rule_id == "FORMER_COMPANY"]
-        assert len(idg) >= 1, "Should detect IDG / Innovative Development Group"
+        assert len(idg) >= 1
 
     def test_print_flags(self) -> None:
+        _print_flags("Modera PV", self.text)
+
+
+class TestElantoPrasada:
+    """Elanto at Prasada - known 'Deseret' misspelling."""
+
+    @classmethod
+    def setup_class(cls) -> None:
+        cls.text = _load_text("elanto-at-prasada")
+
+    def test_has_text(self) -> None:
+        assert self.text is not None, "Contract PDF not found"
+        assert len(self.text) > 500
+
+    def test_detects_company_misspelling(self) -> None:
         if self.text is None:
             return
         result = scan(self.text)
-        print(f"\n  === Modera PV: {len(result.active_flags)} active flags ===")
-        print(f"  Critical: {result.critical_count}, Warning: {result.warning_count}")
-        for f in result.active_flags:
-            print(f"  [{f.severity:8s}] {f.rule_id}: {f.keyword[:60]}")
+        misspell = [f for f in result.active_flags if f.rule_id == "COMPANY_MISSPELLING"]
+        assert len(misspell) >= 1
+
+    def test_print_flags(self) -> None:
+        _print_flags("Elanto Prasada", self.text)
+
+
+class TestDiamondViewBallpark:
+    """Diamond View Ballpark."""
+
+    @classmethod
+    def setup_class(cls) -> None:
+        cls.text = _load_text("diamond-view-ballpark")
+
+    def test_has_text(self) -> None:
+        assert self.text is not None, "Contract PDF not found"
+        assert len(self.text) > 1000
+
+    def test_print_flags(self) -> None:
+        _print_flags("Diamond View", self.text)
+
+
+class TestDesertSky:
+    """Desert Sky."""
+
+    @classmethod
+    def setup_class(cls) -> None:
+        cls.text = _load_text("desert-sky")
+
+    def test_has_text(self) -> None:
+        assert self.text is not None, "Contract PDF not found"
+        assert len(self.text) > 500
+
+    def test_print_flags(self) -> None:
+        _print_flags("Desert Sky", self.text)
+
+
+class TestGoodDayCarwash:
+    """Good Day Carwash Gilbert."""
+
+    @classmethod
+    def setup_class(cls) -> None:
+        cls.text = _load_text("good-day-carwash-gilbert")
+
+    def test_has_text(self) -> None:
+        assert self.text is not None, "Contract PDF not found"
+        assert len(self.text) > 500
+
+    def test_print_flags(self) -> None:
+        _print_flags("Good Day Carwash", self.text)
+
+
+class TestGSQBldg01:
+    """GSQ Bldg 01."""
+
+    @classmethod
+    def setup_class(cls) -> None:
+        cls.text = _load_text("gsq-bldg-01")
+
+    def test_has_text(self) -> None:
+        assert self.text is not None, "Contract PDF not found"
+        assert len(self.text) > 500
+
+    def test_print_flags(self) -> None:
+        _print_flags("GSQ Bldg 01", self.text)
+
+
+class TestMorelandMultifamily:
+    """Moreland Multifamily."""
+
+    @classmethod
+    def setup_class(cls) -> None:
+        cls.text = _load_text("moreland-multifamily")
+
+    def test_has_text(self) -> None:
+        assert self.text is not None, "Contract PDF not found"
+        assert len(self.text) > 500
+
+    def test_print_flags(self) -> None:
+        _print_flags("Moreland Multifamily", self.text)
+
+
+class TestMuscularMovingMen:
+    """Muscular Moving Men."""
+
+    @classmethod
+    def setup_class(cls) -> None:
+        cls.text = _load_text("muscular-moving-men")
+
+    def test_has_text(self) -> None:
+        assert self.text is not None, "Contract PDF not found"
+        assert len(self.text) > 500
+
+    def test_print_flags(self) -> None:
+        _print_flags("Muscular Moving Men", self.text)

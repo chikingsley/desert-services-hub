@@ -415,6 +415,7 @@ if (import.meta.main) {
   const fullSync = args.includes("--full");
   const incremental = !fullSync;
   const includeGroups = args.includes("--include-groups");
+  const skipPost = args.includes("--no-post");
 
   const options: SyncAllOptions = {
     incremental,
@@ -503,6 +504,7 @@ if (import.meta.main) {
     );
   }
   console.log(`Include M365 Groups: ${includeGroups}`);
+  console.log(`Post-processing: ${skipPost ? "SKIP (--no-post)" : "run"}`);
   console.log(`${"=".repeat(60)}\n`);
 
   // Dynamic imports for enrichment modules
@@ -517,6 +519,11 @@ if (import.meta.main) {
     // Step 1: Sync emails from Graph API
     const results = await syncAllMailboxes(options);
     printSyncSummary(results);
+
+    if (skipPost) {
+      console.log("\nNote: Skipping post-processing (--no-post).");
+      process.exit(0);
+    }
 
     // Step 1b: Sync M365 Groups if requested
     if (includeGroups) {

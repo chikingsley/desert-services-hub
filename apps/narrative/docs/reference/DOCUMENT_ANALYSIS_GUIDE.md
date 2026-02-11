@@ -34,7 +34,7 @@ Instead of brittle parsing logic, we ask Claude to extract specific data:
 
 ### 1. Get Claude API Key
 
-1. Go to https://console.anthropic.com/
+1. Go to <https://console.anthropic.com/>
 2. Create account or log in
 3. Go to "API Keys"
 4. Create new key
@@ -176,12 +176,14 @@ Compare to **30-60 minutes of manual work** = you're saving $25-100 per SWPPP!
 ## Current Status
 
 ### ✅ Completed
+
 - Variable schema designed
 - Document analyzers built for Estimate and Storm Plan
 - Test script created
 - Anthropic SDK installed
 
 ### ⏳ Next (After Testing)
+
 - Variable merger (combines estimate + storm plan + NOI data)
 - Review interface (web form to correct extracted data)
 - Integration with template generation

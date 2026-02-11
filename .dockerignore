@@ -24,6 +24,9 @@
 !apps/workers/outlook-folder-watcher/lib/
 !apps/workers/estimates-sync-worker/lib/
 
+# Email attachment backfill worker
+!apps/workers/files-email-intake/lib/
+
 # Notifications worker
 !apps/workers/notifications/lib/
 

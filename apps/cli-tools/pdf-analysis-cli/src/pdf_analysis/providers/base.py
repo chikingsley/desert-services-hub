@@ -21,7 +21,7 @@ class BaseProvider(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def ocr(self, pdf_path: Path, pages: list[int] | None = None) -> OCRResult:
+    async def ocr(self, pdf_path: Path, pages: list[int] | None = None, output_path: Path | None = None) -> OCRResult:
         raise NotImplementedError
 
     @abstractmethod

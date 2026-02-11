@@ -3,3 +3,8 @@
 *.log
 node_modules/
 .claude/settings.local.json
+
+# Local-only narrative intake + generated artifacts
+data/intake/
+data/extracted/
+templates/output/

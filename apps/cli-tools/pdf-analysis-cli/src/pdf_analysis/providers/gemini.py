@@ -49,7 +49,7 @@ class GeminiProvider(BaseProvider):
     async def is_available(self) -> bool:
         return self.client is not None
 
-    async def ocr(self, pdf_path: Path, pages: list[int] | None = None) -> OCRResult:
+    async def ocr(self, pdf_path: Path, pages: list[int] | None = None, output_path: Path | None = None) -> OCRResult:
         started = time.perf_counter()
         if self.client is None:
             raise RuntimeError("Gemini provider is unavailable (missing GEMINI_API_KEY)")

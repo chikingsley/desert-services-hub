@@ -4,14 +4,10 @@
  * Slides in from the right when an email row is clicked.
  * Shows full email body (HTML or plain text), metadata, and actions.
  */
-import {
-  Ban,
-  ExternalLink,
-  Mail,
-  Paperclip,
-  Users,
-} from "lucide-react";
-import { useEffect, useState } from "react";
+
+import type { Attachment, Email } from "@lib/db/types";
+import { Ban, ExternalLink, Mail, Paperclip, Users } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import useSWR from "swr";
 import { Badge } from "@/apps/web/frontend/components/ui/badge";
 import { Button } from "@/apps/web/frontend/components/ui/button";
@@ -26,7 +22,6 @@ import {
 import { Skeleton } from "@/apps/web/frontend/components/ui/skeleton";
 import { fetcher } from "@/apps/web/frontend/lib/fetcher";
 import { formatDate } from "@/lib/utils";
-import type { Email } from "@lib/db/types";
 
 interface EmailDetailPanelProps {
   emailId: number | null;
@@ -47,8 +42,7 @@ const CLASSIFICATION_COLORS: Record<string, string> = {
     "bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-300",
   INTERNAL: "bg-zinc-100 text-zinc-600 dark:bg-zinc-800/40 dark:text-zinc-400",
   SCHEDULE: "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300",
-  CHANGE_ORDER:
-    "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300",
+  CHANGE_ORDER: "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300",
   VENDOR: "bg-teal-100 text-teal-800 dark:bg-teal-900/40 dark:text-teal-300",
   SWPPP: "bg-lime-100 text-lime-800 dark:bg-lime-900/40 dark:text-lime-300",
   SPAM: "bg-zinc-100 text-zinc-400 dark:bg-zinc-800/20 dark:text-zinc-500",
@@ -66,20 +60,118 @@ export function EmailDetailPanel({
     recipients: { mailbox: string; receivedAt: string }[];
   }>(emailId && open ? `/api/emails/${emailId}` : null, fetcher);
 
+  const { data: attachmentsData } = useSWR<{
+    attachments: Attachment[];
+  }>(emailId && open ? `/api/emails/${emailId}/attachments` : null, fetcher);
+
   const email = data?.email;
   const recipients = data?.recipients ?? [];
+  const spamDomain = email?.fromDomain ?? null;
 
   // Auto-resize iframe to content height
   const [iframeHeight, setIframeHeight] = useState(400);
 
+  // Reset iframe height when switching emails; onLoad will then compute the final height.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: we intentionally reset only on emailId changes.
   useEffect(() => {
     setIframeHeight(400);
   }, [emailId]);
 
+  const attachmentsUi = useMemo(() => {
+    if (!email?.hasAttachments) {
+      return null;
+    }
+
+    const attachments = attachmentsData?.attachments ?? null;
+
+    const openUrl = (att: Attachment) =>
+      `/api/emails/${email.id}/attachments/${att.id}/download?inline=1`;
+    const downloadUrl = (att: Attachment) =>
+      `/api/emails/${email.id}/attachments/${att.id}/download`;
+
+    const header = (
+      <div className="flex items-center gap-2 text-muted-foreground text-sm">
+        <Paperclip className="h-3.5 w-3.5" />
+        <span>Attachments</span>
+      </div>
+    );
+
+    if (attachments?.length) {
+      return (
+        <div className="space-y-2">
+          {header}
+          <div className="space-y-1">
+            {attachments.map((att) => (
+              <div
+                className="flex items-center justify-between gap-2 rounded-md border border-border bg-muted/20 px-2 py-1.5"
+                key={att.id}
+              >
+                <div className="min-w-0">
+                  <div className="truncate text-sm">{att.name}</div>
+                  {(att.contentType || att.size) && (
+                    <div className="truncate text-muted-foreground text-xs">
+                      {att.contentType ?? ""}
+                      {att.contentType && att.size ? " • " : ""}
+                      {att.size ? `${Math.round(att.size / 1024)} KB` : ""}
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex shrink-0 items-center gap-2">
+                  <Button asChild size="sm" variant="outline">
+                    <a
+                      href={openUrl(att)}
+                      rel="noopener noreferrer"
+                      target="_blank"
+                    >
+                      Open
+                    </a>
+                  </Button>
+                  <Button asChild size="sm" variant="outline">
+                    <a href={downloadUrl(att)}>Download</a>
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    if (email.attachmentNames.length > 0) {
+      return (
+        <div className="space-y-2">
+          {header}
+          <div className="flex flex-wrap gap-2">
+            {email.attachmentNames.map((name) => (
+              <Badge
+                className="gap-1 font-normal"
+                key={name}
+                variant="secondary"
+              >
+                <Paperclip className="h-3 w-3" />
+                {name}
+              </Badge>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-2">
+        {header}
+        <div className="text-muted-foreground text-sm">
+          Attachment metadata not available yet.
+        </div>
+      </div>
+    );
+  }, [attachmentsData?.attachments, email]);
+
   return (
     <Sheet onOpenChange={(isOpen) => !isOpen && onClose()} open={open}>
       <SheetContent
-        className="w-full sm:max-w-2xl overflow-y-auto"
+        className="w-full overflow-y-auto sm:max-w-2xl"
         side="right"
       >
         {isLoading && (
@@ -168,13 +260,13 @@ export function EmailDetailPanel({
               {/* Recipients (dedup) */}
               {recipients.length > 1 && (
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-muted-foreground text-sm flex items-center gap-1">
+                  <span className="flex items-center gap-1 text-muted-foreground text-sm">
                     <Users className="h-3.5 w-3.5" />
                     Received by {recipients.length} mailboxes:
                   </span>
                   {recipients.map((r) => (
                     <Badge
-                      className="bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300 font-normal"
+                      className="bg-indigo-100 font-normal text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300"
                       key={r.mailbox}
                       variant="outline"
                     >
@@ -185,20 +277,7 @@ export function EmailDetailPanel({
               )}
 
               {/* Attachments */}
-              {email.hasAttachments && email.attachmentNames.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {email.attachmentNames.map((name) => (
-                    <Badge
-                      className="gap-1 font-normal"
-                      key={name}
-                      variant="secondary"
-                    >
-                      <Paperclip className="h-3 w-3" />
-                      {name}
-                    </Badge>
-                  ))}
-                </div>
-              )}
+              {attachmentsUi}
 
               {/* Actions */}
               <div className="flex gap-2">
@@ -214,14 +293,14 @@ export function EmailDetailPanel({
                     </a>
                   </Button>
                 )}
-                {onSpam && email.fromDomain && (
+                {onSpam && spamDomain && (
                   <Button
-                    onClick={() => onSpam(email.fromDomain!)}
+                    onClick={() => onSpam(spamDomain)}
                     size="sm"
                     variant="destructive"
                   >
                     <Ban className="mr-1.5 h-3.5 w-3.5" />
-                    Block {email.fromDomain}
+                    Block {spamDomain}
                   </Button>
                 )}
               </div>
@@ -232,17 +311,28 @@ export function EmailDetailPanel({
             {/* Email body */}
             <div className="flex-1 px-4 pb-4">
               {email.bodyHtml ? (
+                // biome-ignore lint/a11y/noNoninteractiveElementInteractions: iframe onLoad is used to tweak sandboxed HTML.
                 <iframe
                   className="w-full rounded-lg border border-border bg-white"
                   onLoad={(e) => {
-                    const doc = (e.target as HTMLIFrameElement).contentDocument;
+                    const iframe = e.currentTarget;
+                    const doc = iframe.contentDocument;
                     if (doc?.body) {
+                      // Ensure links clicked from email content open in a new tab,
+                      // instead of navigating inside the sandboxed iframe.
+                      for (const a of Array.from(
+                        doc.querySelectorAll<HTMLAnchorElement>("a[href]")
+                      )) {
+                        a.setAttribute("target", "_blank");
+                        a.setAttribute("rel", "noopener noreferrer");
+                      }
+
                       setIframeHeight(
                         Math.max(300, doc.body.scrollHeight + 32)
                       );
                     }
                   }}
-                  sandbox="allow-same-origin"
+                  sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox"
                   srcDoc={email.bodyHtml}
                   style={{ height: iframeHeight }}
                   title="Email content"

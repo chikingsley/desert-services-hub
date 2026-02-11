@@ -3,7 +3,8 @@ import sys
 from pathlib import Path
 
 # Add project root to path
-BASE_DIR = Path(__file__).resolve().parent.parent
+# inspect_template.py lives under scripts/utils/, so go up 2 levels to repo root (apps/narrative/).
+BASE_DIR = Path(__file__).resolve().parents[2]
 template_path = BASE_DIR / "templates/cgp_p3_template.docx"
 
 if not template_path.exists():

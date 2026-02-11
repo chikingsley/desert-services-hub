@@ -166,7 +166,11 @@ def ocr(
     """Run OCR and output text/json/markdown."""
     parsed_pages = parse_page_spec(pages)
     manager = _manager()
-    result = asyncio.run(manager.ocr(pdf_path, pages=parsed_pages, provider=provider))
+    # Pass output path for incremental writes (local provider saves pages as they complete)
+    result = asyncio.run(manager.ocr(
+        pdf_path, pages=parsed_pages, provider=provider,
+        output_path=output if output_format == OutputFormat.TEXT else None,
+    ))
     rendered = _render_output(result, output_format)
     _write_or_echo(rendered, output)
 
@@ -436,17 +440,22 @@ def ingest(
 
 @app.command()
 def noi(
-    pdf_path: Path = typer.Argument(..., exists=True, readable=True, dir_okay=False),
-    ocr_fallback: bool = typer.Option(
-        False, "--ocr-fallback", help="Use glm-ocr if pdfplumber fails"
+    file_path: Path = typer.Argument(
+        ..., exists=True, readable=True, dir_okay=False,
+        help="Text or markdown file with NOI content (from parse pipeline)",
     ),
     output_format: OutputFormat = typer.Option(OutputFormat.JSON, "--format", "-f"),
     output: Path | None = typer.Option(None, "--output", "-o"),
 ) -> None:
-    """Extract structured data from an ADEQ NOI certificate PDF."""
+    """Extract structured data from an ADEQ NOI certificate.
+
+    Input must be a text/markdown file that has already been through the
+    parse pipeline. For PDFs, run `parse` first then pass the output here.
+    """
     from pdf_analysis.noi import extract_noi
 
-    result = extract_noi(pdf_path, ocr_fallback=ocr_fallback)
+    text = file_path.read_text(encoding="utf-8")
+    result = extract_noi(text)
     rendered = json.dumps(result.model_dump(by_alias=True), indent=2)
 
     if output_format == OutputFormat.TEXT:
@@ -471,6 +480,10 @@ def noi(
             lines.append(f"Coordinates: {result.latitude}, {result.longitude}")
         if result.acres_disturbed is not None:
             lines.append(f"Acres Disturbed: {result.acres_disturbed}")
+        if result.outfalls:
+            lines.append(f"Outfalls: {len(result.outfalls)}")
+            for o in result.outfalls:
+                lines.append(f"  {o.name}: {o.latitude}, {o.longitude}")
         lines.append("")
         lines.append("SWPPP Contact:")
         lines.append(
@@ -486,16 +499,135 @@ def noi(
 
 
 @app.command()
+def reconcile(
+    plumber_file: Path = typer.Argument(
+        ..., exists=True, readable=True, dir_okay=False,
+        help="Path to pdfplumber text file (or use --no-plumber to skip)",
+    ),
+    ocr_file: Path = typer.Argument(
+        ..., exists=True, readable=True, dir_okay=False,
+        help="Path to OCR text file",
+    ),
+    reconcile_model: str = typer.Option(
+        "zai-coding-plan/glm-4.7",
+        "--reconcile",
+        "-r",
+        help=(
+            "Model for reconciliation. "
+            "OpenCode: zai-coding-plan/glm-4.7, zai-coding-plan/glm-4.7-flash. "
+            "Gemini CLI: gemini-2.5-flash, gemini-2.5-pro, gemini-2.5-flash-lite, "
+            "gemini-3-flash-preview, gemini-3-pro-preview. "
+            "Codex: codex, codex:high, codex:low (reasoning effort). "
+            "Or 'local' for ollama."
+        ),
+    ),
+    output: Path | None = typer.Option(None, "--output", "-o"),
+) -> None:
+    """Reconcile existing pdfplumber + OCR text files into clean markdown.
+
+    Use this when you've already run 'text' and 'ocr' separately and want
+    to (re-)run just the LLM reconciliation step. Supports chunked
+    reconciliation for large documents.
+
+    Example workflow:
+        pdf-analysis text doc.pdf -o doc-plumber.txt
+        pdf-analysis ocr doc.pdf -o doc-ocr.txt
+        pdf-analysis reconcile doc-plumber.txt doc-ocr.txt -o doc.md
+    """
+    from pdf_analysis.parse import (
+        OPENCODE_MODEL,
+        OVERLAP_PAGES,
+        MAX_CHARS_PER_SOURCE,
+        OCR_PAGE_RE,
+        PLUMBER_PAGE_RE,
+        PageText,
+        _build_chunks,
+        _reassemble_pages,
+        _reconcile_chunk,
+        _split_text_by_pages,
+    )
+    from pdf_analysis.config import Settings
+    from pdf_analysis.provider_manager import ProviderManager
+
+    import sys
+    import time
+
+    started = time.perf_counter()
+    manager = ProviderManager(Settings())
+
+    plumber_text = plumber_file.read_text(encoding="utf-8")
+    ocr_text = ocr_file.read_text(encoding="utf-8")
+
+    plumber_pages = _split_text_by_pages(plumber_text, PLUMBER_PAGE_RE)
+    ocr_pages = _split_text_by_pages(ocr_text, OCR_PAGE_RE)
+
+    if not plumber_pages and plumber_text.strip():
+        plumber_pages = [PageText(page_num=1, text=plumber_text)]
+    if not ocr_pages and ocr_text.strip():
+        ocr_pages = [PageText(page_num=1, text=ocr_text)]
+
+    chunks = _build_chunks(plumber_pages, ocr_pages)
+
+    if len(chunks) <= 1:
+        reconciled, rmodel = asyncio.run(
+            _reconcile_chunk(plumber_text, ocr_text, reconcile_model, manager)
+        )
+    else:
+        print(
+            f"[reconcile] {len(chunks)} chunks",
+            file=sys.stderr,
+        )
+        parts: list[str] = []
+        rmodel = reconcile_model
+        for i, chunk in enumerate(chunks):
+            p_text = _reassemble_pages(chunk.plumber_pages, "--- Page {} ---", "\n\n")
+            o_text = _reassemble_pages(chunk.ocr_pages, "<!-- Page {} -->", "\n\n---\n\n")
+            print(
+                f"[reconcile]   chunk {i + 1}/{len(chunks)}: "
+                f"pages {chunk.start_page}\u2013{chunk.end_page} "
+                f"(plumber={len(p_text):,} ocr={len(o_text):,})",
+                file=sys.stderr,
+            )
+            chunk_md, rmodel = asyncio.run(
+                _reconcile_chunk(
+                    p_text, o_text, reconcile_model, manager,
+                    chunk=chunk, chunk_index=i,
+                )
+            )
+            parts.append(chunk_md)
+            print(
+                f"[reconcile]   chunk {i + 1}/{len(chunks)} done: {len(chunk_md):,} chars",
+                file=sys.stderr,
+            )
+        reconciled = "\n\n".join(parts)
+
+    elapsed_ms = int((time.perf_counter() - started) * 1000)
+    _write_or_echo(reconciled, output)
+    typer.echo(
+        f"\n[reconcile: {elapsed_ms}ms, model={rmodel}, "
+        f"plumber={len(plumber_text):,} chars, ocr={len(ocr_text):,} chars]",
+        err=True,
+    )
+
+
+@app.command()
 def parse(
     pdf_path: Path = typer.Argument(..., exists=True, readable=True),
     ocr_provider: ProviderSelector = typer.Option(
         ProviderSelector.LOCAL, "--ocr", help="OCR provider (local=glm-ocr)"
     ),
     reconcile: str = typer.Option(
-        "kimi-for-coding/k2p5",
+        "zai-coding-plan/glm-4.7",
         "--reconcile",
         "-r",
-        help="OpenCode model for reconciliation, or 'local' for granite4",
+        help=(
+            "Model for reconciliation. "
+            "OpenCode: zai-coding-plan/glm-4.7, zai-coding-plan/glm-4.7-flash. "
+            "Gemini CLI: gemini-2.5-flash, gemini-2.5-pro, gemini-2.5-flash-lite, "
+            "gemini-3-flash-preview, gemini-3-pro-preview. "
+            "Codex: codex, codex:high, codex:low (reasoning effort). "
+            "Or 'local' for ollama."
+        ),
     ),
     output_format: OutputFormat = typer.Option(OutputFormat.MARKDOWN, "--format", "-f"),
     output: Path | None = typer.Option(None, "--output", "-o"),
@@ -504,11 +636,12 @@ def parse(
     """Parse a PDF using pdfplumber + OCR, reconcile into clean markdown.
 
     Runs BOTH text-layer extraction (pdfplumber) and vision-based OCR,
-    then uses kimi-k2.5 (via opencode) to combine them into one structured
-    markdown document. Works on single files or directories.
+    then uses an LLM (via opencode CLI) to combine them into one structured
+    markdown document. Large documents are automatically split into
+    page-aligned chunks with overlap. Works on single files or directories.
 
     OCR defaults to local (glm-ocr). Reconciliation defaults to
-    kimi-for-coding/k2p5 via opencode CLI. Use --reconcile local
+    zai-coding-plan/glm-4.7 via opencode CLI. Use --reconcile local
     for offline granite4.
     """
     from pdf_analysis.parse import ParseResult, parse_dir, parse_pdf

@@ -65,11 +65,12 @@ class ProviderManager:
         pdf_path: Path,
         pages: list[int] | None = None,
         provider: ProviderSelector = ProviderSelector.AUTO,
+        output_path: Path | None = None,
     ) -> OCRResult:
         return await self._run_with_fallback(
             provider=provider,
             operation="ocr",
-            fn=lambda p: p.ocr(pdf_path, pages=pages),
+            fn=lambda p: p.ocr(pdf_path, pages=pages, output_path=output_path),
         )
 
     async def chat(
@@ -144,7 +145,7 @@ class ProviderManager:
                     attempted_order=[p.value for p in provider_order],
                 )
             except Exception as err:
-                errors.append(f"{name.value}: {err}")
+                errors.append(f"{name.value}: {type(err).__name__}: {err or repr(err)}")
 
         raise RuntimeError(
             f"All providers failed for '{operation}'. "

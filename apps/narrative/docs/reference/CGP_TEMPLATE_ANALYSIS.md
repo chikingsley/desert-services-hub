@@ -30,6 +30,7 @@
 ## COVER PAGE Fields
 
 ### Project Information
+
 | Field | Template Placeholder | Example (Starbucks) | Likely Source |
 |-------|---------------------|---------------------|---------------|
 | Site Name | `Insert Site Name` | "White Castle" (note: wrong) | **Estimate** or **PM Tool** |
@@ -38,6 +39,7 @@
 | Site Telephone | `Insert Site Telephone Number` | "805-651-0015" | **PM Tool** or **Manual** |
 
 ### SWPPP Prepared For
+
 | Field | Template Placeholder | Example | Likely Source |
 |-------|---------------------|---------|---------------|
 | Company Name | `Insert Company or Organization Name` | "41 North Contractors, LLC" | **Estimate** (client info) |
@@ -48,6 +50,7 @@
 | Email | `Insert  Email` | Not in example | **PM Tool** or **Manual** |
 
 ### SWPPP Prepared By
+
 | Field | Template Placeholder | Example | Likely Source |
 |-------|---------------------|---------|---------------|
 | Company Name | `Insert Company or Organization Name` | "Desert Services/SWPPP" | **CONSTANT** (always Desert Services) |
@@ -58,6 +61,7 @@
 | Email | `Insert  Email` | "www.DesertServices.net" | **CONSTANT** |
 
 ### Dates
+
 | Field | Template Placeholder | Example | Likely Source |
 |-------|---------------------|---------|---------------|
 | SWPPP Preparation Date | `__ __ / __ __ / __ __ __ __` | "12/15/2022" | **Auto-generated** (today's date) |
@@ -98,6 +102,7 @@
 ### 2.1 Site Description
 
 #### Project Name and Address
+
 | Field | Template Format | Example | Likely Source |
 |-------|----------------|---------|---------------|
 | Project/Site Name | `INSERT TEXT HERE` | "White Castle" | **Estimate** |
@@ -108,6 +113,7 @@
 | County | `INSERT TEXT HERE` | "Maricopa" | **Storm Plan** or **NOI** |
 
 #### Latitude/Longitude
+
 | Field | Template Format | Example | Likely Source |
 |-------|----------------|---------|---------------|
 | Latitude (Decimal) | `___ ___ . ___ ___ ___ ___ ___ ___ N` | "33°33'50.65" N" | **Storm Plan** cover sheet |
@@ -115,6 +121,7 @@
 | Method Checkbox | ☐ USGS ☐ EPA ☐ ADEQ ☐ GPS ☐ Other | "Google Earth" (Other) | **Storm Plan** |
 
 #### Function of Construction Activity
+
 **Checkboxes:**
 - ☐ Residential
 - ☐ Commercial ✓ (Starbucks example)
@@ -126,6 +133,7 @@
 **Source:** **Estimate** or **Storm Plan** (Lot Data section)
 
 #### Additional Project Information
+
 | Field | Template Format | Example | Likely Source |
 |-------|----------------|---------|---------------|
 | Municipality received authorization? | ☐ No ☐ Yes | Not in old example | **Manual** or **NOI** |
@@ -134,11 +142,13 @@
 | Public emergency response? | Text field | "Not applicable" | **Manual** |
 
 #### Intended Use of Site
+
 | Field | Template Format | Example | Likely Source |
 |-------|----------------|---------|---------------|
 | Intended use after completion | `INSERT TEXT HERE` | "Retail / Restaurants" | **Storm Plan** (Lot Data section) or **Estimate** |
 
 #### Size of Construction Project
+
 | Field | Template Format | Example | Likely Source |
 |-------|----------------|---------|---------------|
 | Size of property (acres) | `INSERT SIZE` | 1.31 AC (from Storm Plan) or 1.42 AC (from old example) | **Storm Plan** (Lot Data) |
@@ -148,21 +158,25 @@
 | % Impervious AFTER construction | `INSERT ESTIMATE (0.0%)` | Not in old example | **Storm Plan** or **Manual Calc** |
 
 #### Type of Soils
+
 | Field | Template Format | Example | Likely Source |
 |-------|----------------|---------|---------------|
 | Soil type and erosion potential | `INSERT TEXT HERE` | "Valencia sandy loam" | **Geotechnical Report** or **Storm Plan** |
 
 #### 50-foot Buffer Areas
+
 | Field | Template Format | Example | Likely Source |
 |-------|----------------|---------|---------------|
 | Areas where 50-ft buffer unfeasible | `INSERT TEXT HERE` | "N/A" | **Manual** or **Storm Plan** |
 
 #### Material Storage Areas
+
 | Field | Template Format | Example | Likely Source |
 |-------|----------------|---------|---------------|
 | Describe material storage areas | `INSERT TEXT HERE` | Not in old example | **Manual** or **Estimate** (BMP section) |
 
 #### Construction Support Activities
+
 | Field | Template Format | Example | Likely Source |
 |-------|----------------|---------|---------------|
 | Description | `INSERT DESCRIPTION` | Not in old example | **Manual** |
@@ -170,6 +184,7 @@
 | Location | `INSERT LOCATION INFORMATION` | Not in old example | **Manual** |
 
 #### Other Permits
+
 | Field | Template Format | Example | Likely Source |
 |-------|----------------|---------|---------------|
 | List other permits/agreements | `INSERT DESCRIPTION` | "City of Tempe grading permit" | **Dust Permit** or **PM Tool** |
@@ -201,6 +216,7 @@
 ### 2.3 Discharge Information
 
 #### Table 1: Receiving Waters
+
 | Field | Template Format | Example | Likely Source |
 |-------|----------------|---------|---------------|
 | Name of receiving water | Table entry | "Highline Canal" or "Morrison Creek" | **Storm Plan** (cover sheet) |
@@ -208,6 +224,7 @@
 | MS4 owner name | Text field | "City of Tempe" or "City of Maricopa" | **Storm Plan** |
 
 #### Table 2: Impaired Waters (if applicable)
+
 | Field | Template Format | Example | Likely Source |
 |-------|----------------|---------|---------------|
 | Discharge to impaired water? | ☐ Yes ☐ No | "Not Applicable" (old example) | **Environmental Review** or **NOI** |
@@ -377,6 +394,7 @@ These are mostly procedural/administrative:
 ## Recommended Automation Priority
 
 ### Phase 1 (High Value, Easy Extraction)
+
 1. Cover page contact information
 2. Project name/address
 3. Lat/Long
@@ -385,12 +403,14 @@ These are mostly procedural/administrative:
 6. SWPPP Prepared By (constant)
 
 ### Phase 2 (Medium Value, Medium Difficulty)
+
 7. BMP list and descriptions
 8. Project dates
 9. Inspection schedule
 10. Operator contacts
 
 ### Phase 3 (Lower Priority, Complex)
+
 11. Environmental review checkboxes
 12. Site map elements (visual)
 13. Impervious area calculations

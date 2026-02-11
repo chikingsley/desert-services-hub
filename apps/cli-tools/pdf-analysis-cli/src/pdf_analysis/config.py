@@ -22,4 +22,4 @@ class Settings(BaseSettings):
     ollama_chat_model: str = "granite4:latest"
 
     pdf_analysis_provider_order: str = "local,mistral,gemini"
-    http_timeout_seconds: float = 90.0
+    http_timeout_seconds: float = 180.0

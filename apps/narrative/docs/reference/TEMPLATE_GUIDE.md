@@ -31,6 +31,7 @@ Permit Number: CAS000002
 Based on the current SWPPP data model, you can use these variables in your template:
 
 ### Project Information
+
 - `{{ project_name }}` - Project name
 - `{{ project_address }}` - Project street address
 - `{{ city }}` - City
@@ -42,6 +43,7 @@ Based on the current SWPPP data model, you can use these variables in your templ
 - `{{ longitude }}` - Longitude coordinate
 
 ### Permit Information
+
 - `{{ permit_number }}` - NPDES/State permit number
 - `{{ wdid }}` - Waste Discharge ID
 - `{{ permit_issue_date }}` - Permit issue date
@@ -50,6 +52,7 @@ Based on the current SWPPP data model, you can use these variables in your templ
 - `{{ disturbed_area_acres }}` - Total disturbed area
 
 ### Owner Contact
+
 - `{{ owner_name }}` - Owner name
 - `{{ owner_title }}` - Owner title
 - `{{ owner_company }}` - Owner company
@@ -57,6 +60,7 @@ Based on the current SWPPP data model, you can use these variables in your templ
 - `{{ owner_email }}` - Owner email
 
 ### Contractor Contact
+
 - `{{ contractor_name }}` - Contractor name
 - `{{ contractor_title }}` - Contractor title
 - `{{ contractor_company }}` - Contractor company
@@ -64,6 +68,7 @@ Based on the current SWPPP data model, you can use these variables in your templ
 - `{{ contractor_email }}` - Contractor email
 
 ### QSP Contact
+
 - `{{ qsp_name }}` - QSP name
 - `{{ qsp_title }}` - QSP title
 - `{{ qsp_company }}` - QSP company
@@ -71,6 +76,7 @@ Based on the current SWPPP data model, you can use these variables in your templ
 - `{{ qsp_email }}` - QSP email
 
 ### Document Information
+
 - `{{ swppp_prepared_date }}` - Date SWPPP was prepared
 - `{{ swppp_revision }}` - Revision number
 - `{{ site_description }}` - Site description

@@ -41,6 +41,7 @@ import type { DustPermitIntakePayload } from "@/apps/workers/dust-permit-intake/
 import { processDustPermitIntake } from "@/apps/workers/dust-permit-intake/lib/intake";
 import { syncEstimates } from "@/apps/workers/estimate-poller/lib/sync";
 import { syncSharePointFolders } from "@/apps/workers/estimates-sync-worker/lib/sharepoint-sync";
+import { processUnprocessedAttachments } from "@/apps/workers/files-email-intake/lib/attachment-backfill";
 import { pollFolderWatcher } from "@/apps/workers/outlook-folder-watcher/lib/poll";
 import {
   detectDustPermitEmailTrigger,
@@ -70,6 +71,7 @@ const MAX_CONCURRENT_JOBS = Number.isFinite(parsedMaxConcurrency)
   : 4;
 const FULL_SYNC_INTERVAL_MS = 10 * 60 * 1000; // 10 minutes
 const FOLDER_WATCHER_INTERVAL_MS = 30 * 1000; // 30 seconds
+const ATTACHMENT_BACKFILL_INTERVAL_MS = 2 * 60 * 1000; // 2 minutes
 const RENEWAL_INTERVAL_MS = 60 * 60 * 1000; // 1 hour
 const GROUP_SYNC_INTERVAL_MS = 15 * 60 * 1000; // 15 minutes
 const STALE_JOB_MINUTES = 5;
@@ -1055,13 +1057,14 @@ async function processNextJob(): Promise<void> {
 let pollTimer: ReturnType<typeof setInterval> | null = null;
 let fullSyncTimer: ReturnType<typeof setInterval> | null = null;
 let folderWatcherTimer: ReturnType<typeof setInterval> | null = null;
+let attachmentBackfillTimer: ReturnType<typeof setInterval> | null = null;
 let renewalTimer: ReturnType<typeof setInterval> | null = null;
 let groupSyncTimer: ReturnType<typeof setInterval> | null = null;
 
 export async function startWorker(): Promise<void> {
   console.log("[worker] Starting background job processor");
   console.log(
-    `[worker] Poll interval: ${POLL_INTERVAL_MS}ms, max concurrency: ${MAX_CONCURRENT_JOBS}, Full sync: ${FULL_SYNC_INTERVAL_MS / 60_000}min, Folder watcher: ${FOLDER_WATCHER_INTERVAL_MS / 1000}s`
+    `[worker] Poll interval: ${POLL_INTERVAL_MS}ms, max concurrency: ${MAX_CONCURRENT_JOBS}, Full sync: ${FULL_SYNC_INTERVAL_MS / 60_000}min, Folder watcher: ${FOLDER_WATCHER_INTERVAL_MS / 1000}s, Attachment backfill: ${ATTACHMENT_BACKFILL_INTERVAL_MS / 60_000}min`
   );
 
   // Recover stale jobs from previous crashes
@@ -1127,6 +1130,25 @@ export async function startWorker(): Promise<void> {
     console.error("[worker] Folder watcher initial poll error:", err)
   );
 
+  // Attachment backfill — process unprocessed email attachments (every 2 min)
+  let backfillRunning = false;
+  attachmentBackfillTimer = setInterval(async () => {
+    if (backfillRunning) return;
+    backfillRunning = true;
+    try {
+      const result = await processUnprocessedAttachments();
+      if (result.processed > 0 || result.skipped > 0) {
+        console.log(
+          `[worker] Attachment backfill: ${result.succeeded} ok, ${result.failed} failed, ${result.skipped} skipped`
+        );
+      }
+    } catch (err) {
+      console.error("[worker] Attachment backfill error:", err);
+    } finally {
+      backfillRunning = false;
+    }
+  }, ATTACHMENT_BACKFILL_INTERVAL_MS);
+
   // Renew expiring Outlook subscriptions (every hour)
   renewalTimer = setInterval(async () => {
     try {
@@ -1174,6 +1196,10 @@ export function stopWorker(): void {
   if (folderWatcherTimer) {
     clearInterval(folderWatcherTimer);
     folderWatcherTimer = null;
+  }
+  if (attachmentBackfillTimer) {
+    clearInterval(attachmentBackfillTimer);
+    attachmentBackfillTimer = null;
   }
   if (renewalTimer) {
     clearInterval(renewalTimer);

@@ -56,6 +56,9 @@ COPY apps/workers/estimates-sync-worker/lib ./apps/workers/estimates-sync-worker
 # Dust permit intake worker
 COPY apps/workers/dust-permit-intake/lib ./apps/workers/dust-permit-intake/lib
 
+# Email attachment backfill worker
+COPY apps/workers/files-email-intake/lib ./apps/workers/files-email-intake/lib
+
 # Notifications worker
 COPY apps/workers/notifications/lib ./apps/workers/notifications/lib
 

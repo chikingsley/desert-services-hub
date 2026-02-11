@@ -1,5 +1,6 @@
-"""Extract structured data from ADEQ NOI (Notice of Intent) certificate PDFs.
+"""Extract structured data from ADEQ NOI (Notice of Intent) certificate text.
 
+Operates on already-extracted text (from parse pipeline or pdfplumber).
 Handles both CGP25 (newer) and older ADEQ NOI formats:
 - Newer: Has direct Lat/Long fields, no site address
 - Older: Has site address under Location, coordinates from Outfall section
@@ -8,17 +9,10 @@ Handles both CGP25 (newer) and older ADEQ NOI formats:
 
 from __future__ import annotations
 
-import asyncio
-import base64
-import os
 import re
-from pathlib import Path
-from tempfile import TemporaryDirectory
 
-import httpx
-import pdfplumber
-import pymupdf
 from pydantic import BaseModel, ConfigDict, Field
+
 
 # ---------------------------------------------------------------------------
 # Models
@@ -32,6 +26,14 @@ class ExtractionMeta(BaseModel):
     confidence: str = "high"
     missing_fields: list[str] = Field(default_factory=list, alias="missingFields")
     warnings: list[str] = Field(default_factory=list)
+
+
+class Outfall(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    name: str
+    latitude: float
+    longitude: float
 
 
 class NOIExtraction(BaseModel):
@@ -49,6 +51,8 @@ class NOIExtraction(BaseModel):
     latitude: float | None = None
     longitude: float | None = None
     acres_disturbed: float | None = Field(None, alias="acresDisturbed")
+
+    outfalls: list[Outfall] = Field(default_factory=list)
 
     swppp_contact_first_name: str | None = Field(None, alias="swpppContactFirstName")
     swppp_contact_last_name: str | None = Field(None, alias="swpppContactLastName")
@@ -81,7 +85,7 @@ _LAST_NAME = re.compile(r"Last Name:\s*(.+)")
 _PHONE = re.compile(r"Phone:\s*(.+)")
 _EMAIL = re.compile(r"Work Email:\s*(.+)")
 # Outfall line: NAME | lat | long | ...
-_OUTFALL = re.compile(r"^[A-Z][\w\s/]+\|\s*([\d.-]+)\s*\|\s*([\d.-]+)", re.MULTILINE)
+_OUTFALL = re.compile(r"^([A-Z][\w\s/]+?)\s*\|\s*([\d.-]+)\s*\|\s*([\d.-]+)", re.MULTILINE)
 
 
 # ---------------------------------------------------------------------------
@@ -116,7 +120,6 @@ def _parse_sections(full_text: str) -> dict[str, str]:
     """Split text into logical sections for context-aware field extraction."""
     sections: dict[str, str] = {"coverage": "", "site_info": "", "swppp": ""}
 
-    # Find section boundaries
     coverage_start = full_text.find("Coverage Issued to:")
     site_info_start = full_text.find("Construction Site Information:")
     swppp_start = full_text.find("SWPPP Contact Information:")
@@ -130,7 +133,6 @@ def _parse_sections(full_text: str) -> dict[str, str]:
         sections["site_info"] = full_text[site_info_start:end]
 
     if swppp_start >= 0:
-        # End at the boilerplate "Please note" paragraph
         please_note = full_text.find("Please note,", swppp_start)
         end = please_note if please_note > swppp_start else len(full_text)
         sections["swppp"] = full_text[swppp_start:end]
@@ -144,92 +146,36 @@ def _first_match(pattern: re.Pattern[str], text: str) -> str | None:
     return _strip(m.group(1)) if m else None
 
 
+def _extract_outfalls(text: str) -> list[Outfall]:
+    """Extract all outfall coordinates from the text."""
+    outfalls: list[Outfall] = []
+    for match in _OUTFALL.finditer(text):
+        name = match.group(1).strip()
+        lat = float(match.group(2))
+        lng = float(match.group(3))
+        outfalls.append(Outfall(name=name, latitude=lat, longitude=lng))
+    return outfalls
+
+
 # ---------------------------------------------------------------------------
 # Main extraction
 # ---------------------------------------------------------------------------
 
 
-async def _ocr_pdf(pdf_path: Path) -> str:
-    """OCR a PDF using glm-ocr via Ollama when pdfplumber can't extract text."""
-    endpoint = os.environ.get("OLLAMA_ENDPOINT", "https://ollama.peacockery.studio/v1").rstrip("/")
-    model = os.environ.get("OLLAMA_MODEL", "glm-ocr:latest")
+def extract_noi(text: str) -> NOIExtraction:
+    """Extract structured NOI data from already-extracted text.
 
-    doc = pymupdf.open(pdf_path)
-    try:
-        chunks: list[str] = []
-        with TemporaryDirectory(prefix="noi-ocr-") as temp_dir:
-            for page_num in range(len(doc)):
-                page = doc.load_page(page_num)
-                pix = page.get_pixmap(matrix=pymupdf.Matrix(2, 2))
-                img_path = Path(temp_dir) / f"page_{page_num}.png"
-                pix.save(str(img_path))
-
-                image_b64 = base64.b64encode(img_path.read_bytes()).decode()
-
-                async with httpx.AsyncClient(timeout=90.0) as client:
-                    resp = await client.post(
-                        f"{endpoint}/chat/completions",
-                        json={
-                            "model": model,
-                            "messages": [
-                                {
-                                    "role": "user",
-                                    "content": [
-                                        {
-                                            "type": "text",
-                                            "text": "Extract all visible text from this document page. "
-                                            "Preserve structure, labels, and field values exactly.",
-                                        },
-                                        {
-                                            "type": "image_url",
-                                            "image_url": {
-                                                "url": f"data:image/png;base64,{image_b64}"
-                                            },
-                                        },
-                                    ],
-                                }
-                            ],
-                        },
-                    )
-                    resp.raise_for_status()
-                    text = resp.json()["choices"][0]["message"]["content"]
-                    chunks.append(text.strip())
-
-        return "\n\n".join(chunks)
-    finally:
-        doc.close()
-
-
-def extract_noi(pdf_path: Path | str, *, ocr_fallback: bool = False) -> NOIExtraction:
-    """Extract structured NOI data from an ADEQ NOI certificate PDF.
-
-    Uses pdfplumber for text extraction and regex for field parsing.
-    Falls back to glm-ocr via Ollama when ocr_fallback=True and pdfplumber fails.
+    The text should come from the parse pipeline (pdfplumber + OCR + reconcile)
+    or any other extraction method. This function only does regex parsing.
     """
-    pdf_path = Path(pdf_path)
     warnings: list[str] = []
-    missing: list[str] = []
-
-    # Extract all text from all pages
-    pages_text: list[str] = []
-    with pdfplumber.open(pdf_path) as pdf:
-        for page in pdf.pages:
-            text = page.extract_text() or ""
-            pages_text.append(text)
-
-    full_text = "\n".join(pages_text)
+    # Strip markdown formatting so regexes work on both plain text and markdown
+    full_text = re.sub(r"\*\*", "", text)
+    full_text = re.sub(r"^\* ", "", full_text, flags=re.MULTILINE)
 
     if len(full_text.strip()) < 50:
-        if not ocr_fallback:
-            raise ValueError(
-                f"PDF appears to be scanned or empty — only {len(full_text.strip())} chars extracted"
-            )
-        full_text = asyncio.run(_ocr_pdf(pdf_path))
-        warnings.append("Used OCR fallback (scanned PDF)")
-        if len(full_text.strip()) < 50:
-            raise ValueError(f"OCR also failed — only {len(full_text.strip())} chars extracted")
+        raise ValueError(f"Text too short for NOI extraction — only {len(full_text.strip())} chars")
 
-    # Split into logical sections
     sections = _parse_sections(full_text)
 
     # --- Global fields (anywhere in document) ---
@@ -243,7 +189,6 @@ def extract_noi(pdf_path: Path | str, *, ocr_fallback: bool = False) -> NOIExtra
     applicant_addr2 = _first_match(_ADDR2, coverage)
     applicant_city = _first_match(_CITY, coverage)
     applicant_state = _first_match(_STATE, coverage)
-    # Zip might be on page 2 (after page break) — search coverage first, then full text
     applicant_zip = _first_match(_ZIP, coverage) or _first_match(_ZIP, full_text)
 
     # Handle broken address: if addr1 is just a number, use addr2 as the real addr1
@@ -269,16 +214,18 @@ def extract_noi(pdf_path: Path | str, *, ocr_fallback: bool = False) -> NOIExtra
     if lat_long_match:
         latitude = float(lat_long_match.group(1))
         longitude = float(lat_long_match.group(2))
-    else:
-        # Older format: extract from Outfall coordinates
-        outfall_match = _OUTFALL.search(site_info)
-        if outfall_match:
-            latitude = float(outfall_match.group(1))
-            longitude = float(outfall_match.group(2))
+
+    # Extract all outfalls
+    outfalls = _extract_outfalls(site_info)
+
+    # If no direct coordinates, fall back to first outfall
+    if latitude is None and outfalls:
+        latitude = outfalls[0].latitude
+        longitude = outfalls[0].longitude
+        warnings.append("Site coordinates derived from first outfall (older NOI format)")
 
     # Site address: older format has address lines under Location
     site_address: str | None = None
-    # Check if site_info has its own Address Line 1 (separate from applicant address)
     site_addr_match = _ADDR1.search(site_info)
     if site_addr_match:
         site_addr1 = _strip(site_addr_match.group(1))
@@ -321,7 +268,6 @@ def extract_noi(pdf_path: Path | str, *, ocr_fallback: bool = False) -> NOIExtra
     }
     missing = [k for k, v in field_checks.items() if v is None]
 
-    # Confidence: high if we got the critical fields, medium if some missing
     critical_present = all([applicant_name, site_name, email])
     confidence = "high" if critical_present else "medium"
 
@@ -338,6 +284,7 @@ def extract_noi(pdf_path: Path | str, *, ocr_fallback: bool = False) -> NOIExtra
             "latitude": latitude,
             "longitude": longitude,
             "acres_disturbed": acres_disturbed,
+            "outfalls": [o.model_dump() for o in outfalls],
             "swppp_contact_first_name": first_name,
             "swppp_contact_last_name": last_name,
             "swppp_contact_email": email,

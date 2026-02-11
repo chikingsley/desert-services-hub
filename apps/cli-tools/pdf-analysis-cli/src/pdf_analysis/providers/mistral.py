@@ -82,7 +82,7 @@ class MistralProvider(BaseProvider):
         except Exception:
             return False
 
-    async def ocr(self, pdf_path: Path, pages: list[int] | None = None) -> OCRResult:
+    async def ocr(self, pdf_path: Path, pages: list[int] | None = None, output_path: Path | None = None) -> OCRResult:
         started = time.perf_counter()
         if not pdf_path.exists():
             raise FileNotFoundError(f"File not found: {pdf_path}")

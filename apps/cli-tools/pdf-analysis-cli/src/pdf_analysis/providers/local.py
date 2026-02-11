@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import asyncio
 import base64
+import sys
 import time
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -30,6 +32,8 @@ from .base import BaseProvider
 class LocalProvider(BaseProvider):
     name = ProviderName.LOCAL
     cost_per_1k_pages = 0.0
+    _MAX_RETRIES = 5
+    _RETRY_BACKOFF = [5, 15, 30, 60, 90]
 
     def __init__(self, settings: Settings):
         self.settings = settings
@@ -64,7 +68,12 @@ class LocalProvider(BaseProvider):
 
         return False
 
-    async def ocr(self, pdf_path: Path, pages: list[int] | None = None) -> OCRResult:
+    async def ocr(
+        self,
+        pdf_path: Path,
+        pages: list[int] | None = None,
+        output_path: Path | None = None,
+    ) -> OCRResult:
         started = time.perf_counter()
 
         if not pdf_path.exists():
@@ -79,18 +88,44 @@ class LocalProvider(BaseProvider):
 
             chunks: list[str] = []
             page_numbers: list[int] = []
+            failed_pages: list[int] = []
+            total = len(rendered_pages)
+
+            # Incremental write: truncate output file if provided
+            if output_path:
+                output_path.write_text("", encoding="utf-8")
 
             for page_number, image_path in rendered_pages:
                 image_b64 = base64.b64encode(image_path.read_bytes()).decode("utf-8")
-                content = await self._chat_completion(
-                    prompt=(
-                        "Extract all visible text from this page. Preserve structure, "
-                        "tables, and section headings in markdown."
-                    ),
-                    image_base64=image_b64,
-                )
+                try:
+                    content = await self._ocr_page_with_retry(
+                        image_b64, page_number, total,
+                    )
+                except Exception as e:
+                    print(
+                        f"[ocr] page {page_number} FAILED after {self._MAX_RETRIES} "
+                        f"retries ({type(e).__name__}), skipping",
+                        file=sys.stderr,
+                    )
+                    failed_pages.append(page_number)
+                    content = f"[OCR FAILED: {type(e).__name__}]"
+
                 page_numbers.append(page_number)
-                chunks.append(f"<!-- Page {page_number} -->\n{content.strip()}")
+                chunk = f"<!-- Page {page_number} -->\n{content.strip()}"
+                chunks.append(chunk)
+
+                # Write incrementally so completed pages are never lost
+                if output_path:
+                    with open(output_path, "a", encoding="utf-8") as f:
+                        if len(chunks) > 1:
+                            f.write("\n\n---\n\n")
+                        f.write(chunk)
+
+            if failed_pages:
+                print(
+                    f"[ocr] completed with {len(failed_pages)} failed pages: {failed_pages}",
+                    file=sys.stderr,
+                )
 
         elapsed_ms = int((time.perf_counter() - started) * 1000)
         return OCRResult(
@@ -235,6 +270,45 @@ class LocalProvider(BaseProvider):
             model=self.model,
             confidence=float(result.data.get("confidence", 0.65) or 0.65),
         )
+
+    async def _ocr_page_with_retry(
+        self, image_b64: str, page_num: int, total: int,
+    ) -> str:
+        """OCR a single page with retry on transient errors."""
+        last_err: Exception | None = None
+        for attempt in range(1, self._MAX_RETRIES + 1):
+            try:
+                print(
+                    f"[ocr] page {page_num}/{total}"
+                    + (f" (retry {attempt})" if attempt > 1 else ""),
+                    file=sys.stderr,
+                )
+                return await self._chat_completion(
+                    prompt=(
+                        "Extract all visible text from this page. Preserve structure, "
+                        "tables, and section headings in markdown."
+                    ),
+                    image_base64=image_b64,
+                )
+            except (
+                httpx.ReadTimeout,
+                httpx.ConnectError,
+                httpx.RemoteProtocolError,
+                httpx.ReadError,
+                httpx.HTTPStatusError,
+            ) as e:
+                last_err = e
+                if attempt < self._MAX_RETRIES:
+                    wait = self._RETRY_BACKOFF[attempt - 1]
+                    print(
+                        f"[ocr] page {page_num} failed ({type(e).__name__}), "
+                        f"retrying in {wait}s...",
+                        file=sys.stderr,
+                    )
+                    await asyncio.sleep(wait)
+                    continue
+                raise
+        raise last_err  # type: ignore[misc]
 
     def _render_pdf_pages(
         self,

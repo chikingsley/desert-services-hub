@@ -22,6 +22,7 @@ graph LR
 We have consolidated the scripts into the `scripts/` directory.
 
 ### 1. Run Extraction Demo
+
 Extracts data from the sample PDFs in `data/samples/` and saves JSON to `data/extracted/`.
 
 ```bash
@@ -30,6 +31,7 @@ uv run python scripts/run_extraction_demo.py
 ```
 
 ### 2. Run Generation Demo
+
 Takes hardcoded test data (simulating what we'd get from extraction) and fills the Word template. Saves to `templates/output/`.
 
 ```bash
@@ -43,11 +45,13 @@ uv run python scripts/run_generation_demo.py
 The system uses **docxtpl** (Jinja2 for Word). You edit the template directly in Microsoft Word.
 
 ### How to Add Variables
+
 1.  Open `templates/cgp_p3_template.docx`.
 2.  Insert tags using double curly braces: `{{ variable_name }}`.
 3.  Save the file.
 
 ### Common Variables
+
 | Variable | Description |
 | :--- | :--- |
 | `{{ project_name }}` | Name of the project |
@@ -60,6 +64,7 @@ The system uses **docxtpl** (Jinja2 for Word). You edit the template directly in
 *See `app/models/swppp.py` for the full list of available fields.*
 
 ### Advanced Logic
+
 You can use logic inside the Word doc:
 ```jinja2
 {% if operator_name %}

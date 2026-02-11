@@ -18,6 +18,10 @@ import {
 import { getCatalog, getTakeoffItems } from "@/api/catalog";
 import { listContracts } from "@/api/contracts";
 import {
+  downloadEmailAttachment,
+  listEmailAttachments,
+} from "@/api/email-attachments";
+import {
   getEmail,
   listDomainRules,
   listEmails,
@@ -146,6 +150,12 @@ const server = serve({
     },
     "/api/emails/:id": {
       GET: h(getEmail),
+    },
+    "/api/emails/:id/attachments": {
+      GET: h(listEmailAttachments),
+    },
+    "/api/emails/:id/attachments/:attachmentId/download": {
+      GET: h(downloadEmailAttachment),
     },
 
     // Monday.com

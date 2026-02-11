@@ -58,8 +58,30 @@ class IngestResult:
 # ---------------------------------------------------------------------------
 
 
+def _has_text_layer(pdf_path: Path, sample_pages: int = 5) -> tuple[bool, int]:
+    """Quick check if PDF has a text layer using pymupdf (milliseconds, not minutes).
+
+    Samples up to ``sample_pages`` pages. Returns (has_text, page_count).
+    """
+    import pymupdf
+
+    doc = pymupdf.open(pdf_path)
+    try:
+        page_count = len(doc)
+        check = min(sample_pages, page_count)
+        for i in range(check):
+            if doc.load_page(i).get_text().strip():
+                return True, page_count
+        return False, page_count
+    finally:
+        doc.close()
+
+
 def extract_text(pdf_path: Path, max_pages: int = 0) -> TextResult:
     """Extract text from a PDF using pdfplumber. No LLM calls.
+
+    Runs a fast pymupdf pre-check first — if the PDF has no text layer
+    (pure scanned images), skips the expensive pdfplumber extraction entirely.
 
     Args:
         pdf_path: Path to PDF file.
@@ -69,6 +91,18 @@ def extract_text(pdf_path: Path, max_pages: int = 0) -> TextResult:
         TextResult with extracted text and metadata.
     """
     path = Path(pdf_path)
+
+    # Fast pre-check: skip pdfplumber entirely for pure-image PDFs
+    has_text, page_count = _has_text_layer(path)
+    if not has_text:
+        return TextResult(
+            text="",
+            page_count=page_count,
+            has_text=False,
+            filename=path.name,
+            pages_with_text=0,
+        )
+
     pages_text: list[str] = []
     pages_with_text = 0
 

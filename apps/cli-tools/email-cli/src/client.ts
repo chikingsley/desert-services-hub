@@ -33,7 +33,8 @@ import type {
   SendEmailOptions,
   TrackedEmailAttachment,
 } from "@email/types";
-import { Client } from "@microsoft/microsoft-graph-client";
+import { getOneDriveFileFromShareUrl } from "@lib/graph/files";
+import { Client, ResponseType } from "@microsoft/microsoft-graph-client";
 import { TokenCredentialAuthenticationProvider } from "@microsoft/microsoft-graph-client/authProviders/azureTokenCredentials";
 
 export type AuthMode = "app" | "user";
@@ -1166,11 +1167,58 @@ export class GraphEmailClient {
         .api(`${basePath}/messages/${messageId}/attachments/${attachmentId}`)
         .get();
 
-      if (!response?.contentBytes) {
-        throw new Error("Attachment has no content");
+      // Most file attachments include base64 contentBytes directly.
+      if (response?.contentBytes) {
+        return Buffer.from(response.contentBytes, "base64");
       }
 
-      return Buffer.from(response.contentBytes, "base64");
+      const odataType = (response?.["@odata.type"] as string | undefined) ?? "";
+
+      // Cloud / OneDrive attachments show up as referenceAttachment and must be
+      // fetched via their SharePoint URL (contentBytes/$value won't work).
+      if (odataType.includes("referenceAttachment")) {
+        const beta = await client
+          .api(`${basePath}/messages/${messageId}/attachments/${attachmentId}`)
+          .version("beta")
+          .get();
+
+        const sourceUrl = beta?.sourceUrl as string | undefined;
+        if (!sourceUrl) {
+          throw new Error("Reference attachment missing sourceUrl");
+        }
+
+        const meta = await getOneDriveFileFromShareUrl(sourceUrl);
+        const fileRes = await fetch(meta.downloadUrl);
+        if (!fileRes.ok) {
+          throw new Error(
+            `Reference attachment download failed: ${fileRes.status}`
+          );
+        }
+
+        const ab = await fileRes.arrayBuffer();
+        return Buffer.from(new Uint8Array(ab));
+      }
+
+      // Some attachments omit contentBytes on the attachment metadata response.
+      // Fallback to the $value endpoint which returns the raw bytes for file attachments.
+      const raw = await client
+        .api(
+          `${basePath}/messages/${messageId}/attachments/${attachmentId}/$value`
+        )
+        .responseType(ResponseType.ARRAYBUFFER)
+        .get();
+
+      if (raw instanceof ArrayBuffer) {
+        return Buffer.from(new Uint8Array(raw));
+      }
+
+      // Defensive: handle unexpected shapes.
+      if (raw && typeof raw === "object" && ArrayBuffer.isView(raw)) {
+        const view = raw as ArrayBufferView;
+        return Buffer.from(new Uint8Array(view.buffer));
+      }
+
+      throw new Error("Attachment has no content");
     } catch (error) {
       console.error("Error downloading attachment:", error);
       throw error;

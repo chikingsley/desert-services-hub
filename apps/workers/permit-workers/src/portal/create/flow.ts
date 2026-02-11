@@ -28,6 +28,7 @@ import {
   fillPage1,
   fillPage2,
   fillPage2Renew,
+  fillPage2WithMapData,
   fillPage3,
   fillPage4,
 } from "./fill";
@@ -188,15 +189,77 @@ export async function createApplicationFull(
   // Page 1
   await fillPage1(page, formData, isNewCompany ? "full" : "partial");
 
-  // Navigate to Page 2 (map)
+  // Page 2 (map) - draw polygon from NOI lat/lng by snapping to the parcel
   await clickNext(page);
+  await sleep(SETTLE_MS);
 
-  // Navigate to Page 3
-  await clickNext(page);
+  if (flow === "renew") {
+    console.log("  Handling Page 2 (Project Location) for renewal...");
+    const page2Success = await fillPage2Renew(page, context, options.copyFromApp);
+    if (!page2Success) {
+      return {
+        success: false,
+        applicationId: createResult.applicationId,
+        reachedPage5: false,
+        error:
+          "Page 2 failed: location/map data not confirmed. Application created but incomplete.",
+      };
+    }
+  } else {
+    const lat = formData.site.latitude;
+    const lng = formData.site.longitude;
+
+    if (typeof lat === "number" && typeof lng === "number") {
+      console.log("  Handling Page 2 (Project Location)...");
+
+      const { buildPermitMapDataFromSiteCoordinates } = await import(
+        "@/lib/site-drawing"
+      );
+
+      const { mapData, targetParcelDashed, parcel } =
+        await buildPermitMapDataFromSiteCoordinates({
+          latitude: lat,
+          longitude: lng,
+          acresDisturbed: formData.site.acresDisturbed,
+        });
+
+      console.log(
+        `  Parcel from NOI point: ${targetParcelDashed}${parcel.owner ? ` (${parcel.owner})` : ""}`
+      );
+
+      const page2Success = await fillPage2WithMapData(
+        page,
+        context,
+        mapData,
+        targetParcelDashed
+      );
+      if (!page2Success) {
+        return {
+          success: false,
+          applicationId: createResult.applicationId,
+          reachedPage5: false,
+          error:
+            "Page 2 failed: location/map data not confirmed. Application created but incomplete.",
+        };
+      }
+    } else {
+      console.log(
+        "  ⚠ No site latitude/longitude in FormData.site; skipping map drawing (manual required)."
+      );
+      await clickNext(page);
+    }
+  }
+
+  await sleep(SETTLE_MS);
+
+  // Page 3
   await fillPage3(page, formData);
 
   // Navigate to Page 4
   await clickNext(page);
+  await sleep(SETTLE_MS);
+
+  // Page 4
   await fillPage4(page, formData);
 
   // Navigate to Page 5

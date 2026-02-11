@@ -12,7 +12,7 @@
  */
 
 import { parseArgs } from "node:util";
-import { copyFileSync, existsSync, mkdirSync, readdirSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, unlinkSync } from "node:fs";
 import { join } from "node:path";
 
 function main(): void {
@@ -50,10 +50,25 @@ function main(): void {
     copied.push(name);
   }
 
-  // Copy any generated diff markdowns as examples.
+  // Clear old diff snapshots first so destination reflects current source selection.
+  for (const name of readdirSync(toDir)) {
+    if (name.startsWith("DIFF_") && name.endsWith(".md")) {
+      unlinkSync(join(toDir, name));
+    }
+  }
+
+  // Copy generated diff markdowns as examples.
+  // Skip low-signal diffs where one side is mostly blank (typically docx parse failures).
   for (const name of readdirSync(fromDir)) {
     if (!name.startsWith("DIFF_") || !name.endsWith(".md")) continue;
     const src = join(fromDir, name);
+    const text = readFileSync(src, "utf8");
+    const aOrBLines = text
+      .split("\n")
+      .filter((l) => l.trimStart().startsWith("A:") || l.trimStart().startsWith("B:"));
+    const blankLines = aOrBLines.filter((l) => /\(blank\)\s*$/.test(l.trim()));
+    const blankRatio = aOrBLines.length === 0 ? 1 : blankLines.length / aOrBLines.length;
+    if (blankRatio > 0.45) continue;
     const dst = join(toDir, name);
     copyFileSync(src, dst);
     copied.push(name);
@@ -66,4 +81,3 @@ function main(): void {
 }
 
 main();
-

@@ -4,14 +4,7 @@
  * Always-on embedded VNC view of the permit-worker browser session.
  */
 
-import {
-  CheckCircle2,
-  ClipboardPaste,
-  Copy,
-  Loader2,
-  RefreshCw,
-  Square,
-} from "lucide-react";
+import { CheckCircle2, Loader2, RefreshCw, Square } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import useSWR from "swr";
@@ -35,6 +28,8 @@ interface AutomationStatus {
   keepAliveIntervalMs: number;
   portalHomePinEnabled: boolean;
   portalHomePinIntervalMs: number;
+  viewportWidth: number;
+  viewportHeight: number;
   vncUrl: string;
 }
 
@@ -288,8 +283,11 @@ export function AutomationPage({ visible = true }: AutomationPageProps) {
   }
   const actionPending = action !== null;
   const busyLabel = data?.busy ? data.currentOperation || "Running" : "Idle";
+  const viewportWidth = data?.viewportWidth || 1280;
+  const viewportHeight = data?.viewportHeight || 1024;
+  const vncAspectRatio = `${viewportWidth} / ${viewportHeight}`;
   const rootClassName = visible
-    ? "flex min-h-full flex-1 flex-col"
+    ? "flex flex-col"
     : "pointer-events-none fixed inset-0 -z-10 opacity-0";
 
   return (
@@ -299,7 +297,7 @@ export function AutomationPage({ visible = true }: AutomationPageProps) {
         title="Maricopa County Dust Portal"
       />
 
-      <div className="flex min-h-0 flex-1 flex-col p-6 lg:p-8">
+      <div className="p-6 lg:p-8">
         <div className="mb-4 rounded-2xl border border-border bg-card p-4">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
             <div className="inline-flex items-center gap-2 rounded-full border border-border px-3 py-1.5 font-medium text-sm">
@@ -354,36 +352,6 @@ export function AutomationPage({ visible = true }: AutomationPageProps) {
                 )}
                 Stop Session
               </Button>
-              <Button
-                className="gap-2"
-                disabled={actionPending}
-                onClick={() => {
-                  pasteFromLocalClipboard().catch(() => undefined);
-                }}
-                variant="outline"
-              >
-                {action === "/api/automation/clipboard/paste" ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <ClipboardPaste className="h-4 w-4" />
-                )}
-                Paste Clipboard
-              </Button>
-              <Button
-                className="gap-2"
-                disabled={actionPending}
-                onClick={() => {
-                  copySelectionToLocalClipboard().catch(() => undefined);
-                }}
-                variant="outline"
-              >
-                {action === "/api/automation/clipboard/copy" ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Copy className="h-4 w-4" />
-                )}
-                Copy Selection
-              </Button>
             </div>
           </div>
 
@@ -410,6 +378,11 @@ export function AutomationPage({ visible = true }: AutomationPageProps) {
             </div>
           </div>
 
+          <div className="mt-3 text-muted-foreground text-xs">
+            Clipboard shortcuts: Cmd/Ctrl+C copies portal selection, Cmd/Ctrl+V
+            pastes local clipboard into the active portal field.
+          </div>
+
           {error && (
             <div className="mt-3 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-red-500 text-sm">
               Status check failed: {error.message}
@@ -422,10 +395,13 @@ export function AutomationPage({ visible = true }: AutomationPageProps) {
           )}
         </div>
 
-        <div className="relative min-h-0 flex-1 overflow-hidden rounded-2xl border border-border bg-black">
+        <div
+          className="relative w-full overflow-hidden rounded-2xl border border-border bg-black"
+          style={{ aspectRatio: vncAspectRatio }}
+        >
           <iframe
             allow="clipboard-read; clipboard-write; fullscreen"
-            className="h-full w-full border-0"
+            className="absolute inset-0 h-full w-full border-0"
             src={vncUrl}
             title="Maricopa County Dust Portal"
           />

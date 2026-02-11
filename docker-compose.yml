@@ -15,6 +15,8 @@ services:
       PORT: 3000
       DATABASE_URL: postgresql://postgres:postgres@host.docker.internal:54322/postgres
       MONDAY_FILES_DIR: /app/data/monday-files
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     healthcheck:
       test: ["CMD", "bun", "-e", "const r = await fetch('http://localhost:3000/api/health'); if (!r.ok) process.exit(1);"]
       interval: 10s
@@ -40,7 +42,12 @@ services:
       WEBHOOK_PORT: 4747
       DATABASE_URL: postgresql://postgres:postgres@host.docker.internal:54322/postgres
       MONDAY_FILES_DIR: /app/data/monday-files
-      OLLAMA_ENDPOINT: http://host.docker.internal:11434/v1
+      OLLAMA_ENDPOINT: ${OLLAMA_ENDPOINT:-http://host.docker.internal:11434/v1}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-glm-ocr:latest}
+      OLLAMA_MANAGER_ENDPOINT: ${OLLAMA_MANAGER_ENDPOINT:-https://mm.peacockery.studio}
+      PDF_ANALYSIS_PROVIDER_ORDER: ${PDF_ANALYSIS_PROVIDER_ORDER:-local,mistral,gemini}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - webhooks-data:/app/data
       - /home/simon/.local/share/opencode/auth.json:/root/.local/share/opencode/auth.json:ro
@@ -52,6 +59,40 @@ services:
       start_period: 5s
     restart: unless-stopped
     command: ["bun", "run", "apps/web/webhooks.ts"]
+
+  # ==========================================================================
+  # Notifications Poller — event detection + draft queueing
+  # ==========================================================================
+  notifications:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: desert-notifications
+    env_file: .env
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://postgres:postgres@host.docker.internal:54322/postgres
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+    command: ["bun", "run", "apps/workers/notifications/cli/watch.ts", "--delivery=log"]
+
+  # ==========================================================================
+  # SWPPP Sync Poller — SharePoint SWPPP Master → Postgres sync
+  # ==========================================================================
+  swppp-sync:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: desert-swppp-sync
+    env_file: .env
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://postgres:postgres@host.docker.internal:54322/postgres
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+    command: ["bun", "run", "apps/workers/swppp-sync/cli/sync.ts"]
 
   # ==========================================================================
   # Permit Worker — Browser automation for Maricopa County dust permits
@@ -70,9 +111,11 @@ services:
     environment:
       NODE_ENV: production
       HEADLESS: "false"
-      VNC_RESOLUTION: 1280x720
+      VNC_RESOLUTION: 1280x1024
       DISPLAY: ":1"
       DATABASE_URL: postgresql://postgres:postgres@host.docker.internal:54322/postgres
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - permit-data:/app/data
     ipc: host
@@ -122,6 +165,8 @@ volumes:
 #
 # Logs:           docker compose logs -f web
 #                 docker compose logs -f webhooks
+#                 docker compose logs -f notifications
+#                 docker compose logs -f swppp-sync
 #                 docker compose logs -f permit-worker
 # Rebuild:        docker compose build && docker compose up -d
 # =============================================================================

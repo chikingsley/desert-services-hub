@@ -30,6 +30,9 @@ const DEFAULT_KEEP_ALIVE_INTERVAL_MS = 5 * 60 * 1000;
 const MIN_KEEP_ALIVE_INTERVAL_MS = 60_000;
 const DEFAULT_PORTAL_HOME_PIN_INTERVAL_MS = 10 * 60 * 1000;
 const MIN_PORTAL_HOME_PIN_INTERVAL_MS = 60_000;
+const DEFAULT_VIEWPORT_WIDTH = 1280;
+const DEFAULT_VIEWPORT_HEIGHT = 1024;
+const VIEWPORT_PATTERN_RE = /^(\d+)\s*[xX]\s*(\d+)$/;
 
 function parsePositiveInt(value: string | undefined): number | null {
   if (!value) {
@@ -49,6 +52,28 @@ function getKeepOpenTimeoutMs(timeoutMs?: number): number {
   return Math.max(MIN_KEEP_OPEN_TIMEOUT_MS, Math.trunc(timeoutMs));
 }
 
+function parseViewport(
+  value: string | undefined
+): { width: number; height: number } | null {
+  if (!value) {
+    return null;
+  }
+  const match = value.trim().match(VIEWPORT_PATTERN_RE);
+  if (!match) {
+    return null;
+  }
+
+  const width = Number.parseInt(match[1], 10);
+  const height = Number.parseInt(match[2], 10);
+  if (!(Number.isFinite(width) && Number.isFinite(height))) {
+    return null;
+  }
+  if (width < 320 || height < 320) {
+    return null;
+  }
+  return { width, height };
+}
+
 const KEEP_ALIVE_ENABLED =
   process.env.PERMIT_WORKER_KEEP_ALIVE_ENABLED !== "false";
 const KEEP_ALIVE_INTERVAL_MS = Math.max(
@@ -63,6 +88,13 @@ const PORTAL_HOME_PIN_INTERVAL_MS = Math.max(
   parsePositiveInt(process.env.PERMIT_WORKER_PORTAL_HOME_PIN_INTERVAL_MS) ??
     DEFAULT_PORTAL_HOME_PIN_INTERVAL_MS
 );
+const RESOLVED_VIEWPORT = parseViewport(
+  process.env.PERMIT_WORKER_BROWSER_VIEWPORT
+) ??
+  parseViewport(process.env.VNC_RESOLUTION) ?? {
+    width: DEFAULT_VIEWPORT_WIDTH,
+    height: DEFAULT_VIEWPORT_HEIGHT,
+  };
 
 function isoOrNull(ts: number | null): string | null {
   if (!ts) {
@@ -220,6 +252,8 @@ export interface BrowserSessionStatus {
   keepAliveIntervalMs: number;
   portalHomePinEnabled: boolean;
   portalHomePinIntervalMs: number;
+  viewportWidth: number;
+  viewportHeight: number;
 }
 
 export interface BrowserKeepAliveResult {
@@ -732,6 +766,8 @@ export function getSessionStatus(): BrowserSessionStatus {
     keepAliveIntervalMs: KEEP_ALIVE_INTERVAL_MS,
     portalHomePinEnabled: PORTAL_HOME_PIN_ENABLED,
     portalHomePinIntervalMs: PORTAL_HOME_PIN_INTERVAL_MS,
+    viewportWidth: RESOLVED_VIEWPORT.width,
+    viewportHeight: RESOLVED_VIEWPORT.height,
   };
 }
 
@@ -767,7 +803,10 @@ export async function createBrowser(options?: {
   });
 
   const context = await browser.newContext({
-    viewport: { width: 1280, height: 720 },
+    viewport: {
+      width: RESOLVED_VIEWPORT.width,
+      height: RESOLVED_VIEWPORT.height,
+    },
   });
 
   const page = await context.newPage();

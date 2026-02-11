@@ -14,14 +14,14 @@ export type CanonicalGroup =
   | "site"
   | "bmp";
 
-export type CanonicalField = {
+export interface CanonicalField {
   id: string;
   group: CanonicalGroup;
   required: boolean;
   label: string;
   description: string;
   sourceKeys: readonly string[];
-};
+}
 
 export const CANONICAL_FIELDS: readonly CanonicalField[] = [
   {
@@ -113,7 +113,9 @@ export const CANONICAL_FIELDS: readonly CanonicalField[] = [
     required: true,
     label: "Estimated project completion date",
     description: "Estimated completion date for construction activity.",
-    sourceKeys: ["1.3 Nature and Sequence of Construction Activity.Estimated Project Completion Date"],
+    sourceKeys: [
+      "1.3 Nature and Sequence of Construction Activity.Estimated Project Completion Date",
+    ],
   },
   {
     id: "operator.company",
@@ -211,7 +213,9 @@ export const CANONICAL_FIELDS: readonly CanonicalField[] = [
     required: true,
     label: "Emergency phone",
     description: "24-hour emergency phone.",
-    sourceKeys: ["1.2 Contact Information/Responsable Parties.Emergency 24-Hour Contact.Line3"],
+    sourceKeys: [
+      "1.2 Contact Information/Responsable Parties.Emergency 24-Hour Contact.Line3",
+    ],
   },
   {
     id: "site.total_project_area",
@@ -227,7 +231,9 @@ export const CANONICAL_FIELDS: readonly CanonicalField[] = [
     required: true,
     label: "Disturbed area",
     description: "Construction disturbance acreage.",
-    sourceKeys: ["1.5 Construction Site Estimates.Construction site area to be disturbed"],
+    sourceKeys: [
+      "1.5 Construction Site Estimates.Construction site area to be disturbed",
+    ],
   },
   {
     id: "site.soil_types",
@@ -235,7 +241,9 @@ export const CANONICAL_FIELDS: readonly CanonicalField[] = [
     required: true,
     label: "Soil type(s)",
     description: "Soils and related descriptors used in the narrative.",
-    sourceKeys: ["1.4 Soils, Slopes, Vegetation, and Current Drainage Patterns.Soil type(s)"],
+    sourceKeys: [
+      "1.4 Soils, Slopes, Vegetation, and Current Drainage Patterns.Soil type(s)",
+    ],
   },
   {
     id: "site.slopes",
@@ -243,7 +251,9 @@ export const CANONICAL_FIELDS: readonly CanonicalField[] = [
     required: false,
     label: "Slopes",
     description: "Slope description (frequently blank in source docs).",
-    sourceKeys: ["1.4 Soils, Slopes, Vegetation, and Current Drainage Patterns.Slopes"],
+    sourceKeys: [
+      "1.4 Soils, Slopes, Vegetation, and Current Drainage Patterns.Slopes",
+    ],
   },
   {
     id: "site.receiving_waters",
@@ -272,4 +282,3 @@ export const CANONICAL_FIELDS: readonly CanonicalField[] = [
 ] as const;
 
 export const CANONICAL_FIELD_IDS = new Set(CANONICAL_FIELDS.map((f) => f.id));
-

@@ -13,7 +13,7 @@ Purpose:
 apps/narrative/workflows/eva-jayson-variable-inventory/
 ├── README.md
 ├── manifest.json
-├── canonical_fields.ts
+├── canonical-fields.ts
 └── artifacts/
     ├── REPORT.md
     ├── CANONICAL_MVP.tsv
@@ -23,7 +23,7 @@ apps/narrative/workflows/eva-jayson-variable-inventory/
 
 ## File Roles
 
-- `canonical_fields.ts`
+- `canonical-fields.ts`
   - Type-safe canonical field contract (the deterministic field surface to map from inputs).
   - This is the target schema for generation logic.
 - `artifacts/REPORT.md`
@@ -44,16 +44,16 @@ Run from repo root:
 
 ```bash
 # 1) Build raw inventory from local intake docs
-bun apps/narrative/scripts/narrative_inventory/inventory_swppp_variables.ts
+bun apps/narrative/scripts/narrative_inventory/inventory-swppp-variables.ts
 
 # 2) Build canonical report/tsv from the raw inventory
-bun apps/narrative/scripts/narrative_inventory/report_variable_inventory.ts
+bun apps/narrative/scripts/narrative_inventory/report-variable-inventory.ts
 
 # 3) Export committed artifact snapshots into this folder
-bun apps/narrative/scripts/narrative_inventory/export_snapshot.ts
+bun apps/narrative/scripts/narrative_inventory/export-snapshot.ts
 
 # Optional: generate a fresh example diff
-bun apps/narrative/scripts/narrative_inventory/diff_narratives.ts --auto
+bun apps/narrative/scripts/narrative_inventory/diff-narratives.ts --auto
 ```
 
 Or run the orchestrator:
@@ -64,8 +64,12 @@ bun apps/narrative/scripts/narrative_inventory/run.ts --inventory --report --dif
 
 ## What To Build Next
 
-- Map source documents (NOI + plan + estimate) into `canonical_fields.ts`.
-- Generate one canonical JSON payload per project.
-- Feed that payload into narrative template generation.
-- Add regression checks by comparing generated output fields to `CANONICAL_DOCS.tsv` ground truth.
-
+- Source packet capture is now scripted:
+  - `bun apps/narrative/scripts/narrative_inventory/build-source-packets.ts --limit 20 --download`
+  - Output location: `apps/narrative/data/intake/eva-to-jayson/source-packets/`
+- Deterministic packet alignment report:
+  - `bun apps/narrative/scripts/narrative_inventory/report-packet-alignment.ts`
+  - Outputs: `alignment.md`, `alignment.csv` in the same source-packets folder.
+- Next iteration:
+  - Add plan/NOI deep extraction into canonical builder input.
+  - Increase deterministic match rates in `alignment.md`.

@@ -23,7 +23,7 @@ import { db } from "@lib/db/hub";
 // Reuse estimate-poller config table for lightweight worker state.
 const CONFIG_KEY_LAST_EMAIL_ID = "estimate_email_linker_last_email_id";
 
-type EmailRow = {
+interface EmailRow {
   id: number;
   subject: string | null;
   normalized_subject: string | null;
@@ -32,22 +32,24 @@ type EmailRow = {
   from_domain: string | null;
   project_id: number | null;
   received_at: string;
-};
+}
 
-type EstimateIndexRow = {
+interface EstimateIndexRow {
   id: number;
   monday_item_id: string | null;
   estimate_number: string | null;
   account_domain: string | null;
   name: string;
-};
+}
 
 function uniq<T>(xs: T[]): T[] {
   return [...new Set(xs)];
 }
 
 function safeJsonArray(value: string | null): string[] {
-  if (!value) return [];
+  if (!value) {
+    return [];
+  }
   try {
     const parsed = JSON.parse(value);
     return Array.isArray(parsed) ? parsed.map((v) => String(v)) : [];
@@ -58,17 +60,20 @@ function safeJsonArray(value: string | null): string[] {
 
 function extractMondayPulseIds(text: string): string[] {
   const ids: string[] = [];
-  const re = /(?:pulses|items)\/(\d{6,})/gi;
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(text))) {
-    if (m[1]) ids.push(m[1]);
+  for (const match of text.matchAll(/(?:pulses|items)\/(\d{6,})/gi)) {
+    const id = match[1];
+    if (id) {
+      ids.push(id);
+    }
   }
   return uniq(ids);
 }
 
 function normalizeEstimateNumberDigits(raw: string): string | null {
   const digits = raw.replace(/[^0-9]/g, "");
-  if (digits.length < 6 || digits.length > 8) return null;
+  if (digits.length < 6 || digits.length > 8) {
+    return null;
+  }
   return digits;
 }
 
@@ -76,18 +81,21 @@ function extractEstimateNumbers(text: string): string[] {
   const out: string[] = [];
 
   // Est_03192502, Est-03192502, Est 03192502, etc (+ optional -R# suffix).
-  const estRe = /\bEst(?:imate)?[_\s-]*([0-9]{6,8})(?:\s*-?\s*R[0-9]+)?\b/gi;
-  let m: RegExpExecArray | null;
-  while ((m = estRe.exec(text))) {
-    const n = normalizeEstimateNumberDigits(m[1] ?? "");
-    if (n) out.push(n);
+  for (const match of text.matchAll(
+    /\bEst(?:imate)?[_\s-]*([0-9]{6,8})(?:\s*-?\s*R[0-9]+)?\b/gi
+  )) {
+    const n = normalizeEstimateNumberDigits(match[1] ?? "");
+    if (n) {
+      out.push(n);
+    }
   }
 
   // "Estimate: 03192502"
-  const estimateWordRe = /\bEstimate[:\s#]*([0-9]{6,8})\b/gi;
-  while ((m = estimateWordRe.exec(text))) {
-    const n = normalizeEstimateNumberDigits(m[1] ?? "");
-    if (n) out.push(n);
+  for (const match of text.matchAll(/\bEstimate[:\s#]*([0-9]{6,8})\b/gi)) {
+    const n = normalizeEstimateNumberDigits(match[1] ?? "");
+    if (n) {
+      out.push(n);
+    }
   }
 
   return uniq(out);
@@ -151,7 +159,9 @@ async function fetchProjectEstimates(
   projectIds: number[]
 ): Promise<Map<number, number[]>> {
   const out = new Map<number, number[]>();
-  if (projectIds.length === 0) return out;
+  if (projectIds.length === 0) {
+    return out;
+  }
 
   const placeholders = projectIds.map(() => "?").join(", ");
   const rows = await db
@@ -181,13 +191,17 @@ function disambiguateEstimatesForEmail(opts: {
   emailProjectEstimateIds: number[] | null;
 }): EstimateIndexRow[] {
   const { candidates, emailFromDomain, emailProjectEstimateIds } = opts;
-  if (candidates.length <= 1) return candidates;
+  if (candidates.length <= 1) {
+    return candidates;
+  }
 
   // 1) If the email's project already maps to estimates, intersect.
   if (emailProjectEstimateIds && emailProjectEstimateIds.length > 0) {
     const set = new Set(emailProjectEstimateIds);
     const narrowed = candidates.filter((c) => set.has(c.id));
-    if (narrowed.length > 0) return narrowed;
+    if (narrowed.length > 0) {
+      return narrowed;
+    }
   }
 
   // 2) Match by account domain (GC domain from Monday) when available.
@@ -196,7 +210,9 @@ function disambiguateEstimatesForEmail(opts: {
     const narrowed = candidates.filter(
       (c) => (c.account_domain ?? "").toLowerCase() === d
     );
-    if (narrowed.length > 0) return narrowed;
+    if (narrowed.length > 0) {
+      return narrowed;
+    }
   }
 
   return candidates;
@@ -237,7 +253,9 @@ export async function pollEstimateEmailLinker(
     const cfg = await getConfig(CONFIG_KEY_LAST_EMAIL_ID);
     if (cfg) {
       startFrom = Number.parseInt(cfg, 10);
-      if (!Number.isFinite(startFrom)) startFrom = 0;
+      if (!Number.isFinite(startFrom)) {
+        startFrom = 0;
+      }
     } else {
       // First run: start near the newest emails so we can validate behavior quickly.
       // If you want a full backfill, pass --min-id=0 from the CLI.
@@ -311,7 +329,7 @@ export async function pollEstimateEmailLinker(
         .join("\n");
 
       const projectEstimateIds =
-        email.project_id != null ? projMap.get(email.project_id) ?? [] : [];
+        email.project_id != null ? (projMap.get(email.project_id) ?? []) : [];
 
       // -------------------------------------------------------------------
       // Strategy 1: Monday pulse ID match (unique)
@@ -319,8 +337,12 @@ export async function pollEstimateEmailLinker(
       const mondayIds = extractMondayPulseIds(haystack);
       for (const mid of mondayIds) {
         const est = byMondayItemId.get(mid);
-        if (!est) continue;
-        if (!dryRun) {
+        if (!est) {
+          continue;
+        }
+        if (dryRun) {
+          linksInserted++;
+        } else {
           const r = await insertLink.run(
             est.id,
             email.id,
@@ -328,11 +350,7 @@ export async function pollEstimateEmailLinker(
             `matched monday_item_id=${mid}`
           );
           linksInserted += r.count ?? 0;
-        } else {
-          linksInserted++;
         }
-        // If we have a hard ID match, we don't need to do anything else.
-        continue;
       }
       if (mondayIds.length > 0) {
         // Even if we didn't find a matching estimate, don't do weaker heuristics.
@@ -347,7 +365,9 @@ export async function pollEstimateEmailLinker(
 
       for (const n of nums) {
         const candidates = byEstimateNumber.get(n) ?? [];
-        if (candidates.length === 0) continue;
+        if (candidates.length === 0) {
+          continue;
+        }
 
         const narrowed = disambiguateEstimatesForEmail({
           candidates,
@@ -362,8 +382,14 @@ export async function pollEstimateEmailLinker(
           continue;
         }
 
-        const est = narrowed[0]!;
-        if (!dryRun) {
+        const est = narrowed[0];
+        if (!est) {
+          skippedAmbiguous++;
+          continue;
+        }
+        if (dryRun) {
+          linksInserted++;
+        } else {
           const r = await insertLink.run(
             est.id,
             email.id,
@@ -371,8 +397,6 @@ export async function pollEstimateEmailLinker(
             `matched estimate_number=${n} (source=subject/body/attachments)`
           );
           linksInserted += r.count ?? 0;
-        } else {
-          linksInserted++;
         }
         linkedByNumber = true;
       }
@@ -385,8 +409,13 @@ export async function pollEstimateEmailLinker(
       // Strategy 3: Project→estimate (only when single estimate on project).
       // -------------------------------------------------------------------
       if (enableProjectSingle && projectEstimateIds.length === 1) {
-        const estId = projectEstimateIds[0]!;
-        if (!dryRun) {
+        const estId = projectEstimateIds[0];
+        if (estId == null) {
+          continue;
+        }
+        if (dryRun) {
+          linksInserted++;
+        } else {
           const r = await insertLink.run(
             estId,
             email.id,
@@ -394,8 +423,6 @@ export async function pollEstimateEmailLinker(
             `linked via project_id=${email.project_id}`
           );
           linksInserted += r.count ?? 0;
-        } else {
-          linksInserted++;
         }
         continue;
       }

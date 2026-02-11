@@ -8,12 +8,21 @@
  *   apps/narrative/workflows/eva-jayson-variable-inventory/artifacts/
  *
  * Usage:
- *   bun apps/narrative/scripts/narrative_inventory/export_snapshot.ts
+ *   bun apps/narrative/scripts/narrative_inventory/export-snapshot.ts
  */
 
-import { parseArgs } from "node:util";
-import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, unlinkSync } from "node:fs";
+import {
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  unlinkSync,
+} from "node:fs";
 import { join } from "node:path";
+import { parseArgs } from "node:util";
+
+const BLANK_LINE_PATTERN = /\(blank\)\s*$/;
 
 function main(): void {
   const { values } = parseArgs({
@@ -25,7 +34,8 @@ function main(): void {
       },
       to: {
         type: "string",
-        default: "apps/narrative/workflows/eva-jayson-variable-inventory/artifacts",
+        default:
+          "apps/narrative/workflows/eva-jayson-variable-inventory/artifacts",
       },
     },
     allowPositionals: false,
@@ -39,12 +49,18 @@ function main(): void {
   }
   mkdirSync(toDir, { recursive: true });
 
-  const explicitFiles = ["REPORT.md", "CANONICAL_MVP.tsv", "CANONICAL_DOCS.tsv"];
+  const explicitFiles = [
+    "REPORT.md",
+    "CANONICAL_MVP.tsv",
+    "CANONICAL_DOCS.tsv",
+  ];
   const copied: string[] = [];
 
   for (const name of explicitFiles) {
     const src = join(fromDir, name);
-    if (!existsSync(src)) continue;
+    if (!existsSync(src)) {
+      continue;
+    }
     const dst = join(toDir, name);
     copyFileSync(src, dst);
     copied.push(name);
@@ -60,15 +76,24 @@ function main(): void {
   // Copy generated diff markdowns as examples.
   // Skip low-signal diffs where one side is mostly blank (typically docx parse failures).
   for (const name of readdirSync(fromDir)) {
-    if (!name.startsWith("DIFF_") || !name.endsWith(".md")) continue;
+    if (!(name.startsWith("DIFF_") && name.endsWith(".md"))) {
+      continue;
+    }
     const src = join(fromDir, name);
     const text = readFileSync(src, "utf8");
     const aOrBLines = text
       .split("\n")
-      .filter((l) => l.trimStart().startsWith("A:") || l.trimStart().startsWith("B:"));
-    const blankLines = aOrBLines.filter((l) => /\(blank\)\s*$/.test(l.trim()));
-    const blankRatio = aOrBLines.length === 0 ? 1 : blankLines.length / aOrBLines.length;
-    if (blankRatio > 0.45) continue;
+      .filter(
+        (l) => l.trimStart().startsWith("A:") || l.trimStart().startsWith("B:")
+      );
+    const blankLines = aOrBLines.filter((l) =>
+      BLANK_LINE_PATTERN.test(l.trim())
+    );
+    const blankRatio =
+      aOrBLines.length === 0 ? 1 : blankLines.length / aOrBLines.length;
+    if (blankRatio > 0.45) {
+      continue;
+    }
     const dst = join(toDir, name);
     copyFileSync(src, dst);
     copied.push(name);

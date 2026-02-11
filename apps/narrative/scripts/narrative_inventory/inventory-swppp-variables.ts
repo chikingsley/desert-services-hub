@@ -15,22 +15,28 @@
  * - docs.tsv: per-document "core" fields (project, address, operator, dates, etc.)
  *
  * Usage:
- *   bun apps/narrative/scripts/inventory_swppp_variables.ts
- *   bun apps/narrative/scripts/inventory_swppp_variables.ts --in apps/narrative/data/intake/eva-to-jayson/by-email --out apps/narrative/data/intake/eva-to-jayson/variable-inventory
+ *   bun apps/narrative/scripts/inventory-swppp-variables.ts
+ *   bun apps/narrative/scripts/inventory-swppp-variables.ts --in apps/narrative/data/intake/eva-to-jayson/by-email --out apps/narrative/data/intake/eva-to-jayson/variable-inventory
  */
 
-import { parseArgs } from "node:util";
-import { existsSync, mkdirSync, readdirSync, statSync, writeFileSync } from "node:fs";
-import { join, extname, basename } from "node:path";
 import { createHash } from "node:crypto";
+import {
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
+import { extname, join } from "node:path";
+import { parseArgs } from "node:util";
 
-type DocFile = {
+interface DocFile {
   emailId: string;
   fileName: string;
   filePath: string;
-};
+}
 
-type Entry = {
+interface Entry {
   docId: string;
   emailId: string;
   fileName: string;
@@ -40,11 +46,20 @@ type Entry = {
   block: string | null;
   key: string;
   value: string;
-};
+}
 
 const WORD_EXTS = new Set([".doc", ".docx", ".docm"]);
 
 const STRINGS_MIN_LEN_DEFAULT = 8;
+const MAJOR_SECTION_PATTERN = /^SECTION\s+(\d+):\s*(.+)$/i;
+const SUBSECTION_PATTERN = /^(\d+(?:\.\d+)+)\t+(.+)$/;
+const CONTENTS_PATTERN = /^contents$/i;
+const COORDINATE_PLACEHOLDER_PATTERN = /^[NSEW]\s*\(decimal\)$/i;
+const HAS_DIGIT_PATTERN = /\d/;
+const KNOWN_PLACEHOLDER_VALUE_PATTERN =
+  /^(n\/a|na|not applicable\.?|tbd|to be determined)$/i;
+const BMP_DESCRIPTION_KEY_PATTERN =
+  /^BMP\s+([A-Z]{1,5}-?\d{1,4})\s+Description$/i;
 
 const NOISE_LINE_PREFIXES = [
   "PAGEREF ",
@@ -81,16 +96,30 @@ function normalizeKey(s: string): string {
 
 function isNoiseLine(line: string): boolean {
   const trimmed = line.trim();
-  if (!trimmed) return true;
-  if (trimmed === "Contents") return true; // TOC header; not meaningful content for extraction
-  if (trimmed === "FORMCHECKBOX") return true;
-  if (trimmed === "FORMTEXT") return true;
-  if (trimmed.startsWith("<")) return true;
+  if (!trimmed) {
+    return true;
+  }
+  if (trimmed === "Contents") {
+    return true; // TOC header; not meaningful content for extraction
+  }
+  if (trimmed === "FORMCHECKBOX") {
+    return true;
+  }
+  if (trimmed === "FORMTEXT") {
+    return true;
+  }
+  if (trimmed.startsWith("<")) {
+    return true;
+  }
   for (const p of NOISE_LINE_PREFIXES) {
-    if (trimmed.startsWith(p)) return true;
+    if (trimmed.startsWith(p)) {
+      return true;
+    }
   }
   for (const c of NOISE_LINE_CONTAINS) {
-    if (trimmed.includes(c)) return true;
+    if (trimmed.includes(c)) {
+      return true;
+    }
   }
   return false;
 }
@@ -113,11 +142,15 @@ function listWordDocs(byEmailDir: string): DocFile[] {
     } catch {
       continue;
     }
-    if (!st.isDirectory()) continue;
+    if (!st.isDirectory()) {
+      continue;
+    }
 
     for (const name of readdirSync(dir)) {
       const ext = extname(name).toLowerCase();
-      if (!WORD_EXTS.has(ext)) continue;
+      if (!WORD_EXTS.has(ext)) {
+        continue;
+      }
       const filePath = join(dir, name);
       result.push({ emailId, fileName: name, filePath });
     }
@@ -127,8 +160,12 @@ function listWordDocs(byEmailDir: string): DocFile[] {
   result.sort((a, b) => {
     const ea = Number.parseInt(a.emailId, 10);
     const eb = Number.parseInt(b.emailId, 10);
-    if (!Number.isNaN(ea) && !Number.isNaN(eb) && ea !== eb) return ea - eb;
-    if (a.emailId !== b.emailId) return a.emailId.localeCompare(b.emailId);
+    if (!(Number.isNaN(ea) || Number.isNaN(eb)) && ea !== eb) {
+      return ea - eb;
+    }
+    if (a.emailId !== b.emailId) {
+      return a.emailId.localeCompare(b.emailId);
+    }
     return a.fileName.localeCompare(b.fileName);
   });
 
@@ -144,7 +181,9 @@ function runStrings(filePath: string, minLen: number): string[] {
 
   if (proc.exitCode !== 0) {
     const err = proc.stderr.toString("utf8").slice(0, 2000);
-    throw new Error(`strings failed (exit=${proc.exitCode}) for ${filePath}: ${err}`);
+    throw new Error(
+      `strings failed (exit=${proc.exitCode}) for ${filePath}: ${err}`
+    );
   }
 
   return proc.stdout
@@ -155,8 +194,10 @@ function runStrings(filePath: string, minLen: number): string[] {
 }
 
 function parseMajorSectionHeading(line: string): string | null {
-  const m = /^SECTION\s+(\d+):\s*(.+)$/i.exec(line);
-  if (!m) return null;
+  const m = MAJOR_SECTION_PATTERN.exec(line);
+  if (!m) {
+    return null;
+  }
   return `SECTION ${m[1]}: ${normalizeWhitespace(m[2] ?? "")}`.trim();
 }
 
@@ -165,35 +206,58 @@ function parseSubsectionHeading(line: string): string | null {
   //
   // Important: require a TAB delimiter to avoid misclassifying numeric value lines
   // like "10.2 Acres" or "1.04 acres" as headings.
-  const m = /^(\d+(?:\.\d+)+)\t+(.+)$/.exec(line);
-  if (!m) return null;
+  const m = SUBSECTION_PATTERN.exec(line);
+  if (!m) {
+    return null;
+  }
   return `${m[1]} ${normalizeWhitespace(m[2] ?? "")}`.trim();
 }
 
 function splitKeyValue(line: string): { key: string; value: string } | null {
   const trimmed = line.trim();
-  if (!trimmed) return null;
+  if (!trimmed) {
+    return null;
+  }
   // Avoid parsing URLs as key/value (e.g. "http://...").
-  if (trimmed.includes("://")) return null;
+  if (trimmed.includes("://")) {
+    return null;
+  }
 
   const idx = trimmed.indexOf(":");
-  if (idx <= 0) return null;
+  if (idx <= 0) {
+    return null;
+  }
   const key = trimmed.slice(0, idx).trim();
   const value = trimmed.slice(idx + 1).trim();
-  if (!key) return null;
+  if (!key) {
+    return null;
+  }
   // Heuristic: real labels tend to be short; long "keys" usually mean we split a sentence
   // like "... (including: ...)" which is not a field label we want to inventory.
-  if (key.length > 80) return null;
+  if (key.length > 80) {
+    return null;
+  }
   return { key, value };
 }
 
-function shouldTakeNextLineAsValue(keyNorm: string, nextValueLine: string): boolean {
+function shouldTakeNextLineAsValue(
+  keyNorm: string,
+  nextValueLine: string
+): boolean {
   const s = normalizeWhitespace(nextValueLine);
-  if (!s) return false;
-  if (/^contents$/i.test(s)) return false;
-  if (s.endsWith(":")) return false;
+  if (!s) {
+    return false;
+  }
+  if (CONTENTS_PATTERN.test(s)) {
+    return false;
+  }
+  if (s.endsWith(":")) {
+    return false;
+  }
   // Template directional placeholders for coordinates; treat as non-values unless digits exist.
-  if (/^[NSEW]\s*\(decimal\)$/i.test(s)) return false;
+  if (COORDINATE_PLACEHOLDER_PATTERN.test(s)) {
+    return false;
+  }
 
   const NUMERIC_VALUE_KEYS = new Set([
     "SWPPP Preparation Date",
@@ -214,7 +278,7 @@ function shouldTakeNextLineAsValue(keyNorm: string, nextValueLine: string): bool
   ]);
 
   if (NUMERIC_VALUE_KEYS.has(keyNorm)) {
-    return /\d/.test(s);
+    return HAS_DIGIT_PATTERN.test(s);
   }
   if (FREE_TEXT_KEYS.has(keyNorm)) {
     return true;
@@ -222,8 +286,12 @@ function shouldTakeNextLineAsValue(keyNorm: string, nextValueLine: string): bool
 
   // Default (should be rare; only used if a key was added to TAKE_NEXT_LINE_AS_VALUE_KEYS
   // but not categorized above).
-  if (/\d/.test(s)) return true;
-  if (/^(n\/a|na|not applicable\.?|tbd|to be determined)$/i.test(s)) return true;
+  if (HAS_DIGIT_PATTERN.test(s)) {
+    return true;
+  }
+  if (KNOWN_PLACEHOLDER_VALUE_PATTERN.test(s)) {
+    return true;
+  }
   return false;
 }
 
@@ -273,9 +341,6 @@ function extractEntriesFromLines(params: {
     "Responsible Staff",
   ]);
 
-  // If we see a "BMP <CODE> Description" line, treat the code as a block for subsequent rows.
-  const BMP_DESC_KEY_RE = /^BMP\s+([A-Z]{1,5}-?\d{1,4})\s+Description$/i;
-
   for (let i = 0; i < params.lines.length; i++) {
     const line = params.lines[i];
 
@@ -314,9 +379,13 @@ function extractEntriesFromLines(params: {
       const valueNorm = normalizeWhitespace(line);
       if (valueNorm !== "") {
         const scopeParts: string[] = [];
-        if (subsection) scopeParts.push(subsection);
-        else if (majorSection) scopeParts.push(majorSection);
-        else scopeParts.push("TITLE");
+        if (subsection) {
+          scopeParts.push(subsection);
+        } else if (majorSection) {
+          scopeParts.push(majorSection);
+        } else {
+          scopeParts.push("TITLE");
+        }
         scopeParts.push(block);
         scopeParts.push(keyNorm);
 
@@ -353,14 +422,14 @@ function extractEntriesFromLines(params: {
       // also appear in other sections (e.g. Section 8 appendices) where capturing
       // unlabeled lines would be mostly noise.
       inContactBlock =
-        (!majorSection && !subsection) || // title page area (before Section 1)
+        !(majorSection || subsection) || // title page area (before Section 1)
         Boolean(subsection?.startsWith("1.2")); // contact info section
       continue;
     }
 
     // BMP block starter
     if (valueNorm !== "") {
-      const bmpMatch = BMP_DESC_KEY_RE.exec(keyNorm);
+      const bmpMatch = BMP_DESCRIPTION_KEY_PATTERN.exec(keyNorm);
       if (bmpMatch?.[1]) {
         block = `BMP ${bmpMatch[1].toUpperCase()}`;
         blockLineIndex = 0;
@@ -387,7 +456,7 @@ function extractEntriesFromLines(params: {
         next.length <= 120;
 
       if (nextLooksLikeValue && TAKE_NEXT_LINE_AS_VALUE_KEYS.has(keyNorm)) {
-        const nextNorm = normalizeWhitespace(next!);
+        const nextNorm = normalizeWhitespace(next ?? "");
         if (shouldTakeNextLineAsValue(keyNorm, nextNorm)) {
           valueNorm = nextNorm;
           i++;
@@ -405,10 +474,16 @@ function extractEntriesFromLines(params: {
     }
 
     const scopeParts: string[] = [];
-    if (subsection) scopeParts.push(subsection);
-    else if (majorSection) scopeParts.push(majorSection);
-    else scopeParts.push("TITLE");
-    if (block) scopeParts.push(block);
+    if (subsection) {
+      scopeParts.push(subsection);
+    } else if (majorSection) {
+      scopeParts.push(majorSection);
+    } else {
+      scopeParts.push("TITLE");
+    }
+    if (block) {
+      scopeParts.push(block);
+    }
     scopeParts.push(keyNorm);
 
     const scopedKey = scopeParts.join(".");
@@ -440,17 +515,34 @@ function extractEntriesFromLines(params: {
   // right after the "1.1 Project/Site Information" heading. We recover them.
   for (let i = 0; i < params.lines.length; i++) {
     const sub = parseSubsectionHeading(params.lines[i] ?? "");
-    if (!sub) continue;
-    if (!sub.startsWith("1.1")) continue;
-    if (!sub.toLowerCase().includes("project/site information")) continue;
+    if (!sub) {
+      continue;
+    }
+    if (!sub.startsWith("1.1")) {
+      continue;
+    }
+    if (!sub.toLowerCase().includes("project/site information")) {
+      continue;
+    }
 
     const rawAfter: string[] = [];
     for (let j = i + 1; j < params.lines.length && rawAfter.length < 5; j++) {
-      const l = params.lines[j]!;
-      if (parseMajorSectionHeading(l) || parseSubsectionHeading(l)) break;
-      if (splitKeyValue(l)) break;
-      if (isNoiseLine(l)) continue;
-      if (l.length > 120) continue;
+      const l = params.lines[j];
+      if (!l) {
+        break;
+      }
+      if (parseMajorSectionHeading(l) || parseSubsectionHeading(l)) {
+        break;
+      }
+      if (splitKeyValue(l)) {
+        break;
+      }
+      if (isNoiseLine(l)) {
+        continue;
+      }
+      if (l.length > 120) {
+        continue;
+      }
       rawAfter.push(normalizeWhitespace(l));
     }
 
@@ -465,7 +557,7 @@ function extractEntriesFromLines(params: {
         }
       }
 
-      const base = `1.1 Project/Site Information.UNLABELED`;
+      const base = "1.1 Project/Site Information.UNLABELED";
       const add = (k: string, v: string) => {
         entries.push({
           docId,
@@ -481,7 +573,9 @@ function extractEntriesFromLines(params: {
       };
       add("project_name", rawAfter[0] ?? "");
       add("address_line1", rawAfter[1] ?? "");
-      if (rawAfter[2]) add("address_line2", rawAfter[2]);
+      if (rawAfter[2]) {
+        add("address_line2", rawAfter[2]);
+      }
       break;
     }
   }
@@ -491,16 +585,26 @@ function extractEntriesFromLines(params: {
 
 function toTsvRow(cols: Array<string | number | null | undefined>): string {
   return cols
-    .map((c) => String(c ?? "").replaceAll("\t", " ").replaceAll("\n", " "))
+    .map((c) =>
+      String(c ?? "")
+        .replaceAll("\t", " ")
+        .replaceAll("\n", " ")
+    )
     .join("\t");
 }
 
-async function main(): Promise<void> {
+function main(): void {
   const { values } = parseArgs({
     args: Bun.argv.slice(2),
     options: {
-      in: { type: "string", default: "apps/narrative/data/intake/eva-to-jayson/by-email" },
-      out: { type: "string", default: "apps/narrative/data/intake/eva-to-jayson/variable-inventory" },
+      in: {
+        type: "string",
+        default: "apps/narrative/data/intake/eva-to-jayson/by-email",
+      },
+      out: {
+        type: "string",
+        default: "apps/narrative/data/intake/eva-to-jayson/variable-inventory",
+      },
       minLen: { type: "string", default: String(STRINGS_MIN_LEN_DEFAULT) },
       limit: { type: "string" },
     },
@@ -509,7 +613,8 @@ async function main(): Promise<void> {
 
   const inDir = String(values.in);
   const outDir = String(values.out);
-  const minLen = Number.parseInt(String(values.minLen), 10) || STRINGS_MIN_LEN_DEFAULT;
+  const minLen =
+    Number.parseInt(String(values.minLen), 10) || STRINGS_MIN_LEN_DEFAULT;
   const limit = values.limit ? Number.parseInt(String(values.limit), 10) : null;
 
   mkdirSync(outDir, { recursive: true });
@@ -517,7 +622,9 @@ async function main(): Promise<void> {
   const docs = listWordDocs(inDir);
   const docsToProcess = limit ? docs.slice(0, limit) : docs;
 
-  console.log(`Scanning ${docsToProcess.length}/${docs.length} Word docs under ${inDir}...`);
+  console.log(
+    `Scanning ${docsToProcess.length}/${docs.length} Word docs under ${inDir}...`
+  );
 
   const entries: Entry[] = [];
   for (const doc of docsToProcess) {
@@ -529,7 +636,7 @@ async function main(): Promise<void> {
   const entriesPath = join(outDir, "entries.jsonl");
   writeFileSync(
     entriesPath,
-    entries.map((e) => JSON.stringify(e)).join("\n") + "\n",
+    `${entries.map((e) => JSON.stringify(e)).join("\n")}\n`,
     "utf8"
   );
 
@@ -542,12 +649,18 @@ async function main(): Promise<void> {
     const agg =
       keyAgg.get(e.key) ??
       (() => {
-        const fresh = { docs: new Set<string>(), values: new Map<string, number>(), blanks: 0 };
+        const fresh = {
+          docs: new Set<string>(),
+          values: new Map<string, number>(),
+          blanks: 0,
+        };
         keyAgg.set(e.key, fresh);
         return fresh;
       })();
     agg.docs.add(e.docId);
-    if (e.value === "") agg.blanks += 1;
+    if (e.value === "") {
+      agg.blanks += 1;
+    }
     agg.values.set(e.value, (agg.values.get(e.value) ?? 0) + 1);
   }
 
@@ -567,8 +680,12 @@ async function main(): Promise<void> {
   });
 
   keyRows.sort((a, b) => {
-    if (b.uniqueValues !== a.uniqueValues) return b.uniqueValues - a.uniqueValues;
-    if (b.docsWithKey !== a.docsWithKey) return b.docsWithKey - a.docsWithKey;
+    if (b.uniqueValues !== a.uniqueValues) {
+      return b.uniqueValues - a.uniqueValues;
+    }
+    if (b.docsWithKey !== a.docsWithKey) {
+      return b.docsWithKey - a.docsWithKey;
+    }
     return a.key.localeCompare(b.key);
   });
 
@@ -613,7 +730,9 @@ async function main(): Promise<void> {
   const byDoc = new Map<string, Map<string, string>>();
   for (const e of entries) {
     const m = byDoc.get(e.docId) ?? new Map<string, string>();
-    if (!byDoc.has(e.docId)) byDoc.set(e.docId, m);
+    if (!byDoc.has(e.docId)) {
+      byDoc.set(e.docId, m);
+    }
     // Prefer first non-empty value.
     if (!m.has(e.key) || (m.get(e.key) === "" && e.value !== "")) {
       m.set(e.key, e.value);
@@ -630,8 +749,21 @@ async function main(): Promise<void> {
         const firstEntry = entries.find((e) => e.docId === docId);
         const emailId = firstEntry?.emailId ?? "";
         const fileName = firstEntry?.fileName ?? "";
-        const m = byDoc.get(docId)!;
-        return toTsvRow([docId, emailId, fileName, ...coreKeys.map((k) => m.get(k) ?? "")]);
+        const m = byDoc.get(docId);
+        if (!m) {
+          return toTsvRow([
+            docId,
+            emailId,
+            fileName,
+            ...coreKeys.map(() => ""),
+          ]);
+        }
+        return toTsvRow([
+          docId,
+          emailId,
+          fileName,
+          ...coreKeys.map((k) => m.get(k) ?? ""),
+        ]);
       }),
       "",
     ].join("\n"),
@@ -641,4 +773,4 @@ async function main(): Promise<void> {
   console.log(`Wrote:\n  ${entriesPath}\n  ${keysTsvPath}\n  ${docsTsvPath}`);
 }
 
-await main();
+main();

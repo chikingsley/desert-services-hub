@@ -4,13 +4,14 @@
  * Finds attachments on project-linked emails that haven't been processed yet,
  * downloads them from Graph API, and runs them through the file analysis pipeline.
  *
- * Handles both initial backfill (clearing ~1,500 unprocessed attachments) AND
- * ongoing processing (new attachments from folder-watcher-linked emails).
+ * Handles both initial backfill AND ongoing processing of new attachments.
  *
- * Timer-based: runs every 2 minutes with a batch of 20 attachments.
+ * Processes 3 files concurrently per batch for faster throughput.
+ * PDFs try fast Kreuzberg extraction first — only scanned PDFs fall back to OCR.
  */
 import { mkdir, unlink } from "node:fs/promises";
 import { join } from "node:path";
+import type { GraphEmailClient } from "@email/client";
 import { createGraphClient } from "@email/sync/config";
 import { db } from "@lib/db/hub";
 import { updateAttachmentExtraction } from "@lib/db/repositories/attachment";
@@ -18,6 +19,7 @@ import { processFilesIntake } from "@/apps/workers/contract-intake/lib/files-int
 
 const LOG = "[attachment-backfill]";
 const BACKFILL_DIR = "/app/data/backfill";
+const CONCURRENCY = 3;
 
 // ============================================================================
 // Types
@@ -70,13 +72,19 @@ function shouldSkip(att: UnprocessedAttachment): boolean {
   const ct = att.content_type?.toLowerCase() ?? "";
 
   // Skip non-processable types (calendar invites, signatures, embedded emails)
-  if (SKIP_CONTENT_TYPES.has(ct)) return true;
+  if (SKIP_CONTENT_TYPES.has(ct)) {
+    return true;
+  }
 
   // Skip inline/signature images: small size OR matching name patterns
   if (ct.startsWith("image/")) {
-    if ((att.size ?? 0) < 50_000) return true;
+    if ((att.size ?? 0) < 50_000) {
+      return true;
+    }
     for (const pattern of INLINE_IMAGE_PATTERNS) {
-      if (pattern.test(att.name)) return true;
+      if (pattern.test(att.name)) {
+        return true;
+      }
     }
   }
 
@@ -120,11 +128,100 @@ const updateDocumentBackfillLinks = db.prepare(`
 `);
 
 // ============================================================================
-// Main
+// Single Attachment Processing
+// ============================================================================
+
+type AttachmentOutcome =
+  | { type: "skipped" }
+  | { type: "succeeded" }
+  | { type: "failed"; error: string };
+
+async function processOneAttachment(
+  att: UnprocessedAttachment,
+  client: GraphEmailClient
+): Promise<AttachmentOutcome> {
+  // Check skip rules first (no download needed)
+  if (shouldSkip(att)) {
+    await updateAttachmentExtraction(att.attachment_id_pk, "skipped");
+    return { type: "skipped" };
+  }
+
+  // File extension from attachment name
+  const ext = att.name.includes(".")
+    ? att.name.split(".").pop()?.toLowerCase()
+    : "bin";
+  const localPath = join(
+    BACKFILL_DIR,
+    `${att.email_id}-${att.attachment_id_pk}.${ext}`
+  );
+
+  // Download from Graph API
+  console.log(
+    `${LOG}   Downloading: "${att.name}" (${att.content_type}, ${att.size ?? "?"} bytes) from ${att.mailbox_email}`
+  );
+
+  const buffer = await client.downloadAttachment(
+    att.message_id,
+    att.graph_attachment_id,
+    att.mailbox_email
+  );
+
+  await Bun.write(localPath, buffer);
+
+  try {
+    // Run through the file analysis pipeline (Kreuzberg-first for PDFs, OCR fallback)
+    const results = await processFilesIntake({
+      attachmentPaths: [localPath],
+      originalSubject: att.subject ?? "",
+      originalFrom: att.from_email ?? "",
+      bodyText: "",
+      forwarderEmail: att.mailbox_email,
+    });
+
+    // Link document records to email, attachment, and project
+    let anySuccess = false;
+    for (const r of results) {
+      if (r.documentId) {
+        await updateDocumentBackfillLinks.run(
+          r.documentId,
+          att.email_id,
+          att.attachment_id_pk,
+          att.project_id
+        );
+        anySuccess = true;
+      }
+    }
+
+    if (anySuccess) {
+      await updateAttachmentExtraction(att.attachment_id_pk, "success");
+      console.log(`${LOG}   OK: ${att.name} -> project #${att.project_id}`);
+      return { type: "succeeded" };
+    }
+
+    const errMsg = results[0]?.error ?? "No document created";
+    await updateAttachmentExtraction(
+      att.attachment_id_pk,
+      "failed",
+      null,
+      errMsg
+    );
+    return { type: "failed", error: `${att.name}: ${errMsg}` };
+  } finally {
+    // Clean up temp file
+    try {
+      await unlink(localPath);
+    } catch {
+      // Non-fatal
+    }
+  }
+}
+
+// ============================================================================
+// Main — Concurrent Processing
 // ============================================================================
 
 export async function processUnprocessedAttachments(
-  batchSize = 20
+  batchSize = 50
 ): Promise<BackfillResult> {
   const result: BackfillResult = {
     processed: 0,
@@ -140,106 +237,62 @@ export async function processUnprocessedAttachments(
     return result;
   }
 
-  console.log(`${LOG} Processing batch of ${attachments.length} attachments`);
+  console.log(
+    `${LOG} Processing batch of ${attachments.length} attachments (concurrency: ${CONCURRENCY})`
+  );
 
   await mkdir(BACKFILL_DIR, { recursive: true });
 
   // Single Graph client for the entire batch (token is cached internally)
   const client = createGraphClient();
 
-  for (const att of attachments) {
-    try {
-      // Check skip rules first (no download needed)
-      if (shouldSkip(att)) {
-        await updateAttachmentExtraction(att.attachment_id_pk, "skipped");
-        result.skipped++;
-        continue;
-      }
+  // Process in chunks of CONCURRENCY
+  for (let i = 0; i < attachments.length; i += CONCURRENCY) {
+    const chunk = attachments.slice(i, i + CONCURRENCY);
 
-      result.processed++;
-
-      // File extension from attachment name
-      const ext = att.name.includes(".")
-        ? att.name.split(".").pop()!.toLowerCase()
-        : "bin";
-      const localPath = join(
-        BACKFILL_DIR,
-        `${att.email_id}-${att.attachment_id_pk}.${ext}`
-      );
-
-      // Download from Graph API
-      console.log(
-        `${LOG}   Downloading: "${att.name}" (${att.content_type}, ${att.size ?? "?"} bytes) from ${att.mailbox_email}`
-      );
-
-      const buffer = await client.downloadAttachment(
-        att.message_id,
-        att.graph_attachment_id,
-        att.mailbox_email
-      );
-
-      await Bun.write(localPath, buffer);
-
-      // Run through the file analysis pipeline (PDF parse, image OCR, etc.)
-      const results = await processFilesIntake({
-        attachmentPaths: [localPath],
-        originalSubject: att.subject ?? "",
-        originalFrom: att.from_email ?? "",
-        bodyText: "",
-        forwarderEmail: att.mailbox_email,
-      });
-
-      // Link document records to email, attachment, and project
-      let anySuccess = false;
-      for (const r of results) {
-        if (r.documentId) {
-          await updateDocumentBackfillLinks.run(
-            r.documentId,
-            att.email_id,
+    const outcomes = await Promise.allSettled(
+      chunk.map(async (att) => {
+        try {
+          return await processOneAttachment(att, client);
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err);
+          console.error(`${LOG}   FAIL: ${att.name}: ${msg}`);
+          await updateAttachmentExtraction(
             att.attachment_id_pk,
-            att.project_id
+            "failed",
+            null,
+            msg.slice(0, 1000)
           );
-          anySuccess = true;
+          return { type: "failed" as const, error: `${att.name}: ${msg}` };
         }
-      }
+      })
+    );
 
-      // Update attachment extraction status
-      if (anySuccess) {
-        await updateAttachmentExtraction(att.attachment_id_pk, "success");
-        result.succeeded++;
-        console.log(
-          `${LOG}   OK: ${att.name} -> project #${att.project_id}`
-        );
-      } else {
-        const errMsg = results[0]?.error ?? "No document created";
-        await updateAttachmentExtraction(
-          att.attachment_id_pk,
-          "failed",
-          null,
-          errMsg
-        );
-        result.failed++;
-        result.errors.push(`${att.name}: ${errMsg}`);
-      }
+    for (const outcome of outcomes) {
+      const o =
+        outcome.status === "fulfilled"
+          ? outcome.value
+          : { type: "failed" as const, error: String(outcome.reason) };
 
-      // Clean up temp file
-      try {
-        await unlink(localPath);
-      } catch {
-        // Non-fatal
+      switch (o.type) {
+        case "skipped":
+          result.skipped++;
+          break;
+        case "succeeded":
+          result.processed++;
+          result.succeeded++;
+          break;
+        case "failed":
+          result.processed++;
+          result.failed++;
+          result.errors.push(o.error);
+          break;
+        default:
+          result.processed++;
+          result.failed++;
+          result.errors.push("Unknown outcome type");
+          break;
       }
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      console.error(`${LOG}   FAIL: ${att.name}: ${msg}`);
-
-      await updateAttachmentExtraction(
-        att.attachment_id_pk,
-        "failed",
-        null,
-        msg.slice(0, 1000)
-      );
-      result.failed++;
-      result.errors.push(`${att.name}: ${msg}`);
     }
   }
 

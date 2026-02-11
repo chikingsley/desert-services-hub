@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+
 /**
  * Desert SSSP CLI
  *
@@ -7,11 +8,11 @@
  *   bun apps/cli-tools/sssp-cli/bin/cli.ts generate --in <input.json> --out <output.pdf>
  */
 
-import { parseArgs } from "node:util";
-import { dirname, resolve } from "node:path";
 import { mkdirSync } from "node:fs";
-import { templateDoc } from "../src/template";
+import { dirname, resolve } from "node:path";
+import { parseArgs } from "node:util";
 import { generatePdf } from "../src/generate";
+import { templateDoc } from "../src/template";
 
 function ensureDir(path: string) {
   mkdirSync(dirname(path), { recursive: true });
@@ -42,10 +43,12 @@ if (!cmd || cmd === "--help" || cmd === "-h") {
 
 if (cmd === "init") {
   const out = Bun.argv[3];
-  if (!out) die("init requires an output path: init <output.json>");
+  if (!out) {
+    die("init requires an output path: init <output.json>");
+  }
   const outPath = resolve(out);
   ensureDir(outPath);
-  await Bun.write(outPath, JSON.stringify(templateDoc(), null, 2) + "\n");
+  await Bun.write(outPath, `${JSON.stringify(templateDoc(), null, 2)}\n`);
   // eslint-disable-next-line no-console
   console.log(`Wrote template JSON: ${outPath}`);
   process.exit(0);
@@ -62,7 +65,7 @@ if (cmd === "generate") {
 
   const inPath = values.in ? resolve(values.in) : null;
   const outPath = values.out ? resolve(values.out) : null;
-  if (!inPath || !outPath) {
+  if (!(inPath && outPath)) {
     die("generate requires --in <input.json> --out <output.pdf>");
   }
   ensureDir(outPath);
@@ -73,4 +76,3 @@ if (cmd === "generate") {
 }
 
 die(`Unknown command: ${cmd}`);
-

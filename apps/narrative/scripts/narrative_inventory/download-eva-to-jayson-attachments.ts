@@ -10,28 +10,27 @@
  *   finally tries Eva's mailbox via Graph filter by internetMessageId.
  *
  * Usage:
- *   bun apps/narrative/scripts/download_eva_to_jayson_attachments.ts --limit 5
- *   bun apps/narrative/scripts/download_eva_to_jayson_attachments.ts --since 2024-11-01
- *   bun apps/narrative/scripts/download_eva_to_jayson_attachments.ts
+ *   bun apps/narrative/scripts/download-eva-to-jayson-attachments.ts --limit 5
+ *   bun apps/narrative/scripts/download-eva-to-jayson-attachments.ts --since 2024-11-01
+ *   bun apps/narrative/scripts/download-eva-to-jayson-attachments.ts
  *
  * Notes:
  * - Requires AZURE_* Graph credentials and DATABASE_URL to be present (repo .env is fine; Bun loads it).
  * - This is a read-only operation against mailboxes.
  */
 
-import { parseArgs } from "node:util";
 import {
+  appendFileSync,
   existsSync,
   mkdirSync,
   readdirSync,
-  writeFileSync,
-  appendFileSync,
   unlinkSync,
+  writeFileSync,
 } from "node:fs";
 import { join } from "node:path";
-
-import { db } from "@lib/db/hub";
+import { parseArgs } from "node:util";
 import { getAppClient } from "@email/commands/config";
+import { db } from "@lib/db/hub";
 
 const EVA = "eva@desertservices.net";
 const JAYSON = "jayson@desertservices.net";
@@ -52,7 +51,7 @@ function escapeODataStringLiteral(value: string): string {
   return value.replaceAll("'", "''");
 }
 
-type EmailRow = {
+interface EmailRow {
   email_db_id: number;
   message_id: string;
   mailbox_email: string;
@@ -60,14 +59,14 @@ type EmailRow = {
   subject: string;
   internet_message_id: string | null;
   attachment_names: string;
-};
+}
 
-type AltRow = {
+interface AltRow {
   email_db_id: number;
   message_id: string;
   mailbox_email: string;
   received_at: string;
-};
+}
 
 async function downloadWordAttachmentsFromMessage(params: {
   messageId: string;
@@ -76,7 +75,10 @@ async function downloadWordAttachmentsFromMessage(params: {
 }): Promise<{ downloaded: string[]; available: string[] }> {
   const client = getAppClient();
 
-  const attachments = await client.getAttachments(params.messageId, params.mailboxEmail);
+  const attachments = await client.getAttachments(
+    params.messageId,
+    params.mailboxEmail
+  );
   // "Inline" usually means signature images, but we've seen Word docs show up
   // as inline when attached as cloud/reference files. Keep Word docs regardless
   // of isInline.
@@ -144,7 +146,11 @@ function hasDoneMarker(outDir: string): boolean {
 }
 
 function markDone(outDir: string, payload: Record<string, unknown>): void {
-  writeFileSync(join(outDir, ".done.json"), `${JSON.stringify(payload, null, 2)}\n`, "utf8");
+  writeFileSync(
+    join(outDir, ".done.json"),
+    `${JSON.stringify(payload, null, 2)}\n`,
+    "utf8"
+  );
   const failedPath = join(outDir, ".failed.json");
   if (existsSync(failedPath)) {
     unlinkSync(failedPath);
@@ -152,11 +158,17 @@ function markDone(outDir: string, payload: Record<string, unknown>): void {
 }
 
 function markFailed(outDir: string, payload: Record<string, unknown>): void {
-  writeFileSync(join(outDir, ".failed.json"), `${JSON.stringify(payload, null, 2)}\n`, "utf8");
+  writeFileSync(
+    join(outDir, ".failed.json"),
+    `${JSON.stringify(payload, null, 2)}\n`,
+    "utf8"
+  );
 }
 
-function hasAnyWordFiles(outDir: string): boolean {
-  if (!existsSync(outDir)) return false;
+function _hasAnyWordFiles(outDir: string): boolean {
+  if (!existsSync(outDir)) {
+    return false;
+  }
   return readdirSync(outDir).some((name) => WORD_EXT_RE.test(name));
 }
 
@@ -164,7 +176,10 @@ async function main(): Promise<void> {
   const { values } = parseArgs({
     args: Bun.argv.slice(2),
     options: {
-      out: { type: "string", default: "apps/narrative/data/intake/eva-to-jayson" },
+      out: {
+        type: "string",
+        default: "apps/narrative/data/intake/eva-to-jayson",
+      },
       since: { type: "string" }, // YYYY-MM-DD
       limit: { type: "string" },
       dryRun: { type: "boolean", default: false },
@@ -185,7 +200,11 @@ async function main(): Promise<void> {
   const resultsTsvPath = join(outBase, "download-results.tsv");
 
   // Fresh results file per run; keep the raw emails list stable.
-  writeFileSync(resultsTsvPath, "email_db_id\treceived_at\tsubject\tstatus\tused_mailbox\tused_email_db_id\tdownloaded_count\tdownloaded_names\n", "utf8");
+  writeFileSync(
+    resultsTsvPath,
+    "email_db_id\treceived_at\tsubject\tstatus\tused_mailbox\tused_email_db_id\tdownloaded_count\tdownloaded_names\n",
+    "utf8"
+  );
 
   let query = `
     select
@@ -207,16 +226,17 @@ async function main(): Promise<void> {
   const params: unknown[] = [JAYSON];
 
   if (sinceDate) {
-    query += ` and e.received_at >= ?`;
+    query += " and e.received_at >= ?";
     params.push(sinceDate.toISOString());
   }
 
-  query += ` order by e.received_at desc`;
+  query += " order by e.received_at desc";
 
   const rows = await db.query<EmailRow>(query).all(...params);
 
   // Write a stable index of the input set.
-  const tsvHeader = "email_db_id\tmessage_id\tmailbox_email\treceived_at\tsubject\tinternet_message_id\tattachment_names\n";
+  const tsvHeader =
+    "email_db_id\tmessage_id\tmailbox_email\treceived_at\tsubject\tinternet_message_id\tattachment_names\n";
   const tsvLines = rows.map((r) =>
     [
       r.email_db_id,
@@ -264,8 +284,16 @@ async function main(): Promise<void> {
       continue;
     }
 
-    const attempts: Array<{ mailboxEmail: string; messageId: string; emailDbId?: number }> = [];
-    attempts.push({ mailboxEmail: JAYSON, messageId: row.message_id, emailDbId: row.email_db_id });
+    const attempts: Array<{
+      mailboxEmail: string;
+      messageId: string;
+      emailDbId?: number;
+    }> = [];
+    attempts.push({
+      mailboxEmail: JAYSON,
+      messageId: row.message_id,
+      emailDbId: row.email_db_id,
+    });
 
     // Add DB-known alternates by internet_message_id (often includes Eva's copy).
     if (row.internet_message_id) {
@@ -325,11 +353,15 @@ async function main(): Promise<void> {
         let usedEmailDbId: number | null = attempt.emailDbId ?? null;
 
         if (messageId === "__LOOKUP_BY_INTERNET_MESSAGE_ID__") {
+          const internetMessageId = row.internet_message_id;
+          if (!internetMessageId) {
+            continue;
+          }
           const client = getAppClient();
           const matches = await client.filterEmails({
             userId: EVA,
             limit: 5,
-            filter: `internetMessageId eq '${escapeODataStringLiteral(row.internet_message_id!)}'`,
+            filter: `internetMessageId eq '${escapeODataStringLiteral(internetMessageId)}'`,
           });
           const match = matches.find((m) => m.hasAttachments) ?? matches[0];
           if (!match) {
@@ -370,14 +402,15 @@ async function main(): Promise<void> {
         break;
       } catch (err) {
         lastError = err;
-        continue;
       }
     }
 
     if (!succeeded) {
       markFailed(outDir, {
         ...baseLog,
-        error: String((lastError as Error | null)?.message ?? lastError ?? "unknown"),
+        error: String(
+          (lastError as Error | null)?.message ?? lastError ?? "unknown"
+        ),
       });
       appendFileSync(
         resultsTsvPath,

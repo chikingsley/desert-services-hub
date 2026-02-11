@@ -46,10 +46,9 @@ export default {
       return new Response("ok", { headers: { "Content-Type": "text/plain" } });
     }
 
-    return new Response(
-      "Intake Worker\n\nEndpoints:\n  GET /health",
-      { headers: { "Content-Type": "text/plain" } }
-    );
+    return new Response("Intake Worker\n\nEndpoints:\n  GET /health", {
+      headers: { "Content-Type": "text/plain" },
+    });
   },
 
   async email(
@@ -83,8 +82,14 @@ export default {
         bodyText.replace(FWD_PREFIX_RE, "").trim().length >= MIN_BODY_LENGTH;
 
       // Proceed if we have attachments, links, OR meaningful body text
-      if (attachments.length === 0 && fileLinks.length === 0 && !bodyHasContent) {
-        console.log(`${LOG} No attachments, links, or body content, forwarding only`);
+      if (
+        attachments.length === 0 &&
+        fileLinks.length === 0 &&
+        !bodyHasContent
+      ) {
+        console.log(
+          `${LOG} No attachments, links, or body content, forwarding only`
+        );
         await message.forward("chi@desertservices.net");
         return;
       }
@@ -129,6 +134,7 @@ export default {
 const ONEDRIVE_RE = /https:\/\/[^\s"<>]*sharepoint\.com\/:[a-z]:\/[^\s"<>]*/gi;
 const EGNYTE_RE = /https:\/\/[^\s"<>]+\.egnyte\.com\/fl\/[^\s"<>]*/gi;
 const DROPBOX_RE = /https:\/\/(?:www\.)?dropbox\.com\/[^\s"<>]*/gi;
+const TRAILING_URL_ARTIFACT_PATTERN = /['">\s]+$/;
 
 /**
  * Extract file sharing links from email HTML and text body.
@@ -139,11 +145,11 @@ function extractFileLinks(html: string, text: string): FileLink[] {
   const seen = new Set<string>();
 
   // Search both HTML and text (HTML has full URLs, text may have some too)
-  const combined = (html || "") + "\n" + (text || "");
+  const combined = `${html || ""}\n${text || ""}`;
 
   for (const match of combined.matchAll(ONEDRIVE_RE)) {
     // Clean trailing HTML artifacts (quotes, angle brackets)
-    const url = match[0].replace(/['">\s]+$/, "");
+    const url = match[0].replace(TRAILING_URL_ARTIFACT_PATTERN, "");
     if (!seen.has(url)) {
       seen.add(url);
       links.push({ url, source: "onedrive" });
@@ -151,7 +157,7 @@ function extractFileLinks(html: string, text: string): FileLink[] {
   }
 
   for (const match of combined.matchAll(EGNYTE_RE)) {
-    const url = match[0].replace(/['">\s]+$/, "");
+    const url = match[0].replace(TRAILING_URL_ARTIFACT_PATTERN, "");
     if (!seen.has(url)) {
       seen.add(url);
       links.push({ url, source: "egnyte" });
@@ -159,7 +165,7 @@ function extractFileLinks(html: string, text: string): FileLink[] {
   }
 
   for (const match of combined.matchAll(DROPBOX_RE)) {
-    const url = match[0].replace(/['">\s]+$/, "");
+    const url = match[0].replace(TRAILING_URL_ARTIFACT_PATTERN, "");
     if (!seen.has(url)) {
       seen.add(url);
       links.push({ url, source: "dropbox" });
@@ -179,8 +185,7 @@ async function postToHub(
   _subject: string
 ): Promise<void> {
   const hubUrl =
-    (env.HUB_WEBHOOK_URL || "https://webhooks.desertservices.app") +
-    HUB_PATH;
+    (env.HUB_WEBHOOK_URL || "https://webhooks.desertservices.app") + HUB_PATH;
 
   try {
     const response = await fetch(hubUrl, {
@@ -218,7 +223,9 @@ function extractOriginalSender(body: string): string {
 }
 
 function guessExtension(mimeType?: string): string {
-  if (!mimeType) return "bin";
+  if (!mimeType) {
+    return "bin";
+  }
   const map: Record<string, string> = {
     "application/pdf": "pdf",
     "image/png": "png",
@@ -230,8 +237,7 @@ function guessExtension(mimeType?: string): string {
     "text/csv": "csv",
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
       "docx",
-    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
-      "xlsx",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "xlsx",
   };
   return map[mimeType] ?? "bin";
 }

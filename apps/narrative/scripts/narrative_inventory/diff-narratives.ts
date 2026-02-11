@@ -6,16 +6,16 @@
  * - all: diff all extracted keys, grouped by major/subsection
  *
  * Usage:
- *   bun apps/narrative/scripts/diff_narratives.ts --auto
- *   bun apps/narrative/scripts/diff_narratives.ts --a 10892 --b 10994
- *   bun apps/narrative/scripts/diff_narratives.ts --a <docId> --b <docId> --mode all
+ *   bun apps/narrative/scripts/diff-narratives.ts --auto
+ *   bun apps/narrative/scripts/diff-narratives.ts --a 10892 --b 10994
+ *   bun apps/narrative/scripts/diff-narratives.ts --a <docId> --b <docId> --mode all
  */
 
-import { parseArgs } from "node:util";
-import { readFileSync, writeFileSync, existsSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { parseArgs } from "node:util";
 
-type Entry = {
+interface Entry {
   docId: string;
   emailId: string;
   fileName: string;
@@ -25,9 +25,19 @@ type Entry = {
   block: string | null;
   key: string;
   value: string;
-};
+}
 
-type DocMeta = { emailId: string; fileName: string; filePath: string };
+interface DocMeta {
+  emailId: string;
+  fileName: string;
+  filePath: string;
+}
+
+const CITY_STATE_ZIP_PATTERN =
+  /^\s*(.+?),\s*([A-Z]{2})\s+(\d{5}(?:-\d{4})?)\s*$/;
+const EMAIL_PATTERN = /\b[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+\b/;
+const PHONE_PATTERN = /(\+?1[\s\-.]?)?(\(?\d{3}\)?[\s\-.]?\d{3}[\s\-.]?\d{4})/;
+const DIGITS_ONLY_PATTERN = /^\d+$/;
 
 function normalizeWhitespace(s: string): string {
   return s.replace(/\s+/g, " ").trim();
@@ -37,45 +47,61 @@ function normalizeValue(s: string): string {
   return normalizeWhitespace(s).toLowerCase();
 }
 
-function tryParseCityStateZip(s: string): { city: string; state: string; zip: string } | null {
-  const m = /^\s*(.+?),\s*([A-Z]{2})\s+(\d{5}(?:-\d{4})?)\s*$/.exec(s);
-  if (!m) return null;
-  return { city: m[1]!.trim(), state: m[2]!, zip: m[3]! };
+function tryParseCityStateZip(
+  s: string
+): { city: string; state: string; zip: string } | null {
+  const m = CITY_STATE_ZIP_PATTERN.exec(s);
+  if (!m) {
+    return null;
+  }
+  const city = m[1]?.trim();
+  const state = m[2];
+  const zip = m[3];
+  if (!(city && state && zip)) {
+    return null;
+  }
+  return { city, state, zip };
 }
 
 function findFirstNonEmpty(doc: Map<string, string>, keys: string[]): string {
   for (const k of keys) {
     const v = doc.get(k);
-    if (v && v.trim() !== "") return v;
+    if (v && v.trim() !== "") {
+      return v;
+    }
   }
   return "";
 }
 
 function findEmailInValues(values: string[]): string {
   for (const v of values) {
-    const m = /\b[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+\b/.exec(v);
-    if (m?.[0]) return m[0];
+    const m = EMAIL_PATTERN.exec(v);
+    if (m?.[0]) {
+      return m[0];
+    }
   }
   return "";
 }
 
 function findPhoneInValues(values: string[]): string {
   for (const v of values) {
-    const m = /(\+?1[\s\-\.]?)?(\(?\d{3}\)?[\s\-\.]?\d{3}[\s\-\.]?\d{4})/.exec(v);
-    if (m?.[0]) return normalizeWhitespace(m[0]);
+    const m = PHONE_PATTERN.exec(v);
+    if (m?.[0]) {
+      return normalizeWhitespace(m[0]);
+    }
   }
   return "";
 }
 
-type CanonField = {
+interface CanonField {
   id: string;
   label: string;
   sources?: string[];
   derive?: (doc: Map<string, string>, allKeys: string[]) => string;
-};
+}
 
 function canonicalFields(): { group: string; fields: CanonField[] }[] {
-  // Keep in sync with report_variable_inventory.ts (duplicated on purpose for script isolation).
+  // Keep in sync with report-variable-inventory.ts (duplicated on purpose for script isolation).
   return [
     {
       group: "Project",
@@ -100,7 +126,10 @@ function canonicalFields(): { group: string; fields: CanonField[] }[] {
         {
           id: "project.city_state_zip",
           label: "Project city/state/zip",
-          sources: ["1.1 Project/Site Information.UNLABELED.address_line2", "TITLE.SWPPP Contact(s).Line3"],
+          sources: [
+            "1.1 Project/Site Information.UNLABELED.address_line2",
+            "TITLE.SWPPP Contact(s).Line3",
+          ],
         },
         {
           id: "project.city",
@@ -117,7 +146,9 @@ function canonicalFields(): { group: string; fields: CanonField[] }[] {
         {
           id: "project.county",
           label: "County",
-          sources: ["1.1 Project/Site Information.County or Similar Subdivision"],
+          sources: [
+            "1.1 Project/Site Information.County or Similar Subdivision",
+          ],
         },
       ],
     },
@@ -132,7 +163,9 @@ function canonicalFields(): { group: string; fields: CanonField[] }[] {
               "1.1 Project/Site Information.AZPDES project or permit tracking number*",
               "TITLE.SWPPP Contact(s).AZPDES number",
             ]);
-            if (azpdes) return azpdes;
+            if (azpdes) {
+              return azpdes;
+            }
             const azcon = findFirstNonEmpty(doc, [
               "1.1 Project/Site Information.AZCON project or permit tracking number*",
               "TITLE.SWPPP Contact(s).AZCON number",
@@ -161,7 +194,9 @@ function canonicalFields(): { group: string; fields: CanonField[] }[] {
         {
           id: "dates.project_completion",
           label: "Estimated project completion date",
-          sources: ["1.3 Nature and Sequence of Construction Activity.Estimated Project Completion Date"],
+          sources: [
+            "1.3 Nature and Sequence of Construction Activity.Estimated Project Completion Date",
+          ],
         },
       ],
     },
@@ -171,17 +206,26 @@ function canonicalFields(): { group: string; fields: CanonField[] }[] {
         {
           id: "operator.company",
           label: "Operator company",
-          sources: ["1.2 Contact Information/Responsable Parties.Operator(s).Line1", "TITLE.Operator(s).Line1"],
+          sources: [
+            "1.2 Contact Information/Responsable Parties.Operator(s).Line1",
+            "TITLE.Operator(s).Line1",
+          ],
         },
         {
           id: "operator.contact_name",
           label: "Operator contact name",
-          sources: ["1.2 Contact Information/Responsable Parties.Operator(s).Contact", "TITLE.Operator(s).Contact"],
+          sources: [
+            "1.2 Contact Information/Responsable Parties.Operator(s).Contact",
+            "TITLE.Operator(s).Contact",
+          ],
         },
         {
           id: "operator.phone",
           label: "Operator phone",
-          sources: ["1.2 Contact Information/Responsable Parties.Operator(s).Phone", "TITLE.Phone"],
+          sources: [
+            "1.2 Contact Information/Responsable Parties.Operator(s).Phone",
+            "TITLE.Phone",
+          ],
         },
         {
           id: "operator.email",
@@ -191,10 +235,14 @@ function canonicalFields(): { group: string; fields: CanonField[] }[] {
             for (const k of allKeys) {
               if (
                 k.startsWith("TITLE.Operator(s).Line") ||
-                k.startsWith("1.2 Contact Information/Responsable Parties.Operator(s).Line")
+                k.startsWith(
+                  "1.2 Contact Information/Responsable Parties.Operator(s).Line"
+                )
               ) {
                 const v = doc.get(k);
-                if (v) values.push(v);
+                if (v) {
+                  values.push(v);
+                }
               }
             }
             return findEmailInValues(values);
@@ -203,19 +251,32 @@ function canonicalFields(): { group: string; fields: CanonField[] }[] {
         {
           id: "swppp_contact.name",
           label: "SWPPP contact name (best-effort)",
-          sources: ["TITLE.SWPPP Contact(s).Line1", "1.2 Contact Information/Responsable Parties.SWPPP Contact(s).Line1"],
+          sources: [
+            "TITLE.SWPPP Contact(s).Line1",
+            "1.2 Contact Information/Responsable Parties.SWPPP Contact(s).Line1",
+          ],
         },
         {
           id: "emergency.contact_name",
           label: "Emergency contact name (best-effort)",
           derive: (doc, allKeys) => {
-            const line2 = doc.get("1.2 Contact Information/Responsable Parties.Emergency 24-Hour Contact.Line2");
-            if (line2 && line2.trim()) return line2.trim();
+            const line2 = doc.get(
+              "1.2 Contact Information/Responsable Parties.Emergency 24-Hour Contact.Line2"
+            );
+            if (line2?.trim()) {
+              return line2.trim();
+            }
             const values: string[] = [];
             for (const k of allKeys) {
-              if (k.startsWith("1.2 Contact Information/Responsable Parties.Emergency 24-Hour Contact.Line")) {
+              if (
+                k.startsWith(
+                  "1.2 Contact Information/Responsable Parties.Emergency 24-Hour Contact.Line"
+                )
+              ) {
                 const v = doc.get(k);
-                if (v) values.push(v);
+                if (v) {
+                  values.push(v);
+                }
               }
             }
             return values[0]?.trim() ?? "";
@@ -227,9 +288,15 @@ function canonicalFields(): { group: string; fields: CanonField[] }[] {
           derive: (doc, allKeys) => {
             const values: string[] = [];
             for (const k of allKeys) {
-              if (k.startsWith("1.2 Contact Information/Responsable Parties.Emergency 24-Hour Contact.Line")) {
+              if (
+                k.startsWith(
+                  "1.2 Contact Information/Responsable Parties.Emergency 24-Hour Contact.Line"
+                )
+              ) {
                 const v = doc.get(k);
-                if (v) values.push(v);
+                if (v) {
+                  values.push(v);
+                }
               }
             }
             return findPhoneInValues(values);
@@ -248,12 +315,16 @@ function canonicalFields(): { group: string; fields: CanonField[] }[] {
         {
           id: "site.disturbed_area",
           label: "Disturbed area (raw)",
-          sources: ["1.5 Construction Site Estimates.Construction site area to be disturbed"],
+          sources: [
+            "1.5 Construction Site Estimates.Construction site area to be disturbed",
+          ],
         },
         {
           id: "site.soil_types",
           label: "Soil type(s)",
-          sources: ["1.4 Soils, Slopes, Vegetation, and Current Drainage Patterns.Soil type(s)"],
+          sources: [
+            "1.4 Soils, Slopes, Vegetation, and Current Drainage Patterns.Soil type(s)",
+          ],
         },
         {
           id: "site.receiving_waters",
@@ -275,8 +346,12 @@ function computeCanonicalValue(
   allKeys: string[],
   field: CanonField
 ): string {
-  if (field.derive) return normalizeWhitespace(field.derive(doc, allKeys));
-  if (field.sources) return normalizeWhitespace(findFirstNonEmpty(doc, field.sources));
+  if (field.derive) {
+    return normalizeWhitespace(field.derive(doc, allKeys));
+  }
+  if (field.sources) {
+    return normalizeWhitespace(findFirstNonEmpty(doc, field.sources));
+  }
   return "";
 }
 
@@ -284,7 +359,10 @@ function main(): void {
   const { values } = parseArgs({
     args: Bun.argv.slice(2),
     options: {
-      dir: { type: "string", default: "apps/narrative/data/intake/eva-to-jayson/variable-inventory" },
+      dir: {
+        type: "string",
+        default: "apps/narrative/data/intake/eva-to-jayson/variable-inventory",
+      },
       a: { type: "string" },
       b: { type: "string" },
       mode: { type: "string", default: "canonical" }, // canonical | all
@@ -296,26 +374,39 @@ function main(): void {
 
   const invDir = String(values.dir);
   const entriesPath = join(invDir, "entries.jsonl");
-  if (!existsSync(entriesPath)) throw new Error(`Missing required file: ${entriesPath}`);
+  if (!existsSync(entriesPath)) {
+    throw new Error(`Missing required file: ${entriesPath}`);
+  }
 
   const entriesText = readFileSync(entriesPath, "utf8");
 
   const docMaps = new Map<string, Map<string, string>>();
   const docMeta = new Map<string, DocMeta>();
-  const keyScope = new Map<string, { major: string; sub: string; block: string | null }>();
+  const keyScope = new Map<
+    string,
+    { major: string; sub: string; block: string | null }
+  >();
 
   for (const line of entriesText.split("\n")) {
     const trimmed = line.trim();
-    if (!trimmed) continue;
+    if (!trimmed) {
+      continue;
+    }
     const e = JSON.parse(trimmed) as Entry;
     const m = docMaps.get(e.docId) ?? new Map<string, string>();
-    if (!docMaps.has(e.docId)) docMaps.set(e.docId, m);
+    if (!docMaps.has(e.docId)) {
+      docMaps.set(e.docId, m);
+    }
     const existing = m.get(e.key) ?? "";
     if (!existing || (existing === "" && e.value !== "")) {
       m.set(e.key, e.value);
     }
     if (!docMeta.has(e.docId)) {
-      docMeta.set(e.docId, { emailId: e.emailId, fileName: e.fileName, filePath: e.filePath });
+      docMeta.set(e.docId, {
+        emailId: e.emailId,
+        fileName: e.fileName,
+        filePath: e.filePath,
+      });
     }
     if (!keyScope.has(e.key)) {
       const major = e.majorSection ?? "TITLE";
@@ -325,7 +416,9 @@ function main(): void {
   }
 
   const docIds = [...docMaps.keys()].sort();
-  const allKeys = [...new Set([...docMaps.values()].flatMap((m) => [...m.keys()]))].sort();
+  const allKeys = [
+    ...new Set([...docMaps.values()].flatMap((m) => [...m.keys()])),
+  ].sort();
 
   const mode = String(values.mode);
   if (mode !== "canonical" && mode !== "all") {
@@ -337,16 +430,22 @@ function main(): void {
 
   const resolveDocId = (sel: string): string => {
     // If sel matches docId exactly, use it.
-    if (docMaps.has(sel)) return sel;
+    if (docMaps.has(sel)) {
+      return sel;
+    }
     // If sel looks like an emailId (digits), pick the first docId starting with "<emailId>:"
-    if (/^\d+$/.test(sel)) {
+    if (DIGITS_ONLY_PATTERN.test(sel)) {
       const prefix = `${sel}:`;
       const found = docIds.find((d) => d.startsWith(prefix));
-      if (found) return found;
+      if (found) {
+        return found;
+      }
     }
     // As a last resort, substring match.
     const found = docIds.find((d) => d.includes(sel));
-    if (found) return found;
+    if (found) {
+      return found;
+    }
     throw new Error(`Could not resolve doc selector: ${sel}`);
   };
 
@@ -354,9 +453,12 @@ function main(): void {
   let bDocId = values.b ? resolveDocId(String(values.b)) : "";
 
   // Auto-select the most-different pair across canonical fields.
-  if (values.auto || (!aDocId && !bDocId)) {
+  if (values.auto || !(aDocId || bDocId)) {
     const perDoc = docIds.map((docId) => {
-      const doc = docMaps.get(docId)!;
+      const doc = docMaps.get(docId);
+      if (!doc) {
+        throw new Error(`Missing document map for docId ${docId}`);
+      }
       const obj = new Map<string, string>();
       for (const f of canonicalFlat) {
         obj.set(f.id, computeCanonicalValue(doc, allKeys, f));
@@ -379,31 +481,39 @@ function main(): void {
       for (let j = i + 1; j < pool.length; j++) {
         let score = 0;
         for (const f of canonicalFlat) {
-          const va = pool[i]!.vals.get(f.id) ?? "";
-          const vb = pool[j]!.vals.get(f.id) ?? "";
-          if (normalizeValue(va) !== normalizeValue(vb)) score += 1;
+          const va = pool[i]?.vals.get(f.id) ?? "";
+          const vb = pool[j]?.vals.get(f.id) ?? "";
+          if (normalizeValue(va) !== normalizeValue(vb)) {
+            score += 1;
+          }
         }
         if (!best || score > best.score) {
-          best = { a: pool[i]!.docId, b: pool[j]!.docId, score };
+          best = { a: pool[i]?.docId, b: pool[j]?.docId, score };
         }
       }
     }
-    if (!best) throw new Error("Failed to auto-pick doc pair");
+    if (!best) {
+      throw new Error("Failed to auto-pick doc pair");
+    }
     aDocId = best.a;
     bDocId = best.b;
   }
 
-  if (!aDocId || !bDocId) throw new Error("Provide --a and --b, or use --auto");
+  if (!(aDocId && bDocId)) {
+    throw new Error("Provide --a and --b, or use --auto");
+  }
 
-  const aMap = docMaps.get(aDocId)!;
-  const bMap = docMaps.get(bDocId)!;
-  const aInfo = docMeta.get(aDocId)!;
-  const bInfo = docMeta.get(bDocId)!;
+  const aMap = docMaps.get(aDocId);
+  const bMap = docMaps.get(bDocId);
+  const aInfo = docMeta.get(aDocId);
+  const bInfo = docMeta.get(bDocId);
+  if (!(aMap && bMap && aInfo && bInfo)) {
+    throw new Error("Failed to load one or both selected documents");
+  }
 
-  const outPath =
-    values.out
-      ? String(values.out)
-      : join(invDir, `DIFF_${aInfo.emailId}_${bInfo.emailId}_${mode}.md`);
+  const outPath = values.out
+    ? String(values.out)
+    : join(invDir, `DIFF_${aInfo.emailId}_${bInfo.emailId}_${mode}.md`);
 
   const md: string[] = [];
   md.push(`# Narrative Diff (${mode})`);
@@ -420,50 +530,80 @@ function main(): void {
       for (const f of group.fields) {
         const va = computeCanonicalValue(aMap, allKeys, f);
         const vb = computeCanonicalValue(bMap, allKeys, f);
-        if (normalizeValue(va) === normalizeValue(vb)) continue;
+        if (normalizeValue(va) === normalizeValue(vb)) {
+          continue;
+        }
         any = true;
         md.push(`- \`${f.id}\` (${f.label})`);
         md.push(`  A: ${va || "(blank)"}`);
         md.push(`  B: ${vb || "(blank)"}`);
       }
-      if (!any) md.push(`(no differences in this group)`);
+      if (!any) {
+        md.push("(no differences in this group)");
+      }
       md.push("");
     }
   } else {
     // all keys diff grouped by major/subsection
     const keys = new Set<string>([...aMap.keys(), ...bMap.keys()]);
-    const diffs: Array<{ major: string; sub: string; key: string; a: string; b: string }> = [];
+    const diffs: Array<{
+      major: string;
+      sub: string;
+      key: string;
+      a: string;
+      b: string;
+    }> = [];
     for (const k of [...keys].sort()) {
       const va = normalizeWhitespace(aMap.get(k) ?? "");
       const vb = normalizeWhitespace(bMap.get(k) ?? "");
-      if (normalizeValue(va) === normalizeValue(vb)) continue;
-      const scope = keyScope.get(k) ?? { major: "UNKNOWN", sub: "UNKNOWN", block: null };
+      if (normalizeValue(va) === normalizeValue(vb)) {
+        continue;
+      }
+      const scope = keyScope.get(k) ?? {
+        major: "UNKNOWN",
+        sub: "UNKNOWN",
+        block: null,
+      };
       diffs.push({ major: scope.major, sub: scope.sub, key: k, a: va, b: vb });
     }
 
-    const byMajor = new Map<string, Array<{ sub: string; key: string; a: string; b: string }>>();
+    const byMajor = new Map<
+      string,
+      Array<{ sub: string; key: string; a: string; b: string }>
+    >();
     for (const d of diffs) {
       const list = byMajor.get(d.major) ?? [];
-      if (!byMajor.has(d.major)) byMajor.set(d.major, list);
+      if (!byMajor.has(d.major)) {
+        byMajor.set(d.major, list);
+      }
       list.push({ sub: d.sub, key: d.key, a: d.a, b: d.b });
     }
 
     for (const major of [...byMajor.keys()].sort()) {
       md.push(`## ${major}`);
       md.push("");
-      const list = byMajor.get(major)!;
+      const list = byMajor.get(major);
+      if (!list) {
+        continue;
+      }
       // subgroup by subsection
-      const bySub = new Map<string, Array<{ key: string; a: string; b: string }>>();
+      const bySub = new Map<
+        string,
+        Array<{ key: string; a: string; b: string }>
+      >();
       for (const d of list) {
         const s = d.sub;
         const l = bySub.get(s) ?? [];
-        if (!bySub.has(s)) bySub.set(s, l);
+        if (!bySub.has(s)) {
+          bySub.set(s, l);
+        }
         l.push({ key: d.key, a: d.a, b: d.b });
       }
       for (const sub of [...bySub.keys()].sort()) {
         md.push(`### ${sub}`);
         md.push("");
-        for (const d of bySub.get(sub)!) {
+        const subDiffs = bySub.get(sub) ?? [];
+        for (const d of subDiffs) {
           md.push(`- \`${d.key}\``);
           md.push(`  A: ${d.a || "(blank)"}`);
           md.push(`  B: ${d.b || "(blank)"}`);

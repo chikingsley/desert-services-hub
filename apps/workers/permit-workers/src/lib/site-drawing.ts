@@ -6,9 +6,9 @@
  * parcel that contains the point.
  */
 
+import { type ParcelData, queryParcelByCoordinates } from "@/lib/assessor";
 import type { MapFeature, PermitMapData } from "@/lib/dust-features";
-import { latLngToWebMercator, type LatLng } from "@/lib/dust-features";
-import { queryParcelByCoordinates, type ParcelData } from "@/lib/assessor";
+import { type LatLng, latLngToWebMercator } from "@/lib/dust-features";
 
 export interface SiteCoordinatesInput {
   latitude: number;
@@ -38,7 +38,7 @@ export function formatApnDashed(apn: string): string {
 }
 
 export function m2ToAcres(m2: number): number {
-  return m2 / 4046.8564224;
+  return m2 / 4046.856_422_4;
 }
 
 /**
@@ -54,7 +54,7 @@ export function approximatePolygonAreaM2(points: LatLng[]): number {
 
   const pts = points.slice();
   const first = pts[0];
-  const last = pts[pts.length - 1];
+  const last = pts.at(-1);
   if (first && last && first.lat === last.lat && first.lng === last.lng) {
     pts.pop();
   }
@@ -82,8 +82,13 @@ export function approximatePolygonAreaM2(points: LatLng[]): number {
 
   let area2 = 0;
   for (let i = 0; i < pts.length; i++) {
-    const p1 = toXY(pts[i]!);
-    const p2 = toXY(pts[(i + 1) % pts.length]!);
+    const p1Raw = pts.at(i);
+    const p2Raw = pts.at((i + 1) % pts.length);
+    if (!(p1Raw && p2Raw)) {
+      continue;
+    }
+    const p1 = toXY(p1Raw);
+    const p2 = toXY(p2Raw);
     area2 += p1.x * p2.y - p2.x * p1.y;
   }
 
@@ -178,10 +183,15 @@ export async function buildPermitMapDataFromSiteCoordinates(
   // Sanity-check: if NOI disturbed acreage is MUCH smaller than parcel acreage,
   // don't blindly draw the full parcel.
   if (site.acresDisturbed && site.acresDisturbed > 0) {
-    const areaM2 = approximatePolygonAreaM2(parcel.polygon as unknown as LatLng[]);
+    const areaM2 = approximatePolygonAreaM2(
+      parcel.polygon as unknown as LatLng[]
+    );
     const parcelAcres = m2ToAcres(areaM2);
 
-    if (parcelAcres > 0 && parcelAcres / site.acresDisturbed > maxAcreageRatio) {
+    if (
+      parcelAcres > 0 &&
+      parcelAcres / site.acresDisturbed > maxAcreageRatio
+    ) {
       throw new Error(
         `Parcel acreage (~${parcelAcres.toFixed(2)} ac) is much larger than NOI disturbed acreage (${site.acresDisturbed} ac). Boundary extraction required (not full parcel).`
       );

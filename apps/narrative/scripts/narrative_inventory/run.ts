@@ -9,7 +9,10 @@
 
 import { parseArgs } from "node:util";
 
-type Step = { name: string; cmd: string[] };
+interface Step {
+  name: string;
+  cmd: string[];
+}
 
 function runStep(step: Step): void {
   console.log(`\n== ${step.name} ==`);
@@ -49,42 +52,61 @@ function main(): void {
   if (wantDownload) {
     steps.push({
       name: "Download Eva -> Jayson Attachments",
-      cmd: ["bun", "apps/narrative/scripts/narrative_inventory/download_eva_to_jayson_attachments.ts"],
+      cmd: [
+        "bun",
+        "apps/narrative/scripts/narrative_inventory/download-eva-to-jayson-attachments.ts",
+      ],
     });
   }
   if (wantInventory) {
     steps.push({
       name: "Build Raw Variable Inventory",
-      cmd: ["bun", "apps/narrative/scripts/narrative_inventory/inventory_swppp_variables.ts"],
+      cmd: [
+        "bun",
+        "apps/narrative/scripts/narrative_inventory/inventory-swppp-variables.ts",
+      ],
     });
   }
   if (wantReport) {
     steps.push({
       name: "Build Canonical Report",
-      cmd: ["bun", "apps/narrative/scripts/narrative_inventory/report_variable_inventory.ts"],
+      cmd: [
+        "bun",
+        "apps/narrative/scripts/narrative_inventory/report-variable-inventory.ts",
+      ],
     });
   }
   if (wantDiff) {
     steps.push({
       name: "Generate Example Diff",
-      cmd: ["bun", "apps/narrative/scripts/narrative_inventory/diff_narratives.ts", "--auto"],
+      cmd: [
+        "bun",
+        "apps/narrative/scripts/narrative_inventory/diff-narratives.ts",
+        "--auto",
+      ],
     });
   }
   if (wantExport) {
     steps.push({
       name: "Export Snapshot Artifacts",
-      cmd: ["bun", "apps/narrative/scripts/narrative_inventory/export_snapshot.ts"],
+      cmd: [
+        "bun",
+        "apps/narrative/scripts/narrative_inventory/export-snapshot.ts",
+      ],
     });
   }
 
   if (steps.length === 0) {
-    console.log("No steps selected. Use --all or one of --download/--inventory/--report/--diff/--export");
+    console.log(
+      "No steps selected. Use --all or one of --download/--inventory/--report/--diff/--export"
+    );
     return;
   }
 
-  for (const s of steps) runStep(s);
+  for (const s of steps) {
+    runStep(s);
+  }
   console.log("\nWorkflow complete.");
 }
 
 main();
-

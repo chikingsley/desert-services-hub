@@ -1,4 +1,4 @@
-import { test, expect } from "bun:test";
+import { expect, test } from "bun:test";
 import { existsSync } from "node:fs";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -36,10 +36,11 @@ async function pdftotext(bytes: Uint8Array): Promise<string> {
 }
 
 if (!PDFTOTEXT_BIN) {
-  test.skip("SSSP generation (requires pdftotext in PATH)", () => {});
-} else if (!existsSync(INPUT_PATH)) {
-  test.skip(`SSSP generation (missing ${INPUT_PATH})`, () => {});
-} else {
+  // biome-ignore lint/suspicious/noSkippedTests: This integration test requires pdftotext installed on the host.
+  test.skip("SSSP generation (requires pdftotext in PATH)", () => {
+    // Intentionally skipped when dependency is unavailable.
+  });
+} else if (existsSync(INPUT_PATH)) {
   test("SSSP generation stays in-scope and avoids typed bullets/wrapped emails", async () => {
     const doc = (await Bun.file(INPUT_PATH).json()) as SsspDocument;
 
@@ -51,6 +52,8 @@ if (!PDFTOTEXT_BIN) {
     expect(text).toContain("Contractor:");
     expect(text).toContain("Address:");
     expect(text).toContain("Job Number:");
+    expect(text).toContain("Date: February 10, 2026");
+    expect(text).not.toContain("Date: FEBRUARY");
 
     // No out-of-scope sections for SWPPP-only jobs.
     expect(text).not.toContain("Water Truck Operations");
@@ -64,5 +67,10 @@ if (!PDFTOTEXT_BIN) {
 
     // Don't hard-wrap emails in code (e.g. inserting '@\\n').
     expect(text).not.toContain("@\n");
+  });
+} else {
+  // biome-ignore lint/suspicious/noSkippedTests: Test input is optional in some environments.
+  test.skip(`SSSP generation (missing ${INPUT_PATH})`, () => {
+    // Intentionally skipped when fixture file is absent.
   });
 }

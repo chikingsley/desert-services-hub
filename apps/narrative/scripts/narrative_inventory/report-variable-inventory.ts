@@ -8,23 +8,23 @@
  * - CANONICAL_MVP.tsv: canonical field list with coverage + samples
  *
  * Usage:
- *   bun apps/narrative/scripts/report_variable_inventory.ts
- *   bun apps/narrative/scripts/report_variable_inventory.ts --dir apps/narrative/data/intake/eva-to-jayson/variable-inventory
+ *   bun apps/narrative/scripts/report-variable-inventory.ts
+ *   bun apps/narrative/scripts/report-variable-inventory.ts --dir apps/narrative/data/intake/eva-to-jayson/variable-inventory
  */
 
-import { parseArgs } from "node:util";
-import { readFileSync, writeFileSync, existsSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { parseArgs } from "node:util";
 
-type KeyRow = {
+interface KeyRow {
   key: string;
   docs_with_key: number;
   unique_values: number;
   blank_values: number;
   sample_values_json: string;
-};
+}
 
-type Entry = {
+interface Entry {
   docId: string;
   emailId: string;
   fileName: string;
@@ -34,9 +34,19 @@ type Entry = {
   block: string | null;
   key: string;
   value: string;
-};
+}
 
-type DocMeta = { emailId: string; fileName: string; filePath: string };
+interface DocMeta {
+  emailId: string;
+  fileName: string;
+  filePath: string;
+}
+
+const CITY_STATE_ZIP_PATTERN =
+  /^\s*(.+?),\s*([A-Z]{2})\s+(\d{5}(?:-\d{4})?)\s*$/;
+const ACRES_VALUE_PATTERN = /([0-9]+(?:\.[0-9]+)?)/;
+const EMAIL_PATTERN = /\b[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+\b/;
+const PHONE_PATTERN = /(\+?1[\s\-.]?)?(\(?\d{3}\)?[\s\-.]?\d{3}[\s\-.]?\d{4})/;
 
 function normalizeWhitespace(s: string): string {
   return s.replace(/\s+/g, " ").trim();
@@ -49,43 +59,69 @@ function normalizeValue(s: string): string {
 function parseTsv(path: string): { header: string[]; rows: string[][] } {
   const text = readFileSync(path, "utf8");
   const lines = text.split("\n").filter((l) => l.trim() !== "");
-  if (lines.length === 0) return { header: [], rows: [] };
-  const header = lines[0]!.split("\t");
+  if (lines.length === 0) {
+    return { header: [], rows: [] };
+  }
+  const header = lines[0]?.split("\t");
   const rows = lines.slice(1).map((l) => l.split("\t"));
   return { header, rows };
 }
 
 function toTsvRow(cols: Array<string | number | null | undefined>): string {
   return cols
-    .map((c) => String(c ?? "").replaceAll("\t", " ").replaceAll("\n", " "))
+    .map((c) =>
+      String(c ?? "")
+        .replaceAll("\t", " ")
+        .replaceAll("\n", " ")
+    )
     .join("\t");
 }
 
-function tryParseCityStateZip(s: string): { city: string; state: string; zip: string } | null {
-  const m = /^\s*(.+?),\s*([A-Z]{2})\s+(\d{5}(?:-\d{4})?)\s*$/.exec(s);
-  if (!m) return null;
-  return { city: m[1]!.trim(), state: m[2]!, zip: m[3]! };
+function tryParseCityStateZip(
+  s: string
+): { city: string; state: string; zip: string } | null {
+  const m = CITY_STATE_ZIP_PATTERN.exec(s);
+  if (!m) {
+    return null;
+  }
+  const city = m[1]?.trim();
+  const state = m[2];
+  const zip = m[3];
+  if (!(city && state && zip)) {
+    return null;
+  }
+  return { city, state, zip };
 }
 
 function tryParseAcres(s: string): number | null {
-  const m = /([0-9]+(?:\.[0-9]+)?)/.exec(s.replaceAll(",", ""));
-  if (!m) return null;
-  const n = Number.parseFloat(m[1]!);
+  const m = ACRES_VALUE_PATTERN.exec(s.replaceAll(",", ""));
+  if (!m) {
+    return null;
+  }
+  const rawValue = m[1];
+  if (!rawValue) {
+    return null;
+  }
+  const n = Number.parseFloat(rawValue);
   return Number.isFinite(n) ? n : null;
 }
 
 function findFirstNonEmpty(doc: Map<string, string>, keys: string[]): string {
   for (const k of keys) {
     const v = doc.get(k);
-    if (v && v.trim() !== "") return v;
+    if (v && v.trim() !== "") {
+      return v;
+    }
   }
   return "";
 }
 
 function findEmailInValues(values: string[]): string {
   for (const v of values) {
-    const m = /\b[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+\b/.exec(v);
-    if (m?.[0]) return m[0];
+    const m = EMAIL_PATTERN.exec(v);
+    if (m?.[0]) {
+      return m[0];
+    }
   }
   return "";
 }
@@ -93,18 +129,20 @@ function findEmailInValues(values: string[]): string {
 function findPhoneInValues(values: string[]): string {
   // We keep this permissive; narratives have many formats.
   for (const v of values) {
-    const m = /(\+?1[\s\-\.]?)?(\(?\d{3}\)?[\s\-\.]?\d{3}[\s\-\.]?\d{4})/.exec(v);
-    if (m?.[0]) return normalizeWhitespace(m[0]);
+    const m = PHONE_PATTERN.exec(v);
+    if (m?.[0]) {
+      return normalizeWhitespace(m[0]);
+    }
   }
   return "";
 }
 
-type CanonField = {
+interface CanonField {
   id: string;
   label: string;
   sources?: string[]; // in priority order
   derive?: (doc: Map<string, string>, allKeys: string[]) => string;
-};
+}
 
 function canonicalFields(): { group: string; fields: CanonField[] }[] {
   return [
@@ -177,7 +215,9 @@ function canonicalFields(): { group: string; fields: CanonField[] }[] {
         {
           id: "project.county",
           label: "County",
-          sources: ["1.1 Project/Site Information.County or Similar Subdivision"],
+          sources: [
+            "1.1 Project/Site Information.County or Similar Subdivision",
+          ],
         },
       ],
     },
@@ -208,7 +248,9 @@ function canonicalFields(): { group: string; fields: CanonField[] }[] {
               "1.1 Project/Site Information.AZPDES project or permit tracking number*",
               "TITLE.SWPPP Contact(s).AZPDES number",
             ]);
-            if (azpdes) return azpdes;
+            if (azpdes) {
+              return azpdes;
+            }
             const azcon = findFirstNonEmpty(doc, [
               "1.1 Project/Site Information.AZCON project or permit tracking number*",
               "TITLE.SWPPP Contact(s).AZCON number",
@@ -237,7 +279,9 @@ function canonicalFields(): { group: string; fields: CanonField[] }[] {
         {
           id: "dates.project_completion",
           label: "Estimated project completion date",
-          sources: ["1.3 Nature and Sequence of Construction Activity.Estimated Project Completion Date"],
+          sources: [
+            "1.3 Nature and Sequence of Construction Activity.Estimated Project Completion Date",
+          ],
         },
       ],
     },
@@ -247,7 +291,10 @@ function canonicalFields(): { group: string; fields: CanonField[] }[] {
         {
           id: "operator.company",
           label: "Operator company",
-          sources: ["1.2 Contact Information/Responsable Parties.Operator(s).Line1", "TITLE.Operator(s).Line1"],
+          sources: [
+            "1.2 Contact Information/Responsable Parties.Operator(s).Line1",
+            "TITLE.Operator(s).Line1",
+          ],
         },
         {
           id: "operator.contact_name",
@@ -274,10 +321,14 @@ function canonicalFields(): { group: string; fields: CanonField[] }[] {
             for (const k of allKeys) {
               if (
                 k.startsWith("TITLE.Operator(s).Line") ||
-                k.startsWith("1.2 Contact Information/Responsable Parties.Operator(s).Line")
+                k.startsWith(
+                  "1.2 Contact Information/Responsable Parties.Operator(s).Line"
+                )
               ) {
                 const v = doc.get(k);
-                if (v) values.push(v);
+                if (v) {
+                  values.push(v);
+                }
               }
             }
             return findEmailInValues(values);
@@ -286,12 +337,18 @@ function canonicalFields(): { group: string; fields: CanonField[] }[] {
         {
           id: "operator.address_line1",
           label: "Operator address line 1",
-          sources: ["1.2 Contact Information/Responsable Parties.Operator(s).Line2", "TITLE.Operator(s).Line2"],
+          sources: [
+            "1.2 Contact Information/Responsable Parties.Operator(s).Line2",
+            "TITLE.Operator(s).Line2",
+          ],
         },
         {
           id: "operator.city_state_zip",
           label: "Operator city/state/zip",
-          sources: ["1.2 Contact Information/Responsable Parties.Operator(s).Line3", "TITLE.Operator(s).Line3"],
+          sources: [
+            "1.2 Contact Information/Responsable Parties.Operator(s).Line3",
+            "TITLE.Operator(s).Line3",
+          ],
         },
         {
           id: "swppp_contact.name",
@@ -316,14 +373,24 @@ function canonicalFields(): { group: string; fields: CanonField[] }[] {
           derive: (doc, allKeys) => {
             const values: string[] = [];
             for (const k of allKeys) {
-              if (k.startsWith("1.2 Contact Information/Responsable Parties.Emergency 24-Hour Contact.Line")) {
+              if (
+                k.startsWith(
+                  "1.2 Contact Information/Responsable Parties.Emergency 24-Hour Contact.Line"
+                )
+              ) {
                 const v = doc.get(k);
-                if (v) values.push(v);
+                if (v) {
+                  values.push(v);
+                }
               }
             }
             // Prefer the \"Line2\" if present (often the person name); fallback to first non-empty.
-            const line2 = doc.get("1.2 Contact Information/Responsable Parties.Emergency 24-Hour Contact.Line2");
-            if (line2 && line2.trim()) return line2.trim();
+            const line2 = doc.get(
+              "1.2 Contact Information/Responsable Parties.Emergency 24-Hour Contact.Line2"
+            );
+            if (line2?.trim()) {
+              return line2.trim();
+            }
             return values[0]?.trim() ?? "";
           },
         },
@@ -333,15 +400,25 @@ function canonicalFields(): { group: string; fields: CanonField[] }[] {
           derive: (doc, allKeys) => {
             const values: string[] = [];
             for (const k of allKeys) {
-              if (k.startsWith("1.2 Contact Information/Responsable Parties.Emergency 24-Hour Contact.Line")) {
+              if (
+                k.startsWith(
+                  "1.2 Contact Information/Responsable Parties.Emergency 24-Hour Contact.Line"
+                )
+              ) {
                 const v = doc.get(k);
-                if (v) values.push(v);
+                if (v) {
+                  values.push(v);
+                }
               }
             }
-            const line3 = doc.get("1.2 Contact Information/Responsable Parties.Emergency 24-Hour Contact.Line3");
+            const line3 = doc.get(
+              "1.2 Contact Information/Responsable Parties.Emergency 24-Hour Contact.Line3"
+            );
             if (line3) {
               const p = findPhoneInValues([line3]);
-              if (p) return p;
+              if (p) {
+                return p;
+              }
             }
             return findPhoneInValues(values);
           },
@@ -360,7 +437,9 @@ function canonicalFields(): { group: string; fields: CanonField[] }[] {
           id: "site.total_project_area_acres_number",
           label: "Total project area (acres; numeric derived)",
           derive: (doc) => {
-            const raw = findFirstNonEmpty(doc, ["1.5 Construction Site Estimates.Total project area"]);
+            const raw = findFirstNonEmpty(doc, [
+              "1.5 Construction Site Estimates.Total project area",
+            ]);
             const n = raw ? tryParseAcres(raw) : null;
             return n === null ? "" : String(n);
           },
@@ -368,7 +447,9 @@ function canonicalFields(): { group: string; fields: CanonField[] }[] {
         {
           id: "site.disturbed_area_acres",
           label: "Disturbed area (acres; raw)",
-          sources: ["1.5 Construction Site Estimates.Construction site area to be disturbed"],
+          sources: [
+            "1.5 Construction Site Estimates.Construction site area to be disturbed",
+          ],
         },
         {
           id: "site.disturbed_area_acres_number",
@@ -384,12 +465,16 @@ function canonicalFields(): { group: string; fields: CanonField[] }[] {
         {
           id: "site.soil_types",
           label: "Soil type(s)",
-          sources: ["1.4 Soils, Slopes, Vegetation, and Current Drainage Patterns.Soil type(s)"],
+          sources: [
+            "1.4 Soils, Slopes, Vegetation, and Current Drainage Patterns.Soil type(s)",
+          ],
         },
         {
           id: "site.slopes",
           label: "Slopes (often blank)",
-          sources: ["1.4 Soils, Slopes, Vegetation, and Current Drainage Patterns.Slopes"],
+          sources: [
+            "1.4 Soils, Slopes, Vegetation, and Current Drainage Patterns.Slopes",
+          ],
         },
         {
           id: "site.receiving_waters",
@@ -431,8 +516,12 @@ function computeCanonicalValue(
   allKeys: string[],
   field: CanonField
 ): string {
-  if (field.derive) return normalizeWhitespace(field.derive(doc, allKeys));
-  if (field.sources) return normalizeWhitespace(findFirstNonEmpty(doc, field.sources));
+  if (field.derive) {
+    return normalizeWhitespace(field.derive(doc, allKeys));
+  }
+  if (field.sources) {
+    return normalizeWhitespace(findFirstNonEmpty(doc, field.sources));
+  }
   return "";
 }
 
@@ -440,7 +529,10 @@ function main(): void {
   const { values } = parseArgs({
     args: Bun.argv.slice(2),
     options: {
-      dir: { type: "string", default: "apps/narrative/data/intake/eva-to-jayson/variable-inventory" },
+      dir: {
+        type: "string",
+        default: "apps/narrative/data/intake/eva-to-jayson/variable-inventory",
+      },
     },
     allowPositionals: false,
   });
@@ -451,13 +543,17 @@ function main(): void {
   const entriesPath = join(invDir, "entries.jsonl");
 
   for (const p of [keysPath, docsPath, entriesPath]) {
-    if (!existsSync(p)) throw new Error(`Missing required file: ${p}`);
+    if (!existsSync(p)) {
+      throw new Error(`Missing required file: ${p}`);
+    }
   }
 
   const { header, rows } = parseTsv(keysPath);
   const idx = (name: string) => {
     const i = header.indexOf(name);
-    if (i < 0) throw new Error(`keys.tsv missing column: ${name}`);
+    if (i < 0) {
+      throw new Error(`keys.tsv missing column: ${name}`);
+    }
     return i;
   };
 
@@ -475,24 +571,39 @@ function main(): void {
   // Build per-doc key/value map (first non-empty).
   const docMaps = new Map<string, Map<string, string>>();
   const docMeta = new Map<string, DocMeta>();
-  const keyMeta = new Map<string, { major: string | null; sub: string | null; block: string | null }>();
+  const keyMeta = new Map<
+    string,
+    { major: string | null; sub: string | null; block: string | null }
+  >();
 
   const entriesText = readFileSync(entriesPath, "utf8");
   for (const line of entriesText.split("\n")) {
     const trimmed = line.trim();
-    if (!trimmed) continue;
+    if (!trimmed) {
+      continue;
+    }
     const e = JSON.parse(trimmed) as Entry;
     const m = docMaps.get(e.docId) ?? new Map<string, string>();
-    if (!docMaps.has(e.docId)) docMaps.set(e.docId, m);
+    if (!docMaps.has(e.docId)) {
+      docMaps.set(e.docId, m);
+    }
     const existing = m.get(e.key) ?? "";
     if (!existing || (existing === "" && e.value !== "")) {
       m.set(e.key, e.value);
     }
     if (!docMeta.has(e.docId)) {
-      docMeta.set(e.docId, { emailId: e.emailId, fileName: e.fileName, filePath: e.filePath });
+      docMeta.set(e.docId, {
+        emailId: e.emailId,
+        fileName: e.fileName,
+        filePath: e.filePath,
+      });
     }
     if (!keyMeta.has(e.key)) {
-      keyMeta.set(e.key, { major: e.majorSection, sub: e.subsection, block: e.block });
+      keyMeta.set(e.key, {
+        major: e.majorSection,
+        sub: e.subsection,
+        block: e.block,
+      });
     }
   }
 
@@ -507,8 +618,12 @@ function main(): void {
   const topVary = [...keyRows]
     .filter((r) => r.unique_values > 1 && r.docs_with_key >= 150)
     .sort((a, b) => {
-      if (b.unique_values !== a.unique_values) return b.unique_values - a.unique_values;
-      if (b.docs_with_key !== a.docs_with_key) return b.docs_with_key - a.docs_with_key;
+      if (b.unique_values !== a.unique_values) {
+        return b.unique_values - a.unique_values;
+      }
+      if (b.docs_with_key !== a.docs_with_key) {
+        return b.docs_with_key - a.docs_with_key;
+      }
       return a.key.localeCompare(b.key);
     })
     .slice(0, 40);
@@ -554,12 +669,24 @@ function main(): void {
   writeFileSync(
     canonicalDocsTsvPath,
     [
-      ["doc_id", "email_id", "file_name", ...canonicalFlat.map((f) => f.id)].join("\t"),
+      [
+        "doc_id",
+        "email_id",
+        "file_name",
+        ...canonicalFlat.map((f) => f.id),
+      ].join("\t"),
       ...allDocIds.map((docId) => {
         const meta = docMeta.get(docId);
         const doc = docMaps.get(docId) ?? new Map<string, string>();
-        const vals = canonicalFlat.map((f) => computeCanonicalValue(doc, allKeyNames, f));
-        return toTsvRow([docId, meta?.emailId ?? "", meta?.fileName ?? "", ...vals]);
+        const vals = canonicalFlat.map((f) =>
+          computeCanonicalValue(doc, allKeyNames, f)
+        );
+        return toTsvRow([
+          docId,
+          meta?.emailId ?? "",
+          meta?.fileName ?? "",
+          ...vals,
+        ]);
       }),
       "",
     ].join("\n"),
@@ -589,42 +716,53 @@ function main(): void {
 
   const reportPath = join(invDir, "REPORT.md");
   const md: string[] = [];
-  md.push(`# Variable Inventory Report (Eva -> Jayson Narratives)`);
+  md.push("# Variable Inventory Report (Eva -> Jayson Narratives)");
   md.push("");
   md.push(`Inventory directory: \`${invDir}\``);
   md.push("");
-  md.push(`## Counts`);
+  md.push("## Counts");
   md.push("");
   md.push(`- Docs scanned: **${docsCount}** (docs.tsv rows)`);
   md.push(`- Distinct extracted keys: **${keysTotal}**`);
   md.push(`- Keys that vary across docs: **${keysVary}**`);
   md.push(`- Keys that are constant across docs: **${keysConstant}**`);
   md.push("");
-  md.push(`## Canonical MVP Fields`);
+  md.push("## Canonical MVP Fields");
   md.push("");
-  md.push(`This collapses duplicated fields across TITLE/Section 1/Section 8 into a smaller list.`); // human hint
-  md.push(`Machine-readable list: \`CANONICAL_MVP.tsv\``);
-  md.push(`Per-doc canonical values: \`CANONICAL_DOCS.tsv\``);
+  md.push(
+    "This collapses duplicated fields across TITLE/Section 1/Section 8 into a smaller list."
+  ); // human hint
+  md.push("Machine-readable list: `CANONICAL_MVP.tsv`");
+  md.push("Per-doc canonical values: `CANONICAL_DOCS.tsv`");
   md.push("");
 
   for (const group of canonical) {
     md.push(`### ${group.group}`);
     md.push("");
     for (const f of group.fields) {
-      const s = canonicalStats.find((x) => x.id === f.id)!;
-      md.push(`- \`${s.id}\`: ${s.label} (covered_docs=${s.covered_docs}, unique=${s.unique_values})`);
+      const s = canonicalStats.find((x) => x.id === f.id);
+      if (!s) {
+        continue;
+      }
+      md.push(
+        `- \`${s.id}\`: ${s.label} (covered_docs=${s.covered_docs}, unique=${s.unique_values})`
+      );
       md.push(
         `sources: ${
-          f.sources?.length ? f.sources.map((k) => `\`${k}\``).join(", ") : "(derived)"
+          f.sources?.length
+            ? f.sources.map((k) => `\`${k}\``).join(", ")
+            : "(derived)"
         }`
       );
     }
     md.push("");
   }
 
-  md.push(`## Top High-Variance Keys (Raw Extraction)`);
+  md.push("## Top High-Variance Keys (Raw Extraction)");
   md.push("");
-  md.push(`These are individual extracted keys with high coverage and high variance (not yet deduped).`);
+  md.push(
+    "These are individual extracted keys with high coverage and high variance (not yet deduped)."
+  );
   md.push("");
   for (const r of topVary) {
     const meta = keyMeta.get(r.key);
@@ -637,7 +775,9 @@ function main(): void {
 
   writeFileSync(reportPath, md.join("\n"), "utf8");
 
-  console.log(`Wrote:\n  ${reportPath}\n  ${canonicalTsvPath}\n  ${canonicalDocsTsvPath}`);
+  console.log(
+    `Wrote:\n  ${reportPath}\n  ${canonicalTsvPath}\n  ${canonicalDocsTsvPath}`
+  );
 }
 
 main();

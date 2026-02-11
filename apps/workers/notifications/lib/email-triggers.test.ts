@@ -12,6 +12,15 @@ import {
   parsePointAndPayEmail,
 } from "./email-triggers";
 
+function expectCostBreakdownValue(
+  result: ReturnType<typeof computeCostBreakdown>
+): NonNullable<ReturnType<typeof computeCostBreakdown>> {
+  if (!result) {
+    throw new Error("Expected cost breakdown result");
+  }
+  return result;
+}
+
 // ============================================================================
 // Sample Email Bodies
 // ============================================================================
@@ -64,7 +73,10 @@ const POINTANDPAY_BODY_SMALL = POINTANDPAY_BODY_CRLF.replace(
   .replace("190018295", "190099001")
   .replace("8113", "4242")
   .replace("(304) 405-2446", "(602) 555-1234")
-  .replace("01/14/2026 09:06 AM US Mountain Time", "02/05/2026 02:30 PM US Mountain Time");
+  .replace(
+    "01/14/2026 09:06 AM US Mountain Time",
+    "02/05/2026 02:30 PM US Mountain Time"
+  );
 
 /** PointAndPay with the largest tier */
 const POINTANDPAY_BODY_LARGE = POINTANDPAY_BODY_CRLF.replace(
@@ -241,9 +253,7 @@ describe("parsePointAndPayEmail", () => {
     expect(data.amount).toBe("$1,130.00");
     expect(data.confirmationId).toBe("190018295");
     expect(data.cardLastFour).toBe("8113");
-    expect(data.paymentDate).toBe(
-      "01/14/2026 09:06 AM US Mountain Time"
-    );
+    expect(data.paymentDate).toBe("01/14/2026 09:06 AM US Mountain Time");
     expect(data.customerPhone).toBeTruthy();
   });
 
@@ -263,9 +273,7 @@ describe("parsePointAndPayEmail", () => {
     expect(data.amount).toBe("$1,130.00");
     expect(data.confirmationId).toBe("190018295");
     expect(data.cardLastFour).toBe("8113");
-    expect(data.paymentDate).toBe(
-      "01/14/2026 09:06 AM US Mountain Time"
-    );
+    expect(data.paymentDate).toBe("01/14/2026 09:06 AM US Mountain Time");
   });
 
   test("parses smaller tier amount ($570)", () => {
@@ -274,9 +282,7 @@ describe("parsePointAndPayEmail", () => {
     expect(data.amount).toBe("$570.00");
     expect(data.confirmationId).toBe("190099001");
     expect(data.cardLastFour).toBe("4242");
-    expect(data.paymentDate).toBe(
-      "02/05/2026 02:30 PM US Mountain Time"
-    );
+    expect(data.paymentDate).toBe("02/05/2026 02:30 PM US Mountain Time");
   });
 
   test("parses large tier amount ($16,490)", () => {
@@ -310,24 +316,17 @@ describe("parseMaricopaIssuedEmail", () => {
     expect(data.facilityName).toBe(
       "Lexington 420 - Northern Pkwy Logistics Bldg. D"
     );
-    expect(data.facilityAddress).toBe(
-      "Section 31, 3N, 1W GLENDALE, AZ 85355"
-    );
+    expect(data.facilityAddress).toBe("Section 31, 3N, 1W GLENDALE, AZ 85355");
   });
 
   test("parses CRLF format", () => {
-    const data = parseMaricopaIssuedEmail(
-      MARICOPA_BODY_CRLF,
-      MARICOPA_SUBJECT
-    );
+    const data = parseMaricopaIssuedEmail(MARICOPA_BODY_CRLF, MARICOPA_SUBJECT);
     expect(data.permitNumber).toBe("D0064501");
     expect(data.facilityId).toBe("F055909");
     expect(data.facilityName).toBe(
       "Lexington 420 - Northern Pkwy Logistics Bldg. D"
     );
-    expect(data.facilityAddress).toBe(
-      "Section 31, 3N, 1W GLENDALE, AZ 85355"
-    );
+    expect(data.facilityAddress).toBe("Section 31, 3N, 1W GLENDALE, AZ 85355");
   });
 
   test("parses concatenated format (no line breaks between fields)", () => {
@@ -340,9 +339,7 @@ describe("parseMaricopaIssuedEmail", () => {
     expect(data.facilityName).toBe(
       "Lexington 420 - Northern Pkwy Logistics Bldg. D"
     );
-    expect(data.facilityAddress).toBe(
-      "Section 31, 3N, 1W GLENDALE, AZ 85355"
-    );
+    expect(data.facilityAddress).toBe("Section 31, 3N, 1W GLENDALE, AZ 85355");
   });
 
   test("parses different permit/facility data", () => {
@@ -449,32 +446,35 @@ describe("computeCostBreakdown", () => {
 
   for (const tc of tierCases) {
     test(`tier: ${tc.label}`, () => {
-      const result = computeCostBreakdown(tc.adeqFee, false);
-      expect(result).not.toBeNull();
-      expect(result!.permitCost).toBe(tc.expectedPermitCost);
-      expect(result!.adminFee).toBe(tc.expectedAdminFee);
-      expect(result!.scheduleValue).toBe(tc.expectedSchedule);
-      expect(result!.isAccelerated).toBe(false);
+      const result = expectCostBreakdownValue(
+        computeCostBreakdown(tc.adeqFee, false)
+      );
+      expect(result.permitCost).toBe(tc.expectedPermitCost);
+      expect(result.adminFee).toBe(tc.expectedAdminFee);
+      expect(result.scheduleValue).toBe(tc.expectedSchedule);
+      expect(result.isAccelerated).toBe(false);
     });
   }
 
   test("accelerated permit (doubled ADEQ fee)", () => {
     // Accelerated 1-5 acre: county charges $2,260 (2x $1,130), admin stays $500
-    const result = computeCostBreakdown("$2,260.00", true);
-    expect(result).not.toBeNull();
-    expect(result!.permitCost).toBe("$2,260.00");
-    expect(result!.adminFee).toBe("$500.00");
-    expect(result!.scheduleValue).toBe("$2,760.00");
-    expect(result!.isAccelerated).toBe(true);
+    const result = expectCostBreakdownValue(
+      computeCostBreakdown("$2,260.00", true)
+    );
+    expect(result.permitCost).toBe("$2,260.00");
+    expect(result.adminFee).toBe("$500.00");
+    expect(result.scheduleValue).toBe("$2,760.00");
+    expect(result.isAccelerated).toBe(true);
   });
 
   test("accelerated <1 acre ($1,140 = 2x $570)", () => {
-    const result = computeCostBreakdown("$1,140.00", true);
-    expect(result).not.toBeNull();
-    expect(result!.permitCost).toBe("$1,140.00");
-    expect(result!.adminFee).toBe("$500.00");
-    expect(result!.scheduleValue).toBe("$1,640.00");
-    expect(result!.isAccelerated).toBe(true);
+    const result = expectCostBreakdownValue(
+      computeCostBreakdown("$1,140.00", true)
+    );
+    expect(result.permitCost).toBe("$1,140.00");
+    expect(result.adminFee).toBe("$500.00");
+    expect(result.scheduleValue).toBe("$1,640.00");
+    expect(result.isAccelerated).toBe(true);
   });
 
   test("null amount → null", () => {

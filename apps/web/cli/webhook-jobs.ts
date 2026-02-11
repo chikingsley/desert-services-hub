@@ -48,7 +48,9 @@ function usage(exitCode = 1): never {
   console.log("  list [--type <job_type>] [--status <status>] [--limit <n>]");
   console.log("  show <job_id>");
   console.log("  latest <job_type>");
-  console.log("  clone <job_id>              # insert a new job with same payload");
+  console.log(
+    "  clone <job_id>              # insert a new job with same payload"
+  );
   console.log("  requeue <job_id> [--force] [--keep-attempts]");
   console.log("");
   console.log("Examples:");
@@ -99,28 +101,36 @@ function summarize(job: WebhookJobRow): string {
 
   // Common fields we care about when debugging.
   const parts: string[] = [];
-  const emailId =
-    typeof obj.emailId === "number"
-      ? obj.emailId
-      : typeof obj.emailId === "string"
-        ? obj.emailId
-        : null;
+  let emailId: number | string | null = null;
+  if (typeof obj.emailId === "number" || typeof obj.emailId === "string") {
+    emailId = obj.emailId;
+  }
   const mailboxEmail =
     typeof obj.mailboxEmail === "string" ? obj.mailboxEmail : null;
   const messageId = typeof obj.messageId === "string" ? obj.messageId : null;
 
-  if (emailId != null) parts.push(`emailId=${emailId}`);
-  if (mailboxEmail) parts.push(`mailbox=${mailboxEmail}`);
-  if (messageId) parts.push(`msg=${messageId.slice(0, 10)}…`);
+  if (emailId != null) {
+    parts.push(`emailId=${emailId}`);
+  }
+  if (mailboxEmail) {
+    parts.push(`mailbox=${mailboxEmail}`);
+  }
+  if (messageId) {
+    parts.push(`msg=${messageId.slice(0, 10)}…`);
+  }
 
   return parts.join(" ");
 }
 
 function fmtTime(ts: string | null): string {
-  if (!ts) return "-";
+  if (!ts) {
+    return "-";
+  }
   // Render as "YYYY-MM-DD HH:MM:SS" in local time for quick scanning.
   const d = new Date(ts);
-  if (!Number.isFinite(d.getTime())) return ts;
+  if (!Number.isFinite(d.getTime())) {
+    return ts;
+  }
   const pad = (n: number) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(
     d.getHours()
@@ -217,7 +227,9 @@ if (command === "list") {
 
 if (command === "show") {
   const idRaw = rest[0];
-  if (!idRaw) usage(1);
+  if (!idRaw) {
+    usage(1);
+  }
   const id = parseIntStrict(idRaw, "job_id");
 
   const job = await db
@@ -240,8 +252,12 @@ if (command === "show") {
   console.log(`created_at:   ${fmtTime(job.created_at)}`);
   console.log(`started_at:   ${fmtTime(job.started_at)}`);
   console.log(`completed_at: ${fmtTime(job.completed_at)}`);
-  if (job.error) console.log(`error:        ${job.error}`);
-  if (job.monday_item_id) console.log(`monday_item:  ${job.monday_item_id}`);
+  if (job.error) {
+    console.log(`error:        ${job.error}`);
+  }
+  if (job.monday_item_id) {
+    console.log(`monday_item:  ${job.monday_item_id}`);
+  }
   console.log("");
 
   const parsed = safeJson(job.payload);
@@ -258,7 +274,9 @@ if (command === "show") {
 
 if (command === "latest") {
   const type = rest[0];
-  if (!type) usage(1);
+  if (!type) {
+    usage(1);
+  }
 
   const job = await db
     .query<WebhookJobRow>(
@@ -281,7 +299,9 @@ if (command === "latest") {
 
 if (command === "clone") {
   const idRaw = rest[0];
-  if (!idRaw) usage(1);
+  if (!idRaw) {
+    usage(1);
+  }
   const id = parseIntStrict(idRaw, "job_id");
 
   const row = await db
@@ -305,7 +325,9 @@ if (command === "clone") {
 
 if (command === "requeue") {
   const idRaw = rest[0];
-  if (!idRaw) usage(1);
+  if (!idRaw) {
+    usage(1);
+  }
   const id = parseIntStrict(idRaw, "job_id");
   const force = hasFlag(rest, "--force");
   const keepAttempts = hasFlag(rest, "--keep-attempts");
@@ -358,4 +380,3 @@ if (command === "requeue") {
 
 console.error(`Unknown command: ${command}`);
 usage(1);
-

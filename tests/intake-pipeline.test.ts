@@ -15,7 +15,7 @@ import { db } from "@lib/db/hub";
 
 const WEBHOOK_URL = process.env.WEBHOOK_URL ?? "http://localhost:4747";
 const TEST_PDF_DIR = "/tmp/po-test";
-const POLL_INTERVAL_MS = 2_000;
+const POLL_INTERVAL_MS = 2000;
 const PARSE_TIMEOUT_MS = 120_000; // 2 min for OCR + reconciliation
 
 // ============================================================================
@@ -43,8 +43,12 @@ async function waitForJobCompletion(
       )
       .get(jobId);
 
-    if (!row) throw new Error(`Job #${jobId} not found`);
-    if (row.status === "completed" || row.status === "failed") return row;
+    if (!row) {
+      throw new Error(`Job #${jobId} not found`);
+    }
+    if (row.status === "completed" || row.status === "failed") {
+      return row;
+    }
 
     await Bun.sleep(POLL_INTERVAL_MS);
   }
@@ -68,31 +72,31 @@ describe("intake pipeline — PDF", () => {
   it("webhook accepts PDF and enqueues job", async () => {
     const pdfBuffer = await Bun.file(testPdfPath).arrayBuffer();
     const base64 = Buffer.from(pdfBuffer).toString("base64");
-    const fileName = testPdfPath.split("/").pop()!;
+    const fileName = testPdfPath.split("/").pop();
+    if (!fileName) {
+      throw new Error(`Invalid test PDF path: ${testPdfPath}`);
+    }
 
-    const response = await fetch(
-      `${WEBHOOK_URL}/api/webhooks/intake`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          forwarderEmail: "test-runner@desertservices.app",
-          forwardedAt: new Date().toISOString(),
-          originalSubject: `Test Intake Pipeline ${Date.now()}`,
-          originalFrom: "vendor@example.com",
-          bodyText: "Test email body for pipeline verification",
-          bodyHasContent: false,
-          attachments: [
-            {
-              filename: fileName,
-              contentType: "application/pdf",
-              size: pdfBuffer.byteLength,
-              content: base64,
-            },
-          ],
-        }),
-      }
-    );
+    const response = await fetch(`${WEBHOOK_URL}/api/webhooks/intake`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        forwarderEmail: "test-runner@desertservices.app",
+        forwardedAt: new Date().toISOString(),
+        originalSubject: `Test Intake Pipeline ${Date.now()}`,
+        originalFrom: "vendor@example.com",
+        bodyText: "Test email body for pipeline verification",
+        bodyHasContent: false,
+        attachments: [
+          {
+            filename: fileName,
+            contentType: "application/pdf",
+            size: pdfBuffer.byteLength,
+            content: base64,
+          },
+        ],
+      }),
+    });
 
     expect(response.status).toBe(202);
     const body = (await response.json()) as {
@@ -121,9 +125,7 @@ describe("intake pipeline — PDF", () => {
 
       expect(result.status).toBe("completed");
       expect(result.error).toBeNull();
-      console.log(
-        `  Job #${jobId} completed (attempt ${result.attempts})`
-      );
+      console.log(`  Job #${jobId} completed (attempt ${result.attempts})`);
     },
     { timeout: PARSE_TIMEOUT_MS + 10_000 }
   );
@@ -152,76 +154,83 @@ describe("intake pipeline — PDF", () => {
       .get();
 
     expect(contract).toBeTruthy();
-    expect(contract!.extraction_status).toBe("success");
-    expect(contract!.document_type).not.toBe("unknown");
-    expect(contract!.summary).toBeTruthy();
-    expect(contract!.summary!.length).toBeGreaterThan(100);
-    expect(contract!.model).toBeTruthy();
-    expect(contract!.processing_time_ms).toBeGreaterThan(0);
-    expect(contract!.original_from).toBe("vendor@example.com");
-    expect(contract!.forwarder_email).toBe("test-runner@desertservices.app");
+    if (!contract) {
+      throw new Error("Expected a processed contract record");
+    }
 
-    console.log(`  Record #${contract!.id}:`);
-    console.log(`    Type: ${contract!.document_type}`);
-    console.log(`    Model: ${contract!.model}`);
-    console.log(`    Time: ${contract!.processing_time_ms}ms`);
-    console.log(`    Summary: ${contract!.summary!.length} chars`);
+    expect(contract.extraction_status).toBe("success");
+    expect(contract.document_type).not.toBe("unknown");
+    expect(contract.summary).toBeTruthy();
+    if (!contract.summary) {
+      throw new Error("Expected contract summary to be present");
+    }
+    expect(contract.summary.length).toBeGreaterThan(100);
+
+    expect(contract.model).toBeTruthy();
+    if (!contract.model) {
+      throw new Error("Expected model name to be present");
+    }
+
+    expect(contract.processing_time_ms).toBeGreaterThan(0);
+    if (contract.processing_time_ms == null) {
+      throw new Error("Expected processing_time_ms to be present");
+    }
+
+    expect(contract.original_from).toBe("vendor@example.com");
+    expect(contract.forwarder_email).toBe("test-runner@desertservices.app");
+
+    console.log(`  Record #${contract.id}:`);
+    console.log(`    Type: ${contract.document_type}`);
+    console.log(`    Model: ${contract.model}`);
+    console.log(`    Time: ${contract.processing_time_ms}ms`);
+    console.log(`    Summary: ${contract.summary.length} chars`);
   });
 
   it("backward compat: old endpoints still work", async () => {
     // Test /api/webhooks/files-intake alias
-    const res1 = await fetch(
-      `${WEBHOOK_URL}/api/webhooks/files-intake`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          forwarderEmail: "test-runner@desertservices.app",
-          forwardedAt: new Date().toISOString(),
-          originalSubject: "Backward Compat Test - files-intake",
-          originalFrom: "test@example.com",
-          bodyText: "",
-          attachments: [],
-        }),
-      }
-    );
+    const res1 = await fetch(`${WEBHOOK_URL}/api/webhooks/files-intake`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        forwarderEmail: "test-runner@desertservices.app",
+        forwardedAt: new Date().toISOString(),
+        originalSubject: "Backward Compat Test - files-intake",
+        originalFrom: "test@example.com",
+        bodyText: "",
+        attachments: [],
+      }),
+    });
     // Should get 400 (no files) but NOT 404 (route not found)
     expect(res1.status).toBe(400);
 
     // Test /api/webhooks/contracts-intake alias
-    const res2 = await fetch(
-      `${WEBHOOK_URL}/api/webhooks/contracts-intake`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          forwarderEmail: "test-runner@desertservices.app",
-          forwardedAt: new Date().toISOString(),
-          originalSubject: "Backward Compat Test - contracts-intake",
-          originalFrom: "test@example.com",
-          bodyText: "",
-          attachments: [],
-        }),
-      }
-    );
+    const res2 = await fetch(`${WEBHOOK_URL}/api/webhooks/contracts-intake`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        forwarderEmail: "test-runner@desertservices.app",
+        forwardedAt: new Date().toISOString(),
+        originalSubject: "Backward Compat Test - contracts-intake",
+        originalFrom: "test@example.com",
+        bodyText: "",
+        attachments: [],
+      }),
+    });
     expect(res2.status).toBe(400);
 
     // Test /api/webhooks/dust-permit-intake alias
-    const res3 = await fetch(
-      `${WEBHOOK_URL}/api/webhooks/dust-permit-intake`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          forwarderEmail: "test-runner@desertservices.app",
-          forwardedAt: new Date().toISOString(),
-          originalSubject: "Backward Compat Test - dust-permit-intake",
-          originalFrom: "test@example.com",
-          bodyText: "",
-          attachments: [],
-        }),
-      }
-    );
+    const res3 = await fetch(`${WEBHOOK_URL}/api/webhooks/dust-permit-intake`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        forwarderEmail: "test-runner@desertservices.app",
+        forwardedAt: new Date().toISOString(),
+        originalSubject: "Backward Compat Test - dust-permit-intake",
+        originalFrom: "test@example.com",
+        bodyText: "",
+        attachments: [],
+      }),
+    });
     expect(res3.status).toBe(400);
   });
 

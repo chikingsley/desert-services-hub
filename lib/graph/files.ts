@@ -35,7 +35,9 @@ export async function getOneDriveFileFromShareUrl(
 
   if (!res.ok) {
     const text = await res.text();
-    throw new Error(`Graph shares API error ${res.status}: ${text.slice(0, 200)}`);
+    throw new Error(
+      `Graph shares API error ${res.status}: ${text.slice(0, 200)}`
+    );
   }
 
   const item = (await res.json()) as {
@@ -70,5 +72,5 @@ function encodeSharingUrl(url: string): string {
     .replace(/=/g, "")
     .replace(/\//g, "_")
     .replace(/\+/g, "-");
-  return "u!" + base64;
+  return `u!${base64}`;
 }

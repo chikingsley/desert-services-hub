@@ -15,13 +15,16 @@ import { join } from "node:path";
 import { extractFile } from "@kreuzberg/node";
 import { db } from "@lib/db/hub";
 import type {
-  ContractsEmailIntakePayload,
-  ParseIntakeResult,
+  ContractsEmailIntakePayload as ContractsEmailIntakePayloadType,
+  ParseIntakeResult as ParseIntakeResultType,
 } from "./parse-intake";
 import { processContractsEmailIntake } from "./parse-intake";
 
 // Re-export types so worker.ts can import from here
-export type { ContractsEmailIntakePayload, ParseIntakeResult };
+export type {
+  ContractsEmailIntakePayload,
+  ParseIntakeResult,
+} from "./parse-intake";
 
 // ============================================================================
 // Config
@@ -68,10 +71,18 @@ type FileCategory = "pdf" | "image" | "text" | "office" | "other";
 
 function getFileCategory(filePath: string): FileCategory {
   const ext = (filePath.split(".").pop() ?? "").toLowerCase();
-  if (PDF_EXTS.has(ext)) return "pdf";
-  if (IMAGE_EXTS.has(ext)) return "image";
-  if (OFFICE_EXTS.has(ext)) return "office";
-  if (TEXT_EXTS.has(ext)) return "text";
+  if (PDF_EXTS.has(ext)) {
+    return "pdf";
+  }
+  if (IMAGE_EXTS.has(ext)) {
+    return "image";
+  }
+  if (OFFICE_EXTS.has(ext)) {
+    return "office";
+  }
+  if (TEXT_EXTS.has(ext)) {
+    return "text";
+  }
   return "other";
 }
 
@@ -113,6 +124,70 @@ const insertUnsupported = db.prepare(`
   ) VALUES ('unsupported', $1, $2, 'unsupported', $3, $4, $5)
   RETURNING id
 `);
+
+// ============================================================================
+// Fast PDF Extraction — Kreuzberg (text-based PDFs only)
+// ============================================================================
+
+const MIN_KREUZBERG_TEXT_LENGTH = 100; // below this, PDF is likely scanned
+
+async function processPdfFast(
+  pdfPath: string,
+  emailMeta: EmailMeta
+): Promise<ParseIntakeResultType | null> {
+  const fileName = pdfPath.split("/").pop() ?? pdfPath;
+  const started = performance.now();
+
+  try {
+    const result = await extractFile(pdfPath);
+    const content = result.content ?? "";
+
+    // If Kreuzberg got meaningful text, this is a text-based PDF — done
+    if (content.length >= MIN_KREUZBERG_TEXT_LENGTH) {
+      const elapsed = Math.round(performance.now() - started);
+
+      const rawExtraction = {
+        text_content: content,
+        table_count: result.tables?.length ?? 0,
+        tables: result.tables?.map((t) => t.markdown) ?? [],
+        metadata: result.metadata ?? {},
+        extractor: "kreuzberg",
+        char_count: content.length,
+      };
+
+      const row = (await insertFileRecord.get(
+        "pdf_document",
+        pdfPath,
+        fileName,
+        content.slice(0, 10_000),
+        JSON.stringify(rawExtraction),
+        "kreuzberg",
+        elapsed,
+        emailMeta.originalFrom || null,
+        emailMeta.originalSubject || null,
+        emailMeta.forwarderEmail || null
+      )) as { id: number } | null;
+
+      console.log(
+        `${LOG}   Fast PDF #${row?.id}: ${content.length} chars in ${elapsed}ms (kreuzberg)`
+      );
+
+      return {
+        documentId: row?.id ?? null,
+        fileName,
+        documentType: "pdf_document",
+        pageCount: 0,
+        processingTimeMs: elapsed,
+      };
+    }
+
+    // Not enough text — likely a scanned PDF, return null to fall through
+    return null;
+  } catch {
+    // Kreuzberg failed — fall through to heavy pipeline
+    return null;
+  }
+}
 
 // ============================================================================
 // Image Processing — OCR via pdf-analysis
@@ -161,7 +236,7 @@ async function runOcr(imagePath: string): Promise<OcrOutput> {
 async function processImage(
   imagePath: string,
   emailMeta: EmailMeta
-): Promise<ParseIntakeResult> {
+): Promise<ParseIntakeResultType> {
   const fileName = imagePath.split("/").pop() ?? imagePath;
   const started = performance.now();
 
@@ -229,7 +304,7 @@ async function processImage(
 async function processTextFile(
   textPath: string,
   emailMeta: EmailMeta
-): Promise<ParseIntakeResult> {
+): Promise<ParseIntakeResultType> {
   const fileName = textPath.split("/").pop() ?? textPath;
   const started = performance.now();
 
@@ -251,7 +326,7 @@ async function processTextFile(
       docType,
       textPath,
       fileName,
-      content.slice(0, 10000), // summary = first 10k chars
+      content.slice(0, 10_000), // summary = first 10k chars
       JSON.stringify(rawExtraction),
       "direct_read",
       elapsed,
@@ -300,7 +375,7 @@ async function processTextFile(
 async function processOfficeDocument(
   filePath: string,
   emailMeta: EmailMeta
-): Promise<ParseIntakeResult> {
+): Promise<ParseIntakeResultType> {
   const fileName = filePath.split("/").pop() ?? filePath;
   const ext = (fileName.split(".").pop() ?? "").toLowerCase();
   const started = performance.now();
@@ -313,12 +388,12 @@ async function processOfficeDocument(
     const content = result.content ?? "";
 
     // Map extension to a document type hint
-    const docType =
-      ext === "xlsx" || ext === "xls" || ext === "ods"
-        ? "spreadsheet"
-        : ext === "pptx" || ext === "ppt" || ext === "odp"
-          ? "presentation"
-          : "office_document";
+    let docType = "office_document";
+    if (ext === "xlsx" || ext === "xls" || ext === "ods") {
+      docType = "spreadsheet";
+    } else if (ext === "pptx" || ext === "ppt" || ext === "odp") {
+      docType = "presentation";
+    }
 
     const rawExtraction = {
       text_content: content,
@@ -333,7 +408,7 @@ async function processOfficeDocument(
       docType,
       filePath,
       fileName,
-      content.slice(0, 10000),
+      content.slice(0, 10_000),
       JSON.stringify(rawExtraction),
       "kreuzberg",
       elapsed,
@@ -382,7 +457,7 @@ async function processOfficeDocument(
 async function processUnsupported(
   filePath: string,
   emailMeta: EmailMeta
-): Promise<ParseIntakeResult> {
+): Promise<ParseIntakeResultType> {
   const fileName = filePath.split("/").pop() ?? filePath;
 
   const row = (await insertUnsupported.get(
@@ -409,8 +484,8 @@ async function processUnsupported(
 // ============================================================================
 
 export async function processFilesIntake(
-  payload: ContractsEmailIntakePayload
-): Promise<ParseIntakeResult[]> {
+  payload: ContractsEmailIntakePayloadType
+): Promise<ParseIntakeResultType[]> {
   const { attachmentPaths, originalSubject, originalFrom, forwarderEmail } =
     payload;
 
@@ -450,13 +525,25 @@ export async function processFilesIntake(
     forwarderEmail: forwarderEmail ?? "",
   };
 
-  const results: ParseIntakeResult[] = [];
+  const results: ParseIntakeResultType[] = [];
 
-  // Process PDFs via existing pipeline
-  if (pdfs.length > 0) {
+  // Process PDFs: try fast Kreuzberg extraction first, fall back to OCR pipeline
+  const slowPdfs: string[] = [];
+  for (const pdfPath of pdfs) {
+    const fastResult = await processPdfFast(pdfPath, emailMeta);
+    if (fastResult) {
+      results.push(fastResult);
+    } else {
+      slowPdfs.push(pdfPath); // scanned PDF — needs OCR
+    }
+  }
+  if (slowPdfs.length > 0) {
+    console.log(
+      `${LOG}   ${slowPdfs.length} scanned PDF(s) falling back to OCR pipeline`
+    );
     const pdfResults = await processContractsEmailIntake({
       ...payload,
-      attachmentPaths: pdfs,
+      attachmentPaths: slowPdfs,
     });
     results.push(...pdfResults);
   }

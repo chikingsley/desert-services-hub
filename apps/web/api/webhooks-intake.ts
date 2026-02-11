@@ -14,6 +14,11 @@ import { getOneDriveFileFromShareUrl } from "@lib/graph/files";
 
 const INTAKE_DIR = join(import.meta.dir, "../../../data/intake");
 const LOG = "[webhook:intake]";
+const INVALID_FILENAME_CHARS_PATTERN = /[/\\?%*:|"<>]/g;
+const LEADING_DOTS_PATTERN = /^\.+/;
+const CONTENT_DISPOSITION_FILENAME_PATTERN =
+  /filename[^;=\n]*=(["']?)([^"';\n]+)\1/;
+const DROPBOX_DL0_PATTERN = /[?&]dl=0/;
 
 /** Per-file download timeout (2 minutes) */
 const DOWNLOAD_TIMEOUT_MS = 120_000;
@@ -55,8 +60,8 @@ const enqueueStmt = db.prepare(
 
 function sanitizeFilename(name: string): string {
   return name
-    .replace(/[/\\?%*:|"<>]/g, "-")
-    .replace(/^\.+/, "")
+    .replace(INVALID_FILENAME_CHARS_PATTERN, "-")
+    .replace(LEADING_DOTS_PATTERN, "")
     .slice(0, 255);
 }
 
@@ -93,7 +98,9 @@ async function downloadOneDriveFile(
   }
 
   const buffer = await response.arrayBuffer();
-  if (buffer.byteLength === 0) throw new Error("Empty file");
+  if (buffer.byteLength === 0) {
+    throw new Error("Empty file");
+  }
   await Bun.write(filePath, buffer);
 
   console.log(
@@ -114,21 +121,28 @@ async function downloadEgnyteFile(
   let filename = "egnyte-file";
   const disposition = response.headers.get("content-disposition");
   if (disposition) {
-    const match = disposition.match(/filename[^;=\n]*=(["']?)([^"';\n]+)\1/);
-    if (match?.[2]) filename = match[2];
+    const match = disposition.match(CONTENT_DISPOSITION_FILENAME_PATTERN);
+    if (match?.[2]) {
+      filename = match[2];
+    }
   }
   // Detect content type to add extension if missing
   const ct = response.headers.get("content-type") ?? "";
   if (!filename.includes(".")) {
-    if (ct.includes("pdf")) filename += ".pdf";
-    else if (ct.includes("zip")) filename += ".zip";
+    if (ct.includes("pdf")) {
+      filename += ".pdf";
+    } else if (ct.includes("zip")) {
+      filename += ".zip";
+    }
   }
 
   filename = sanitizeFilename(filename);
   const filePath = join(destDir, filename);
 
   const buffer = await response.arrayBuffer();
-  if (buffer.byteLength === 0) throw new Error("Empty file");
+  if (buffer.byteLength === 0) {
+    throw new Error("Empty file");
+  }
   await Bun.write(filePath, buffer);
 
   console.log(
@@ -144,10 +158,9 @@ async function downloadDropboxFile(
   // Convert share link to direct download
   let downloadUrl = link.url;
   if (downloadUrl.includes("dropbox.com")) {
-    downloadUrl = downloadUrl.replace(/[?&]dl=0/, "?dl=1");
+    downloadUrl = downloadUrl.replace(DROPBOX_DL0_PATTERN, "?dl=1");
     if (!downloadUrl.includes("dl=1")) {
-      downloadUrl +=
-        (downloadUrl.includes("?") ? "&" : "?") + "dl=1";
+      downloadUrl += `${downloadUrl.includes("?") ? "&" : "?"}dl=1`;
     }
   }
 
@@ -159,14 +172,18 @@ async function downloadDropboxFile(
   let filename = "dropbox-file";
   const disposition = response.headers.get("content-disposition");
   if (disposition) {
-    const match = disposition.match(/filename[^;=\n]*=(["']?)([^"';\n]+)\1/);
-    if (match?.[2]) filename = match[2];
+    const match = disposition.match(CONTENT_DISPOSITION_FILENAME_PATTERN);
+    if (match?.[2]) {
+      filename = match[2];
+    }
   }
   filename = sanitizeFilename(filename);
   const filePath = join(destDir, filename);
 
   const buffer = await response.arrayBuffer();
-  if (buffer.byteLength === 0) throw new Error("Empty file");
+  if (buffer.byteLength === 0) {
+    throw new Error("Empty file");
+  }
   await Bun.write(filePath, buffer);
 
   console.log(
@@ -187,6 +204,8 @@ async function downloadFileLink(
         return await downloadEgnyteFile(link, destDir);
       case "dropbox":
         return await downloadDropboxFile(link, destDir);
+      default:
+        return null;
     }
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
@@ -200,9 +219,7 @@ async function downloadFileLink(
 // Main Handler
 // =============================================================================
 
-export async function handleIntakeWebhook(
-  req: Request
-): Promise<Response> {
+export async function handleIntakeWebhook(req: Request): Promise<Response> {
   let body: IncomingPayload;
   try {
     body = (await req.json()) as IncomingPayload;
@@ -214,7 +231,7 @@ export async function handleIntakeWebhook(
   const hasLinks = (body.fileLinks?.length ?? 0) > 0;
   const hasBody = body.bodyHasContent === true;
 
-  if (!hasAttachments && !hasLinks && !hasBody) {
+  if (!(hasAttachments || hasLinks || hasBody)) {
     return Response.json(
       { error: "No attachments, links, or body content provided" },
       { status: 400 }

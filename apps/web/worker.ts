@@ -1,13 +1,13 @@
 /**
  * Background Job Worker
  *
- * Polls the webhook_jobs queue in hub.db and processes jobs asynchronously.
+ * Polls the webhook_jobs queue in Supabase Postgres and processes jobs asynchronously.
  * Runs in-process alongside the Bun HTTP server.
  *
  * Job types:
- *   sync_item              -- Fetch a single item from Monday, upsert all fields into hub.db
+ *   sync_item              -- Fetch a single item from Monday, upsert all fields into Supabase Postgres
  *   download_files         -- Download new files from a Monday item, run PDF extraction
- *   sync_full              -- Full board sync (all ~4800 estimates from Monday -> hub.db)
+ *   sync_full              -- Full board sync (all ~4800 estimates from Monday -> Supabase Postgres)
  *   contract_intake        -- Classify + extract data from IC contract PDFs via LLM
  *   dust_permit_payment    -- PointAndPay payment email → billing + submitted notifications
  *   dust_permit_issued_email -- Maricopa issued email → issued notification with PDF
@@ -17,10 +17,6 @@ import type { GraphEmailClient } from "@email/client";
 import { createGraphClient } from "@email/sync/config";
 import { db } from "@lib/db/hub";
 import {
-  createSharePointClientFromEnv,
-  uploadLocalFileToProjectSubfolder,
-} from "@lib/sharepoint/intake-upload";
-import {
   getEmailByMessageId,
   getOrCreateMailbox,
   insertAttachment,
@@ -29,20 +25,23 @@ import {
 } from "@lib/db/repositories";
 import type { InsertAttachmentData, InsertEmailData } from "@lib/db/types";
 import { htmlToText } from "@lib/html-to-text";
+import {
+  createSharePointClientFromEnv,
+  uploadLocalFileToProjectSubfolder,
+} from "@lib/sharepoint/intake-upload";
 import { isSpam } from "@lib/spam-filter";
 import { getItemRich } from "@monday/client";
 import { ESTIMATING_COLUMNS } from "@monday/types";
 import { z } from "zod";
 import { itemHasFiles, processItemFiles } from "@/apps/web/pipeline";
-import { processContractIntake } from "@/apps/workers/contract-intake/lib/intake";
 import type { ContractsEmailIntakePayload } from "@/apps/workers/contract-intake/lib/files-intake";
 import { processFilesIntake } from "@/apps/workers/contract-intake/lib/files-intake";
+import { processContractIntake } from "@/apps/workers/contract-intake/lib/intake";
 import type { DustPermitIntakePayload } from "@/apps/workers/dust-permit-intake/lib/intake";
 import { processDustPermitIntake } from "@/apps/workers/dust-permit-intake/lib/intake";
 import { syncEstimates } from "@/apps/workers/estimate-poller/lib/sync";
 import { syncSharePointFolders } from "@/apps/workers/estimates-sync-worker/lib/sharepoint-sync";
 import { processUnprocessedAttachments } from "@/apps/workers/files-email-intake/lib/attachment-backfill";
-import { pollFolderWatcher } from "@/apps/workers/outlook-folder-watcher/lib/poll";
 import {
   detectDustPermitEmailTrigger,
   handleIssuedEmail,
@@ -50,6 +49,7 @@ import {
   type IssuedJobPayload,
   type PaymentJobPayload,
 } from "@/apps/workers/notifications/lib/email-triggers";
+import { pollFolderWatcher } from "@/apps/workers/outlook-folder-watcher/lib/poll";
 
 // ============================================================================
 // Config
@@ -150,9 +150,12 @@ const ISSUED_PAYLOAD_SCHEMA: z.ZodType<IssuedJobPayload> = z.object({
 
 // Lazy Graph client for email notification processing
 let _graphClient: GraphEmailClient | null = null;
-let _sharePointClient: ReturnType<typeof createSharePointClientFromEnv> | undefined =
-  undefined;
-function getSharePointClient(): ReturnType<typeof createSharePointClientFromEnv> {
+let _sharePointClient:
+  | ReturnType<typeof createSharePointClientFromEnv>
+  | undefined;
+function getSharePointClient(): ReturnType<
+  typeof createSharePointClientFromEnv
+> {
   if (_sharePointClient === undefined) {
     _sharePointClient = createSharePointClientFromEnv();
   }
@@ -727,13 +730,17 @@ const getDocumentUploadMeta = db.query<{
   "SELECT project_id, file_path, file_name, document_type FROM documents WHERE id = ?"
 );
 
-function docTypeToSharePointSubfolder(
-  documentType: string | null
-): string {
+function docTypeToSharePointSubfolder(documentType: string | null): string {
   const t = (documentType ?? "").toLowerCase();
-  if (t.includes("noi")) return "NOI";
-  if (t.includes("plan")) return "Plans";
-  if (t.includes("estimate")) return "Estimates";
+  if (t.includes("noi")) {
+    return "NOI";
+  }
+  if (t.includes("plan")) {
+    return "Plans";
+  }
+  if (t.includes("estimate")) {
+    return "Estimates";
+  }
   return "Contracts";
 }
 
@@ -958,7 +965,8 @@ async function processNextJob(): Promise<void> {
                 }
               }
             } catch (error) {
-              const msg = error instanceof Error ? error.message : String(error);
+              const msg =
+                error instanceof Error ? error.message : String(error);
               console.warn(
                 `[doc-sharepoint] Upload failed for document #${r.documentId}: ${msg}`
               );
@@ -1115,7 +1123,9 @@ export async function startWorker(): Promise<void> {
   // Outlook folder watcher — polls Graph deltas for folder/message changes (every 30s)
   let folderWatcherRunning = false;
   folderWatcherTimer = setInterval(async () => {
-    if (folderWatcherRunning) return; // skip if previous poll still in-flight
+    if (folderWatcherRunning) {
+      return; // skip if previous poll still in-flight
+    }
     folderWatcherRunning = true;
     try {
       await pollFolderWatcher();
@@ -1133,7 +1143,9 @@ export async function startWorker(): Promise<void> {
   // Attachment backfill — process unprocessed email attachments (every 2 min)
   let backfillRunning = false;
   attachmentBackfillTimer = setInterval(async () => {
-    if (backfillRunning) return;
+    if (backfillRunning) {
+      return;
+    }
     backfillRunning = true;
     try {
       const result = await processUnprocessedAttachments();

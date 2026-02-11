@@ -2,7 +2,7 @@
   "name": "eva-jayson-variable-inventory",
   "description": "Committed snapshot + canonical contract from Eva->Jayson SWPPP narrative corpus analysis.",
   "source_inventory_dir": "apps/narrative/data/intake/eva-to-jayson/variable-inventory",
-  "canonical_contract": "apps/narrative/workflows/eva-jayson-variable-inventory/canonical_fields.ts",
+  "canonical_contract": "apps/narrative/workflows/eva-jayson-variable-inventory/canonical-fields.ts",
   "artifacts": [
     {
       "path": "apps/narrative/workflows/eva-jayson-variable-inventory/artifacts/REPORT.md",
@@ -24,7 +24,6 @@
   "refresh_command": "bun apps/narrative/scripts/narrative_inventory/run.ts --inventory --report --diff --export",
   "notes": [
     "The source inventory directory is local/ignored; artifacts folder is committed snapshot state.",
-    "Use canonical_fields.ts as the deterministic schema target for downstream generation."
+    "Use canonical-fields.ts as the deterministic schema target for downstream generation."
   ]
 }
-

@@ -45,6 +45,7 @@
     "@azure/identity": "^4.13.0",
     "@azure/msal-node": "^5.0.3",
     "@google/genai": "^1.40.0",
+    "@kreuzberg/node": "^4.2.15",
     "@microsoft/microsoft-graph-client": "^3.0.7",
     "@mistralai/mistralai": "^1.14.0",
     "@modelcontextprotocol/sdk": "^1.26.0",

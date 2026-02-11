@@ -154,6 +154,18 @@ export async function fillPage4(
     return true;
   } catch (e) {
     console.log(`  fillPage4 failed: ${e}`);
+    const ts = Date.now();
+    const screenshotPath = `/tmp/page4-fail-${ts}.png`;
+    const htmlPath = `/tmp/page4-fail-${ts}.html`;
+    try {
+      await page.screenshot({ path: screenshotPath, fullPage: true });
+      const { writeFile } = await import("node:fs/promises");
+      await writeFile(htmlPath, await page.content());
+      console.log(`  Screenshot: ${screenshotPath}`);
+      console.log(`  HTML dump: ${htmlPath}`);
+    } catch {
+      console.log("  (debug capture failed)");
+    }
     return false;
   }
 }

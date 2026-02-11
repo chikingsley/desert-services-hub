@@ -4,6 +4,7 @@
  * Routes files by type to the appropriate processing pipeline:
  *   - PDF → existing parse pipeline (pdfplumber + GLM OCR + Kimi K2.5)
  *   - Images → GLM OCR via pdf-analysis ocr command
+ *   - Office → Kreuzberg native extraction (docx, xlsx, xls, doc, pptx, ppt)
  *   - Text → direct read + LLM classification
  *   - Other → metadata-only storage
  *
@@ -11,6 +12,7 @@
  * for the files_intake job type.
  */
 import { join } from "node:path";
+import { extractFile } from "@kreuzberg/node";
 import { db } from "@lib/db/hub";
 import type {
   ContractsEmailIntakePayload,
@@ -49,13 +51,26 @@ const IMAGE_EXTS = new Set([
 ]);
 const TEXT_EXTS = new Set(["txt", "csv", "md"]);
 const PDF_EXTS = new Set(["pdf"]);
+const OFFICE_EXTS = new Set([
+  "docx",
+  "doc",
+  "xlsx",
+  "xls",
+  "pptx",
+  "ppt",
+  "odt",
+  "ods",
+  "odp",
+  "rtf",
+]);
 
-type FileCategory = "pdf" | "image" | "text" | "other";
+type FileCategory = "pdf" | "image" | "text" | "office" | "other";
 
 function getFileCategory(filePath: string): FileCategory {
   const ext = (filePath.split(".").pop() ?? "").toLowerCase();
   if (PDF_EXTS.has(ext)) return "pdf";
   if (IMAGE_EXTS.has(ext)) return "image";
+  if (OFFICE_EXTS.has(ext)) return "office";
   if (TEXT_EXTS.has(ext)) return "text";
   return "other";
 }
@@ -279,6 +294,88 @@ async function processTextFile(
 }
 
 // ============================================================================
+// Office Document Processing — Kreuzberg native extraction
+// ============================================================================
+
+async function processOfficeDocument(
+  filePath: string,
+  emailMeta: EmailMeta
+): Promise<ParseIntakeResult> {
+  const fileName = filePath.split("/").pop() ?? filePath;
+  const ext = (fileName.split(".").pop() ?? "").toLowerCase();
+  const started = performance.now();
+
+  try {
+    console.log(`${LOG}   Extracting office doc: ${fileName}`);
+    const result = await extractFile(filePath);
+    const elapsed = Math.round(performance.now() - started);
+
+    const content = result.content ?? "";
+
+    // Map extension to a document type hint
+    const docType =
+      ext === "xlsx" || ext === "xls" || ext === "ods"
+        ? "spreadsheet"
+        : ext === "pptx" || ext === "ppt" || ext === "odp"
+          ? "presentation"
+          : "office_document";
+
+    const rawExtraction = {
+      text_content: content,
+      table_count: result.tables?.length ?? 0,
+      tables: result.tables?.map((t) => t.markdown) ?? [],
+      metadata: result.metadata ?? {},
+      extractor: "kreuzberg",
+      char_count: content.length,
+    };
+
+    const row = (await insertFileRecord.get(
+      docType,
+      filePath,
+      fileName,
+      content.slice(0, 10000),
+      JSON.stringify(rawExtraction),
+      "kreuzberg",
+      elapsed,
+      emailMeta.originalFrom || null,
+      emailMeta.originalSubject || null,
+      emailMeta.forwarderEmail || null
+    )) as { id: number } | null;
+
+    console.log(
+      `${LOG}   Stored ${docType} #${row?.id}: ${content.length} chars in ${elapsed}ms`
+    );
+
+    return {
+      documentId: row?.id ?? null,
+      fileName,
+      documentType: docType,
+      pageCount: 0,
+      processingTimeMs: elapsed,
+    };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error(`${LOG}   Failed office doc ${fileName}: ${msg}`);
+    await insertFileError.run(
+      filePath,
+      fileName,
+      msg.slice(0, 1000),
+      emailMeta.originalFrom || null,
+      emailMeta.originalSubject || null,
+      emailMeta.forwarderEmail || null
+    );
+    return {
+      documentId: null,
+      fileName,
+      documentType: "error",
+      pageCount: 0,
+      processingTimeMs: 0,
+      error: msg,
+    };
+  }
+}
+
+// ============================================================================
 // Unsupported File — store metadata only
 // ============================================================================
 
@@ -320,6 +417,7 @@ export async function processFilesIntake(
   // Categorize files
   const pdfs: string[] = [];
   const images: string[] = [];
+  const office: string[] = [];
   const texts: string[] = [];
   const others: string[] = [];
 
@@ -331,6 +429,9 @@ export async function processFilesIntake(
       case "image":
         images.push(path);
         break;
+      case "office":
+        office.push(path);
+        break;
       case "text":
         texts.push(path);
         break;
@@ -340,7 +441,7 @@ export async function processFilesIntake(
   }
 
   console.log(
-    `${LOG} Processing ${attachmentPaths.length} file(s) from "${originalSubject}" (${originalFrom}): ${pdfs.length} PDF, ${images.length} image, ${texts.length} text, ${others.length} other`
+    `${LOG} Processing ${attachmentPaths.length} file(s) from "${originalSubject}" (${originalFrom}): ${pdfs.length} PDF, ${images.length} image, ${office.length} office, ${texts.length} text, ${others.length} other`
   );
 
   const emailMeta: EmailMeta = {
@@ -363,6 +464,11 @@ export async function processFilesIntake(
   // Process images via OCR
   for (const imagePath of images) {
     results.push(await processImage(imagePath, emailMeta));
+  }
+
+  // Process office documents via Kreuzberg
+  for (const officePath of office) {
+    results.push(await processOfficeDocument(officePath, emailMeta));
   }
 
   // Process text files

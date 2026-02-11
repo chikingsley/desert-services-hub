@@ -22,8 +22,11 @@ AutoNarrative is an AI-powered system that automates the generation of SWPPP (St
 │   ├── run_extraction_demo.py  # Test: Extraction only
 │   ├── run_generation_demo.py  # Test: Generation only
 │   ├── test_mapper.py          # Test: Data Mapping logic
+│   ├── narrative_inventory/    # Corpus inventory + canonical-field tooling
 │   ├── utils/                  # Utility scripts (e.g., template inspection)
 │   └── archive/                # One-off setup scripts (template injection)
+├── workflows/
+│   └── eva-jayson-variable-inventory/  # Organized analysis package + snapshots
 └── templates/
     ├── cgp_p3_template.docx    # The Master Word Template
     └── output/                 # Generated SWPPP documents
@@ -82,6 +85,18 @@ uv run python scripts/generate_swppp.py
     ```bash
     uv run python scripts/utils/inspect_template.py
     ```
+
+### 5. Narrative Inventory Workflow (Organized)
+
+Use this when updating the Eva->Jayson narrative corpus analysis and canonical field contract.
+
+```bash
+bun apps/narrative/scripts/narrative_inventory/run.ts --inventory --report --diff --export
+```
+
+Outputs are exported to:
+
+`apps/narrative/workflows/eva-jayson-variable-inventory/artifacts/`
 
 ## 📚 Documentation
 

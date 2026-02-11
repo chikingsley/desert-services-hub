@@ -55,11 +55,11 @@ export const categoryB1 = {
       '[id="ThePage:siTable:21:sioTable:8:siForm:radioTable:1:radio"]',
     None: '[id="ThePage:siTable:21:sioTable:8:siForm:radioTable:2:radio"]',
   },
-  /** Paving timing radios (sioTable:29) - shown when pave is Primary or Contingency */
+  /** Paving timing radios (sioTable:30) - shown when pave is Primary or Contingency */
   paveWhen: {
-    prior: '[id="ThePage:siTable:21:sioTable:29:siForm:radioTable:0:radio"]',
-    during: '[id="ThePage:siTable:21:sioTable:29:siForm:radioTable:1:radio"]',
-    end: '[id="ThePage:siTable:21:sioTable:29:siForm:radioTable:2:radio"]',
+    prior: '[id="ThePage:siTable:21:sioTable:30:siForm:radioTable:0:radio"]',
+    during: '[id="ThePage:siTable:21:sioTable:30:siForm:radioTable:1:radio"]',
+    end: '[id="ThePage:siTable:21:sioTable:30:siForm:radioTable:2:radio"]',
   },
   /** Dust suppressant frequency */
   dustSuppressantsFrequency:

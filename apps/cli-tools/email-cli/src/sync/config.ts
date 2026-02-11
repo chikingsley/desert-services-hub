@@ -60,6 +60,7 @@ export interface SyncAllOptions {
   maxPerMailbox?: number;
   concurrency?: number;
   incremental?: boolean;
+  fetchBodies?: boolean;
   onProgress?: (progress: SyncProgress) => void;
 }
 

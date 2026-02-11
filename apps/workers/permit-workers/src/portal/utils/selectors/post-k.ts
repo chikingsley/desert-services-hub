@@ -24,55 +24,55 @@ export const postK = {
   /** B.1 - Unpaved Staging Areas (siTable:54) */
   b1: {
     waterTier: {
-      "0-2": '[id="ThePage:siTable:54:sioTable:1:siForm:radioTable:0:radio"]',
-      "2-10": '[id="ThePage:siTable:54:sioTable:1:siForm:radioTable:1:radio"]',
+      "0-2": '[id="ThePage:siTable:54:sioTable:3:siForm:radioTable:0:radio"]',
+      "2-10": '[id="ThePage:siTable:54:sioTable:3:siForm:radioTable:1:radio"]',
       "10-100":
-        '[id="ThePage:siTable:54:sioTable:1:siForm:radioTable:2:radio"]',
-      "100+": '[id="ThePage:siTable:54:sioTable:1:siForm:radioTable:3:radio"]',
+        '[id="ThePage:siTable:54:sioTable:3:siForm:radioTable:2:radio"]',
+      "100+": '[id="ThePage:siTable:54:sioTable:3:siForm:radioTable:3:radio"]',
     },
     avgDailyDisturbedAcres: '[id="ThePage:siTable:54:sioTable:5:siForm:text"]',
   },
   /** B.2 - Unpaved Haul Roads (siTable:55) */
   b2: {
     waterTier: {
-      "0-2": '[id="ThePage:siTable:55:sioTable:2:siForm:radioTable:0:radio"]',
-      "2-10": '[id="ThePage:siTable:55:sioTable:2:siForm:radioTable:1:radio"]',
+      "0-2": '[id="ThePage:siTable:55:sioTable:3:siForm:radioTable:0:radio"]',
+      "2-10": '[id="ThePage:siTable:55:sioTable:3:siForm:radioTable:1:radio"]',
       "10-100":
-        '[id="ThePage:siTable:55:sioTable:2:siForm:radioTable:2:radio"]',
-      "100+": '[id="ThePage:siTable:55:sioTable:2:siForm:radioTable:3:radio"]',
+        '[id="ThePage:siTable:55:sioTable:3:siForm:radioTable:2:radio"]',
+      "100+": '[id="ThePage:siTable:55:sioTable:3:siForm:radioTable:3:radio"]',
     },
     avgDailyDisturbedAcres: '[id="ThePage:siTable:55:sioTable:4:siForm:text"]',
   },
   /** C.2 - Disturbed Surfaces Active Operations (siTable:56) */
   c2: {
     waterTier: {
-      "0-2": '[id="ThePage:siTable:56:sioTable:2:siForm:radioTable:0:radio"]',
-      "2-10": '[id="ThePage:siTable:56:sioTable:2:siForm:radioTable:1:radio"]',
+      "0-2": '[id="ThePage:siTable:56:sioTable:3:siForm:radioTable:0:radio"]',
+      "2-10": '[id="ThePage:siTable:56:sioTable:3:siForm:radioTable:1:radio"]',
       "10-100":
-        '[id="ThePage:siTable:56:sioTable:2:siForm:radioTable:2:radio"]',
-      "100+": '[id="ThePage:siTable:56:sioTable:2:siForm:radioTable:3:radio"]',
+        '[id="ThePage:siTable:56:sioTable:3:siForm:radioTable:2:radio"]',
+      "100+": '[id="ThePage:siTable:56:sioTable:3:siForm:radioTable:3:radio"]',
     },
     avgDailyDisturbedAcres: '[id="ThePage:siTable:56:sioTable:4:siForm:text"]',
   },
   /** C.3 - Disturbed Surfaces Inactive Periods (siTable:57) */
   c3: {
     waterTier: {
-      "0-2": '[id="ThePage:siTable:57:sioTable:2:siForm:radioTable:0:radio"]',
-      "2-10": '[id="ThePage:siTable:57:sioTable:2:siForm:radioTable:1:radio"]',
+      "0-2": '[id="ThePage:siTable:57:sioTable:3:siForm:radioTable:0:radio"]',
+      "2-10": '[id="ThePage:siTable:57:sioTable:3:siForm:radioTable:1:radio"]',
       "10-100":
-        '[id="ThePage:siTable:57:sioTable:2:siForm:radioTable:2:radio"]',
-      "100+": '[id="ThePage:siTable:57:sioTable:2:siForm:radioTable:3:radio"]',
+        '[id="ThePage:siTable:57:sioTable:3:siForm:radioTable:2:radio"]',
+      "100+": '[id="ThePage:siTable:57:sioTable:3:siForm:radioTable:3:radio"]',
     },
     avgDailyDisturbedAcres: '[id="ThePage:siTable:57:sioTable:4:siForm:text"]',
   },
   /** F.2 - Fine Grading (siTable:58) */
   f2: {
     waterTier: {
-      "0-2": '[id="ThePage:siTable:58:sioTable:0:siForm:radioTable:0:radio"]',
-      "2-10": '[id="ThePage:siTable:58:sioTable:0:siForm:radioTable:1:radio"]',
+      "0-2": '[id="ThePage:siTable:58:sioTable:1:siForm:radioTable:0:radio"]',
+      "2-10": '[id="ThePage:siTable:58:sioTable:1:siForm:radioTable:1:radio"]',
       "10-100":
-        '[id="ThePage:siTable:58:sioTable:0:siForm:radioTable:2:radio"]',
-      "100+": '[id="ThePage:siTable:58:sioTable:0:siForm:radioTable:3:radio"]',
+        '[id="ThePage:siTable:58:sioTable:1:siForm:radioTable:2:radio"]',
+      "100+": '[id="ThePage:siTable:58:sioTable:1:siForm:radioTable:3:radio"]',
     },
     avgDailyDisturbedAcres: '[id="ThePage:siTable:58:sioTable:2:siForm:text"]',
   },

@@ -48,6 +48,8 @@ async function syncMailboxFull(
   since: Date,
   before: Date | undefined,
   maxEmails: number,
+  includeBodyInListing: boolean,
+  fetchBodies: boolean,
   onProgress?: (progress: SyncProgress) => void
 ): Promise<SyncResult> {
   const reportProgress = (progress: SyncProgress) => {
@@ -66,7 +68,7 @@ async function syncMailboxFull(
       mailboxEmail,
       since,
       maxEmails,
-      { includeBody: false, before }
+      { includeBody: includeBodyInListing, before }
     );
 
     reportProgress({
@@ -75,23 +77,27 @@ async function syncMailboxFull(
       emailsFetched: emails.length,
     });
 
-    // Phase 2: Batch fetch bodies for non-spam emails (20 at a time)
+    // Phase 2: Batch fetch bodies for non-spam emails (20 at a time).
+    // For backfills (`--full`), we prefer fetching bodies inline during listing
+    // to avoid high-volume batch calls (Graph throttling).
     const nonSpamEmails = emails.filter(
       (e) => !isSpam(e.fromEmail, e.subject).isSpam
     );
-    const emailIds = nonSpamEmails.map((e) => e.id);
+    if (!includeBodyInListing && fetchBodies) {
+      const emailIds = nonSpamEmails.map((e) => e.id);
 
-    console.log(
-      `   [${mailboxEmail}] Fetching bodies for ${emailIds.length} emails...`
-    );
+      console.log(
+        `   [${mailboxEmail}] Fetching bodies for ${emailIds.length} emails...`
+      );
 
-    const bodies = await client.getEmailBodiesBatch(emailIds, mailboxEmail);
+      const bodies = await client.getEmailBodiesBatch(emailIds, mailboxEmail);
 
-    // Merge bodies back into email objects
-    for (const email of nonSpamEmails) {
-      const body = bodies.get(email.id);
-      if (body) {
-        email.bodyContent = body;
+      // Merge bodies back into email objects
+      for (const email of nonSpamEmails) {
+        const body = bodies.get(email.id);
+        if (body) {
+          email.bodyContent = body;
+        }
       }
     }
 
@@ -250,6 +256,7 @@ export async function syncAllMailboxes(
     maxPerMailbox = 50_000,
     concurrency = 3,
     incremental = false,
+    fetchBodies = true,
     onProgress,
   } = options;
 
@@ -275,6 +282,8 @@ export async function syncAllMailboxes(
         effectiveSince,
         before,
         maxPerMailbox,
+        !incremental,
+        fetchBodies,
         onProgress
       );
     });
@@ -416,9 +425,11 @@ if (import.meta.main) {
   const incremental = !fullSync;
   const includeGroups = args.includes("--include-groups");
   const skipPost = args.includes("--no-post");
+  const noBodies = args.includes("--no-bodies");
 
   const options: SyncAllOptions = {
     incremental,
+    fetchBodies: !noBodies,
     onProgress: (p) => {
       let emoji = "\u2192";
       if (p.phase === "complete") {
@@ -505,6 +516,7 @@ if (import.meta.main) {
   }
   console.log(`Include M365 Groups: ${includeGroups}`);
   console.log(`Post-processing: ${skipPost ? "SKIP (--no-post)" : "run"}`);
+  console.log(`Fetch bodies: ${noBodies ? "no (--no-bodies)" : "yes"}`);
   console.log(`${"=".repeat(60)}\n`);
 
   // Dynamic imports for enrichment modules

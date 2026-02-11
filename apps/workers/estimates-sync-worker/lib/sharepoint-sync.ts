@@ -17,10 +17,10 @@ import {
   getLetterFolder,
   parseStatusFromUrl,
   parseVariantPrefix,
-  sanitizeName,
   SHAREPOINT_HOST,
   SHAREPOINT_SITE_PATH,
   STATUS_MAP,
+  sanitizeName,
 } from "@lib/sharepoint/paths";
 
 // =============================================================================
@@ -215,7 +215,9 @@ export async function syncSharePointFolders(): Promise<SharePointSyncResult> {
 
 function getMondayApiKey(): string {
   const key = process.env.MONDAY_API_KEY;
-  if (!key) throw new Error("Missing MONDAY_API_KEY");
+  if (!key) {
+    throw new Error("Missing MONDAY_API_KEY");
+  }
   return key;
 }
 
@@ -405,6 +407,13 @@ async function downloadFile(url: string): Promise<Uint8Array> {
   return new Uint8Array(buffer);
 }
 
+function u8ToArrayBuffer(u8: Uint8Array): ArrayBuffer {
+  // Ensure an actual ArrayBuffer (not SharedArrayBuffer) for fetch BodyInit typing.
+  const ab = new ArrayBuffer(u8.byteLength);
+  new Uint8Array(ab).set(u8);
+  return ab;
+}
+
 async function uploadToSharePoint(
   token: string,
   driveId: string,
@@ -426,7 +435,7 @@ async function uploadToSharePoint(
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/octet-stream",
       },
-      body: content,
+      body: u8ToArrayBuffer(content),
     });
 
     if (!res.ok) {
@@ -479,7 +488,7 @@ async function uploadToSharePoint(
         "Content-Length": chunk.length.toString(),
         "Content-Range": contentRange,
       },
-      body: chunk,
+      body: u8ToArrayBuffer(chunk),
     });
 
     if (!chunkRes.ok) {

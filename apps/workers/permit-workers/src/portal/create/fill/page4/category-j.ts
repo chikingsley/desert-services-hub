@@ -20,11 +20,12 @@ export async function fillCategoryJ(page: Page, data: FormData): Promise<void> {
   console.log("  Category J - Blasting...");
 
   const catJ = selectors.categoryJ;
-  if (data.categoryJ.applies) {
-    await clickRadio(page, catJ.applies.yes);
-  } else {
+  if (!data.categoryJ.applies) {
     await clickRadio(page, catJ.applies.no);
+    return;
   }
+
+  await clickRadio(page, catJ.applies.yes);
 
   await selectControlMeasure(page, data.categoryJ.water, catJ.water);
   await selectControlMeasure(

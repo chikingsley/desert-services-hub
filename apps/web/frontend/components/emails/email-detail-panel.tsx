@@ -5,7 +5,7 @@
  * Shows full email body (HTML or plain text), metadata, and actions.
  */
 
-import type { Attachment, Email } from "@lib/db/types";
+import type { Email } from "@lib/db/types";
 import { Ban, ExternalLink, Mail, Paperclip, Users } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import useSWR from "swr";
@@ -28,6 +28,83 @@ interface EmailDetailPanelProps {
   open: boolean;
   onClose: () => void;
   onSpam?: (domain: string) => void;
+}
+
+interface EmailAttachmentItem {
+  id: string; // "db:<pk>" or "graph:<graphAttachmentId>"
+  name: string;
+  contentType: string | null;
+  size: number | null;
+}
+
+interface EmailAttachmentsResponse {
+  attachments: EmailAttachmentItem[];
+  source: "db" | "graph" | "none";
+  unavailableReason?: string;
+}
+
+const EMAIL_VIEWER_CSS = `
+  :root { color-scheme: light; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    padding: 14px 16px;
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+    font-size: 14px;
+    line-height: 1.45;
+    color: #0f172a;
+    background: #ffffff;
+  }
+  * { box-sizing: border-box; }
+  img { max-width: 100%; height: auto; }
+  table { max-width: 100%; }
+  pre { white-space: pre-wrap; word-break: break-word; }
+  blockquote {
+    margin: 0 0 0 12px;
+    padding-left: 12px;
+    border-left: 3px solid #e2e8f0;
+  }
+  hr { border: 0; border-top: 1px solid #e2e8f0; margin: 12px 0; }
+  a { color: #0b5fff; }
+`;
+
+const HTML_HEAD_TAG_RE = /<head\b[^>]*>/i;
+const HTML_HTML_TAG_RE = /<html\b[^>]*>/i;
+
+function looksLikeHtml(raw: string): boolean {
+  const s = raw.trim().slice(0, 2000).toLowerCase();
+  if (!s) {
+    return false;
+  }
+  return (
+    s.includes("<html") ||
+    s.includes("<body") ||
+    s.includes("<div") ||
+    s.includes("<p") ||
+    s.includes("<table") ||
+    s.includes("<br") ||
+    s.includes("<span") ||
+    s.includes("</")
+  );
+}
+
+function buildEmailSrcDoc(rawHtml: string): string {
+  const injected = `<base target="_blank" /><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><style>${EMAIL_VIEWER_CSS}</style>`;
+
+  // If there's already a <head>, inject inside it.
+  if (HTML_HEAD_TAG_RE.test(rawHtml)) {
+    return rawHtml.replace(HTML_HEAD_TAG_RE, (m) => `${m}${injected}`);
+  }
+
+  // If there's an <html> but no <head>, add one.
+  if (HTML_HTML_TAG_RE.test(rawHtml)) {
+    return rawHtml.replace(
+      HTML_HTML_TAG_RE,
+      (m) => `${m}<head>${injected}</head>`
+    );
+  }
+
+  // Otherwise treat as a fragment.
+  return `<!doctype html><html><head>${injected}</head><body>${rawHtml}</body></html>`;
 }
 
 const CLASSIFICATION_COLORS: Record<string, string> = {
@@ -60,13 +137,18 @@ export function EmailDetailPanel({
     recipients: { mailbox: string; receivedAt: string }[];
   }>(emailId && open ? `/api/emails/${emailId}` : null, fetcher);
 
-  const { data: attachmentsData } = useSWR<{
-    attachments: Attachment[];
-  }>(emailId && open ? `/api/emails/${emailId}/attachments` : null, fetcher);
-
   const email = data?.email;
   const recipients = data?.recipients ?? [];
   const spamDomain = email?.fromDomain ?? null;
+
+  const attachmentsKey =
+    emailId && open ? `/api/emails/${emailId}/attachments` : null;
+
+  const {
+    data: attachmentsData,
+    error: attachmentsError,
+    isLoading: attachmentsLoading,
+  } = useSWR<EmailAttachmentsResponse>(attachmentsKey, fetcher);
 
   // Auto-resize iframe to content height
   const [iframeHeight, setIframeHeight] = useState(400);
@@ -78,16 +160,17 @@ export function EmailDetailPanel({
   }, [emailId]);
 
   const attachmentsUi = useMemo(() => {
-    if (!email?.hasAttachments) {
+    if (!email) {
       return null;
     }
 
-    const attachments = attachmentsData?.attachments ?? null;
+    const attachments = attachmentsData?.attachments ?? [];
+    const unavailableReason = attachmentsData?.unavailableReason ?? null;
 
-    const openUrl = (att: Attachment) =>
-      `/api/emails/${email.id}/attachments/${att.id}/download?inline=1`;
-    const downloadUrl = (att: Attachment) =>
-      `/api/emails/${email.id}/attachments/${att.id}/download`;
+    const openUrl = (att: EmailAttachmentItem) =>
+      `/api/emails/${email.id}/attachments/${encodeURIComponent(att.id)}/download?inline=1`;
+    const downloadUrl = (att: EmailAttachmentItem) =>
+      `/api/emails/${email.id}/attachments/${encodeURIComponent(att.id)}/download`;
 
     const header = (
       <div className="flex items-center gap-2 text-muted-foreground text-sm">
@@ -96,7 +179,40 @@ export function EmailDetailPanel({
       </div>
     );
 
-    if (attachments?.length) {
+    if (attachmentsLoading) {
+      return (
+        <div className="space-y-2">
+          {header}
+          <div className="text-muted-foreground text-sm">
+            Loading attachments...
+          </div>
+        </div>
+      );
+    }
+
+    if (attachmentsError) {
+      return (
+        <div className="space-y-2">
+          {header}
+          <div className="text-muted-foreground text-sm">
+            Attachments unavailable ({attachmentsError.message})
+          </div>
+        </div>
+      );
+    }
+
+    if (unavailableReason) {
+      return (
+        <div className="space-y-2">
+          {header}
+          <div className="text-muted-foreground text-sm">
+            Attachments unavailable ({unavailableReason})
+          </div>
+        </div>
+      );
+    }
+
+    if (attachments.length > 0) {
       return (
         <div className="space-y-2">
           {header}
@@ -154,6 +270,22 @@ export function EmailDetailPanel({
               </Badge>
             ))}
           </div>
+          <div className="text-muted-foreground text-sm">
+            Attachment content is not available in the hub yet. Use "Open in
+            Outlook" to access them.
+          </div>
+        </div>
+      );
+    }
+
+    if (email.hasAttachments) {
+      return (
+        <div className="space-y-2">
+          {header}
+          <div className="text-muted-foreground text-sm">
+            This email reports attachments, but none were indexed in the hub.
+            Use "Open in Outlook" to access them.
+          </div>
         </div>
       );
     }
@@ -161,12 +293,26 @@ export function EmailDetailPanel({
     return (
       <div className="space-y-2">
         {header}
-        <div className="text-muted-foreground text-sm">
-          Attachment metadata not available yet.
-        </div>
+        <div className="text-muted-foreground text-sm">No attachments.</div>
       </div>
     );
-  }, [attachmentsData?.attachments, email]);
+  }, [
+    attachmentsData?.attachments,
+    attachmentsData?.unavailableReason,
+    attachmentsError,
+    attachmentsLoading,
+    email,
+  ]);
+
+  const iframeSrcDoc = useMemo(() => {
+    if (!email?.bodyHtml) {
+      return null;
+    }
+    if (!looksLikeHtml(email.bodyHtml)) {
+      return null;
+    }
+    return buildEmailSrcDoc(email.bodyHtml);
+  }, [email?.bodyHtml]);
 
   return (
     <Sheet onOpenChange={(isOpen) => !isOpen && onClose()} open={open}>
@@ -310,7 +456,7 @@ export function EmailDetailPanel({
 
             {/* Email body */}
             <div className="flex-1 px-4 pb-4">
-              {email.bodyHtml ? (
+              {iframeSrcDoc ? (
                 // biome-ignore lint/a11y/noNoninteractiveElementInteractions: iframe onLoad is used to tweak sandboxed HTML.
                 <iframe
                   className="w-full rounded-lg border border-border bg-white"
@@ -318,14 +464,56 @@ export function EmailDetailPanel({
                     const iframe = e.currentTarget;
                     const doc = iframe.contentDocument;
                     if (doc?.body) {
-                      // Ensure links clicked from email content open in a new tab,
-                      // instead of navigating inside the sandboxed iframe.
+                      // Force links out of the sandbox so JS-enabled pages don't render
+                      // inside the iframe (which triggers "JavaScript disabled").
                       for (const a of Array.from(
-                        doc.querySelectorAll<HTMLAnchorElement>("a[href]")
+                        doc.querySelectorAll("a[href]")
                       )) {
                         a.setAttribute("target", "_blank");
                         a.setAttribute("rel", "noopener noreferrer");
                       }
+
+                      // Also intercept clicks to ensure the iframe never navigates.
+                      // (Some HTML email templates override target or use weird markup.)
+                      doc.addEventListener(
+                        "click",
+                        (ev) => {
+                          const t = ev.target as Element | null;
+                          const a = t?.closest?.(
+                            "a[href]"
+                          ) as HTMLAnchorElement | null;
+                          if (!a) {
+                            return;
+                          }
+
+                          const href = a.getAttribute("href") ?? "";
+                          if (
+                            !href ||
+                            href.startsWith("#") ||
+                            href.toLowerCase().startsWith("javascript:")
+                          ) {
+                            return;
+                          }
+
+                          ev.preventDefault();
+                          ev.stopPropagation();
+
+                          const resolved = (() => {
+                            try {
+                              return new URL(href, doc.baseURI).toString();
+                            } catch {
+                              return href;
+                            }
+                          })();
+
+                          window.open(
+                            resolved,
+                            "_blank",
+                            "noopener,noreferrer"
+                          );
+                        },
+                        { capture: true }
+                      );
 
                       setIframeHeight(
                         Math.max(300, doc.body.scrollHeight + 32)
@@ -333,13 +521,16 @@ export function EmailDetailPanel({
                     }
                   }}
                   sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox"
-                  srcDoc={email.bodyHtml}
+                  srcDoc={iframeSrcDoc}
                   style={{ height: iframeHeight }}
                   title="Email content"
                 />
               ) : (
                 <pre className="whitespace-pre-wrap rounded-lg border border-border bg-muted/30 p-4 text-sm">
-                  {email.bodyFull || email.bodyPreview || "(no content)"}
+                  {email.bodyFull ||
+                    email.bodyHtml ||
+                    email.bodyPreview ||
+                    "(no content)"}
                 </pre>
               )}
             </div>

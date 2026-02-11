@@ -118,5 +118,8 @@ async function fillCategoryI2(page: Page, data: FormData): Promise<void> {
  */
 export async function fillCategoryI(page: Page, data: FormData): Promise<void> {
   await fillCategoryI1(page, data);
-  await fillCategoryI2(page, data);
+  // I.2 controls only render when I.1 applies (they share siTable:46)
+  if (data.categoryI1.applies) {
+    await fillCategoryI2(page, data);
+  }
 }

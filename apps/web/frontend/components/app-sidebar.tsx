@@ -11,6 +11,7 @@ import {
   Shield,
 } from "lucide-react";
 import { Link, useLocation } from "react-router";
+import useSWR from "swr";
 import {
   Sidebar,
   SidebarContent,
@@ -25,6 +26,14 @@ import {
   SidebarRail,
   SidebarSeparator,
 } from "@/apps/web/frontend/components/ui/sidebar";
+import { fetcher } from "@/apps/web/frontend/lib/fetcher";
+
+interface AutomationSidebarStatus {
+  active: boolean;
+  portalReady: boolean;
+  busy: boolean;
+  currentOperation: string | null;
+}
 
 // Workflow order: Estimates → Contracts → Project Initiation → Dust Permits
 const mainNavItems = [
@@ -38,7 +47,7 @@ const manageItems = [
   { title: "Emails", href: "/emails", icon: Mail },
   { title: "Catalog", href: "/catalog", icon: Package },
   { title: "Map", href: "/map", icon: MapPin },
-  { title: "Automation", href: "/automation", icon: Monitor },
+  { title: "Maricopa Portal", href: "/maricopa", icon: Monitor },
 ];
 
 const utilityItems = [
@@ -76,6 +85,29 @@ function DesertSunLogo() {
 export function AppSidebar() {
   const location = useLocation();
   const pathname = location.pathname;
+  const { data: automationStatus } = useSWR<AutomationSidebarStatus>(
+    "/api/automation/status",
+    fetcher,
+    {
+      refreshInterval: 15_000,
+      dedupingInterval: 5000,
+      shouldRetryOnError: false,
+      revalidateOnFocus: false,
+    }
+  );
+
+  let portalLabel = "Portal Offline";
+  let portalDotClass = "bg-red-500";
+  if (automationStatus?.portalReady) {
+    portalLabel = "Portal Ready";
+    portalDotClass = "bg-green-500";
+  } else if (automationStatus?.active) {
+    portalLabel = "Portal Login Needed";
+    portalDotClass = "bg-amber-500";
+  }
+  const portalTooltip = automationStatus?.busy
+    ? `Portal busy: ${automationStatus.currentOperation || "running"}`
+    : portalLabel;
 
   return (
     <Sidebar collapsible="icon">
@@ -186,10 +218,10 @@ export function AppSidebar() {
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="sm" tooltip="v0.1 • Active">
-              <div className="size-2 rounded-full bg-green-500" />
+            <SidebarMenuButton size="sm" tooltip={portalTooltip}>
+              <div className={`size-2 rounded-full ${portalDotClass}`} />
               <span className="text-sidebar-foreground/60 text-xs">
-                v0.1 • Active
+                {portalLabel}
               </span>
             </SidebarMenuButton>
           </SidebarMenuItem>

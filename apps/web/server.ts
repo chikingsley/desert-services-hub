@@ -15,6 +15,13 @@ import {
   getConversation,
   listArchives,
 } from "@/api/archive";
+import {
+  getAutomationStatus,
+  postAutomationKeepAlive,
+  postAutomationReady,
+  postAutomationStart,
+  postAutomationStop,
+} from "@/api/automation";
 import { getCatalog, getTakeoffItems } from "@/api/catalog";
 import { listContracts } from "@/api/contracts";
 import {
@@ -23,10 +30,13 @@ import {
 } from "@/api/email-attachments";
 import {
   getEmail,
+  getEmailEstimateCandidates,
   listDomainRules,
+  listEmailSenders,
   listEmails,
   markDomainAsSpam,
   setDomainRule,
+  setEmailClassification,
 } from "@/api/emails";
 import { createEstimate, listEstimates } from "@/api/estimates";
 import {
@@ -132,6 +142,23 @@ const server = serve({
       GET: h(listPermits),
     },
 
+    // Browser Automation / Permit Worker
+    "/api/automation/status": {
+      GET: h(getAutomationStatus),
+    },
+    "/api/automation/start": {
+      POST: h(postAutomationStart),
+    },
+    "/api/automation/ready": {
+      POST: h(postAutomationReady),
+    },
+    "/api/automation/keepalive": {
+      POST: h(postAutomationKeepAlive),
+    },
+    "/api/automation/stop": {
+      POST: h(postAutomationStop),
+    },
+
     // Contracts (Won estimates)
     "/api/contracts": {
       GET: h(listContracts),
@@ -140,6 +167,9 @@ const server = serve({
     // Emails
     "/api/emails": {
       GET: h(listEmails),
+    },
+    "/api/emails/senders": {
+      GET: h(listEmailSenders),
     },
     "/api/emails/spam": {
       POST: h(markDomainAsSpam),
@@ -150,6 +180,12 @@ const server = serve({
     },
     "/api/emails/:id": {
       GET: h(getEmail),
+    },
+    "/api/emails/:id/estimate-candidates": {
+      GET: h(getEmailEstimateCandidates),
+    },
+    "/api/emails/:id/classification": {
+      POST: h(setEmailClassification),
     },
     "/api/emails/:id/attachments": {
       GET: h(listEmailAttachments),
@@ -195,6 +231,7 @@ const server = serve({
     "/emails/*": homepage,
     "/catalog": homepage,
     "/map": homepage,
+    "/maricopa": homepage,
     "/automation": homepage,
     "/settings": homepage,
   },

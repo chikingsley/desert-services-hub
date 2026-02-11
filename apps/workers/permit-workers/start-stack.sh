@@ -3,6 +3,16 @@ set -e
 
 echo "Starting permit-worker container..."
 
+# Resolve display and matching VNC TCP port.
+# VNC listens on 5900 + display number (e.g. :1 -> 5901).
+DISPLAY="${DISPLAY:-:1}"
+DISPLAY_NUM="${DISPLAY#*:}"
+DISPLAY_NUM="${DISPLAY_NUM%%.*}"
+if [[ -z "${DISPLAY_NUM}" || ! "${DISPLAY_NUM}" =~ ^[0-9]+$ ]]; then
+  DISPLAY_NUM=1
+fi
+VNC_TCP_PORT=$((5900 + DISPLAY_NUM))
+
 # 1. Start Xvnc (TigerVNC - provides both X server and VNC)
 echo "Starting Xvnc on $DISPLAY..."
 # -SecurityTypes None: No password
@@ -13,13 +23,13 @@ sleep 2
 
 # 2. Start Window Manager (Openbox)
 echo "Starting Openbox..."
-export DISPLAY=:1
+export DISPLAY
 openbox-session > /dev/null 2>&1 &
 sleep 1
 
 # 3. Start noVNC (Websocket proxy)
-echo "Starting noVNC on port 6080..."
-websockify --web /usr/share/novnc 6080 localhost:5900 > /dev/null 2>&1 &
+echo "Starting noVNC on port 6080 (proxying localhost:${VNC_TCP_PORT})..."
+websockify --web /usr/share/novnc 6080 "localhost:${VNC_TCP_PORT}" > /dev/null 2>&1 &
 
 # 4. Start the API Server (also serves frontend)
 echo "Starting Server..."

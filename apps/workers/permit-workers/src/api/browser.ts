@@ -6,9 +6,30 @@
 
 import {
   closeBrowserSession,
+  ensureBrowserSessionReady,
   getOrCreateBrowserSession,
   getSessionStatus,
+  keepBrowserSessionAlive,
 } from "@/portal/utils/browser";
+
+function jsonSuccess(data: Record<string, unknown>): Response {
+  return Response.json({
+    success: true,
+    ...data,
+    timestamp: new Date().toISOString(),
+  });
+}
+
+function jsonError(error: string, status = 500): Response {
+  return Response.json(
+    {
+      success: false,
+      error,
+      timestamp: new Date().toISOString(),
+    },
+    { status }
+  );
+}
 
 /**
  * GET /api/browser/status - Get browser session status
@@ -27,17 +48,55 @@ export function handleBrowserStatus(): Response {
 export async function handleBrowserStart(): Promise<Response> {
   try {
     const session = await getOrCreateBrowserSession();
-    return Response.json({
-      success: true,
+    return jsonSuccess({
       isLoggedIn: session.isLoggedIn,
-      timestamp: new Date().toISOString(),
+      portalReady: session.portalReady,
+      status: getSessionStatus(),
     });
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : String(error);
-    return Response.json(
-      { success: false, error: errorMsg, timestamp: new Date().toISOString() },
-      { status: 500 }
-    );
+    return jsonError(errorMsg);
+  }
+}
+
+/**
+ * POST /api/browser/ready - Ensure browser session is active and logged in
+ */
+export async function handleBrowserReady(): Promise<Response> {
+  try {
+    await ensureBrowserSessionReady();
+    const keepAlive = await keepBrowserSessionAlive({
+      allowRelogin: true,
+      force: true,
+    });
+    return jsonSuccess({
+      isLoggedIn: keepAlive.isLoggedIn,
+      portalReady: keepAlive.portalReady,
+      keepAlive,
+      status: getSessionStatus(),
+    });
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    return jsonError(errorMsg);
+  }
+}
+
+/**
+ * POST /api/browser/keepalive - Trigger keepalive check and optional relogin
+ */
+export async function handleBrowserKeepAlive(): Promise<Response> {
+  try {
+    const keepAlive = await keepBrowserSessionAlive({
+      allowRelogin: true,
+      force: true,
+    });
+    return jsonSuccess({
+      keepAlive,
+      status: getSessionStatus(),
+    });
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    return jsonError(errorMsg);
   }
 }
 
@@ -47,15 +106,9 @@ export async function handleBrowserStart(): Promise<Response> {
 export async function handleBrowserStop(): Promise<Response> {
   try {
     await closeBrowserSession();
-    return Response.json({
-      success: true,
-      timestamp: new Date().toISOString(),
-    });
+    return jsonSuccess({ status: getSessionStatus() });
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : String(error);
-    return Response.json(
-      { success: false, error: errorMsg, timestamp: new Date().toISOString() },
-      { status: 500 }
-    );
+    return jsonError(errorMsg);
   }
 }

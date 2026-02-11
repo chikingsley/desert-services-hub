@@ -54,6 +54,26 @@ describe("handleBrowserStart", () => {
   );
 });
 
+describe("handleBrowserReady", () => {
+  it("returns response with success field", async () => {
+    const response = await api.handleBrowserReady();
+    expect(response.headers.get("content-type")).toContain("application/json");
+
+    const data = await response.json();
+    expect(typeof data.success).toBe("boolean");
+  });
+});
+
+describe("handleBrowserKeepAlive", () => {
+  it("returns response with success field", async () => {
+    const response = await api.handleBrowserKeepAlive();
+    expect(response.headers.get("content-type")).toContain("application/json");
+
+    const data = await response.json();
+    expect(typeof data.success).toBe("boolean");
+  });
+});
+
 describe("handleBrowserStop", () => {
   it("returns response with success field", async () => {
     const response = await api.handleBrowserStop();

@@ -1,72 +1,321 @@
 /**
- * Automation Page
+ * Maricopa portal page
  *
- * Placeholder for browser automation controls.
- * Opens a VNC viewer to watch/interact with the permit-worker's browser session.
+ * Always-on embedded VNC view of the permit-worker browser session.
  */
 
-import { ExternalLink, Monitor } from "lucide-react";
-import { useState } from "react";
+import { CheckCircle2, Loader2, RefreshCw, Square } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
+import useSWR from "swr";
 import { PageHeader } from "@/apps/web/frontend/components/page-header";
 import { Button } from "@/apps/web/frontend/components/ui/button";
-import { VncViewer } from "@/apps/web/frontend/components/vnc-viewer";
+import { fetcher } from "@/apps/web/frontend/lib/fetcher";
+
+interface AutomationStatus {
+  active: boolean;
+  isLoggedIn: boolean;
+  portalReady: boolean;
+  busy: boolean;
+  currentOperation: string | null;
+  startedAt: string | null;
+  lastActivityAt: string | null;
+  lastKeepAliveAt: string | null;
+  lastLoginAt: string | null;
+  lastPortalPinAt: string | null;
+  lastError: string | null;
+  keepAliveEnabled: boolean;
+  keepAliveIntervalMs: number;
+  portalHomePinEnabled: boolean;
+  portalHomePinIntervalMs: number;
+  vncUrl: string;
+}
+
+type AutomationActionEndpoint =
+  | "/api/automation/start"
+  | "/api/automation/ready"
+  | "/api/automation/keepalive"
+  | "/api/automation/stop";
+
+interface RunActionOptions {
+  silentSuccess?: boolean;
+}
+
+function formatTimestamp(value: string | null): string {
+  if (!value) {
+    return "—";
+  }
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+  return date.toLocaleString();
+}
 
 export function AutomationPage() {
-  const [vncOpen, setVncOpen] = useState(false);
+  const [action, setAction] = useState<AutomationActionEndpoint | null>(null);
+  const previousPortalReady = useRef<boolean | null>(null);
+  const previousBusy = useRef<boolean | null>(null);
+  const autoEnsureAttempted = useRef(false);
+  const { data, error, isLoading, mutate } = useSWR<AutomationStatus>(
+    "/api/automation/status",
+    fetcher,
+    {
+      refreshInterval: 5000,
+      dedupingInterval: 2000,
+      shouldRetryOnError: true,
+    }
+  );
+
+  const fallbackVncUrl = useMemo(
+    () =>
+      `${window.location.protocol}//${window.location.hostname}:47821/vnc.html?autoconnect=true&resize=scale&reconnect=true&reconnect_delay=2000`,
+    []
+  );
+  const vncUrl = data?.vncUrl || fallbackVncUrl;
+
+  const runAction = useCallback(
+    async (
+      endpoint: AutomationActionEndpoint,
+      successMessage: string,
+      options?: RunActionOptions
+    ): Promise<void> => {
+      setAction(endpoint);
+      try {
+        const response = await fetch(endpoint, { method: "POST" });
+        const payload = (await response.json().catch(() => ({}))) as {
+          success?: boolean;
+          error?: string;
+        };
+        if (!response.ok || payload.success === false) {
+          throw new Error(
+            payload.error || `Request failed with status ${response.status}`
+          );
+        }
+        if (!options?.silentSuccess) {
+          toast.success(successMessage);
+        }
+        await mutate();
+      } catch (actionError) {
+        const message =
+          actionError instanceof Error
+            ? actionError.message
+            : String(actionError);
+        toast.error(message);
+      } finally {
+        setAction(null);
+      }
+    },
+    [mutate]
+  );
+
+  useEffect(() => {
+    if (autoEnsureAttempted.current) {
+      return;
+    }
+    autoEnsureAttempted.current = true;
+    runAction("/api/automation/ready", "Portal session is ready", {
+      silentSuccess: true,
+    }).catch(() => undefined);
+  }, [runAction]);
+
+  useEffect(() => {
+    if (!data) {
+      return;
+    }
+
+    if (previousPortalReady.current === null) {
+      previousPortalReady.current = data.portalReady;
+      return;
+    }
+
+    if (previousPortalReady.current !== data.portalReady) {
+      if (data.portalReady) {
+        toast.success("Dust portal is ready");
+      } else {
+        toast.error("Dust portal requires login");
+      }
+      previousPortalReady.current = data.portalReady;
+    }
+  }, [data]);
+
+  useEffect(() => {
+    if (!data) {
+      return;
+    }
+
+    if (previousBusy.current === null) {
+      previousBusy.current = data.busy;
+      return;
+    }
+
+    if (previousBusy.current && !data.busy) {
+      toast.success("Automation step finished");
+    }
+
+    previousBusy.current = data.busy;
+  }, [data]);
+
+  let sessionState = "Checking";
+  let sessionDotClass = "bg-red-500";
+  if (data) {
+    if (data.portalReady) {
+      sessionState = "Ready";
+      sessionDotClass = "bg-green-500";
+    } else if (data.active) {
+      sessionState = "Login Needed";
+      sessionDotClass = "bg-amber-500";
+    } else {
+      sessionState = "Offline";
+      sessionDotClass = "bg-red-500";
+    }
+  }
+  const actionPending = action !== null;
+  const busyLabel = data?.busy ? data.currentOperation || "Running" : "Idle";
 
   return (
     <div className="flex flex-1 flex-col">
       <PageHeader
-        breadcrumbs={[{ label: "Automation" }]}
-        title="Browser Automation"
+        breadcrumbs={[{ label: "Maricopa Portal" }]}
+        title="Maricopa County Dust Portal"
       />
 
-      <div className="flex flex-1 items-center justify-center p-8">
-        <div className="flex max-w-md flex-col items-center gap-6 text-center">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10">
-            <Monitor className="h-8 w-8 text-primary" />
+      <div className="flex-1 p-6 lg:p-8">
+        <div className="mb-4 rounded-2xl border border-border bg-card p-4">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+            <div className="inline-flex items-center gap-2 rounded-full border border-border px-3 py-1.5 font-medium text-sm">
+              <span className={`h-2.5 w-2.5 rounded-full ${sessionDotClass}`} />
+              <span>{sessionState}</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                className="gap-2"
+                disabled={actionPending}
+                onClick={() =>
+                  runAction("/api/automation/ready", "Portal session is ready")
+                }
+              >
+                {action === "/api/automation/ready" ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <CheckCircle2 className="h-4 w-4" />
+                )}
+                Ensure Bot Ready
+              </Button>
+              <Button
+                className="gap-2"
+                disabled={actionPending}
+                onClick={() =>
+                  runAction(
+                    "/api/automation/keepalive",
+                    "Keepalive ping completed"
+                  )
+                }
+                variant="outline"
+              >
+                {action === "/api/automation/keepalive" ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <RefreshCw className="h-4 w-4" />
+                )}
+                Keep Alive Ping
+              </Button>
+              <Button
+                className="gap-2"
+                disabled={actionPending}
+                onClick={() =>
+                  runAction("/api/automation/stop", "Session stopped")
+                }
+                variant="outline"
+              >
+                {action === "/api/automation/stop" ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Square className="h-4 w-4" />
+                )}
+                Stop Session
+              </Button>
+            </div>
           </div>
 
-          <div>
-            <h2 className="font-semibold text-foreground text-lg">
-              Permit Portal Automation
-            </h2>
-            <p className="mt-2 text-muted-foreground text-sm">
-              Watch and interact with browser automation sessions running on the
-              Maricopa County permit portal. Open the VNC viewer to see the
-              browser in real-time.
-            </p>
+          <div className="grid grid-cols-2 gap-2 text-muted-foreground text-sm lg:grid-cols-6">
+            <div>Busy: {busyLabel}</div>
+            <div>Last login: {formatTimestamp(data?.lastLoginAt ?? null)}</div>
+            <div>
+              Last keepalive: {formatTimestamp(data?.lastKeepAliveAt ?? null)}
+            </div>
+            <div>
+              Last pinned home: {formatTimestamp(data?.lastPortalPinAt ?? null)}
+            </div>
+            <div>
+              Keepalive:{" "}
+              {data?.keepAliveEnabled
+                ? `On (${Math.round((data.keepAliveIntervalMs || 0) / 1000)}s)`
+                : "Off"}
+            </div>
+            <div>
+              Home pin:{" "}
+              {data?.portalHomePinEnabled
+                ? `On (${Math.round((data.portalHomePinIntervalMs || 0) / 1000)}s)`
+                : "Off"}
+            </div>
           </div>
 
-          <div className="flex gap-3">
-            <Button className="gap-2" onClick={() => setVncOpen(true)}>
-              <Monitor className="h-4 w-4" />
-              Open VNC Viewer
-            </Button>
-            <Button
-              className="gap-2"
-              onClick={() =>
-                window.open(
-                  "http://localhost:47821",
-                  "_blank",
-                  "noopener,noreferrer"
-                )
-              }
-              variant="outline"
-            >
-              <ExternalLink className="h-4 w-4" />
-              Open in Tab
-            </Button>
+          {error && (
+            <div className="mt-3 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-red-500 text-sm">
+              Status check failed: {error.message}
+            </div>
+          )}
+          {data?.lastError && (
+            <div className="mt-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-amber-500 text-sm">
+              {data.lastError}
+            </div>
+          )}
+        </div>
+
+        <div className="relative overflow-hidden rounded-2xl border border-border bg-black">
+          <iframe
+            allow="clipboard-read; clipboard-write"
+            className="h-[72vh] w-full border-0"
+            src={vncUrl}
+            title="Maricopa County Dust Portal"
+          />
+
+          <div className="pointer-events-none absolute inset-0 z-10 opacity-[0.03]">
+            <div
+              className="h-full w-full"
+              style={{
+                backgroundImage:
+                  "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.3) 2px, rgba(0,0,0,0.3) 4px)",
+              }}
+            />
+          </div>
+
+          <div className="absolute bottom-3 left-3 flex items-center gap-2 rounded-full border border-border bg-black/80 px-3 py-1.5 font-mono text-xs backdrop-blur-sm">
+            <span className="relative flex h-2 w-2">
+              <span
+                className={`absolute inline-flex h-full w-full animate-ping rounded-full ${
+                  data?.portalReady ? "bg-green-400" : "bg-amber-400"
+                } opacity-75`}
+              />
+              <span
+                className={`relative inline-flex h-2 w-2 rounded-full ${
+                  data?.portalReady ? "bg-green-500" : "bg-amber-500"
+                }`}
+              />
+            </span>
+            <span className="text-muted-foreground">
+              {data?.portalReady ? "Portal ready" : "Portal not ready"}
+            </span>
           </div>
         </div>
-      </div>
 
-      <VncViewer
-        onOpenChange={setVncOpen}
-        open={vncOpen}
-        subtitle="Permit-worker browser session"
-        title="Permit Portal"
-      />
+        {isLoading && (
+          <div className="mt-2 text-muted-foreground text-xs">
+            Loading status…
+          </div>
+        )}
+      </div>
     </div>
   );
 }

@@ -136,6 +136,10 @@ const router = createBrowserRouter([
         element: <CatalogPage />,
       },
       {
+        path: "maricopa",
+        element: <AutomationPage />,
+      },
+      {
         path: "automation",
         element: <AutomationPage />,
       },

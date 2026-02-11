@@ -7,6 +7,8 @@
 
 import { serve } from "bun";
 import {
+  handleBrowserKeepAlive,
+  handleBrowserReady,
   handleBrowserStart,
   handleBrowserStatus,
   handleBrowserStop,
@@ -131,6 +133,16 @@ const server = serve({
     "/api/browser/start": {
       POST() {
         return handleBrowserStart();
+      },
+    },
+    "/api/browser/ready": {
+      POST() {
+        return handleBrowserReady();
+      },
+    },
+    "/api/browser/keepalive": {
+      POST() {
+        return handleBrowserKeepAlive();
       },
     },
     "/api/browser/stop": {

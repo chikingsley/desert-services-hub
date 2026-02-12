@@ -2,6 +2,11 @@
 // Shared between CLI and web app
 
 import { db } from "@lib/db/hub";
+import type { EstimateRow } from "@lib/db/types";
+import {
+  validateCreateEstimatePayload,
+  validateUpdateEstimatePayload,
+} from "@lib/estimating/estimate-payload-validation";
 import type {
   CreateEstimateInput,
   Estimate,
@@ -193,43 +198,87 @@ export async function getEstimateWithDetails(id: string): Promise<
   };
 }
 
+function mapCreateLineItemToValidationInput(
+  item: NonNullable<CreateEstimateInput["line_items"]>[number]
+): Record<string, unknown> {
+  return {
+    section_id: item.section_id,
+    item: item.item_name,
+    item_name: item.item_name,
+    description: item.description,
+    quantity: item.quantity,
+    unit: item.unit,
+    unit_cost: item.unit_cost,
+    unit_price: item.unit_cost,
+    cost: item.unit_cost,
+    notes: item.notes,
+  };
+}
+
 // Create a new estimate
 export async function createEstimate(
   input: CreateEstimateInput
 ): Promise<Estimate> {
-  const id = crypto.randomUUID();
-  const baseNumber = input.base_number || (await getNextBaseNumber());
+  const normalized = validateCreateEstimatePayload({
+    base_number: input.base_number,
+    takeoff_id: input.takeoff_id,
+    job_name: input.job_name,
+    job_address: input.job_address,
+    client_name: input.client_name,
+    client_address: input.client_address,
+    client_email: input.client_email,
+    client_phone: input.client_phone,
+    notes: input.notes,
+    status: input.status,
+    is_locked: input.is_locked,
+    total: input.total,
+    sections: input.sections?.map((section) => ({
+      id: section.id ?? crypto.randomUUID(),
+      name: section.name,
+      title: section.title,
+      show_subtotal: section.show_subtotal,
+    })),
+    line_items: input.line_items?.map(mapCreateLineItemToValidationInput),
+  });
 
-  // Insert quote
-  await db
+  const baseNumber = normalized.base_number || (await getNextBaseNumber());
+  const sections = normalized.sections ?? [];
+  const lineItems = normalized.line_items ?? [];
+
+  // Insert estimate row (id is integer/serial in Postgres)
+  const inserted = (await db
     .prepare(
-      `INSERT INTO estimates (id, base_number, takeoff_id, job_name, job_address, client_name, client_address, client_email, client_phone, estimator, estimator_email, notes, status, is_locked)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      `INSERT INTO estimates (name, base_number, takeoff_id, job_name, job_address, client_name, client_address, client_email, client_phone, estimator, estimator_email, notes, status, is_locked)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+     RETURNING id`
     )
-    .run(
-      id,
+    .get(
+      normalized.job_name || "Untitled Estimate",
       baseNumber,
-      input.takeoff_id || null,
-      input.job_name || "Untitled Estimate",
-      input.job_address || null,
-      input.client_name || null,
-      input.client_address || null,
-      input.client_email || null,
-      input.client_phone || null,
+      normalized.takeoff_id || null,
+      normalized.job_name || "Untitled Estimate",
+      normalized.job_address || null,
+      normalized.client_name || null,
+      normalized.client_address || null,
+      normalized.client_email || null,
+      normalized.client_phone || null,
       input.estimator || null,
       input.estimator_email || null,
-      input.notes || null,
-      input.status || "draft",
-      input.is_locked ? 1 : 0
-    );
+      normalized.notes || null,
+      normalized.status || "draft",
+      normalized.is_locked ? 1 : 0
+    )) as { id: number } | null;
+
+  const estimateId = inserted?.id;
+  if (!estimateId) {
+    throw new Error("Failed to create estimate row");
+  }
 
   // Compute total from line items if not provided
   const computedTotal =
-    input.total ??
-    input.line_items?.reduce((sum, item) => {
-      const qty = item.quantity ?? 1;
-      const cost = item.unit_cost ?? 0;
-      return sum + qty * cost;
+    normalized.total ??
+    lineItems.reduce((sum, item) => {
+      return sum + item.quantity * item.unit_price;
     }, 0) ??
     0;
 
@@ -240,13 +289,13 @@ export async function createEstimate(
       `INSERT INTO estimate_versions (id, estimate_id, version_number, total, is_current)
      VALUES (?, ?, 1, ?, 1)`
     )
-    .run(versionId, id, computedTotal);
+    .run(versionId, estimateId, computedTotal);
 
   // Create sections if provided
   const sectionIdMap = new Map<string, string>();
-  if (input.sections) {
+  if (sections.length > 0) {
     let sortOrder = 0;
-    for (const section of input.sections) {
+    for (const section of sections) {
       const sectionId = crypto.randomUUID();
       await db
         .prepare(
@@ -261,22 +310,19 @@ export async function createEstimate(
           section.show_subtotal ? 1 : 0,
           sortOrder
         );
-      if (section.id) {
-        sectionIdMap.set(section.id, sectionId);
-      }
+      sectionIdMap.set(section.id, sectionId);
       sortOrder += 1;
     }
   }
 
   // Create line items if provided
-  if (input.line_items) {
+  if (lineItems.length > 0) {
     let sortOrder = 0;
-    for (const item of input.line_items) {
+    for (const item of lineItems) {
       const lineItemId = crypto.randomUUID();
       const sectionId = item.section_id
         ? sectionIdMap.get(item.section_id)
         : null;
-      const cost = item.unit_cost ?? 0;
       await db
         .prepare(
           `INSERT INTO estimate_line_items (id, version_id, section_id, item_name, description, quantity, unit, unit_cost, unit_price, notes, sort_order)
@@ -286,20 +332,20 @@ export async function createEstimate(
           lineItemId,
           versionId,
           sectionId || null,
-          item.item_name || null,
+          item.item_name,
           item.description,
-          item.quantity ?? 1,
-          item.unit || "EA",
-          cost,
-          cost,
-          item.notes || null,
+          item.quantity,
+          item.unit,
+          item.unit_cost,
+          item.unit_price,
+          item.notes ?? null,
           sortOrder
         );
       sortOrder += 1;
     }
   }
 
-  const estimate = await getEstimate(id);
+  const estimate = await getEstimate(String(estimateId));
   if (!estimate) {
     throw new Error("Failed to create estimate");
   }
@@ -439,13 +485,14 @@ export async function duplicateEstimate(
       : null;
     await db
       .prepare(
-        `INSERT INTO estimate_line_items (id, version_id, section_id, description, quantity, unit, unit_cost, unit_price, notes, sort_order)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        `INSERT INTO estimate_line_items (id, version_id, section_id, item_name, description, quantity, unit, unit_cost, unit_price, notes, sort_order)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
       )
       .run(
         newLineItemId,
         newVersionId,
         newSectionId || null,
+        item.item_name || null,
         item.description,
         item.quantity,
         item.unit,
@@ -468,36 +515,72 @@ export async function applyLineItemChanges(
   if (!estimate) {
     return null;
   }
+  const estimateRow = (await db
+    .prepare("SELECT * FROM estimates WHERE id = ?")
+    .get(estimateId)) as EstimateRow | null;
+  if (!estimateRow) {
+    return null;
+  }
+  const existingEstimateRow: EstimateRow = estimateRow;
 
   const currentVersion = estimate.current_version;
   const versionId = currentVersion.id;
+  const sortOrderRow = (await db
+    .prepare(
+      "SELECT COALESCE(MAX(sort_order), -1) AS max_sort_order FROM estimate_line_items WHERE version_id = ?"
+    )
+    .get(versionId)) as { max_sort_order: number } | null;
+  let nextSortOrder = (sortOrderRow?.max_sort_order ?? -1) + 1;
+
+  function normalizeChangeLineItem(rawItem: Record<string, unknown>) {
+    const normalized = validateUpdateEstimatePayload(
+      { line_items: [rawItem] },
+      existingEstimateRow
+    );
+    const item = normalized.line_items?.[0];
+    if (!item) {
+      throw new Error(
+        "Line item change did not produce a normalized line item."
+      );
+    }
+    return item;
+  }
 
   for (const change of changes) {
     switch (change.action) {
       case "add": {
+        const item = normalizeChangeLineItem({
+          section_id: change.section_id,
+          item: change.item_name,
+          item_name: change.item_name,
+          description: change.description,
+          quantity: change.quantity,
+          unit: change.unit,
+          unit_cost: change.unit_cost,
+          unit_price: change.unit_cost,
+          cost: change.unit_cost,
+          notes: change.notes,
+        });
         const lineItemId = crypto.randomUUID();
-        const cost = change.unit_cost ?? 0;
-        const maxSortOrder =
-          currentVersion.line_items.length > 0
-            ? Math.max(...currentVersion.line_items.map((i) => i.sort_order))
-            : -1;
         await db
           .prepare(
-            `INSERT INTO estimate_line_items (id, version_id, section_id, description, quantity, unit, unit_cost, unit_price, notes, sort_order)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+            `INSERT INTO estimate_line_items (id, version_id, section_id, item_name, description, quantity, unit, unit_cost, unit_price, notes, sort_order)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
           )
           .run(
             lineItemId,
             versionId,
-            change.section_id || null,
-            change.description || "",
-            change.quantity ?? 1,
-            change.unit || "EA",
-            cost,
-            cost,
-            change.notes || null,
-            maxSortOrder + 1
+            item.section_id ?? null,
+            item.item_name,
+            item.description,
+            item.quantity,
+            item.unit,
+            item.unit_cost,
+            item.unit_price,
+            item.notes ?? null,
+            nextSortOrder
           );
+        nextSortOrder += 1;
         break;
       }
       case "remove": {
@@ -512,41 +595,54 @@ export async function applyLineItemChanges(
       }
       case "update": {
         if (change.id) {
-          const updates: string[] = [];
-          const values: (string | number | null)[] = [];
-
-          if (change.description !== undefined) {
-            updates.push("description = ?");
-            values.push(change.description);
-          }
-          if (change.quantity !== undefined) {
-            updates.push("quantity = ?");
-            values.push(change.quantity);
-          }
-          if (change.unit !== undefined) {
-            updates.push("unit = ?");
-            values.push(change.unit);
-          }
-          if (change.unit_cost !== undefined) {
-            updates.push("unit_cost = ?");
-            values.push(change.unit_cost);
-            updates.push("unit_price = ?");
-            values.push(change.unit_cost);
-          }
-          if (change.notes !== undefined) {
-            updates.push("notes = ?");
-            values.push(change.notes);
+          const existingItem = currentVersion.line_items.find(
+            (item) => item.id === change.id
+          );
+          if (!existingItem) {
+            throw new Error(`Line item not found: ${change.id}`);
           }
 
-          if (updates.length > 0) {
-            updates.push("updated_at = now()");
-            values.push(change.id, versionId);
-            await db
-              .prepare(
-                `UPDATE estimate_line_items SET ${updates.join(", ")} WHERE id = ? AND version_id = ?`
-              )
-              .run(...values);
-          }
+          const item = normalizeChangeLineItem({
+            section_id:
+              change.section_id ?? existingItem.section_id ?? undefined,
+            item:
+              change.item_name ??
+              existingItem.item_name ??
+              existingItem.description,
+            item_name:
+              change.item_name ??
+              existingItem.item_name ??
+              existingItem.description,
+            description: change.description ?? existingItem.description,
+            quantity: change.quantity ?? existingItem.quantity,
+            unit: change.unit ?? existingItem.unit,
+            unit_cost: change.unit_cost ?? existingItem.unit_cost,
+            unit_price:
+              change.unit_cost ??
+              existingItem.unit_price ??
+              existingItem.unit_cost,
+            cost: change.unit_cost ?? existingItem.unit_cost,
+            notes: change.notes ?? existingItem.notes ?? undefined,
+          });
+
+          await db
+            .prepare(
+              `UPDATE estimate_line_items
+               SET section_id = ?, item_name = ?, description = ?, quantity = ?, unit = ?, unit_cost = ?, unit_price = ?, notes = ?, updated_at = now()
+               WHERE id = ? AND version_id = ?`
+            )
+            .run(
+              item.section_id ?? null,
+              item.item_name,
+              item.description,
+              item.quantity,
+              item.unit,
+              item.unit_cost,
+              item.unit_price,
+              item.notes ?? null,
+              change.id,
+              versionId
+            );
         }
         break;
       }
@@ -558,7 +654,7 @@ export async function applyLineItemChanges(
   // Recalculate total
   const result = (await db
     .prepare(
-      "SELECT SUM(quantity * unit_cost) as total FROM estimate_line_items WHERE version_id = ?"
+      "SELECT SUM(quantity * unit_price) as total FROM estimate_line_items WHERE version_id = ?"
     )
     .get(versionId)) as { total: number } | null;
   const newTotal = result?.total || 0;

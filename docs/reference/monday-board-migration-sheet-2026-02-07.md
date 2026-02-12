@@ -335,7 +335,7 @@ If the goal is: "show all active TF / roll-off / water truck / stormwater / insp
 
 Recommended path:
 - Make direct Service Lines relations canonical on Projects and Estimating.
-- Build a derived operational dataset in `hub.db` from Monday relations + worker events.
+- Build a derived operational dataset in `Supabase Postgres` from Monday relations + worker events.
 - Drive views/reporting from that dataset, not from manual mirror columns.
 
 This keeps boards semi-autonomous and programmatic while still giving you operational visibility by service line.

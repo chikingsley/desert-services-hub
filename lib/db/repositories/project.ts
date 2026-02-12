@@ -4,6 +4,99 @@
 import { db } from "@lib/db/hub";
 import { parseEmailRow } from "@lib/db/repositories/email";
 import type { Email, Project } from "@lib/db/types";
+import {
+  normalizeProjectAlias,
+  normalizeProjectNameKey,
+  tokenizeProjectText,
+  tokenOverlap,
+  uniqueStrings,
+} from "@lib/project-matching";
+
+export type ProjectMatchReasonCode =
+  | "normalized_name_exact"
+  | "project_alias_exact"
+  | "outlook_folder_exact"
+  | "account_exact"
+  | "primary_token_overlap"
+  | "contractor_token_overlap"
+  | "address_token_overlap";
+
+export interface ProjectMatchReason {
+  code: ProjectMatchReasonCode;
+  points: number;
+  detail: string;
+}
+
+export interface ProjectMatchCandidate {
+  projectId: number;
+  name: string;
+  contractor: string | null;
+  address: string | null;
+  outlookFolder: string | null;
+  accountId: number | null;
+  updatedAt: string;
+  score: number;
+  confidence: number;
+  reasons: ProjectMatchReason[];
+}
+
+export interface ProjectMatchDecision {
+  best: ProjectMatchCandidate | null;
+  runnerUp: ProjectMatchCandidate | null;
+  autoLink: boolean;
+  gap: number;
+  reason: string;
+  thresholds: {
+    minScore: number;
+    minGap: number;
+  };
+}
+
+export interface ProjectMatchContext {
+  primaryText: string;
+  aliasHints: string[];
+  contractorHint: string | null;
+  addressHint: string | null;
+  accountIdHint: number | null;
+  primaryNameKey: string;
+  nameKeys: string[];
+  aliasKeys: string[];
+  primaryTokens: string[];
+  contractorTokens: string[];
+  addressTokens: string[];
+}
+
+export interface ProjectMatchInput {
+  primaryText: string;
+  aliasHints?: string[];
+  contractorHint?: string | null;
+  addressHint?: string | null;
+  accountIdHint?: number | null;
+  limit?: number;
+}
+
+export interface ProjectMatchResult {
+  context: ProjectMatchContext;
+  candidates: ProjectMatchCandidate[];
+  decision: ProjectMatchDecision;
+}
+
+interface ProjectCandidateRow {
+  id: number;
+  name: string;
+  normalized_name: string | null;
+  contractor: string | null;
+  address: string | null;
+  outlook_folder: string | null;
+  account_id: number | null;
+  updated_at: string;
+}
+
+const HARD_MATCH_CODES = new Set<ProjectMatchReasonCode>([
+  "normalized_name_exact",
+  "project_alias_exact",
+  "outlook_folder_exact",
+]);
 
 function parseProjectRow(row: Record<string, unknown>): Project {
   return {
@@ -40,7 +133,7 @@ export async function createProject(
   accountId?: number,
   address?: string
 ): Promise<Project> {
-  const normalized = name.toLowerCase().replace(/[^a-z0-9]/g, "");
+  const normalized = normalizeProjectNameKey(name);
 
   const row = await db
     .query<
@@ -142,10 +235,7 @@ export async function addProjectAlias(
   alias: string,
   source: "manual" | "monday" | "learned" = "manual"
 ): Promise<boolean> {
-  const normalized = alias
-    .toLowerCase()
-    .replace(/[^\w\s]/g, "")
-    .trim();
+  const normalized = normalizeProjectAlias(alias);
   if (!normalized) {
     return false;
   }
@@ -166,10 +256,7 @@ export async function addProjectAlias(
 export async function getProjectByAlias(
   alias: string
 ): Promise<Project | null> {
-  const normalized = alias
-    .toLowerCase()
-    .replace(/[^\w\s]/g, "")
-    .trim();
+  const normalized = normalizeProjectAlias(alias);
   const row = await db
     .query<{ project_id: number }, [string]>(
       "SELECT project_id FROM project_aliases WHERE normalized_alias = ?"
@@ -199,10 +286,7 @@ export async function findProjectByText(text: string): Promise<Project | null> {
     return byAlias;
   }
 
-  const normalized = text
-    .toLowerCase()
-    .replace(/[^\w\s]/g, "")
-    .replace(/\s+/g, "");
+  const normalized = normalizeProjectNameKey(text);
   const row = await db
     .query<Record<string, unknown>, [string]>(
       "SELECT * FROM projects WHERE normalized_name = ?"
@@ -214,6 +298,332 @@ export async function findProjectByText(text: string): Promise<Project | null> {
   }
   return null;
 }
+
+function scoreFromTokenOverlap(
+  hintTokens: Set<string>,
+  candidateText: string,
+  maxPoints: number
+): { points: number; common: string[] } {
+  const overlap = tokenOverlap(hintTokens, tokenizeProjectText(candidateText));
+  if (overlap.common.length === 0) {
+    return { points: 0, common: [] };
+  }
+  const points = Math.max(5, Math.round(maxPoints * overlap.ratio));
+  return { points, common: overlap.common };
+}
+
+function candidateConfidence(score: number): number {
+  const clamped = Math.max(0, Math.min(1, score / 320));
+  return Number(clamped.toFixed(3));
+}
+
+function buildMatchDecision(
+  candidates: ProjectMatchCandidate[]
+): ProjectMatchDecision {
+  const best = candidates[0] ?? null;
+  const runnerUp = candidates[1] ?? null;
+  if (!best) {
+    return {
+      best: null,
+      runnerUp: null,
+      autoLink: false,
+      gap: 0,
+      reason: "no_project_candidates",
+      thresholds: { minScore: 0, minGap: 0 },
+    };
+  }
+
+  const hasHardAnchor = best.reasons.some((reason) =>
+    HARD_MATCH_CODES.has(reason.code)
+  );
+  const minScore = hasHardAnchor ? 180 : 230;
+  const minGap = hasHardAnchor ? 20 : 45;
+  const gap = runnerUp ? best.score - runnerUp.score : best.score;
+  const autoLink = best.score >= minScore && gap >= minGap;
+
+  return {
+    best,
+    runnerUp,
+    autoLink,
+    gap,
+    reason: autoLink ? "auto_link_threshold_met" : "manual_review_required",
+    thresholds: { minScore, minGap },
+  };
+}
+
+async function fetchProjectCandidateRows(context: {
+  nameKeys: string[];
+  aliasKeys: string[];
+  primaryTokens: string[];
+  accountIdHint: number | null;
+}): Promise<{ rows: ProjectCandidateRow[]; aliasMatchedIds: Set<number> }> {
+  const rowsById = new Map<number, ProjectCandidateRow>();
+  const aliasMatchedIds = new Set<number>();
+
+  if (context.nameKeys.length > 0) {
+    const placeholders = context.nameKeys.map(() => "?").join(", ");
+    const rows = await db
+      .query<ProjectCandidateRow>(
+        `SELECT
+           id, name, normalized_name, contractor, address, outlook_folder,
+           account_id, updated_at
+         FROM projects
+         WHERE normalized_name IN (${placeholders})`
+      )
+      .all(...context.nameKeys);
+    for (const row of rows) {
+      rowsById.set(row.id, row);
+    }
+  }
+
+  if (context.aliasKeys.length > 0) {
+    const placeholders = context.aliasKeys.map(() => "?").join(", ");
+    const rows = await db
+      .query<ProjectCandidateRow>(
+        `SELECT
+           p.id, p.name, p.normalized_name, p.contractor, p.address, p.outlook_folder,
+           p.account_id, p.updated_at
+         FROM project_aliases pa
+         JOIN projects p ON p.id = pa.project_id
+         WHERE pa.normalized_alias IN (${placeholders})`
+      )
+      .all(...context.aliasKeys);
+
+    for (const row of rows) {
+      rowsById.set(row.id, row);
+      aliasMatchedIds.add(row.id);
+    }
+  }
+
+  if (context.primaryTokens.length > 0 || context.accountIdHint != null) {
+    const whereParts: string[] = [];
+    const params: unknown[] = [];
+
+    if (context.accountIdHint != null) {
+      whereParts.push("account_id = ?");
+      params.push(context.accountIdHint);
+    }
+
+    if (context.primaryTokens.length > 0) {
+      const tokenClauses = context.primaryTokens
+        .slice(0, 6)
+        .map(
+          () =>
+            "(name ILIKE ? OR contractor ILIKE ? OR address ILIKE ? OR outlook_folder ILIKE ?)"
+        );
+      whereParts.push(tokenClauses.join(" OR "));
+      for (const token of context.primaryTokens.slice(0, 6)) {
+        const pattern = `%${token}%`;
+        params.push(pattern, pattern, pattern, pattern);
+      }
+    }
+
+    const rows = await db
+      .query<ProjectCandidateRow>(
+        `SELECT
+           id, name, normalized_name, contractor, address, outlook_folder,
+           account_id, updated_at
+         FROM projects
+         WHERE ${whereParts.join(" OR ")}
+         ORDER BY updated_at DESC
+         LIMIT 250`
+      )
+      .all(...params);
+
+    for (const row of rows) {
+      rowsById.set(row.id, row);
+    }
+  }
+
+  return { rows: [...rowsById.values()], aliasMatchedIds };
+}
+
+export async function findProjectCandidates(
+  input: ProjectMatchInput
+): Promise<ProjectMatchResult | null> {
+  const primaryText = (input.primaryText ?? "").trim();
+  if (!primaryText) {
+    return null;
+  }
+
+  const aliasHints = uniqueStrings(input.aliasHints ?? []);
+  const contractorHint = (input.contractorHint ?? "").trim() || null;
+  const addressHint = (input.addressHint ?? "").trim() || null;
+  const accountIdHint =
+    typeof input.accountIdHint === "number" ? input.accountIdHint : null;
+
+  const nameKeys = uniqueStrings([primaryText, ...aliasHints]).map(
+    normalizeProjectNameKey
+  );
+  const aliasKeys = uniqueStrings([primaryText, ...aliasHints]).map(
+    normalizeProjectAlias
+  );
+  const primaryTokens = [
+    ...tokenizeProjectText([primaryText, ...aliasHints].join(" ")),
+  ];
+  const contractorTokens = contractorHint
+    ? [...tokenizeProjectText(contractorHint)]
+    : [];
+  const addressTokens = addressHint
+    ? [...tokenizeProjectText(addressHint)]
+    : [];
+
+  const context: ProjectMatchContext = {
+    primaryText,
+    aliasHints,
+    contractorHint,
+    addressHint,
+    accountIdHint,
+    primaryNameKey: normalizeProjectNameKey(primaryText),
+    nameKeys,
+    aliasKeys,
+    primaryTokens,
+    contractorTokens,
+    addressTokens,
+  };
+
+  const { rows, aliasMatchedIds } = await fetchProjectCandidateRows({
+    nameKeys,
+    aliasKeys,
+    primaryTokens,
+    accountIdHint,
+  });
+
+  const rawTexts = uniqueStrings([primaryText, ...aliasHints]).map((text) =>
+    text.toLowerCase()
+  );
+  const nameKeySet = new Set(nameKeys);
+  const primaryTokenSet = new Set(primaryTokens);
+  const contractorTokenSet = new Set(contractorTokens);
+  const addressTokenSet = new Set(addressTokens);
+
+  const candidates: ProjectMatchCandidate[] = [];
+  for (const row of rows) {
+    const reasons: ProjectMatchReason[] = [];
+
+    const normalizedName = row.normalized_name ?? "";
+    if (normalizedName && nameKeySet.has(normalizedName)) {
+      reasons.push({
+        code: "normalized_name_exact",
+        points: 230,
+        detail: `normalized_name=${normalizedName}`,
+      });
+    }
+
+    if (aliasMatchedIds.has(row.id)) {
+      reasons.push({
+        code: "project_alias_exact",
+        points: 240,
+        detail: "project_aliases.normalized_alias match",
+      });
+    }
+
+    if (
+      row.outlook_folder &&
+      rawTexts.some((text) => text === row.outlook_folder?.toLowerCase())
+    ) {
+      reasons.push({
+        code: "outlook_folder_exact",
+        points: 210,
+        detail: `outlook_folder=${row.outlook_folder}`,
+      });
+    }
+
+    if (accountIdHint != null && row.account_id === accountIdHint) {
+      reasons.push({
+        code: "account_exact",
+        points: 80,
+        detail: `account_id=${accountIdHint}`,
+      });
+    }
+
+    const projectOverlap = scoreFromTokenOverlap(
+      primaryTokenSet,
+      `${row.name ?? ""} ${row.outlook_folder ?? ""}`,
+      95
+    );
+    if (projectOverlap.points > 0) {
+      reasons.push({
+        code: "primary_token_overlap",
+        points: projectOverlap.points,
+        detail: projectOverlap.common.slice(0, 8).join(", "),
+      });
+    }
+
+    if (contractorTokenSet.size > 0) {
+      const contractorOverlap = scoreFromTokenOverlap(
+        contractorTokenSet,
+        row.contractor ?? "",
+        70
+      );
+      if (contractorOverlap.points > 0) {
+        reasons.push({
+          code: "contractor_token_overlap",
+          points: contractorOverlap.points,
+          detail: contractorOverlap.common.slice(0, 6).join(", "),
+        });
+      }
+    }
+
+    if (addressTokenSet.size > 0) {
+      const addressOverlap = scoreFromTokenOverlap(
+        addressTokenSet,
+        row.address ?? "",
+        70
+      );
+      if (addressOverlap.points > 0) {
+        reasons.push({
+          code: "address_token_overlap",
+          points: addressOverlap.points,
+          detail: addressOverlap.common.slice(0, 6).join(", "),
+        });
+      }
+    }
+
+    const score = reasons.reduce((sum, reason) => sum + reason.points, 0);
+    if (score <= 0) {
+      continue;
+    }
+
+    candidates.push({
+      projectId: row.id,
+      name: row.name,
+      contractor: row.contractor,
+      address: row.address,
+      outlookFolder: row.outlook_folder,
+      accountId: row.account_id,
+      updatedAt: row.updated_at,
+      score,
+      confidence: candidateConfidence(score),
+      reasons: reasons.sort((a, b) => b.points - a.points),
+    });
+  }
+
+  candidates.sort((a, b) => {
+    if (b.score !== a.score) {
+      return b.score - a.score;
+    }
+    return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+  });
+
+  const limit = Math.max(1, Math.min(25, input.limit ?? 10));
+  const top = candidates.slice(0, limit);
+  const decision = buildMatchDecision(top);
+
+  return { context, candidates: top, decision };
+}
+
+export async function findBestProjectMatch(
+  input: ProjectMatchInput
+): Promise<Project | null> {
+  const result = await findProjectCandidates(input);
+  const best = result?.decision.best;
+  if (!(best && result.decision.autoLink)) {
+    return null;
+  }
+  return await getProjectById(best.projectId);
+}
+
 export async function getAllProjectNames(): Promise<[number, string][]> {
   const rows = await db
     .query<{ id: number; name: string }, []>("SELECT id, name FROM projects")

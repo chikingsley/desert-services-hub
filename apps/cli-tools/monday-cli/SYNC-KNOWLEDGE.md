@@ -426,7 +426,7 @@ async function downloadFromSharePointUrl(url: string): Promise<ArrayBuffer> {
 
 ### What We Store
 
-The `sharepoint_url` column in estimates/hub.db contains the full SharePoint URL. From this, we can:
+The `sharepoint_url` column in Supabase Postgres estimates contains the full SharePoint URL. From this, we can:
 
 1. Derive the sharing token instantly (no API call)
 2. Fetch file metadata in one call
@@ -443,7 +443,7 @@ No path parsing, no folder navigation, no site/drive resolution needed.
 
 ### Overview
 
-Contacts board syncs to hub.db `contacts` table. The sync includes email matching, contractor linking, and phone enrichment from email signatures.
+Contacts board syncs to Supabase Postgres `contacts` table. The sync includes email matching, contractor linking, and phone enrichment from email signatures.
 
 ### Contact Board Groups in Monday
 
@@ -548,7 +548,7 @@ Use AI to extract phone numbers and titles from email signatures:
 // 1. Find HIGH confidence email match
 // 2. Get recent email body from that sender
 // 3. Use Gemini to parse signature
-// 4. Update hub.db and optionally Monday
+// 4. Update Supabase Postgres and optionally Monday
 
 // Phone fields in Monday CONTACTS board:
 CONTACTS_COLUMNS.PHONE        // Default phone
@@ -561,10 +561,10 @@ CONTACTS_COLUMNS.TITLE        // Dropdown (has ~40 pre-defined titles)
 ### Update Contact in Both Systems
 
 ```bash
-# Update hub.db only
+# Update Supabase Postgres only
 bun cli/hub.ts update contact 3083 --email=bids@example.com
 
-# Update hub.db AND Monday
+# Update Supabase Postgres AND Monday
 bun cli/hub.ts update contact 3083 --email=bids@example.com --push
 
 # Available fields: --email, --mobile, --office, --company, --title
@@ -572,7 +572,7 @@ bun cli/hub.ts update contact 3083 --email=bids@example.com --push
 
 ### Contractor Linking
 
-Contacts should link to contractors via `account_id` in hub.db. Match by email domain:
+Contacts should link to contractors via `account_id` in Supabase Postgres. Match by email domain:
 
 ```sql
 UPDATE contacts

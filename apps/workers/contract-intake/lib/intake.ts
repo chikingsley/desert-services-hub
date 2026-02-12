@@ -10,10 +10,14 @@
  *   3. This module processes each PDF:
  *      - Spawns pdf-analysis ingest (pdfplumber → LLM classification + extraction)
  *      - Stores result in documents table
- *      - Matches to estimate by reference number if found
+ *      - Resolves likely estimate match from extracted + email context
  */
 import { join } from "node:path";
 import { db } from "@lib/db/hub";
+import {
+  findEstimateCandidatesForEmail,
+  linkEmailToEstimate,
+} from "@lib/db/repositories/estimate-email";
 
 // ============================================================================
 // Config
@@ -96,10 +100,6 @@ const insertDocumentError = db.prepare(`
   RETURNING id
 `);
 
-const matchEstimateByRef = db.query<{ id: number; name: string }>(
-  "SELECT id, name FROM estimates WHERE estimate_number = ? LIMIT 1"
-);
-
 const linkDocumentToEstimate = db.prepare(
   "UPDATE documents SET estimate_id = $1 WHERE id = $2"
 );
@@ -179,14 +179,37 @@ async function processSinglePdf(
     const documentId = (documentRow as { id: number } | null)?.id ?? null;
     let estimateLinked = false;
 
-    // Try to match to estimate by reference
-    if (documentId && ext.estimate_reference) {
-      const estimate = await matchEstimateByRef.get(ext.estimate_reference);
-      if (estimate) {
-        await linkDocumentToEstimate.run(estimate.id, documentId);
+    if (documentId) {
+      const match = await findEstimateCandidatesForEmail(emailId, {
+        estimateReferenceHints: ext.estimate_reference
+          ? [ext.estimate_reference]
+          : [],
+        contractorHints: ext.parties?.contractor
+          ? [ext.parties.contractor]
+          : [],
+        projectHints: ext.project?.name ? [ext.project.name] : [],
+        addressHints: ext.project?.address ? [ext.project.address] : [],
+        queryHints: [fileName, result.summary],
+        limit: 5,
+      });
+
+      if (match?.decision.best && match.decision.autoLink) {
+        const best = match.decision.best;
+        await linkDocumentToEstimate.run(best.estimateId, documentId);
+        await linkEmailToEstimate(
+          best.estimateId,
+          emailId,
+          "script",
+          `contract_intake auto-link score=${best.score} reason=${match.decision.reason}`
+        );
         estimateLinked = true;
         console.log(
-          `[contract-intake]   Linked to estimate: ${estimate.name} (ref: ${ext.estimate_reference})`
+          `[contract-intake]   Linked to estimate #${best.estimateId} (${best.estimateNumber ?? "n/a"}) score=${best.score}`
+        );
+      } else if (match?.decision.best) {
+        const best = match.decision.best;
+        console.log(
+          `[contract-intake]   Match candidate requires review: estimate #${best.estimateId} score=${best.score} gap=${match.decision.gap}`
         );
       }
     }

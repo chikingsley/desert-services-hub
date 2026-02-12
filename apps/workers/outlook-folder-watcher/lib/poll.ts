@@ -11,6 +11,7 @@
  */
 
 import { db as hubDb } from "@lib/db/hub";
+import { normalizeProjectNameKey } from "@lib/project-matching";
 import {
   DeltaExpiredError,
   type FolderChange,
@@ -22,6 +23,7 @@ import {
 import {
   checkDustPermitIssued,
   linkMessages,
+  linkMessagesToProjectEstimates,
 } from "@/apps/workers/outlook-folder-watcher/lib/linker";
 import {
   findProjectByFolder,
@@ -78,20 +80,17 @@ async function handleRenamedFolder(
   // If already linked, update the project to reflect the rename
   if (tracked?.project_id) {
     const { projectName, contractor } = parseFolderName(folder.displayName);
-    const normalized = projectName.toLowerCase().replace(/[^a-z0-9]/g, "");
     await hubDb.run(
       "UPDATE projects SET name = ?, normalized_name = ?, outlook_folder = ?, contractor = COALESCE(?, contractor), updated_at = now() WHERE id = ?",
       [
         projectName,
-        normalized,
+        normalizeProjectNameKey(projectName),
         folder.displayName,
         contractor,
         tracked.project_id,
       ]
     );
-    console.log(
-      `  → Updated project #${tracked.project_id}: "${projectName}"`
-    );
+    console.log(`  → Updated project #${tracked.project_id}: "${projectName}"`);
   } else {
     // No linked project yet — find or create
     const projectId = await findProjectByFolder(folder.displayName);
@@ -143,6 +142,21 @@ async function handleNewMessages(
     );
     await logEvent("emails_linked", folderId, folderName, {
       ...stats,
+      hubProjectId,
+    });
+  }
+
+  const estimateStats = await linkMessagesToProjectEstimates(
+    hubProjectId,
+    folderName,
+    toLink
+  );
+  if (estimateStats.linked > 0) {
+    console.log(
+      `[EstimateLink] "${folderName}": linked=${estimateStats.linked}, candidates=${estimateStats.candidateEmails}, projectEstimates=${estimateStats.projectEstimateCount}`
+    );
+    await logEvent("estimate_emails_linked", folderId, folderName, {
+      ...estimateStats,
       hubProjectId,
     });
   }
@@ -259,12 +273,9 @@ export async function pollFolderWatcher(): Promise<boolean> {
         await updateTrackedFolder(folder.folder_id, {
           messages_delta_link: null,
         });
-        await logEvent(
-          "delta_expired",
-          folder.folder_id,
-          folder.display_name,
-          { type: "messages" }
-        );
+        await logEvent("delta_expired", folder.folder_id, folder.display_name, {
+          type: "messages",
+        });
       } else {
         console.error(
           `[FolderWatcher] Error polling "${folder.display_name}":`,

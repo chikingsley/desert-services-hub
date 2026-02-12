@@ -1,8 +1,15 @@
 /**
  * Dust Permits API handlers
- * Routes: GET /api/permits
+ * Route: GET /api/permits
  */
 import { db } from "@lib/db/hub";
+
+type SortField =
+  | "submitted_date"
+  | "effective_date"
+  | "expiration_date"
+  | "project_name";
+type SortDirection = "asc" | "desc";
 
 interface PermitRow {
   id: string;
@@ -17,76 +24,144 @@ interface PermitRow {
   project_db_name: string | null;
 }
 
+function parsePositiveInt(value: string | null, fallback: number): number {
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed <= 0) {
+    return fallback;
+  }
+  return parsed;
+}
+
+function parseSort(value: string | null): {
+  field: SortField;
+  direction: SortDirection;
+} {
+  const [fieldRaw, directionRaw] = (value || "submitted_date.desc").split(".");
+  const field: SortField =
+    fieldRaw === "submitted_date" ||
+    fieldRaw === "effective_date" ||
+    fieldRaw === "expiration_date" ||
+    fieldRaw === "project_name"
+      ? fieldRaw
+      : "submitted_date";
+  const direction: SortDirection = directionRaw === "asc" ? "asc" : "desc";
+  return { field, direction };
+}
+
+function parseMultiFilter(value: string | null): string[] {
+  if (!value) {
+    return [];
+  }
+
+  const values = value
+    .split(",")
+    .map((entry) => entry.trim())
+    .filter((entry) => entry.length > 0 && entry !== "all");
+
+  return [...new Set(values)].slice(0, 50);
+}
+
+function getSortExpression(field: SortField): string {
+  switch (field) {
+    case "effective_date":
+      return "d.effective_date";
+    case "expiration_date":
+      return "d.expiration_date";
+    case "project_name":
+      return "LOWER(COALESCE(d.project_name, ''))";
+    default:
+      return "d.submitted_date";
+  }
+}
+
 export async function listPermits(req: Request): Promise<Response> {
   try {
     const url = new URL(req.url);
-    const statusFilter = url.searchParams.get("status");
-    const search = url.searchParams.get("q");
-
-    let query = `SELECT
-          d.id,
-          d.project_name,
-          d.company_name,
-          d.status,
-          d.submitted_date,
-          d.effective_date,
-          d.expiration_date,
-          d.address,
-          d.city,
-          p.name as project_db_name
-         FROM dust_permits_filed_by_desert_services d
-         LEFT JOIN projects p ON p.id = d.project_id`;
+    const page = parsePositiveInt(url.searchParams.get("page"), 1);
+    const perPage = Math.min(
+      200,
+      Math.max(1, parsePositiveInt(url.searchParams.get("perPage"), 50))
+    );
+    const query = url.searchParams.get("q")?.trim() || "";
+    const statuses = parseMultiFilter(url.searchParams.get("status"));
+    const { field: sortField, direction: sortDirection } = parseSort(
+      url.searchParams.get("sort")
+    );
 
     const conditions: string[] = [];
     const params: unknown[] = [];
 
-    if (statusFilter && statusFilter !== "all") {
-      conditions.push(`d.status = $${params.length + 1}`);
-      params.push(statusFilter);
-    }
-
-    if (search) {
+    if (statuses.length > 0) {
       conditions.push(
-        `(d.project_name ILIKE $${params.length + 1} OR d.id ILIKE $${params.length + 1} OR d.address ILIKE $${params.length + 1} OR d.company_name ILIKE $${params.length + 1})`
+        `COALESCE(d.status, 'Unknown') IN (${statuses.map(() => "?").join(", ")})`
       );
-      params.push(`%${search}%`);
+      params.push(...statuses);
     }
 
-    if (conditions.length > 0) {
-      query += ` WHERE ${conditions.join(" AND ")}`;
+    if (query) {
+      const like = `%${query}%`;
+      conditions.push(
+        "(d.project_name ILIKE ? OR d.id ILIKE ? OR d.address ILIKE ? OR d.company_name ILIKE ? OR p.name ILIKE ?)"
+      );
+      params.push(like, like, like, like, like);
     }
 
-    query += " ORDER BY d.submitted_date DESC NULLS LAST";
+    const where =
+      conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+    const orderBy = getSortExpression(sortField);
+    const offset = (page - 1) * perPage;
 
-    const permits = (await db.prepare(query).all(...params)) as PermitRow[];
+    const [items, countResult, statusRows] = await Promise.all([
+      db
+        .prepare(
+          `SELECT
+            d.id,
+            d.project_name,
+            d.company_name,
+            d.status,
+            d.submitted_date,
+            d.effective_date,
+            d.expiration_date,
+            d.address,
+            d.city,
+            p.name as project_db_name
+           FROM dust_permits_filed_by_desert_services d
+           LEFT JOIN projects p ON p.id = d.project_id
+           ${where}
+           ORDER BY ${orderBy} ${sortDirection.toUpperCase()} NULLS LAST, d.id DESC
+           LIMIT ? OFFSET ?`
+        )
+        .all(...params, perPage, offset) as Promise<PermitRow[]>,
+      db
+        .prepare(
+          `SELECT count(*)::int as total
+           FROM dust_permits_filed_by_desert_services d
+           LEFT JOIN projects p ON p.id = d.project_id
+           ${where}`
+        )
+        .get(...params) as Promise<{ total: number } | null>,
+      db
+        .prepare(
+          `SELECT COALESCE(status, 'Unknown') as status, COUNT(*)::int as count
+           FROM dust_permits_filed_by_desert_services
+           GROUP BY COALESCE(status, 'Unknown')
+           ORDER BY COALESCE(status, 'Unknown') ASC`
+        )
+        .all() as Promise<Array<{ status: string; count: number }>>,
+    ]);
 
-    // Compute stats from full dataset (unfiltered)
-    const statsRows = (await db
-      .prepare(
-        `SELECT
-          COUNT(*) as total,
-          COUNT(*) FILTER (WHERE status = 'Active') as active,
-          COUNT(*) FILTER (WHERE status = 'Closed') as closed,
-          COUNT(*) FILTER (WHERE status = 'Superseded') as superseded,
-          COUNT(*) FILTER (WHERE status = 'Rejected') as rejected,
-          COUNT(*) FILTER (WHERE status = 'Pending Payment') as pending_payment,
-          COUNT(*) FILTER (WHERE status = 'Submitted') as submitted,
-          COUNT(*) FILTER (WHERE project_id IS NULL) as unlinked
-        FROM dust_permits_filed_by_desert_services`
-      )
-      .get()) as Record<string, number>;
+    const total = countResult?.total ?? 0;
 
     return Response.json({
-      permits,
-      stats: {
-        total: statsRows.total,
-        active: statsRows.active,
-        closed: statsRows.closed,
-        superseded: statsRows.superseded,
-        rejected: statsRows.rejected,
-        pendingPayment: statsRows.pending_payment,
-        submitted: statsRows.submitted,
-        unlinked: statsRows.unlinked,
+      items,
+      pagination: {
+        page,
+        perPage,
+        total,
+        totalPages: Math.ceil(total / perPage),
+      },
+      facets: {
+        statuses: statusRows,
       },
     });
   } catch (error) {

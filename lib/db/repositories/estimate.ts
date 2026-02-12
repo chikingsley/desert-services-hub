@@ -2,6 +2,7 @@
  * Estimate Repository
  */
 import { db } from "@lib/db/hub";
+import { ensureEstimateHasCurrentVersion } from "@lib/db/repositories/estimate-version";
 import { likeSearch } from "@lib/db/search";
 import type { Estimate, UpsertEstimateData } from "@lib/db/types";
 
@@ -100,7 +101,15 @@ export async function upsertEstimate(
     )
     .get(data.mondayItemId);
 
-  return row?.id ?? 0;
+  const id = row?.id ?? 0;
+  if (id > 0) {
+    await ensureEstimateHasCurrentVersion(id, {
+      source: "sync",
+      total: data.bidValue ?? 0,
+    });
+  }
+
+  return id;
 }
 
 export async function updateEstimateStorage(

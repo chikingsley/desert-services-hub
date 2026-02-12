@@ -9,10 +9,13 @@ import type {
   EditorSection,
   EstimateLineItemRow,
   EstimateRow,
-  EstimateSection,
   EstimateSectionRow,
   EstimateVersionRow,
 } from "@lib/db/types";
+import {
+  EstimatePayloadValidationError,
+  validateUpdateEstimatePayload,
+} from "@lib/estimating/estimate-payload-validation";
 import {
   generateEstimatePDF,
   getEstimatePDFFilename,
@@ -22,18 +25,26 @@ import { generateBaseNumber } from "@lib/utils";
 // Bun extends Request with params from route matching
 type BunRequest = Request & { params: { id: string } };
 
-interface EstimateLineItemInput {
-  section_id?: string;
-  description?: string;
-  item?: string;
-  quantity?: number;
-  qty?: number;
-  unit?: string;
-  uom?: string;
-  unit_cost?: number;
-  cost?: number;
-  unit_price?: number;
-  notes?: string;
+async function getPreferredEstimateVersion(
+  estimateId: number
+): Promise<EstimateVersionRow | undefined> {
+  return (await db
+    .prepare(
+      `SELECT *
+       FROM estimate_versions
+       WHERE estimate_id = ?
+       ORDER BY is_current DESC, version_number DESC, created_at DESC
+       LIMIT 1`
+    )
+    .get(estimateId)) as EstimateVersionRow | undefined;
+}
+
+function parseEstimateId(rawId: string): number | null {
+  const id = Number(rawId);
+  if (!Number.isInteger(id) || id <= 0) {
+    return null;
+  }
+  return id;
 }
 
 // Generate a unique base number (YYMMDD format with suffix for duplicates)
@@ -64,7 +75,10 @@ async function getNextBaseNumber(): Promise<string> {
 // GET /api/estimates/:id - Get a single estimate with versions, sections, line items
 export async function getEstimate(req: BunRequest): Promise<Response> {
   try {
-    const { id } = req.params;
+    const id = parseEstimateId(req.params.id);
+    if (!id) {
+      return Response.json({ error: "Estimate not found" }, { status: 404 });
+    }
 
     const estimate = (await db
       .prepare("SELECT * FROM estimates WHERE id = ?")
@@ -74,35 +88,54 @@ export async function getEstimate(req: BunRequest): Promise<Response> {
       return Response.json({ error: "Estimate not found" }, { status: 404 });
     }
 
-    const version = (await db
-      .prepare(
-        "SELECT * FROM estimate_versions WHERE estimate_id = ? AND is_current = 1"
-      )
-      .get(id)) as EstimateVersionRow | undefined;
+    const version = await getPreferredEstimateVersion(id);
 
-    if (!version) {
-      return Response.json(
-        { error: "No current version found" },
-        { status: 404 }
-      );
-    }
+    const sections = version
+      ? ((await db
+          .prepare(
+            "SELECT * FROM estimate_sections WHERE version_id = ? ORDER BY sort_order"
+          )
+          .all(version.id)) as EstimateSectionRow[])
+      : [];
 
-    const sections = (await db
-      .prepare(
-        "SELECT * FROM estimate_sections WHERE version_id = ? ORDER BY sort_order"
-      )
-      .all(version.id)) as EstimateSectionRow[];
+    const lineItems = version
+      ? ((await db
+          .prepare(
+            "SELECT * FROM estimate_line_items WHERE version_id = ? ORDER BY sort_order"
+          )
+          .all(version.id)) as EstimateLineItemRow[])
+      : [];
 
-    const lineItems = (await db
-      .prepare(
-        "SELECT * FROM estimate_line_items WHERE version_id = ? ORDER BY sort_order"
-      )
-      .all(version.id)) as EstimateLineItemRow[];
+    const currentVersion =
+      version ??
+      ({
+        id: `legacy-${id}`,
+        estimate_id: String(id),
+        version_number: 1,
+        total: 0,
+        is_current: 1,
+        created_at: estimate.created_at,
+      } satisfies EstimateVersionRow);
 
     return Response.json({
-      ...estimate,
+      id: estimate.id,
+      base_number: estimate.base_number ?? estimate.estimate_number,
+      takeoff_id: estimate.takeoff_id,
+      job_name: estimate.job_name || estimate.name,
+      job_address: estimate.job_address,
+      client_name: estimate.client_name ?? estimate.contractor,
+      client_address: estimate.client_address ?? estimate.location,
+      client_email: estimate.client_email,
+      client_phone: estimate.client_phone,
+      estimator: estimate.estimator,
+      estimator_email: estimate.estimator_email,
+      notes: estimate.notes,
+      status: estimate.status ?? estimate.bid_status ?? "draft",
+      is_locked: estimate.is_locked,
+      created_at: estimate.created_at,
+      updated_at: estimate.updated_at,
       current_version: {
-        ...version,
+        ...currentVersion,
         sections,
         line_items: lineItems,
       },
@@ -119,134 +152,219 @@ export async function getEstimate(req: BunRequest): Promise<Response> {
 // PUT /api/estimates/:id - Update an estimate
 export async function updateEstimate(req: BunRequest): Promise<Response> {
   try {
-    const { id } = req.params;
-    const body = (await req.json()) as Record<string, unknown>;
+    const id = parseEstimateId(req.params.id);
+    if (!id) {
+      return Response.json({ error: "Estimate not found" }, { status: 404 });
+    }
+    const existing = (await db
+      .prepare("SELECT * FROM estimates WHERE id = ?")
+      .get(id)) as EstimateRow | undefined;
+    if (!existing) {
+      return Response.json({ error: "Estimate not found" }, { status: 404 });
+    }
 
-    // Update estimate metadata
-    const jobName = (body.job_name as string) || "Untitled Estimate";
-    const updateFields = [
-      "base_number = ?",
-      "name = ?",
-      "job_address = ?",
-      "client_name = ?",
-      "client_email = ?",
-      "client_phone = ?",
-      "notes = ?",
-      "bid_status = ?",
-      "updated_at = now()",
-    ];
-    const updateValues: (string | null)[] = [
-      body.base_number as string,
-      jobName,
-      (body.job_address as string) || null,
-      (body.client_name as string) || null,
-      (body.client_email as string) || null,
-      (body.client_phone as string) || null,
-      (body.notes as string) || null,
-      (body.status as string) || "draft",
-    ];
+    const body = await req.json();
+    const payload = validateUpdateEstimatePayload(body, existing);
 
-    // Only update takeoff_id if explicitly provided
-    if ("takeoff_id" in body) {
+    const updateFields = ["updated_at = now()"];
+    const updateValues: Array<string | number | null> = [];
+
+    if (payload.base_number !== undefined) {
+      updateFields.push("base_number = ?");
+      updateValues.push(payload.base_number);
+    }
+    if (payload.job_name !== undefined) {
+      const jobName = payload.job_name || "Untitled Estimate";
+      updateFields.push("name = ?");
+      updateValues.push(jobName);
+      updateFields.push("job_name = ?");
+      updateValues.push(jobName);
+    }
+    if (payload.job_address !== undefined) {
+      updateFields.push("job_address = ?");
+      updateValues.push(payload.job_address || null);
+    }
+    if (payload.client_name !== undefined) {
+      updateFields.push("client_name = ?");
+      updateValues.push(payload.client_name || null);
+    }
+    if (payload.client_address !== undefined) {
+      updateFields.push("client_address = ?");
+      updateValues.push(payload.client_address || null);
+    }
+    if (payload.client_email !== undefined) {
+      updateFields.push("client_email = ?");
+      updateValues.push(payload.client_email || null);
+    }
+    if (payload.client_phone !== undefined) {
+      updateFields.push("client_phone = ?");
+      updateValues.push(payload.client_phone || null);
+    }
+    if (payload.notes !== undefined) {
+      updateFields.push("notes = ?");
+      updateValues.push(payload.notes || null);
+    }
+    if (payload.status !== undefined) {
+      const status = payload.status || "draft";
+      updateFields.push("bid_status = ?");
+      updateValues.push(status);
+      updateFields.push("status = ?");
+      updateValues.push(status);
+    }
+    if (payload.is_locked !== undefined) {
+      updateFields.push("is_locked = ?");
+      updateValues.push(payload.is_locked ? 1 : 0);
+    }
+    if (payload.takeoff_id !== undefined) {
       updateFields.push("takeoff_id = ?");
-      updateValues.push((body.takeoff_id as string) || null);
+      updateValues.push(payload.takeoff_id || null);
     }
 
     updateValues.push(id);
-
     await db
       .prepare(`UPDATE estimates SET ${updateFields.join(", ")} WHERE id = ?`)
       .run(...updateValues);
 
-    // Get current version
-    const version = (await db
-      .prepare(
-        "SELECT id FROM estimate_versions WHERE estimate_id = ? AND is_current = 1"
-      )
-      .get(id)) as { id: string } | undefined;
+    const shouldReplaceLineItems = payload.line_items !== undefined;
+    const shouldReplaceSections = payload.sections !== undefined;
+    const shouldTouchVersion =
+      shouldReplaceLineItems || payload.total !== undefined;
 
-    if (version) {
+    if (shouldTouchVersion) {
+      // Get current version
+      let version = (await getPreferredEstimateVersion(id)) as
+        | EstimateVersionRow
+        | undefined;
+
+      if (!version) {
+        const versionId = crypto.randomUUID();
+        await db
+          .prepare(
+            `INSERT INTO estimate_versions (id, estimate_id, version_number, total, is_current)
+             VALUES (?, ?, 1, 0, 1)`
+          )
+          .run(versionId, id);
+        version = {
+          id: versionId,
+          estimate_id: String(id),
+          version_number: 1,
+          total: 0,
+          is_current: 1,
+          created_at: new Date().toISOString(),
+        };
+      } else if (version.is_current !== 1) {
+        await db
+          .prepare(
+            `UPDATE estimate_versions
+             SET is_current = CASE WHEN id = ? THEN 1 ELSE 0 END
+             WHERE estimate_id = ?`
+          )
+          .run(version.id, id);
+        version = { ...version, is_current: 1 };
+      }
+
       await db.transaction(async () => {
-        // Delete existing sections and line items
-        await db
-          .prepare("DELETE FROM estimate_line_items WHERE version_id = ?")
-          .run(version.id);
-        await db
-          .prepare("DELETE FROM estimate_sections WHERE version_id = ?")
-          .run(version.id);
+        if (shouldReplaceLineItems) {
+          const sectionIdMap = new Map<string, string>();
+          const validSectionIds = new Set<string>();
 
-        // Re-create sections
-        const sectionIdMap = new Map<string, string>();
-        const sections = body.sections as EstimateSection[] | undefined;
-        if (sections && sections.length > 0) {
-          const sectionValues: unknown[] = [];
-          const sectionPlaceholders: string[] = [];
-          let sortOrder = 0;
-          for (const section of sections) {
-            const sectionId = crypto.randomUUID();
-            sectionIdMap.set(section.id, sectionId);
-            sectionPlaceholders.push("(?, ?, ?, ?, ?, ?)");
-            sectionValues.push(
-              sectionId,
-              version.id,
-              section.name,
-              section.title ?? null,
-              section.show_subtotal ? 1 : 0,
-              sortOrder
-            );
-            sortOrder += 1;
+          if (shouldReplaceSections) {
+            await db
+              .prepare("DELETE FROM estimate_line_items WHERE version_id = ?")
+              .run(version.id);
+            await db
+              .prepare("DELETE FROM estimate_sections WHERE version_id = ?")
+              .run(version.id);
+
+            const sections = payload.sections ?? [];
+            if (sections.length > 0) {
+              const sectionValues: unknown[] = [];
+              const sectionPlaceholders: string[] = [];
+              let sortOrder = 0;
+              for (const section of sections) {
+                const sectionId = crypto.randomUUID();
+                sectionIdMap.set(section.id, sectionId);
+                validSectionIds.add(sectionId);
+                sectionPlaceholders.push("(?, ?, ?, ?, ?, ?)");
+                sectionValues.push(
+                  sectionId,
+                  version.id,
+                  section.name,
+                  section.title ?? null,
+                  section.show_subtotal ? 1 : 0,
+                  sortOrder
+                );
+                sortOrder += 1;
+              }
+              await db.run(
+                `INSERT INTO estimate_sections (id, version_id, name, title, show_subtotal, sort_order) VALUES ${sectionPlaceholders.join(", ")}`,
+                sectionValues
+              );
+            }
+          } else {
+            await db
+              .prepare("DELETE FROM estimate_line_items WHERE version_id = ?")
+              .run(version.id);
+            const existingSections = (await db
+              .prepare("SELECT id FROM estimate_sections WHERE version_id = ?")
+              .all(version.id)) as Array<{ id: string }>;
+            for (const section of existingSections) {
+              validSectionIds.add(section.id);
+            }
           }
-          await db.run(
-            `INSERT INTO estimate_sections (id, version_id, name, title, show_subtotal, sort_order) VALUES ${sectionPlaceholders.join(", ")}`,
-            sectionValues
-          );
-        }
 
-        // Re-create line items
-        const lineItems = body.line_items as
-          | EstimateLineItemInput[]
-          | undefined;
-        if (lineItems && lineItems.length > 0) {
-          const itemValues: unknown[] = [];
-          const itemPlaceholders: string[] = [];
-          let sortOrder = 0;
-          for (const item of lineItems) {
-            const lineItemId = crypto.randomUUID();
-            const cost = item.cost ?? 0;
-            itemPlaceholders.push("(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-            itemValues.push(
-              lineItemId,
-              version.id,
-              item.section_id
-                ? (sectionIdMap.get(item.section_id) ?? null)
-                : null,
-              item.item || item.description || "",
-              item.quantity ?? item.qty ?? 1,
-              item.unit || item.uom || "EA",
-              item.unit_cost ?? cost * 0.7,
-              item.unit_price ?? cost,
-              item.notes ||
-                (item.item &&
-                item.description &&
-                item.description.trim() &&
-                item.item !== item.description
-                  ? item.description
-                  : null) ||
-                null,
-              sortOrder
+          const lineItems = payload.line_items ?? [];
+          if (lineItems.length > 0) {
+            const itemValues: unknown[] = [];
+            const itemPlaceholders: string[] = [];
+            let sortOrder = 0;
+            for (const item of lineItems) {
+              const lineItemId = crypto.randomUUID();
+              let sectionId: string | null = null;
+              if (item.section_id) {
+                if (shouldReplaceSections) {
+                  sectionId = sectionIdMap.get(item.section_id) ?? null;
+                } else if (validSectionIds.has(item.section_id)) {
+                  sectionId = item.section_id;
+                }
+              }
+
+              itemPlaceholders.push("(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+              itemValues.push(
+                lineItemId,
+                version.id,
+                sectionId,
+                item.item_name,
+                item.description,
+                item.quantity,
+                item.unit,
+                item.unit_cost,
+                item.unit_price,
+                item.notes ?? null,
+                item.is_excluded ? 1 : 0,
+                sortOrder
+              );
+              sortOrder += 1;
+            }
+            await db.run(
+              `INSERT INTO estimate_line_items (id, version_id, section_id, item_name, description, quantity, unit, unit_cost, unit_price, notes, is_excluded, sort_order) VALUES ${itemPlaceholders.join(", ")}`,
+              itemValues
             );
-            sortOrder += 1;
           }
-          await db.run(
-            `INSERT INTO estimate_line_items (id, version_id, section_id, description, quantity, unit, unit_cost, unit_price, notes, sort_order) VALUES ${itemPlaceholders.join(", ")}`,
-            itemValues
-          );
-        }
 
-        // Update version total
-        await db
-          .prepare("UPDATE estimate_versions SET total = ? WHERE id = ?")
-          .run((body.total as number) || 0, version.id);
+          const computedTotal = lineItems.reduce(
+            (sum, item) => sum + item.quantity * item.unit_price,
+            0
+          );
+          const total = payload.total ?? computedTotal;
+          await db
+            .prepare("UPDATE estimate_versions SET total = ? WHERE id = ?")
+            .run(total, version.id);
+        } else if (payload.total !== undefined) {
+          await db
+            .prepare("UPDATE estimate_versions SET total = ? WHERE id = ?")
+            .run(payload.total, version.id);
+        }
       });
     }
 
@@ -257,6 +375,12 @@ export async function updateEstimate(req: BunRequest): Promise<Response> {
 
     return Response.json({ success: true, updated_at: updated?.updated_at });
   } catch (error) {
+    if (error instanceof EstimatePayloadValidationError) {
+      return Response.json(
+        { error: error.issues[0], issues: error.issues },
+        { status: 400 }
+      );
+    }
     console.error("Failed to update estimate:", error);
     return Response.json(
       { error: "Failed to update estimate" },
@@ -268,7 +392,10 @@ export async function updateEstimate(req: BunRequest): Promise<Response> {
 // DELETE /api/estimates/:id - Delete an estimate
 export async function deleteEstimate(req: BunRequest): Promise<Response> {
   try {
-    const { id } = req.params;
+    const id = parseEstimateId(req.params.id);
+    if (!id) {
+      return Response.json({ error: "Estimate not found" }, { status: 404 });
+    }
 
     const estimate = await db
       .prepare("SELECT id FROM estimates WHERE id = ?")
@@ -293,7 +420,10 @@ export async function deleteEstimate(req: BunRequest): Promise<Response> {
 // GET /api/estimates/:id/pdf - Generate and download PDF
 export async function getEstimatePdf(req: BunRequest): Promise<Response> {
   try {
-    const { id } = req.params;
+    const id = parseEstimateId(req.params.id);
+    if (!id) {
+      return Response.json({ error: "Estimate not found" }, { status: 404 });
+    }
 
     const estimate = (await db
       .prepare("SELECT * FROM estimates WHERE id = ?")
@@ -303,30 +433,23 @@ export async function getEstimatePdf(req: BunRequest): Promise<Response> {
       return Response.json({ error: "Estimate not found" }, { status: 404 });
     }
 
-    const version = (await db
-      .prepare(
-        "SELECT * FROM estimate_versions WHERE estimate_id = ? AND is_current = 1"
-      )
-      .get(id)) as EstimateVersionRow | undefined;
+    const version = await getPreferredEstimateVersion(id);
 
-    if (!version) {
-      return Response.json(
-        { error: "No current version found" },
-        { status: 404 }
-      );
-    }
+    const sectionsData = version
+      ? ((await db
+          .prepare(
+            "SELECT * FROM estimate_sections WHERE version_id = ? ORDER BY sort_order"
+          )
+          .all(version.id)) as EstimateSectionRow[])
+      : [];
 
-    const sectionsData = (await db
-      .prepare(
-        "SELECT * FROM estimate_sections WHERE version_id = ? ORDER BY sort_order"
-      )
-      .all(version.id)) as EstimateSectionRow[];
-
-    const lineItemsData = (await db
-      .prepare(
-        "SELECT * FROM estimate_line_items WHERE version_id = ? ORDER BY sort_order"
-      )
-      .all(version.id)) as EstimateLineItemRow[];
+    const lineItemsData = version
+      ? ((await db
+          .prepare(
+            "SELECT * FROM estimate_line_items WHERE version_id = ? ORDER BY sort_order"
+          )
+          .all(version.id)) as EstimateLineItemRow[])
+      : [];
 
     // Convert to EditorEstimate format
     const sections: EditorSection[] = sectionsData.map((s) => ({
@@ -336,13 +459,14 @@ export async function getEstimatePdf(req: BunRequest): Promise<Response> {
 
     const lineItems: EditorLineItem[] = lineItemsData.map((item) => ({
       id: item.id,
-      item: item.description,
-      description: item.notes || "",
+      item: item.item_name || item.description,
+      description: item.description || item.notes || "",
       qty: item.quantity,
       uom: item.unit,
       cost: item.unit_price,
       total: item.quantity * item.unit_price,
       sectionId: item.section_id || undefined,
+      isAlternate: item.is_excluded === 1,
     }));
 
     const total = lineItems.reduce((sum, item) => sum + item.total, 0);
@@ -351,7 +475,7 @@ export async function getEstimatePdf(req: BunRequest): Promise<Response> {
       estimateNumber:
         estimate.base_number ?? estimate.estimate_number ?? estimate.name,
       date: estimate.created_at || new Date().toISOString(),
-      estimator: "",
+      estimator: estimate.estimator || "",
       estimatorEmail: estimate.estimator_email || "",
       billTo: {
         companyName: estimate.client_name || "",
@@ -360,7 +484,7 @@ export async function getEstimatePdf(req: BunRequest): Promise<Response> {
         phone: estimate.client_phone || "",
       },
       jobInfo: {
-        siteName: estimate.name || "",
+        siteName: estimate.job_name || estimate.name || "",
         address: estimate.job_address || "",
       },
       sections,
@@ -387,7 +511,10 @@ export async function getEstimatePdf(req: BunRequest): Promise<Response> {
 // POST /api/estimates/:id/duplicate - Duplicate an estimate
 export async function duplicateEstimate(req: BunRequest): Promise<Response> {
   try {
-    const { id } = req.params;
+    const id = parseEstimateId(req.params.id);
+    if (!id) {
+      return Response.json({ error: "Estimate not found" }, { status: 404 });
+    }
 
     const originalEstimate = (await db
       .prepare("SELECT * FROM estimates WHERE id = ?")
@@ -397,48 +524,44 @@ export async function duplicateEstimate(req: BunRequest): Promise<Response> {
       return Response.json({ error: "Estimate not found" }, { status: 404 });
     }
 
-    const originalVersion = (await db
-      .prepare(
-        "SELECT * FROM estimate_versions WHERE estimate_id = ? AND is_current = 1"
-      )
-      .get(id)) as EstimateVersionRow | undefined;
+    const originalVersion = await getPreferredEstimateVersion(id);
 
-    if (!originalVersion) {
-      return Response.json(
-        { error: "No current version found" },
-        { status: 404 }
-      );
-    }
+    const originalSections = originalVersion
+      ? ((await db
+          .prepare(
+            "SELECT * FROM estimate_sections WHERE version_id = ? ORDER BY sort_order"
+          )
+          .all(originalVersion.id)) as EstimateSectionRow[])
+      : [];
 
-    const originalSections = (await db
-      .prepare(
-        "SELECT * FROM estimate_sections WHERE version_id = ? ORDER BY sort_order"
-      )
-      .all(originalVersion.id)) as EstimateSectionRow[];
-
-    const originalLineItems = (await db
-      .prepare(
-        "SELECT * FROM estimate_line_items WHERE version_id = ? ORDER BY sort_order"
-      )
-      .all(originalVersion.id)) as EstimateLineItemRow[];
+    const originalLineItems = originalVersion
+      ? ((await db
+          .prepare(
+            "SELECT * FROM estimate_line_items WHERE version_id = ? ORDER BY sort_order"
+          )
+          .all(originalVersion.id)) as EstimateLineItemRow[])
+      : [];
 
     // Create new estimate in a transaction
     const newBaseNumber = await getNextBaseNumber();
 
     const result = await db.transaction(async () => {
       const insertResult = await db.run(
-        `INSERT INTO estimates (base_number, takeoff_id, name, job_address, client_name, client_email, client_phone, notes, bid_status, is_locked)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `INSERT INTO estimates (base_number, takeoff_id, name, job_name, job_address, client_name, client_address, client_email, client_phone, notes, bid_status, status, is_locked)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
          RETURNING id`,
         [
           newBaseNumber,
           originalEstimate.takeoff_id,
           `${originalEstimate.name} (Copy)`,
+          `${originalEstimate.job_name || originalEstimate.name} (Copy)`,
           originalEstimate.job_address,
           originalEstimate.client_name,
+          originalEstimate.client_address,
           originalEstimate.client_email,
           originalEstimate.client_phone,
           originalEstimate.notes,
+          "draft",
           "draft",
           0,
         ]
@@ -454,7 +577,7 @@ export async function duplicateEstimate(req: BunRequest): Promise<Response> {
           `INSERT INTO estimate_versions (id, estimate_id, version_number, total, is_current)
          VALUES (?, ?, 1, ?, 1)`
         )
-        .run(newVersionId, newEstimateId, originalVersion.total);
+        .run(newVersionId, newEstimateId, originalVersion?.total ?? 0);
 
       // Copy sections (batch insert)
       const sectionIdMap = new Map<string, string>();
@@ -489,22 +612,24 @@ export async function duplicateEstimate(req: BunRequest): Promise<Response> {
           const newSectionId = item.section_id
             ? (sectionIdMap.get(item.section_id) ?? null)
             : null;
-          itemPlaceholders.push("(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+          itemPlaceholders.push("(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
           itemValues.push(
             newLineItemId,
             newVersionId,
             newSectionId,
+            item.item_name || null,
             item.description,
             item.quantity,
             item.unit,
             item.unit_cost,
             item.unit_price,
             item.notes,
+            item.is_excluded,
             item.sort_order
           );
         }
         await db.run(
-          `INSERT INTO estimate_line_items (id, version_id, section_id, description, quantity, unit, unit_cost, unit_price, notes, sort_order) VALUES ${itemPlaceholders.join(", ")}`,
+          `INSERT INTO estimate_line_items (id, version_id, section_id, item_name, description, quantity, unit, unit_cost, unit_price, notes, is_excluded, sort_order) VALUES ${itemPlaceholders.join(", ")}`,
           itemValues
         );
       }
@@ -525,7 +650,10 @@ export async function duplicateEstimate(req: BunRequest): Promise<Response> {
 // GET /api/estimates/:id/takeoff - Get linked takeoff
 export async function getEstimateTakeoff(req: BunRequest): Promise<Response> {
   try {
-    const { id } = req.params;
+    const id = parseEstimateId(req.params.id);
+    if (!id) {
+      return Response.json({ error: "Estimate not found" }, { status: 404 });
+    }
 
     const estimate = (await db
       .prepare("SELECT takeoff_id FROM estimates WHERE id = ?")

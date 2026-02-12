@@ -261,6 +261,7 @@ export type NotificationEventType =
   | "estimate_won"
   | "estimate_lost"
   | "contract_received"
+  | "contract_packet_sla_breached"
   | "swppp_scheduled"
   | "inspection_received";
 
@@ -598,6 +599,7 @@ export interface EditorLineItem {
   total: number;
   sectionId?: string;
   subcategoryId?: string;
+  isAlternate?: boolean;
   isStruck?: boolean;
 }
 

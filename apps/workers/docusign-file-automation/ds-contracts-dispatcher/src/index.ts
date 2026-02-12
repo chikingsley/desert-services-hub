@@ -40,6 +40,81 @@ interface ClassifiedEmail {
   receivedAt: Date;
 }
 
+interface DispatcherMetrics {
+  receivedTotal: number;
+  manualTriggerTotal: number;
+  triggerRequestedNewLinkTotal: number;
+  triggerUnknownTotal: number;
+  docusignSearchFoundTotal: number;
+  docusignSearchNotFoundTotal: number;
+  notificationSentTotal: number;
+  notificationFailedTotal: number;
+  workerErrorTotal: number;
+  forwardFailedTotal: number;
+}
+
+interface DispatcherErrorSnapshot {
+  code: string;
+  message: string;
+  at: string;
+}
+
+const METRICS: DispatcherMetrics = {
+  receivedTotal: 0,
+  manualTriggerTotal: 0,
+  triggerRequestedNewLinkTotal: 0,
+  triggerUnknownTotal: 0,
+  docusignSearchFoundTotal: 0,
+  docusignSearchNotFoundTotal: 0,
+  notificationSentTotal: 0,
+  notificationFailedTotal: 0,
+  workerErrorTotal: 0,
+  forwardFailedTotal: 0,
+};
+
+let lastError: DispatcherErrorSnapshot | null = null;
+
+function incrementMetric(key: keyof DispatcherMetrics, by = 1): void {
+  METRICS[key] += by;
+}
+
+function sanitizeErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return String(error);
+}
+
+function logEvent(
+  event: string,
+  fields: Record<string, unknown> = {},
+  level: "info" | "error" = "info"
+): void {
+  const line = JSON.stringify({
+    source: "contracts-dispatcher",
+    event,
+    level,
+    at: new Date().toISOString(),
+    ...fields,
+  });
+  if (level === "error") {
+    console.error(line);
+    return;
+  }
+  console.log(line);
+}
+
+function recordError(
+  code: string,
+  error: unknown,
+  fields: Record<string, unknown> = {}
+): void {
+  const message = sanitizeErrorMessage(error);
+  incrementMetric("workerErrorTotal");
+  lastError = { code, message, at: new Date().toISOString() };
+  logEvent("error", { code, message, ...fields }, "error");
+}
+
 // =============================================================================
 // Worker Entry Point
 // =============================================================================
@@ -49,7 +124,13 @@ export default {
     const url = new URL(request.url);
 
     if (url.pathname === "/health") {
-      return new Response("ok", { headers: { "Content-Type": "text/plain" } });
+      return Response.json({
+        status: "ok",
+        worker: "contracts-dispatcher",
+        metrics: METRICS,
+        lastError,
+        checkedAt: new Date().toISOString(),
+      });
     }
 
     // Manual trigger endpoint for testing:
@@ -62,21 +143,39 @@ export default {
       if (!subject) {
         return new Response("Missing ?subject= parameter", { status: 400 });
       }
+      incrementMetric("manualTriggerTotal");
+      logEvent("manual_trigger.requested", { subject });
 
-      const token = await getGraphToken(
-        env.AZURE_TENANT_ID,
-        env.AZURE_CLIENT_ID,
-        env.AZURE_CLIENT_SECRET
-      );
+      try {
+        const token = await getGraphToken(
+          env.AZURE_TENANT_ID,
+          env.AZURE_CLIENT_ID,
+          env.AZURE_CLIENT_SECRET
+        );
 
-      const result = await findDocuSignLink(token, subject, new Date());
+        const result = await findDocuSignLink(token, subject, new Date());
 
-      if (result.found) {
-        await sendDocuSignNotification(env, result);
-        return Response.json(result);
+        if (result.found) {
+          incrementMetric("docusignSearchFoundTotal");
+          logEvent("docusign.search.found", {
+            subject,
+            mailbox: result.foundInMailbox,
+            receivedAt: result.receivedAt,
+          });
+          await sendDocuSignNotification(env, result);
+          return Response.json(result);
+        }
+
+        incrementMetric("docusignSearchNotFoundTotal");
+        logEvent("docusign.search.not_found", { subject });
+        return Response.json(result, { status: 404 });
+      } catch (error) {
+        recordError("manual_trigger_failed", error, { subject });
+        return Response.json(
+          { error: "Manual DocuSign trigger failed" },
+          { status: 500 }
+        );
       }
-
-      return Response.json(result, { status: 404 });
     }
 
     return new Response(
@@ -92,9 +191,8 @@ export default {
   ) {
     const from = message.from;
     const subject = message.headers.get("subject") ?? "";
-
-    console.log(`[Dispatcher] Email from: ${from}`);
-    console.log(`[Dispatcher] Subject: ${subject}`);
+    incrementMetric("receivedTotal");
+    logEvent("email.received", { from, subject });
 
     try {
       // Read and parse the email
@@ -107,30 +205,53 @@ export default {
         body: parsed.text ?? parsed.html ?? "",
         receivedAt: new Date(),
       });
-
-      console.log(`[Dispatcher] Trigger: ${classified.trigger}`);
+      logEvent("email.classified", {
+        trigger: classified.trigger,
+        subject: classified.subject,
+      });
 
       // Dispatch based on trigger type
       switch (classified.trigger) {
         case "requested-new-link":
-          ctx.waitUntil(handleRequestedNewLink(env, classified));
+          incrementMetric("triggerRequestedNewLinkTotal");
+          ctx.waitUntil(
+            handleRequestedNewLink(env, classified).catch((error) => {
+              recordError("requested_new_link_handler_failed", error, {
+                subject: classified.subject,
+              });
+            })
+          );
           break;
         case "unknown":
-          console.log("[Dispatcher] No matching trigger, ignoring");
+          incrementMetric("triggerUnknownTotal");
+          logEvent("email.ignored", {
+            reason: "no_matching_trigger",
+            subject: classified.subject,
+          });
           break;
         default:
-          console.log(`[Dispatcher] Unhandled trigger: ${classified.trigger}`);
+          incrementMetric("triggerUnknownTotal");
+          logEvent("email.ignored", {
+            reason: "unhandled_trigger",
+            trigger: classified.trigger,
+            subject: classified.subject,
+          });
           break;
       }
 
       // Always forward to chi@ so you still get the email
       await message.forward("chi@desertservices.net");
+      logEvent("email.forwarded", {
+        subject,
+        target: "chi@desertservices.net",
+      });
     } catch (error) {
-      console.error(`[Dispatcher] Error: ${error}`);
+      recordError("email_handler_failed", error, { from, subject });
       try {
         await message.forward("chi@desertservices.net");
       } catch (fwdErr) {
-        console.error(`[Dispatcher] Forward failed: ${fwdErr}`);
+        incrementMetric("forwardFailedTotal");
+        recordError("forward_failed", fwdErr, { from, subject });
       }
     }
   },
@@ -180,24 +301,38 @@ async function handleRequestedNewLink(
     .replace(/^(?:Re|Fw|FW|Fwd):\s*/gi, "")
     .trim();
 
-  console.log(`[Dispatcher] Looking for DocuSign link: "${documentSubject}"`);
+  logEvent("docusign.search.started", { documentSubject });
 
-  const token = await getGraphToken(
-    env.AZURE_TENANT_ID,
-    env.AZURE_CLIENT_ID,
-    env.AZURE_CLIENT_SECRET
-  );
+  try {
+    const token = await getGraphToken(
+      env.AZURE_TENANT_ID,
+      env.AZURE_CLIENT_ID,
+      env.AZURE_CLIENT_SECRET
+    );
 
-  const result = await findDocuSignLink(
-    token,
-    documentSubject,
-    email.receivedAt
-  );
+    const result = await findDocuSignLink(
+      token,
+      documentSubject,
+      email.receivedAt
+    );
 
-  if (result.found) {
-    await sendDocuSignNotification(env, result);
-  } else {
+    if (result.found) {
+      incrementMetric("docusignSearchFoundTotal");
+      logEvent("docusign.search.found", {
+        documentSubject,
+        mailbox: result.foundInMailbox,
+        receivedAt: result.receivedAt,
+      });
+      await sendDocuSignNotification(env, result);
+      return;
+    }
+
+    incrementMetric("docusignSearchNotFoundTotal");
+    logEvent("docusign.search.not_found", { documentSubject });
     await sendDocuSignNotFound(env, documentSubject);
+  } catch (error) {
+    recordError("docusign_search_failed", error, { documentSubject });
+    throw error;
   }
 }
 
@@ -307,9 +442,11 @@ async function sendNotificationEmail(
       fullRawEmail
     );
     await env.SEND_EMAIL.send(message);
-    console.log(`[Dispatcher] Notification sent: ${subject}`);
+    incrementMetric("notificationSentTotal");
+    logEvent("notification.sent", { subject });
   } catch (error) {
-    console.error(`[Dispatcher] Failed to send notification: ${error}`);
+    incrementMetric("notificationFailedTotal");
+    recordError("notification_send_failed", error, { subject });
   }
 }
 

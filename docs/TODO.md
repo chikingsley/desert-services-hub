@@ -48,11 +48,11 @@ See `apps/contract/PROJECT.md` for full 15-step workflow and `STATE.md` for curr
 
 ## Known Technical Debt
 
-### Hub Database (hub.db)
+### Primary Database (Supabase Postgres)
 
-- [ ] Verify all services use correct hub.db path (`lib/db/hub.db`)
-- [ ] Update any remaining scripts referencing old census.db paths
-- [ ] Document migration path from census.db (if any data still needed)
+- [ ] Verify all runtime services use `DATABASE_URL` and connect to Postgres on port `54322`
+- [ ] Remove stale SQLite-era docs/comments where they still imply SQLite is the operational store
+- [ ] Document backup/restore workflow for Supabase Postgres
 
 ### Services Cleanup
 
@@ -109,10 +109,10 @@ See `apps/contract/PROJECT.md` for full 15-step workflow and `STATE.md` for curr
 - **Main App**: `apps/web/` — Bun full-stack (quotes, takeoffs, contracts, catalog)
 - **Quoting MCP**: `apps/quoting/` — Quote generation and catalog
 - **Contract Workflow**: `apps/contract/` — Processing pipeline
-- **Hub Database**: `lib/db/hub.db` — Primary data store
+- **Primary Database**: Supabase Postgres (local: `54322`) — Primary data store
 - **Monday Sync CLI**: `workers/ds-estimates-sync-worker/cli/hub.ts`
 
-### Current Stats (Hub DB)
+### Current Stats (Supabase Postgres)
 
 - 237,758 emails synced
 - 125,235 attachments cataloged

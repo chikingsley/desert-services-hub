@@ -1,10 +1,11 @@
 /**
- * Quiet estimate sync: Monday ESTIMATING board → hub.db estimates table.
+ * Quiet estimate sync: Monday ESTIMATING board → Supabase Postgres estimates table.
  *
- * Reuses the Monday client from @monday/client and the shared hub.db
+ * Reuses the Monday client from @monday/client and the shared Postgres repository layer
  * connection from @lib/db/hub. Returns stats instead of printing.
  */
 import { db } from "@lib/db/hub";
+import { ensureEstimateHasCurrentVersion } from "@lib/db/repositories/estimate-version";
 import { getItemsRich, type MondayItemRich, query } from "@monday/client";
 import { BOARD_IDS, ESTIMATING_COLUMNS } from "@monday/types";
 
@@ -37,6 +38,7 @@ export interface SyncResult {
   upserted: number;
   errors: number;
   changes: StatusChange[];
+  estimateFileItemIds: string[];
 }
 
 export interface StatusChange {
@@ -53,6 +55,28 @@ function parseNumber(value: string | null | undefined): number | null {
   const cleaned = value.replace(/[,$]/g, "");
   const num = Number.parseFloat(cleaned);
   return Number.isNaN(num) ? null : num;
+}
+
+function hasEstimateFiles(item: MondayItemRich): boolean {
+  const estimateCol = item.columnValues.find(
+    (cv) => cv.id === ESTIMATING_COLUMNS.ESTIMATE.id
+  );
+  if (!estimateCol?.value) {
+    return false;
+  }
+
+  try {
+    const parsed = JSON.parse(estimateCol.value) as {
+      files?: Array<{ assetId?: number }>;
+    };
+    return (
+      parsed.files?.some((file) =>
+        Number.isFinite(file.assetId ?? Number.NaN)
+      ) ?? false
+    );
+  } catch {
+    return false;
+  }
 }
 
 function extractAccountId(item: MondayItemRich): string | null {
@@ -159,7 +183,7 @@ async function snapshotStatuses(): Promise<Map<string, string | null>> {
 }
 
 /**
- * Run a full sync cycle: fetch all estimates from Monday, upsert into hub.db,
+ * Run a full sync cycle: fetch all estimates from Monday, upsert into Supabase Postgres,
  * detect status changes.
  */
 export async function syncEstimates(): Promise<SyncResult> {
@@ -169,6 +193,9 @@ export async function syncEstimates(): Promise<SyncResult> {
   // Fetch from Monday
   let items = await getItemsRich(BOARD_IDS.ESTIMATING);
   items = items.filter((item) => !SKIP_GROUPS.includes(item.groupTitle));
+  const estimateFileItemIds = items
+    .filter(hasEstimateFiles)
+    .map((item) => item.id);
 
   // Batch-fetch account domains
   const accountIds = items
@@ -183,7 +210,7 @@ export async function syncEstimates(): Promise<SyncResult> {
   for (const item of items) {
     try {
       const row = extractEstimateRow(item, domainMap);
-      await db.run(
+      const upsertResult = (await db.run(
         `INSERT INTO estimates (
           monday_item_id, name, estimate_number, contractor,
           group_id, group_title, monday_url,
@@ -210,7 +237,8 @@ export async function syncEstimates(): Promise<SyncResult> {
           location = excluded.location,
           sharepoint_url = COALESCE(excluded.sharepoint_url, estimates.sharepoint_url),
           synced_at = now(),
-          updated_at = now()`,
+          updated_at = now()
+        RETURNING id`,
         [
           row.mondayItemId,
           row.name,
@@ -230,7 +258,14 @@ export async function syncEstimates(): Promise<SyncResult> {
           row.location,
           row.sharepointUrl,
         ]
-      );
+      )) as Array<{ id: number }>;
+      const estimateId = upsertResult[0]?.id;
+      if (estimateId) {
+        await ensureEstimateHasCurrentVersion(estimateId, {
+          source: "sync",
+          total: row.bidValue ?? 0,
+        });
+      }
       upserted++;
     } catch {
       errors++;
@@ -253,5 +288,11 @@ export async function syncEstimates(): Promise<SyncResult> {
     }
   }
 
-  return { fetched: items.length, upserted, errors, changes };
+  return {
+    fetched: items.length,
+    upserted,
+    errors,
+    changes,
+    estimateFileItemIds,
+  };
 }

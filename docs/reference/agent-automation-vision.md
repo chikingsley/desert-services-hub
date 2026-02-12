@@ -56,7 +56,7 @@ Chi doesn't touch email. Agents handle the front-end workflow. Chi is the human 
 
 - **Skills**: Claude Code skills that encapsulate specific workflows (already have this)
 - **Cron scripts**: Bun scripts that run on schedule to check for new work (simple, proven)
-- **hub.db as the backbone**: Everything reads/writes to SQLite (already true)
+- **Supabase Postgres as the backbone**: Everything reads/writes to Supabase Postgres (already true)
 - **Email CLI as the interface**: Draft, review, send (already built)
 
 ### The insight

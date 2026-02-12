@@ -1,32 +1,40 @@
 /**
  * Estimates API handlers
- * Routes: GET /api/estimates, POST /api/estimates
+ * Route: GET /api/estimates, POST /api/estimates
  */
 import { db } from "@lib/db/hub";
-import type { EstimateRow, EstimateSection } from "@lib/db/types";
+import {
+  EstimatePayloadValidationError,
+  validateCreateEstimatePayload,
+} from "@lib/estimating/estimate-payload-validation";
 import { generateBaseNumber } from "@lib/utils";
 
-type EstimateWithVersionsJson = EstimateRow & { versions: string };
-
-interface EstimateLineItemInput {
-  section_id?: string;
-  description?: string;
-  item?: string;
-  quantity?: number;
-  qty?: number;
-  unit?: string;
-  uom?: string;
-  unit_cost?: number;
-  cost?: number;
-  unit_price?: number;
-  notes?: string;
+interface EstimateListRow {
+  id: string;
+  base_number: string;
+  job_name: string;
+  client_name: string | null;
+  job_address: string | null;
+  status: string;
+  created_at: string;
+  takeoff_id: string | null;
+  current_version_id: string | null;
+  current_version_number: number | null;
+  current_version_total: number | null;
+  current_version_is_current: number | null;
+  current_version_created_at: string | null;
 }
+
+type SortField = "created_at" | "job_name" | "client_name" | "total" | "status";
+type SortDirection = "asc" | "desc";
+
+const DEFAULT_SORT: `${SortField}.${SortDirection}` = "created_at.desc";
+const DEFAULT_PER_PAGE = 50;
 
 // Generate a unique base number (YYMMDD format with suffix for duplicates)
 async function getNextBaseNumber(): Promise<string> {
   const baseNumber = generateBaseNumber();
 
-  // Check for existing estimates with this prefix
   const existing = (await db
     .prepare(
       `SELECT base_number FROM estimates
@@ -40,7 +48,6 @@ async function getNextBaseNumber(): Promise<string> {
     return baseNumber;
   }
 
-  // Add suffix for duplicates (01, 02, etc.)
   const lastNumber = existing.base_number;
   if (lastNumber.length > 6) {
     const suffix = Number.parseInt(lastNumber.slice(6), 10) + 1;
@@ -49,118 +56,203 @@ async function getNextBaseNumber(): Promise<string> {
   return `${baseNumber}01`;
 }
 
-// Status filter groups for the UI tabs
-const STATUS_FILTERS: Record<string, string[]> = {
-  "Bid Sent": ["Bid Sent"],
-  Won: ["Won", "Pending Won", "Add to Projects"],
-  Lost: ["Lost", "GC Not Awarded"],
-  "Yet to Bid": ["Yet to Bid"],
-};
+function parsePositiveInt(value: string | null, fallback: number): number {
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed <= 0) {
+    return fallback;
+  }
+  return parsed;
+}
 
-// GET /api/estimates - List estimates with pagination, search, and status filter
+function parseSort(value: string | null): {
+  field: SortField;
+  direction: SortDirection;
+} {
+  const raw = (value || DEFAULT_SORT).trim();
+  const [fieldRaw, directionRaw] = raw.split(".");
+
+  const field =
+    fieldRaw === "created_at" ||
+    fieldRaw === "job_name" ||
+    fieldRaw === "client_name" ||
+    fieldRaw === "total" ||
+    fieldRaw === "status"
+      ? fieldRaw
+      : "created_at";
+
+  const direction = directionRaw === "asc" ? "asc" : "desc";
+
+  return { field, direction };
+}
+
+function parseStatusFilter(value: string | null): string[] {
+  if (!value) {
+    return [];
+  }
+
+  const statuses = value
+    .split(",")
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
+
+  return [...new Set(statuses)].slice(0, 20);
+}
+
+function getSortExpression(field: SortField): string {
+  switch (field) {
+    case "job_name":
+      return "LOWER(COALESCE(q.name, ''))";
+    case "client_name":
+      return "LOWER(COALESCE(NULLIF(q.client_name, ''), q.contractor, ''))";
+    case "total":
+      return "COALESCE(cv.total, 0)";
+    case "status":
+      return "LOWER(COALESCE(q.bid_status, 'draft'))";
+    default:
+      return "q.created_at";
+  }
+}
+
+// GET /api/estimates - List estimates with server-side filters/sort/pagination
 export async function listEstimates(req: Request): Promise<Response> {
   try {
     const url = new URL(req.url);
-    const page = Math.max(1, Number(url.searchParams.get("page")) || 1);
-    const limit = Math.min(
-      100,
-      Math.max(1, Number(url.searchParams.get("limit")) || 50)
+    const page = parsePositiveInt(url.searchParams.get("page"), 1);
+    const perPage = Math.min(
+      200,
+      Math.max(
+        1,
+        parsePositiveInt(url.searchParams.get("perPage"), DEFAULT_PER_PAGE)
+      )
     );
-    const search = url.searchParams.get("search")?.trim() || "";
-    const statusFilter = url.searchParams.get("status") || "";
 
-    // Build WHERE clause
+    const query = url.searchParams.get("q")?.trim() || "";
+    const source = (url.searchParams.get("source") || "all").trim();
+    const statuses = parseStatusFilter(url.searchParams.get("status"));
+    const { field: sortField, direction: sortDirection } = parseSort(
+      url.searchParams.get("sort")
+    );
+
     const conditions: string[] = [];
     const params: unknown[] = [];
 
-    if (search) {
+    if (query) {
+      const like = `%${query}%`;
       conditions.push(
-        "(q.name ILIKE ? OR q.estimate_number ILIKE ? OR q.contractor ILIKE ? OR q.client_name ILIKE ? OR q.base_number ILIKE ?)"
+        "(q.name ILIKE ? OR q.estimate_number ILIKE ? OR q.contractor ILIKE ? OR q.client_name ILIKE ? OR q.base_number ILIKE ? OR q.job_address ILIKE ? OR q.location ILIKE ?)"
       );
-      const like = `%${search}%`;
-      params.push(like, like, like, like, like);
+      params.push(like, like, like, like, like, like, like);
     }
 
-    if (statusFilter && STATUS_FILTERS[statusFilter]) {
-      const statuses = STATUS_FILTERS[statusFilter];
+    if (source === "manual") {
+      conditions.push("q.takeoff_id IS NULL");
+    } else if (source === "takeoff") {
+      conditions.push("q.takeoff_id IS NOT NULL");
+    }
+
+    if (statuses.length > 0) {
       conditions.push(
-        `q.bid_status IN (${statuses.map(() => "?").join(", ")})`
+        `COALESCE(q.bid_status, 'draft') IN (${statuses.map(() => "?").join(", ")})`
       );
       params.push(...statuses);
+    } else {
+      // Default behavior for main list: hide Yet to Bid until explicitly filtered in.
+      conditions.push("COALESCE(q.bid_status, 'draft') <> ?");
+      params.push("Yet to Bid");
     }
 
     const where =
       conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
-    const offset = (page - 1) * limit;
+    const orderByExpression = getSortExpression(sortField);
+    const offset = (page - 1) * perPage;
 
-    const [estimates, countResult, statsResult] = await Promise.all([
+    const [rows, countResult, statusFacetRows] = await Promise.all([
       db
         .prepare(
-          `SELECT q.id,
+          `SELECT
+            q.id,
             COALESCE(NULLIF(q.base_number, ''), q.estimate_number) as base_number,
             q.name as job_name,
             COALESCE(NULLIF(q.client_name, ''), q.contractor) as client_name,
+            COALESCE(NULLIF(q.job_address, ''), q.location) as job_address,
             COALESCE(q.bid_status, 'draft') as status,
             q.created_at,
             q.takeoff_id,
-          (SELECT COALESCE(json_agg(json_build_object(
-            'id', v.id,
-            'version_number', v.version_number,
-            'total', v.total,
-            'is_current', v.is_current,
-            'created_at', v.created_at
-          )), '[]'::json) FROM estimate_versions v WHERE v.estimate_id = q.id) as versions
-        FROM estimates q
-        ${where}
-        ORDER BY q.created_at DESC
-        LIMIT ? OFFSET ?`
+            cv.id as current_version_id,
+            cv.version_number as current_version_number,
+            cv.total as current_version_total,
+            cv.is_current as current_version_is_current,
+            cv.created_at as current_version_created_at
+          FROM estimates q
+          LEFT JOIN LATERAL (
+            SELECT v.id, v.version_number, v.total, v.is_current, v.created_at
+            FROM estimate_versions v
+            WHERE v.estimate_id = q.id
+            ORDER BY v.is_current DESC, v.version_number DESC, v.created_at DESC
+            LIMIT 1
+          ) cv ON TRUE
+          ${where}
+          ORDER BY ${orderByExpression} ${sortDirection.toUpperCase()}, q.id DESC
+          LIMIT ? OFFSET ?`
         )
-        .all(...params, limit, offset) as Promise<EstimateWithVersionsJson[]>,
+        .all(...params, perPage, offset) as Promise<EstimateListRow[]>,
       db
         .prepare(`SELECT count(*)::int as total FROM estimates q ${where}`)
         .get(...params) as Promise<{ total: number } | null>,
       db
         .prepare(
-          `SELECT
-            count(*)::int as total,
-            COALESCE(SUM(COALESCE(bid_value, 0)), 0)::bigint as total_value,
-            count(*) FILTER (WHERE bid_status = 'Bid Sent')::int as bid_sent,
-            count(*) FILTER (WHERE bid_status IN ('Won', 'Pending Won', 'Add to Projects'))::int as won,
-            count(*) FILTER (WHERE bid_status IN ('Lost', 'GC Not Awarded'))::int as lost,
-            count(*) FILTER (WHERE bid_status = 'Yet to Bid')::int as yet_to_bid
-          FROM estimates`
+          `SELECT COALESCE(bid_status, 'draft') as status, count(*)::int as count
+           FROM estimates
+           GROUP BY COALESCE(bid_status, 'draft')
+           ORDER BY COALESCE(bid_status, 'draft') ASC`
         )
-        .get() as Promise<{
-        total: number;
-        total_value: number;
-        bid_sent: number;
-        won: number;
-        lost: number;
-        yet_to_bid: number;
-      } | null>,
+        .all() as Promise<Array<{ status: string; count: number }>>,
     ]);
 
     const total = countResult?.total ?? 0;
 
-    // Parse the versions JSON for each estimate
-    const parsedEstimates = estimates.map((e) => ({
-      ...e,
-      versions:
-        typeof e.versions === "string"
-          ? JSON.parse(e.versions)
-          : (e.versions ?? []),
-    }));
-
     return Response.json({
-      estimates: parsedEstimates,
-      pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
-      stats: {
-        total: statsResult?.total ?? 0,
-        totalValue: statsResult?.total_value ?? 0,
-        bidSent: statsResult?.bid_sent ?? 0,
-        won: statsResult?.won ?? 0,
-        lost: statsResult?.lost ?? 0,
-        yetToBid: statsResult?.yet_to_bid ?? 0,
+      items: rows.map((row) => ({
+        id: row.id,
+        base_number: row.base_number,
+        job_name: row.job_name,
+        client_name: row.client_name,
+        job_address: row.job_address,
+        status: row.status,
+        created_at: row.created_at,
+        takeoff_id: row.takeoff_id,
+        current_version: row.current_version_id
+          ? {
+              id: row.current_version_id,
+              version_number: row.current_version_number ?? 1,
+              total: row.current_version_total ?? 0,
+              is_current: row.current_version_is_current ?? 1,
+              created_at: row.current_version_created_at ?? row.created_at,
+            }
+          : null,
+      })),
+      pagination: {
+        page,
+        perPage,
+        total,
+        totalPages: Math.ceil(total / perPage),
+      },
+      facets: {
+        statuses: statusFacetRows,
+        sources: {
+          manual: await db
+            .prepare(
+              "SELECT count(*)::int as count FROM estimates WHERE takeoff_id IS NULL"
+            )
+            .get()
+            .then((r) => (r as { count: number } | null)?.count ?? 0),
+          takeoff: await db
+            .prepare(
+              "SELECT count(*)::int as count FROM estimates WHERE takeoff_id IS NOT NULL"
+            )
+            .get()
+            .then((r) => (r as { count: number } | null)?.count ?? 0),
+        },
       },
     });
   } catch (error) {
@@ -175,49 +267,55 @@ export async function listEstimates(req: Request): Promise<Response> {
 // POST /api/estimates - Create a new estimate
 export async function createEstimate(req: Request): Promise<Response> {
   try {
-    const body = (await req.json()) as Record<string, unknown>;
+    const body = await req.json();
+    const payload = validateCreateEstimatePayload(body);
 
-    // Auto-generate base_number if not provided (YYMMDD format)
-    const baseNumber =
-      (body.base_number as string) || (await getNextBaseNumber());
+    const baseNumber = payload.base_number || (await getNextBaseNumber());
+    const jobName = payload.job_name || "Untitled Estimate";
+    const status = payload.status || "draft";
+    const sections = payload.sections ?? [];
+    const lineItems = payload.line_items ?? [];
+    const computedTotal =
+      payload.total ??
+      lineItems.reduce((sum, item) => sum + item.quantity * item.unit_price, 0);
 
     const result = await db.transaction(async () => {
-      // Insert estimate (let DB auto-generate integer id)
       const insertResult = await db.run(
-        `INSERT INTO estimates (base_number, takeoff_id, name, job_address, client_name, client_email, client_phone, notes, bid_status, is_locked)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `INSERT INTO estimates (base_number, takeoff_id, name, job_name, job_address, client_name, client_address, client_email, client_phone, notes, bid_status, status, is_locked)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
          RETURNING id`,
         [
           baseNumber,
-          (body.takeoff_id as string) || null,
-          (body.job_name as string) || "Untitled Estimate",
-          (body.job_address as string) || null,
-          (body.client_name as string) || null,
-          (body.client_email as string) || null,
-          (body.client_phone as string) || null,
-          (body.notes as string) || null,
-          (body.status as string) || "draft",
-          body.is_locked ? 1 : 0,
+          payload.takeoff_id || null,
+          jobName,
+          jobName,
+          payload.job_address || null,
+          payload.client_name || null,
+          payload.client_address || null,
+          payload.client_email || null,
+          payload.client_phone || null,
+          payload.notes || null,
+          status,
+          status,
+          payload.is_locked ? 1 : 0,
         ]
       );
       const id = (insertResult as unknown as Array<{ id: number }>)[0].id;
 
-      // Create first version
       const versionId = crypto.randomUUID();
       await db
         .prepare(
           `INSERT INTO estimate_versions (id, estimate_id, version_number, total, is_current)
-         VALUES (?, ?, 1, ?, 1)`
+           VALUES (?, ?, 1, ?, 1)`
         )
-        .run(versionId, id, (body.total as number) || 0);
+        .run(versionId, id, computedTotal);
 
-      // Create sections if provided (batch insert)
       const sectionIdMap = new Map<string, string>();
-      const sections = body.sections as EstimateSection[] | undefined;
-      if (sections && sections.length > 0) {
+      if (sections.length > 0) {
         const sectionValues: unknown[] = [];
         const sectionPlaceholders: string[] = [];
         let sortOrder = 0;
+
         for (const section of sections) {
           const sectionId = crypto.randomUUID();
           sectionIdMap.set(section.id, sectionId);
@@ -232,47 +330,42 @@ export async function createEstimate(req: Request): Promise<Response> {
           );
           sortOrder += 1;
         }
+
         await db.run(
           `INSERT INTO estimate_sections (id, version_id, name, title, show_subtotal, sort_order) VALUES ${sectionPlaceholders.join(", ")}`,
           sectionValues
         );
       }
 
-      // Create line items if provided (batch insert)
-      const lineItems = body.line_items as EstimateLineItemInput[] | undefined;
-      if (lineItems && lineItems.length > 0) {
+      if (lineItems.length > 0) {
         const itemValues: unknown[] = [];
         const itemPlaceholders: string[] = [];
         let sortOrder = 0;
+
         for (const item of lineItems) {
           const lineItemId = crypto.randomUUID();
-          const cost = item.cost ?? 0;
-          itemPlaceholders.push("(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+          itemPlaceholders.push("(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
           itemValues.push(
             lineItemId,
             versionId,
             item.section_id
               ? (sectionIdMap.get(item.section_id) ?? null)
               : null,
-            item.item || item.description || "",
-            item.quantity ?? item.qty ?? 1,
-            item.unit || item.uom || "EA",
-            item.unit_cost ?? cost * 0.7,
-            item.unit_price ?? cost,
-            item.notes ||
-              (item.item &&
-              item.description &&
-              item.description.trim() &&
-              item.item !== item.description
-                ? item.description
-                : null) ||
-              null,
+            item.item_name,
+            item.description,
+            item.quantity,
+            item.unit,
+            item.unit_cost,
+            item.unit_price,
+            item.notes ?? null,
+            item.is_excluded ? 1 : 0,
             sortOrder
           );
           sortOrder += 1;
         }
+
         await db.run(
-          `INSERT INTO estimate_line_items (id, version_id, section_id, description, quantity, unit, unit_cost, unit_price, notes, sort_order) VALUES ${itemPlaceholders.join(", ")}`,
+          `INSERT INTO estimate_line_items (id, version_id, section_id, item_name, description, quantity, unit, unit_cost, unit_price, notes, is_excluded, sort_order) VALUES ${itemPlaceholders.join(", ")}`,
           itemValues
         );
       }
@@ -282,6 +375,13 @@ export async function createEstimate(req: Request): Promise<Response> {
 
     return Response.json(result);
   } catch (error) {
+    if (error instanceof EstimatePayloadValidationError) {
+      return Response.json(
+        { error: error.issues[0], issues: error.issues },
+        { status: 400 }
+      );
+    }
+
     console.error("Failed to create estimate:", error);
     return Response.json(
       { error: "Failed to create estimate" },
@@ -290,7 +390,6 @@ export async function createEstimate(req: Request): Promise<Response> {
   }
 }
 
-// Route handler object for Bun.serve()
 export const estimatesRoutes = {
   GET: listEstimates,
   POST: createEstimate,

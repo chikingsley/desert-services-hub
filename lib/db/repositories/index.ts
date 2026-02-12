@@ -93,11 +93,22 @@ export {
   markDetailScraped,
   upsertMarketingPermit,
 } from "@lib/db/repositories/marketing-permit";
+export type {
+  ProjectMatchCandidate,
+  ProjectMatchContext,
+  ProjectMatchDecision,
+  ProjectMatchInput,
+  ProjectMatchReason,
+  ProjectMatchReasonCode,
+  ProjectMatchResult,
+} from "@lib/db/repositories/project";
 // Project
 export {
   addProjectAlias,
   createProject,
+  findBestProjectMatch,
   findProjectByText,
+  findProjectCandidates,
   getAliasesForProject,
   getAllProjectNames,
   getAllProjects,
@@ -113,6 +124,13 @@ export {
   getEstimatesForProject,
   linkEstimateToProject,
 } from "@lib/db/repositories/project-estimate";
+export type { ProjectMatchReviewSource } from "@lib/db/repositories/project-match-review";
+// Project Match Review Queue
+export {
+  getProjectMatchReview,
+  resolveProjectMatchReview,
+  upsertProjectMatchReview,
+} from "@lib/db/repositories/project-match-review";
 // Statistics & Cleanup
 export {
   clearAllData,
@@ -124,3 +142,7 @@ export {
   getLowConfidenceEmails,
   getTotalEmailCount,
 } from "@lib/db/repositories/stats";
+export type {
+  ProjectMatchReview,
+  ProjectMatchReviewStatus,
+} from "@lib/db/types";

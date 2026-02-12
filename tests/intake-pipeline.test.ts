@@ -186,7 +186,7 @@ describe("intake pipeline — PDF", () => {
     console.log(`    Summary: ${contract.summary.length} chars`);
   });
 
-  it("backward compat: old endpoints still work", async () => {
+  it("backward compat: supported aliases still work; removed alias stays removed", async () => {
     // Test /api/webhooks/files-intake alias
     const res1 = await fetch(`${WEBHOOK_URL}/api/webhooks/files-intake`, {
       method: "POST",
@@ -218,7 +218,7 @@ describe("intake pipeline — PDF", () => {
     });
     expect(res2.status).toBe(400);
 
-    // Test /api/webhooks/dust-permit-intake alias
+    // /api/webhooks/dust-permit-intake was intentionally removed.
     const res3 = await fetch(`${WEBHOOK_URL}/api/webhooks/dust-permit-intake`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -231,7 +231,7 @@ describe("intake pipeline — PDF", () => {
         attachments: [],
       }),
     });
-    expect(res3.status).toBe(400);
+    expect(res3.status).toBe(404);
   });
 
   afterAll(async () => {

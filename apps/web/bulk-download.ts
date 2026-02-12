@@ -1,7 +1,7 @@
 /**
  * Bulk File Download
  *
- * Iterates through all estimates in hub.db (already synced) and downloads
+ * Iterates through all estimates in Supabase Postgres (already synced) and downloads
  * any files from Monday that we don't have yet. No full-board re-fetch --
  * uses local item IDs, calls processItemFiles per-item.
  *

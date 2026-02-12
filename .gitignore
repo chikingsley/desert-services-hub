@@ -89,10 +89,6 @@ test-results/
 playwright-report/
 .stagehand-cache/
 
-# Test PDF output artifacts
-test-pdf-*.pdf
-example-estimate.pdf
-
 # Agent/skill configs (managed by tools, not code)
 .agents/
 .claude/skills/

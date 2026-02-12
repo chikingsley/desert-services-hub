@@ -31,7 +31,7 @@ export const BOARD_IDS = {
   // ============================================================================
   // MAIN WORKSPACE (8970676) - Active CRM
   // ============================================================================
-  // These are synced to hub.db via `bun cli/hub.ts sync`
+  // These are synced to Supabase Postgres via `bun cli/hub.ts sync`
   ESTIMATING: "7943937851",
   LEADS: "7943937841",
   CONTRACTORS: "7943937856",

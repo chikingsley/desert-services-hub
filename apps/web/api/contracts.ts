@@ -1,13 +1,16 @@
 /**
  * Contracts API handlers
- * Routes: GET /api/contracts
- *
- * "Contracts" = Won estimates from Monday.com estimating board.
- * Each Won estimate represents a contract that needs to be collected,
- * reviewed, and executed. The linked project's contract_status tracks
- * where it is in the pipeline.
+ * Route: GET /api/contracts
  */
 import { db } from "@lib/db/hub";
+
+type SortField =
+  | "updated_at"
+  | "name"
+  | "contractor"
+  | "total"
+  | "contract_status";
+type SortDirection = "asc" | "desc";
 
 interface ContractRow {
   id: number;
@@ -29,93 +32,179 @@ interface ContractRow {
   updated_at: string;
 }
 
+function parsePositiveInt(value: string | null, fallback: number): number {
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed <= 0) {
+    return fallback;
+  }
+  return parsed;
+}
+
+function parseSort(value: string | null): {
+  field: SortField;
+  direction: SortDirection;
+} {
+  const [fieldRaw, directionRaw] = (value || "updated_at.desc").split(".");
+  const field: SortField =
+    fieldRaw === "updated_at" ||
+    fieldRaw === "name" ||
+    fieldRaw === "contractor" ||
+    fieldRaw === "total" ||
+    fieldRaw === "contract_status"
+      ? fieldRaw
+      : "updated_at";
+  const direction: SortDirection = directionRaw === "asc" ? "asc" : "desc";
+  return { field, direction };
+}
+
+function parseMultiFilter(value: string | null): string[] {
+  if (!value) {
+    return [];
+  }
+
+  const values = value
+    .split(",")
+    .map((entry) => entry.trim())
+    .filter((entry) => entry.length > 0 && entry !== "all");
+
+  return [...new Set(values)].slice(0, 50);
+}
+
+function getSortExpression(field: SortField): string {
+  switch (field) {
+    case "name":
+      return "LOWER(e.name)";
+    case "contractor":
+      return "LOWER(COALESCE(e.contractor, ''))";
+    case "total":
+      return "COALESCE(e.awarded_value, e.bid_value, 0)";
+    case "contract_status":
+      return "LOWER(COALESCE(proj.contract_status, 'Unlinked'))";
+    default:
+      return "e.updated_at";
+  }
+}
+
 export async function listContracts(req: Request): Promise<Response> {
   try {
     const url = new URL(req.url);
-    const statusFilter = url.searchParams.get("status");
-    const search = url.searchParams.get("q");
+    const page = parsePositiveInt(url.searchParams.get("page"), 1);
+    const perPage = Math.min(
+      200,
+      Math.max(1, parsePositiveInt(url.searchParams.get("perPage"), 50))
+    );
+    const query = url.searchParams.get("q")?.trim() || "";
+    const statuses = parseMultiFilter(url.searchParams.get("status"));
+    const { field: sortField, direction: sortDirection } = parseSort(
+      url.searchParams.get("sort")
+    );
 
-    let query = `SELECT
+    const conditions: string[] = ["e.bid_status = 'Won'"];
+    const params: unknown[] = [];
+
+    if (statuses.length > 0) {
+      conditions.push(
+        `COALESCE(proj.contract_status, 'Unlinked') IN (${statuses.map(() => "?").join(", ")})`
+      );
+      params.push(...statuses);
+    }
+
+    if (query) {
+      const like = `%${query}%`;
+      conditions.push(
+        "(e.name ILIKE ? OR e.contractor ILIKE ? OR e.estimate_number ILIKE ? OR e.location ILIKE ? OR proj.project_name ILIKE ?)"
+      );
+      params.push(like, like, like, like, like);
+    }
+
+    const where = `WHERE ${conditions.join(" AND ")}`;
+    const orderBy = getSortExpression(sortField);
+    const offset = (page - 1) * perPage;
+
+    const [items, countResult, facetRows, valueRow] = await Promise.all([
+      db
+        .prepare(
+          `SELECT
             e.id, e.monday_item_id, e.name, e.estimate_number,
             e.contractor, e.group_id, e.bid_status, e.bid_value,
             e.awarded_value, e.due_date, e.location,
             proj.project_id, proj.project_name,
             proj.contract_status, proj.dust_permit_status,
             e.created_at, e.updated_at
-         FROM estimates e
-         LEFT JOIN LATERAL (
-            SELECT
-              p.id as project_id,
-              p.name as project_name,
-              p.contract_status,
-              p.dust_permit_status
-            FROM project_estimates pe
-            JOIN projects p ON p.id = pe.project_id
-            WHERE pe.estimate_id = e.id
-            ORDER BY pe.created_at DESC NULLS LAST, p.id DESC
-            LIMIT 1
-         ) proj ON true
-         WHERE e.bid_status = 'Won'`;
+           FROM estimates e
+           LEFT JOIN LATERAL (
+              SELECT
+                p.id as project_id,
+                p.name as project_name,
+                p.contract_status,
+                p.dust_permit_status
+              FROM project_estimates pe
+              JOIN projects p ON p.id = pe.project_id
+              WHERE pe.estimate_id = e.id
+              ORDER BY pe.created_at DESC NULLS LAST, p.id DESC
+              LIMIT 1
+           ) proj ON true
+           ${where}
+           ORDER BY ${orderBy} ${sortDirection.toUpperCase()}, e.id DESC
+           LIMIT ? OFFSET ?`
+        )
+        .all(...params, perPage, offset) as Promise<ContractRow[]>,
+      db
+        .prepare(
+          `SELECT count(*)::int as total
+           FROM estimates e
+           LEFT JOIN LATERAL (
+              SELECT p.contract_status, p.name as project_name
+              FROM project_estimates pe
+              JOIN projects p ON p.id = pe.project_id
+              WHERE pe.estimate_id = e.id
+              ORDER BY pe.created_at DESC NULLS LAST, p.id DESC
+              LIMIT 1
+           ) proj ON true
+           ${where}`
+        )
+        .get(...params) as Promise<{ total: number } | null>,
+      db
+        .prepare(
+          `SELECT COALESCE(proj.contract_status, 'Unlinked') as status, COUNT(*)::int as count
+           FROM estimates e
+           LEFT JOIN LATERAL (
+              SELECT p.contract_status
+              FROM project_estimates pe
+              JOIN projects p ON p.id = pe.project_id
+              WHERE pe.estimate_id = e.id
+              ORDER BY pe.created_at DESC NULLS LAST, p.id DESC
+              LIMIT 1
+           ) proj ON true
+           WHERE e.bid_status = 'Won'
+           GROUP BY COALESCE(proj.contract_status, 'Unlinked')
+           ORDER BY COALESCE(proj.contract_status, 'Unlinked') ASC`
+        )
+        .all() as Promise<Array<{ status: string; count: number }>>,
+      db
+        .prepare(
+          `SELECT COALESCE(SUM(COALESCE(awarded_value, bid_value, 0)), 0)::bigint as total_value
+           FROM estimates
+           WHERE bid_status = 'Won'`
+        )
+        .get() as Promise<{ total_value: number } | null>,
+    ]);
 
-    const params: unknown[] = [];
-
-    if (statusFilter && statusFilter !== "all") {
-      query += " AND proj.contract_status = ?";
-      params.push(statusFilter);
-    }
-
-    if (search) {
-      query +=
-        " AND (e.name ILIKE ? OR e.contractor ILIKE ? OR e.estimate_number ILIKE ?)";
-      const like = `%${search}%`;
-      params.push(like, like, like);
-    }
-
-    query += " ORDER BY e.updated_at DESC";
-
-    const contracts = (await db.prepare(query).all(...params)) as ContractRow[];
-
-    // Stats
-    const statsRows = (await db
-      .prepare(
-        `SELECT
-          COUNT(*) as total,
-          COUNT(*) FILTER (WHERE bid_status = 'Won') as won,
-          SUM(CASE WHEN bid_status = 'Won' THEN COALESCE(awarded_value, bid_value, 0) ELSE 0 END) as total_value
-        FROM estimates
-        WHERE bid_status = 'Won'`
-      )
-      .get()) as Record<string, number>;
-
-    // Contract status breakdown (from linked projects)
-    const pipelineStats = (await db
-      .prepare(
-        `SELECT proj.contract_status, COUNT(*) as count
-         FROM estimates e
-         LEFT JOIN LATERAL (
-            SELECT p.contract_status
-            FROM project_estimates pe
-            JOIN projects p ON p.id = pe.project_id
-            WHERE pe.estimate_id = e.id
-            ORDER BY pe.created_at DESC NULLS LAST, p.id DESC
-            LIMIT 1
-         ) proj ON true
-         WHERE e.bid_status = 'Won'
-         GROUP BY proj.contract_status`
-      )
-      .all()) as { contract_status: string | null; count: number }[];
-
-    const pipeline: Record<string, number> = {};
-    for (const row of pipelineStats) {
-      pipeline[row.contract_status || "Unlinked"] = row.count;
-    }
+    const total = countResult?.total ?? 0;
 
     return Response.json({
-      contracts,
-      stats: {
-        total: statsRows.total,
-        totalValue: statsRows.total_value || 0,
-        pipeline,
+      items,
+      pagination: {
+        page,
+        perPage,
+        total,
+        totalPages: Math.ceil(total / perPage),
+      },
+      facets: {
+        contractStatuses: facetRows,
+      },
+      summary: {
+        totalValue: valueRow?.total_value ?? 0,
       },
     });
   } catch (error) {

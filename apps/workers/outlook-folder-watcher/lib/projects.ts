@@ -3,6 +3,20 @@
  * Matches Outlook folder names to Postgres projects, creating if needed.
  */
 import { db } from "@lib/db/hub";
+import {
+  addProjectAlias,
+  findProjectByText,
+  findProjectCandidates,
+  getProjectById,
+} from "@lib/db/repositories/project";
+import {
+  resolveProjectMatchReview,
+  upsertProjectMatchReview,
+} from "@lib/db/repositories/project-match-review";
+import {
+  normalizeProjectAlias,
+  normalizeProjectNameKey,
+} from "@lib/project-matching";
 
 /**
  * Parse folder name into project name and contractor.
@@ -31,11 +45,13 @@ export function parseFolderName(name: string): {
 
 /**
  * Find a project matching a folder name, or create one.
- * Tries: outlook_folder exact → normalized_name → project_aliases → create new.
+ * Tries: outlook_folder exact → shared ranked matcher → create new.
  */
 export async function findProjectByFolder(
   folderName: string
 ): Promise<number | null> {
+  const reviewKey = normalizeProjectAlias(folderName);
+
   // 1. Exact outlook_folder match
   const byFolder = await db
     .query<{ id: number }, [string]>(
@@ -43,57 +59,87 @@ export async function findProjectByFolder(
     )
     .get(folderName);
   if (byFolder) {
+    await resolveProjectMatchReview({
+      source: "folder_watcher",
+      sourceKey: reviewKey,
+      projectId: byFolder.id,
+      resolutionNote: "resolved via outlook_folder exact match",
+    });
     return byFolder.id;
   }
 
-  // 2. Full folder name against normalized_name
-  const fullNormalized = folderName.toLowerCase().replace(/[^a-z0-9]/g, "");
-  const byFullName = await db
-    .query<{ id: number }, [string]>(
-      "SELECT id FROM projects WHERE normalized_name = ?"
-    )
-    .get(fullNormalized);
-  if (byFullName) {
-    return byFullName.id;
-  }
-
-  // 3. Parsed project name (strips contractor suffix) against normalized_name
+  // 2. Shared matcher (normalized exact + aliases + token overlap scoring)
   const { projectName, contractor } = parseFolderName(folderName);
-  const normalized = projectName.toLowerCase().replace(/[^a-z0-9]/g, "");
-  if (normalized !== fullNormalized) {
-    const byParsedName = await db
-      .query<{ id: number }, [string]>(
-        "SELECT id FROM projects WHERE normalized_name = ?"
-      )
-      .get(normalized);
-    if (byParsedName) {
-      return byParsedName.id;
+  for (const text of new Set([folderName, projectName])) {
+    const exact = await findProjectByText(text);
+    if (!exact) {
+      continue;
+    }
+    await adoptProjectForFolder({
+      projectId: exact.id,
+      folderName,
+      projectName,
+      contractor,
+    });
+    await resolveProjectMatchReview({
+      source: "folder_watcher",
+      sourceKey: reviewKey,
+      projectId: exact.id,
+      resolutionNote: "resolved via deterministic text match",
+    });
+    return exact.id;
+  }
+
+  const result = await findProjectCandidates({
+    primaryText: folderName,
+    aliasHints: [projectName],
+    contractorHint: contractor,
+    limit: 8,
+  });
+  const best = result?.decision.best;
+  if (best && result.decision.autoLink) {
+    const project = await getProjectById(best.projectId);
+    if (project) {
+      await adoptProjectForFolder({
+        projectId: project.id,
+        folderName,
+        projectName,
+        contractor,
+      });
+      await resolveProjectMatchReview({
+        source: "folder_watcher",
+        sourceKey: reviewKey,
+        projectId: project.id,
+        resolutionNote: "resolved via scored auto-link",
+      });
+      return project.id;
     }
   }
 
-  // 4. Project alias match (try both full and parsed)
-  for (const text of [folderName, projectName]) {
-    const aliasNorm = text
-      .toLowerCase()
-      .replace(/[^\w\s]/g, "")
-      .trim();
-    const byAlias = await db
-      .query<{ project_id: number }, [string]>(
-        "SELECT project_id FROM project_aliases WHERE normalized_alias = ?"
-      )
-      .get(aliasNorm);
-    if (byAlias) {
-      return byAlias.project_id;
-    }
+  if (result && result.candidates.length > 0) {
+    await upsertProjectMatchReview({
+      source: "folder_watcher",
+      sourceKey: reviewKey,
+      result,
+      note: `Ambiguous folder match for "${folderName}"`,
+    });
+    return null;
   }
 
-  // 5. No match — create the project
-  return createProjectFromFolder(
+  // 3. No candidates — create a new project and mark any prior review resolved.
+  const createdId = await createProjectFromFolder(
     folderName,
     projectName,
-    normalized,
+    normalizeProjectNameKey(projectName),
     contractor
   );
+  await resolveProjectMatchReview({
+    source: "folder_watcher",
+    sourceKey: reviewKey,
+    projectId: createdId,
+    resolutionNote: "resolved by creating new project (no candidate matches)",
+  });
+  return createdId;
 }
 
 /**
@@ -121,4 +167,20 @@ async function createProjectFromFolder(
     `  → Created project #${id}: "${projectName}"${contractor ? ` (${contractor})` : ""}`
   );
   return id;
+}
+
+async function adoptProjectForFolder(params: {
+  projectId: number;
+  folderName: string;
+  projectName: string;
+  contractor: string | null;
+}): Promise<void> {
+  await db.run(
+    "UPDATE projects SET outlook_folder = COALESCE(outlook_folder, ?), contractor = COALESCE(contractor, ?), updated_at = now() WHERE id = ?",
+    [params.folderName, params.contractor, params.projectId]
+  );
+  await addProjectAlias(params.projectId, params.folderName, "learned");
+  if (params.projectName !== params.folderName) {
+    await addProjectAlias(params.projectId, params.projectName, "learned");
+  }
 }

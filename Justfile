@@ -70,9 +70,25 @@ triage-audit project_id:
 email-dedup-refresh:
     @docker exec supabase_db_desert-services-hub psql -U postgres -d postgres -c "REFRESH MATERIALIZED VIEW CONCURRENTLY public.project_email_dedup_mv;"
 
+# Refresh deduplicated inbox-email materialized view used by /api/emails default listing path.
+email-list-dedup-refresh:
+    @docker exec supabase_db_desert-services-hub psql -U postgres -d postgres -c "REFRESH MATERIALIZED VIEW CONCURRENTLY public.email_list_dedup_mv;"
+
 # Show deduplicated project-email summary and top duplicates.
 email-dedup-report project_id limit="30" refresh="":
     @scripts/project-email-dedup-report.sh --project-id {{project_id}} --limit {{limit}} {{refresh}}
+
+# Contract reporting fast paths (coarse project-level status).
+contracts-status-summary:
+	@cat scripts/sql/contracts_status_summary.sql | docker exec -i supabase_db_desert-services-hub psql -U postgres -d postgres
+
+contracts-pending:
+	@cat scripts/sql/contracts_pending.sql | docker exec -i supabase_db_desert-services-hub psql -U postgres -d postgres
+
+contracts-pending-csv out="data/reports/contracts-pending.csv":
+	@mkdir -p $(dirname {{out}})
+	@docker exec -i supabase_db_desert-services-hub psql -U postgres -d postgres -c "\copy (SELECT id, name, contractor, COALESCE(contract_status, 'Pending') AS contract_status FROM projects WHERE contract_status = 'Pending' OR contract_status IS NULL ORDER BY name) TO STDOUT WITH CSV HEADER" > {{out}}
+	@echo "Wrote {{out}}"
 
 [private]
 _health strict:

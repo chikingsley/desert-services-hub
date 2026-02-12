@@ -102,6 +102,7 @@ export interface LineItemChange {
   action: "add" | "remove" | "update";
   id?: string; // For update/remove
   section_id?: string;
+  item_name?: string;
   description?: string;
   quantity?: number;
   unit?: string;

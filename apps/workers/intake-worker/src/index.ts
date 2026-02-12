@@ -67,12 +67,19 @@ export default {
       const parsed = await new PostalMime().parse(rawBuffer);
 
       // Extract ALL attachments (not just PDFs)
-      const attachments = (parsed.attachments ?? []).map((a) => ({
-        filename: a.filename ?? `attachment.${guessExtension(a.mimeType)}`,
-        contentType: a.mimeType ?? "application/octet-stream",
-        size: a.content.byteLength,
-        content: arrayBufferToBase64(a.content),
-      }));
+      const attachments = (parsed.attachments ?? []).map((a) => {
+        const content =
+          typeof a.content === "string"
+            ? new TextEncoder().encode(a.content).buffer
+            : a.content;
+
+        return {
+          filename: a.filename ?? `attachment.${guessExtension(a.mimeType)}`,
+          contentType: a.mimeType ?? "application/octet-stream",
+          size: content.byteLength,
+          content: arrayBufferToBase64(content),
+        };
+      });
 
       // Extract file-sharing links from HTML/text body
       const fileLinks = extractFileLinks(parsed.html ?? "", parsed.text ?? "");
@@ -131,16 +138,18 @@ export default {
 // Link Extraction
 // =============================================================================
 
-const ONEDRIVE_RE = /https:\/\/[^\s"<>]*sharepoint\.com\/:[a-z]:\/[^\s"<>]*/gi;
+const ONEDRIVE_RE =
+  /https:\/\/(?:(?:[^\s"<>]*sharepoint\.com)|(?:www\.)?onedrive\.live\.com)\/[^\s"<>]*/gi;
 const EGNYTE_RE = /https:\/\/[^\s"<>]+\.egnyte\.com\/fl\/[^\s"<>]*/gi;
 const DROPBOX_RE = /https:\/\/(?:www\.)?dropbox\.com\/[^\s"<>]*/gi;
-const TRAILING_URL_ARTIFACT_PATTERN = /['">\s]+$/;
+const TRAILING_URL_ARTIFACT_PATTERN = /['">\s\]),.;]+$/;
+const SHAREPOINT_COLON_PATH_RE = /\/:[a-z]:\//;
 
 /**
  * Extract file sharing links from email HTML and text body.
  * Supports OneDrive/SharePoint, Egnyte, Dropbox.
  */
-function extractFileLinks(html: string, text: string): FileLink[] {
+export function extractFileLinks(html: string, text: string): FileLink[] {
   const links: FileLink[] = [];
   const seen = new Set<string>();
 
@@ -148,8 +157,11 @@ function extractFileLinks(html: string, text: string): FileLink[] {
   const combined = `${html || ""}\n${text || ""}`;
 
   for (const match of combined.matchAll(ONEDRIVE_RE)) {
-    // Clean trailing HTML artifacts (quotes, angle brackets)
+    // Clean trailing HTML/punctuation artifacts (quotes, angle brackets, etc.)
     const url = match[0].replace(TRAILING_URL_ARTIFACT_PATTERN, "");
+    if (!isLikelyOneDriveShareUrl(url)) {
+      continue;
+    }
     if (!seen.has(url)) {
       seen.add(url);
       links.push({ url, source: "onedrive" });
@@ -173,6 +185,25 @@ function extractFileLinks(html: string, text: string): FileLink[] {
   }
 
   return links;
+}
+
+function isLikelyOneDriveShareUrl(url: string): boolean {
+  const lower = url.toLowerCase();
+
+  if (lower.includes("onedrive.live.com")) {
+    return true;
+  }
+  if (!lower.includes("sharepoint.com")) {
+    return false;
+  }
+
+  // Common SharePoint file-share URL shapes seen in forwarded mail.
+  return (
+    SHAREPOINT_COLON_PATH_RE.test(lower) ||
+    lower.includes("guestaccess.aspx") ||
+    lower.includes("/_layouts/15/") ||
+    lower.includes("/doc.aspx")
+  );
 }
 
 // =============================================================================
@@ -242,7 +273,7 @@ function guessExtension(mimeType?: string): string {
   return map[mimeType] ?? "bin";
 }
 
-function arrayBufferToBase64(buffer: ArrayBuffer): string {
+function arrayBufferToBase64(buffer: ArrayBufferLike): string {
   const bytes = new Uint8Array(buffer);
   let binary = "";
   for (let i = 0; i < bytes.byteLength; i++) {

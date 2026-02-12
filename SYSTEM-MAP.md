@@ -136,6 +136,29 @@ Desert Services provides environmental compliance services (SWPPP, dust control,
 | **swppp-sync** | Compose Service | `docker compose` container | RUNNING in Docker — SWPPP Master sync |
 | **estimate-poller** | Setup Script | Manual | DONE — Webhook config utility only |
 
+### Worker Audit Snapshot (2026-02-12)
+
+Canonical health/deploy gating reads from `ops/runtime/worker-registry.json`. This table is the human audit artifact for lifecycle ownership and cleanup decisions.
+
+| Worker / Service | Classification | Owner | Source of Truth | Cleanup Candidate | Follow-up |
+|------------------|----------------|-------|-----------------|------------------|-----------|
+| `notifications` | ACTIVE | Ops Runtime | `docker-compose.yml`, `apps/workers/notifications/` | No | Runtime checks in `just status` / `just check` |
+| `swppp-sync` | ACTIVE | Ops Runtime | `docker-compose.yml`, `apps/workers/swppp-sync/` | No | Runtime checks in `just status` / `just check` |
+| `permit-workers` | ACTIVE | Permit Automation | `docker-compose.yml`, `apps/workers/permit-workers/` | No | `PEA-46` (session hardening, in progress) |
+| `intake-worker` | ACTIVE | Intake Automation | `apps/workers/intake-worker/`, Cloudflare deploy | No | Intake pipeline consolidation complete (`PEA-53`) |
+| `monday-status-sync-worker` | ACTIVE | Monday Integrations | `apps/workers/monday-status-sync-worker/`, Cloudflare deploy | No | Registry health gate (`PEA-54`) |
+| `estimates-sync-worker` | ACTIVE | Monday Integrations | `apps/workers/estimates-sync-worker/`, Cloudflare deploy | No | Registry health gate (`PEA-54`) |
+| `inspections-email-worker` | ACTIVE | Compliance Integrations | `apps/workers/inspections-email-worker/`, Cloudflare deploy | No | Registry health gate (`PEA-54`) |
+| `docusign-file-automation` | PARTIAL | Contracts Integrations | `apps/workers/docusign-file-automation/` | No | Runbook: `docs/reference/processes/docusign-intake-runbook.md` |
+| `estimate-poller` | DORMANT (utility-only) | Estimating Integrations | `apps/workers/estimate-poller/` | Yes | Consolidation context tracked in `PEA-30` |
+| `contract-intake` | DEPRECATED / DORMANT | Legacy Contracts Flow | `apps/workers/contract-intake/` | Yes | Legacy enqueue/runtime removed in `PEA-52`, `PEA-53`; umbrella `PEA-51` |
+
+### Deprecation Notes (2026-02-11)
+
+- `apps/web/api/webhooks-dust-permit.ts` (orphan webhook path) was removed on **2026-02-11** (`PEA-53`).
+- Canonical intake job type is `intake` as of **2026-02-11**. `files_intake` and `contracts_email_intake` remain compatibility aliases only and log deprecation warnings (`PEA-53`).
+- Legacy `contract_intake` enqueue path from M365 group sync was removed on **2026-02-11** (`PEA-52`).
+
 ---
 
 ### CLI Tools (apps/cli-tools/)

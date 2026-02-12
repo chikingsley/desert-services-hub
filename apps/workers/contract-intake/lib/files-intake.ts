@@ -11,6 +11,7 @@
  * This module replaces processContractsEmailIntake as the main entry point
  * for the files_intake job type.
  */
+import { mkdir, readdir, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { extractFile } from "@kreuzberg/node";
 import { db } from "@lib/db/hub";
@@ -66,8 +67,9 @@ const OFFICE_EXTS = new Set([
   "odp",
   "rtf",
 ]);
+const ZIP_EXTS = new Set(["zip"]);
 
-type FileCategory = "pdf" | "image" | "text" | "office" | "other";
+type FileCategory = "pdf" | "image" | "text" | "office" | "zip" | "other";
 
 function getFileCategory(filePath: string): FileCategory {
   const ext = (filePath.split(".").pop() ?? "").toLowerCase();
@@ -82,6 +84,9 @@ function getFileCategory(filePath: string): FileCategory {
   }
   if (TEXT_EXTS.has(ext)) {
     return "text";
+  }
+  if (ZIP_EXTS.has(ext)) {
+    return "zip";
   }
   return "other";
 }
@@ -451,6 +456,104 @@ async function processOfficeDocument(
 }
 
 // ============================================================================
+// ZIP Archive Processing — extract and process contents
+// ============================================================================
+
+async function listFilesRecursive(dir: string): Promise<string[]> {
+  const entries = await readdir(dir, { withFileTypes: true });
+  const files: string[] = [];
+  for (const entry of entries) {
+    const fullPath = join(dir, entry.name);
+    if (entry.isDirectory()) {
+      files.push(...(await listFilesRecursive(fullPath)));
+    } else if (
+      !(entry.name.startsWith(".") || entry.name.startsWith("__MACOSX"))
+    ) {
+      files.push(fullPath);
+    }
+  }
+  return files;
+}
+
+async function processZipFile(
+  zipPath: string,
+  emailMeta: EmailMeta,
+  payload: ContractsEmailIntakePayloadType
+): Promise<ParseIntakeResultType[]> {
+  const fileName = zipPath.split("/").pop() ?? zipPath;
+  const extractDir = join(
+    "/app/data/backfill",
+    `zip-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+  );
+
+  try {
+    await mkdir(extractDir, { recursive: true });
+
+    // Extract ZIP
+    const proc = Bun.spawn(["unzip", "-o", "-q", zipPath, "-d", extractDir], {
+      stdout: "pipe",
+      stderr: "pipe",
+    });
+    const stderr = await new Response(proc.stderr).text();
+    const exitCode = await proc.exited;
+
+    if (exitCode !== 0) {
+      throw new Error(`unzip exit ${exitCode}: ${stderr.trim().slice(0, 500)}`);
+    }
+
+    // List extracted files (recursively, skip macOS metadata)
+    const files = await listFilesRecursive(extractDir);
+
+    if (files.length === 0) {
+      console.log(`${LOG}   ZIP empty: ${fileName}`);
+      return [];
+    }
+
+    console.log(
+      `${LOG}   ZIP "${fileName}" → ${files.length} file(s): ${files.map((f) => f.split("/").pop()).join(", ")}`
+    );
+
+    // Process each extracted file through the normal pipeline
+    const results = await processFilesIntake({
+      ...payload,
+      attachmentPaths: files,
+    });
+
+    return results;
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error(`${LOG}   Failed ZIP ${fileName}: ${msg}`);
+    await insertFileError.run(
+      zipPath,
+      fileName,
+      msg.slice(0, 1000),
+      emailMeta.originalFrom || null,
+      emailMeta.originalSubject || null,
+      emailMeta.forwarderEmail || null
+    );
+    return [
+      {
+        documentId: null,
+        fileName,
+        documentType: "error",
+        pageCount: 0,
+        processingTimeMs: 0,
+        error: msg,
+      },
+    ];
+  } finally {
+    await rm(extractDir, { recursive: true, force: true }).catch(
+      (cleanupError) => {
+        console.warn(
+          `${LOG}   ZIP cleanup failed for ${fileName}:`,
+          cleanupError
+        );
+      }
+    );
+  }
+}
+
+// ============================================================================
 // Unsupported File — store metadata only
 // ============================================================================
 
@@ -494,6 +597,7 @@ export async function processFilesIntake(
   const images: string[] = [];
   const office: string[] = [];
   const texts: string[] = [];
+  const zips: string[] = [];
   const others: string[] = [];
 
   for (const path of attachmentPaths) {
@@ -510,13 +614,16 @@ export async function processFilesIntake(
       case "text":
         texts.push(path);
         break;
+      case "zip":
+        zips.push(path);
+        break;
       default:
         others.push(path);
     }
   }
 
   console.log(
-    `${LOG} Processing ${attachmentPaths.length} file(s) from "${originalSubject}" (${originalFrom}): ${pdfs.length} PDF, ${images.length} image, ${office.length} office, ${texts.length} text, ${others.length} other`
+    `${LOG} Processing ${attachmentPaths.length} file(s) from "${originalSubject}" (${originalFrom}): ${pdfs.length} PDF, ${images.length} image, ${office.length} office, ${texts.length} text, ${zips.length} zip, ${others.length} other`
   );
 
   const emailMeta: EmailMeta = {
@@ -556,6 +663,12 @@ export async function processFilesIntake(
   // Process office documents via Kreuzberg
   for (const officePath of office) {
     results.push(await processOfficeDocument(officePath, emailMeta));
+  }
+
+  // Extract and process ZIP archives
+  for (const zipPath of zips) {
+    const zipResults = await processZipFile(zipPath, emailMeta, payload);
+    results.push(...zipResults);
   }
 
   // Process text files

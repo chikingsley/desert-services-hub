@@ -34,7 +34,7 @@ Send internal billing notification to billing team after a dust permit is submit
 See [`.claude/skills/draft-email/html-reference.md`](../draft-email/html-reference.md) for full reference.
 
 - Use `<b>` not `<strong>`
-- Use plain `<ul>` with NO style attribute
+- Use `<ul>/<ol>` with `style="margin-top:0; margin-bottom:0;"`
 - Do NOT add `<div><br></div>` before/after lists
 - Do NOT use `<p>` tags
 - Signature is added by Outlook — use `skipSignature: true`
@@ -42,7 +42,7 @@ See [`.claude/skills/draft-email/html-reference.md`](../draft-email/html-referen
 Correct list pattern:
 ```html
 <div>Intro text.</div>
-<ul>
+<ul style="margin-top:0; margin-bottom:0;">
 <li><div><b>Label:</b> Value</div></li>
 </ul>
 <div>Closing text.</div>

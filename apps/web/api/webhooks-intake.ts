@@ -65,6 +65,58 @@ function sanitizeFilename(name: string): string {
     .slice(0, 255);
 }
 
+function extensionFromContentType(contentType: string | null): string {
+  const ct = (contentType ?? "").toLowerCase();
+  if (ct.includes("pdf")) {
+    return ".pdf";
+  }
+  if (ct.includes("zip")) {
+    return ".zip";
+  }
+  if (ct.includes("csv")) {
+    return ".csv";
+  }
+  if (ct.includes("plain")) {
+    return ".txt";
+  }
+  if (ct.includes("png")) {
+    return ".png";
+  }
+  if (ct.includes("jpeg") || ct.includes("jpg")) {
+    return ".jpg";
+  }
+  if (ct.includes("gif")) {
+    return ".gif";
+  }
+  if (ct.includes("tiff")) {
+    return ".tiff";
+  }
+  if (ct.includes("webp")) {
+    return ".webp";
+  }
+  if (ct.includes("sheet")) {
+    return ".xlsx";
+  }
+  if (ct.includes("wordprocessingml")) {
+    return ".docx";
+  }
+  if (ct.includes("presentationml")) {
+    return ".pptx";
+  }
+  return "";
+}
+
+function ensureFilenameExtension(
+  filename: string,
+  contentType: string | null
+): string {
+  if (filename.includes(".")) {
+    return filename;
+  }
+  const ext = extensionFromContentType(contentType);
+  return ext ? `${filename}${ext}` : filename;
+}
+
 async function fetchWithTimeout(
   url: string,
   timeoutMs: number
@@ -86,8 +138,7 @@ async function downloadOneDriveFile(
   destDir: string
 ): Promise<{ path: string; filename: string }> {
   const metadata = await getOneDriveFileFromShareUrl(link.url);
-  const filename = sanitizeFilename(metadata.name);
-  const filePath = join(destDir, filename);
+  let filename = sanitizeFilename(metadata.name);
 
   const response = await fetchWithTimeout(
     metadata.downloadUrl,
@@ -101,6 +152,12 @@ async function downloadOneDriveFile(
   if (buffer.byteLength === 0) {
     throw new Error("Empty file");
   }
+
+  filename = ensureFilenameExtension(
+    filename,
+    response.headers.get("content-type")
+  );
+  const filePath = join(destDir, filename);
   await Bun.write(filePath, buffer);
 
   console.log(
@@ -128,14 +185,7 @@ async function downloadEgnyteFile(
   }
   // Detect content type to add extension if missing
   const ct = response.headers.get("content-type") ?? "";
-  if (!filename.includes(".")) {
-    if (ct.includes("pdf")) {
-      filename += ".pdf";
-    } else if (ct.includes("zip")) {
-      filename += ".zip";
-    }
-  }
-
+  filename = ensureFilenameExtension(filename, ct);
   filename = sanitizeFilename(filename);
   const filePath = join(destDir, filename);
 
@@ -177,6 +227,10 @@ async function downloadDropboxFile(
       filename = match[2];
     }
   }
+  filename = ensureFilenameExtension(
+    filename,
+    response.headers.get("content-type")
+  );
   filename = sanitizeFilename(filename);
   const filePath = join(destDir, filename);
 
@@ -246,7 +300,10 @@ export async function handleIntakeWebhook(req: Request): Promise<Response> {
   // Save direct attachments to disk
   const attachmentPaths: string[] = [];
   for (const att of body.attachments ?? []) {
-    const filePath = join(jobDir, att.filename);
+    const filename = sanitizeFilename(
+      ensureFilenameExtension(att.filename || "attachment", att.contentType)
+    );
+    const filePath = join(jobDir, filename);
     const buffer = Buffer.from(att.content, "base64");
     await Bun.write(filePath, buffer);
     attachmentPaths.push(filePath);

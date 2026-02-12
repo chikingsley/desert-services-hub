@@ -2,6 +2,13 @@
 
 The unified platform for Desert Services, combining Bun full-stack web applications with core automation services, background task workers, and Model Context Protocol (MCP) integrations.
 
+## Deployment Model
+
+- Primary runtime is **self-hosted** on `gmk-server`.
+- Core services and operational Postgres run in local Docker containers.
+- Public access is exposed through **Cloudflare Tunnel**.
+- Treat runtime database changes as local self-hosted DB operations (not a separate hosted Supabase environment).
+
 ## Repository Architecture
 
 This repository is organized into multiple pillars:
@@ -38,11 +45,11 @@ workers/        # Cloudflare Workers
 └── ds-monday-status-sync-worker/
 
 lib/            # Shared libraries
-├── db/         # SQLite schemas, connection, and hub.db
+├── db/         # Database adapter, repositories, and shared DB types
 ├── pdf/        # PDF utilities
 └── schemas/    # Zod validation schemas
 
-data/           # SQLite databases and token caches
+data/           # Runtime outputs and token caches
 docs/           # Business logic, SOPs, and system design
 ```
 
@@ -60,9 +67,9 @@ The following services are integrated and available for both automation scripts 
 
 ## Primary Database
 
-**Hub.db** (`lib/db/hub.db`)
+**Self-hosted Postgres (Supabase local stack)** (`postgresql://postgres:postgres@host.docker.internal:54322/postgres`)
 
-The consolidated SQLite database containing:
+The consolidated operational database containing:
 
 - 237K+ emails across all mailboxes
 - 125K+ attachments cataloged
@@ -106,10 +113,10 @@ bun run test
 ### Operations Quick Commands
 
 ```bash
-# Full startup on server: compose + poller services + strict health check
+# Full startup on server: compose runtime + strict health check
 just up
 
-# Human-readable runtime status (docker + HTTP + systemd pollers)
+# Human-readable runtime status (docker + HTTP + pollers)
 just status
 
 # Strict local-runtime gate (non-zero on failures)
@@ -118,8 +125,8 @@ just check
 # Cloudflare worker deployment check (best effort)
 just cf-check
 
-# (Optional) install/restart user systemd poller services from templates
-just services-install
+# Poller container status
+just services-status
 
 # Code quality (repo-level)
 just code-check
@@ -131,22 +138,20 @@ bun run ops:health
 bun run ops:check
 ```
 
-## Local Postgres (Supabase) Migration Track
-
-To run SQLite and local Postgres in parallel while migrating:
+## Local Database Runtime
 
 ```bash
-# Start local Supabase and write .env.supabase.local
-bash scripts/db/bootstrap-supabase-local.sh
+# Start local Supabase services (includes Postgres on 54322)
+bun run db:supabase:start
 
-# Backfill SQLite -> local Postgres
-bun run db:migrate:local-pg
+# Check status and connection details
+bun run db:supabase:status
 
-# Verify row-count parity
-bun run db:migrate:verify
+# Stop local Supabase services
+bun run db:supabase:stop
 ```
 
-Detailed runbook: `docs/POSTGRES_MIGRATION.md`
+Runtime notes: `docs/POSTGRES_MIGRATION.md`
 
 ## Documentation
 

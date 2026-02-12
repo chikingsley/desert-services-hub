@@ -37,6 +37,11 @@
         "dir": "apps/workers/inspections-email-worker",
         "name": "inspection-router",
         "url": "https://inspection-router.cheez2012.workers.dev/"
+      },
+      {
+        "dir": "apps/workers/docusign-file-automation/ds-contracts-dispatcher",
+        "name": "contracts-dispatcher",
+        "url": "https://contracts-dispatcher.cheez2012.workers.dev/health"
       }
     ]
   }

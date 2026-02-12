@@ -1,5 +1,5 @@
 -- Initial Postgres schema for Desert Services Hub
--- Migrated from SQLite (hub.db) → Supabase Postgres
+-- Migrated from SQLite (Supabase Postgres) → Supabase Postgres
 
 -- ============================================
 -- Mailboxes

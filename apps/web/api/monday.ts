@@ -2,7 +2,7 @@
  * Monday.com search API handlers
  * Routes: GET /api/monday/search
  *
- * Searches the estimates table in hub.db (synced from Monday ESTIMATING board).
+ * Searches the estimates table in Supabase Postgres (synced from Monday ESTIMATING board).
  */
 import { likeSearch } from "@lib/db/search";
 

@@ -5,6 +5,7 @@
  * Each test verifies that actual values flow through the system correctly.
  */
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
+import { findItem } from "@lib/catalog";
 import { db } from "@lib/db/hub";
 import type {
   EstimateLineItemRow,
@@ -26,15 +27,26 @@ import {
 
 const TEST_PREFIX = "_TEST_DELETE_ME_";
 const testEstimateIds: string[] = [];
+const PRIMARY_CATALOG_ITEM = findItem("SWPPP-002");
+const SECONDARY_CATALOG_ITEM = findItem("CM-012");
+
+if (!(PRIMARY_CATALOG_ITEM && SECONDARY_CATALOG_ITEM)) {
+  throw new Error("Required catalog fixtures are missing for estimate tests.");
+}
 
 // Unique identifiable values for each test
 const UNIQUE = {
   JOB_NAME: `${TEST_PREFIX}UniqueJob_ABC123`,
   CLIENT_NAME: "UniqueClient_XYZ789",
+  CLIENT_ADDRESS: "230 S Siesta Lane, Tempe, Arizona 85288",
+  NORMALIZED_CLIENT_ADDRESS: "230 S Siesta Lane\nTempe, Arizona 85288",
   CLIENT_EMAIL: "unique_test_456@example.com",
-  JOB_ADDRESS: "999 Unique Test Street, Suite ABC",
-  ITEM_NAME: "UniqueItem_QRS111",
-  ITEM_DESCRIPTION: "UniqueDescription_TUV222 for testing",
+  JOB_ADDRESS: "3633 E Thunderbird Road, Phoenix, Arizona 85032",
+  NORMALIZED_JOB_ADDRESS: "3633 E Thunderbird Road\nPhoenix, Arizona 85032",
+  ITEM_NAME: PRIMARY_CATALOG_ITEM.name,
+  ITEM_DESCRIPTION: PRIMARY_CATALOG_ITEM.description,
+  ALT_ITEM_NAME: SECONDARY_CATALOG_ITEM.name,
+  ALT_ITEM_DESCRIPTION: SECONDARY_CATALOG_ITEM.description,
   SECTION_NAME: "UniqueSection_WXY333",
 };
 
@@ -115,21 +127,21 @@ describe("listEstimates", () => {
       new Request("http://localhost/api/estimates")
     );
     const body = (await response.json()) as {
-      estimates: Array<{
+      items: Array<{
         id: string;
         job_name: string;
         client_name: string | null;
-        versions: Array<{ total: number }>;
+        current_version: { total: number } | null;
       }>;
     };
-    const estimates = body.estimates;
+    const estimates = body.items;
 
     const ourEstimate = estimates.find((q) => q.id === id);
 
     expect(ourEstimate).toBeDefined();
     expect(ourEstimate?.job_name).toBe(UNIQUE.JOB_NAME);
     expect(ourEstimate?.client_name).toBe(UNIQUE.CLIENT_NAME);
-    expect(ourEstimate?.versions).toHaveLength(1);
+    expect(ourEstimate?.current_version).toBeDefined();
   });
 });
 
@@ -143,6 +155,7 @@ describe("createEstimate", () => {
       job_name: `${TEST_PREFIX}CreateAllFields`,
       job_address: UNIQUE.JOB_ADDRESS,
       client_name: UNIQUE.CLIENT_NAME,
+      client_address: UNIQUE.CLIENT_ADDRESS,
       client_email: UNIQUE.CLIENT_EMAIL,
       client_phone: "555-TEST-123",
       notes: "Test notes content",
@@ -161,22 +174,26 @@ describe("createEstimate", () => {
       .get(id)) as EstimateRow;
 
     expect(row.name).toBe(input.job_name);
-    expect(row.job_address).toBe(input.job_address);
+    expect(row.job_address).toBe(UNIQUE.NORMALIZED_JOB_ADDRESS);
     expect(row.client_name).toBe(input.client_name);
+    expect(row.client_address).toBe(UNIQUE.NORMALIZED_CLIENT_ADDRESS);
     expect(row.client_email).toBe(input.client_email);
     expect(row.client_phone).toBe(input.client_phone);
     expect(row.notes).toBe(input.notes);
     expect(row.bid_status).toBe(input.status);
   });
 
-  test("saves line item with description to notes field", async () => {
+  test("canonicalizes line item name + description from catalog", async () => {
     const response = await createEstimate(
       makeRequest({
         job_name: `${TEST_PREFIX}ItemWithDescription`,
+        client_name: UNIQUE.CLIENT_NAME,
+        client_address: UNIQUE.CLIENT_ADDRESS,
+        job_address: UNIQUE.JOB_ADDRESS,
         line_items: [
           {
             item: UNIQUE.ITEM_NAME,
-            description: UNIQUE.ITEM_DESCRIPTION,
+            description: "not used",
             qty: 5,
             uom: "EA",
             cost: 100,
@@ -191,13 +208,14 @@ describe("createEstimate", () => {
     };
     testEstimateIds.push(id);
 
-    // Verify the description was saved to notes
+    // Verify line item fields were canonicalized from catalog
     const item = (await db
       .prepare("SELECT * FROM estimate_line_items WHERE version_id = ?")
       .get(version_id)) as EstimateLineItemRow;
 
-    expect(item.description).toBe(UNIQUE.ITEM_NAME);
-    expect(item.notes).toBe(UNIQUE.ITEM_DESCRIPTION);
+    expect(item.item_name).toBe(UNIQUE.ITEM_NAME);
+    expect(item.description).toBe(UNIQUE.ITEM_DESCRIPTION);
+    expect(item.notes).toBeNull();
     expect(item.quantity).toBe(5);
     expect(item.unit_price).toBe(100);
   });
@@ -227,10 +245,13 @@ describe("createEstimate", () => {
     const response = await createEstimate(
       makeRequest({
         job_name: `${TEST_PREFIX}ItemInSection`,
+        client_name: UNIQUE.CLIENT_NAME,
+        client_address: UNIQUE.CLIENT_ADDRESS,
+        job_address: UNIQUE.JOB_ADDRESS,
         sections: [{ id: "sec-original", name: "Test Section" }],
         line_items: [
           {
-            item: "Sectioned Item",
+            item: UNIQUE.ITEM_NAME,
             qty: 1,
             uom: "EA",
             cost: 50,
@@ -274,6 +295,7 @@ describe("getEstimate", () => {
       makeRequest({
         job_name: `${TEST_PREFIX}GetEstimateTest`,
         client_name: UNIQUE.CLIENT_NAME,
+        client_address: UNIQUE.CLIENT_ADDRESS,
         job_address: UNIQUE.JOB_ADDRESS,
         sections: [{ id: "s1", name: UNIQUE.SECTION_NAME }],
         line_items: [
@@ -311,8 +333,9 @@ describe("getEstimate", () => {
       current_version: {
         sections: Array<{ name: string }>;
         line_items: Array<{
+          item_name: string | null;
           description: string;
-          notes: string;
+          notes: string | null;
           quantity: number;
           unit: string;
           unit_price: number;
@@ -323,7 +346,7 @@ describe("getEstimate", () => {
     // Verify the exact values we saved come back
     expect(estimate.job_name).toContain(TEST_PREFIX);
     expect(estimate.client_name).toBe(UNIQUE.CLIENT_NAME);
-    expect(estimate.job_address).toBe(UNIQUE.JOB_ADDRESS);
+    expect(estimate.job_address).toBe(UNIQUE.NORMALIZED_JOB_ADDRESS);
 
     // Verify section
     expect(estimate.current_version.sections).toHaveLength(1);
@@ -332,11 +355,38 @@ describe("getEstimate", () => {
     // Verify line item - THIS IS THE CRITICAL TEST
     expect(estimate.current_version.line_items).toHaveLength(1);
     const item = estimate.current_version.line_items[0];
-    expect(item.description).toBe(UNIQUE.ITEM_NAME);
-    expect(item.notes).toBe(UNIQUE.ITEM_DESCRIPTION);
+    expect(item.item_name).toBe(UNIQUE.ITEM_NAME);
+    expect(item.description).toBe(UNIQUE.ITEM_DESCRIPTION);
+    expect(item.notes).toBeNull();
     expect(item.quantity).toBe(7);
-    expect(item.unit).toBe("LF");
+    expect(item.unit).toBe(PRIMARY_CATALOG_ITEM.unit);
     expect(item.unit_price).toBe(25);
+  });
+
+  test("returns empty current_version for legacy estimate without versions", async () => {
+    const inserted = (await db.run(
+      `INSERT INTO estimates (name, bid_status)
+       VALUES (?, ?)
+       RETURNING id`,
+      [`${TEST_PREFIX}LegacyNoVersion`, "draft"]
+    )) as Array<{ id: string }>;
+    const id = inserted[0].id;
+    testEstimateIds.push(id);
+
+    const response = await getEstimate(makeGetRequest({ id }));
+    expect(response.status).toBe(200);
+
+    const estimate = (await response.json()) as {
+      current_version: {
+        is_current: number;
+        sections: unknown[];
+        line_items: unknown[];
+      };
+    };
+
+    expect(estimate.current_version.is_current).toBe(1);
+    expect(estimate.current_version.sections).toHaveLength(0);
+    expect(estimate.current_version.line_items).toHaveLength(0);
   });
 });
 
@@ -352,6 +402,8 @@ describe("updateEstimate", () => {
       makeRequest({
         job_name: `${TEST_PREFIX}UpdateTest`,
         client_name: "Original Client",
+        client_address: UNIQUE.CLIENT_ADDRESS,
+        job_address: UNIQUE.JOB_ADDRESS,
       })
     );
     const data = (await response.json()) as { id: string };
@@ -392,18 +444,18 @@ describe("updateEstimate", () => {
   });
 
   test("replaces line items with new ones including descriptions", async () => {
-    const newItemName = "Brand New Item";
-    const newDescription = "Brand New Description That Must Be Saved";
-
-    await updateEstimate(
+    const response = await updateEstimate(
       makeRequestWithParams(
         {
           base_number: "999999",
           job_name: `${TEST_PREFIX}UpdatedJobName`,
+          client_name: UNIQUE.CLIENT_NAME,
+          client_address: UNIQUE.CLIENT_ADDRESS,
+          job_address: UNIQUE.JOB_ADDRESS,
           line_items: [
             {
-              item: newItemName,
-              description: newDescription,
+              item: UNIQUE.ALT_ITEM_NAME,
+              description: "incorrect payload description",
               qty: 99,
               uom: "SF",
               cost: 50,
@@ -413,6 +465,7 @@ describe("updateEstimate", () => {
         { id: testId }
       )
     );
+    expect(response.status).toBe(200);
 
     const version = (await db
       .prepare(
@@ -425,10 +478,57 @@ describe("updateEstimate", () => {
       .all(version.id)) as EstimateLineItemRow[];
 
     expect(items).toHaveLength(1);
-    expect(items[0].description).toBe(newItemName);
-    expect(items[0].notes).toBe(newDescription);
+    expect(items[0].item_name).toBe(UNIQUE.ALT_ITEM_NAME);
+    expect(items[0].description).toBe(UNIQUE.ALT_ITEM_DESCRIPTION);
+    expect(items[0].notes).toBeNull();
     expect(items[0].quantity).toBe(99);
-    expect(items[0].unit).toBe("SF");
+    expect(items[0].unit).toBe(SECONDARY_CATALOG_ITEM.unit);
+  });
+
+  test("creates a version when updating a legacy estimate missing versions", async () => {
+    const inserted = (await db.run(
+      `INSERT INTO estimates (name, bid_status)
+       VALUES (?, ?)
+       RETURNING id`,
+      [`${TEST_PREFIX}LegacyUpdateNoVersion`, "draft"]
+    )) as Array<{ id: string }>;
+    const id = inserted[0].id;
+    testEstimateIds.push(id);
+
+    await updateEstimate(
+      makeRequestWithParams(
+        {
+          base_number: "111111",
+          job_name: `${TEST_PREFIX}LegacyUpdated`,
+          client_name: UNIQUE.CLIENT_NAME,
+          client_address: UNIQUE.CLIENT_ADDRESS,
+          job_address: UNIQUE.JOB_ADDRESS,
+          line_items: [{ item: UNIQUE.ITEM_NAME, qty: 2, uom: "EA", cost: 99 }],
+        },
+        { id }
+      )
+    );
+
+    const version = (await db
+      .prepare(
+        "SELECT id FROM estimate_versions WHERE estimate_id = ? AND is_current = 1"
+      )
+      .get(id)) as { id: string } | null;
+    expect(version).toBeTruthy();
+
+    const items = (await db
+      .prepare(
+        "SELECT item_name, description, quantity FROM estimate_line_items WHERE version_id = ?"
+      )
+      .all(version?.id)) as Array<{
+      item_name: string;
+      description: string;
+      quantity: number;
+    }>;
+    expect(items).toHaveLength(1);
+    expect(items[0].item_name).toBe(UNIQUE.ITEM_NAME);
+    expect(items[0].description).toBe(UNIQUE.ITEM_DESCRIPTION);
+    expect(items[0].quantity).toBe(2);
   });
 });
 
@@ -449,8 +549,11 @@ describe("deleteEstimate", () => {
     const createRes = await createEstimate(
       makeRequest({
         job_name: `${TEST_PREFIX}ToDelete`,
+        client_name: UNIQUE.CLIENT_NAME,
+        client_address: UNIQUE.CLIENT_ADDRESS,
+        job_address: UNIQUE.JOB_ADDRESS,
         sections: [{ id: "s1", name: "Delete Section" }],
-        line_items: [{ item: "Delete Item", qty: 1, uom: "EA", cost: 50 }],
+        line_items: [{ item: UNIQUE.ITEM_NAME, qty: 1, uom: "EA", cost: 50 }],
       })
     );
     const { id, version_id } = (await createRes.json()) as {
@@ -506,6 +609,8 @@ describe("duplicateEstimate", () => {
       makeRequest({
         job_name: `${TEST_PREFIX}DuplicateOriginal`,
         client_name: UNIQUE.CLIENT_NAME,
+        client_address: UNIQUE.CLIENT_ADDRESS,
+        job_address: UNIQUE.JOB_ADDRESS,
         client_email: UNIQUE.CLIENT_EMAIL,
         sections: [{ id: "s1", name: UNIQUE.SECTION_NAME }],
         line_items: [
@@ -571,8 +676,9 @@ describe("duplicateEstimate", () => {
       .all(copyVersion.id)) as EstimateLineItemRow[];
 
     expect(copyItems).toHaveLength(1);
-    expect(copyItems[0].description).toBe(UNIQUE.ITEM_NAME);
-    expect(copyItems[0].notes).toBe(UNIQUE.ITEM_DESCRIPTION);
+    expect(copyItems[0].item_name).toBe(UNIQUE.ITEM_NAME);
+    expect(copyItems[0].description).toBe(UNIQUE.ITEM_DESCRIPTION);
+    expect(copyItems[0].notes).toBeNull();
     expect(copyItems[0].quantity).toBe(10);
   });
 });
@@ -589,6 +695,7 @@ describe("getEstimatePdf", () => {
       makeRequest({
         job_name: `${TEST_PREFIX}PdfContentTest`,
         client_name: UNIQUE.CLIENT_NAME,
+        client_address: UNIQUE.CLIENT_ADDRESS,
         job_address: UNIQUE.JOB_ADDRESS,
         line_items: [
           {
@@ -635,6 +742,7 @@ describe("getEstimatePdf", () => {
       job_address: string;
       current_version: {
         line_items: Array<{
+          item_name: string | null;
           description: string;
           notes: string | null;
           quantity: number;
@@ -646,19 +754,136 @@ describe("getEstimatePdf", () => {
 
     // These are the values that will be transformed into EditorEstimate for PDF
     expect(estimate.client_name).toBe(UNIQUE.CLIENT_NAME);
-    expect(estimate.job_address).toBe(UNIQUE.JOB_ADDRESS);
+    expect(estimate.job_address).toBe(UNIQUE.NORMALIZED_JOB_ADDRESS);
 
-    // CRITICAL: The line item must have the description in notes
+    // CRITICAL: item_name + description must be populated from catalog
     const item = estimate.current_version.line_items[0];
-    expect(item.description).toBe(UNIQUE.ITEM_NAME);
-    expect(item.notes).toBe(UNIQUE.ITEM_DESCRIPTION);
+    expect(item.item_name).toBe(UNIQUE.ITEM_NAME);
+    expect(item.description).toBe(UNIQUE.ITEM_DESCRIPTION);
+    expect(item.notes).toBeNull();
+  });
+});
 
-    // Verify the transformation to EditorEstimate format
-    // In the PDF, item.description -> notes, item.item <- description
-    // So the EditorLineItem.description should be estimate.notes
-    expect(item.notes).not.toBeNull();
-    expect(item.notes).not.toBe("");
-    expect(item.notes).toBe(UNIQUE.ITEM_DESCRIPTION);
+// ============================================================================
+// Integration Workflow - Full end-to-end estimate lifecycle
+// ============================================================================
+
+describe("integration workflow", () => {
+  test("enforces validation and preserves canonical data across full flow", async () => {
+    // 1) Invalid create should fail (non-catalog item)
+    const invalidCreate = await createEstimate(
+      makeRequest({
+        job_name: `${TEST_PREFIX}WorkflowInvalidCreate`,
+        line_items: [{ item: "Not In Catalog", qty: 1, cost: 100 }],
+      })
+    );
+    expect(invalidCreate.status).toBe(400);
+
+    // 2) Valid create should pass
+    const validCreate = await createEstimate(
+      makeRequest({
+        job_name: `${TEST_PREFIX}Workflow`,
+        client_name: UNIQUE.CLIENT_NAME,
+        client_address: UNIQUE.CLIENT_ADDRESS,
+        job_address: UNIQUE.JOB_ADDRESS,
+        line_items: [{ item: UNIQUE.ITEM_NAME, qty: 3, cost: 100 }],
+      })
+    );
+    expect(validCreate.status).toBe(200);
+    const createData = (await validCreate.json()) as {
+      id: string;
+      version_id: string;
+    };
+    testEstimateIds.push(createData.id);
+
+    const initialLineItem = (await db
+      .prepare(
+        "SELECT item_name, description, quantity FROM estimate_line_items WHERE version_id = ?"
+      )
+      .get(createData.version_id)) as {
+      item_name: string;
+      description: string;
+      quantity: number;
+    };
+    expect(initialLineItem.item_name).toBe(UNIQUE.ITEM_NAME);
+    expect(initialLineItem.description).toBe(UNIQUE.ITEM_DESCRIPTION);
+    expect(initialLineItem.quantity).toBe(3);
+
+    // 3) Invalid update should fail and must not mutate rows
+    const invalidUpdate = await updateEstimate(
+      makeRequestWithParams(
+        {
+          sections: [
+            { id: "workflow-section", name: "Invalid Update Section" },
+          ],
+        },
+        { id: createData.id }
+      )
+    );
+    expect(invalidUpdate.status).toBe(400);
+
+    const afterInvalid = (await db
+      .prepare(
+        "SELECT item_name, description, quantity FROM estimate_line_items WHERE version_id = ?"
+      )
+      .get(createData.version_id)) as {
+      item_name: string;
+      description: string;
+      quantity: number;
+    };
+    expect(afterInvalid).toEqual(initialLineItem);
+
+    // 4) Valid update should pass and mutate to new canonical item
+    const validUpdate = await updateEstimate(
+      makeRequestWithParams(
+        {
+          base_number: "991122",
+          job_name: `${TEST_PREFIX}WorkflowUpdated`,
+          client_name: UNIQUE.CLIENT_NAME,
+          client_address: UNIQUE.CLIENT_ADDRESS,
+          job_address: UNIQUE.JOB_ADDRESS,
+          line_items: [{ item: UNIQUE.ALT_ITEM_NAME, qty: 4, cost: 110 }],
+        },
+        { id: createData.id }
+      )
+    );
+    expect(validUpdate.status).toBe(200);
+
+    const estimateRes = await getEstimate(
+      makeGetRequest({ id: createData.id })
+    );
+    expect(estimateRes.status).toBe(200);
+    const estimateData = (await estimateRes.json()) as {
+      job_name: string;
+      job_address: string;
+      current_version: {
+        line_items: Array<{
+          item_name: string | null;
+          description: string;
+          quantity: number;
+        }>;
+      };
+    };
+    expect(estimateData.job_name).toContain("WorkflowUpdated");
+    expect(estimateData.job_address).toBe(UNIQUE.NORMALIZED_JOB_ADDRESS);
+    expect(estimateData.current_version.line_items).toHaveLength(1);
+    expect(estimateData.current_version.line_items[0].item_name).toBe(
+      UNIQUE.ALT_ITEM_NAME
+    );
+    expect(estimateData.current_version.line_items[0].description).toBe(
+      UNIQUE.ALT_ITEM_DESCRIPTION
+    );
+    expect(estimateData.current_version.line_items[0].quantity).toBe(4);
+
+    // 5) PDF endpoint still works after updates
+    const pdfRes = await getEstimatePdf(makeGetRequest({ id: createData.id }));
+    expect(pdfRes.status).toBe(200);
+    expect(pdfRes.headers.get("Content-Type")).toBe("application/pdf");
+    const pdfBuffer = await pdfRes.arrayBuffer();
+    const header = String.fromCharCode(
+      ...new Uint8Array(pdfBuffer.slice(0, 4))
+    );
+    expect(header).toBe("%PDF");
   });
 });
 
@@ -667,124 +892,68 @@ describe("getEstimatePdf", () => {
 // ============================================================================
 
 describe("edge cases", () => {
-  test("empty description string should not be saved as notes", async () => {
+  test("rejects non-catalog line item names", async () => {
     const response = await createEstimate(
       makeRequest({
-        job_name: `${TEST_PREFIX}EmptyDescription`,
-        line_items: [
-          {
-            item: "Item With Empty Description",
-            description: "", // Empty string
-            qty: 1,
-            uom: "EA",
-            cost: 50,
-          },
-        ],
+        job_name: `${TEST_PREFIX}NonCatalogItem`,
+        line_items: [{ item: "Not In Catalog", qty: 1, cost: 50 }],
       })
     );
 
-    const { id, version_id } = (await response.json()) as {
-      id: string;
-      version_id: string;
-    };
-    testEstimateIds.push(id);
-
-    const item = (await db
-      .prepare("SELECT notes FROM estimate_line_items WHERE version_id = ?")
-      .get(version_id)) as { notes: string | null };
-
-    // Empty string should become null, not saved as ""
-    expect(item.notes).toBeNull();
+    expect(response.status).toBe(400);
+    const data = (await response.json()) as { error: string };
+    expect(data.error).toContain("Line item 1");
   });
 
-  test("whitespace-only description should not be saved as notes", async () => {
-    const response = await createEstimate(
+  test("requires job/client addresses when updating with line items", async () => {
+    const createRes = await createEstimate(
       makeRequest({
-        job_name: `${TEST_PREFIX}WhitespaceDescription`,
-        line_items: [
-          {
-            item: "Item With Whitespace Description",
-            description: "   ", // Whitespace only
-            qty: 1,
-            uom: "EA",
-            cost: 50,
-          },
-        ],
+        job_name: `${TEST_PREFIX}MissingAddresses`,
       })
     );
-
-    const { id, version_id } = (await response.json()) as {
-      id: string;
-      version_id: string;
-    };
+    const { id } = (await createRes.json()) as { id: string };
     testEstimateIds.push(id);
 
-    const item = (await db
-      .prepare("SELECT notes FROM estimate_line_items WHERE version_id = ?")
-      .get(version_id)) as { notes: string | null };
-
-    expect(item.notes).toBeNull();
-  });
-
-  test("description same as item name should not be duplicated to notes", async () => {
-    const response = await createEstimate(
-      makeRequest({
-        job_name: `${TEST_PREFIX}SameDescription`,
-        line_items: [
-          {
-            item: "Same Value",
-            description: "Same Value", // Same as item
-            qty: 1,
-            uom: "EA",
-            cost: 50,
-          },
-        ],
-      })
-    );
-
-    const { id, version_id } = (await response.json()) as {
-      id: string;
-      version_id: string;
-    };
-    testEstimateIds.push(id);
-
-    const item = (await db
-      .prepare(
-        "SELECT description, notes FROM estimate_line_items WHERE version_id = ?"
+    const updateRes = await updateEstimate(
+      makeRequestWithParams(
+        {
+          job_name: `${TEST_PREFIX}MissingAddressesUpdated`,
+          line_items: [{ item: UNIQUE.ITEM_NAME, qty: 1, cost: 55 }],
+        },
+        { id }
       )
-      .get(version_id)) as { description: string; notes: string | null };
-
-    expect(item.description).toBe("Same Value");
-    expect(item.notes).toBeNull(); // Should not duplicate
-  });
-
-  test("notes field takes precedence over description field", async () => {
-    const response = await createEstimate(
-      makeRequest({
-        job_name: `${TEST_PREFIX}NotesPrecedence`,
-        line_items: [
-          {
-            item: "Item Name",
-            description: "Description Value",
-            notes: "Notes Value", // Both provided
-            qty: 1,
-            uom: "EA",
-            cost: 50,
-          },
-        ],
-      })
     );
 
-    const { id, version_id } = (await response.json()) as {
-      id: string;
-      version_id: string;
+    expect(updateRes.status).toBe(400);
+    const data = (await updateRes.json()) as {
+      error: string;
+      issues?: string[];
     };
+    const joinedIssues = [data.error, ...(data.issues ?? [])].join(" ");
+    expect(joinedIssues).toContain("job_address");
+    expect(joinedIssues).toContain("client_address");
+  });
+
+  test("rejects sections updates without line_items", async () => {
+    const createRes = await createEstimate(
+      makeRequest({
+        job_name: `${TEST_PREFIX}SectionOnlyUpdate`,
+      })
+    );
+    const { id } = (await createRes.json()) as { id: string };
     testEstimateIds.push(id);
 
-    const item = (await db
-      .prepare("SELECT notes FROM estimate_line_items WHERE version_id = ?")
-      .get(version_id)) as { notes: string | null };
+    const updateRes = await updateEstimate(
+      makeRequestWithParams(
+        {
+          sections: [{ id: "s-only", name: "Section Without Items" }],
+        },
+        { id }
+      )
+    );
 
-    expect(item.notes).toBe("Notes Value");
+    expect(updateRes.status).toBe(400);
+    const data = (await updateRes.json()) as { error: string };
+    expect(data.error).toContain("sections cannot be updated");
   });
 });

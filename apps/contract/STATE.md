@@ -11,7 +11,7 @@
 
 Redesigned workflow with anti-hallucination measures:
 
-- **Queue-based entry:** `workflow/queue.ts` - view contracts@ queue from hub.db
+- **Queue-based entry:** `workflow/queue.ts` - view contracts@ queue from Supabase Postgres
 - **Document collection:** `workflow/collect.ts` - gather PDFs into project folders
 - **Citation-based extraction:** `workflow/extract.ts` - every value requires source quote
 - **Business rule validation:** `workflow/validate.ts` - Tucson, fines, mobilization rules

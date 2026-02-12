@@ -73,6 +73,7 @@ const FULL_SYNC_INTERVAL_MS = 10 * 60 * 1000; // 10 minutes
 const FOLDER_WATCHER_INTERVAL_MS = 30 * 1000; // 30 seconds
 const ESTIMATE_LINKER_INTERVAL_MS = 60 * 1000; // 60 seconds
 const ATTACHMENT_BACKFILL_INTERVAL_MS = 2 * 60 * 1000; // 2 minutes
+const CONTRACT_PACKET_AUTOLINK_INTERVAL_MS = 60 * 1000; // 60 seconds
 const RENEWAL_INTERVAL_MS = 60 * 60 * 1000; // 1 hour
 const GROUP_SYNC_INTERVAL_MS = 15 * 60 * 1000; // 15 minutes
 const ESTIMATE_TRIAGE_ENABLED = !["0", "false", "no", "off"].includes(
@@ -127,6 +128,7 @@ const ESTIMATE_FILE_SWEEP_BATCH_SIZE = Number.isFinite(
   ? Math.max(1, parsedEstimateSweepBatchSize)
   : 150;
 const ESTIMATE_FILE_SWEEP_CURSOR_KEY = "estimate_file_sweep_offset_v1";
+const CONTRACT_PACKET_AUTOLINK_BATCH_SIZE = 400;
 const SKIP_GROUPS = new Set([
   "Shell Estimates ( Do Not Move)",
   "Sales Team Estimates",
@@ -924,6 +926,131 @@ async function autoLinkDocument(
 
 type FilesIntakeResult = Awaited<ReturnType<typeof processFilesIntake>>[number];
 
+const linkContractPacketDocuments = db.query<{ inserted: number }, [number]>(
+  `WITH candidate_docs AS (
+     SELECT
+       cp.id AS packet_id,
+       d.id AS document_id,
+       CASE
+         WHEN lower(coalesce(d.document_type, '')) IN ('contract', 'subcontract', 'agreement') THEN 'primary_contract'
+         WHEN lower(coalesce(d.document_type, '')) IN ('po', 'purchase_order', 'work_order') THEN 'po'
+         WHEN lower(coalesce(d.document_type, '')) = 'insurance' THEN 'insurance'
+         WHEN lower(coalesce(d.document_type, '')) IN ('schedule of values', 'sov') THEN 'sov'
+         WHEN lower(coalesce(d.document_type, '')) IN ('plan_set', 'plans', 'drainage_plan') THEN 'plan_set'
+         ELSE 'supporting'
+       END AS document_role,
+       CASE
+         WHEN lower(coalesce(d.document_type, '')) IN ('contract', 'subcontract', 'agreement', 'po', 'purchase_order', 'work_order') THEN TRUE
+         ELSE FALSE
+       END AS is_required
+     FROM contract_packets cp
+     JOIN documents d
+       ON d.project_id = cp.project_id
+     LEFT JOIN emails de
+       ON de.id = d.email_id
+     LEFT JOIN attachments a
+       ON a.id = d.attachment_id
+     LEFT JOIN emails ae
+       ON ae.id = a.email_id
+     WHERE cp.is_active = TRUE
+       AND cp.status <> 'archived'
+       AND (
+         coalesce(de.classification, '') = 'CONTRACT'
+         OR coalesce(ae.classification, '') = 'CONTRACT'
+         OR lower(coalesce(d.document_type, '')) IN (
+           'contract', 'subcontract', 'agreement', 'work_order', 'po',
+           'purchase_order', 'insurance', 'schedule of values', 'sov',
+           'plan_set', 'plans', 'drainage_plan', 'loi'
+         )
+       )
+       AND NOT EXISTS (
+         SELECT 1
+         FROM contract_packet_documents cpd
+         WHERE cpd.packet_id = cp.id
+           AND cpd.document_id = d.id
+       )
+     ORDER BY d.created_at DESC
+     LIMIT $1
+   ),
+   inserted_rows AS (
+     INSERT INTO contract_packet_documents (packet_id, document_id, document_role, is_required)
+     SELECT packet_id, document_id, document_role, is_required
+     FROM candidate_docs
+     ON CONFLICT (packet_id, document_id) DO NOTHING
+     RETURNING 1
+   )
+   SELECT count(*)::int AS inserted
+   FROM inserted_rows`
+);
+
+const updateContractPacketTypes = db.prepare(
+  `UPDATE contract_packets cp
+   SET packet_type = CASE
+       WHEN stats.doc_count <= 1 THEN 'single_pdf'
+       WHEN stats.primary_contract_count >= 1 THEN 'mixed'
+       ELSE 'multi_doc_packet'
+     END,
+     updated_at = now()
+   FROM (
+     SELECT
+       cp.id AS packet_id,
+       count(*)::int AS doc_count,
+       count(*) FILTER (WHERE cpd.document_role = 'primary_contract')::int AS primary_contract_count
+     FROM contract_packets cp
+     JOIN contract_packet_documents cpd
+       ON cpd.packet_id = cp.id
+     WHERE cp.is_active = TRUE
+       AND cp.status <> 'archived'
+     GROUP BY cp.id
+   ) stats
+   WHERE cp.id = stats.packet_id
+     AND cp.packet_type = 'unknown'`
+);
+
+const promoteRequestedPacketsToReceived = db.prepare(
+  `UPDATE contract_packets cp
+   SET status = 'received',
+     received_at = COALESCE(cp.received_at, evidence.first_received_at, now()),
+     source_email_id = COALESCE(cp.source_email_id, evidence.latest_email_id),
+     next_action = CASE
+       WHEN cp.next_action IS NULL OR btrim(cp.next_action) = '' OR cp.next_action = 'Request contract packet from counterparty'
+         THEN 'Review packet and classify required docs'
+       ELSE cp.next_action
+     END,
+     updated_at = now()
+   FROM (
+     SELECT
+       cp.id AS packet_id,
+       min(e.received_at) FILTER (WHERE e.received_at IS NOT NULL) AS first_received_at,
+       (array_agg(e.id ORDER BY e.received_at DESC NULLS LAST, e.id DESC))[1] AS latest_email_id
+     FROM contract_packets cp
+     JOIN contract_packet_documents cpd
+       ON cpd.packet_id = cp.id
+     JOIN documents d
+       ON d.id = cpd.document_id
+     LEFT JOIN emails e
+       ON e.id = COALESCE(d.email_id, (
+         SELECT a.email_id FROM attachments a WHERE a.id = d.attachment_id
+       ))
+     WHERE cp.is_active = TRUE
+       AND cp.status = 'requested'
+     GROUP BY cp.id
+   ) evidence
+   WHERE cp.id = evidence.packet_id
+     AND cp.status = 'requested'`
+);
+
+async function backfillContractPacketDocuments(): Promise<{
+  linked: number;
+}> {
+  const linked =
+    (await linkContractPacketDocuments.get(CONTRACT_PACKET_AUTOLINK_BATCH_SIZE))
+      ?.inserted ?? 0;
+  await updateContractPacketTypes.run();
+  await promoteRequestedPacketsToReceived.run();
+  return { linked };
+}
+
 function startIntakePostProcessing(
   results: FilesIntakeResult[],
   filesPayload: ContractsEmailIntakePayload
@@ -1193,13 +1320,14 @@ let folderWatcherTimer: ReturnType<typeof setInterval> | null = null;
 let estimateLinkerTimer: ReturnType<typeof setInterval> | null = null;
 let estimateTriageTimer: ReturnType<typeof setInterval> | null = null;
 let attachmentBackfillTimer: ReturnType<typeof setInterval> | null = null;
+let contractPacketAutolinkTimer: ReturnType<typeof setInterval> | null = null;
 let renewalTimer: ReturnType<typeof setInterval> | null = null;
 let groupSyncTimer: ReturnType<typeof setInterval> | null = null;
 
 export async function startWorker(): Promise<void> {
   console.log("[worker] Starting background job processor");
   console.log(
-    `[worker] Poll interval: ${POLL_INTERVAL_MS}ms, max concurrency: ${MAX_CONCURRENT_JOBS}, Full sync: ${FULL_SYNC_INTERVAL_MS / 60_000}min, Folder watcher: ${FOLDER_WATCHER_INTERVAL_MS / 1000}s, Estimate linker backfill: ${ESTIMATE_LINKER_INTERVAL_MS / 1000}s, Estimate triage: ${ESTIMATE_TRIAGE_ENABLED ? `${ESTIMATE_TRIAGE_INTERVAL_MS / 1000}s (${ESTIMATE_TRIAGE_MAX_ROWS}/run via ${ESTIMATE_TRIAGE_PROVIDER || "mistral"})` : "disabled"}, Attachment backfill: ${ATTACHMENT_BACKFILL_INTERVAL_MS / 60_000}min`
+    `[worker] Poll interval: ${POLL_INTERVAL_MS}ms, max concurrency: ${MAX_CONCURRENT_JOBS}, Full sync: ${FULL_SYNC_INTERVAL_MS / 60_000}min, Folder watcher: ${FOLDER_WATCHER_INTERVAL_MS / 1000}s, Estimate linker backfill: ${ESTIMATE_LINKER_INTERVAL_MS / 1000}s, Estimate triage: ${ESTIMATE_TRIAGE_ENABLED ? `${ESTIMATE_TRIAGE_INTERVAL_MS / 1000}s (${ESTIMATE_TRIAGE_MAX_ROWS}/run via ${ESTIMATE_TRIAGE_PROVIDER || "mistral"})` : "disabled"}, Attachment backfill: ${ATTACHMENT_BACKFILL_INTERVAL_MS / 60_000}min, Contract packet autolink: ${CONTRACT_PACKET_AUTOLINK_INTERVAL_MS / 1000}s`
   );
 
   // Recover stale jobs from previous crashes
@@ -1356,6 +1484,30 @@ export async function startWorker(): Promise<void> {
     }
   }, ATTACHMENT_BACKFILL_INTERVAL_MS);
 
+  // Contract packet auto-link — map contract-related documents into packet evidence rows.
+  let contractPacketAutolinkRunning = false;
+  contractPacketAutolinkTimer = setInterval(async () => {
+    if (contractPacketAutolinkRunning) {
+      return;
+    }
+    contractPacketAutolinkRunning = true;
+    try {
+      const stats = await backfillContractPacketDocuments();
+      if (stats.linked > 0) {
+        console.log(
+          `[worker] Contract packet autolink: ${stats.linked} document(s) linked`
+        );
+      }
+    } catch (err) {
+      console.error("[worker] Contract packet autolink error:", err);
+    } finally {
+      contractPacketAutolinkRunning = false;
+    }
+  }, CONTRACT_PACKET_AUTOLINK_INTERVAL_MS);
+  backfillContractPacketDocuments().catch((err) =>
+    console.error("[worker] Contract packet autolink initial run error:", err)
+  );
+
   // Renew expiring Outlook subscriptions (every hour)
   renewalTimer = setInterval(async () => {
     try {
@@ -1419,6 +1571,10 @@ export function stopWorker(): void {
   if (renewalTimer) {
     clearInterval(renewalTimer);
     renewalTimer = null;
+  }
+  if (contractPacketAutolinkTimer) {
+    clearInterval(contractPacketAutolinkTimer);
+    contractPacketAutolinkTimer = null;
   }
   if (groupSyncTimer) {
     clearInterval(groupSyncTimer);

@@ -12,8 +12,8 @@
  *   bun cli/watch.ts --interval=30000   # Custom interval (ms)
  */
 
-import { getConfig } from "@/apps/workers/outlook-folder-watcher/lib/state";
 import { pollFolderWatcher } from "@/apps/workers/outlook-folder-watcher/lib/poll";
+import { getConfig } from "@/apps/workers/outlook-folder-watcher/lib/state";
 
 // Parse CLI args
 const args = process.argv.slice(2);
@@ -24,9 +24,7 @@ const interval = intervalArg
   ? Number.parseInt(intervalArg.split("=")[1] ?? "60000", 10)
   : Number.parseInt(configInterval ?? "60000", 10);
 
-console.log(
-  `[Watch] Starting. Interval: ${interval}ms, Once: ${once}`
-);
+console.log(`[Watch] Starting. Interval: ${interval}ms, Once: ${once}`);
 
 if (once) {
   await pollFolderWatcher();

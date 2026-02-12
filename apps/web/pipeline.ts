@@ -100,8 +100,25 @@ const getEstimateByMondayId = db.query<{
   "SELECT id, name, extraction_status FROM estimates WHERE monday_item_id = ?"
 );
 
+const getLatestEstimateAsset = db.query<{
+  monday_asset_id: string;
+  file_name: string;
+  local_path: string | null;
+}>(
+  `SELECT monday_asset_id, file_name, local_path
+   FROM monday_assets
+   WHERE monday_item_id = ?
+     AND column_id = ?
+   ORDER BY downloaded_at DESC NULLS LAST, id DESC
+   LIMIT 1`
+);
+
+const updateAssetLocalPath = db.prepare(
+  "UPDATE monday_assets SET local_path = ?, downloaded_at = now() WHERE monday_asset_id = ?"
+);
+
 const markOldVersionsNotCurrent = db.prepare(
-  "UPDATE estimate_versions SET is_current = 0 WHERE estimate_id = ? AND source = 'ocr'"
+  "UPDATE estimate_versions SET is_current = 0 WHERE estimate_id = ?"
 );
 
 const getNextVersionNumber = db.query<{ next_num: number }>(
@@ -171,6 +188,82 @@ function ensureDir(dir: string): void {
   }
 }
 
+async function redownloadAsset(
+  mondayItemId: string,
+  assetId: string,
+  fileName: string
+): Promise<string | null> {
+  const assets = await getItemAssets(mondayItemId);
+  const asset = assets.find((candidate) => candidate.id === assetId);
+  if (!asset?.public_url) {
+    console.log(
+      `[pipeline]   Retry skipped ${fileName}: no public_url (asset ${assetId})`
+    );
+    return null;
+  }
+
+  const response = await fetch(asset.public_url);
+  if (!response.ok) {
+    console.log(
+      `[pipeline]   Retry failed ${fileName}: HTTP ${response.status}`
+    );
+    return null;
+  }
+
+  const buffer = new Uint8Array(await response.arrayBuffer());
+  const itemDir = join(FILES_DIR, mondayItemId);
+  ensureDir(itemDir);
+  const localPath = join(itemDir, `${assetId}_${fileName}`);
+  writeFileSync(localPath, buffer);
+
+  await updateAssetLocalPath.run(localPath, assetId);
+  await updateEstimatePath.run(localPath, fileName, mondayItemId);
+
+  console.log(
+    `[pipeline]   Re-downloaded ${fileName} (${(buffer.length / 1024).toFixed(0)}KB)`
+  );
+  return localPath;
+}
+
+async function retryExistingEstimateExtraction(
+  mondayItemId: string
+): Promise<void> {
+  const estimate = await getEstimateByMondayId.get(mondayItemId);
+  if (!estimate || estimate.extraction_status === "success") {
+    return;
+  }
+
+  const asset = await getLatestEstimateAsset.get(
+    mondayItemId,
+    EXTRACTION_COLUMN
+  );
+  if (!asset) {
+    return;
+  }
+
+  if (!asset.file_name.toLowerCase().endsWith(".pdf")) {
+    return;
+  }
+
+  let localPath = asset.local_path;
+  if (!(localPath && existsSync(localPath))) {
+    localPath = await redownloadAsset(
+      mondayItemId,
+      asset.monday_asset_id,
+      asset.file_name
+    );
+  }
+
+  if (!localPath) {
+    return;
+  }
+
+  console.log(
+    `[pipeline]   Retrying extraction for ${asset.file_name} (${mondayItemId})`
+  );
+  await runExtraction(mondayItemId, localPath, asset.file_name);
+}
+
 // ============================================================================
 // Core Pipeline
 // ============================================================================
@@ -226,6 +319,7 @@ export async function processItemFiles(mondayItemId: string): Promise<number> {
   }
 
   if (newAssets.length === 0) {
+    await retryExistingEstimateExtraction(mondayItemId);
     return 0;
   }
 

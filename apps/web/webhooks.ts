@@ -39,9 +39,6 @@ const server = serve({
     "/api/webhooks/contracts-intake": {
       POST: h(handleIntakeWebhook),
     },
-    "/api/webhooks/dust-permit-intake": {
-      POST: h(handleIntakeWebhook),
-    },
   },
 
   fetch() {

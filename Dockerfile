@@ -26,8 +26,10 @@ WORKDIR /app
 ENV NODE_ENV=production
 
 # Install Python + uv (needed for pdf-analysis extraction)
+# LibreOffice-core for legacy .doc/.xls/.ppt extraction via Kreuzberg
+# unzip for ZIP archive extraction in files-intake pipeline
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends python3 python3-venv curl && \
+    apt-get install -y --no-install-recommends python3 python3-venv curl libreoffice-core unzip && \
     curl -LsSf https://astral.sh/uv/install.sh | sh && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
@@ -49,17 +51,18 @@ COPY apps/cli-tools/email-cli ./apps/cli-tools/email-cli
 
 # Workers
 COPY apps/workers/estimate-poller/lib ./apps/workers/estimate-poller/lib
+COPY apps/workers/estimate-email-linker/lib ./apps/workers/estimate-email-linker/lib
 COPY apps/workers/contract-intake/lib ./apps/workers/contract-intake/lib
 COPY apps/workers/outlook-folder-watcher/lib ./apps/workers/outlook-folder-watcher/lib
 COPY apps/workers/estimates-sync-worker/lib ./apps/workers/estimates-sync-worker/lib
-
-# Dust permit intake worker
-COPY apps/workers/dust-permit-intake/lib ./apps/workers/dust-permit-intake/lib
+COPY apps/workers/swppp-sync/cli ./apps/workers/swppp-sync/cli
+COPY apps/workers/swppp-sync/lib ./apps/workers/swppp-sync/lib
 
 # Email attachment backfill worker
 COPY apps/workers/files-email-intake/lib ./apps/workers/files-email-intake/lib
 
 # Notifications worker
+COPY apps/workers/notifications/cli ./apps/workers/notifications/cli
 COPY apps/workers/notifications/lib ./apps/workers/notifications/lib
 
 # PDF analysis pipeline (Python)

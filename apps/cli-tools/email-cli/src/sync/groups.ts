@@ -245,13 +245,9 @@ async function syncGroup(
           }
 
           // Enqueue canonical intake job for IC posts with PDF attachments.
-          // Keep a legacy-mode flag so worker-side processing can preserve
-          // existing contract extraction + estimate-link behavior during transition.
           if (groupEmail === IC_GROUP_EMAIL && pdfPaths.length > 0) {
             await enqueueIntake.run(
               JSON.stringify({
-                emailId,
-                legacyContractIntake: true,
                 originalSubject: conv.topic ?? "(no subject)",
                 originalFrom: post.from.address ?? "",
                 bodyText: fullText,

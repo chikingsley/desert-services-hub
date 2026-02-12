@@ -91,7 +91,7 @@ Desert Services provides environmental compliance services (SWPPP, dust control,
 |----------|--------|---------|
 | `POST /api/webhooks/monday` | DONE | Monday item changes → enqueue sync_item |
 | `POST /api/webhooks/outlook` | DONE | Graph change notifications → enqueue email_notification |
-| `POST /api/webhooks/dust-permit-intake` | DONE | Forwarded emails with PDFs → enqueue dust_permit_intake |
+| `POST /api/webhooks/intake` | DONE | Forwarded files/emails from intake worker → enqueue intake |
 
 ### Background Worker (apps/web/worker.ts)
 
@@ -101,8 +101,7 @@ Desert Services provides environmental compliance services (SWPPP, dust control,
 | `download_files` | DONE | Download PDFs from Monday → run extraction |
 | `sync_full` | DONE | Full board sync (every 30 min) |
 | `email_notification` | DONE | Process Outlook change → insert email + attachments |
-| `contract_intake` | WIP | Classify + extract IC contract PDFs via LLM |
-| `dust_permit_intake` | DONE | Parse intake email + extract NOI from PDFs |
+| `intake` | DONE | Canonical file/email intake processing path |
 | `dust_permit_payment` | DONE | PointAndPay email → billing + invoice PDF attachment |
 | `dust_permit_issued_email` | DONE | Maricopa issued email → notification |
 
@@ -112,6 +111,9 @@ Desert Services provides environmental compliance services (SWPPP, dust control,
 |-------|----------|--------|
 | Job poller | 5 sec | RUNNING |
 | Full Monday sync | 30 min | RUNNING |
+| Folder watcher delta poll | 30 sec | RUNNING |
+| Estimate-email backfill | 60 sec | RUNNING |
+| Attachment backfill | 2 min | RUNNING |
 | Outlook subscription renewal | 1 hour | RUNNING |
 | M365 group sync (IC, etc.) | 15 min | RUNNING |
 
@@ -124,13 +126,14 @@ Desert Services provides environmental compliance services (SWPPP, dust control,
 | **estimates-sync-worker** | Cloudflare | Cron hourly :00 | DEPLOYED — Monday files → SharePoint folders |
 | **monday-status-sync-worker** | Cloudflare | Cron hourly :15 | DEPLOYED — GC cleanup, leads sync, project links |
 | **inspections-email-worker** | CF Email | Incoming email | DEPLOYED — ComplianceGo → PDF → SharePoint |
-| **dust-permit-intake** | CF Email | Incoming email | DEPLOYED — Forwarded PDFs → hub webhook |
+| **intake-worker** | CF Email | Incoming email | DEPLOYED — intake@ + contracts@ + dustpermits@ → hub intake webhook |
 | **docusign-file-automation** | CF Email | Incoming email | PARTIAL — Dispatcher works, intake future |
 | **permit-workers** | Bun Server | HTTP API + CLI | DEPLOYED — Browser automation + invoice PDF scraping |
 | **files-email-intake** | Background | Webhook job queue | WIP — Auto-linking works, LLM extraction incomplete |
-| **outlook-folder-watcher** | CLI Poller | systemd service | RUNNING on gmk-server — Folder delta sync |
-| **notifications** | CLI Poller | systemd service | RUNNING on gmk-server — Event notifications + drafts |
-| **swppp-sync** | CLI Poller | systemd service | RUNNING on gmk-server — SWPPP Master sync |
+| **outlook-folder-watcher** | Worker Timer | `apps/web/worker.ts` interval | RUNNING in web worker — Folder delta sync + email/project linking |
+| **estimate-email-linker** | Worker Timer | `apps/web/worker.ts` interval | RUNNING in web worker — `estimate_emails` backfill (60s) |
+| **notifications** | Compose Service | `docker compose` container | RUNNING in Docker — Event notifications + drafts |
+| **swppp-sync** | Compose Service | `docker compose` container | RUNNING in Docker — SWPPP Master sync |
 | **estimate-poller** | Setup Script | Manual | DONE — Webhook config utility only |
 
 ---
@@ -200,14 +203,15 @@ Desert Services provides environmental compliance services (SWPPP, dust control,
 4. Link estimate → project → account
 5. Notify relevant stakeholders
 
-### GAP 2: CLI Pollers Not Running as Services
+### GAP 2: Legacy Host Poller Overlap
 
-**Resolved (2026-02-09):** Three CLI pollers are now deployed as user `systemd` services on gmk-server:
-- `desert-outlook-folder-watcher.service`
-- `desert-notifications.service`
-- `desert-swppp-sync.service`
+**Updated (2026-02-11):** Pollers are containerized:
+- `notifications` runs as a Docker Compose service.
+- `swppp-sync` runs as a Docker Compose service.
 
-**Ongoing:** Keep `bun run ops:check` in startup/deploy validation so regressions are detected immediately.
+Folder watcher and estimate-email-linker are canonical in the webhooks background worker runtime (`apps/web/worker.ts`) to avoid duplicate polling overlap.
+
+**Ongoing:** Keep host user `systemd` poller units disabled/removed and keep `bun run ops:check` in startup/deploy validation so regressions are detected immediately.
 
 ### GAP 3: Contract/File Intake Pipeline Incomplete
 

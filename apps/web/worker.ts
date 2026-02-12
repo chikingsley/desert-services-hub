@@ -9,7 +9,6 @@
  *   download_files         -- Download new files from a Monday item, run PDF extraction
  *   sync_full              -- Full board sync (all ~4800 estimates from Monday -> Supabase Postgres)
  *   intake                 -- Canonical file/email intake processing path
- *   contract_intake        -- Legacy contract intake (compat only; being deprecated)
  *   dust_permit_payment    -- PointAndPay payment email → billing + submitted notifications
  *   dust_permit_issued_email -- Maricopa issued email → issued notification with PDF
  */
@@ -39,7 +38,6 @@ import { runEstimateExtractionTriage } from "@/apps/web/lib/estimate-extraction-
 import { itemHasFiles, processItemFiles } from "@/apps/web/pipeline";
 import type { ContractsEmailIntakePayload } from "@/apps/workers/contract-intake/lib/files-intake";
 import { processFilesIntake } from "@/apps/workers/contract-intake/lib/files-intake";
-import { processContractIntake } from "@/apps/workers/contract-intake/lib/intake";
 import { pollEstimateEmailLinker } from "@/apps/workers/estimate-email-linker/lib/poll";
 import { syncEstimates } from "@/apps/workers/estimate-poller/lib/sync";
 import { syncSharePointFolders } from "@/apps/workers/estimates-sync-worker/lib/sharepoint-sync";
@@ -148,24 +146,12 @@ const EMAIL_NOTIFICATION_PAYLOAD_SCHEMA = z.object({
   mailboxEmail: NON_EMPTY_STRING_SCHEMA,
   changeType: NON_EMPTY_STRING_SCHEMA,
 });
-const CONTRACT_INTAKE_PAYLOAD_SCHEMA = z.object({
-  emailId: z.number().int().positive(),
-  subject: NON_EMPTY_STRING_SCHEMA,
-  pdfPaths: z.array(NON_EMPTY_STRING_SCHEMA),
-});
-type IntakeJobPayload = ContractsEmailIntakePayload & {
-  emailId?: number;
-  legacyContractIntake?: boolean;
-};
-
-const INTAKE_PAYLOAD_SCHEMA: z.ZodType<IntakeJobPayload> = z.object({
+const INTAKE_PAYLOAD_SCHEMA: z.ZodType<ContractsEmailIntakePayload> = z.object({
   originalSubject: z.string(),
   originalFrom: z.string(),
   bodyText: z.string(),
   attachmentPaths: z.array(NON_EMPTY_STRING_SCHEMA),
   forwarderEmail: z.string(),
-  emailId: z.number().int().positive().optional(),
-  legacyContractIntake: z.boolean().optional(),
 });
 const PAYMENT_PAYLOAD_SCHEMA: z.ZodType<PaymentJobPayload> = z.object({
   emailId: z.number().int().positive(),
@@ -1108,21 +1094,8 @@ async function processNextJob(): Promise<void> {
         break;
       }
 
-      case "contract_intake": {
-        console.warn(
-          "[worker] Deprecated job_type `contract_intake` encountered; process and migrate enqueue sources to `intake`."
-        );
-        const { emailId, subject, pdfPaths } = parseJobPayload(
-          job,
-          CONTRACT_INTAKE_PAYLOAD_SCHEMA
-        );
-        await processContractIntake(emailId, subject, pdfPaths);
-        break;
-      }
-
       case "files_intake":
       case "contracts_email_intake":
-      case "dust_permit_intake":
       case "intake": {
         if (job.job_type !== "intake") {
           console.warn(
@@ -1131,16 +1104,6 @@ async function processNextJob(): Promise<void> {
         }
 
         const filesPayload = parseJobPayload(job, INTAKE_PAYLOAD_SCHEMA);
-
-        if (filesPayload.legacyContractIntake && filesPayload.emailId) {
-          await processContractIntake(
-            filesPayload.emailId,
-            filesPayload.originalSubject,
-            filesPayload.attachmentPaths
-          );
-          break;
-        }
-
         const results = await processFilesIntake(filesPayload);
         startIntakePostProcessing(results, filesPayload);
         break;

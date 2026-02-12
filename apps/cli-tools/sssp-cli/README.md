@@ -11,4 +11,3 @@ bun apps/cli-tools/sssp-cli/bin/cli.ts init data/sssp/sssp.input.json
 # Generate the PDF
 bun apps/cli-tools/sssp-cli/bin/cli.ts generate --in data/sssp/sssp.input.json --out data/sssp/SSSP.pdf
 ```
-

@@ -1,0 +1,324 @@
+import type { SdsListDocument } from "@lib/pdf/sds/types";
+
+export function templateDoc(): SdsListDocument {
+  return {
+    title: "Safety Data Sheets",
+    subtitle: "Chemical Inventory List",
+    updated: "April 2025",
+    revision: "0",
+    entries: [
+      {
+        tradeName: "ABC Fire Extinguisher",
+        supplier: "Buckeye Fire",
+        page: 6,
+        url: "https://example.com/sds/abc-fire-extinguisher.pdf",
+        pdfPath: "./sheets/abc-fire-extinguisher.pdf",
+      },
+      {
+        tradeName: "AC Flush Solvent",
+        supplier: "Dura II",
+        page: 17,
+      },
+      {
+        tradeName: "Air Brake Anti - Freeze",
+        supplier: "CRC Industries",
+        page: 26,
+      },
+      {
+        tradeName: "Air Filter Cleaner",
+        supplier: "Maxima Racing Oils",
+        page: 36,
+      },
+      {
+        tradeName: "Ammonia",
+        supplier: "Sigma-Aldrich",
+        page: 44,
+      },
+      {
+        tradeName: "Armor All - Wheel & Tire Cleaner",
+        supplier: "Energizer Holdings",
+        page: 58,
+      },
+      {
+        tradeName: "Assembly Lube - Engine",
+        supplier: "CRC Industries",
+        page: 74,
+      },
+      {
+        tradeName: "Batter Terminal Protector",
+        supplier: "CRC Industries",
+        page: 82,
+      },
+      {
+        tradeName: "Battery Cleaner",
+        supplier: "CRC Industries",
+        page: 97,
+      },
+      {
+        tradeName: "Bertz Paint",
+        supplier: "Sunburst Coating",
+        page: 106,
+      },
+      {
+        tradeName: "Brake Fluid",
+        supplier: "Castrol",
+        page: 108,
+      },
+      {
+        tradeName: "Cabana Spray",
+        supplier: "Cabana Spray 1064",
+        page: 118,
+      },
+      {
+        tradeName: "CloroxPro Germicidal Bleach",
+        supplier: "The Clorox Company",
+        page: 125,
+      },
+      {
+        tradeName: "Coolant",
+        supplier: "Chevron",
+        page: 133,
+      },
+      {
+        tradeName: "Cream Hardner",
+        supplier: "3M Company",
+        page: 140,
+      },
+      {
+        tradeName: "Dielectric Grease",
+        supplier: "CRC Industries",
+        page: 152,
+      },
+      {
+        tradeName: "Diesel - Auto",
+        supplier: "Chevron",
+        page: 163,
+      },
+      {
+        tradeName: "Diesel - Red Dye #2",
+        supplier: "Marathon Petroleum",
+        page: 172,
+      },
+      {
+        tradeName: "Evaporator Heater Cleaner",
+        supplier: "International Lubricants Inc",
+        page: 183,
+      },
+      {
+        tradeName: "Fiberglass Resin",
+        supplier: "ITW Evercoat",
+        page: 202,
+      },
+      {
+        tradeName: "Flex Seal",
+        supplier: "Swift Response",
+        page: 212,
+      },
+      {
+        tradeName: "Freon 134A",
+        supplier: "National Refrigerant",
+        page: 238,
+      },
+      {
+        tradeName: "Gasoline - All Grades",
+        supplier: "Chevron",
+        page: 247,
+      },
+      {
+        tradeName: "Glass Cleaner - Spay - A - Way",
+        supplier: "SC Johnson & Son",
+        page: 262,
+      },
+      {
+        tradeName: "Graffix - Graffiti Remover",
+        supplier: "CRC Industries",
+        page: 268,
+      },
+      {
+        tradeName: "Gunk - Engine Cleaner",
+        supplier: "Radiator Specialty Co.",
+        page: 279,
+      },
+      {
+        tradeName: "Head Gasket Sealant",
+        supplier: "ITW Permatex Inc",
+        page: 286,
+      },
+      {
+        tradeName: "In - Cide Disinfectant",
+        supplier: "Lucas Products Corporation",
+        page: 300,
+      },
+      {
+        tradeName: "JB Weld",
+        supplier: "JB Weld LLC",
+        page: 302,
+      },
+      {
+        tradeName: "Kem - Tek 2 pH Pool Muriatic Acid",
+        supplier: "KIK Pool Additives Inc",
+        page: 315,
+      },
+      {
+        tradeName: "Kleen up - Pro Herbicide",
+        supplier: "Loveland Products Inc",
+        page: 323,
+      },
+      {
+        tradeName: "Loctite",
+        supplier: "Henkel Corporation",
+        page: 329,
+      },
+      {
+        tradeName: "Loctite - Tite Foam Gaps & Cracks",
+        supplier: "Henkel",
+        page: 335,
+      },
+      {
+        tradeName: "Motor Oil",
+        supplier: "49 North Lubricants",
+        page: 341,
+      },
+      {
+        tradeName: "Nickel Anti - Seize",
+        supplier: "CRC Industries",
+        page: 345,
+      },
+      {
+        tradeName: "Non - Para Urinal Blocks",
+        supplier: "VisionCorps",
+        page: 354,
+      },
+      {
+        tradeName: "Nozzle Gel",
+        supplier: "Radnor",
+        page: 355,
+      },
+      {
+        tradeName: "Oven Cleaner",
+        supplier: "Ecolab Inc",
+        page: 367,
+      },
+      {
+        tradeName: "PB Blaster",
+        supplier: "B'laster Corporation",
+        page: 378,
+      },
+      {
+        tradeName: "PEAK DEF Fluid",
+        supplier: "Peak Lubricants",
+        page: 390,
+      },
+      {
+        tradeName: "Power Steering Stop Leak",
+        supplier: "Prestone Products",
+        page: 396,
+      },
+      {
+        tradeName: "Propane",
+        supplier: "Airgas USA",
+        page: 402,
+      },
+      {
+        tradeName: "Purell Advanced Gel",
+        supplier: "GOJO Industries",
+        page: 414,
+      },
+      {
+        tradeName: "PVC Cleaner",
+        supplier: "William H. Harvey Company",
+        page: 426,
+      },
+      {
+        tradeName: "PVC Cement",
+        supplier: "Oatey Co.",
+        page: 439,
+      },
+      {
+        tradeName: "PVC Primer",
+        supplier: "Oatey Co.",
+        page: 449,
+      },
+      {
+        tradeName: "Quickcrete - Concrete Mix",
+        supplier: "The QUICKCRETE Companies",
+        page: 462,
+      },
+      {
+        tradeName: "Radiator Anti - Rust",
+        supplier: "CRC Industries",
+        page: 472,
+      },
+      {
+        tradeName: "Radiator Flush",
+        supplier: "Prestone Products",
+        page: 478,
+      },
+      {
+        tradeName: "Sea Foam Spray",
+        supplier: "Sea Foam Sales Company",
+        page: 483,
+      },
+      {
+        tradeName: "Spray - A - Way Glass Cleaner",
+        supplier: "PLZ Corp.",
+        page: 492,
+      },
+      {
+        tradeName: "Starting Fluid - Jump Start",
+        supplier: "CRC Industries",
+        page: 498,
+      },
+      {
+        tradeName: "STF 6K FOM - Toilet Deodorizer",
+        supplier: "Triple S (SSS)",
+        page: 508,
+      },
+      {
+        tradeName: "Tire Sealant - Fix - A - Flat",
+        supplier: "ITW Global Tire Repair",
+        page: 519,
+      },
+      {
+        tradeName: "Transmission Fluid - ATF",
+        supplier: "Valvoline LLC",
+        page: 528,
+      },
+      {
+        tradeName: "UV Dye - R134A",
+        supplier: "ID Quest Operating",
+        page: 541,
+      },
+      {
+        tradeName: "Waxie Clean Touch Handwash",
+        supplier: "Waxie's Enterprises LLC",
+        page: 548,
+      },
+      {
+        tradeName: "Waxie Green Cleaner/ Degreaser",
+        supplier: "Waxie's Enterprises LLC",
+        page: 566,
+      },
+      {
+        tradeName: "WD - 40",
+        supplier: "WD-40 Company",
+        page: 586,
+      },
+      {
+        tradeName: "Zep - Air & Fabric Odor Eliminator",
+        supplier: "Zep Inc.",
+        page: 591,
+      },
+      {
+        tradeName: "Zep - Multipurpose Cleaner/Degreaser",
+        supplier: "Zep Inc.",
+        page: 602,
+      },
+      {
+        tradeName: "50:1 Fuel Mix",
+        supplier: "Calumet Packaging",
+        page: 613,
+      },
+    ],
+  };
+}

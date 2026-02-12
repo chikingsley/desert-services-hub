@@ -24,4 +24,3 @@ export async function saveSsspPDF(
   await Bun.write(outputPath, bytes);
   return outputPath;
 }
-

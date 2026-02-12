@@ -3,17 +3,17 @@
  */
 import { parseArgs } from "node:util";
 import {
+  normalizeEmailBody,
+  validateEmailBodyOrThrow,
+} from "@email/commands/body-policy";
+import {
+  assertSendEnabled,
   assertWritableMailbox,
-  DEFAULT_USER,
   getAppClient,
-  getUserClient,
+  getWriteClient,
 } from "@email/commands/config";
 import { loadFileAttachments } from "@email/commands/helpers";
 import type { CommandHandler } from "@email/commands/types";
-import {
-  getLogoAttachment,
-  wrapWithSignature,
-} from "@email/email-templates/index";
 
 async function draftCommand(options: {
   to?: string;
@@ -22,10 +22,13 @@ async function draftCommand(options: {
   body: string;
   skipSignature: boolean;
   attachmentPaths?: string;
-  userId: string;
+  userId?: string;
 }) {
   assertWritableMailbox(options.userId, "draft");
-  const client = await getUserClient();
+  const normalizedBody = normalizeEmailBody(options.body);
+  validateEmailBodyOrThrow(normalizedBody);
+  const userId = options.userId as string;
+  const client = await getWriteClient(userId);
 
   const toRecipients = options.to
     ? options.to.split(",").map((email) => ({ email: email.trim() }))
@@ -38,20 +41,9 @@ async function draftCommand(options: {
     ? await loadFileAttachments(options.attachmentPaths)
     : [];
 
-  let body = options.body;
-  let bodyType: "html" | "text" = "text";
+  const body = normalizedBody;
+  const bodyType: "html" | "text" = "html";
   const attachmentsToAdd = [...fileAttachments];
-
-  if (!options.skipSignature) {
-    body = await wrapWithSignature(options.body);
-    bodyType = "html";
-    const logo = await getLogoAttachment();
-    attachmentsToAdd.push({
-      name: logo.name,
-      contentType: logo.contentType,
-      contentBytes: logo.contentBytes,
-    });
-  }
 
   const draft = await client.createDraft({
     subject: options.subject,
@@ -60,7 +52,7 @@ async function draftCommand(options: {
     to: toRecipients,
     cc: ccRecipients,
     attachments: attachmentsToAdd.length > 0 ? attachmentsToAdd : undefined,
-    userId: options.userId,
+    userId,
   });
 
   const attInfo =
@@ -78,18 +70,21 @@ async function replyDraftCommand(options: {
   body: string;
   replyAll: boolean;
   skipSignature: boolean;
-  userId: string;
+  userId?: string;
   limit?: number;
   attachmentPaths?: string;
 }) {
   assertWritableMailbox(options.userId, "reply-draft");
+  const normalizedBody = normalizeEmailBody(options.body);
+  validateEmailBodyOrThrow(normalizedBody);
+  const userId = options.userId as string;
   const appCl = getAppClient();
-  const userCl = await getUserClient();
+  const writeCl = await getWriteClient(userId);
 
   console.log(`Searching for: "${options.query}"...`);
   const emails = await appCl.searchEmails({
     query: options.query,
-    userId: options.userId,
+    userId,
     limit: options.limit ?? 5,
   });
 
@@ -133,12 +128,12 @@ async function replyDraftCommand(options: {
   console.log(
     `\nCreating ${options.replyAll ? "reply-all" : "reply"} draft...`
   );
-  const draft = await userCl.createReplyDraft({
+  const draft = await writeCl.createReplyDraft({
     messageId: selectedEmail.id,
-    body: options.body,
+    body: normalizedBody,
     replyAll: options.replyAll,
     attachments: attachments.length > 0 ? attachments : undefined,
-    userId: options.userId,
+    userId,
     skipSignature: options.skipSignature,
   });
 
@@ -156,11 +151,14 @@ async function replyDraftByIdCommand(options: {
   body: string;
   replyAll: boolean;
   skipSignature: boolean;
-  userId: string;
+  userId?: string;
   attachmentPaths?: string;
 }) {
   assertWritableMailbox(options.userId, "reply-draft-by-id");
-  const client = await getUserClient();
+  const normalizedBody = normalizeEmailBody(options.body);
+  validateEmailBodyOrThrow(normalizedBody);
+  const userId = options.userId as string;
+  const client = await getWriteClient(userId);
 
   const attachments = options.attachmentPaths
     ? await loadFileAttachments(options.attachmentPaths)
@@ -168,10 +166,10 @@ async function replyDraftByIdCommand(options: {
 
   const draft = await client.createReplyDraft({
     messageId: options.messageId,
-    body: options.body,
+    body: normalizedBody,
     replyAll: options.replyAll,
     attachments: attachments.length > 0 ? attachments : undefined,
-    userId: options.userId,
+    userId,
     skipSignature: options.skipSignature,
   });
 
@@ -184,10 +182,12 @@ async function replyDraftByIdCommand(options: {
   console.log(`  View in Outlook or send with: send-draft ${draft.id}`);
 }
 
-async function sendDraftCommand(draftId: string, userId: string) {
+async function sendDraftCommand(draftId: string, userId?: string) {
+  assertSendEnabled("send-draft");
   assertWritableMailbox(userId, "send-draft");
-  const client = await getUserClient();
-  await client.sendDraft(draftId);
+  const resolvedUserId = userId as string;
+  const client = await getWriteClient(resolvedUserId);
+  await client.sendDraft(draftId, resolvedUserId);
   console.log(`Done - Draft sent successfully (ID: ${draftId})`);
 }
 
@@ -202,13 +202,13 @@ export const draftHandlers: Record<string, CommandHandler> = {
         body: { type: "string", short: "b" },
         attachments: { type: "string", short: "a" },
         "no-signature": { type: "boolean", default: false },
-        user: { type: "string", short: "u", default: DEFAULT_USER },
+        user: { type: "string", short: "u" },
       },
     });
-    if (!(values.subject && values.body)) {
-      console.error("Error: --subject and --body are required");
+    if (!(values.subject && values.body && values.user)) {
+      console.error("Error: --subject, --body, and --user are required");
       console.error(
-        "Usage: draft --subject <text> --body <text> [--to <email>] [--attachments <paths>]"
+        "Usage: draft --user <mailbox> --subject <text> --body <text> [--to <email>] [--attachments <paths>]"
       );
       process.exit(1);
     }
@@ -228,7 +228,7 @@ export const draftHandlers: Record<string, CommandHandler> = {
       args,
       options: {
         body: { type: "string", short: "b" },
-        user: { type: "string", short: "u", default: DEFAULT_USER },
+        user: { type: "string", short: "u" },
         "reply-all": { type: "boolean", default: false },
         "no-signature": { type: "boolean", default: false },
         limit: { type: "string", short: "l", default: "5" },
@@ -237,10 +237,10 @@ export const draftHandlers: Record<string, CommandHandler> = {
       allowPositionals: true,
     });
     const query = positionals[0];
-    if (!(query && values.body)) {
-      console.error("Error: search query and --body are required");
+    if (!(query && values.body && values.user)) {
+      console.error("Error: search query, --body, and --user are required");
       console.error(
-        "Usage: reply-draft <query> --body <text> [--reply-all] [--limit <number>]"
+        "Usage: reply-draft <query> --user <mailbox> --body <text> [--reply-all] [--limit <number>]"
       );
       process.exit(1);
     }
@@ -260,7 +260,7 @@ export const draftHandlers: Record<string, CommandHandler> = {
       args,
       options: {
         body: { type: "string", short: "b" },
-        user: { type: "string", short: "u", default: DEFAULT_USER },
+        user: { type: "string", short: "u" },
         "reply-all": { type: "boolean", default: false },
         "no-signature": { type: "boolean", default: false },
         attachments: { type: "string", short: "a" },
@@ -268,9 +268,11 @@ export const draftHandlers: Record<string, CommandHandler> = {
       allowPositionals: true,
     });
     const messageId = positionals[0];
-    if (!(messageId && values.body)) {
-      console.error("Error: messageId and --body are required");
-      console.error("Usage: reply-draft-by-id <messageId> --body <text>");
+    if (!(messageId && values.body && values.user)) {
+      console.error("Error: messageId, --body, and --user are required");
+      console.error(
+        "Usage: reply-draft-by-id <messageId> --user <mailbox> --body <text>"
+      );
       process.exit(1);
     }
     await replyDraftByIdCommand({
@@ -287,13 +289,15 @@ export const draftHandlers: Record<string, CommandHandler> = {
     const { values, positionals } = parseArgs({
       args,
       options: {
-        user: { type: "string", short: "u", default: DEFAULT_USER },
+        user: { type: "string", short: "u" },
       },
       allowPositionals: true,
     });
     const draftId = positionals[0];
-    if (!draftId) {
-      console.error("Error: draftId required. Usage: send-draft <draftId>");
+    if (!(draftId && values.user)) {
+      console.error(
+        "Error: draftId and --user required. Usage: send-draft <draftId> --user <mailbox>"
+      );
       process.exit(1);
     }
     await sendDraftCommand(draftId, values.user as string);

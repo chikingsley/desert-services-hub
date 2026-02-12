@@ -15,6 +15,9 @@ export type EmailClassification =
   | "ESTIMATE"
   | "INSURANCE"
   | "INVOICE"
+  | "PAYMENT"
+  | "HR"
+  | "IT"
   | "SCHEDULE"
   | "CHANGE_ORDER"
   | "INTERNAL"
@@ -287,6 +290,28 @@ export interface Notification {
   createdAt: string;
 }
 
+export type ProjectMatchReviewStatus = "pending" | "resolved" | "dismissed";
+
+export interface ProjectMatchReview {
+  id: number;
+  source: string;
+  sourceKey: string;
+  status: ProjectMatchReviewStatus;
+  primaryText: string;
+  aliasHints: string[];
+  contractorHint: string | null;
+  addressHint: string | null;
+  accountIdHint: number | null;
+  candidates: unknown[];
+  decision: unknown;
+  selectedProjectId: number | null;
+  note: string | null;
+  resolutionNote: string | null;
+  resolvedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 // ============================================
 // Input Data Types (for insert/upsert operations)
 // ============================================
@@ -441,8 +466,10 @@ export interface ClassificationStats {
 export interface EstimateRow {
   id: string;
   name: string;
+  job_name?: string | null;
   estimate_number: string | null;
   contractor: string | null;
+  location?: string | null;
   base_number: string | null;
   takeoff_id: string | null;
   job_address: string | null;
@@ -452,6 +479,7 @@ export interface EstimateRow {
   client_phone: string | null;
   notes: string | null;
   bid_status: string | null;
+  status?: string | null;
   is_locked: number;
   estimator: string | null;
   estimator_email: string | null;
@@ -482,6 +510,7 @@ export interface EstimateLineItemRow {
   id: string;
   version_id: string;
   section_id: string | null;
+  item_name: string | null;
   description: string;
   quantity: number;
   unit: string;
@@ -542,6 +571,7 @@ export interface EstimateLineItem {
   id: string;
   version_id: string;
   section_id: string | null;
+  item_name: string | null;
   description: string;
   quantity: number;
   unit: string;

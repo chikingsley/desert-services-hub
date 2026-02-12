@@ -2,7 +2,15 @@
  * Email send and reply commands.
  */
 import { parseArgs } from "node:util";
-import { DEFAULT_USER, getUserClient } from "@email/commands/config";
+import {
+  normalizeEmailBody,
+  validateEmailBodyOrThrow,
+} from "@email/commands/body-policy";
+import {
+  assertSendEnabled,
+  assertWritableMailbox,
+  getWriteClient,
+} from "@email/commands/config";
 import { loadFileAttachments } from "@email/commands/helpers";
 import type { CommandHandler } from "@email/commands/types";
 
@@ -13,8 +21,14 @@ async function sendCommand(options: {
   body: string;
   skipSignature: boolean;
   attachmentPaths?: string;
+  userId?: string;
 }) {
-  const client = await getUserClient();
+  assertSendEnabled("send");
+  assertWritableMailbox(options.userId, "send");
+  const normalizedBody = normalizeEmailBody(options.body);
+  validateEmailBodyOrThrow(normalizedBody);
+  const userId = options.userId as string;
+  const client = await getWriteClient(userId);
 
   const toRecipients = options.to
     .split(",")
@@ -27,14 +41,16 @@ async function sendCommand(options: {
     ? await loadFileAttachments(options.attachmentPaths)
     : [];
 
-  await client.sendEmail({
+  const draft = await client.createDraft({
     to: toRecipients,
     cc: ccRecipients,
     subject: options.subject,
-    body: options.body,
+    body: normalizedBody,
     skipSignature: options.skipSignature,
     attachments: attachments.length > 0 ? attachments : undefined,
+    userId,
   });
+  await client.sendDraft(draft.id, userId);
 
   const attInfo =
     attachments.length > 0 ? ` with ${attachments.length} attachment(s)` : "";
@@ -44,19 +60,25 @@ async function sendCommand(options: {
 async function replyCommand(options: {
   messageId: string;
   body: string;
-  userId: string;
+  userId?: string;
   replyAll: boolean;
   skipSignature: boolean;
 }) {
-  const client = await getUserClient();
+  assertSendEnabled("reply");
+  assertWritableMailbox(options.userId, "reply");
+  const normalizedBody = normalizeEmailBody(options.body);
+  validateEmailBodyOrThrow(normalizedBody);
+  const userId = options.userId as string;
+  const client = await getWriteClient(userId);
 
-  await client.replyToEmail({
+  const draft = await client.createReplyDraft({
     messageId: options.messageId,
-    body: options.body,
-    userId: options.userId,
+    body: normalizedBody,
+    userId,
     replyAll: options.replyAll,
     skipSignature: options.skipSignature,
   });
+  await client.sendDraft(draft.id, userId);
 
   const action = options.replyAll ? "Reply-all" : "Reply";
   console.log(`Done - ${action} sent successfully`);
@@ -73,12 +95,13 @@ export const sendHandlers: Record<string, CommandHandler> = {
         body: { type: "string", short: "b" },
         attachments: { type: "string", short: "a" },
         "no-signature": { type: "boolean", default: false },
+        user: { type: "string", short: "u" },
       },
     });
-    if (!(values.to && values.subject && values.body)) {
-      console.error("Error: --to, --subject, and --body are required");
+    if (!(values.to && values.subject && values.body && values.user)) {
+      console.error("Error: --to, --subject, --body, and --user are required");
       console.error(
-        "Usage: send --to <email> --subject <text> --body <text> [--attachments <paths>]"
+        "Usage: send --user <mailbox> --to <email> --subject <text> --body <text> [--attachments <paths>]"
       );
       process.exit(1);
     }
@@ -89,6 +112,7 @@ export const sendHandlers: Record<string, CommandHandler> = {
       body: values.body,
       skipSignature: values["no-signature"] ?? false,
       attachmentPaths: values.attachments,
+      userId: values.user as string,
     });
   },
 
@@ -97,16 +121,16 @@ export const sendHandlers: Record<string, CommandHandler> = {
       args,
       options: {
         body: { type: "string", short: "b" },
-        user: { type: "string", short: "u", default: DEFAULT_USER },
+        user: { type: "string", short: "u" },
         "reply-all": { type: "boolean", default: false },
         "no-signature": { type: "boolean", default: false },
       },
       allowPositionals: true,
     });
     const messageId = positionals[0];
-    if (!(messageId && values.body)) {
-      console.error("Error: messageId and --body are required");
-      console.error("Usage: reply <messageId> --body <text>");
+    if (!(messageId && values.body && values.user)) {
+      console.error("Error: messageId, --body, and --user are required");
+      console.error("Usage: reply <messageId> --user <mailbox> --body <text>");
       process.exit(1);
     }
     await replyCommand({

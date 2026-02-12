@@ -494,10 +494,26 @@ function buildItemRow(rowNumber: number, item: EditorLineItem): TableCell[] {
   // Put parenthetical content on new line
   const itemText = item.item.replace(PARENS_REGEX, "\n($1)");
 
+  const descriptionText = item.isAlternate
+    ? [
+        {
+          text: "[ALTERNATE] ",
+          color: "#b91c1c",
+          bold: true,
+        },
+        {
+          text:
+            item.description.trim().length > 0
+              ? item.description
+              : "Not included unless selected.",
+        },
+      ]
+    : item.description;
+
   return [
     { text: String(rowNumber), style: "tableCell", alignment: "center" },
     { text: itemText, style: "tableCell" },
-    { text: item.description, style: "tableCell" },
+    { text: descriptionText, style: "tableCell" },
     {
       text: String(item.qty),
       style: "tableCell",
@@ -770,7 +786,7 @@ export function buildEstimateDocDefinition(
                           text: `${estimate.billTo.companyName}\n`,
                           bold: true,
                         },
-                        { text: estimate.billTo.address ?? "" },
+                        { text: formatAddress(estimate.billTo.address) },
                       ],
                       fontSize: 9,
                       lineHeight: 1.15,

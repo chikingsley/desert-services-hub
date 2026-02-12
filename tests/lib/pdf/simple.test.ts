@@ -6,6 +6,7 @@ import {
   generateEstimatePDF,
   saveEstimatePDF,
 } from "@/lib/pdf/estimate/generate-estimate-pdf.server";
+import { getPdfTestOutputPath } from "./output-path";
 import { simpleQuote } from "./test-data";
 
 describe("PDF Generation - Simple Style", () => {
@@ -21,11 +22,12 @@ describe("PDF Generation - Simple Style", () => {
   });
 
   test("saves simple style PDF to file", async () => {
-    const outPath = await saveEstimatePDF(simpleQuote, "test-pdf-simple.pdf", {
+    const targetPath = getPdfTestOutputPath("test-pdf-simple.pdf");
+    const outPath = await saveEstimatePDF(simpleQuote, targetPath, {
       style: "simple",
     });
 
-    expect(outPath).toBe("test-pdf-simple.pdf");
+    expect(outPath).toBe(targetPath);
 
     // Verify file exists and is valid PDF
     const file = Bun.file(outPath);

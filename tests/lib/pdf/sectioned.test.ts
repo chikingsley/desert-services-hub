@@ -6,6 +6,7 @@ import {
   generateEstimatePDF,
   saveEstimatePDF,
 } from "@/lib/pdf/estimate/generate-estimate-pdf.server";
+import { getPdfTestOutputPath } from "./output-path";
 import { maxCatalogQuote } from "./test-data";
 
 describe("PDF Generation - Sectioned Style", () => {
@@ -34,15 +35,12 @@ describe("PDF Generation - Sectioned Style", () => {
   });
 
   test("saves sectioned style PDF to file", async () => {
-    const outPath = await saveEstimatePDF(
-      maxCatalogQuote,
-      "test-pdf-sectioned.pdf",
-      {
-        style: "sectioned",
-      }
-    );
+    const targetPath = getPdfTestOutputPath("test-pdf-sectioned.pdf");
+    const outPath = await saveEstimatePDF(maxCatalogQuote, targetPath, {
+      style: "sectioned",
+    });
 
-    expect(outPath).toBe("test-pdf-sectioned.pdf");
+    expect(outPath).toBe(targetPath);
 
     // Verify file exists and is valid PDF
     const file = Bun.file(outPath);

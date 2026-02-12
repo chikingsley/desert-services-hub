@@ -242,13 +242,14 @@ export function convertToEstimateLineItems(
   return summaryItems.map((item, index) => ({
     version_id: versionId,
     section_id: null, // Will be set when creating sections
-    description: item.name,
+    item_name: item.name,
+    description: item.description || item.name,
     quantity: Math.round(item.quantity * 100) / 100, // Round to 2 decimal places
     unit: item.unit,
     unit_cost: item.unitCost,
     unit_price: item.unitPrice,
     is_excluded: false,
-    notes: item.description,
+    notes: null,
     sort_order: index,
   }));
 }

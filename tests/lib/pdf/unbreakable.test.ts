@@ -6,6 +6,7 @@ import {
   generateEstimatePDF,
   saveEstimatePDF,
 } from "@/lib/pdf/estimate/generate-estimate-pdf.server";
+import { getPdfTestOutputPath } from "./output-path";
 import { maxCatalogQuote } from "./test-data";
 
 describe("PDF Generation - Unbreakable Sections", () => {
@@ -49,16 +50,13 @@ describe("PDF Generation - Unbreakable Sections", () => {
   });
 
   test("saves PDF with unbreakable sections enabled to file", async () => {
-    const outPath = await saveEstimatePDF(
-      maxCatalogQuote,
-      "test-pdf-unbreakable-true.pdf",
-      {
-        style: "sectioned",
-        unbreakableSections: true,
-      }
-    );
+    const targetPath = getPdfTestOutputPath("test-pdf-unbreakable-true.pdf");
+    const outPath = await saveEstimatePDF(maxCatalogQuote, targetPath, {
+      style: "sectioned",
+      unbreakableSections: true,
+    });
 
-    expect(outPath).toBe("test-pdf-unbreakable-true.pdf");
+    expect(outPath).toBe(targetPath);
 
     const file = Bun.file(outPath);
     const exists = await file.exists();
@@ -70,16 +68,13 @@ describe("PDF Generation - Unbreakable Sections", () => {
   });
 
   test("saves PDF with unbreakable sections disabled to file", async () => {
-    const outPath = await saveEstimatePDF(
-      maxCatalogQuote,
-      "test-pdf-unbreakable-false.pdf",
-      {
-        style: "sectioned",
-        unbreakableSections: false,
-      }
-    );
+    const targetPath = getPdfTestOutputPath("test-pdf-unbreakable-false.pdf");
+    const outPath = await saveEstimatePDF(maxCatalogQuote, targetPath, {
+      style: "sectioned",
+      unbreakableSections: false,
+    });
 
-    expect(outPath).toBe("test-pdf-unbreakable-false.pdf");
+    expect(outPath).toBe(targetPath);
 
     const file = Bun.file(outPath);
     const exists = await file.exists();

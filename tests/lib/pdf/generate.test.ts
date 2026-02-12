@@ -4,6 +4,7 @@ import {
   generateEstimatePDF,
   getEstimatePDFFilename,
 } from "@/lib/pdf/estimate/generate-estimate-pdf.server";
+import { getPdfTestOutputPath } from "./output-path";
 
 const testQuote = {
   estimateNumber: "251227-01",
@@ -73,7 +74,7 @@ describe("PDF Generation", () => {
 
   test("saves PDF to file", async () => {
     const buffer = await generateEstimatePDF(testQuote);
-    const outPath = "./example-estimate.pdf";
+    const outPath = getPdfTestOutputPath("example-estimate.pdf");
 
     writeFileSync(outPath, buffer);
 

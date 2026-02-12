@@ -53,9 +53,63 @@ import {
   generateEstimatePDF,
   getEstimatePDFFilename,
 } from "@lib/pdf/estimate/generate-estimate-pdf.server";
+import { z } from "zod";
 
 const args = process.argv.slice(2);
 const command = args[0];
+
+const createFileSchema = z
+  .object({
+    jobName: z.string().trim().min(1),
+    clientName: z.string().trim().min(1).optional(),
+    clientAddress: z.string().trim().min(1).optional(),
+    jobAddress: z.string().trim().min(1).optional(),
+    clientEmail: z.string().trim().min(1).optional(),
+    clientPhone: z.string().trim().min(1).optional(),
+    estimator: z.string().trim().min(1).optional(),
+    estimatorEmail: z.string().trim().min(1).optional(),
+    notes: z.string().trim().optional(),
+    lineItems: z
+      .array(
+        z
+          .object({
+            code: z.string().trim().min(1),
+            quantity: z.number().positive().optional(),
+            sectionId: z.string().trim().min(1).optional(),
+          })
+          .strict()
+      )
+      .optional(),
+  })
+  .strict();
+
+const updateFileSchema = z
+  .object({
+    remove: z.array(z.string().trim().min(1)).optional(),
+    add: z
+      .array(
+        z
+          .object({
+            code: z.string().trim().min(1),
+            quantity: z.number().positive().optional(),
+            sectionId: z.string().trim().min(1).optional(),
+          })
+          .strict()
+      )
+      .optional(),
+    notes: z.string().optional(),
+    status: z.enum(["draft", "sent", "accepted", "declined"]).optional(),
+  })
+  .strict();
+
+function formatZodError(error: z.ZodError): string {
+  return error.issues
+    .map((issue) => {
+      const path = issue.path.length > 0 ? issue.path.join(".") : "root";
+      return `${path}: ${issue.message}`;
+    })
+    .join("; ");
+}
 
 function printUsage(): void {
   console.log(`
@@ -239,22 +293,12 @@ async function createCommand(argv: string[]): Promise<void> {
     process.exit(1);
   }
 
-  const data = await loadJsonFile<{
-    jobName: string;
-    clientName?: string;
-    clientAddress?: string;
-    jobAddress?: string;
-    clientEmail?: string;
-    clientPhone?: string;
-    estimator?: string;
-    estimatorEmail?: string;
-    notes?: string;
-    lineItems?: Array<{
-      code: string;
-      quantity?: number;
-      sectionId?: string;
-    }>;
-  }>(opts.file);
+  const rawData = await loadJsonFile<unknown>(opts.file);
+  const parsed = createFileSchema.safeParse(rawData);
+  if (!parsed.success) {
+    throw new Error(`Invalid create payload: ${formatZodError(parsed.error)}`);
+  }
+  const data = parsed.data;
 
   const input: CreateEstimateInput = {
     job_name: data.jobName,
@@ -330,16 +374,12 @@ async function updateCommand(argv: string[]): Promise<void> {
     process.exit(1);
   }
 
-  const data = await loadJsonFile<{
-    remove?: string[]; // Line item IDs to remove
-    add?: Array<{
-      code: string;
-      quantity?: number;
-      sectionId?: string;
-    }>;
-    notes?: string;
-    status?: "draft" | "sent" | "accepted" | "declined";
-  }>(opts.file);
+  const rawData = await loadJsonFile<unknown>(opts.file);
+  const parsed = updateFileSchema.safeParse(rawData);
+  if (!parsed.success) {
+    throw new Error(`Invalid update payload: ${formatZodError(parsed.error)}`);
+  }
+  const data = parsed.data;
 
   // Build line item changes
   const changes: LineItemChange[] = [];
@@ -357,7 +397,8 @@ async function updateCommand(argv: string[]): Promise<void> {
         changes.push({
           action: "add",
           section_id: item.sectionId,
-          description: `${catalogItem.code}: ${catalogItem.name}`,
+          item_name: catalogItem.name,
+          description: catalogItem.description,
           quantity: item.quantity ?? catalogItem.defaultQty ?? 1,
           unit: catalogItem.unit,
           unit_cost: catalogItem.price,
@@ -478,7 +519,7 @@ async function pdfCommand(argv: string[]): Promise<void> {
     return {
       id: i.id,
       item: i.item_name || i.description,
-      description: i.notes || "",
+      description: i.description || i.notes || "",
       qty: i.quantity,
       uom: i.unit,
       cost: unitPrice,

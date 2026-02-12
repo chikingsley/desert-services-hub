@@ -7,6 +7,7 @@ import {
   generateEstimatePDF,
   saveEstimatePDF,
 } from "@/lib/pdf/estimate/generate-estimate-pdf.server";
+import { getPdfTestOutputPath } from "./output-path";
 import { maxCatalogQuote } from "./test-data";
 
 describe("PDF Generation - Back Page", () => {
@@ -51,16 +52,13 @@ describe("PDF Generation - Back Page", () => {
   });
 
   test("saves PDF with back page to file", async () => {
-    const outPath = await saveEstimatePDF(
-      maxCatalogQuote,
-      "test-pdf-with-backpage.pdf",
-      {
-        style: "sectioned",
-        includeBackPage: true,
-      }
-    );
+    const targetPath = getPdfTestOutputPath("test-pdf-with-backpage.pdf");
+    const outPath = await saveEstimatePDF(maxCatalogQuote, targetPath, {
+      style: "sectioned",
+      includeBackPage: true,
+    });
 
-    expect(outPath).toBe("test-pdf-with-backpage.pdf");
+    expect(outPath).toBe(targetPath);
 
     // Verify file exists and is valid PDF
     const file = Bun.file(outPath);
@@ -74,7 +72,7 @@ describe("PDF Generation - Back Page", () => {
 
   test("saves standalone back page to file", async () => {
     const buffer = await generateEstimateBackPagePDF();
-    const outPath = "test-pdf-backpage-only.pdf";
+    const outPath = getPdfTestOutputPath("test-pdf-backpage-only.pdf");
     await Bun.write(outPath, buffer);
 
     // Verify file exists and is valid PDF

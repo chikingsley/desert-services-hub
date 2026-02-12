@@ -47,23 +47,55 @@ pm.fonts = {
   },
 };
 
+// 1x1 transparent PNG fallback to keep PDF rendering resilient if logo fetch fails
+const FALLBACK_LOGO_DATA_URL =
+  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+X4mQAAAAASUVORK5CYII=";
+
 // Convert image to base64 for pdfMake (cached after first fetch)
 let logoCache: string | null = null;
 
-async function getLogoBase64(): Promise<string> {
-  if (logoCache) {
-    return logoCache;
-  }
-  const response = await fetch("/logo.png");
-  const blob = await response.blob();
-  const base64 = await new Promise<string>((resolve, reject) => {
+async function blobToDataURL(blob: Blob): Promise<string> {
+  return await new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
     reader.onloadend = () => resolve(reader.result as string);
     reader.onerror = reject;
     reader.readAsDataURL(blob);
   });
-  logoCache = base64;
-  return base64;
+}
+
+async function getLogoBase64(): Promise<string> {
+  if (logoCache) {
+    return logoCache;
+  }
+
+  try {
+    const response = await fetch("/logo.png", { cache: "no-store" });
+    if (!response.ok) {
+      throw new Error(`Logo request failed: ${response.status}`);
+    }
+
+    const contentType = response.headers.get("content-type") ?? "";
+    if (!contentType.startsWith("image/")) {
+      throw new Error(`Unexpected logo content-type: ${contentType || "none"}`);
+    }
+
+    const blob = await response.blob();
+    if (blob.size === 0 || !blob.type.startsWith("image/")) {
+      throw new Error(`Invalid logo blob type: ${blob.type || "none"}`);
+    }
+
+    const dataUrl = await blobToDataURL(blob);
+    if (!dataUrl.startsWith("data:image/")) {
+      throw new Error("Logo data URL is not an image");
+    }
+
+    logoCache = dataUrl;
+    return dataUrl;
+  } catch (error) {
+    console.warn("Falling back to transparent logo:", error);
+    logoCache = FALLBACK_LOGO_DATA_URL;
+    return FALLBACK_LOGO_DATA_URL;
+  }
 }
 
 /**

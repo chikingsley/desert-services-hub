@@ -52,14 +52,10 @@ COPY apps/cli-tools/email-cli ./apps/cli-tools/email-cli
 # Workers
 COPY apps/workers/estimate-poller/lib ./apps/workers/estimate-poller/lib
 COPY apps/workers/estimate-email-linker/lib ./apps/workers/estimate-email-linker/lib
-COPY apps/workers/contract-intake/lib ./apps/workers/contract-intake/lib
 COPY apps/workers/outlook-folder-watcher/lib ./apps/workers/outlook-folder-watcher/lib
 COPY apps/workers/estimates-sync-worker/lib ./apps/workers/estimates-sync-worker/lib
 COPY apps/workers/swppp-sync/cli ./apps/workers/swppp-sync/cli
 COPY apps/workers/swppp-sync/lib ./apps/workers/swppp-sync/lib
-
-# Email attachment backfill worker
-COPY apps/workers/files-email-intake/lib ./apps/workers/files-email-intake/lib
 
 # Notifications worker
 COPY apps/workers/notifications/cli ./apps/workers/notifications/cli

@@ -34,14 +34,14 @@ import { isSpam } from "@lib/spam-filter";
 import { getItemRich } from "@monday/client";
 import { ESTIMATING_COLUMNS } from "@monday/types";
 import { z } from "zod";
+import { processUnprocessedAttachments } from "@/apps/web/lib/attachment-backfill";
 import { runEstimateExtractionTriage } from "@/apps/web/lib/estimate-extraction-triage";
+import type { ContractsEmailIntakePayload } from "@/apps/web/lib/files-intake";
+import { processFilesIntake } from "@/apps/web/lib/files-intake";
 import { itemHasFiles, processItemFiles } from "@/apps/web/pipeline";
-import type { ContractsEmailIntakePayload } from "@/apps/workers/contract-intake/lib/files-intake";
-import { processFilesIntake } from "@/apps/workers/contract-intake/lib/files-intake";
 import { pollEstimateEmailLinker } from "@/apps/workers/estimate-email-linker/lib/poll";
 import { syncEstimates } from "@/apps/workers/estimate-poller/lib/sync";
 import { syncSharePointFolders } from "@/apps/workers/estimates-sync-worker/lib/sharepoint-sync";
-import { processUnprocessedAttachments } from "@/apps/workers/files-email-intake/lib/attachment-backfill";
 import {
   detectDustPermitEmailTrigger,
   handleIssuedEmail,
@@ -1174,6 +1174,9 @@ async function processNextJob(): Promise<void> {
           syncResult = await syncEstimates();
           console.log(
             `[worker] Full sync: ${syncResult.fetched} fetched, ${syncResult.upserted} upserted, ${syncResult.changes.length} changes`
+          );
+          console.log(
+            `[worker] Link sync: ${syncResult.linkStats.mondayPairsUnique} pairs (${syncResult.linkStats.mondayPairsDirect} direct, ${syncResult.linkStats.mondayPairsLegacy} legacy), ${syncResult.linkStats.estimateContactsResolved} resolved, ${syncResult.linkStats.missingContact} missing-contact, ${syncResult.linkStats.missingEstimate} missing-estimate, ${syncResult.linkStats.contactsSynced} contacts synced, ${syncResult.linkStats.accountsSynced} accounts synced`
           );
           for (const change of syncResult.changes) {
             console.log(

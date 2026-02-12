@@ -20,12 +20,11 @@ apps/
     email-sync/           # Outlook email sync via Microsoft Graph
     inspections-email-worker/  # ComplianceGo → SharePoint (Cloudflare Worker)
     docusign-file-automation/  # DocuSign contract dispatch (Cloudflare Worker)
-    dust-permit-intake/   # Permit request intake processing
-    files-email-intake/       # Email file auto-linking pipeline
-    contract-intake/          # Deprecated legacy worker (dormant, not active runtime)
+    intake-worker/        # Cloudflare email ingress -> webhooks intake API
     estimate-poller/
     estimates-sync-worker/
     monday-status-sync-worker/
+    estimate-email-linker/    # In-process linker logic used by web worker timer
     outlook-folder-watcher/
     swppp-sync/
   cli-tools/
@@ -144,7 +143,7 @@ When consuming parsed NOI data (from `pdf-analysis` / intake workers), use this 
   - `acresDisturbed` can be used as disturbed-acreage fallback when plan acres are missing.
 
 Primary references:
-- `apps/workers/dust-permit-intake/lib/intake.ts`
+- `apps/web/lib/files-intake.ts`
 - `apps/cli-tools/pdf-analysis-cli/src/pdf_analysis/noi.py`
 - `apps/workers/permit-workers/tests/lib/extraction-validator.ts`
 
@@ -261,8 +260,8 @@ Connection: `@lib/db/hub` provides a Postgres client with SQLite-compatible API 
   - If project has exactly one linked estimate in `project_estimates`, links deterministically.
   - If project has multiple estimates, calls ranked matcher (`findEstimateCandidatesForEmail`) and only auto-links when decision says `autoLink=true`.
   - Rejects ranked matches outside the project's estimate set.
-- Dust-permit intake project linking (`apps/workers/dust-permit-intake/lib/project-matcher.ts`):
-  - Uses the same shared project matcher contract (subject-first, then NOI-site-first) for consistency with folder watcher and SWPPP reconciliation.
+- Intake/project linking:
+  - Uses shared project matcher contract (`lib/project-matching.ts` + `lib/db/repositories/project.ts`) for consistency across webhook intake, folder watcher, and SWPPP reconciliation.
   - Non-auto-link outcomes are persisted to `project_match_reviews` for operator triage.
 - Periodic estimate-email backfill (`apps/workers/estimate-email-linker/lib/poll.ts`):
   - Processes unlinked candidate emails incrementally using cursor `estimate_email_linker_last_email_id` in `estimate_poller_config`.
@@ -289,7 +288,7 @@ Use this when users request Site-Specific Safety Plans (SSSP) or Safety Data She
 ### Source of Truth
 
 - SSSP generator:
-  - `apps/cli-tools/sssp-cli/`
+  - `apps/cli-tools/pdf-cli/`
   - `lib/pdf/sssp/`
 - Current LGE working packet:
   - `data/triage/1400-w-3rd/`
@@ -327,12 +326,12 @@ Commands:
 
 ```bash
 # Inventory only
-bun apps/cli-tools/sds-cli/bin/cli.ts generate \
+bun apps/cli-tools/pdf-cli/bin/cli.ts safety sds generate \
   --in data/sds/sds-input.json \
   --out data/sds/SDS_Chemical_Inventory.pdf
 
 # Binder (append sheets)
-bun apps/cli-tools/sds-cli/bin/cli.ts generate \
+bun apps/cli-tools/pdf-cli/bin/cli.ts safety sds generate \
   --in data/sds/sds-input.json \
   --out data/sds/SDS_Binder.pdf \
   --include-sheets

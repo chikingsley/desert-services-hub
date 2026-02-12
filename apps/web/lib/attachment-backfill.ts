@@ -15,7 +15,7 @@ import type { GraphEmailClient } from "@email/client";
 import { createGraphClient } from "@email/sync/config";
 import { db } from "@lib/db/hub";
 import { updateAttachmentExtraction } from "@lib/db/repositories/attachment";
-import { processFilesIntake } from "@/apps/workers/contract-intake/lib/files-intake";
+import { processFilesIntake } from "@/apps/web/lib/files-intake";
 
 const LOG = "[attachment-backfill]";
 const BACKFILL_DIR = "/app/data/backfill";

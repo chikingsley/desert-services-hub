@@ -1,21 +1,45 @@
 import { afterAll, beforeEach, describe, expect, mock, test } from "bun:test";
 import { db } from "@lib/db/hub";
 import type { MondayItemRich } from "@monday/client";
-import { ESTIMATING_COLUMNS } from "@monday/types";
+import {
+  CONTACTS_COLUMNS,
+  CONTRACTORS_COLUMNS,
+  ESTIMATING_COLUMNS,
+} from "@monday/types";
 
 const TEST_PREFIX = "_TEST_DELETE_ME_EST_SYNC_";
 const TEST_MONDAY_PREFIX = `${TEST_PREFIX}MONDAY_`;
 
+const REL_ESTIMATE_ID = "9900010001";
+const REL_ACCOUNT_ID = "9900011001";
+const REL_CONTACT_ID = "9900012001";
+const REL_ACCOUNT_DOMAIN = "test-estimate-sync-link.example.com";
+
 let mockItems: MondayItemRich[] = [];
+let mockMondayQuery: (graphql: string) => Promise<unknown> = async () => ({
+  items: [],
+});
 
 mock.module("@monday/client", () => ({
   getItemsRich: async () => mockItems,
-  query: async () => ({ items: [] }),
+  query: async (graphql: string) =>
+    (await mockMondayQuery(graphql)) as Record<string, unknown>,
 }));
 
 const { syncEstimates } = await import("./sync");
 
-function makeItem(mondayItemId: string): MondayItemRich {
+function makeItem(
+  mondayItemId: string,
+  options: {
+    accountId?: string | null;
+    directContactIds?: string[];
+    legacyContactIds?: string[];
+  } = {}
+): MondayItemRich {
+  const accountId = options.accountId ?? null;
+  const directContactIds = options.directContactIds ?? [];
+  const legacyContactIds = options.legacyContactIds ?? [];
+
   return {
     id: mondayItemId,
     name: `${TEST_PREFIX}Estimate ${mondayItemId}`,
@@ -34,21 +58,54 @@ function makeItem(mondayItemId: string): MondayItemRich {
       [ESTIMATING_COLUMNS.LOCATION.id]: "Phoenix",
       [ESTIMATING_COLUMNS.SHAREPOINT_URL.id]: null,
     },
-    columnValues: [],
+    columnValues: [
+      {
+        id: ESTIMATING_COLUMNS.CONTRACTORS_DIRECT.id,
+        type: "board_relation",
+        text: null,
+        value: null,
+        linkedItemIds: accountId ? [accountId] : [],
+      },
+      {
+        id: ESTIMATING_COLUMNS.CONTACTS_DIRECT.id,
+        type: "board_relation",
+        text: null,
+        value: null,
+        linkedItemIds: directContactIds,
+      },
+      {
+        id: ESTIMATING_COLUMNS.CONTACTS.id,
+        type: "board_relation",
+        text: null,
+        value: null,
+        linkedItemIds: legacyContactIds,
+      },
+    ],
   };
+}
+
+async function cleanupTestRows(): Promise<void> {
+  await db
+    .prepare(
+      "DELETE FROM estimates WHERE monday_item_id LIKE ? OR monday_item_id = ?"
+    )
+    .run(`${TEST_MONDAY_PREFIX}%`, REL_ESTIMATE_ID);
+  await db
+    .prepare("DELETE FROM contacts WHERE monday_item_id = ?")
+    .run(REL_CONTACT_ID);
+  await db
+    .prepare("DELETE FROM accounts WHERE monday_account_id = ? OR domain = ?")
+    .run(REL_ACCOUNT_ID, REL_ACCOUNT_DOMAIN);
 }
 
 beforeEach(async () => {
   mockItems = [];
-  await db
-    .prepare("DELETE FROM estimates WHERE monday_item_id LIKE ?")
-    .run(`${TEST_MONDAY_PREFIX}%`);
+  mockMondayQuery = async () => ({ items: [] });
+  await cleanupTestRows();
 });
 
 afterAll(async () => {
-  await db
-    .prepare("DELETE FROM estimates WHERE monday_item_id LIKE ?")
-    .run(`${TEST_MONDAY_PREFIX}%`);
+  await cleanupTestRows();
 
   const remaining = (await db
     .prepare(
@@ -138,5 +195,92 @@ describe("syncEstimates integration", () => {
       )
       .get(estimateId)) as { count: number } | null;
     expect(afterSecond?.count).toBe(1);
+  });
+
+  test("syncs estimate-contact and contact-account links from Monday relations", async () => {
+    mockItems = [
+      makeItem(REL_ESTIMATE_ID, {
+        accountId: REL_ACCOUNT_ID,
+        directContactIds: [REL_CONTACT_ID],
+      }),
+    ];
+
+    mockMondayQuery = (graphql: string) => {
+      if (graphql.includes(CONTRACTORS_COLUMNS.DOMAIN.id)) {
+        return Promise.resolve({
+          items: [
+            {
+              id: REL_ACCOUNT_ID,
+              name: "Rel Account",
+              column_values: [
+                {
+                  id: CONTRACTORS_COLUMNS.DOMAIN.id,
+                  text: REL_ACCOUNT_DOMAIN,
+                },
+              ],
+            },
+          ],
+        });
+      }
+
+      if (graphql.includes(CONTACTS_COLUMNS.CONTRACTOR.id)) {
+        return Promise.resolve({
+          items: [
+            {
+              id: REL_CONTACT_ID,
+              name: "Rel Contact",
+              group: { id: "group-rel", title: "Contacts" },
+              column_values: [
+                {
+                  id: CONTACTS_COLUMNS.EMAIL.id,
+                  text: "rel.contact@example.com",
+                },
+                { id: CONTACTS_COLUMNS.PHONE.id, text: "602-555-0100" },
+                { id: CONTACTS_COLUMNS.MOBILE_PHONE.id, text: null },
+                { id: CONTACTS_COLUMNS.OFFICE_PHONE.id, text: null },
+                { id: CONTACTS_COLUMNS.COMPANY_PHONE.id, text: null },
+                { id: CONTACTS_COLUMNS.COMPANY_FAX.id, text: null },
+                { id: CONTACTS_COLUMNS.TITLE.id, text: "Estimator" },
+                { id: CONTACTS_COLUMNS.PRIORITY.id, text: "Medium" },
+                {
+                  id: CONTACTS_COLUMNS.CONTRACTOR.id,
+                  text: null,
+                  linked_item_ids: [REL_ACCOUNT_ID],
+                },
+              ],
+            },
+          ],
+        });
+      }
+
+      return Promise.resolve({ items: [] });
+    };
+
+    const result = await syncEstimates();
+    expect(result.errors).toBe(0);
+    expect(result.linkStats.mondayPairsUnique).toBe(1);
+    expect(result.linkStats.estimateContactsResolved).toBe(1);
+    expect(result.linkStats.missingContact).toBe(0);
+
+    const link = (await db
+      .prepare(
+        `SELECT ec.source, c.account_id, a.monday_account_id
+         FROM estimate_contacts ec
+         JOIN estimates e ON e.id = ec.estimate_id
+         JOIN contacts c ON c.id = ec.contact_id
+         LEFT JOIN accounts a ON a.id = c.account_id
+         WHERE e.monday_item_id = ? AND c.monday_item_id = ?
+         LIMIT 1`
+      )
+      .get(REL_ESTIMATE_ID, REL_CONTACT_ID)) as {
+      source: string;
+      account_id: number | null;
+      monday_account_id: string | null;
+    } | null;
+
+    expect(link).toBeTruthy();
+    expect(link?.source).toBe("monday.direct_contacts");
+    expect(link?.account_id).toBeTruthy();
+    expect(link?.monday_account_id).toBe(REL_ACCOUNT_ID);
   });
 });

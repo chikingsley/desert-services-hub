@@ -81,7 +81,7 @@ Project-linking runtime (shared matcher):
 - Primary SSSP input for current LGE packet:
   - `data/triage/1400-w-3rd/sssp-input.json`
 - Generate SSSP PDF:
-  - `bun apps/cli-tools/sssp-cli/bin/cli.ts generate --in <input.json> --out <output.pdf>`
+  - `bun apps/cli-tools/pdf-cli/bin/cli.ts safety sssp generate --in <input.json> --out <output.pdf>`
 - Contact policy for this flow:
   - Project lead defaults to the assigned Site Services Manager (SSM) from current sales-territory assignment, unless user overrides.
   - For lead/field/dispatcher contacts, format phone as two lines:
@@ -98,15 +98,15 @@ Project-linking runtime (shared matcher):
 ## SDS CLI (Inventory vs Binder)
 
 - Tool location:
-  - `apps/cli-tools/sds-cli/bin/cli.ts`
-  - `apps/cli-tools/sds-cli/README.md`
+  - `apps/cli-tools/pdf-cli/bin/cli.ts`
+  - `apps/cli-tools/pdf-cli/README.md`
 - Input file (current working set):
   - `data/sds/sds-input.json`
 - Two output modes:
   - Inventory only:
-    - `bun apps/cli-tools/sds-cli/bin/cli.ts generate --in data/sds/sds-input.json --out data/sds/SDS_Chemical_Inventory.pdf`
+    - `bun apps/cli-tools/pdf-cli/bin/cli.ts safety sds generate --in data/sds/sds-input.json --out data/sds/SDS_Chemical_Inventory.pdf`
   - Full binder (inventory + appended SDS sheets):
-    - `bun apps/cli-tools/sds-cli/bin/cli.ts generate --in data/sds/sds-input.json --out data/sds/SDS_Binder.pdf --include-sheets`
+    - `bun apps/cli-tools/pdf-cli/bin/cli.ts safety sds generate --in data/sds/sds-input.json --out data/sds/SDS_Binder.pdf --include-sheets`
 - Optional flags:
   - `--download-sheets-from-url`: fetch entry `url` when local `pdfPath` is not present.
   - `--fail-on-missing-sheets`: exit non-zero if any sheet could not be appended.

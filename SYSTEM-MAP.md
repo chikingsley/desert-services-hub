@@ -129,7 +129,7 @@ Desert Services provides environmental compliance services (SWPPP, dust control,
 | **intake-worker** | CF Email | Incoming email | DEPLOYED — intake@ + contracts@ + dustpermits@ → hub intake webhook |
 | **docusign-file-automation** | CF Email | Incoming email | PARTIAL — Dispatcher works, intake future |
 | **permit-workers** | Bun Server | HTTP API + CLI | DEPLOYED — Browser automation + invoice PDF scraping |
-| **files-email-intake** | Background | Webhook job queue | WIP — Auto-linking works, LLM extraction incomplete |
+| **web intake libs** (`apps/web/lib/files-intake.ts`, `apps/web/lib/attachment-backfill.ts`) | In-process | `apps/web/worker.ts` timers + queue jobs | RUNNING — intake processing + attachment backfill |
 | **outlook-folder-watcher** | Worker Timer | `apps/web/worker.ts` interval | RUNNING in web worker — Folder delta sync + email/project linking |
 | **estimate-email-linker** | Worker Timer | `apps/web/worker.ts` interval | RUNNING in web worker — `estimate_emails` backfill (60s) |
 | **notifications** | Compose Service | `docker compose` container | RUNNING in Docker — Event notifications + drafts |
@@ -151,13 +151,14 @@ Canonical health/deploy gating reads from `ops/runtime/worker-registry.json`. Th
 | `inspections-email-worker` | ACTIVE | Compliance Integrations | `apps/workers/inspections-email-worker/`, Cloudflare deploy | No | Registry health gate (`PEA-54`) |
 | `docusign-file-automation` | PARTIAL | Contracts Integrations | `apps/workers/docusign-file-automation/` | No | Runbook: `docs/reference/processes/docusign-intake-runbook.md` |
 | `estimate-poller` | DORMANT (utility-only) | Estimating Integrations | `apps/workers/estimate-poller/` | Yes | Consolidation context tracked in `PEA-30` |
-| `contract-intake` | DEPRECATED / DORMANT | Legacy Contracts Flow | `apps/workers/contract-intake/` | Yes | Legacy enqueue/runtime removed in `PEA-52`, `PEA-53`; umbrella `PEA-51` |
+| `web intake libs` | ACTIVE (in-process) | Intake Automation | `apps/web/lib/files-intake.ts`, `apps/web/lib/attachment-backfill.ts` | No | Canonical path in `apps/web/worker.ts` |
 
 ### Deprecation Notes (2026-02-11)
 
 - `apps/web/api/webhooks-dust-permit.ts` (orphan webhook path) was removed on **2026-02-11** (`PEA-53`).
 - Canonical intake job type is `intake` as of **2026-02-11**. `files_intake` and `contracts_email_intake` remain compatibility aliases only and log deprecation warnings (`PEA-53`).
 - Legacy `contract_intake` enqueue path from M365 group sync was removed on **2026-02-11** (`PEA-52`).
+- Legacy worker folders `apps/workers/contract-intake/` and `apps/workers/files-email-intake/` were removed on **2026-02-12**; logic moved to `apps/web/lib/`.
 
 ---
 
@@ -170,6 +171,7 @@ Canonical health/deploy gating reads from `ops/runtime/worker-registry.json`. Th
 | **sharepoint-cli** | walk, sync-project-files, batch-sync | PRODUCTION |
 | **quoting-cli** | list, get, create, update, delete, duplicate, pdf | PRODUCTION |
 | **pdf-analysis-cli** | ocr, extract, identify, analyze (Python — Gemini/Ollama/Mistral) | PRODUCTION |
+| **pdf-cli** | safety sssp init|generate, safety sds init|generate | PRODUCTION |
 | **aqdata-cli** | Client library only, **no CLI commands exposed** | WIP |
 
 ---
@@ -238,9 +240,9 @@ Folder watcher and estimate-email-linker are canonical in the webhooks backgroun
 
 ### GAP 3: Contract/File Intake Pipeline Incomplete
 
-**Problem:** The `files-email-intake` worker (formerly `contract-intake`) has auto-linking and integration tests but the LLM extraction pipeline is incomplete.
+**Problem:** Intake automation logic exists and runs in-process, but structured extraction/classification completeness still trails routing/linking reliability.
 
-**Current state:** Renamed to `files-email-intake`. Email → estimate auto-linking works via contracts pipeline. PDFs are downloaded. But automatic classification + structured extraction isn't finishing.
+**Current state:** Intake and attachment backfill now run from `apps/web/lib/*` via `apps/web/worker.ts`. Email → estimate auto-linking works; files are processed and persisted. Remaining gap is deeper structured extraction coverage.
 
 **What's needed:** Complete the pipeline: PDF → OCR → classify (subcontract? insurance cert? change order?) → extract fields → store in documents table (`documents.summary` + `documents.raw_extraction`).
 

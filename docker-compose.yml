@@ -111,7 +111,7 @@ services:
     environment:
       NODE_ENV: production
       HEADLESS: "false"
-      VNC_RESOLUTION: 1280x1024
+      VNC_RESOLUTION: 1920x1080
       DISPLAY: ":1"
       DATABASE_URL: postgresql://postgres:postgres@host.docker.internal:54322/postgres
     extra_hosts:

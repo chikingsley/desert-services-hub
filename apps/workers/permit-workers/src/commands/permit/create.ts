@@ -43,6 +43,12 @@ export default defineCommand({
       default: false,
       description: "Keep browser open after completion for manual review",
     },
+    allowFullParcelDraw: {
+      type: "boolean",
+      default: false,
+      description:
+        "Bypass acreage-ratio guardrail and auto-draw the full assessor parcel on map",
+    },
     ...headlessArgs,
     ...outputArgs,
   },
@@ -56,6 +62,10 @@ export default defineCommand({
         "Error: --flow must be 'new-company' or 'existing-company'"
       );
       process.exit(1);
+    }
+
+    if (args.allowFullParcelDraw) {
+      process.env.PERMIT_ALLOW_FULL_PARCEL_DRAW = "1";
     }
 
     // Progress callback for non-JSON output
@@ -73,6 +83,9 @@ export default defineCommand({
       }
       if (args.formData) {
         console.log(`    FormData: ${args.formData}`);
+      }
+      if (args.allowFullParcelDraw) {
+        console.log("    Map Override: full parcel draw enabled");
       }
       console.log("");
     }

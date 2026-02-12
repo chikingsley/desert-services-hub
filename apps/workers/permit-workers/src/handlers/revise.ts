@@ -8,7 +8,11 @@
  */
 
 import { z } from "zod";
-import type { DeepPartial, FormData } from "@/form-data";
+import { buildFormData, type DeepPartial, type FormData } from "@/form-data";
+import {
+  validateBuiltFormData,
+  validateFormDataOverrides,
+} from "@/lib/form-data-validation";
 import { persistDraftPermitRecord } from "@/lib/permit-records";
 import { revisePermitFull } from "@/portal/create";
 import { withBrowser } from "@/portal/utils/browser";
@@ -103,8 +107,44 @@ export async function revisePermit(input: ReviseInput): Promise<ReviseResult> {
   let formData: DeepPartial<FormData> | undefined;
   if (formDataPath) {
     const file = Bun.file(formDataPath);
-    const text = await file.text();
-    formData = JSON.parse(text) as DeepPartial<FormData>;
+    let overridesInput: unknown;
+    try {
+      const text = await file.text();
+      overridesInput = JSON.parse(text) as unknown;
+    } catch (error) {
+      return {
+        success: false,
+        permitId,
+        revisionType,
+        error: `Failed to parse FormData JSON from ${formDataPath}: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      };
+    }
+
+    const overridesValidation = validateFormDataOverrides(overridesInput);
+    if (!overridesValidation.success) {
+      return {
+        success: false,
+        permitId,
+        revisionType,
+        error: overridesValidation.error,
+      };
+    }
+    formData = overridesValidation.data;
+
+    // Hard gate: validate semantic consistency on a projected full form.
+    // The revision flow still uses partial overrides at runtime.
+    const projectedFormData = buildFormData({ overrides: formData });
+    const projectedValidation = validateBuiltFormData(projectedFormData);
+    if (!projectedValidation.success) {
+      return {
+        success: false,
+        permitId,
+        revisionType,
+        error: projectedValidation.error,
+      };
+    }
   }
 
   return await withBrowser<ReviseResult>(
@@ -123,11 +163,19 @@ export async function revisePermit(input: ReviseInput): Promise<ReviseResult> {
       );
 
       if (result.success && result.applicationId) {
-        await persistDraftPermitRecord({
-          applicationId: result.applicationId,
-          flow: "revise",
-          sourcePermitId: permitId,
-        });
+        try {
+          await persistDraftPermitRecord({
+            applicationId: result.applicationId,
+            flow: "revise",
+            sourcePermitId: permitId,
+          });
+        } catch (error) {
+          console.warn(
+            `[revise] Failed to persist draft permit record: ${
+              error instanceof Error ? error.message : String(error)
+            }`
+          );
+        }
       }
 
       return {

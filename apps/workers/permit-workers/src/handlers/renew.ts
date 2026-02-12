@@ -5,7 +5,11 @@
  */
 
 import { z } from "zod";
-import type { DeepPartial, FormData } from "@/form-data";
+import { buildFormData, type DeepPartial, type FormData } from "@/form-data";
+import {
+  validateBuiltFormData,
+  validateFormDataOverrides,
+} from "@/lib/form-data-validation";
 import { persistDraftPermitRecord } from "@/lib/permit-records";
 import { renewPermitFull } from "@/portal/create";
 import { withBrowser } from "@/portal/utils/browser";
@@ -61,8 +65,44 @@ export async function renewPermit(input: RenewInput): Promise<RenewResult> {
   let formDataOverrides: DeepPartial<FormData> | undefined;
   if (formDataPath) {
     const file = Bun.file(formDataPath);
-    const text = await file.text();
-    formDataOverrides = JSON.parse(text) as DeepPartial<FormData>;
+    let overridesInput: unknown;
+    try {
+      const text = await file.text();
+      overridesInput = JSON.parse(text) as unknown;
+    } catch (error) {
+      return {
+        success: false,
+        permitId,
+        companyName,
+        error: `Failed to parse FormData JSON from ${formDataPath}: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      };
+    }
+
+    const overridesValidation = validateFormDataOverrides(overridesInput);
+    if (!overridesValidation.success) {
+      return {
+        success: false,
+        permitId,
+        companyName,
+        error: overridesValidation.error,
+      };
+    }
+    formDataOverrides = overridesValidation.data;
+
+    // Hard gate: validate semantic consistency on a projected full form.
+    // The renewal flow still uses partial overrides at runtime.
+    const projectedFormData = buildFormData({ overrides: formDataOverrides });
+    const projectedValidation = validateBuiltFormData(projectedFormData);
+    if (!projectedValidation.success) {
+      return {
+        success: false,
+        permitId,
+        companyName,
+        error: projectedValidation.error,
+      };
+    }
   }
 
   return await withBrowser<RenewResult>(
@@ -79,13 +119,21 @@ export async function renewPermit(input: RenewInput): Promise<RenewResult> {
       );
 
       if (result.success && result.applicationId) {
-        await persistDraftPermitRecord({
-          applicationId: result.applicationId,
-          flow: "renew",
-          sourcePermitId: permitId,
-          formData: formDataOverrides,
-          companyName,
-        });
+        try {
+          await persistDraftPermitRecord({
+            applicationId: result.applicationId,
+            flow: "renew",
+            sourcePermitId: permitId,
+            formData: formDataOverrides,
+            companyName,
+          });
+        } catch (error) {
+          console.warn(
+            `[renew] Failed to persist draft permit record: ${
+              error instanceof Error ? error.message : String(error)
+            }`
+          );
+        }
       }
 
       return {

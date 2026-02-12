@@ -10,8 +10,13 @@
 
 import type { Page } from "playwright";
 import type { DeepPartial, FormData } from "@/form-data";
-import { clickRadio, fillText } from "@/portal/utils/helpers";
+import {
+  clickRadio,
+  clickRadioWithSelectors,
+  fillText,
+} from "@/portal/utils/helpers";
 import { selectors } from "@/portal/utils/selectors";
+import { coordinator } from "@/portal/utils/selectors/page3";
 
 /**
  * Fill Page 3 - Project Details.
@@ -62,6 +67,19 @@ export async function fillPage3(
 
     if (data.primaryContact?.fax !== undefined) {
       await fillText(page, pc.fax, data.primaryContact.fax);
+    }
+
+    // Required field in portal: coordinator same as primary contact.
+    // Force "Yes" to avoid blocking progression out of Page 3.
+    const coordinatorResult = await clickRadioWithSelectors(
+      page,
+      [coordinator.yes, ...coordinator.yesFallbacks],
+      "Coordinator same as primary contact (forced Yes)"
+    );
+    if (!coordinatorResult.success) {
+      throw new Error(
+        "Could not set coordinator question to Yes on Page 3 (all selectors failed)"
+      );
     }
 
     // Project Info - only fill if fields are provided

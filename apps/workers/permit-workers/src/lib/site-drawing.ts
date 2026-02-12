@@ -16,6 +16,25 @@ export interface SiteCoordinatesInput {
   acresDisturbed?: number | null;
 }
 
+function parseBooleanEnv(value: string | undefined): boolean {
+  if (!value) {
+    return false;
+  }
+  const normalized = value.trim().toLowerCase();
+  return normalized === "1" || normalized === "true" || normalized === "yes";
+}
+
+function parsePositiveNumberEnv(value: string | undefined): number | null {
+  if (!value) {
+    return null;
+  }
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    return null;
+  }
+  return parsed;
+}
+
 export function formatApnClean(apn: string): string {
   return apn.replace(/[-\s.]/g, "").toUpperCase();
 }
@@ -171,7 +190,15 @@ export async function buildPermitMapDataFromSiteCoordinates(
   parcel: ParcelData;
 }> {
   const includeAccessPoint = options.includeAccessPoint ?? true;
-  const maxAcreageRatio = options.maxAcreageRatio ?? 2.0;
+  const envAllowFullParcelDraw = parseBooleanEnv(
+    process.env.PERMIT_ALLOW_FULL_PARCEL_DRAW
+  );
+  const envMaxAcreageRatio = parsePositiveNumberEnv(
+    process.env.PERMIT_MAP_MAX_ACREAGE_RATIO
+  );
+  const maxAcreageRatio = envAllowFullParcelDraw
+    ? Number.POSITIVE_INFINITY
+    : (options.maxAcreageRatio ?? envMaxAcreageRatio ?? 2.0);
 
   const parcel = await queryParcelByCoordinates(site.latitude, site.longitude);
   if (!parcel) {
@@ -189,6 +216,7 @@ export async function buildPermitMapDataFromSiteCoordinates(
     const parcelAcres = m2ToAcres(areaM2);
 
     if (
+      Number.isFinite(maxAcreageRatio) &&
       parcelAcres > 0 &&
       parcelAcres / site.acresDisturbed > maxAcreageRatio
     ) {

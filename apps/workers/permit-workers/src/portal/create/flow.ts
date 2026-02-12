@@ -195,7 +195,11 @@ export async function createApplicationFull(
 
   if (flow === "renew") {
     console.log("  Handling Page 2 (Project Location) for renewal...");
-    const page2Success = await fillPage2Renew(page, context, options.copyFromApp);
+    const page2Success = await fillPage2Renew(
+      page,
+      context,
+      options.copyFromApp
+    );
     if (!page2Success) {
       return {
         success: false,
@@ -263,15 +267,52 @@ export async function createApplicationFull(
   await fillPage4(page, formData);
 
   // Navigate to Page 5
-  await clickNext(page);
+  const nextToPage5Clicked = await clickNext(page);
+  if (!nextToPage5Clicked) {
+    console.log("  ⚠ Could not click Next after Page 4");
+  }
 
   // 4. Verify we reached Page 5
-  const reachedPage5 = await page.isVisible(portal.pageMarkers.page5Submit);
+  await sleep(SETTLE_MS);
+  let reachedPage5 = await page
+    .isVisible(portal.pageMarkers.page5Submit)
+    .catch(() => false);
+
+  // ADF can be slow to swap page panels; give it one more settle window.
+  if (!reachedPage5) {
+    await sleep(SETTLE_MS);
+    reachedPage5 = await page
+      .isVisible(portal.pageMarkers.page5Submit)
+      .catch(() => false);
+  }
+
+  // Fallback: step marker can indicate page 5 even when the submit text is delayed/changed.
+  const currentPage = await getCurrentPage(page).catch(() => null);
+  if (!reachedPage5 && currentPage === 5) {
+    reachedPage5 = true;
+  }
+
   const applicationId = createResult.applicationId;
 
   console.log("\n=== FLOW COMPLETE ===");
   console.log(`    Application: ${applicationId}`);
   console.log(`    Reached Page 5: ${reachedPage5}`);
+  console.log(`    Current Page: ${currentPage}`);
+
+  if (!reachedPage5) {
+    const ts = Date.now();
+    const screenshotPath = `/tmp/create-flow-page5-not-reached-${ts}.png`;
+    const htmlPath = `/tmp/create-flow-page5-not-reached-${ts}.html`;
+    try {
+      await page.screenshot({ path: screenshotPath, fullPage: true });
+      const { writeFile } = await import("node:fs/promises");
+      await writeFile(htmlPath, await page.content());
+      console.log(`    Debug screenshot: ${screenshotPath}`);
+      console.log(`    Debug HTML: ${htmlPath}`);
+    } catch {
+      console.log("    (debug capture failed)");
+    }
+  }
 
   return {
     success: true,

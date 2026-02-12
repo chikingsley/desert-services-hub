@@ -6,6 +6,10 @@
 
 import { z } from "zod";
 import { buildFormData, type DeepPartial, type FormData } from "@/form-data";
+import {
+  validateBuiltFormData,
+  validateFormDataOverrides,
+} from "@/lib/form-data-validation";
 import { persistDraftPermitRecord } from "@/lib/permit-records";
 import { createApplicationFull } from "@/portal/create";
 import { withBrowser } from "@/portal/utils/browser";
@@ -90,6 +94,38 @@ function validateFormData(
   return { valid: true };
 }
 
+async function validateMapPreflight(
+  formData: FormData
+): Promise<{ valid: true } | { valid: false; error: string }> {
+  const { latitude, longitude, acresDisturbed } = formData.site;
+  if (typeof latitude !== "number" || typeof longitude !== "number") {
+    return { valid: true };
+  }
+
+  try {
+    const { buildPermitMapDataFromSiteCoordinates } = await import(
+      "@/lib/site-drawing"
+    );
+    await buildPermitMapDataFromSiteCoordinates(
+      {
+        latitude,
+        longitude,
+        acresDisturbed,
+      },
+      { includeAccessPoint: false }
+    );
+  } catch (error) {
+    return {
+      valid: false,
+      error: `Map preflight failed for site ${latitude.toFixed(6)},${longitude.toFixed(6)}: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
+    };
+  }
+
+  return { valid: true };
+}
+
 /**
  * Create a new dust permit application.
  *
@@ -110,26 +146,57 @@ export async function createPermit(
 
   // Validate input parameters
   const inputValidation = validateInput(flow, companyName);
-  if (!inputValidation.valid) {
+  if (inputValidation.valid === false) {
     return { success: false, flow, error: inputValidation.error };
   }
 
   // Load FormData from file if provided
-  let overrides = formDataOverrides;
-  if (formDataPath && !overrides) {
-    log(1, 5, `Loading FormData from ${formDataPath}...`);
+  let overridesInput: unknown = formDataOverrides;
+  if (formDataPath && !overridesInput) {
+    log(1, 6, `Loading FormData from ${formDataPath}...`);
     const file = Bun.file(formDataPath);
-    const text = await file.text();
-    overrides = JSON.parse(text) as DeepPartial<FormData>;
+    try {
+      const text = await file.text();
+      overridesInput = JSON.parse(text) as unknown;
+    } catch (error) {
+      return {
+        success: false,
+        flow,
+        error: `Failed to parse FormData JSON from ${formDataPath}: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      };
+    }
+  }
+
+  let overrides: DeepPartial<FormData> | undefined;
+  if (overridesInput !== undefined) {
+    log(2, 6, "Validating FormData overrides...");
+    const overridesValidation = validateFormDataOverrides(overridesInput);
+    if (!overridesValidation.success) {
+      return { success: false, flow, error: overridesValidation.error };
+    }
+    overrides = overridesValidation.data;
   }
 
   // Build FormData with overrides
   const formData = buildFormData({ overrides });
 
-  // Validate form data matches flow
+  // Validate form data matches flow + schema/business rules
   const formValidation = validateFormData(flow, formData);
-  if (!formValidation.valid) {
+  if (formValidation.valid === false) {
     return { success: false, flow, error: formValidation.error };
+  }
+  log(2, 6, "Running FormData validation...");
+  const builtValidation = validateBuiltFormData(formData);
+  if (!builtValidation.success) {
+    return { success: false, flow, error: builtValidation.error };
+  }
+
+  log(3, 6, "Running map preflight checks...");
+  const mapValidation = await validateMapPreflight(formData);
+  if (mapValidation.valid === false) {
+    return { success: false, flow, error: mapValidation.error };
   }
 
   return await withBrowser<CreateResult>(
@@ -138,7 +205,7 @@ export async function createPermit(
       const { page, context } = instance;
 
       // Run the create flow
-      log(3, 5, `Running ${flow} flow...`);
+      log(4, 6, `Running ${flow} flow...`);
       const result = await createApplicationFull(
         page,
         context,
@@ -154,16 +221,25 @@ export async function createPermit(
       }
 
       if (result.applicationId) {
-        await persistDraftPermitRecord({
-          applicationId: result.applicationId,
-          flow,
-          formData,
-          companyName: companyName ?? null,
-        });
+        try {
+          await persistDraftPermitRecord({
+            applicationId: result.applicationId,
+            flow,
+            formData,
+            companyName: companyName ?? null,
+          });
+        } catch (error) {
+          // Portal creation succeeded; DB sync should not make the CLI run fail.
+          console.warn(
+            `[create] Failed to persist draft permit record: ${
+              error instanceof Error ? error.message : String(error)
+            }`
+          );
+        }
       }
 
-      log(4, 5, `Application created: ${result.applicationId}`);
-      log(5, 5, result.reachedPage5 ? "Reached Page 5" : "Needs manual review");
+      log(5, 6, `Application created: ${result.applicationId}`);
+      log(6, 6, result.reachedPage5 ? "Reached Page 5" : "Needs manual review");
 
       return {
         success: true,

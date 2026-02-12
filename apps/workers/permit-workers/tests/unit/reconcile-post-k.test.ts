@@ -182,6 +182,18 @@ describe("reconcilePostK", () => {
     expect(data.postK.d4.cubicYardsExport).toBe(200);
   });
 
+  test("D4 defaults are populated when categoryD4 active and values missing", () => {
+    const data = buildFormData({
+      overrides: {
+        categoryD4: { applies: true },
+        postK: { d4: { cubicYardsImport: null, cubicYardsExport: null } },
+      },
+    });
+
+    expect(data.postK.d4.cubicYardsImport).toBe(20);
+    expect(data.postK.d4.cubicYardsExport).toBe(20);
+  });
+
   test("F1 seasonal split resolved from category acreage", () => {
     const data = buildFormData({
       overrides: {

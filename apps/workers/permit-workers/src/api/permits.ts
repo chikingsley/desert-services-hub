@@ -16,6 +16,10 @@ import { closeSchema } from "@/handlers/close";
 import { createSchema } from "@/handlers/create";
 import { renewSchema } from "@/handlers/renew";
 import {
+  validateBuiltFormData,
+  validateFormDataOverrides,
+} from "@/lib/form-data-validation";
+import {
   deleteAllDraftPermitRecords,
   deletePermitRecord,
   markPermitClosedRecord,
@@ -26,10 +30,10 @@ import { closePermit } from "@/portal/close";
 import { createApplicationFull, renewPermitFull } from "@/portal/create";
 import { deleteAllDrafts, deleteByApplicationId } from "@/portal/delete";
 import {
-  getOrCreateBrowserSession,
+  ensureBrowserSessionReady,
   getSessionPageAndContext,
+  withBrowserSessionOperation,
 } from "@/portal/utils/browser";
-import { login } from "@/portal/utils/login";
 import { captureError } from "@/portal/utils/sentry";
 
 const log = (msg: string) => process.stderr.write(`${msg}\n`);
@@ -105,20 +109,15 @@ async function ensureBrowserSession(): Promise<
     }
   | { success: false; error: string }
 > {
-  const session = await getOrCreateBrowserSession();
+  const session = await ensureBrowserSessionReady();
   const ctx = getSessionPageAndContext();
 
   if (!ctx) {
     return { success: false, error: "No browser session available" };
   }
 
-  if (!session.isLoggedIn) {
-    log("   ✗ Not logged in - attempting re-login...");
-    const loggedIn = await login(ctx.page);
-    if (!loggedIn) {
-      return { success: false, error: "Failed to login to portal" };
-    }
-    session.isLoggedIn = true;
+  if (!(session.isLoggedIn && session.portalReady)) {
+    return { success: false, error: "Failed to login to portal" };
   }
 
   return { success: true, page: ctx };
@@ -137,6 +136,38 @@ function jsonSuccess(data: Record<string, unknown>): Response {
     ...data,
     timestamp: new Date().toISOString(),
   });
+}
+
+async function validateCreateMapPreflight(
+  formData: FormData
+): Promise<{ valid: true } | { valid: false; error: string }> {
+  const { latitude, longitude, acresDisturbed } = formData.site;
+  if (typeof latitude !== "number" || typeof longitude !== "number") {
+    return { valid: true };
+  }
+
+  try {
+    const { buildPermitMapDataFromSiteCoordinates } = await import(
+      "@/lib/site-drawing"
+    );
+    await buildPermitMapDataFromSiteCoordinates(
+      {
+        latitude,
+        longitude,
+        acresDisturbed,
+      },
+      { includeAccessPoint: false }
+    );
+  } catch (error) {
+    return {
+      valid: false,
+      error: `Map preflight failed for site ${latitude.toFixed(6)},${longitude.toFixed(6)}: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
+    };
+  }
+
+  return { valid: true };
 }
 
 // ============================================
@@ -179,43 +210,73 @@ export async function handleCreatePermit(body: unknown): Promise<Response> {
   // Load form data from file if path provided
   let overrides: DeepPartial<FormData> | undefined;
   if (formDataPath) {
+    let overridesInput: unknown;
     try {
       const file = Bun.file(formDataPath);
       const text = await file.text();
-      overrides = JSON.parse(text) as DeepPartial<FormData>;
-    } catch {
-      return jsonError(`Failed to load form data from ${formDataPath}`);
+      overridesInput = JSON.parse(text) as unknown;
+    } catch (error) {
+      return jsonError(
+        `Failed to load form data from ${formDataPath}: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
     }
+
+    const overridesValidation = validateFormDataOverrides(overridesInput);
+    if (!overridesValidation.success) {
+      return jsonError(overridesValidation.error);
+    }
+    overrides = overridesValidation.data;
   }
 
   const formData = buildFormData({ overrides });
-
-  // Get browser session
-  const session = await getOrCreateBrowserSession();
-  if (!session) {
-    return jsonError("Failed to start browser session", 500);
+  const formValidation = validateBuiltFormData(formData);
+  if (!formValidation.success) {
+    return jsonError(formValidation.error);
+  }
+  const mapValidation = await validateCreateMapPreflight(formData);
+  if (mapValidation.valid === false) {
+    return jsonError(mapValidation.error);
   }
 
-  const { page, context } = session.instance;
+  const sessionResult = await ensureBrowserSession();
+  if (sessionResult.success === false) {
+    return jsonError(sessionResult.error, 500);
+  }
+
+  const { page, context } = sessionResult.page;
 
   try {
-    const result = await createApplicationFull(page, context, flow, formData, {
-      companyName,
-      copyFromApp,
-    });
+    const result = await withBrowserSessionOperation(
+      `create:${flow}`,
+      async () =>
+        await createApplicationFull(page, context, flow, formData, {
+          companyName,
+          copyFromApp,
+        })
+    );
 
     if (!result.success) {
       return jsonError(result.error || "Create failed", 500);
     }
 
     if (result.applicationId) {
-      await persistDraftPermitRecord({
-        applicationId: result.applicationId,
-        flow,
-        sourcePermitId: copyFromApp ?? null,
-        formData,
-        companyName,
-      });
+      try {
+        await persistDraftPermitRecord({
+          applicationId: result.applicationId,
+          flow,
+          sourcePermitId: copyFromApp ?? null,
+          formData,
+          companyName,
+        });
+      } catch (error) {
+        log(
+          `   ⚠ Failed to persist draft permit record: ${
+            error instanceof Error ? error.message : String(error)
+          }`
+        );
+      }
     }
 
     return jsonSuccess({
@@ -254,16 +315,20 @@ export async function handleRenewPermit(
 
   try {
     const sessionResult = await ensureBrowserSession();
-    if (!sessionResult.success) {
+    if (sessionResult.success === false) {
       return jsonError(sessionResult.error, 500);
     }
 
     const ctx = sessionResult.page;
-    const result = await renewPermitFull(
-      ctx.page,
-      ctx.context,
-      id,
-      parsed.data.companyName
+    const result = await withBrowserSessionOperation(
+      `renew:${id}`,
+      async () =>
+        await renewPermitFull(
+          ctx.page,
+          ctx.context,
+          id,
+          parsed.data.companyName
+        )
     );
 
     if (!result.success) {
@@ -305,16 +370,15 @@ export async function handleClosePermit(
 
   try {
     const sessionResult = await ensureBrowserSession();
-    if (!sessionResult.success) {
+    if (sessionResult.success === false) {
       return jsonError(sessionResult.error, 500);
     }
 
     const ctx = sessionResult.page;
-    const result = await closePermit(
-      ctx.page,
-      ctx.context,
-      id,
-      parsed.data.reason
+    const result = await withBrowserSessionOperation(
+      `close:${id}`,
+      async () =>
+        await closePermit(ctx.page, ctx.context, id, parsed.data.reason)
     );
 
     if (!result.success) {
@@ -354,7 +418,7 @@ export async function handleRevisePermit(
 
   try {
     const sessionResult = await ensureBrowserSession();
-    if (!sessionResult.success) {
+    if (sessionResult.success === false) {
       return jsonError(sessionResult.error, 500);
     }
 
@@ -389,11 +453,10 @@ export async function handleRevisePermit(
 
     // Create revision
     const { createReviseApplication } = await import("@/portal/create");
-    const result = await createReviseApplication(
-      page,
-      context,
-      id,
-      revisionPurpose
+    const result = await withBrowserSessionOperation(
+      `revise:${id}`,
+      async () =>
+        await createReviseApplication(page, context, id, revisionPurpose)
     );
 
     if (!result.success) {
@@ -429,13 +492,16 @@ export async function handleDeletePermit(id: string): Promise<Response> {
 
   try {
     const sessionResult = await ensureBrowserSession();
-    if (!sessionResult.success) {
+    if (sessionResult.success === false) {
       return jsonError(sessionResult.error, 500);
     }
 
     const { page, context } = sessionResult.page;
 
-    const deleted = await deleteByApplicationId(page, context, id);
+    const deleted = await withBrowserSessionOperation(
+      `delete:${id}`,
+      async () => await deleteByApplicationId(page, context, id)
+    );
 
     if (deleted) {
       await deletePermitRecord(id);
@@ -460,12 +526,15 @@ export async function handleDeleteAllDrafts(): Promise<Response> {
 
   try {
     const sessionResult = await ensureBrowserSession();
-    if (!sessionResult.success) {
+    if (sessionResult.success === false) {
       return jsonError(sessionResult.error, 500);
     }
 
     const { page, context } = sessionResult.page;
-    const success = await deleteAllDrafts(page, context);
+    const success = await withBrowserSessionOperation(
+      "delete:drafts",
+      async () => await deleteAllDrafts(page, context)
+    );
     if (!success) {
       return jsonError("Delete all drafts failed", 500);
     }

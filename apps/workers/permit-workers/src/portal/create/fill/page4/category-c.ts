@@ -235,14 +235,19 @@ async function fillCategoryC4(page: Page, data: FormData): Promise<void> {
       await setCheckbox(page, awpMethods.trees, true);
     }
     if (methods1?.includes("other")) {
-      await setCheckbox(page, awpMethods.other, true);
-      if (data.categoryC4.applyWaterPreventOtherText) {
+      const otherText = data.categoryC4.applyWaterPreventOtherText.trim();
+      if (otherText) {
+        await setCheckbox(page, awpMethods.other, true);
         await sleep(SETTLE_MS);
         await fillTextWithSelectors(
           page,
           c4.applyWaterPreventOtherText,
-          data.categoryC4.applyWaterPreventOtherText,
+          otherText,
           "C4.applyWaterPreventOtherText"
+        );
+      } else {
+        throw new Error(
+          "Invalid FormData: categoryC4.applyWaterPreventMethods includes 'other' but applyWaterPreventOtherText is empty"
         );
       }
     }
@@ -294,19 +299,24 @@ async function fillCategoryC4(page: Page, data: FormData): Promise<void> {
       );
     }
     if (methods2?.includes("other")) {
-      await setCheckboxWithSelectors(
-        page,
-        paMethods.other,
-        true,
-        "C4.preventAccessMethods.other"
-      );
-      if (data.categoryC4.preventAccessOtherText) {
+      const otherText = data.categoryC4.preventAccessOtherText.trim();
+      if (otherText) {
+        await setCheckboxWithSelectors(
+          page,
+          paMethods.other,
+          true,
+          "C4.preventAccessMethods.other"
+        );
         await sleep(SETTLE_MS);
         await fillTextWithSelectors(
           page,
           c4.preventAccessOtherText,
-          data.categoryC4.preventAccessOtherText,
+          otherText,
           "C4.preventAccessOtherText"
+        );
+      } else {
+        throw new Error(
+          "Invalid FormData: categoryC4.preventAccessMethods includes 'other' but preventAccessOtherText is empty"
         );
       }
     }

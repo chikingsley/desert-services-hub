@@ -8,10 +8,10 @@
 import { z } from "zod";
 import { downloadInvoicePdf } from "@/portal/invoice";
 import {
-  getOrCreateBrowserSession,
+  ensureBrowserSessionReady,
   getSessionPageAndContext,
+  withBrowserSessionOperation,
 } from "@/portal/utils/browser";
-import { login } from "@/portal/utils/login";
 
 const log = (msg: string) => process.stderr.write(`${msg}\n`);
 
@@ -65,27 +65,21 @@ async function ensureBrowserSession(): Promise<
   | {
       success: true;
       page: NonNullable<ReturnType<typeof getSessionPageAndContext>>;
-      session: Awaited<ReturnType<typeof getOrCreateBrowserSession>>;
     }
   | { success: false; error: string }
 > {
-  const session = await getOrCreateBrowserSession();
+  const session = await ensureBrowserSessionReady();
   const ctx = getSessionPageAndContext();
 
   if (!ctx) {
     return { success: false, error: "No browser session available" };
   }
 
-  if (!session.isLoggedIn) {
-    log("   ✗ Not logged in - attempting re-login...");
-    const loggedIn = await login(ctx.page);
-    if (!loggedIn) {
-      return { success: false, error: "Failed to login to portal" };
-    }
-    session.isLoggedIn = true;
+  if (!(session.isLoggedIn && session.portalReady)) {
+    return { success: false, error: "Failed to login to portal" };
   }
 
-  return { success: true, page: ctx, session };
+  return { success: true, page: ctx };
 }
 
 async function readFileBase64(path: string): Promise<string> {
@@ -118,19 +112,24 @@ export async function handleInvoicePdf(body: unknown): Promise<Response> {
     }
 
     const { page } = sessionResult.page;
-    const { session } = sessionResult;
 
     // Attempt download once; if session expired unexpectedly, re-login and retry.
-    let result = await downloadInvoicePdf(page, invoiceNumber, { outputDir });
+    let result = await withBrowserSessionOperation(
+      `invoice:${invoiceNumber}`,
+      async () => await downloadInvoicePdf(page, invoiceNumber, { outputDir })
+    );
     if (
       !result.success &&
       result.error?.toLowerCase().includes("not logged in")
     ) {
       log("   ✗ Session appears expired; attempting re-login and retry...");
-      const loggedIn = await login(page);
-      session.isLoggedIn = loggedIn;
-      if (loggedIn) {
-        result = await downloadInvoicePdf(page, invoiceNumber, { outputDir });
+      const refreshed = await ensureBrowserSessionReady({ forceRelogin: true });
+      if (refreshed.isLoggedIn && refreshed.portalReady) {
+        result = await withBrowserSessionOperation(
+          `invoice:${invoiceNumber}:retry`,
+          async () =>
+            await downloadInvoicePdf(page, invoiceNumber, { outputDir })
+        );
       }
     }
 

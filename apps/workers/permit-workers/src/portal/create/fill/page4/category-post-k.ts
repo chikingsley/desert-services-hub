@@ -25,19 +25,77 @@
 
 import type { Page } from "playwright";
 import { type FormData, getWaterTier } from "@/form-data";
-import { clickRadio, fillText } from "@/portal/utils/helpers";
+import { clickRadioWithSelectors, fillText } from "@/portal/utils/helpers";
 import { selectors } from "@/portal/utils/selectors";
+
+const SIO_FALLBACK_SELECTOR_RE =
+  /^(.*:siTable:\d+:sioTable:)(\d+)(:siForm:radioTable:\d+:radio"]?)$/;
+
+/**
+ * Some Post-K siTable panels are present but empty depending on earlier choices.
+ * Guard each section by checking whether any sioTable rows were actually rendered.
+ */
+async function isPostKSectionRendered(
+  page: Page,
+  siTable: number,
+  label: string
+): Promise<boolean> {
+  const count = await page
+    .locator(`[id^="ThePage:siTable:${siTable}:sioTable:"]`)
+    .count();
+  if (count === 0) {
+    console.log(`  ${label} not rendered, skipping...`);
+    return false;
+  }
+  return true;
+}
 
 /**
  * Select water tier radio based on acres value.
  */
+function buildSioFallbackSelectors(primarySelector: string): string[] {
+  const match = primarySelector.match(SIO_FALLBACK_SELECTOR_RE);
+  if (!match) {
+    return [primarySelector];
+  }
+
+  const prefix = match[1];
+  const preferred = Number(match[2]);
+  const suffix = match[3];
+
+  const candidateIndices = [
+    preferred,
+    preferred + 1,
+    preferred - 1,
+    preferred + 2,
+    preferred - 2,
+    preferred + 3,
+    preferred - 3,
+    preferred + 4,
+    preferred - 4,
+    preferred + 5,
+    preferred - 5,
+    preferred + 6,
+    preferred - 6,
+  ].filter((idx) => idx >= 0);
+
+  const unique = [...new Set(candidateIndices)];
+  return unique.map((idx) => `${prefix}${idx}${suffix}`);
+}
+
 async function selectWaterTier(
   page: Page,
   waterTierSelectors: Record<"0-2" | "2-10" | "10-100" | "100+", string>,
-  acres: number
+  acres: number,
+  fieldName: string
 ): Promise<void> {
   const tier = getWaterTier(acres);
-  await clickRadio(page, waterTierSelectors[tier]);
+  const primarySelector = waterTierSelectors[tier];
+  const selectorList = buildSioFallbackSelectors(primarySelector);
+  const result = await clickRadioWithSelectors(page, selectorList, fieldName);
+  if (!result.success) {
+    throw new Error(`Failed to select ${fieldName}`);
+  }
 }
 
 /**
@@ -48,10 +106,13 @@ async function fillPostKB1(page: Page, data: FormData): Promise<void> {
   if (acres === null) {
     return;
   }
+  if (!(await isPostKSectionRendered(page, 54, "Post-K B.1"))) {
+    return;
+  }
 
   console.log("  Post-K B.1 - Unpaved Staging Areas...");
   const b1 = selectors.postK.b1;
-  await selectWaterTier(page, b1.waterTier, acres);
+  await selectWaterTier(page, b1.waterTier, acres, "Post-K B.1 waterTier");
   await fillText(page, b1.avgDailyDisturbedAcres, String(acres));
 }
 
@@ -63,10 +124,13 @@ async function fillPostKB2(page: Page, data: FormData): Promise<void> {
   if (acres === null) {
     return;
   }
+  if (!(await isPostKSectionRendered(page, 55, "Post-K B.2"))) {
+    return;
+  }
 
   console.log("  Post-K B.2 - Unpaved Haul Roads...");
   const b2 = selectors.postK.b2;
-  await selectWaterTier(page, b2.waterTier, acres);
+  await selectWaterTier(page, b2.waterTier, acres, "Post-K B.2 waterTier");
   await fillText(page, b2.avgDailyDisturbedAcres, String(acres));
 }
 
@@ -78,10 +142,13 @@ async function fillPostKC2(page: Page, data: FormData): Promise<void> {
   if (acres === null) {
     return;
   }
+  if (!(await isPostKSectionRendered(page, 56, "Post-K C.2"))) {
+    return;
+  }
 
   console.log("  Post-K C.2 - Disturbed Surfaces (Active Operations)...");
   const c2 = selectors.postK.c2;
-  await selectWaterTier(page, c2.waterTier, acres);
+  await selectWaterTier(page, c2.waterTier, acres, "Post-K C.2 waterTier");
   await fillText(page, c2.avgDailyDisturbedAcres, String(acres));
 }
 
@@ -93,10 +160,13 @@ async function fillPostKC3(page: Page, data: FormData): Promise<void> {
   if (acres === null) {
     return;
   }
+  if (!(await isPostKSectionRendered(page, 57, "Post-K C.3"))) {
+    return;
+  }
 
   console.log("  Post-K C.3 - Disturbed Surfaces (Inactive Periods)...");
   const c3 = selectors.postK.c3;
-  await selectWaterTier(page, c3.waterTier, acres);
+  await selectWaterTier(page, c3.waterTier, acres, "Post-K C.3 waterTier");
   await fillText(page, c3.avgDailyDisturbedAcres, String(acres));
 }
 
@@ -108,10 +178,13 @@ async function fillPostKF2(page: Page, data: FormData): Promise<void> {
   if (acres === null) {
     return;
   }
+  if (!(await isPostKSectionRendered(page, 58, "Post-K F.2"))) {
+    return;
+  }
 
   console.log("  Post-K F.2 - Fine Grading...");
   const f2 = selectors.postK.f2;
-  await selectWaterTier(page, f2.waterTier, acres);
+  await selectWaterTier(page, f2.waterTier, acres, "Post-K F.2 waterTier");
   await fillText(page, f2.avgDailyDisturbedAcres, String(acres));
 }
 
@@ -123,10 +196,13 @@ async function fillPostKG1(page: Page, data: FormData): Promise<void> {
   if (acres === null) {
     return;
   }
+  if (!(await isPostKSectionRendered(page, 59, "Post-K G.1"))) {
+    return;
+  }
 
   console.log("  Post-K G.1 - Underground Utilities...");
   const g1 = selectors.postK.g1;
-  await selectWaterTier(page, g1.waterTier, acres);
+  await selectWaterTier(page, g1.waterTier, acres, "Post-K G.1 waterTier");
   await fillText(page, g1.avgDailyDisturbedAcres, String(acres));
 }
 
@@ -138,10 +214,13 @@ async function fillPostKG2(page: Page, data: FormData): Promise<void> {
   if (acres === null) {
     return;
   }
+  if (!(await isPostKSectionRendered(page, 60, "Post-K G.2"))) {
+    return;
+  }
 
   console.log("  Post-K G.2 - Vertical Structures...");
   const g2 = selectors.postK.g2;
-  await selectWaterTier(page, g2.waterTier, acres);
+  await selectWaterTier(page, g2.waterTier, acres, "Post-K G.2 waterTier");
   await fillText(page, g2.avgDailyDisturbedAcres, String(acres));
 }
 
@@ -153,10 +232,13 @@ async function fillPostKH(page: Page, data: FormData): Promise<void> {
   if (acres === null) {
     return;
   }
+  if (!(await isPostKSectionRendered(page, 61, "Post-K H"))) {
+    return;
+  }
 
   console.log("  Post-K H - Demolition...");
   const h = selectors.postK.h;
-  await selectWaterTier(page, h.waterTier, acres);
+  await selectWaterTier(page, h.waterTier, acres, "Post-K H waterTier");
   await fillText(page, h.avgDailyDisturbedAcres, String(acres));
 }
 
@@ -168,10 +250,13 @@ async function fillPostKI1(page: Page, data: FormData): Promise<void> {
   if (acres === null) {
     return;
   }
+  if (!(await isPostKSectionRendered(page, 62, "Post-K I.1"))) {
+    return;
+  }
 
   console.log("  Post-K I.1 - During Weed Abatement...");
   const i1 = selectors.postK.i1;
-  await selectWaterTier(page, i1.waterTier, acres);
+  await selectWaterTier(page, i1.waterTier, acres, "Post-K I.1 waterTier");
   await fillText(page, i1.avgDailyDisturbedAcres, String(acres));
 }
 
@@ -183,10 +268,13 @@ async function fillPostKI2(page: Page, data: FormData): Promise<void> {
   if (acres === null) {
     return;
   }
+  if (!(await isPostKSectionRendered(page, 63, "Post-K I.2"))) {
+    return;
+  }
 
   console.log("  Post-K I.2 - Stabilization following Weed Abatement...");
   const i2 = selectors.postK.i2;
-  await selectWaterTier(page, i2.waterTier, acres);
+  await selectWaterTier(page, i2.waterTier, acres, "Post-K I.2 waterTier");
   await fillText(page, i2.avgDailyDisturbedAcres, String(acres));
 }
 
@@ -198,10 +286,13 @@ async function fillPostKJ(page: Page, data: FormData): Promise<void> {
   if (acres === null) {
     return;
   }
+  if (!(await isPostKSectionRendered(page, 64, "Post-K J"))) {
+    return;
+  }
 
   console.log("  Post-K J - Blasting...");
   const j = selectors.postK.j;
-  await selectWaterTier(page, j.waterTier, acres);
+  await selectWaterTier(page, j.waterTier, acres, "Post-K J waterTier");
   await fillText(page, j.avgDailyDisturbedAcres, String(acres));
 }
 
@@ -212,6 +303,9 @@ async function fillPostKJ(page: Page, data: FormData): Promise<void> {
 async function fillPostKD4(page: Page, data: FormData): Promise<void> {
   const { cubicYardsImport, cubicYardsExport } = data.postK.d4;
   if (!(cubicYardsImport || cubicYardsExport)) {
+    return;
+  }
+  if (!(await isPostKSectionRendered(page, 65, "Post-K D.4"))) {
     return;
   }
 
@@ -233,6 +327,9 @@ async function fillPostKF1NovFeb(page: Page, data: FormData): Promise<void> {
   if (acres === null) {
     return;
   }
+  if (!(await isPostKSectionRendered(page, 66, "Post-K F.1 Nov-Feb"))) {
+    return;
+  }
 
   console.log("  Post-K F.1 Nov-Feb - Mass Grading...");
   await fillText(
@@ -248,6 +345,9 @@ async function fillPostKF1NovFeb(page: Page, data: FormData): Promise<void> {
 async function fillPostKF1MarOct(page: Page, data: FormData): Promise<void> {
   const acres = data.postK.f1MarOct.avgDailyDisturbedAcres;
   if (acres === null) {
+    return;
+  }
+  if (!(await isPostKSectionRendered(page, 67, "Post-K F.1 Mar-Oct"))) {
     return;
   }
 

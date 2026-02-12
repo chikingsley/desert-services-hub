@@ -824,23 +824,9 @@ export const DEFAULTS: FormData = {
     otherDescription: "",
     suppressantFrequency: "Daily",
     suppressantAmount: "100 gallons",
-    applyWaterPreventMethods: [
-      "ditches",
-      "fences",
-      "berms",
-      "shrubs",
-      "trees",
-      "other",
-    ],
+    applyWaterPreventMethods: ["ditches", "fences", "berms", "shrubs", "trees"],
     applyWaterPreventOtherText: "",
-    preventAccessMethods: [
-      "ditches",
-      "fences",
-      "berms",
-      "shrubs",
-      "trees",
-      "other",
-    ],
+    preventAccessMethods: [],
     preventAccessOtherText: "",
   },
 
@@ -1249,8 +1235,17 @@ function reconcilePostK(data: FormData): void {
     siteAcres
   );
 
-  // D4 - cubic yards, not acreage-based
-  if (!data.categoryD4.applies) {
+  // D4 - required Post-K fields when category applies.
+  // Legacy shape stores the second field as `cubicYardsExport`, but the portal
+  // label is "Number of Days of Importing/Exporting Operations".
+  if (data.categoryD4.applies) {
+    if (data.postK.d4.cubicYardsImport === null) {
+      data.postK.d4.cubicYardsImport = 20;
+    }
+    if (data.postK.d4.cubicYardsExport === null) {
+      data.postK.d4.cubicYardsExport = 20;
+    }
+  } else {
     data.postK.d4.cubicYardsImport = null;
     data.postK.d4.cubicYardsExport = null;
   }

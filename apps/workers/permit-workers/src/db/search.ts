@@ -1,7 +1,7 @@
 /**
  * Permit & Company Lookup Utilities
  *
- * Searches the dust permits table in hub.db for:
+ * Searches the dust permits table in Supabase Postgres for:
  * - Company names → portal company IDs
  * - Permit IDs → parcel numbers, addresses
  */
@@ -60,7 +60,7 @@ export async function searchCompany(
 }
 
 /**
- * Look up a permit's parcel number and address from hub.db.
+ * Look up a permit's parcel number and address from Supabase Postgres.
  * Returns null if the permit isn't found or has no parcel.
  */
 export async function lookupPermitParcel(

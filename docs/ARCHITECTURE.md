@@ -35,7 +35,7 @@ What everything does, how it fits together, and what's redundant.
 
 **estimate-poller** — Polls Monday ESTIMATING board every 60s, syncs new/updated estimates to Supabase Postgres, auto-links to projects. CLI: `bun cli/watch.ts`, `bun cli/status.ts`.
 
-**estimates-sync-worker** — Cloudflare Worker. Runs hourly via cron. Syncs Monday estimates to SharePoint folder structure (organized by bid status). Downloads files from Monday, uploads to SharePoint. Also contains the hub CLI (`apps/contract/cli/hub.ts`) for manual Monday-to-Postgres syncs.
+**estimates-sync-worker** — Library module (`lib/sharepoint-sync.ts`) that runs inside the web worker's `sync_full` job. Syncs Monday estimates to SharePoint folder structure (organized by bid status). Downloads files from Monday, uploads to SharePoint. CF Worker was removed 2026-02-11; cron had already been disabled in favor of the web worker.
 
 **outlook-folder-watcher** — Polls Graph delta API every 60s. Detects new folders under `Projects/Active/` and new emails in tracked folders. Auto-matches folders to projects, links emails to Supabase Postgres.
 
@@ -75,12 +75,12 @@ What everything does, how it fits together, and what's redundant.
 
 ## Redundancies and Overlap
 
-**Estimate syncing has 3 touch points:**
-1. `estimate-poller` — always-on local poller, Monday to Supabase Postgres (60s)
-2. `estimates-sync-worker` — Cloudflare cron, Monday to SharePoint (hourly)
-3. `hub.ts sync estimates` — manual CLI command, Monday to Supabase Postgres
+**Estimate syncing has 3 touch points (all in web worker):**
+1. `estimate-poller` — syncs Monday ESTIMATING board to Postgres (every 10min via sync_full job)
+2. `estimates-sync-worker` — syncs Monday files to SharePoint folders (runs after estimate-poller in sync_full job)
+3. `estimate-email-linker` — links emails to estimates via deterministic signals (every 60s)
 
-The poller (#1) is the always-on replacement for manual syncs (#3). The SharePoint worker (#2) does something different (file organization, not database sync). No actual redundancy — they complement each other.
+These are a pipeline, not redundancy: Monday→DB (#1), DB+emails→joins (#3), Monday→SharePoint (#2).
 
 **Email sync now has an always-on worker:**
 `email-sync` worker polls every 5 minutes. The manual `email-cli/sync/mailboxes.ts` still works for one-off syncs with custom options (date ranges, specific mailboxes).
@@ -95,7 +95,7 @@ The poller (#1) is the always-on replacement for manual syncs (#3). The SharePoi
 ```text
 Monday.com
   ESTIMATING board ──→ estimate-poller (60s) ──→ Supabase Postgres estimates
-  ESTIMATING board ──→ estimates-sync-worker (hourly) ──→ SharePoint folders
+  ESTIMATING board ──→ estimates-sync-worker (sync_full job) ──→ SharePoint folders
   CONTACTS board ──→ hub.ts sync contacts (manual) ──→ Supabase Postgres contacts
   CONTRACTORS board ──→ hub.ts sync contractors (manual) ──→ Supabase Postgres accounts
   Status changes ──→ monday-status-sync-worker (hourly) ──→ Monday boards (GC cleanup, leads sync)

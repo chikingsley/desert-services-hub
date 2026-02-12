@@ -61,6 +61,7 @@ export interface SyncAllOptions {
   concurrency?: number;
   incremental?: boolean;
   fetchBodies?: boolean;
+  fetchAttachments?: boolean;
   onProgress?: (progress: SyncProgress) => void;
 }
 

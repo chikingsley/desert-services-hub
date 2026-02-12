@@ -1,5 +1,5 @@
 /**
- * Email mailbox sync — fetches emails from Microsoft Graph API into hub.db.
+ * Email mailbox sync — fetches emails from Microsoft Graph API into Supabase Postgres.
  *
  * Handles full body fetching, spam filtering, attachment metadata,
  * conversation-based project linking, and incremental sync.
@@ -50,6 +50,7 @@ async function syncMailboxFull(
   maxEmails: number,
   includeBodyInListing: boolean,
   fetchBodies: boolean,
+  fetchAttachments: boolean,
   onProgress?: (progress: SyncProgress) => void
 ): Promise<SyncResult> {
   const reportProgress = (progress: SyncProgress) => {
@@ -115,7 +116,7 @@ async function syncMailboxFull(
         size: number;
       }> = [];
 
-      if (email.hasAttachments) {
+      if (fetchAttachments && email.hasAttachments) {
         try {
           const attachments = await client.getAttachments(
             email.id,
@@ -180,18 +181,20 @@ async function syncMailboxFull(
       }
 
       // Store attachment metadata only (no MinIO upload)
-      for (const att of attachmentMeta) {
-        const attData: InsertAttachmentData = {
-          emailId,
-          attachmentId: att.id,
-          name: att.name,
-          contentType: att.contentType,
-          size: att.size,
-          storageBucket: null,
-          storagePath: null,
-        };
-        await insertAttachment(attData);
-        attachmentCount++;
+      if (fetchAttachments) {
+        for (const att of attachmentMeta) {
+          const attData: InsertAttachmentData = {
+            emailId,
+            attachmentId: att.id,
+            name: att.name,
+            contentType: att.contentType,
+            size: att.size,
+            storageBucket: null,
+            storagePath: null,
+          };
+          await insertAttachment(attData);
+          attachmentCount++;
+        }
       }
 
       storedCount++;
@@ -257,6 +260,7 @@ export async function syncAllMailboxes(
     concurrency = 3,
     incremental = false,
     fetchBodies = true,
+    fetchAttachments = true,
     onProgress,
   } = options;
 
@@ -284,6 +288,7 @@ export async function syncAllMailboxes(
         maxPerMailbox,
         !incremental,
         fetchBodies,
+        fetchAttachments,
         onProgress
       );
     });
@@ -426,10 +431,12 @@ if (import.meta.main) {
   const includeGroups = args.includes("--include-groups");
   const skipPost = args.includes("--no-post");
   const noBodies = args.includes("--no-bodies");
+  const noAttachments = args.includes("--no-attachments");
 
   const options: SyncAllOptions = {
     incremental,
     fetchBodies: !noBodies,
+    fetchAttachments: !noAttachments,
     onProgress: (p) => {
       let emoji = "\u2192";
       if (p.phase === "complete") {
@@ -517,6 +524,9 @@ if (import.meta.main) {
   console.log(`Include M365 Groups: ${includeGroups}`);
   console.log(`Post-processing: ${skipPost ? "SKIP (--no-post)" : "run"}`);
   console.log(`Fetch bodies: ${noBodies ? "no (--no-bodies)" : "yes"}`);
+  console.log(
+    `Fetch attachments: ${noAttachments ? "no (--no-attachments)" : "yes"}`
+  );
   console.log(`${"=".repeat(60)}\n`);
 
   // Dynamic imports for enrichment modules

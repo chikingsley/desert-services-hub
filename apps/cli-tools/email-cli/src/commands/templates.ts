@@ -3,6 +3,7 @@
  */
 import { parseArgs } from "node:util";
 import {
+  assertSendEnabled,
   DEFAULT_USER,
   getUserClient,
   TEMPLATE_TEST_DATA,
@@ -28,6 +29,7 @@ async function templatesCommand() {
 }
 
 async function templateCommand(templateName: string) {
+  assertSendEnabled("template");
   const testData = TEMPLATE_TEST_DATA[templateName];
   if (!testData) {
     console.error(`No test data for template: ${templateName}`);
@@ -68,6 +70,7 @@ async function sendTemplateCommand(options: {
   vars: string;
   attachmentPaths?: string;
 }) {
+  assertSendEnabled("send-template");
   let templateVars: Record<string, string | number>;
   try {
     templateVars = JSON.parse(options.vars);

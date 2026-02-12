@@ -161,6 +161,7 @@ export class GraphEmailClient {
   private authMode: AuthMode = "app";
   private credential: TokenCredential | null = null;
   private msalClient: PublicClientApplication | null = null;
+  private userAuthAccountUsername: string | null = null;
   private activeMailboxCache: string[] | null = null;
   private readonly rateLimiter = new RateLimiter();
 
@@ -251,7 +252,7 @@ export class GraphEmailClient {
    * // User signs in via browser, then:
    * const myEmails = await client.getMyEmails({ limit: 10 });
    */
-  async initUserAuth(): Promise<void> {
+  async initUserAuth(preferredUsername?: string): Promise<void> {
     const msalClient = await this.getMsalClient();
     this.authMode = "user";
     this.client = null;
@@ -264,7 +265,10 @@ export class GraphEmailClient {
     if (accounts.length > 0) {
       // Try to get token silently from cache
       try {
-        const account = accounts[0];
+        const targetUsername = preferredUsername?.toLowerCase().trim();
+        const account =
+          accounts.find((a) => a.username.toLowerCase() === targetUsername) ??
+          accounts[0];
         if (!account) {
           throw new Error("Account not found");
         }
@@ -273,6 +277,7 @@ export class GraphEmailClient {
           scopes: GRAPH_SCOPES,
           account,
         });
+        this.userAuthAccountUsername = account.username;
         console.log(`Using cached credentials for: ${account.username}\n`);
       } catch {
         // Silent auth failed, will fall through to device code
@@ -296,6 +301,7 @@ export class GraphEmailClient {
       authResult = await msalClient.acquireTokenByDeviceCode(deviceCodeRequest);
 
       if (authResult?.account) {
+        this.userAuthAccountUsername = authResult.account.username;
         console.log(
           `\nSigned in as: ${authResult.account.name} <${authResult.account.username}>\n`
         );
@@ -311,7 +317,11 @@ export class GraphEmailClient {
           throw new Error("No cached accounts found");
         }
 
-        const account = cachedAccounts[0];
+        const targetUsername = this.userAuthAccountUsername?.toLowerCase();
+        const account =
+          cachedAccounts.find(
+            (a) => a.username.toLowerCase() === targetUsername
+          ) ?? cachedAccounts[0];
         if (!account) {
           throw new Error("No account found");
         }
@@ -1126,6 +1136,11 @@ export class GraphEmailClient {
           );
           await this.sleep(delayMs);
           continue;
+        }
+
+        // Deleted/moved copies are expected in mailbox-search workflows.
+        if (graphError.statusCode === 404) {
+          throw error;
         }
 
         // Non-rate-limit error
@@ -2311,7 +2326,11 @@ export class GraphEmailClient {
   async getFolderById(
     folderId: string,
     userId?: string
-  ): Promise<{ id: string; displayName: string; parentFolderId: string | null } | null> {
+  ): Promise<{
+    id: string;
+    displayName: string;
+    parentFolderId: string | null;
+  } | null> {
     const client = this.getClient();
     const basePath = this.getBasePath(userId);
 
@@ -2784,9 +2803,8 @@ export class GraphEmailClient {
   /**
    * Send an existing draft.
    *
-   * Requires user authentication (delegated).
-   *
    * @param draftId - The ID of the draft message to send
+   * @param userId - Email address of the mailbox (required for app auth)
    * @returns Promise that resolves when draft is sent
    *
    * @example
@@ -2794,12 +2812,12 @@ export class GraphEmailClient {
    * const draft = await client.createDraft({ subject: 'Test', body: 'Hello' });
    * await client.sendDraft(draft.id);
    */
-  async sendDraft(draftId: string): Promise<void> {
-    this.requireUserAuthForSend();
+  async sendDraft(draftId: string, userId?: string): Promise<void> {
     const client = this.getClient();
+    const basePath = this.getBasePath(userId);
 
     try {
-      await client.api(`/me/messages/${draftId}/send`).post({});
+      await client.api(`${basePath}/messages/${draftId}/send`).post({});
     } catch (error) {
       console.error("Error sending draft:", error);
       throw error;

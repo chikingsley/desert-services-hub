@@ -5,6 +5,7 @@
  */
 import { GraphEmailClient } from "@email/client";
 import { GraphGroupsClient } from "@email/groups";
+import { z } from "zod";
 
 // ============================================================================
 // Constants
@@ -17,6 +18,9 @@ export const WRITABLE_MAILBOXES = [
   "contracts@desertservices.net",
   "dustpermits@desertservices.net",
 ] as const;
+
+const WritableMailboxSchema = z.enum(WRITABLE_MAILBOXES);
+export type WritableMailbox = z.infer<typeof WritableMailboxSchema>;
 
 export const KNOWN_MAILBOXES = {
   contracts: "contracts@desertservices.net",
@@ -92,19 +96,43 @@ export function assertWritableMailbox(
   operation: string
 ): void {
   if (!userId) {
-    throw new Error(`Operation "${operation}" requires a mailbox (--user)`);
+    throw new Error(
+      `Operation "${operation}" requires explicit --user. ` +
+        `Allowed mailboxes: ${WRITABLE_MAILBOXES.join(", ")}`
+    );
   }
-  const normalized = userId.toLowerCase().trim();
-  if (
-    !WRITABLE_MAILBOXES.includes(
-      normalized as (typeof WRITABLE_MAILBOXES)[number]
-    )
-  ) {
+  const parsed = WritableMailboxSchema.safeParse(userId.toLowerCase().trim());
+  if (!parsed.success) {
     throw new Error(
       `Operation "${operation}" not allowed on mailbox "${userId}". ` +
         `Write operations are restricted to: ${WRITABLE_MAILBOXES.join(", ")}`
     );
   }
+}
+
+export function resolveWritableMailbox(
+  userId: string | undefined,
+  operation: string
+): WritableMailbox {
+  assertWritableMailbox(userId, operation);
+  const normalized = userId?.toLowerCase().trim();
+  if (!normalized) {
+    throw new Error(
+      `Operation "${operation}" requires explicit --user. ` +
+        `Allowed mailboxes: ${WRITABLE_MAILBOXES.join(", ")}`
+    );
+  }
+  return normalized as WritableMailbox;
+}
+
+export function assertSendEnabled(operation: string): void {
+  if (process.env.EMAIL_CLI_ENABLE_SEND === "1") {
+    return;
+  }
+  throw new Error(
+    `Operation "${operation}" is disabled by policy. ` +
+      "Set EMAIL_CLI_ENABLE_SEND=1 to enable sending."
+  );
 }
 
 // ============================================================================
@@ -131,6 +159,22 @@ export async function getUserClient(): Promise<GraphEmailClient> {
   userClient = new GraphEmailClient(emailConfig);
   await userClient.initUserAuth();
   return userClient;
+}
+
+export async function getUserClientForMailbox(
+  userId: string
+): Promise<GraphEmailClient> {
+  if (userClient) {
+    return userClient;
+  }
+  userClient = new GraphEmailClient(emailConfig);
+  await userClient.initUserAuth(userId);
+  return userClient;
+}
+
+export function getWriteClient(userId: string): Promise<GraphEmailClient> {
+  resolveWritableMailbox(userId, "write");
+  return Promise.resolve(getAppClient());
 }
 
 export function getGroupsClient(): GraphGroupsClient {

@@ -1,6 +1,6 @@
 /**
  * Mailbox listing command — queries Graph API for all tenant mailboxes
- * and cross-references with hub.db email counts and sync config.
+ * and cross-references with Supabase Postgres email counts and sync config.
  */
 import { getAppClient } from "@email/commands/config";
 import type { CommandHandler } from "@email/commands/types";
@@ -54,7 +54,7 @@ export const mailboxHandlers: Record<string, CommandHandler> = {
       const syncTag = inSync ? "[SYNCED]" : "[NOT IN SYNC]";
       const emailInfo = stat
         ? `${stat.emailCount.toLocaleString()} emails, last sync: ${stat.lastSync ?? "never"}`
-        : "not in hub.db";
+        : "not in Supabase Postgres";
       console.log(`  ${syncTag} ${user.email}`);
       console.log(`    Name: ${user.displayName} | ${emailInfo}`);
     }

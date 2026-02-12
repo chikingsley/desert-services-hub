@@ -55,7 +55,7 @@ Email Commands:
   move-thread <messageId>     Move all messages in a thread (requires --dest folderId, use --apply)
   project-hydrate <project>   Move all emails linked to a project into its Outlook folder (use --apply)
   project-hydrate-tracked     Hydrate all tracked project folders (batch mode, use --apply)
-  project-folders             List tracked Outlook project folders (from hub.db)
+  project-folders             List tracked Outlook project folders (from Supabase Postgres)
   project-folder-create <project>  Create a missing Outlook folder for a project (use --apply)
   project-folder-mkdir <name> Create a new Outlook Projects/Active folder by name (use --apply)
   send                        Send an email (supports attachments)
@@ -98,6 +98,7 @@ Known Mailboxes: contracts, estimating, chi, tim
 
 Options:
   --user, -u <email>          Mailbox to search (default: ${DEFAULT_USER})
+                              Required for all write commands (draft/reply/move/send).
   --dest, -d <folderId>       Destination folder ID (for move/move-thread)
   --apply                     Actually perform write operations (default: dry-run)
   --quiet                     Reduce output (useful for batch hydration)
@@ -112,6 +113,7 @@ Options:
   --limit, -l <number>        Max results (default: 10)
   --reply-all                 Reply to all recipients
   --no-signature              Skip auto-signature
+  EMAIL_CLI_ENABLE_SEND=1     Required to enable send/reply/send-draft/send-template
 
 Examples:
   bun apps/cli-tools/email-cli/bin/cli.ts contracts                    # List contracts mailbox emails

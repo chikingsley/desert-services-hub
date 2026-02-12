@@ -2,14 +2,10 @@
  * Email organization commands.
  *
  * Primary use case: hydrate Outlook project folders by moving all messages
- * already linked to a hub.db project into that project's tracked folder.
+ * already linked to a Supabase Postgres project into that project's tracked folder.
  */
 import { parseArgs } from "node:util";
-import {
-  assertWritableMailbox,
-  DEFAULT_USER,
-  getAppClient,
-} from "@email/commands/config";
+import { assertWritableMailbox, getAppClient } from "@email/commands/config";
 import type { CommandHandler } from "@email/commands/types";
 import { db } from "@lib/db/hub";
 import { getMailbox } from "@lib/db/repositories/mailbox";
@@ -390,7 +386,7 @@ async function moveMessageCommand(options: {
   const mailbox = await getMailbox(options.userId);
   if (!mailbox) {
     console.warn(
-      `[WARN] Mailbox "${options.userId}" not found in hub.db; skipping DB message_id update.`
+      `[WARN] Mailbox "${options.userId}" not found in Supabase Postgres; skipping DB message_id update.`
     );
     return;
   }
@@ -493,7 +489,7 @@ async function moveThreadCommand(options: {
   const canUpdateDb = Boolean(mailbox);
   if (!(options.skipDbUpdate || mailbox)) {
     console.warn(
-      `[WARN] Mailbox "${options.userId}" not found in hub.db; skipping DB message_id updates.`
+      `[WARN] Mailbox "${options.userId}" not found in Supabase Postgres; skipping DB message_id updates.`
     );
   }
 
@@ -721,7 +717,7 @@ async function hydrateProjectFolderCommand(options: {
   const mailbox = await getMailbox(options.userId);
   if (!mailbox) {
     throw new Error(
-      `Mailbox "${options.userId}" not found in hub.db. Run email sync first so mailboxes.id exists.`
+      `Mailbox "${options.userId}" not found in Supabase Postgres. Run email sync first so mailboxes.id exists.`
     );
   }
 
@@ -1096,7 +1092,7 @@ async function hydrateTrackedProjectsCommand(options: {
   const mailbox = await getMailbox(options.userId);
   if (!mailbox) {
     throw new Error(
-      `Mailbox "${options.userId}" not found in hub.db. Run email sync first so mailboxes.id exists.`
+      `Mailbox "${options.userId}" not found in Supabase Postgres. Run email sync first so mailboxes.id exists.`
     );
   }
 
@@ -1184,7 +1180,7 @@ export const organizeHandlers: Record<string, CommandHandler> = {
     const { values, positionals } = parseArgs({
       args,
       options: {
-        user: { type: "string", short: "u", default: DEFAULT_USER },
+        user: { type: "string", short: "u" },
         dest: { type: "string", short: "d" },
         apply: { type: "boolean", default: false },
         "skip-db-update": { type: "boolean", default: false },
@@ -1194,9 +1190,9 @@ export const organizeHandlers: Record<string, CommandHandler> = {
 
     const messageId = positionals[0];
     const destinationId = values.dest as string | undefined;
-    if (!(messageId && destinationId)) {
+    if (!(messageId && destinationId && values.user)) {
       console.error(
-        "Usage: move <messageId> --dest <folderId|wellKnown> [--user <mailbox>] [--apply]"
+        "Usage: move <messageId> --dest <folderId|wellKnown> --user <mailbox> [--apply]"
       );
       process.exit(1);
     }
@@ -1214,7 +1210,7 @@ export const organizeHandlers: Record<string, CommandHandler> = {
     const { values, positionals } = parseArgs({
       args,
       options: {
-        user: { type: "string", short: "u", default: DEFAULT_USER },
+        user: { type: "string", short: "u" },
         dest: { type: "string", short: "d" },
         apply: { type: "boolean", default: false },
         limit: { type: "string", short: "l", default: "0" },
@@ -1227,9 +1223,9 @@ export const organizeHandlers: Record<string, CommandHandler> = {
 
     const messageId = positionals[0];
     const destinationId = values.dest as string | undefined;
-    if (!(messageId && destinationId)) {
+    if (!(messageId && destinationId && values.user)) {
       console.error(
-        "Usage: move-thread <messageId> --dest <folderId> [--user <mailbox>] [--apply] [--limit N]"
+        "Usage: move-thread <messageId> --dest <folderId> --user <mailbox> [--apply] [--limit N]"
       );
       process.exit(1);
     }
@@ -1254,16 +1250,16 @@ export const organizeHandlers: Record<string, CommandHandler> = {
     const { values, positionals } = parseArgs({
       args,
       options: {
-        user: { type: "string", short: "u", default: DEFAULT_USER },
+        user: { type: "string", short: "u" },
         apply: { type: "boolean", default: false },
       },
       allowPositionals: true,
     });
 
     const projectArg = positionals[0];
-    if (!projectArg) {
+    if (!(projectArg && values.user)) {
       console.error(
-        "Usage: project-folder-create <projectId|name|outlookFolderName> [--user <mailbox>] [--apply]"
+        "Usage: project-folder-create <projectId|name|outlookFolderName> --user <mailbox> [--apply]"
       );
       process.exit(1);
     }
@@ -1279,16 +1275,16 @@ export const organizeHandlers: Record<string, CommandHandler> = {
     const { values, positionals } = parseArgs({
       args,
       options: {
-        user: { type: "string", short: "u", default: DEFAULT_USER },
+        user: { type: "string", short: "u" },
         apply: { type: "boolean", default: false },
       },
       allowPositionals: true,
     });
 
     const folderName = positionals[0];
-    if (!folderName) {
+    if (!(folderName && values.user)) {
       console.error(
-        "Usage: project-folder-mkdir <folderDisplayName> [--user <mailbox>] [--apply]"
+        "Usage: project-folder-mkdir <folderDisplayName> --user <mailbox> [--apply]"
       );
       process.exit(1);
     }
@@ -1304,7 +1300,7 @@ export const organizeHandlers: Record<string, CommandHandler> = {
     const { values, positionals } = parseArgs({
       args,
       options: {
-        user: { type: "string", short: "u", default: DEFAULT_USER },
+        user: { type: "string", short: "u" },
         apply: { type: "boolean", default: false },
         limit: { type: "string", short: "l", default: "0" },
         threads: { type: "string", short: "t", default: "200" },
@@ -1319,9 +1315,9 @@ export const organizeHandlers: Record<string, CommandHandler> = {
     });
 
     const projectArg = positionals[0];
-    if (!projectArg) {
+    if (!(projectArg && values.user)) {
       console.error(
-        "Usage: project-hydrate <projectId|name|outlookFolderName> [--user <mailbox>] [--apply] [--limit N] [--threads N]"
+        "Usage: project-hydrate <projectId|name|outlookFolderName> --user <mailbox> [--apply] [--limit N] [--threads N]"
       );
       process.exit(1);
     }
@@ -1345,7 +1341,7 @@ export const organizeHandlers: Record<string, CommandHandler> = {
     const { values } = parseArgs({
       args,
       options: {
-        user: { type: "string", short: "u", default: DEFAULT_USER },
+        user: { type: "string", short: "u" },
         apply: { type: "boolean", default: false },
         limit: { type: "string", short: "l", default: "0" },
         threads: { type: "string", short: "t", default: "50" },
@@ -1355,6 +1351,13 @@ export const organizeHandlers: Record<string, CommandHandler> = {
         "skip-db-update": { type: "boolean", default: false },
       },
     });
+
+    if (!values.user) {
+      console.error(
+        "Usage: project-hydrate-tracked --user <mailbox> [--apply] [--limit N] [--threads N]"
+      );
+      process.exit(1);
+    }
 
     await hydrateTrackedProjectsCommand({
       userId: values.user as string,

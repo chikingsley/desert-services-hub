@@ -63,4 +63,3 @@ if (finalStats) {
     `Linked to accounts: ${finalStats.linked.toLocaleString()} (${pct}%)`
   );
 }
-

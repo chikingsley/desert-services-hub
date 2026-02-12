@@ -17,11 +17,13 @@ Environment:
 | Filtered list: classification + attachments | Fallback dedup | 55.210 | 7171 | 0 / 0 | `Bitmap Heap Scan emails` via `idx_emails_classification` + `idx_emails_excluded` |
 
 ## Notes
+
 - The new `/api/emails` fast path uses `email_list_dedup_mv` only for the default no-filter view.
 - Filtered queries still use live-table fallback to preserve pre-dedup filter semantics.
 - Sender-filter path is still expensive because it uses `lower(from_email)`/`lower(real_sender_email)`/`lower(original_sender_email)` without matching functional indexes.
 
 ## Sender Filter Follow-up (Applied)
+
 Functional sender indexes were added in:
 
 - `supabase/migrations/20260212141500_sender_filter_indexes.sql`
@@ -45,4 +47,5 @@ Observed behavior:
 - Selective sender (`+16028314475@tmomail.net`, 2 rows): planner uses `idx_emails_from_email_lower_active` and executes in ~5.5ms.
 
 ## Next Candidate
+
 For consistently fast high-volume sender filtering, consider a dedicated pre-normalized sender dimension (or a sender-filtered materialized view) rather than relying on per-request dedup over the base table.

@@ -1,12 +1,14 @@
 # Query Performance Analysis (2026-02-12)
 
 ## Scope
+
 - Runtime DB: local Postgres container `supabase_db_desert-services-hub`
 - Query surfaces scanned: `lib/db/repositories/*`, `apps/web/api/*`, `apps/web/worker.ts`, `apps/workers/estimate-email-linker/lib/poll.ts`
 - Catalog command used:
   - `rg -n "db\.(prepare|query|run)\(" lib/db/repositories apps/web/api apps/web/worker.ts apps/workers/estimate-email-linker/lib`
 
 ## High-Impact Queries (Observed)
+
 From `pg_stat_statements` and targeted `EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON)`:
 
 1. Emails dedup list query (`apps/web/api/emails.ts`)
@@ -35,6 +37,7 @@ From `pg_stat_statements` and targeted `EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON)`
 ## Changes Implemented
 
 ### 1) Reduced duplicate work in email listing
+
 File: `apps/web/api/emails.ts`
 - Removed separate `dedupCountQuery` execution.
 - Merged total count into main dedup query (`COUNT(*) OVER ()` after dedup filter).
@@ -46,6 +49,7 @@ Result:
 - Net improvement: ~23.8% less DB time for `/api/emails` list requests under tested conditions.
 
 ### 2) Fuzzy estimate search made index-backed
+
 File: `lib/db/repositories/estimate-email.ts`
 - Replaced multi-column OR-ILIKE search with one normalized concatenated text expression.
 - Matches new trigram index expression.
@@ -54,6 +58,7 @@ Result:
 - ~8.85 ms -> ~0.44 ms in profiled case.
 
 ### 3) Added migration for query-performance indexes
+
 File: `supabase/migrations/20260212120000_query_performance_indexes.sql`
 - `idx_emails_active_dedup_partition` (expression + partial index)
 - `idx_emails_active_received_desc` (partial sort-support index)
@@ -64,6 +69,7 @@ Note:
 - The emails dedup query still plans a sequential scan in current data distribution; this index is a guardrail for growth and selective predicates, but immediate wins were primarily from query consolidation.
 
 ### 4) Added default-list materialized view route for `/api/emails`
+
 Files:
 - `supabase/migrations/20260212133000_email_list_dedup_mv.sql`
 - `apps/web/api/emails.ts`
@@ -99,11 +105,13 @@ Reference:
 - Effort: Quick fix
 
 ## Validation Commands Used
+
 - `just status`
 - `SELECT ... FROM pg_stat_statements ORDER BY total_exec_time DESC`
 - `EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON) ...`
 - `jq` extraction from explain JSON outputs
 
 ## Risks / Follow-ups
+
 - `COUNT(*) OVER()` still requires full dedup work per request; if `/api/emails` needs sub-second response at larger scale, consider async pre-aggregation or a dedicated dedup materialized view keyed by active filters.
 - Additional email filters (FTS/sender/classification/date range) should be profiled independently because plan shape can change significantly.

@@ -150,15 +150,15 @@ Canonical health/deploy gating reads from `ops/runtime/worker-registry.json`. Th
 | `estimates-sync-worker` | ACTIVE | Monday Integrations | `apps/workers/estimates-sync-worker/`, Cloudflare deploy | No | Registry health gate (`PEA-54`) |
 | `inspections-email-worker` | ACTIVE | Compliance Integrations | `apps/workers/inspections-email-worker/`, Cloudflare deploy | No | Registry health gate (`PEA-54`) |
 | `docusign-file-automation` | PARTIAL | Contracts Integrations | `apps/workers/docusign-file-automation/` | No | Runbook: `docs/reference/processes/docusign-intake-runbook.md` |
-| `estimate-poller` | DORMANT (utility-only) | Estimating Integrations | `apps/workers/estimate-poller/` | Yes | Consolidation context tracked in `PEA-30` |
+| `estimate-poller` | UTILITY-ONLY | Estimating Integrations | `apps/workers/estimate-poller/` | Yes | Consolidation context tracked in `PEA-30` |
 | `web intake libs` | ACTIVE (in-process) | Intake Automation | `apps/web/lib/files-intake.ts`, `apps/web/lib/attachment-backfill.ts` | No | Canonical path in `apps/web/worker.ts` |
 
-### Deprecation Notes (2026-02-11)
+### Runtime Transition Notes (2026-02-11)
 
 - `apps/web/api/webhooks-dust-permit.ts` (orphan webhook path) was removed on **2026-02-11** (`PEA-53`).
 - Canonical intake job type is `intake` as of **2026-02-11**. `files_intake` and `contracts_email_intake` remain compatibility aliases only and log deprecation warnings (`PEA-53`).
-- Legacy `contract_intake` enqueue path from M365 group sync was removed on **2026-02-11** (`PEA-52`).
-- Legacy worker folders `apps/workers/contract-intake/` and `apps/workers/files-email-intake/` were removed on **2026-02-12**; logic moved to `apps/web/lib/`.
+- Previous `contract_intake` enqueue path from M365 group sync was removed on **2026-02-11** (`PEA-52`).
+- Worker folders `apps/workers/contract-intake/` and `apps/workers/files-email-intake/` were removed on **2026-02-12**; logic moved to `apps/web/lib/`.
 
 ---
 
@@ -183,7 +183,7 @@ Canonical health/deploy gating reads from `ops/runtime/worker-registry.json`. Th
 | `lib/db/hub.ts` | Postgres connection (Bun.sql) | DONE |
 | `lib/db/repositories/` | 11 repository modules (account, project, email, estimate, permit, etc.) | DONE |
 | `lib/db/search.ts` | ILIKE query builder | DONE |
-| `lib/db/_legacy/insurance.ts` | (archived) Coverage gap analysis prototype | ARCHIVED — not automated |
+| `lib/db/_legacy/insurance.ts` | Archived coverage gap analysis prototype | ARCHIVED — not automated |
 | `lib/catalog/` | 2026 pricing catalog + bundles + helpers | DONE |
 | `lib/pdf/` | Estimate PDF generation (pdfmake) | DONE |
 | `lib/takeoff/` | PDF measurement + annotation tools | DONE |
@@ -209,7 +209,7 @@ Canonical health/deploy gating reads from `ops/runtime/worker-registry.json`. Th
 | **Mistral** | Fallback LLM provider | ACTIVE |
 | **Jina AI** | Web scraping, content extraction | ACTIVE |
 | **PDL** | Contact enrichment (person + company) | ACTIVE |
-| **N8N** | Workflow automation | DORMANT — configured, not integrated |
+| **N8N** | Workflow automation | INACTIVE — configured, not integrated |
 
 ---
 
@@ -228,7 +228,7 @@ Canonical health/deploy gating reads from `ops/runtime/worker-registry.json`. Th
 4. Link estimate → project → account
 5. Notify relevant stakeholders
 
-### GAP 2: Legacy Host Poller Overlap
+### GAP 2: Host Poller Overlap Guardrail
 
 **Updated (2026-02-11):** Pollers are containerized:
 - `notifications` runs as a Docker Compose service.
@@ -294,7 +294,7 @@ Folder watcher and estimate-email-linker are canonical in the webhooks backgroun
 
 ### GAP 9: Insurance Gap Checking (Archived)
 
-**Current state:** Prototype exists at `lib/db/_legacy/insurance.ts` and legacy tables (`company_insurance`, `contract_insurance_requirements`). We're dropping those tables and not running this automatically.
+**Current state:** Prototype exists at `lib/db/_legacy/insurance.ts` and old tables (`company_insurance`, `contract_insurance_requirements`). We're dropping those tables and not running this automatically.
 
 **If we revive this:** Store insurance requirements + COIs as `documents` rows (type `INSURANCE_REQUIREMENTS` / `COI`) with structured fields in `documents.raw_extraction`, then run a check during file intake and notify on gaps.
 
@@ -318,7 +318,7 @@ Folder watcher and estimate-email-linker are canonical in the webhooks backgroun
 - [ ] Signs installed
 - [ ] First inspection scheduled
 
-### GAP 12: Stale/Legacy Code
+### GAP 12: Stale Runtime/Config Code
 
 **Resolved (2026-02-09):** Removed 28 dead env vars from `.env` and `.env.example`:
 - Notion (9 vars — API key + 7 DB IDs), OpenAI (1 var — empty), MinIO (14 vars — replaced by SharePoint Feb 2026), Tavily (1 var — never implemented).

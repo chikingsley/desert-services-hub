@@ -48,6 +48,10 @@ lib/                      # Shared libraries (imported by all apps)
   assets/                 # Shared assets (logos, etc.)
 ```
 
+Runtime note:
+- Intake processing/backfill logic now lives under `apps/web/lib/` (`files-intake.ts`, `attachment-backfill.ts`).
+- Old worker folders `contract-intake`, `files-email-intake`, and `dust-permit-intake` are removed from tracked runtime code.
+
 ## Docker Services
 
 All services run on gmk-server. **Claude Code runs directly on gmk-server — never SSH into it.**

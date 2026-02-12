@@ -52,6 +52,21 @@ Docker Compose (see `docker-compose.yml`):
 - `swppp-sync` (poller loop)
 - `tunnel` (optional)
 
+## Runtime Truth (2026-02-12)
+
+Active worker/runtime components:
+- Cloudflare workers: `intake-worker`, `estimates-sync-worker`, `monday-status-sync-worker`, `inspections-email-worker`, `docusign-file-automation` (dispatcher partial).
+- In-process web worker modules: `apps/web/lib/files-intake.ts`, `apps/web/lib/attachment-backfill.ts`, `apps/workers/outlook-folder-watcher/lib/poll.ts`, `apps/workers/estimate-email-linker/lib/poll.ts`.
+- Docker services: `notifications`, `swppp-sync`, `permit-worker`, plus `web`/`webhooks`.
+
+Removed worker folders:
+- `apps/workers/contract-intake/`
+- `apps/workers/files-email-intake/`
+- `apps/workers/dust-permit-intake/`
+
+Notes:
+- If you still see old worker directories locally, they are usually untracked leftovers (`node_modules`/build artifacts), not active tracked runtime code.
+
 Estimate-email linking runtime:
 - Runs inside `apps/web/worker.ts` as a periodic backfill timer (every 60s).
 - No separate `systemd` unit should run for estimate-email-linker.
@@ -135,7 +150,7 @@ Definition of done (triage-ready baseline):
 - Project row exists and status fields are explicit.
 - Outlook folder linkage exists (`tracked_folders.project_id`).
 - Relevant emails are linked (`emails.project_id`) and duplicate signal is reviewed.
-- Estimate linkage exists in `project_estimates` (not legacy `projects.linked_estimate_ids`).
+- Estimate linkage exists in `project_estimates` (not old `projects.linked_estimate_ids`).
 - Dust permit linkage is explicit in `dust_permits_filed_by_desert_services.project_id` or status evidence is clearly pending.
 - Attachments/documents presence is verified in `attachments` and `documents` with extraction status summary.
 - A short packet summary is written under `data/triage/<slug>/README.md` with exact evidence paths.
@@ -156,7 +171,7 @@ To avoid schema drift mistakes during agent runs, prefer this order:
 2. Current migrations under `supabase/migrations/`.
 3. Runtime usage in repo (`lib/db/repositories/*`, `apps/web/api/*`).
 
-Do not assume older columns still exist just because legacy code/comments mention them.
+Do not assume older columns still exist just because old code/comments mention them.
 
 ## Query Routing Policy (Required)
 
@@ -176,7 +191,7 @@ For any new/changed DB query path, include:
 
 ## Contract Packet Lifecycle (Required)
 
-`projects.contract_status` is legacy summary state only (`Pending/Received/Sent Back/Executed`).
+`projects.contract_status` is a coarse summary projection only (`Pending/Received/Sent Back/Executed`).
 For packet-level operations, use canonical tables/views:
 
 - `contract_packets` (one active row per project contract cycle)
@@ -213,5 +228,5 @@ Guardrail:
 
 Note:
 
-- `projects.contract_status` is still a coarse/legacy projection.
+- `projects.contract_status` is still a coarse summary projection.
 - For packet-level operational workflow and SLA, use `contract_packets`, `contract_packet_documents`, and `contract_packet_queue_v`.

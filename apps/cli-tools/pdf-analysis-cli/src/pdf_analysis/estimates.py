@@ -81,11 +81,22 @@ class Estimate(BaseModel):
     grand_total: float
     page_count: int
     source_file: str
+    parse_warnings: list[str] = Field(default_factory=list)
 
     @computed_field
     @property
     def computed_subtotal(self) -> float:
         return sum(item.total for item in self.line_items)
+
+    @computed_field
+    @property
+    def total_delta(self) -> float:
+        return round(self.grand_total - self.computed_subtotal, 2)
+
+    @computed_field
+    @property
+    def totals_match(self) -> bool:
+        return abs(self.total_delta) <= 0.01
 
 
 # ---------------------------------------------------------------------------
@@ -94,14 +105,28 @@ class Estimate(BaseModel):
 
 
 _MONEY_RE = re.compile(r"^[\s$]*([\d,]+\.\d{2})T?\s*$")
-_EMBEDDED_MONEY_RE = re.compile(r"\$([\d,]+\.\d{2})")
+_EMBEDDED_MONEY_RE = re.compile(r"([\d,]+\.\d{2})")
+_CID_RE = re.compile(r"\(cid:(\d+)\)")
+
+
+def _decode_cid_glyphs(value: str) -> str:
+    """Decode common pdfplumber cid glyphs (e.g. (cid:55) -> '7')."""
+
+    def repl(match: re.Match[str]) -> str:
+        code = int(match.group(1))
+        if 32 <= code <= 126:
+            return chr(code)
+        return ""
+
+    return _CID_RE.sub(repl, value)
 
 
 def _parse_money(value: str | None) -> float | None:
-    """Parse '1,350.00' or '1,350.00T' to float. Returns None if not parseable."""
+    """Parse money strings like '1,350.00', '1,350.00T', or cid-encoded values."""
     if not value or not value.strip():
         return None
-    m = _MONEY_RE.match(value.strip())
+    normalized = _decode_cid_glyphs(value).strip()
+    m = _MONEY_RE.match(normalized)
     if m:
         return float(m.group(1).replace(",", ""))
     return None
@@ -111,25 +136,63 @@ def _is_taxable(value: str | None) -> bool:
     """Check if value ends with 'T' (taxable marker)."""
     if not value:
         return False
-    return value.strip().endswith("T") and _parse_money(value) is not None
+    normalized = _decode_cid_glyphs(value).strip()
+    return normalized.endswith("T") and _parse_money(normalized) is not None
 
 
 def _cell(value: str | None) -> str:
-    """Normalize a table cell: strip whitespace, treat None as ''."""
+    """Normalize a table cell: decode cid glyphs, strip whitespace, treat None as ''."""
     if value is None:
         return ""
-    return value.strip()
+    return _decode_cid_glyphs(value).strip()
 
 
 def _parse_qty(value: str | None) -> float | None:
-    """Parse quantity string like '1,560' or '21' to float."""
+    """Parse quantity string like '1,560', '21', or cid-encoded values."""
     if not value or not value.strip():
         return None
-    cleaned = value.strip().replace(",", "")
+    cleaned = _decode_cid_glyphs(value).strip().replace(",", "")
     try:
         return float(cleaned)
     except ValueError:
         return None
+
+
+def _parse_money_relaxed(value: str | None) -> float | None:
+    """Parse first currency-like token found in a noisy string."""
+    if not value:
+        return None
+    normalized = _decode_cid_glyphs(value)
+    m = _EMBEDDED_MONEY_RE.search(normalized)
+    if not m:
+        return None
+    return float(m.group(1).replace(",", ""))
+
+
+def _derive_qty_from_total(total: float | None, unit_cost: float | None) -> float | None:
+    if total is None or unit_cost is None or unit_cost == 0:
+        return None
+    raw = total / unit_cost
+    rounded_whole = round(raw)
+    if abs(raw - rounded_whole) < 1e-6:
+        return float(rounded_whole)
+    return round(raw, 4)
+
+
+def _looks_like_candidate_item(item_cell: str, row_text: str) -> bool:
+    if not item_cell:
+        return False
+    upper_item = item_cell.upper().strip()
+    if upper_item in {"ITEM", "DESCRIPTION", "QTY", "U/M", "COST", "TOTAL"}:
+        return False
+    upper_row = row_text.upper()
+    blocked = (
+        "PRICING BASED ON SPECIFIED QUANTITIES",
+        "ALL ADDENDA HAVE BEEN RECEIVED",
+        "PRINT NAME",
+        "SIGNATURE",
+    )
+    return not any(token in upper_row for token in blocked)
 
 
 # ---------------------------------------------------------------------------
@@ -267,18 +330,17 @@ def _extract_header(pages: list[pdfplumber.page.Page]) -> EstimateHeader:
 
 
 def _extract_grand_total(pages: list[pdfplumber.page.Page]) -> float:
-    """Extract the grand total from the last page's Total box.
-
-    The Total box is a small table (Table 3) with a single cell like 'Total $17,440.00'.
-    Only appears with a dollar amount on the last page.
-    """
+    """Extract grand total from Total box, including cid-encoded currency strings."""
     for page in reversed(pages):
         tables = page.extract_tables()
         for table in tables:
             for row in table:
                 for cell in row:
-                    if cell and cell.strip().startswith("Total") and "$" in cell:
-                        m = _EMBEDDED_MONEY_RE.search(cell)
+                    if not cell:
+                        continue
+                    normalized = _decode_cid_glyphs(cell).strip()
+                    if normalized.startswith("Total"):
+                        m = _EMBEDDED_MONEY_RE.search(normalized)
                         if m:
                             return float(m.group(1).replace(",", ""))
     return 0.0
@@ -330,6 +392,7 @@ def extract_estimate(pdf_path: str | Path) -> Estimate:
         additional_services: list[AdditionalService] = []
         section_subtotals: list[SectionSubtotal] = []
         tax: EstimateTax | None = None
+        parse_warnings: list[str] = []
         current_section = SectionType.REQUIRED
         in_additional_services = False
 
@@ -338,7 +401,9 @@ def extract_estimate(pdf_path: str | Path) -> Estimate:
         qty_idx = col_map.get("Qty", 3)
         cost_idx = col_map.get("Cost", -2)
         total_idx = col_map.get("Total", -1)
-        for row in all_rows:
+        parsed_row_indices: set[int] = set()
+
+        for row_idx, row in enumerate(all_rows):
             item_cell = _cell(row[item_idx]) if item_idx < len(row) else ""
             desc_cell = _cell(row[desc_idx]) if desc_idx < len(row) else ""
             qty_cell = _cell(row[qty_idx]) if qty_idx < len(row) else ""
@@ -398,6 +463,11 @@ def extract_estimate(pdf_path: str | Path) -> Estimate:
             total = _parse_money(total_cell)
             taxable = _is_taxable(total_cell)
 
+            if qty is None:
+                qty = _derive_qty_from_total(total, unit_cost)
+            if unit_cost is None and qty is not None and qty != 0 and total is not None:
+                unit_cost = round(total / qty, 2)
+
             # Row has numeric data -> line item
             if total is not None and qty is not None:
                 section = SectionType.MISC if in_additional_services else current_section
@@ -414,6 +484,7 @@ def extract_estimate(pdf_path: str | Path) -> Estimate:
                         section=section,
                     )
                 )
+                parsed_row_indices.add(row_idx)
                 continue
 
             # Row has no numeric data but has item name -> could be additional service or description-only item
@@ -435,6 +506,74 @@ def extract_estimate(pdf_path: str | Path) -> Estimate:
 
         grand_total = _extract_grand_total(pages)
 
+        # Invariant + fallback: if totals do not reconcile, rescan remaining rows using relaxed parsing.
+        initial_subtotal = sum(li.total for li in line_items)
+        if grand_total > 0 and abs(grand_total - initial_subtotal) > 0.01:
+            parse_warnings.append(
+                f"Grand total mismatch before fallback: grand_total={grand_total:.2f}, subtotal={initial_subtotal:.2f}."
+            )
+
+            fallback_added = 0
+            for row_idx, row in enumerate(all_rows):
+                if row_idx in parsed_row_indices:
+                    continue
+
+                item_cell = _cell(row[item_idx]) if item_idx < len(row) else ""
+                desc_cell = _cell(row[desc_idx]) if desc_idx < len(row) else ""
+                qty_cell = _cell(row[qty_idx]) if qty_idx < len(row) else ""
+                cost_cell = _cell(row[cost_idx]) if cost_idx < len(row) else ""
+                total_cell = _cell(row[total_idx]) if total_idx < len(row) else ""
+                row_text = f"{item_cell} {desc_cell}".strip()
+
+                if not _looks_like_candidate_item(item_cell, row_text):
+                    continue
+
+                qty = _parse_qty(qty_cell)
+                unit_cost = _parse_money(cost_cell)
+                total = _parse_money(total_cell)
+
+                if total is None:
+                    total = _parse_money_relaxed(total_cell)
+                if unit_cost is None:
+                    unit_cost = _parse_money_relaxed(cost_cell)
+                if qty is None:
+                    qty = _derive_qty_from_total(total, unit_cost)
+                if unit_cost is None and qty is not None and qty != 0 and total is not None:
+                    unit_cost = round(total / qty, 2)
+                if total is None and qty is not None and unit_cost is not None:
+                    total = round(qty * unit_cost, 2)
+
+                if total is None or qty is None or unit_cost is None:
+                    continue
+
+                line_items.append(
+                    EstimateLineItem(
+                        item=item_cell or "Misc",
+                        description=desc_cell.split("\n")[0] if desc_cell else "",
+                        qty=qty,
+                        unit=None,
+                        unit_cost=unit_cost,
+                        total=total,
+                        taxable=_is_taxable(total_cell),
+                        section=SectionType.REQUIRED,
+                    )
+                )
+                parsed_row_indices.add(row_idx)
+                fallback_added += 1
+
+            if fallback_added > 0:
+                parse_warnings.append(f"Fallback parser recovered {fallback_added} line item(s).")
+
+        final_subtotal = sum(li.total for li in line_items)
+        if grand_total == 0 and final_subtotal > 0:
+            parse_warnings.append(
+                f"Grand total not found; using subtotal only ({final_subtotal:.2f}) for reconciliation checks."
+            )
+        elif grand_total > 0 and abs(grand_total - final_subtotal) > 0.01:
+            parse_warnings.append(
+                f"Unresolved total mismatch: grand_total={grand_total:.2f}, subtotal={final_subtotal:.2f}."
+            )
+
         return Estimate(
             header=header,
             line_items=line_items,
@@ -444,4 +583,5 @@ def extract_estimate(pdf_path: str | Path) -> Estimate:
             grand_total=grand_total,
             page_count=len(pages),
             source_file=str(pdf_path),
+            parse_warnings=parse_warnings,
         )

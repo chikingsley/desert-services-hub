@@ -13,18 +13,18 @@
       <li><div><b>Application #:</b> {{applicationNumber}}</div></li>
       {{#if permitNumber}}<li><div><b>Permit # (Facility ID):</b> {{permitNumber}}</div></li>{{/if}}
       <li><div><b>Accelerated Processing:</b> {{acceleratedProcessing}}</div></li>
+      <li><div>----</div></li>
       <li><div><b>Vendor Paid:</b> {{vendorName}}</div></li>
       <li><div><b>Permit Cost (ADEQ):</b> {{permitCost}}</div></li>
-      {{#if acceleratedFee}}<li><div><b>Accelerated Fee:</b> {{acceleratedFee}}</div></li>{{/if}}
       {{#if adminFee}}<li><div><b>Admin Fee:</b> {{adminFee}}</div></li>{{/if}}
       <li><div><b>Schedule Charge:</b> {{scheduleValue}}</div></li>
-      <li><div><b>Payment Method:</b> {{paymentMethod}}</div></li>
-      {{#if paymentDate}}<li><div><b>Payment Date:</b> {{paymentDate}}</div></li>{{/if}}
       {{#if confirmationId}}<li><div><b>Confirmation #:</b> {{confirmationId}}</div></li>{{/if}}
-      <li><div><b>Card Last 4:</b> {{cardLastFour}}</div></li>
-      <li><div><b>Cardholder:</b> {{cardholderName}}</div></li>
       <li><div><b>Invoice #:</b> {{invoiceNumber}}</div></li>
-      <li><div><b>Invoice Date:</b> {{invoiceDate}}</div></li>
+      <li><div>----</div></li>
+      <li><div><b>Payment Method:</b> {{paymentMethod}}</div></li>
+      <li><div><b>Cardholder:</b> {{cardholderName}}</div></li>
+      {{#if paymentDate}}<li><div><b>Payment Date:</b> {{paymentDate}}</div></li>{{/if}}
+      {{#if invoiceDate}}<li><div><b>Invoice Date:</b> {{invoiceDate}}</div></li>{{/if}}
     </ul>
     <div>Let me know if you have any questions!</div>
     <div><br></div>

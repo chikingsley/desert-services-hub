@@ -776,8 +776,7 @@ describe.skipIf(!hasCredentials)("email service integration", () => {
         vendorName: "Maricopa County Air Quality Department",
         permitCost: "$150.00",
         scheduleValue: "$5,000.00",
-        paymentMethod: "Credit Card",
-        cardLastFour: "1234",
+        paymentMethod: "Card ending 1234",
         cardholderName: "Chi Ejimofor",
         invoiceNumber: "INV-2025-001",
         invoiceDate: "December 18, 2025",
@@ -981,7 +980,7 @@ describe("email templates", () => {
       vendorName: "Maricopa County Air Quality Department",
       permitCost: "$150.00",
       scheduleValue: "$5,000.00",
-      paymentMethod: "Credit Card",
+      paymentMethod: "Card ending 1234",
       invoiceNumber: "INV-2025-001",
       invoiceDate: "December 18, 2025",
       projectFolderLink: "https://example.sharepoint.com/projects/kiwanis",
@@ -1015,12 +1014,10 @@ describe("email templates", () => {
       acceleratedProcessing: "Yes",
       vendorName: "Maricopa County",
       permitCost: "$150.00",
-      acceleratedFee: "$50.00", // Optional
       scheduleValue: "$5,000.00",
-      paymentMethod: "Credit Card",
+      paymentMethod: "Card ending 1234",
       paymentDate: "December 18, 2025", // Optional
       confirmationId: "CONF-12345", // Optional
-      cardLastFour: "1234", // Optional
       cardholderName: "Chi Ejimofor", // Optional
       invoiceNumber: "INV-2025-001",
       invoiceDate: "December 18, 2025",
@@ -1028,7 +1025,6 @@ describe("email templates", () => {
     });
 
     // Verify optional variables appear when provided
-    expect(html).toContain("$50.00"); // acceleratedFee
     expect(html).toContain("December 18, 2025"); // paymentDate
     expect(html).toContain("CONF-12345"); // confirmationId
     expect(html).toContain("1234"); // cardLastFour

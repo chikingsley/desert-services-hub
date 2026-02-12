@@ -49,6 +49,16 @@ function stringValue(value: unknown, fallback = "N/A"): string {
   return fallback;
 }
 
+function optionalStringValue(value: unknown): string {
+  if (typeof value === "string" && value.trim().length > 0) {
+    return value.trim();
+  }
+  if (typeof value === "number") {
+    return String(value);
+  }
+  return "";
+}
+
 function formatDate(value: unknown, fallback = "TBD"): string {
   if (typeof value !== "string" || value.trim().length === 0) {
     return fallback;
@@ -211,6 +221,10 @@ async function buildDustPermitDraft(
   }
 
   if (event.eventType === "dust_permit_billing") {
+    const invoiceDate =
+      optionalStringValue(metadata.invoiceCreatedDate) ||
+      optionalStringValue(metadata.invoiceDate);
+
     const body = await getTemplate("dust-permit-billing", {
       recipientName: "Team",
       accountName: stringValue(
@@ -231,10 +245,9 @@ async function buildDustPermitDraft(
         : "N/A",
       paymentDate: stringValue(metadata.paymentDate, "N/A"),
       confirmationId: stringValue(metadata.confirmationId),
-      cardLastFour: stringValue(metadata.cardLastFour),
-      cardholderName: stringValue(metadata.cardholderName, "Desert Services"),
+      cardholderName: "Chi Ejimofor",
       invoiceNumber: stringValue(metadata.invoiceNumber, event.refId),
-      invoiceDate: stringValue(metadata.paymentDate, "N/A"),
+      invoiceDate,
     });
 
     const fileAttachments = Array.isArray(metadata.attachments)

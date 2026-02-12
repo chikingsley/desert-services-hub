@@ -199,6 +199,16 @@ export function InlineEstimateEditor({
           >
             X
           </Button>
+          <Button
+            className="ml-2 h-9 rounded-lg px-2 font-semibold text-xs"
+            onClick={() =>
+              updateLineItem(item.id, "isAlternate", !item.isAlternate)
+            }
+            size="sm"
+            variant={item.isAlternate ? "destructive" : "outline"}
+          >
+            ALT
+          </Button>
           <div className="ml-2 min-w-0 flex-[2]">
             <ItemCombobox
               catalog={catalog}
@@ -263,6 +273,16 @@ export function InlineEstimateEditor({
                 variant="destructive"
               >
                 X
+              </Button>
+              <Button
+                className="h-8 rounded-lg px-2 font-semibold text-xs"
+                onClick={() =>
+                  updateLineItem(item.id, "isAlternate", !item.isAlternate)
+                }
+                size="sm"
+                variant={item.isAlternate ? "destructive" : "outline"}
+              >
+                ALT
               </Button>
             </div>
           </div>

@@ -13,6 +13,15 @@ const STATUS_COLORS: Record<string, string> = {
     "bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-300",
   Executed:
     "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300",
+  Requested:
+    "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300",
+  "Triage In Progress":
+    "bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-300",
+  "Ready To Send Back":
+    "bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-300",
+  "Awaiting Counterparty":
+    "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-300",
+  "On Hold": "bg-zinc-100 text-zinc-700 dark:bg-zinc-800/40 dark:text-zinc-300",
 
   // Permit statuses
   Active:
@@ -28,7 +37,6 @@ const STATUS_COLORS: Record<string, string> = {
   // Dust permit project statuses
   Issued:
     "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300",
-  Requested: "bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-300",
   Filed: "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300",
   "Pending Award":
     "bg-violet-100 text-violet-800 dark:bg-violet-900/40 dark:text-violet-300",

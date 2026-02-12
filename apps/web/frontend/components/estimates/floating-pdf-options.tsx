@@ -1,4 +1,4 @@
-import { FileText, GripVertical, Layers, Ungroup } from "lucide-react";
+import { FileText, GripVertical, Layers } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/apps/web/frontend/components/ui/button";
 import {
@@ -74,13 +74,6 @@ export function FloatingPdfOptions({
     });
   };
 
-  const toggleUnbreakable = () => {
-    onChange({
-      ...options,
-      unbreakableSections: !options.unbreakableSections,
-    });
-  };
-
   const toggleBackPage = () => {
     onChange({
       ...options,
@@ -89,7 +82,6 @@ export function FloatingPdfOptions({
   };
 
   const isSectioned = options.style === "sectioned";
-  const isUnbreakable = options.unbreakableSections ?? true;
   const hasBackPage = options.includeBackPage ?? false;
 
   return (
@@ -135,29 +127,6 @@ export function FloatingPdfOptions({
                 <p>Group items by section with subtotals</p>
               </TooltipContent>
             </Tooltip>
-
-            {/* Unbreakable toggle - only show when sectioned */}
-            {isSectioned && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    className="h-auto w-full justify-start gap-2 px-2 py-1.5"
-                    onClick={toggleUnbreakable}
-                    size="sm"
-                    variant={isUnbreakable ? "secondary" : "ghost"}
-                  >
-                    <Ungroup className="h-4 w-4 shrink-0" />
-                    <span className="text-xs">Keep Together</span>
-                    <span className="ml-auto text-[10px] text-muted-foreground">
-                      {isUnbreakable ? "ON" : "OFF"}
-                    </span>
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="right">
-                  <p>Keep sections together on same page</p>
-                </TooltipContent>
-              </Tooltip>
-            )}
 
             {/* Back page toggle */}
             <Tooltip>

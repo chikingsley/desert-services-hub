@@ -19,11 +19,14 @@ import { fetcher } from "@/apps/web/frontend/lib/fetcher";
 // API response types
 interface ApiLineItem {
   id: string;
+  item_name: string | null;
   description: string;
   notes: string | null;
   quantity: number;
   unit: string;
+  unit_cost: number;
   unit_price: number;
+  is_excluded: number;
   section_id: string | null;
 }
 
@@ -50,6 +53,9 @@ interface ApiEstimateResponse {
   job_name: string;
   job_address: string | null;
   client_name: string | null;
+  client_address: string | null;
+  estimator: string | null;
+  estimator_email: string | null;
   client_email: string | null;
   client_phone: string | null;
   notes: string | null;
@@ -73,13 +79,14 @@ function transformToEditorEstimate(api: ApiEstimateResponse): EditorEstimate {
   const lineItems: EditorLineItem[] = (version.line_items || []).map(
     (item) => ({
       id: item.id,
-      item: item.description,
-      description: item.notes || "",
+      item: item.item_name || item.description,
+      description: item.description || item.notes || "",
       qty: item.quantity,
       uom: item.unit,
-      cost: item.unit_price,
+      cost: item.unit_cost ?? item.unit_price,
       total: item.quantity * item.unit_price,
       sectionId: item.section_id || undefined,
+      isAlternate: item.is_excluded === 1,
     })
   );
 
@@ -88,17 +95,17 @@ function transformToEditorEstimate(api: ApiEstimateResponse): EditorEstimate {
   return {
     estimateNumber: api.base_number,
     date: api.created_at || new Date().toISOString(),
-    estimator: "",
-    estimatorEmail: "",
+    estimator: api.estimator || "",
+    estimatorEmail: api.estimator_email || "",
     billTo: {
       companyName: api.client_name || "",
-      address: "",
+      address: (api.client_address || "").replaceAll("\n", ", "),
       email: api.client_email || "",
       phone: api.client_phone || "",
     },
     jobInfo: {
       siteName: api.job_name || "",
-      address: api.job_address || "",
+      address: (api.job_address || "").replaceAll("\n", ", "),
     },
     sections,
     lineItems,

@@ -1,263 +1,362 @@
 /**
  * Contracts Page
- *
- * Won estimates from Monday.com — the contracts pipeline.
- * Table view of all awarded contracts with project linkage info.
  */
-import { RefreshCw, Search } from "lucide-react";
-import { useMemo, useState } from "react";
+import { ChevronLeft, ChevronRight, RefreshCw, Search } from "lucide-react";
+import { memo, startTransition, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router";
 import useSWR from "swr";
 import { PageHeader } from "@/apps/web/frontend/components/page-header";
 import {
   PageError,
   PageLoading,
 } from "@/apps/web/frontend/components/page-loading";
-import { StatCard } from "@/apps/web/frontend/components/stat-card";
 import { StatusBadge } from "@/apps/web/frontend/components/status-badge";
 import { Button } from "@/apps/web/frontend/components/ui/button";
+import { FacetedMultiSelect } from "@/apps/web/frontend/components/ui/faceted-multi-select";
 import { Input } from "@/apps/web/frontend/components/ui/input";
 import {
-  Table,
-  TableBody,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/apps/web/frontend/components/ui/select";
+import {
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
 } from "@/apps/web/frontend/components/ui/table";
-import {
-  Tabs,
-  TabsList,
-  TabsTrigger,
-} from "@/apps/web/frontend/components/ui/tabs";
+import { VirtualizedTable } from "@/apps/web/frontend/components/ui/virtualized-table";
+import { useDebouncedValue } from "@/apps/web/frontend/hooks/use-debounced-value";
 import { fetcher } from "@/apps/web/frontend/lib/fetcher";
 import { formatCompactCurrency, formatCurrency } from "@/lib/utils";
 
 interface ContractFromApi {
   id: number;
-  monday_item_id: string | null;
-  name: string;
   estimate_number: string | null;
+  name: string;
   contractor: string | null;
-  group_id: string | null;
-  bid_status: string | null;
-  bid_value: number | null;
   awarded_value: number | null;
-  due_date: string | null;
+  bid_value: number | null;
   location: string | null;
-  project_id: number | null;
   project_name: string | null;
   contract_status: string | null;
   dust_permit_status: string | null;
-  created_at: string;
-  updated_at: string;
 }
 
 interface ContractsApiResponse {
-  contracts: ContractFromApi[];
-  stats: {
+  items: ContractFromApi[];
+  pagination: {
+    page: number;
+    perPage: number;
     total: number;
+    totalPages: number;
+  };
+  facets: {
+    contractStatuses: Array<{ status: string; count: number }>;
+  };
+  summary: {
     totalValue: number;
-    pipeline: Record<string, number>;
   };
 }
 
-const CONTRACT_STATUS_TABS = [
-  { value: "all", label: "All" },
-  { value: "Pending", label: "Pending" },
-  { value: "Received", label: "Received" },
-  { value: "Sent Back", label: "Sent Back" },
-  { value: "Executed", label: "Executed" },
+const SORT_OPTIONS = [
+  { value: "updated_at.desc", label: "Recently updated" },
+  { value: "total.desc", label: "Highest value" },
+  { value: "contractor.asc", label: "Contractor A-Z" },
+  { value: "name.asc", label: "Project A-Z" },
+  { value: "contract_status.asc", label: "Status A-Z" },
 ] as const;
 
-export function ContractsPage() {
-  const { data, error, isLoading, mutate } = useSWR<ContractsApiResponse>(
-    "/api/contracts",
-    fetcher
+function normalizePositiveInt(value: string | null, fallback: number): number {
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed <= 0) {
+    return fallback;
+  }
+  return parsed;
+}
+
+function parseMultiParam(value: string | null): string[] {
+  if (!value) {
+    return [];
+  }
+
+  const values = value
+    .split(",")
+    .map((entry) => entry.trim())
+    .filter((entry) => entry.length > 0 && entry !== "all");
+
+  return [...new Set(values)];
+}
+
+const ContractRow = memo(function ContractRow({
+  contract,
+}: {
+  contract: ContractFromApi;
+}) {
+  return (
+    <TableRow
+      className="transition-colors hover:bg-primary/5"
+      key={contract.id}
+    >
+      <TableCell className="font-medium font-mono text-primary">
+        {contract.estimate_number || "-"}
+      </TableCell>
+      <TableCell className="truncate font-medium">{contract.name}</TableCell>
+      <TableCell className="truncate text-muted-foreground">
+        {contract.contractor || "-"}
+      </TableCell>
+      <TableCell>
+        <StatusBadge status={contract.contract_status || "Unlinked"} />
+      </TableCell>
+      <TableCell>
+        {contract.dust_permit_status ? (
+          <StatusBadge status={contract.dust_permit_status} />
+        ) : (
+          <span className="text-muted-foreground/60">-</span>
+        )}
+      </TableCell>
+      <TableCell className="text-right font-mono text-sm">
+        {contract.awarded_value || contract.bid_value
+          ? formatCurrency(
+              (contract.awarded_value ?? contract.bid_value) as number
+            )
+          : "-"}
+      </TableCell>
+      <TableCell className="truncate text-muted-foreground text-sm">
+        {contract.location || "-"}
+      </TableCell>
+      <TableCell className="truncate text-muted-foreground text-sm">
+        {contract.project_name || "Not linked"}
+      </TableCell>
+    </TableRow>
   );
-  const [search, setSearch] = useState("");
-  const [statusTab, setStatusTab] = useState("all");
-  const normalizedSearch = search.trim().toLowerCase();
+});
 
-  const contracts = data?.contracts ?? [];
-  const stats = data?.stats ?? { total: 0, totalValue: 0, pipeline: {} };
+export function ContractsPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const page = normalizePositiveInt(searchParams.get("page"), 1);
+  const perPage = normalizePositiveInt(searchParams.get("perPage"), 50);
+  const selectedStatuses = parseMultiParam(searchParams.get("status"));
+  const sort = searchParams.get("sort") || "updated_at.desc";
 
-  const filtered = useMemo(() => {
-    return contracts.filter((c) => {
-      const matchesStatus =
-        statusTab === "all" ||
-        (statusTab === "Unlinked"
-          ? !c.contract_status
-          : c.contract_status === statusTab);
-      const matchesSearch =
-        !normalizedSearch ||
-        c.name.toLowerCase().includes(normalizedSearch) ||
-        c.contractor?.toLowerCase().includes(normalizedSearch) ||
-        c.estimate_number?.toLowerCase().includes(normalizedSearch) ||
-        c.project_name?.toLowerCase().includes(normalizedSearch);
-      return matchesStatus && matchesSearch;
+  const [searchInput, setSearchInput] = useState(searchParams.get("q") || "");
+  const debouncedSearch = useDebouncedValue(searchInput, 250);
+
+  useEffect(() => {
+    const current = searchParams.get("q") || "";
+    if (current !== searchInput) {
+      setSearchInput(current);
+    }
+  }, [searchParams, searchInput]);
+
+  useEffect(() => {
+    const current = searchParams.get("q") || "";
+    const next = debouncedSearch.trim();
+    if (current === next) {
+      return;
+    }
+
+    const params = new URLSearchParams(searchParams);
+    if (next) {
+      params.set("q", next);
+    } else {
+      params.delete("q");
+    }
+    params.set("page", "1");
+    startTransition(() => setSearchParams(params));
+  }, [debouncedSearch, searchParams, setSearchParams]);
+
+  const query = useMemo(() => {
+    const params = new URLSearchParams();
+    params.set("page", String(page));
+    params.set("perPage", String(perPage));
+    params.set("sort", sort);
+
+    if (selectedStatuses.length > 0) {
+      params.set("status", selectedStatuses.join(","));
+    }
+
+    const q = debouncedSearch.trim();
+    if (q) {
+      params.set("q", q);
+    }
+    return params.toString();
+  }, [page, perPage, selectedStatuses, sort, debouncedSearch]);
+
+  const { data, error, isLoading, isValidating, mutate } =
+    useSWR<ContractsApiResponse>(`/api/contracts?${query}`, fetcher, {
+      keepPreviousData: true,
+      revalidateOnFocus: false,
     });
-  }, [contracts, statusTab, normalizedSearch]);
+
+  const setParam = (name: string, value: string) => {
+    const params = new URLSearchParams(searchParams);
+    params.set(name, value);
+    params.set("page", "1");
+    startTransition(() => setSearchParams(params));
+  };
+
+  const setStatuses = (values: string[]) => {
+    const params = new URLSearchParams(searchParams);
+    if (values.length > 0) {
+      params.set("status", values.join(","));
+    } else {
+      params.delete("status");
+    }
+    params.set("page", "1");
+    startTransition(() => setSearchParams(params));
+  };
+
+  const setPage = (nextPage: number) => {
+    const params = new URLSearchParams(searchParams);
+    params.set("page", String(nextPage));
+    startTransition(() => setSearchParams(params));
+  };
+
+  const items = data?.items ?? [];
+  const statuses = data?.facets.contractStatuses ?? [];
+  const totalPages = data?.pagination.totalPages ?? 1;
+  const isInitialLoading = isLoading && !data;
+  const isRefreshing = isValidating && !!data;
 
   return (
     <div className="flex flex-1 flex-col">
       <PageHeader
         actions={
-          <div className="flex items-center gap-3">
-            <div className="relative">
-              <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                className="h-9 w-64 pl-9"
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search contracts..."
-                value={search}
-              />
-            </div>
-            <Button onClick={() => mutate()} size="sm" variant="outline">
-              <RefreshCw className="h-4 w-4" />
-              Refresh
-            </Button>
-          </div>
+          <Button onClick={() => mutate()} size="sm" variant="outline">
+            <RefreshCw className="h-4 w-4" />
+            Refresh
+          </Button>
         }
         breadcrumbs={[{ label: "Contracts" }]}
         title="Contracts"
       />
 
       {error && <PageError message={error.message} />}
-      {!error && isLoading && <PageLoading />}
-      {!(error || isLoading) && (
+      {!error && isInitialLoading && <PageLoading />}
+      {data && (
         <div className="flex-1 p-6 lg:p-8">
-          <div className="page-transition flex flex-col gap-6">
-            {/* Stats bar */}
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-              <StatCard accent label="Won Contracts" value={stats.total} />
-              <StatCard
-                label="Total Value"
-                value={formatCompactCurrency(stats.totalValue)}
-              />
-              <StatCard label="Pending" value={stats.pipeline.Pending || 0} />
-              <StatCard label="Received" value={stats.pipeline.Received || 0} />
-              <StatCard label="Executed" value={stats.pipeline.Executed || 0} />
-            </div>
+          <div className="page-transition flex flex-col gap-4">
+            <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+              <div className="flex flex-wrap items-center gap-3 border-border/50 border-b bg-muted/20 p-4">
+                <div className="relative min-w-[280px] flex-1">
+                  <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    className="pl-9"
+                    onChange={(event) => setSearchInput(event.target.value)}
+                    placeholder="Search estimate #, project, contractor"
+                    value={searchInput}
+                  />
+                </div>
 
-            {/* Filter tabs + count */}
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <Tabs onValueChange={setStatusTab} value={statusTab}>
-                <TabsList>
-                  {CONTRACT_STATUS_TABS.map((tab) => (
-                    <TabsTrigger key={tab.value} value={tab.value}>
-                      {tab.label}
-                      {tab.value !== "all" && (
-                        <span className="ml-1 text-muted-foreground/70">
-                          {stats.pipeline[tab.value] || 0}
-                        </span>
-                      )}
-                    </TabsTrigger>
-                  ))}
-                </TabsList>
-              </Tabs>
-              <div className="text-muted-foreground text-sm">
-                {filtered.length} contracts
+                <FacetedMultiSelect
+                  className="min-w-[220px]"
+                  onApply={setStatuses}
+                  options={statuses.map((entry) => ({
+                    label: entry.status,
+                    value: entry.status,
+                    count: entry.count,
+                  }))}
+                  searchPlaceholder="Filter contract statuses..."
+                  selectedValues={selectedStatuses}
+                  title="Contract status"
+                />
+
+                <Select
+                  onValueChange={(value) => setParam("sort", value)}
+                  value={sort}
+                >
+                  <SelectTrigger className="min-w-[170px]" size="sm">
+                    <SelectValue placeholder="Sort" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SORT_OPTIONS.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                <Select
+                  onValueChange={(value) => setParam("perPage", value)}
+                  value={String(perPage)}
+                >
+                  <SelectTrigger className="min-w-[116px]" size="sm">
+                    <SelectValue placeholder="Per page" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="25">25 / page</SelectItem>
+                    <SelectItem value="50">50 / page</SelectItem>
+                    <SelectItem value="100">100 / page</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
+
+              <VirtualizedTable
+                colSpan={8}
+                empty="No contracts match your filters."
+                header={
+                  <TableHeader>
+                    <TableRow className="bg-muted/30 hover:bg-muted/30">
+                      <TableHead>Estimate #</TableHead>
+                      <TableHead>Project</TableHead>
+                      <TableHead>Contractor</TableHead>
+                      <TableHead>Contract</TableHead>
+                      <TableHead>Dust Permit</TableHead>
+                      <TableHead className="text-right">Value</TableHead>
+                      <TableHead>Location</TableHead>
+                      <TableHead>Linked Project</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                }
+                renderRow={(contract) => (
+                  <ContractRow contract={contract} key={contract.id} />
+                )}
+                rowHeight={38}
+                rows={items}
+                scrollMode="page"
+                tableClassName="table-fixed"
+              />
             </div>
 
-            {/* Table */}
-            <div className="overflow-hidden rounded-xl border border-border bg-card">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-muted/30 hover:bg-muted/30">
-                    <TableHead className="font-display font-medium text-foreground">
-                      Estimate #
-                    </TableHead>
-                    <TableHead className="font-display font-medium text-foreground">
-                      Project
-                    </TableHead>
-                    <TableHead className="font-display font-medium text-foreground">
-                      Contractor
-                    </TableHead>
-                    <TableHead className="font-display font-medium text-foreground">
-                      Contract Status
-                    </TableHead>
-                    <TableHead className="font-display font-medium text-foreground">
-                      Dust Permit
-                    </TableHead>
-                    <TableHead className="text-right font-display font-medium text-foreground">
-                      Value
-                    </TableHead>
-                    <TableHead className="font-display font-medium text-foreground">
-                      Location
-                    </TableHead>
-                    <TableHead className="font-display font-medium text-foreground">
-                      Linked Project
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filtered.map((contract, index) => (
-                    <TableRow
-                      className="group transition-colors hover:bg-primary/5"
-                      key={contract.id}
-                      style={{ animationDelay: `${index * 15}ms` }}
+            {data && (
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground text-sm">
+                  {data.pagination.total} contracts
+                  {isRefreshing ? " (Updating...)" : ""}
+                  <span className="ml-3">
+                    Total value:{" "}
+                    {formatCompactCurrency(data.summary.totalValue)}
+                  </span>
+                </span>
+                <div className="flex items-center gap-3">
+                  <span className="text-muted-foreground text-sm">
+                    Page {data.pagination.page} of {totalPages}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      disabled={data.pagination.page <= 1}
+                      onClick={() => setPage(data.pagination.page - 1)}
+                      size="sm"
+                      variant="outline"
                     >
-                      <TableCell className="font-medium font-mono text-primary">
-                        {contract.estimate_number || "—"}
-                      </TableCell>
-                      <TableCell>
-                        <div className="max-w-[280px] truncate font-medium">
-                          {contract.name}
-                        </div>
-                      </TableCell>
-                      <TableCell className="max-w-[180px] truncate text-muted-foreground">
-                        {contract.contractor || "—"}
-                      </TableCell>
-                      <TableCell>
-                        <StatusBadge
-                          status={contract.contract_status || "Unlinked"}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        {contract.dust_permit_status && (
-                          <StatusBadge status={contract.dust_permit_status} />
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right font-mono text-sm">
-                        {contract.awarded_value || contract.bid_value
-                          ? formatCurrency(
-                              (contract.awarded_value ??
-                                contract.bid_value) as number
-                            )
-                          : "—"}
-                      </TableCell>
-                      <TableCell className="max-w-[180px] truncate text-muted-foreground text-sm">
-                        {contract.location || "—"}
-                      </TableCell>
-                      <TableCell>
-                        {contract.project_name ? (
-                          <span className="max-w-[200px] truncate text-sm">
-                            {contract.project_name}
-                          </span>
-                        ) : (
-                          <span className="text-muted-foreground/50 text-sm italic">
-                            Not linked
-                          </span>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                  {filtered.length === 0 && (
-                    <TableRow>
-                      <TableCell
-                        className="py-12 text-center text-muted-foreground"
-                        colSpan={8}
-                      >
-                        {search || statusTab !== "all"
-                          ? "No contracts match your filters."
-                          : "No won contracts found."}
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </div>
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      disabled={data.pagination.page >= totalPages}
+                      onClick={() => setPage(data.pagination.page + 1)}
+                      size="sm"
+                      variant="outline"
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

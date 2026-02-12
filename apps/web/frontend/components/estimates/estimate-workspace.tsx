@@ -82,6 +82,9 @@ interface ApiEstimateResponse {
   job_name: string;
   job_address: string | null;
   client_name: string | null;
+  estimator: string | null;
+  estimator_email: string | null;
+  client_address: string | null;
   client_email: string | null;
   client_phone: string | null;
   updated_at: string;
@@ -97,10 +100,13 @@ interface ApiEstimateResponse {
     line_items: Array<{
       id: string;
       section_id: string | null;
+      item_name: string | null;
       description: string;
       quantity: number;
       unit: string;
+      unit_cost: number;
       unit_price: number;
+      is_excluded: number;
       notes: string | null;
       sort_order: number;
     }>;
@@ -117,19 +123,22 @@ function apiToEditorEstimate(
   }
 
   return {
-    estimateNumber: api.base_number,
+    estimateNumber: api.base_number || current.estimateNumber,
     date: current.date,
-    estimator: current.estimator,
-    estimatorEmail: current.estimatorEmail,
+    estimator: api.estimator ?? current.estimator,
+    estimatorEmail: api.estimator_email ?? current.estimatorEmail,
     billTo: {
       companyName: api.client_name ?? "",
-      address: current.billTo.address,
+      address: (api.client_address ?? current.billTo.address).replaceAll(
+        "\n",
+        ", "
+      ),
       email: api.client_email ?? "",
       phone: api.client_phone ?? "",
     },
     jobInfo: {
       siteName: api.job_name,
-      address: api.job_address ?? "",
+      address: (api.job_address ?? "").replaceAll("\n", ", "),
     },
     sections: version.sections.map((s) => ({
       id: s.id,
@@ -138,13 +147,14 @@ function apiToEditorEstimate(
     })),
     lineItems: version.line_items.map((item) => ({
       id: item.id,
-      item: item.description,
-      description: item.notes ?? "",
+      item: item.item_name ?? item.description,
+      description: item.description || item.notes || "",
       qty: item.quantity,
       uom: item.unit,
-      cost: item.unit_price,
+      cost: item.unit_cost ?? item.unit_price,
       total: item.quantity * item.unit_price,
       sectionId: item.section_id ?? undefined,
+      isAlternate: item.is_excluded === 1,
     })),
     total: version.total,
   };
@@ -321,33 +331,44 @@ export function EstimateWorkspace({
 
   const handleSave = useCallback(
     async (estimate: EditorEstimate) => {
+      const nonEmptyLineItems = estimate.lineItems.filter(
+        (item) => item.item.trim() !== ""
+      );
+      const computedTotal = nonEmptyLineItems.reduce(
+        (sum, item) => sum + item.total,
+        0
+      );
+
       // Convert editor format to API format
       const payload = {
         base_number: estimate.estimateNumber,
         job_name: estimate.jobInfo.siteName || "Untitled Estimate",
         job_address: estimate.jobInfo.address || null,
         client_name: estimate.billTo.companyName || null,
+        client_address: estimate.billTo.address || null,
         client_email: estimate.billTo.email || null,
         client_phone: estimate.billTo.phone || null,
         status: "draft",
-        total: estimate.total,
+        total: computedTotal,
         sections: estimate.sections.map((s) => ({
           id: s.id,
           name: s.name,
           title: s.title,
         })),
-        line_items: estimate.lineItems.map((item) => ({
+        line_items: nonEmptyLineItems.map((item) => ({
           section_id: item.sectionId,
-          description: item.item || item.description,
+          item_name: item.item,
           item: item.item,
+          description: item.description,
           quantity: item.qty,
           qty: item.qty,
           unit: item.uom,
           uom: item.uom,
-          unit_cost: item.cost * 0.7,
+          unit_cost: item.cost,
           unit_price: item.cost,
           cost: item.cost,
-          notes: item.description,
+          notes: null,
+          is_excluded: item.isAlternate ? 1 : 0,
         })),
       };
 

@@ -17,6 +17,7 @@ interface ApiEstimateResponse {
   job_name: string;
   job_address: string | null;
   client_name: string | null;
+  client_address?: string | null;
   client_email: string | null;
   client_phone: string | null;
   updated_at: string;
@@ -27,6 +28,7 @@ interface ApiEstimateResponse {
     line_items: Array<{
       id: string;
       section_id: string | null;
+      item_name?: string | null;
       description: string;
       quantity: number;
       unit: string;
@@ -58,7 +60,7 @@ function apiToEditorEstimate(
     estimatorEmail: current.estimatorEmail,
     billTo: {
       companyName: api.client_name ?? "",
-      address: current.billTo.address,
+      address: api.client_address ?? current.billTo.address,
       email: api.client_email ?? "",
       phone: api.client_phone ?? "",
     },
@@ -72,8 +74,8 @@ function apiToEditorEstimate(
     })),
     lineItems: version.line_items.map((item) => ({
       id: item.id,
-      item: item.description,
-      description: item.notes ?? "",
+      item: item.item_name ?? item.description,
+      description: item.description || item.notes || "",
       qty: item.quantity,
       uom: item.unit,
       cost: item.unit_price,
@@ -334,7 +336,7 @@ describe("apiToEditorEstimate", () => {
     const item = result.lineItems[0];
     expect(item.id).toBe("item-1");
     expect(item.item).toBe("Temp Fence Install");
-    expect(item.description).toBe("Standard installation");
+    expect(item.description).toBe("Temp Fence Install");
     expect(item.qty).toBe(100);
     expect(item.uom).toBe("LF");
     expect(item.cost).toBe(2.5);
@@ -442,7 +444,7 @@ describe("apiToEditorEstimate", () => {
     };
 
     const result = apiToEditorEstimate(api, mockCurrentEstimate);
-    expect(result.lineItems[0].description).toBe("");
+    expect(result.lineItems[0].description).toBe("Item without notes");
   });
 
   it("calculates line item total correctly", () => {

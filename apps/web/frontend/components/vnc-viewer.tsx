@@ -6,7 +6,7 @@
  */
 
 import { ExternalLink, Maximize2, Minimize2, Monitor } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Button } from "@/apps/web/frontend/components/ui/button";
 import {
   Dialog,
@@ -16,11 +16,19 @@ import {
   DialogTitle,
 } from "@/apps/web/frontend/components/ui/dialog";
 
-const VNC_URL = "http://localhost:47821/vnc.html?autoconnect=true&resize=scale";
+const DEFAULT_VNC_QUERY =
+  "autoconnect=true&resize=scale&reconnect=true&reconnect_delay=2000";
+
+function getDefaultVncUrl(): string {
+  const { protocol, hostname } = window.location;
+  return `${protocol}//${hostname}:47821/vnc.html?${DEFAULT_VNC_QUERY}`;
+}
 
 interface VncViewerProps {
   title?: string;
   subtitle?: string;
+  url?: string;
+  connected?: boolean;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -28,10 +36,13 @@ interface VncViewerProps {
 export function VncViewer({
   title = "Browser Session",
   subtitle,
+  url,
+  connected = false,
   open,
   onOpenChange,
 }: VncViewerProps) {
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const vncUrl = useMemo(() => url || getDefaultVncUrl(), [url]);
 
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
@@ -68,7 +79,7 @@ export function VncViewer({
               </Button>
               <Button
                 onClick={() =>
-                  window.open(VNC_URL, "_blank", "noopener,noreferrer")
+                  window.open(vncUrl, "_blank", "noopener,noreferrer")
                 }
                 size="icon"
                 title="Open in new tab"
@@ -101,17 +112,27 @@ export function VncViewer({
           <iframe
             allow="clipboard-read; clipboard-write"
             className="h-full w-full border-0"
-            src={VNC_URL}
+            src={vncUrl}
             title={`VNC Session — ${title}`}
           />
 
           {/* Connection status indicator */}
           <div className="absolute bottom-3 left-3 flex items-center gap-2 rounded-full border border-border bg-black/80 px-3 py-1.5 font-mono text-xs backdrop-blur-sm">
             <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500" />
+              <span
+                className={`absolute inline-flex h-full w-full animate-ping rounded-full ${
+                  connected ? "bg-green-400" : "bg-amber-400"
+                } opacity-75`}
+              />
+              <span
+                className={`relative inline-flex h-2 w-2 rounded-full ${
+                  connected ? "bg-green-500" : "bg-amber-500"
+                }`}
+              />
             </span>
-            <span className="text-muted-foreground">Connected</span>
+            <span className="text-muted-foreground">
+              {connected ? "Portal ready" : "Portal not ready"}
+            </span>
           </div>
         </div>
 

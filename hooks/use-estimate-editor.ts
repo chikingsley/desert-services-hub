@@ -317,6 +317,34 @@ export function useEstimateEditor({
           updatedLineItems = [...updatedLineItems, newItem];
         }
 
+        if (catalogItem.code === "CM-003") {
+          const siltFence = findCatalogItem(categoryId, "CM-004")?.item;
+          const hasSiltFenceAlternate = siltFence
+            ? updatedLineItems.some(
+                (existing) =>
+                  existing.item === siltFence.name &&
+                  existing.sectionId === categoryId
+              )
+            : true;
+
+          if (siltFence && !hasSiltFenceAlternate) {
+            updatedLineItems = [
+              ...updatedLineItems,
+              {
+                id: crypto.randomUUID(),
+                item: siltFence.name,
+                description: siltFence.description,
+                qty: 0,
+                uom: siltFence.unit,
+                cost: siltFence.price,
+                total: 0,
+                sectionId: categoryId,
+                isAlternate: true,
+              },
+            ];
+          }
+        }
+
         const sectionExists = prev.sections.some((s) => s.id === categoryId);
         const newSections = sectionExists
           ? prev.sections

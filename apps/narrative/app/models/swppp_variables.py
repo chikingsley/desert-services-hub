@@ -349,9 +349,11 @@ class StormPlanExtraction(BaseModel):
     # Site details
     intended_use_after: Optional[str] = None
     soil_type_description: Optional[str] = None
+    slopes_description: Optional[str] = None
 
     # Water info
     receiving_water: Optional[str] = None
+    storm_sewer_systems: Optional[str] = None
     flood_zone: Optional[str] = None
 
     # Engineers/consultants

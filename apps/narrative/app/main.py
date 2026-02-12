@@ -37,7 +37,9 @@ async def root():
         "endpoints": {
             "validate": "/api/v1/swppp/validate - Check if your data is valid",
             "generate": "/api/v1/swppp/generate - Generate document and get path",
-            "download": "/api/v1/swppp/generate-and-download - Generate and download document"
+            "download": "/api/v1/swppp/generate-and-download - Generate and download document",
+            "validate_canonical": "/api/v1/swppp/validate-canonical - Validate canonical payload",
+            "generate_from_canonical": "/api/v1/swppp/generate-from-canonical - Deterministic generation from canonical payload",
         }
     }
 

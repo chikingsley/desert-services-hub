@@ -41,7 +41,8 @@ export const CANONICAL_FIELDS: readonly CanonicalField[] = [
     group: "project",
     required: true,
     label: "Project address line 1",
-    description: "Street or site location line.",
+    description:
+      "Street or site location line. Cross-street descriptors (e.g. 'NWC A & B') are acceptable when no street number is provided.",
     sourceKeys: [
       "1.1 Project/Site Information.UNLABELED.address_line1",
       "TITLE.SWPPP Contact(s).Line2",

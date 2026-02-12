@@ -19,6 +19,9 @@ This directory holds the organized tooling for the Eva->Jayson narrative corpus 
   - Optional `--download` writes selected attachments into packet folders.
 - `report-packet-alignment.ts`
   - Deterministic field-level comparison of packet-derived fields vs `CANONICAL_DOCS.tsv`.
+- `validate_source_packets.py`
+  - Runs deterministic NOI+estimate -> canonical builder -> mapper flow on source packets.
+  - Writes alignment artifacts and can optionally generate output SWPPP docs.
 - `run.ts`
   - Orchestrator for running selected workflow steps.
 
@@ -36,4 +39,7 @@ bun apps/narrative/scripts/narrative_inventory/build-source-packets.ts --limit 2
 
 # Score deterministic packet alignment against canonical ground truth
 bun apps/narrative/scripts/narrative_inventory/report-packet-alignment.ts
+
+# Run deterministic payload builder + mapper against packets (strict all-field hard block)
+uv run --directory apps/narrative python scripts/narrative_inventory/validate_source_packets.py --limit 20 --field-scope all --hard-block
 ```

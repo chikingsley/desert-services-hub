@@ -51,8 +51,8 @@
   A: 480-603-8216
   B: 602-284-1346
 - `operator.email` (Operator email (best-effort))
-  A: james@westates.us
-  B: dtang@csigc.com
+  A: <james@westates.us>
+  B: <dtang@csigc.com>
 - `swppp_contact.name` (SWPPP contact name (best-effort))
   A: James Leonard
   B: David Tang

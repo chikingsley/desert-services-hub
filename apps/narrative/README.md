@@ -86,7 +86,30 @@ uv run python scripts/generate_swppp.py
     uv run python scripts/utils/inspect_template.py
     ```
 
-### 5. Narrative Inventory Workflow (Organized)
+### 5. Deterministic Canonical Flow
+
+Use this when you already have canonical JSON fields and want deterministic generation
+without rerunning PDF extraction prompts.
+
+*   **Validate canonical payload via API:**
+    ```bash
+    curl -X POST http://localhost:8000/api/v1/swppp/validate-canonical \
+      -H "Content-Type: application/json" \
+      -d @path/to/canonical_payload.json
+    ```
+*   **Generate from canonical payload via API:**
+    ```bash
+    curl -X POST http://localhost:8000/api/v1/swppp/generate-from-canonical \
+      -H "Content-Type: application/json" \
+      -d @path/to/canonical_payload.json
+    ```
+*   **Generate from canonical payload via CLI script:**
+    ```bash
+    uv run python scripts/generate_swppp_from_canonical.py \
+      --input path/to/canonical_payload.json
+    ```
+
+### 6. Narrative Inventory Workflow (Organized)
 
 Use this when updating the Eva->Jayson narrative corpus analysis and canonical field contract.
 
@@ -97,6 +120,20 @@ bun apps/narrative/scripts/narrative_inventory/run.ts --inventory --report --dif
 Outputs are exported to:
 
 `apps/narrative/workflows/eva-jayson-variable-inventory/artifacts/`
+
+### 7. Deterministic Source-Packet Validation
+
+Run deterministic NOI + estimate extraction through the canonical builder and mapper:
+
+```bash
+uv run --directory apps/narrative python scripts/narrative_inventory/validate_source_packets.py --limit 20 --field-scope all --hard-block
+```
+
+Outputs:
+
+- `apps/narrative/data/intake/eva-to-jayson/source-packets/deterministic_validation.json`
+- `apps/narrative/data/intake/eva-to-jayson/source-packets/deterministic_alignment.csv`
+- `apps/narrative/data/intake/eva-to-jayson/source-packets/deterministic_alignment.md`
 
 ## 📚 Documentation
 

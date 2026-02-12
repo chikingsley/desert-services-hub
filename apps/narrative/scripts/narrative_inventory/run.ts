@@ -5,6 +5,7 @@
  *   bun apps/narrative/scripts/narrative_inventory/run.ts --all
  *   bun apps/narrative/scripts/narrative_inventory/run.ts --inventory --report --export
  *   bun apps/narrative/scripts/narrative_inventory/run.ts --diff
+ *   bun apps/narrative/scripts/narrative_inventory/run.ts --validate
  */
 
 import { parseArgs } from "node:util";
@@ -36,6 +37,7 @@ function main(): void {
       report: { type: "boolean", default: false },
       diff: { type: "boolean", default: false },
       export: { type: "boolean", default: false },
+      validate: { type: "boolean", default: false },
     },
     allowPositionals: false,
   });
@@ -48,6 +50,7 @@ function main(): void {
   const wantReport = runAll || Boolean(values.report);
   const wantDiff = runAll || Boolean(values.diff);
   const wantExport = runAll || Boolean(values.export);
+  const wantValidate = runAll || Boolean(values.validate);
 
   if (wantDownload) {
     steps.push({
@@ -95,10 +98,28 @@ function main(): void {
       ],
     });
   }
+  if (wantValidate) {
+    steps.push({
+      name: "Validate Deterministic Source Packets",
+      cmd: [
+        "uv",
+        "run",
+        "--directory",
+        "apps/narrative",
+        "python",
+        "scripts/narrative_inventory/validate_source_packets.py",
+        "--limit",
+        "20",
+        "--field-scope",
+        "all",
+        "--hard-block",
+      ],
+    });
+  }
 
   if (steps.length === 0) {
     console.log(
-      "No steps selected. Use --all or one of --download/--inventory/--report/--diff/--export"
+      "No steps selected. Use --all or one of --download/--inventory/--report/--diff/--export/--validate"
     );
     return;
   }

@@ -4,9 +4,9 @@ All emails are rendered in Microsoft Outlook. Use only these patterns.
 
 ## Base Wrapper
 
-Every email uses the simple.hbs template via `wrapWithSignature()` from `services/email/email-templates/index.ts`. The wrapper provides:
+Every email uses the `simple.hbs` wrapper via `wrapWithSignature()` from `apps/cli-tools/email-cli/src/email-templates/index.ts`. The wrapper provides:
 
-- `font-family: Arial, sans-serif; font-size: 14px; color: #333`
+- `font-family: Aptos, sans-serif; font-size: 12pt; color: #333`
 - Signature block (Best, / -- / name / title / email / phone)
 - Desert Services logo as inline attachment (`<img src="cid:logo">`)
 
@@ -56,10 +56,10 @@ The full signature block:
 
 ## Unordered Lists (CRITICAL)
 
-Use plain `<ul>` with NO style attribute. Outlook's native list margins provide correct spacing.
+Use `<ul>` with zero top/bottom margins to avoid extra spacing in Outlook.
 
 ```html
-<ul>
+<ul style="margin-top:0; margin-bottom:0;">
   <li><div>First item</div></li>
   <li><div>Second item</div></li>
   <li><div>Third item</div></li>
@@ -69,14 +69,14 @@ Use plain `<ul>` with NO style attribute. Outlook's native list margins provide 
 **IMPORTANT:**
 
 - Do NOT add `<div><br></div>` before or after lists — creates double spacing
-- Do NOT use `<ul style="margin-top:0; margin-bottom:0">` — removes all spacing
+- Use exactly `style="margin-top:0; margin-bottom:0;"` on `<ul>/<ol>`
 
 ## Ordered Lists
 
-Same rules as unordered lists - plain `<ol>` with no style:
+Same rules as unordered lists:
 
 ```html
-<ol>
+<ol style="margin-top:0; margin-bottom:0;">
   <li><div>First item</div></li>
   <li><div>Second item</div></li>
 </ol>
@@ -124,5 +124,5 @@ Note: No signature in the body when using `skipSignature: true` — Outlook adds
 - `<table>` for layout (never use tables)
 - CSS classes (Outlook strips them)
 - `<span>` with styling (use `<b>` for bold, plain text for everything else)
-- `<ul style="margin-top:0; margin-bottom:0">` — removes all spacing, makes lists look cramped
+- Missing zero-margins on `<ul>/<ol>` — can introduce inconsistent spacing in Outlook
 - `<div><br></div>` before/after `<ul>` — creates double spacing

@@ -4,7 +4,7 @@
  * Email Sync — Poll Loop
  *
  * Polls Microsoft Graph API for new emails across all mailboxes,
- * syncs into hub.db, and runs enrichment pipeline.
+ * syncs into Supabase Postgres, and runs enrichment pipeline.
  *
  * Usage:
  *   bun cli/sync.ts                    # Continuous polling (5min default)

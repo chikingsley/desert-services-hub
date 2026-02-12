@@ -153,6 +153,26 @@ async function buildDustPermitDraft(
   const metadata = event.metadata;
   const logo = await getLogoAttachment();
 
+  if (event.eventType === "contract_packet_sla_breached") {
+    const body = [
+      "<p><strong>Contract packet SLA breached.</strong></p>",
+      `<p>Project: ${stringValue(metadata.projectName, "Unknown Project")}</p>`,
+      `<p>Status: ${stringValue(metadata.packetStatus, "Unknown")}</p>`,
+      `<p>Minutes since received: ${stringValue(metadata.minutesSinceReceived, "N/A")}</p>`,
+      `<p>Current owner: ${stringValue(metadata.owner, "Unassigned")}</p>`,
+      `<p>Next action: ${stringValue(metadata.nextAction, "No next action set")}</p>`,
+      `<p>Packet documents linked: ${stringValue(metadata.packetDocumentCount, "0")}</p>`,
+      `<p>Packet ID: ${stringValue(metadata.packetId, event.refId)}</p>`,
+    ].join("\n");
+
+    return {
+      body,
+      bodyType: "html",
+      skipSignature: true,
+      attachments: [logo],
+    };
+  }
+
   if (event.eventType === "dust_permit_submitted") {
     const body = await getTemplate("dust-permit-submitted", {
       recipientName: "Team",

@@ -3,7 +3,7 @@
 /**
  * SWPPP Sync — Status
  *
- * Shows current state of SWPPP work orders in hub.db.
+ * Shows current state of SWPPP work orders in Supabase Postgres.
  *
  * Usage:
  *   bun cli/status.ts

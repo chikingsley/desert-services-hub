@@ -3,7 +3,7 @@
 /**
  * Email Sync — Status
  *
- * Shows current state of email data in hub.db.
+ * Shows current state of email data in Supabase Postgres.
  *
  * Usage:
  *   bun cli/status.ts

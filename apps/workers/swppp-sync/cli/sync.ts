@@ -3,7 +3,7 @@
 /**
  * SWPPP Sync — Poll Loop
  *
- * Polls SharePoint SWPPP Master Excel and syncs into hub.db.
+ * Polls SharePoint SWPPP Master Excel and syncs into Supabase Postgres.
  *
  * Usage:
  *   bun cli/sync.ts                    # Continuous polling (60s default)

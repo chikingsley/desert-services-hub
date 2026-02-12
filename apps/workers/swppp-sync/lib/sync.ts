@@ -2,7 +2,7 @@
  * SWPPP Sync — Core Logic
  *
  * Fetches SWPPP Master Excel data from SharePoint via Graph API,
- * upserts into hub.db swppp_work_orders table, and links contractors
+ * upserts into Supabase Postgres swppp_work_orders table, and links contractors
  * to accounts.
  */
 

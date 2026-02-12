@@ -47,7 +47,6 @@ Thank you.
 
 To reach the Maricopa County Air Quality Department, please call (602) 506-6010`;
 
-
 // Accelerated processing: PointAndPay lists the same invoice twice; Sub Total is doubled.
 const POINTANDPAY_EMAIL_BODY_ACCELERATED = `Your Maricopa County Air Quality Department payment has been authorized and will be processed soon.
 
@@ -201,7 +200,9 @@ describe("parsePointAndPayEmail", () => {
   });
 
   it("extracts amount for accelerated payments (sum of duplicate invoice line items)", () => {
-    const accelerated = parsePointAndPayEmail(POINTANDPAY_EMAIL_BODY_ACCELERATED);
+    const accelerated = parsePointAndPayEmail(
+      POINTANDPAY_EMAIL_BODY_ACCELERATED
+    );
     expect(accelerated.invoiceNumber).toBe("IV088327");
     expect(accelerated.amount).toBe("$2,260.00");
   });

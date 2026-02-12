@@ -104,12 +104,24 @@ const SEEDS: Array<{
     name: "Contracts",
     role: "contracts",
   },
+  {
+    event: "contract_packet_sla_breached",
+    email: "chi@desertservices.net",
+    name: "Chi",
+    role: "contracts",
+  },
+  {
+    event: "contract_packet_sla_breached",
+    email: "contracts@desertservices.net",
+    name: "Contracts",
+    role: "contracts",
+  },
 ];
 
 console.log("Seeding stakeholders...\n");
 
 for (const s of SEEDS) {
-  addStakeholder(s.event, s.email, s.name, s.role);
+  await addStakeholder(s.event, s.email, s.name, s.role);
   console.log(`  [${s.event}] ${s.name} <${s.email}> (${s.role})`);
 }
 

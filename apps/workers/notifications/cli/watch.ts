@@ -3,7 +3,7 @@
 /**
  * Notifications — Watch Loop
  *
- * Polls hub.db for events that need notifications (permit expirations,
+ * Polls Supabase Postgres for events that need notifications (permit expirations,
  * estimate wins, etc.) and creates notification entries or Outlook drafts.
  *
  * Usage:

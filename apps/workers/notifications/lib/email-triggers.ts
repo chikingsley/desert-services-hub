@@ -36,8 +36,7 @@ const POINT_AND_PAY_INVOICE_RE = /Account Number:\s*(IV\d+)/i;
 const POINT_AND_PAY_COUNTY_INVOICE_NUMBER_RE = /Invoice Number:\s*(\d+)/i;
 const POINT_AND_PAY_PRODUCT_LINE_RE =
   /Product:\s*Invoices\s*-\s*Account Number:\s*(IV\d+)\s*-\s*Amount:\s*(\$[\d,]+\.\d{2})/i;
-const POINT_AND_PAY_SUBTOTAL_RE =
-  /^[ \t]*Sub Total:\s*(\$[\d,]+\.\d{2})/im;
+const POINT_AND_PAY_SUBTOTAL_RE = /^[ \t]*Sub Total:\s*(\$[\d,]+\.\d{2})/im;
 const POINT_AND_PAY_TOTAL_RE = /^[ \t]*Total:\s*(\$[\d,]+\.\d{2})/im;
 const POINT_AND_PAY_AMOUNT_RE = /Amount:\s*(\$[\d,]+\.\d{2})/i;
 const POINT_AND_PAY_CONFIRMATION_RE = /Confirmation ID:\s*(\d+)/i;
@@ -120,7 +119,10 @@ export function parsePointAndPayEmail(body: string): PointAndPayData {
   let amount: string | null = null;
 
   if (invoiceNumber) {
-    const productLineRe = new RegExp(POINT_AND_PAY_PRODUCT_LINE_RE.source, "gi");
+    const productLineRe = new RegExp(
+      POINT_AND_PAY_PRODUCT_LINE_RE.source,
+      "gi"
+    );
     let sum = 0;
     let count = 0;
     for (const match of body.matchAll(productLineRe)) {

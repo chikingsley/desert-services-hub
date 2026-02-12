@@ -292,11 +292,24 @@ Use this when users request Site-Specific Safety Plans (SSSP) or Safety Data She
 ### Source of Truth
 
 - SSSP generator:
-  - `apps/cli-tools/pdf-cli/`
+  - `apps/cli-tools/pdf-generation-cli/`
   - `lib/pdf/sssp/`
 - Current LGE working packet:
   - `data/triage/1400-w-3rd/`
   - SSSP input: `data/triage/1400-w-3rd/sssp-input.json`
+
+### Section Controls
+
+- By default, section visibility is inferred from SSSP scope text.
+- CLI overrides for `safety sssp generate`:
+  - `--sections water-truck,street-sweeping,portable-sanitation`
+  - `--sections all`
+- JSON overrides in SSSP input:
+  - `sections` accepted values: `water-truck`, `street-sweeping`, `portable-sanitation` (at least one required)
+  - `contacts[]` must include at least 5 rows with `role`, `name`, and `phone`
+  - Cover fields currently rendered: `projectName`, `gcName`, `date`, `projectAddress`, `jobNumber`
+  - Metadata accepted but not currently rendered on cover: `title`, `revision`, `preparedBy`, `approvedBy`, `projectCode`, `ownerName`, `startDate`, `duration`, `workHours`
+- Contacts are sourced from `contacts[]` in the SSSP JSON input.
 
 ### Contact Assignment Rule
 
@@ -330,12 +343,12 @@ Commands:
 
 ```bash
 # Inventory only
-bun apps/cli-tools/pdf-cli/bin/cli.ts safety sds generate \
+bun apps/cli-tools/pdf-generation-cli/bin/cli.ts safety sds generate \
   --in data/sds/sds-input.json \
   --out data/sds/SDS_Chemical_Inventory.pdf
 
 # Binder (append sheets)
-bun apps/cli-tools/pdf-cli/bin/cli.ts safety sds generate \
+bun apps/cli-tools/pdf-generation-cli/bin/cli.ts safety sds generate \
   --in data/sds/sds-input.json \
   --out data/sds/SDS_Binder.pdf \
   --include-sheets

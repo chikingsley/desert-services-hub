@@ -123,7 +123,7 @@ Desert Services provides environmental compliance services (SWPPP, dust control,
 
 | Worker | Type | Trigger | Status |
 |--------|------|---------|--------|
-| **estimates-sync-worker** | Cloudflare | Cron hourly :00 | DEPLOYED — Monday files → SharePoint folders |
+| **estimates-sync-worker** | Worker Timer | `apps/web/worker.ts` sync_full job | RUNNING in web worker — Monday files → SharePoint folders (CF Worker removed 2026-02-11) |
 | **monday-status-sync-worker** | Cloudflare | Cron hourly :15 | DEPLOYED — GC cleanup, leads sync, project links |
 | **inspections-email-worker** | CF Email | Incoming email | DEPLOYED — ComplianceGo → PDF → SharePoint |
 | **intake-worker** | CF Email | Incoming email | DEPLOYED — intake@ + contracts@ + dustpermits@ → hub intake webhook |
@@ -147,7 +147,7 @@ Canonical health/deploy gating reads from `ops/runtime/worker-registry.json`. Th
 | `permit-workers` | ACTIVE | Permit Automation | `docker-compose.yml`, `apps/workers/permit-workers/` | No | `PEA-46` (session hardening, in progress) |
 | `intake-worker` | ACTIVE | Intake Automation | `apps/workers/intake-worker/`, Cloudflare deploy | No | Intake pipeline consolidation complete (`PEA-53`) |
 | `monday-status-sync-worker` | ACTIVE | Monday Integrations | `apps/workers/monday-status-sync-worker/`, Cloudflare deploy | No | Registry health gate (`PEA-54`) |
-| `estimates-sync-worker` | ACTIVE | Monday Integrations | `apps/workers/estimates-sync-worker/`, Cloudflare deploy | No | Registry health gate (`PEA-54`) |
+| `estimates-sync-worker` | ACTIVE (in-process) | Monday Integrations | `apps/workers/estimates-sync-worker/lib/sharepoint-sync.ts`, runs in `web` container | No | CF Worker deleted 2026-02-11 |
 | `inspections-email-worker` | ACTIVE | Compliance Integrations | `apps/workers/inspections-email-worker/`, Cloudflare deploy | No | Registry health gate (`PEA-54`) |
 | `docusign-file-automation` | PARTIAL | Contracts Integrations | `apps/workers/docusign-file-automation/` | No | Runbook: `docs/reference/processes/docusign-intake-runbook.md` |
 | `estimate-poller` | UTILITY-ONLY | Estimating Integrations | `apps/workers/estimate-poller/` | Yes | Consolidation context tracked in `PEA-30` |
@@ -171,7 +171,7 @@ Canonical health/deploy gating reads from `ops/runtime/worker-registry.json`. Th
 | **sharepoint-cli** | walk, sync-project-files, batch-sync | PRODUCTION |
 | **quoting-cli** | list, get, create, update, delete, duplicate, pdf | PRODUCTION |
 | **pdf-analysis-cli** | ocr, extract, identify, analyze (Python — Gemini/Ollama/Mistral) | PRODUCTION |
-| **pdf-cli** | safety sssp init|generate, safety sds init|generate | PRODUCTION |
+| **pdf-generation-cli** | safety sssp init|generate, safety sds init|generate, quoting estimate generate | PRODUCTION |
 | **aqdata-cli** | Client library only, **no CLI commands exposed** | WIP |
 
 ---

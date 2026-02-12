@@ -32,9 +32,7 @@
 
 import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
-import { join } from "node:path";
 import { findItem } from "@lib/catalog";
-import type { EditorEstimate } from "@lib/db/types";
 import {
   applyLineItemChanges,
   type CreateEstimateInput,
@@ -49,11 +47,8 @@ import {
   listEstimates,
   updateEstimate,
 } from "@lib/estimating";
-import {
-  generateEstimatePDF,
-  getEstimatePDFFilename,
-} from "@lib/pdf/estimate/generate-estimate-pdf.server";
 import { z } from "zod";
+import { generateEstimatePdfById } from "../../pdf-generation-cli/src/quoting/generate";
 
 const args = process.argv.slice(2);
 const command = args[0];
@@ -505,73 +500,12 @@ async function pdfCommand(argv: string[]): Promise<void> {
 
   const opts = parseArgs(argv.slice(1));
 
-  const details = await getEstimateWithDetails(id);
-  if (!details) {
-    console.error(`Estimate not found: ${id}`);
-    process.exit(1);
-  }
-
-  const currentVersion = details.current_version;
-
-  // Convert to EditorEstimate format for PDF generation
-  const editorLineItems = currentVersion.line_items.map((i) => {
-    const unitPrice = i.unit_price ?? i.unit_cost;
-    return {
-      id: i.id,
-      item: i.item_name || i.description,
-      description: i.description || i.notes || "",
-      qty: i.quantity,
-      uom: i.unit,
-      cost: unitPrice,
-      total: i.quantity * unitPrice,
-      sectionId: i.section_id || undefined,
-    };
-  });
-
-  // Compute total from line items (version total may be stale)
-  const computedTotal = editorLineItems.reduce((sum, i) => sum + i.total, 0);
-
-  const estimate: EditorEstimate = {
-    estimateNumber: getEstimateNumber(
-      details.base_number,
-      currentVersion.version_number
-    ),
-    date: details.created_at,
-    estimator: details.estimator || "",
-    estimatorEmail: details.estimator_email || "",
-    billTo: {
-      companyName: details.client_name || "",
-      address: details.client_address || "",
-      email: details.client_email || "",
-      phone: details.client_phone || "",
-    },
-    jobInfo: {
-      siteName: details.job_name,
-      address: details.job_address || "",
-    },
-    sections: currentVersion.sections.map((s) => ({
-      id: s.id,
-      name: s.name,
-      showSubtotal: s.show_subtotal,
-    })),
-    lineItems: editorLineItems,
-    total: computedTotal,
-  };
-
-  const pdf = await generateEstimatePDF(estimate, {
+  const result = await generateEstimatePdfById(id, {
     includeBackPage: opts.backpage === "true",
+    outputPath: opts.output,
   });
 
-  let outputPath: string;
-  if (opts.output) {
-    outputPath = opts.output;
-  } else {
-    const filename = getEstimatePDFFilename(estimate);
-    outputPath = join(process.cwd(), filename);
-  }
-
-  await Bun.write(outputPath, pdf);
-  console.log(`PDF saved: ${outputPath}`);
+  console.log(`PDF saved: ${result.outputPath}`);
 }
 
 // Main command dispatcher

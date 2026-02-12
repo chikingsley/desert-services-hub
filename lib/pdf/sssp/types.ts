@@ -19,6 +19,11 @@ export interface SsspScopeItem {
   details: string[];
 }
 
+export type SsspSection =
+  | "water-truck"
+  | "street-sweeping"
+  | "portable-sanitation";
+
 export interface SsspDocument {
   // Document control
   title?: string; // default: "Site-Specific Safety Plan (SSSP)"
@@ -43,6 +48,17 @@ export interface SsspDocument {
   scopeOfWork?: string;
   /** Optional structured scope bullets (preferred over scopeOfWork free-text). */
   scopeItems?: SsspScopeItem[];
+  /**
+   * Explicit optional service sections to include in the output document.
+   * If omitted, section visibility falls back to legacy fields and heuristics.
+   */
+  sections?: SsspSection[];
+  /** @deprecated Prefer `sections` for explicit section selection. */
+  includeWaterTruckSection?: boolean | "auto";
+  /** @deprecated Prefer `sections` for explicit section selection. */
+  includeStreetSweepingSection?: boolean | "auto";
+  /** @deprecated Prefer `sections` for explicit section selection. */
+  includePortableSanitationSection?: boolean | "auto";
   crewSize?: string;
   equipment?: string[];
   subcontractors?: string[];

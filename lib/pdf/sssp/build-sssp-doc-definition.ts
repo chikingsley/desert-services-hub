@@ -5,7 +5,7 @@ import type {
 } from "pdfmake/interfaces";
 import { COLORS, COMPANY, FONT_BODY } from "../shared/brand";
 import { borderedLayout } from "../shared/layouts";
-import type { SsspDocument, SsspScopeItem } from "./types";
+import type { SsspDocument, SsspScopeItem, SsspSection } from "./types";
 
 const YYYY_MM_DD_RE = /^(\d{4})-(\d{2})-(\d{2})$/;
 const MULTILINE_SPLIT_RE = /\r?\n/;
@@ -98,6 +98,39 @@ function scopeBlobForHeuristics(scopeItems: SsspScopeItem[]): string {
     .map((s) => [s.title, ...(s.details ?? [])].join(" "))
     .join(" ")
     .toLowerCase();
+}
+
+function resolveSectionVisibility(
+  override: boolean | "auto" | undefined,
+  inferred: boolean
+): boolean {
+  if (override === undefined || override === "auto") {
+    return inferred;
+  }
+  return override;
+}
+
+function normalizeExplicitSections(
+  sections: SsspDocument["sections"]
+): Set<SsspSection> | undefined {
+  if (sections === undefined) {
+    return undefined;
+  }
+
+  const valid = new Set<SsspSection>([
+    "water-truck",
+    "street-sweeping",
+    "portable-sanitation",
+  ]);
+  const selected = new Set<SsspSection>();
+
+  for (const section of sections) {
+    if (valid.has(section)) {
+      selected.add(section);
+    }
+  }
+
+  return selected;
 }
 
 function emergencyContactsTable(doc: SsspDocument): ContentTable {
@@ -213,15 +246,30 @@ export function buildSsspDocDefinition(
 
   const scopeItems = scopeItemsOrFallback(doc);
   const scopeBlob = scopeBlobForHeuristics(scopeItems);
-  const includesWaterTruck = scopeBlob.includes("water truck");
-  const includesStreetSweeping =
-    scopeBlob.includes("street sweeping") ||
-    // be conservative; plain "sweeping" could show up in scope details.
-    (scopeBlob.includes("sweep") && !scopeBlob.includes("swept"));
-  const includesPortableSanitation =
-    scopeBlob.includes("portable") ||
-    scopeBlob.includes("sanitation") ||
-    scopeBlob.includes("toilet");
+  const explicitSections = normalizeExplicitSections(doc.sections);
+
+  const includesWaterTruck = explicitSections
+    ? explicitSections.has("water-truck")
+    : resolveSectionVisibility(
+        doc.includeWaterTruckSection,
+        scopeBlob.includes("water truck")
+      );
+  const includesStreetSweeping = explicitSections
+    ? explicitSections.has("street-sweeping")
+    : resolveSectionVisibility(
+        doc.includeStreetSweepingSection,
+        scopeBlob.includes("street sweeping") ||
+          // be conservative; plain "sweeping" could show up in scope details.
+          (scopeBlob.includes("sweep") && !scopeBlob.includes("swept"))
+      );
+  const includesPortableSanitation = explicitSections
+    ? explicitSections.has("portable-sanitation")
+    : resolveSectionVisibility(
+        doc.includePortableSanitationSection,
+        scopeBlob.includes("portable") ||
+          scopeBlob.includes("sanitation") ||
+          scopeBlob.includes("toilet")
+      );
 
   const content: Content[] = [
     // Cover page

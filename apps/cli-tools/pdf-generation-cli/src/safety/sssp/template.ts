@@ -25,6 +25,7 @@ export function templateDoc(): SsspDocument {
         details: ["____________________________"],
       },
     ],
+    sections: [],
     crewSize: "",
     equipment: [],
     subcontractors: [],

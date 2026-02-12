@@ -32,7 +32,7 @@ Use this structure for each CLI package:
 - Quoting:
   - `bun apps/cli-tools/quoting-cli/bin/cli.ts`
 - PDF:
-  - `bun apps/cli-tools/pdf-cli/bin/cli.ts`
+  - `bun apps/cli-tools/pdf-generation-cli/bin/cli.ts`
 - Email:
   - `bun apps/cli-tools/email-cli/bin/cli.ts`
   - `bun apps/cli-tools/email-cli/bin/docusign-link-watcher.ts`

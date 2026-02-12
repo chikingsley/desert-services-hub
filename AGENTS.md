@@ -55,7 +55,8 @@ Docker Compose (see `docker-compose.yml`):
 ## Runtime Truth (2026-02-12)
 
 Active worker/runtime components:
-- Cloudflare workers: `intake-worker`, `estimates-sync-worker`, `monday-status-sync-worker`, `inspections-email-worker`, `docusign-file-automation` (dispatcher partial).
+- Cloudflare workers: `intake-worker`, `monday-status-sync-worker`, `inspections-email-worker`, `docusign-file-automation` (dispatcher partial).
+- In-process web worker modules (SharePoint sync): `apps/workers/estimates-sync-worker/lib/sharepoint-sync.ts` (runs in `sync_full` job, no longer a CF Worker).
 - In-process web worker modules: `apps/web/lib/files-intake.ts`, `apps/web/lib/attachment-backfill.ts`, `apps/workers/outlook-folder-watcher/lib/poll.ts`, `apps/workers/estimate-email-linker/lib/poll.ts`.
 - Docker services: `notifications`, `swppp-sync`, `permit-worker`, plus `web`/`webhooks`.
 
@@ -96,7 +97,14 @@ Project-linking runtime (shared matcher):
 - Primary SSSP input for current LGE packet:
   - `data/triage/1400-w-3rd/sssp-input.json`
 - Generate SSSP PDF:
-  - `bun apps/cli-tools/pdf-cli/bin/cli.ts safety sssp generate --in <input.json> --out <output.pdf>`
+  - `bun apps/cli-tools/pdf-generation-cli/bin/cli.ts safety sssp generate --in <input.json> --out <output.pdf>`
+- SSSP section selection (CLI override):
+  - `--sections water-truck,street-sweeping,portable-sanitation`
+  - `--sections all`
+- SSSP JSON controls:
+  - Preferred section list: `sections` (`water-truck`, `street-sweeping`, `portable-sanitation`) with at least one value.
+  - Contact people are configured under `contacts[]` and must include at least 5 contacts with `role`, `name`, and `phone`.
+  - Cover fields currently rendered: `projectName`, `gcName`, `date`, `projectAddress`, `jobNumber`.
 - Contact policy for this flow:
   - Project lead defaults to the assigned Site Services Manager (SSM) from current sales-territory assignment, unless user overrides.
   - For lead/field/dispatcher contacts, format phone as two lines:
@@ -113,15 +121,15 @@ Project-linking runtime (shared matcher):
 ## SDS CLI (Inventory vs Binder)
 
 - Tool location:
-  - `apps/cli-tools/pdf-cli/bin/cli.ts`
-  - `apps/cli-tools/pdf-cli/README.md`
+  - `apps/cli-tools/pdf-generation-cli/bin/cli.ts`
+  - `apps/cli-tools/pdf-generation-cli/README.md`
 - Input file (current working set):
   - `data/sds/sds-input.json`
 - Two output modes:
   - Inventory only:
-    - `bun apps/cli-tools/pdf-cli/bin/cli.ts safety sds generate --in data/sds/sds-input.json --out data/sds/SDS_Chemical_Inventory.pdf`
+    - `bun apps/cli-tools/pdf-generation-cli/bin/cli.ts safety sds generate --in data/sds/sds-input.json --out data/sds/SDS_Chemical_Inventory.pdf`
   - Full binder (inventory + appended SDS sheets):
-    - `bun apps/cli-tools/pdf-cli/bin/cli.ts safety sds generate --in data/sds/sds-input.json --out data/sds/SDS_Binder.pdf --include-sheets`
+    - `bun apps/cli-tools/pdf-generation-cli/bin/cli.ts safety sds generate --in data/sds/sds-input.json --out data/sds/SDS_Binder.pdf --include-sheets`
 - Optional flags:
   - `--download-sheets-from-url`: fetch entry `url` when local `pdfPath` is not present.
   - `--fail-on-missing-sheets`: exit non-zero if any sheet could not be appended.

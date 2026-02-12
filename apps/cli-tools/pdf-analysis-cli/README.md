@@ -58,9 +58,10 @@ uv run pytest -k provider
 
 - `GEMINI_API_KEY`
 - `MISTRAL_API_KEY`
-- `OLLAMA_ENDPOINT` (default: `http://localhost:11434/v1`)
+- `OLLAMA_ENDPOINT` (default: `https://ollama.peacockery.studio/v1`)
 - `OLLAMA_MODEL` (default: `glm-ocr:latest`)
-- `PDF_ANALYSIS_PROVIDER_ORDER` (default: `gemini,local,mistral`)
+- `OLLAMA_MANAGER_ENDPOINT` (optional control-plane endpoint, e.g. `https://mm.peacockery.studio`)
+- `PDF_ANALYSIS_PROVIDER_ORDER` (default: `local,mistral,gemini`)
 
 ## Notes
 

@@ -38,11 +38,17 @@ class LocalProvider(BaseProvider):
     def __init__(self, settings: Settings):
         self.settings = settings
         self.endpoint = settings.ollama_endpoint.rstrip("/")
+        manager = (settings.ollama_manager_endpoint or "").strip()
+        self.manager_endpoint = manager.rstrip("/") if manager else None
         self.model = settings.ollama_model
         self.chat_model = settings.ollama_chat_model
         self.timeout = settings.http_timeout_seconds
+        self._resolved_completion_endpoint: str | None = None
 
     async def is_available(self) -> bool:
+        if self.manager_endpoint:
+            return await self._manager_reports_available()
+
         root_endpoint = self.endpoint[:-3] if self.endpoint.endswith("/v1") else self.endpoint
         urls = [
             f"{self.endpoint}/models",
@@ -59,7 +65,8 @@ class LocalProvider(BaseProvider):
                     continue
 
                 body = response.text.lower()
-                if self.model.lower() in body:
+                model = self.model.lower().strip()
+                if model and model in body:
                     return True
 
                 # Endpoint is healthy, model may still be loaded at request time.
@@ -356,11 +363,29 @@ class LocalProvider(BaseProvider):
         }
 
         async with httpx.AsyncClient(timeout=self.timeout) as client:
-            response = await client.post(
-                f"{self.endpoint}/chat/completions",
-                json=payload,
-            )
-            response.raise_for_status()
+            endpoints = await self._candidate_completion_endpoints(client)
+            response: httpx.Response | None = None
+            errors: list[str] = []
+
+            for endpoint in endpoints:
+                try:
+                    attempt = await client.post(endpoint, json=payload)
+                    if attempt.status_code in {404, 405}:
+                        errors.append(f"{endpoint} -> HTTP {attempt.status_code}")
+                        continue
+                    attempt.raise_for_status()
+                    response = attempt
+                    break
+                except Exception as err:
+                    errors.append(f"{endpoint} -> {type(err).__name__}: {err}")
+
+            if response is None:
+                joined = " | ".join(errors[:4])
+                raise RuntimeError(
+                    "No working local OCR completion endpoint. "
+                    f"Tried: {', '.join(endpoints)}. Errors: {joined}"
+                )
+
             result = response.json()
 
         choices = result.get("choices", [])
@@ -374,6 +399,97 @@ class LocalProvider(BaseProvider):
             parts = [part.get("text", "") for part in content if isinstance(part, dict)]
             return "\n".join(parts)
         return str(content)
+
+    async def _candidate_completion_endpoints(self, client: httpx.AsyncClient) -> list[str]:
+        endpoints: list[str] = []
+
+        if self._resolved_completion_endpoint:
+            endpoints.append(self._resolved_completion_endpoint)
+
+        endpoints.extend(self._endpoint_variants(self.endpoint))
+
+        if self.manager_endpoint:
+            manager_endpoint = await self._resolve_from_manager(client)
+            if manager_endpoint:
+                endpoints.extend(self._endpoint_variants(manager_endpoint))
+
+        deduped: list[str] = []
+        seen: set[str] = set()
+        for endpoint in endpoints:
+            if endpoint in seen:
+                continue
+            seen.add(endpoint)
+            deduped.append(endpoint)
+        return deduped
+
+    async def _resolve_from_manager(self, client: httpx.AsyncClient) -> str | None:
+        assert self.manager_endpoint is not None
+
+        # Best-effort activation. If this fails, status may still expose a usable endpoint.
+        for body in [{"model": self.model}, {}]:
+            try:
+                await client.post(f"{self.manager_endpoint}/activate/ocr", json=body)
+                break
+            except Exception:
+                continue
+
+        try:
+            response = await client.get(f"{self.manager_endpoint}/status")
+            if response.status_code != 200:
+                return None
+            data = response.json()
+        except Exception:
+            return None
+
+        services = data.get("services", [])
+        if not isinstance(services, list):
+            return None
+
+        for service in services:
+            if not isinstance(service, dict):
+                continue
+            endpoint = service.get("endpoint")
+            if not endpoint or not isinstance(endpoint, str):
+                continue
+            candidate = endpoint.rstrip("/")
+            if not candidate:
+                continue
+            self._resolved_completion_endpoint = candidate
+            return candidate
+        return None
+
+    async def _manager_reports_available(self) -> bool:
+        if not self.manager_endpoint:
+            return False
+
+        async with httpx.AsyncClient(timeout=self.timeout) as client:
+            # Must have healthy control plane first.
+            try:
+                health = await client.get(f"{self.manager_endpoint}/health")
+            except Exception:
+                return False
+            if health.status_code != 200:
+                return False
+
+            # If status fails, manager is not operational for inference.
+            try:
+                status = await client.get(f"{self.manager_endpoint}/status")
+            except Exception:
+                return False
+            if status.status_code != 200:
+                return False
+
+            endpoint = await self._resolve_from_manager(client)
+            return bool(endpoint)
+
+    @staticmethod
+    def _endpoint_variants(endpoint: str) -> list[str]:
+        base = endpoint.rstrip("/")
+        if base.endswith("/chat/completions"):
+            return [base]
+        if base.endswith("/v1"):
+            return [f"{base}/chat/completions"]
+        return [f"{base}/chat/completions", f"{base}/v1/chat/completions"]
 
     @staticmethod
     def _to_float_map(value: Any) -> dict[str, float]:

@@ -27,6 +27,8 @@ This repo runs with a Docker Compose runtime:
 - `just code-check` : typecheck + lint
 - `just fix`        : autofix lint issues
 - `just docs-path-check` : validates AGENTS/skill file-path references stay aligned
+- Lint/fix standard: use Ultracite (`bun run lint`, `bun run fix`, or `ultracite check/fix <files>` for targeted runs).
+- Avoid direct `biome check`/`biome lint` for normal lint workflows; use Biome directly only for operations Ultracite cannot express, then re-run `bun run lint`.
 
 Note: repo tests include **integration coverage** that can trigger Microsoft device-login and create Outlook drafts.
 

@@ -2,11 +2,16 @@
 
 from __future__ import annotations
 
-from contract_review.scanner import Flag, ScanResult, scan
+from contract_review.scanner import (
+    Flag,
+    ScanResult,
+    scan,
+    scan_non_included_scope_mentions,
+)
 
 
 def _active(result: ScanResult, rule_id: str) -> list[Flag]:
-    return [f for f in result.flags if f.rule_id == rule_id and not f.false_positive]
+    return [f for f in result.flags if f.rule_id == rule_id]
 
 
 # ---------------------------------------------------------------------------
@@ -17,11 +22,19 @@ def _active(result: ScanResult, rule_id: str) -> list[Flag]:
 class TestFramework:
     def test_empty_text(self) -> None:
         result = scan("")
-        assert len(result.flags) == 0
+        # Fail-closed: missing inspection scope + missing payment terms
+        assert len(result.flags) >= 2
+        assert len(_active(result, "INSPECTION_SCOPE_NOT_FOUND")) == 1
+        assert len(_active(result, "PAYMENT_TERMS_MISSING")) == 1
 
     def test_clean_text(self) -> None:
-        result = scan("This is a normal purchase order for SWPPP work.")
-        assert len(result.flags) == 0
+        result = scan(
+            "This is a normal purchase order for SWPPP work. "
+            "Provide 12 inspections bi-weekly and after rain events. "
+            "Net 30 payment."
+        )
+        assert len(_active(result, "INSPECTION_QUANTITY_MISSING")) == 0
+        assert len(_active(result, "PAYMENT_TERMS_MISSING")) == 0
 
 
 # ---------------------------------------------------------------------------
@@ -102,6 +115,7 @@ class TestScopeCreep:
         result = scan(text)
         flags = _active(result, "SCOPE_CREEP")
         assert len(flags) == 4  # maintain, repair, replace, remove
+        assert all(f.severity == "critical" for f in flags)
 
     def test_context_included(self) -> None:
         text = "X" * 50 + " Subcontractor shall maintain all filter sock. " + "Y" * 50
@@ -186,3 +200,87 @@ class TestCompanyMisspelling:
         result = scan("DESERET SERVICES shall perform the work.")
         flags = _active(result, "COMPANY_MISSPELLING")
         assert len(flags) == 1
+
+
+class TestInspectionCoverage:
+    def test_quantity_missing_is_blocker(self) -> None:
+        text = "Subcontractor shall perform inspections bi-weekly and after rainfall."
+        result = scan(text)
+        qty_missing = _active(result, "INSPECTION_QUANTITY_MISSING")
+        assert len(qty_missing) == 1
+        assert qty_missing[0].severity == "critical"
+
+    def test_frequency_missing_is_warning(self) -> None:
+        text = "Subcontractor shall perform 12 inspections and after rainfall events."
+        result = scan(text)
+        frequency_missing = _active(result, "INSPECTION_FREQUENCY_MISSING")
+        assert len(frequency_missing) == 1
+        assert frequency_missing[0].severity == "warning"
+
+    def test_rain_trigger_missing_is_warning(self) -> None:
+        text = "Subcontractor shall perform 12 inspections every 14 days."
+        result = scan(text)
+        rain_missing = _active(result, "INSPECTION_RAIN_TRIGGER_MISSING")
+        assert len(rain_missing) == 1
+        assert rain_missing[0].severity == "warning"
+
+    def test_full_inspection_language_passes(self) -> None:
+        text = (
+            "Subcontractor shall provide 60 inspections bi-weekly and within 24 hours "
+            "after any rainfall event greater than 0.5 inches."
+        )
+        result = scan(text)
+        assert len(_active(result, "INSPECTION_QUANTITY_MISSING")) == 0
+        assert len(_active(result, "INSPECTION_FREQUENCY_MISSING")) == 0
+        assert len(_active(result, "INSPECTION_RAIN_TRIGGER_MISSING")) == 0
+
+
+class TestPaymentTerms:
+    def test_extract_payment_term(self) -> None:
+        result = scan("Terms are pay-when-paid with progress payment processing.")
+        found = _active(result, "PAYMENT_TERMS_FOUND")
+        assert len(found) >= 1
+
+    def test_missing_payment_terms_warns(self) -> None:
+        text = "Subcontractor shall furnish and install erosion control BMPs."
+        result = scan(text)
+        missing = _active(result, "PAYMENT_TERMS_MISSING")
+        assert len(missing) == 1
+        assert missing[0].severity == "warning"
+
+
+class TestLiabilityWarnings:
+    def test_liability_and_fines_are_warning(self) -> None:
+        text = "Subcontractor assumes responsibility for fines and penalties."
+        result = scan(text)
+        flags = _active(result, "LIABILITY_OR_FINES_LANGUAGE")
+        assert len(flags) >= 2
+        assert all(f.severity == "warning" for f in flags)
+
+
+class TestScopeVsEstimate:
+    def test_contract_mentions_non_included_item(self) -> None:
+        estimate_items = [
+            {"description": "Fire Access Signs", "included": False, "total": 0},
+            {"description": "SWPPP Inspections", "included": True, "total": 1000},
+        ]
+        text = "Subcontractor shall provide fire access sign and maintain site signage."
+        result = scan_non_included_scope_mentions(
+            contract_text=text,
+            estimate_items=estimate_items,
+        )
+        flags = _active(result, "CONTRACT_REFERENCES_NON_INCLUDED_ITEM")
+        assert len(flags) == 1
+        assert flags[0].severity == "critical"
+
+    def test_non_included_not_mentioned_no_flag(self) -> None:
+        estimate_items = [
+            {"description": "Fire Access Signs", "included": False, "total": 0},
+        ]
+        text = "Subcontractor shall perform SWPPP inspections only."
+        result = scan_non_included_scope_mentions(
+            contract_text=text,
+            estimate_items=estimate_items,
+        )
+        flags = _active(result, "CONTRACT_REFERENCES_NON_INCLUDED_ITEM")
+        assert len(flags) == 0

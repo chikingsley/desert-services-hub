@@ -1,8 +1,13 @@
 # Project Record Schema
 
-The project record is the single source of truth. Everything lives here or links from here.
+Expanded field inventory for the project record.
 
-- --
+For day-to-day execution, use `apps/contract/templates/project-record-template.md`.
+Use this schema when you need the full field set or are updating system structure.
+
+Operational source-of-truth for packet workflow remains `contract_packets` and related packet tables.
+
+---
 
 ## COLUMNS (List/Table View)
 

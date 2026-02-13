@@ -2,6 +2,7 @@
 \pset pager off
 \pset tuples_only on
 \pset format unaligned
+SET client_min_messages TO warning;
 
 -- Usage:
 --   cat scripts/sql/project_story.sql | docker exec -i supabase_db_desert-services-hub psql -U postgres -d postgres \
@@ -10,7 +11,11 @@
 --     -v subject='FW: DPX8 - Site Surrender Project' \
 --     -v query='' \
 --     -v since='' \
---     -v timeline_limit='30'
+--     -v timeline_limit='30' \
+--     -v query_scope='subject_meta' \
+--     -v thread_evidence_scope='extended' \
+--     -v simulate_unlinked='0' \
+--     -v max_query_chars='1200'
 
 WITH input AS (
   SELECT
@@ -19,14 +24,28 @@ WITH input AS (
     NULLIF(:'subject', '')::text AS subject_input,
     NULLIF(:'query', '')::text AS query_input,
     COALESCE(NULLIF(:'timeline_limit', '')::int, 30) AS timeline_limit_input,
-    NULLIF(:'since', '')::timestamptz AS since_input
+    NULLIF(:'since', '')::timestamptz AS since_input,
+    COALESCE(NULLIF(:'query_scope', ''), 'subject_meta')::text AS query_scope_input,
+    COALESCE(NULLIF(:'thread_evidence_scope', ''), 'extended')::text AS thread_evidence_scope_input,
+    CASE
+      WHEN lower(COALESCE(NULLIF(:'simulate_unlinked', ''), '0')) IN ('1', 'true', 't', 'yes', 'on') THEN true
+      ELSE false
+    END AS simulate_unlinked_input,
+    COALESCE(NULLIF(:'max_query_chars', '')::int, 1200) AS max_query_chars_input
 ),
 email_anchor AS (
   SELECT
     e.id AS email_id,
     e.subject AS email_subject,
+    e.body_preview AS email_body_preview,
+    e.attachment_names AS email_attachment_names,
     e.project_id AS email_project_id,
     e.from_email,
+    e.from_domain,
+    e.contractor_name AS email_contractor_name,
+    e.project_name AS email_project_name,
+    e.conversation_id AS email_conversation_id,
+    COALESCE(NULLIF(e.internet_message_id, ''), e.message_id) AS email_message_key,
     e.received_at
   FROM input i
   JOIN emails e ON e.id = i.email_id_input
@@ -38,14 +57,62 @@ resolved_input AS (
     i.timeline_limit_input,
     COALESCE(i.since_input, now() - interval '90 days') AS since_ts,
     COALESCE(i.subject_input, ea.email_subject) AS subject_hint,
-    COALESCE(i.project_id_input, ea.email_project_id) AS project_id_hint,
+    NULLIF(
+      regexp_replace(COALESCE(i.subject_input, ea.email_subject, ''), '^\s*(re|fw|fwd):\s*', '', 'i'),
+      ''
+    ) AS subject_query_hint,
+    CASE
+      WHEN i.project_id_input IS NOT NULL THEN i.project_id_input
+      WHEN i.simulate_unlinked_input THEN NULL
+      ELSE ea.email_project_id
+    END AS project_id_hint,
     COALESCE(
       i.query_input,
       NULLIF(
-        regexp_replace(COALESCE(i.subject_input, ea.email_subject, ''), '^\s*(re|fw|fwd):\s*', '', 'i'),
+        LEFT(
+          regexp_replace(
+            CASE
+              WHEN i.query_scope_input = 'subject' THEN
+                concat_ws(
+                  ' ',
+                  regexp_replace(COALESCE(i.subject_input, ea.email_subject, ''), '^\s*(re|fw|fwd):\s*', '', 'i')
+                )
+              WHEN i.query_scope_input = 'subject_meta' THEN
+                concat_ws(
+                  ' ',
+                  regexp_replace(COALESCE(i.subject_input, ea.email_subject, ''), '^\s*(re|fw|fwd):\s*', '', 'i'),
+                  COALESCE(ea.email_project_name, ''),
+                  COALESCE(ea.email_contractor_name, ''),
+                  COALESCE(ea.from_domain, '')
+                )
+              ELSE
+                concat_ws(
+                  ' ',
+                  regexp_replace(COALESCE(i.subject_input, ea.email_subject, ''), '^\s*(re|fw|fwd):\s*', '', 'i'),
+                  COALESCE(ea.email_project_name, ''),
+                  COALESCE(ea.email_contractor_name, ''),
+                  COALESCE(ea.from_domain, ''),
+                  COALESCE(ea.email_body_preview, ''),
+                  COALESCE(ea.email_attachment_names, '')
+                )
+            END,
+            '\s+',
+            ' ',
+            'g'
+          ),
+          GREATEST(100, LEAST(4000, i.max_query_chars_input))
+        ),
         ''
       )
-    ) AS query_hint
+    ) AS query_hint,
+    i.query_scope_input,
+    i.thread_evidence_scope_input,
+    i.simulate_unlinked_input,
+    i.max_query_chars_input,
+    ea.email_conversation_id,
+    ea.email_message_key,
+    ea.from_domain AS email_from_domain,
+    ea.received_at AS email_received_at
   FROM input i
   LEFT JOIN email_anchor ea ON true
 ),
@@ -53,10 +120,43 @@ resolved_input_normalized AS (
   SELECT
     ri.*,
     NULLIF(regexp_replace(COALESCE(ri.query_hint, ''), '[^[:alnum:]@._]+', ' ', 'g'), '') AS query_hint_search,
+    NULLIF(regexp_replace(COALESCE(ri.subject_query_hint, ''), '[^[:alnum:]@._]+', ' ', 'g'), '') AS subject_query_hint_search,
     NULLIF(regexp_replace(COALESCE(ri.subject_hint, ''), '[^[:alnum:]@._]+', ' ', 'g'), '') AS subject_hint_search,
     NULLIF(lower(regexp_replace(COALESCE(ri.query_hint, ''), '[^[:alnum:]]+', '', 'g')), '') AS query_hint_compact,
     NULLIF(lower(regexp_replace(COALESCE(ri.subject_hint, ''), '[^[:alnum:]]+', '', 'g')), '') AS subject_hint_compact
   FROM resolved_input ri
+),
+thread_project_evidence AS (
+  SELECT
+    e.project_id,
+    COUNT(*)::int AS thread_hits,
+    MAX(e.received_at) AS thread_last_seen
+  FROM resolved_input_normalized ri
+  JOIN emails e ON e.project_id IS NOT NULL
+  WHERE COALESCE(e.is_excluded, 0) = 0
+    AND (
+      (
+        COALESCE(ri.email_conversation_id, '') <> ''
+        AND e.conversation_id = ri.email_conversation_id
+      )
+      OR (
+        COALESCE(ri.email_message_key, '') <> ''
+        AND COALESCE(NULLIF(e.internet_message_id, ''), e.message_id) = ri.email_message_key
+      )
+      OR (
+        ri.thread_evidence_scope_input = 'extended'
+        AND
+        COALESCE(ri.email_from_domain, '') <> ''
+        AND e.from_domain = ri.email_from_domain
+        AND COALESCE(ri.subject_query_hint_search, '') <> ''
+        AND e.received_at BETWEEN (ri.since_ts - interval '30 days') AND (ri.since_ts + interval '120 days')
+        AND (
+          COALESCE(e.subject, '') ILIKE '%' || ri.subject_query_hint || '%'
+          OR e.search_document @@ plainto_tsquery('english', ri.subject_query_hint_search)
+        )
+      )
+    )
+  GROUP BY e.project_id
 ),
 project_candidates AS (
   SELECT
@@ -97,9 +197,23 @@ project_candidates AS (
             AND POSITION(COALESCE(p.normalized_name, '') IN ri.subject_hint_compact) > 0
           THEN 180 ELSE 0
         END
+      + CASE
+          WHEN p.id IN (SELECT project_id FROM thread_project_evidence)
+          THEN COALESCE(
+            (
+              SELECT LEAST(420, 280 + (40 * t.thread_hits))
+              FROM thread_project_evidence t
+              WHERE t.project_id = p.id
+            ),
+            0
+          )
+          ELSE 0
+        END
     )::int AS score
   FROM resolved_input_normalized ri
   JOIN projects p ON (
+    (p.id IN (SELECT project_id FROM thread_project_evidence))
+    OR
     (ri.project_id_hint IS NOT NULL AND p.id = ri.project_id_hint)
     OR (
       COALESCE(ri.query_hint_search, '') <> ''
@@ -150,6 +264,7 @@ anchor AS (
     bp.score AS project_score,
     COALESCE(NULLIF(ri.subject_hint, ''), bp.name, NULLIF(ri.query_hint, '')) AS anchor_text,
     ri.query_hint,
+    ri.subject_query_hint,
     NULLIF(
       regexp_replace(
         COALESCE(NULLIF(ri.subject_hint, ''), bp.name, NULLIF(ri.query_hint, ''), ''),
@@ -160,8 +275,18 @@ anchor AS (
       ''
     ) AS anchor_text_search,
     ri.query_hint_search,
+    ri.subject_query_hint_search,
     ri.since_ts,
-    GREATEST(1, LEAST(200, ri.timeline_limit_input)) AS timeline_limit
+    GREATEST(1, LEAST(200, ri.timeline_limit_input)) AS timeline_limit,
+    ri.query_scope_input,
+    ri.thread_evidence_scope_input,
+    ri.simulate_unlinked_input,
+    ri.max_query_chars_input,
+    ri.email_id_input,
+    ri.email_conversation_id,
+    ri.email_message_key,
+    ri.email_from_domain,
+    ri.email_received_at
   FROM resolved_input_normalized ri
   LEFT JOIN best_project bp ON true
 ),
@@ -216,6 +341,21 @@ story_rows AS (
   WHERE COALESCE(e.is_excluded, 0) = 0
     AND e.received_at >= a.since_ts
     AND (
+      (
+        a.email_id_input IS NOT NULL
+        AND (
+          e.id = a.email_id_input
+          OR (
+            COALESCE(a.email_conversation_id, '') <> ''
+            AND e.conversation_id = a.email_conversation_id
+          )
+          OR (
+            COALESCE(a.email_message_key, '') <> ''
+            AND COALESCE(NULLIF(e.internet_message_id, ''), e.message_id) = a.email_message_key
+          )
+        )
+      )
+      OR
       (a.project_id IS NOT NULL AND e.project_id = a.project_id)
       OR (
         COALESCE(a.anchor_text, '') <> ''
@@ -229,10 +369,17 @@ story_rows AS (
       )
       OR (
         a.project_id IS NULL
-        AND COALESCE(a.query_hint_search, '') <> ''
+        AND COALESCE(a.subject_query_hint_search, '') <> ''
         AND (
-          e.subject ILIKE '%' || a.query_hint || '%'
-          OR e.search_document @@ plainto_tsquery('english', a.query_hint_search)
+          e.subject ILIKE '%' || a.subject_query_hint || '%'
+          OR e.search_document @@ plainto_tsquery('english', a.subject_query_hint_search)
+          OR (
+            COALESCE(a.email_from_domain, '') <> ''
+            AND e.from_domain = a.email_from_domain
+            AND COALESCE(a.email_received_at, '-infinity'::timestamptz) > '-infinity'::timestamptz
+            AND e.received_at BETWEEN (a.email_received_at - interval '30 days') AND (a.email_received_at + interval '30 days')
+            AND e.search_document @@ plainto_tsquery('english', a.subject_query_hint_search)
+          )
         )
       )
     )
@@ -395,6 +542,10 @@ resolution AS (
       'projectMatchScore', a.project_score,
       'anchorText', a.anchor_text,
       'queryHint', a.query_hint,
+      'queryScope', a.query_scope_input,
+      'threadEvidenceScope', a.thread_evidence_scope_input,
+      'simulateUnlinked', a.simulate_unlinked_input,
+      'maxQueryChars', a.max_query_chars_input,
       'since', a.since_ts,
       'timelineLimit', a.timeline_limit,
       'candidates', cj.value
@@ -410,7 +561,11 @@ SELECT jsonb_pretty(
       'emailId', (SELECT email_id_input FROM input),
       'subject', (SELECT subject_input FROM input),
       'query', (SELECT query_input FROM input),
-      'since', (SELECT since_input FROM input)
+      'since', (SELECT since_input FROM input),
+      'queryScope', (SELECT query_scope_input FROM input),
+      'threadEvidenceScope', (SELECT thread_evidence_scope_input FROM input),
+      'simulateUnlinked', (SELECT simulate_unlinked_input FROM input),
+      'maxQueryChars', (SELECT max_query_chars_input FROM input)
     ),
     'resolution', (SELECT value FROM resolution),
     'project', (SELECT value FROM project_json),

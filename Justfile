@@ -55,6 +55,7 @@ typecheck:
 code-check:
     @{{BUN}} run check
     @just docs-path-check
+    @just folder-size-check
 
 fix:
     @{{BUN}} run fix
@@ -62,6 +63,10 @@ fix:
 # Validate AGENTS/skill path references stay aligned with real files.
 docs-path-check:
     @{{BUN}} run scripts/check-doc-paths.ts
+
+# Flag source directories with too many files (default: 10).
+folder-size-check:
+    @{{BUN}} run scripts/check-folder-size.ts
 
 # Webhook Jobs: inspect / requeue background jobs in the `webhook_jobs` table.
 jobs *args:
@@ -94,6 +99,26 @@ project-story:
 project-story-smoke:
     @scripts/project-story-smoke.sh
 
+# Replay benchmark for project-story deterministic resolver quality.
+# Example:
+#   LINKED_LIMIT=25 UNLINKED_LIMIT=25 SINCE=2026-01-01 QUERY_SCOPE=subject_meta THREAD_EVIDENCE_SCOPE=strict MAX_QUERY_CHARS=1200 just project-story-replay
+project-story-replay:
+    @scripts/project-story-replay.sh
+
+# Run a 3-config replay matrix and print one comparison table.
+project-story-optimize:
+    @scripts/project-story-optimize.sh
+
+# Estimate-driven project seed lifecycle sync (create/update/promote/link/canonicalize).
+# Examples:
+#   just project-seed-sync
+#   just project-seed-sync-dry limit=250 stale_days=45
+project-seed-sync stale_days="45":
+    @{{BUN}} apps/workers/estimate-poller/cli/project-seed-sync.ts --stale-days {{stale_days}}
+
+project-seed-sync-dry limit="250" stale_days="45":
+    @{{BUN}} apps/workers/estimate-poller/cli/project-seed-sync.ts --dry-run --limit {{limit}} --stale-days {{stale_days}}
+
 # Refresh deduplicated project-email materialized view.
 email-dedup-refresh:
     @docker exec supabase_db_desert-services-hub psql -U postgres -d postgres -c "REFRESH MATERIALIZED VIEW CONCURRENTLY public.project_email_dedup_mv;"
@@ -117,6 +142,10 @@ contracts-pending-csv out="data/reports/contracts-pending.csv":
 	@mkdir -p $(dirname {{out}})
 	@docker exec -i supabase_db_desert-services-hub psql -U postgres -d postgres -c "\copy (SELECT id, name, contractor, COALESCE(contract_status, 'Pending') AS contract_status FROM projects WHERE contract_status = 'Pending' OR contract_status IS NULL ORDER BY name) TO STDOUT WITH CSV HEADER" > {{out}}
 	@echo "Wrote {{out}}"
+
+# Unified runtime/project ops snapshot (resolver + contracts + DocuSign/pay app signals).
+ops-status:
+    @scripts/ops-status.sh
 
 [private]
 _health strict:

@@ -616,6 +616,7 @@ export interface EditorEstimate {
   date: string;
   estimator: string;
   estimatorEmail: string;
+  estimatorPhone?: string;
   billTo: {
     companyName: string;
     address: string;

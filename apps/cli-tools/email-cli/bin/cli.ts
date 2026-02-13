@@ -19,6 +19,7 @@ import { organizeHandlers } from "@email/commands/organize";
 import { readHandlers } from "@email/commands/read";
 import { searchHandlers } from "@email/commands/search";
 import { sendHandlers } from "@email/commands/send";
+import { signOrderHandlers } from "@email/commands/sign-orders";
 import { templateHandlers } from "@email/commands/templates";
 import type { CommandHandler } from "@email/commands/types";
 
@@ -29,6 +30,7 @@ import type { CommandHandler } from "@email/commands/types";
 const handlers: Record<string, CommandHandler> = {
   ...searchHandlers,
   ...sendHandlers,
+  ...signOrderHandlers,
   ...readHandlers,
   ...draftHandlers,
   ...foldersHandlers,
@@ -79,6 +81,11 @@ Template Commands:
   templates                   List available email templates
   template <name>             Send test email from template (to self)
   send-template <name>        Send template to recipients
+
+Sign Order Commands:
+  sign-order-draft            Create Sandstorm sign-order draft + tracker record
+  sign-orders                 List tracked sign orders
+  sign-order-update <id>      Update tracked sign-order status
 
 Mailbox Shortcuts (emails):
   contracts [query]           Search contracts@desertservices.net mailbox
@@ -133,6 +140,15 @@ Examples:
     --to "contact@gc.com" --subject "Dust Permit Issued - Project X" \\
     --vars '{"recipientName":"John","projectName":"Project X",...}' \\
     --attachments "/path/to/permit.pdf"
+
+  # Create a tracked Sandstorm draft (one sign type at a time):
+  bun apps/cli-tools/email-cli/bin/cli.ts sign-order-draft \\
+    --user chi@desertservices.net \\
+    --project "Lexington 420" \\
+    --sign-type dust-maricopa \\
+    --permit-id D0064501 \\
+    --contact-name "Scott Turner" \\
+    --contact-phone "623-202-5233"
 `);
 }
 

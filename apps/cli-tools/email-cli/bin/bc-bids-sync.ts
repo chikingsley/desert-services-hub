@@ -8,6 +8,7 @@
  */
 import { Database } from "bun:sqlite";
 import { ClientSecretCredential } from "@azure/identity";
+import { extractBcData } from "@email/sync/bc-bids-extract";
 import { Client } from "@microsoft/microsoft-graph-client";
 import { TokenCredentialAuthenticationProvider } from "@microsoft/microsoft-graph-client/authProviders/azureTokenCredentials";
 
@@ -16,27 +17,17 @@ const USER_ID = "jared@desertservices.net";
 const FOLDER_NAME = "Bid Invites";
 const BATCH_SIZE = 100;
 
-// Top-level regex patterns for performance
-const BID_INVITE_PREFIX_PATTERN = /^(Reminder:\s*)?(Bid Invite:)\s*/i;
-const PROJECT_SUFFIX_PATTERN = /\s+Project$/i;
-const LOCATION_PATTERN = /<b>Location:\s*<\/b><span>([^<]+)<\/span>/;
-const LEAD_PATTERN = /<b>Lead:\s*([^<]+)<\/b>/;
-const CONTACT_PATTERN =
-  /(?:Estimating Lead|Project Manager|Estimator|Senior Estimator|Pre-Construction|Preconstruction)[^•]*•\s*([^•]+)•\s*([^<]+)</;
-const COMPANY_PATTERN = /<b>([^<]+)<\/b>\s*has invited you to bid/;
-const DESCRIPTION_PATTERN = /<div>([^<]{20,500})<\/div>/;
-const RFP_LINK_PATTERN =
-  /<a[^>]*href="(https:\/\/app\.buildingconnected\.com\/goto\/[^"]+)"[^>]*>([^<]*)<\/a>/gi;
-const AMP_PATTERN = /&amp;/g;
-
 interface GraphEmail {
   id: string;
   subject?: string;
   receivedDateTime: string;
-  from?: { emailAddress?: { address?: string; name?: string } };
-  hasAttachments?: boolean;
-  body?: { content?: string; contentType?: string };
+  body?: { content?: string };
   conversationId?: string;
+}
+
+interface GraphMessagesResponse {
+  value?: GraphEmail[];
+  "@odata.nextLink"?: string;
 }
 
 function initDb(): Database {
@@ -82,106 +73,6 @@ function initDb(): Database {
   return db;
 }
 
-interface ExtractedData {
-  projectName: string;
-  location: string | null;
-  leadName: string | null;
-  leadPhone: string | null;
-  leadEmail: string | null;
-  gcCompany: string | null;
-  description: string | null;
-  rfpUrl: string | null;
-  allLinks: Array<{ url: string; label: string }>;
-}
-
-function extractBcData(html: string, subject: string): ExtractedData {
-  // Project name from subject - use top-level patterns
-  const projectName = subject
-    .replace(BID_INVITE_PREFIX_PATTERN, "")
-    .replace(PROJECT_SUFFIX_PATTERN, "")
-    .trim();
-
-  // Location
-  const locMatch = html.match(LOCATION_PATTERN);
-  const location = locMatch?.[1]
-    ? locMatch[1].trim().replace(AMP_PATTERN, "&")
-    : null;
-
-  // Lead name
-  const leadMatch = html.match(LEAD_PATTERN);
-  const leadName = leadMatch?.[1] ? leadMatch[1].trim() : null;
-
-  // Contact details (phone and email)
-  const contactMatch = html.match(CONTACT_PATTERN);
-  const leadPhone = contactMatch?.[1] ? contactMatch[1].trim() : null;
-  const leadEmail = contactMatch?.[2] ? contactMatch[2].trim() : null;
-
-  // GC Company
-  let gcCompany: string | null = null;
-  const companyMatch = html.match(COMPANY_PATTERN);
-  if (companyMatch?.[1]) {
-    gcCompany = companyMatch[1].trim().replace(AMP_PATTERN, "&");
-  }
-
-  // Description
-  let description: string | null = null;
-  const descMatch = html.match(DESCRIPTION_PATTERN);
-  if (descMatch?.[1]) {
-    description = descMatch[1]
-      .trim()
-      .replace(AMP_PATTERN, "&")
-      .substring(0, 500);
-  }
-
-  // Extract all RFP links - reset global regex before use
-  const allLinks: Array<{ url: string; label: string }> = [];
-  RFP_LINK_PATTERN.lastIndex = 0;
-  const seen = new Set<string>();
-
-  let match = RFP_LINK_PATTERN.exec(html);
-  while (match !== null) {
-    const url = match[1];
-    const rawLabel = match[2];
-    if (url && rawLabel && !seen.has(url)) {
-      seen.add(url);
-      const label = rawLabel
-        .trim()
-        .replace(/\s+/g, " ")
-        .replace(/»/g, "")
-        .trim();
-
-      // Only RFP links, not response buttons
-      const lowerLabel = label.toLowerCase();
-      if (
-        label &&
-        (lowerLabel.includes("view") || lowerLabel.includes("rfp")) &&
-        !url.includes("state=")
-      ) {
-        allLinks.push({ url, label });
-      }
-    }
-    match = RFP_LINK_PATTERN.exec(html);
-  }
-
-  // Prefer SWPPP link, otherwise first link
-  const swpppLink = allLinks.find((l) =>
-    l.label.toLowerCase().includes("swppp")
-  );
-  const rfpUrl = swpppLink?.url ?? allLinks[0]?.url ?? null;
-
-  return {
-    projectName,
-    location,
-    leadName,
-    leadPhone,
-    leadEmail,
-    gcCompany,
-    description,
-    rfpUrl,
-    allLinks,
-  };
-}
-
 function getGraphClient(): Client {
   const { AZURE_TENANT_ID, AZURE_CLIENT_ID, AZURE_CLIENT_SECRET } = process.env;
   if (!(AZURE_TENANT_ID && AZURE_CLIENT_ID && AZURE_CLIENT_SECRET)) {
@@ -214,25 +105,26 @@ async function getFolderId(client: Client): Promise<string> {
   return folders.value[0].id;
 }
 
-async function syncBcBids(fullSync = false, limit?: number): Promise<void> {
-  const db = initDb();
-  const client = getGraphClient();
-
-  console.log(`Syncing BuildingConnected bids from "${FOLDER_NAME}"...`);
-
-  const folderId = await getFolderId(client);
-
-  // Get last sync time
-  let lastSync: string | null = null;
-  if (fullSync === false) {
-    const row = db
-      .query<{ value: string }, []>(
-        "SELECT value FROM sync_meta WHERE key = 'last_sync'"
-      )
-      .get();
-    lastSync = row?.value ?? null;
+function getLastSync(db: Database, fullSync: boolean): string | null {
+  if (fullSync) {
+    return null;
   }
 
+  const row = db
+    .query<{ value: string }, []>(
+      "SELECT value FROM sync_meta WHERE key = 'last_sync'"
+    )
+    .get();
+
+  return row?.value ?? null;
+}
+
+function prepareSyncRun(
+  db: Database,
+  fullSync: boolean,
+  lastSync: string | null,
+  limit?: number
+): void {
   if (fullSync) {
     console.log("Full sync - clearing existing data...");
     db.run("DELETE FROM bc_bids");
@@ -246,16 +138,55 @@ async function syncBcBids(fullSync = false, limit?: number): Promise<void> {
   if (limit) {
     console.log(`Limiting to ${limit} bids`);
   }
+}
 
-  const insertBid = db.prepare(`
+function createInsertBidStatement(db: Database) {
+  return db.prepare(`
     INSERT OR REPLACE INTO bc_bids
     (id, project_name, received_at, gc_company, lead_name, lead_phone, lead_email, location, description, rfp_url, all_links, subject, conversation_id, synced_at)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
   `);
+}
 
-  let totalBids = 0;
+function shouldSkipEmail(email: GraphEmail, lastSync: string | null): boolean {
+  return Boolean(lastSync && email.receivedDateTime < lastSync);
+}
 
-  // Filter to only BuildingConnected emails (can't combine filter with orderby)
+function insertBidFromEmail(
+  insertBid: ReturnType<Database["prepare"]>,
+  email: GraphEmail
+): boolean {
+  if (!email.body?.content) {
+    return false;
+  }
+
+  const data = extractBcData(email.body.content, email.subject ?? "");
+  insertBid.run(
+    email.id,
+    data.projectName,
+    email.receivedDateTime,
+    data.gcCompany,
+    data.leadName,
+    data.leadPhone,
+    data.leadEmail,
+    data.location,
+    data.description,
+    data.rfpUrl,
+    JSON.stringify(data.allLinks),
+    email.subject ?? "",
+    email.conversationId ?? ""
+  );
+
+  return true;
+}
+
+async function syncMessagePages(
+  client: Client,
+  folderId: string,
+  insertBid: ReturnType<Database["prepare"]>,
+  lastSync: string | null,
+  limit?: number
+): Promise<number> {
   const request = client
     .api(`/users/${USER_ID}/mailFolders/${folderId}/messages`)
     .filter("from/emailAddress/address eq 'team@buildingconnected.com'")
@@ -264,79 +195,90 @@ async function syncBcBids(fullSync = false, limit?: number): Promise<void> {
       "id,subject,receivedDateTime,from,hasAttachments,body,conversationId"
     );
 
-  let response = await request.get();
+  let totalBids = 0;
+  let response = (await request.get()) as GraphMessagesResponse;
 
-  while (response?.value) {
-    const emails = response.value as GraphEmail[];
-    console.log(`Processing batch of ${emails.length} BC emails...`);
+  while (response.value) {
+    console.log(`Processing batch of ${response.value.length} BC emails...`);
 
-    for (const email of emails) {
-      // Skip if before last sync (incremental)
-      if (lastSync && email.receivedDateTime < lastSync) {
+    for (const email of response.value) {
+      if (shouldSkipEmail(email, lastSync)) {
         continue;
       }
 
-      if (email.body?.content) {
-        const data = extractBcData(email.body.content, email.subject ?? "");
-
-        insertBid.run(
-          email.id,
-          data.projectName,
-          email.receivedDateTime,
-          data.gcCompany,
-          data.leadName,
-          data.leadPhone,
-          data.leadEmail,
-          data.location,
-          data.description,
-          data.rfpUrl,
-          JSON.stringify(data.allLinks),
-          email.subject ?? "",
-          email.conversationId ?? ""
-        );
-
+      if (insertBidFromEmail(insertBid, email)) {
         totalBids++;
       }
 
       if (limit && totalBids >= limit) {
         console.log(`Reached limit of ${limit}`);
-        break;
+        return totalBids;
       }
     }
 
-    if (limit && totalBids >= limit) {
+    const nextLink = response["@odata.nextLink"];
+    if (!nextLink) {
       break;
     }
 
-    // Next page
-    if (response["@odata.nextLink"]) {
-      response = await client.api(response["@odata.nextLink"]).get();
-    } else {
-      break;
-    }
+    response = (await client.api(nextLink).get()) as GraphMessagesResponse;
   }
 
-  // Update last sync time
+  return totalBids;
+}
+
+function updateLastSync(db: Database): void {
   db.run(
     "INSERT OR REPLACE INTO sync_meta (key, value) VALUES ('last_sync', datetime('now'))"
   );
-
-  // Stats
-  const bidCount = db
-    .query<{ count: number }, []>("SELECT COUNT(*) as count FROM bc_bids")
-    .get();
-
-  console.log("\n=== Sync Complete ===");
-  console.log(`BC bids synced this run: ${totalBids}`);
-  console.log(`Total BC bids in DB: ${bidCount?.count ?? 0}`);
-  console.log(`Database: ${DB_PATH}`);
-
-  db.close();
 }
 
-// Main
-const fullSync = process.argv.includes("--full");
-const limitArg = process.argv.find((arg) => arg.startsWith("--limit="));
-const limitValue = limitArg?.split("=")[1];
-const limit = limitValue ? Number.parseInt(limitValue, 10) : undefined;
+function getTotalBidCount(db: Database): number {
+  const row = db
+    .query<{ count: number }, []>("SELECT COUNT(*) as count FROM bc_bids")
+    .get();
+  return row?.count ?? 0;
+}
+
+async function syncBcBids(fullSync = false, limit?: number): Promise<void> {
+  const db = initDb();
+
+  try {
+    const client = getGraphClient();
+    console.log(`Syncing BuildingConnected bids from "${FOLDER_NAME}"...`);
+
+    const folderId = await getFolderId(client);
+    const lastSync = getLastSync(db, fullSync);
+    prepareSyncRun(db, fullSync, lastSync, limit);
+
+    const insertBid = createInsertBidStatement(db);
+    const totalBids = await syncMessagePages(
+      client,
+      folderId,
+      insertBid,
+      lastSync,
+      limit
+    );
+
+    updateLastSync(db);
+
+    console.log("\n=== Sync Complete ===");
+    console.log(`BC bids synced this run: ${totalBids}`);
+    console.log(`Total BC bids in DB: ${getTotalBidCount(db)}`);
+    console.log(`Database: ${DB_PATH}`);
+  } finally {
+    db.close();
+  }
+}
+
+function parseCliArgs(): { fullSync: boolean; limit: number | undefined } {
+  const fullSync = process.argv.includes("--full");
+  const limitArg = process.argv.find((arg) => arg.startsWith("--limit="));
+  const limitValue = limitArg?.split("=")[1];
+  const limit = limitValue ? Number.parseInt(limitValue, 10) : undefined;
+
+  return { fullSync, limit };
+}
+
+const { fullSync, limit } = parseCliArgs();
 await syncBcBids(fullSync, limit);

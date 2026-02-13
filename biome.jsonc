@@ -12,12 +12,18 @@
   "linter": {
     "rules": {
       "complexity": {
-        "noExcessiveCognitiveComplexity": "off"
+        "noExcessiveCognitiveComplexity": {
+          "level": "error",
+          "options": {
+            "maxAllowedComplexity": 20
+          }
+        }
       },
       "performance": {
         "noBarrelFile": "off"
       },
       "nursery": {
+        "noExcessiveLinesPerFile": "error",
         "useSortedClasses": {
           "level": "warn",
           "fix": "safe",

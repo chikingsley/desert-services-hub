@@ -69,6 +69,15 @@ export const catalog: Catalog = {
           notes:
             "Add duration to name when quoting, e.g. (approximately 6 months)",
         },
+        {
+          code: "SWPPP-007",
+          name: "SWPPP Reserve",
+          description:
+            "Allowance for unknown SWPPP BMP installs, repairs, and compliance scope discovered during the project.",
+          price: 0,
+          unit: "Lump Sum",
+          notes: "Use estimate-specific reserve amount",
+        },
       ],
     },
     {
@@ -167,7 +176,7 @@ export const catalog: Catalog = {
             },
             {
               code: "CM-013",
-              name: "SWPPP Site sign",
+              name: "SWPPP Sign",
               description:
                 "Displays project name, permit number, and ADEQ pollution hotline",
               price: 295,

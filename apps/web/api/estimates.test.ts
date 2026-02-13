@@ -16,6 +16,7 @@ import { createEstimate, listEstimates } from "@/apps/web/api/estimates";
 import {
   deleteEstimate,
   duplicateEstimate,
+  finalizeEstimate,
   getEstimate,
   getEstimatePdf,
   updateEstimate,
@@ -27,6 +28,7 @@ import {
 
 const TEST_PREFIX = "_TEST_DELETE_ME_";
 const testEstimateIds: string[] = [];
+const testProjectIds: number[] = [];
 const PRIMARY_CATALOG_ITEM = findItem("SWPPP-002");
 const SECONDARY_CATALOG_ITEM = findItem("CM-012");
 
@@ -85,9 +87,58 @@ function makeGetRequest(params: { id: string }): Request & {
   return req;
 }
 
+function makePostRequestWithParams(
+  params: { id: string },
+  body: unknown = {}
+): Request & { params: { id: string } } {
+  const req = new Request(
+    `http://localhost/api/estimates/${params.id}/finalize`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }
+  ) as Request & { params: { id: string } };
+  req.params = params;
+  return req;
+}
+
+async function createTestProject(name: string): Promise<number> {
+  const rows = (await db.run(
+    `INSERT INTO projects (name, normalized_name)
+     VALUES (?, ?)
+     RETURNING id`,
+    [name, name.toLowerCase()]
+  )) as Array<{ id: number }>;
+
+  const id = rows[0]?.id;
+  if (!id) {
+    throw new Error("Failed to create test project");
+  }
+
+  testProjectIds.push(id);
+  return id;
+}
+
 // ============================================================================
 // Cleanup
 // ============================================================================
+
+beforeAll(async () => {
+  await db.run(
+    `ALTER TABLE project_estimates
+     ADD COLUMN IF NOT EXISTS is_canonical BOOLEAN NOT NULL DEFAULT FALSE`
+  );
+  await db.run(
+    `ALTER TABLE project_estimates
+     ADD COLUMN IF NOT EXISTS canonicalized_at TIMESTAMPTZ`
+  );
+  await db.run(
+    `CREATE UNIQUE INDEX IF NOT EXISTS uq_project_estimates_one_canonical_per_project
+     ON project_estimates(project_id)
+     WHERE is_canonical`
+  );
+});
 
 afterAll(async () => {
   for (const id of testEstimateIds) {
@@ -97,12 +148,33 @@ afterAll(async () => {
       // Ignore cleanup errors
     }
   }
-  // Verify cleanup
-  const remaining = (await db
+
+  for (const id of testProjectIds) {
+    try {
+      await db.prepare("DELETE FROM projects WHERE id = ?").run(id);
+    } catch {
+      // Ignore cleanup errors
+    }
+  }
+
+  const remainingEstimates = (await db
     .prepare("SELECT COUNT(*) as count FROM estimates WHERE name LIKE ?")
     .get(`${TEST_PREFIX}%`)) as { count: number };
-  if (remaining.count > 0) {
-    throw new Error(`Cleanup failed: ${remaining.count} test estimates remain`);
+
+  if (remainingEstimates.count > 0) {
+    throw new Error(
+      `Cleanup failed: ${remainingEstimates.count} test estimates remain`
+    );
+  }
+
+  const remainingProjects = (await db
+    .prepare("SELECT COUNT(*) as count FROM projects WHERE name LIKE ?")
+    .get(`${TEST_PREFIX}%`)) as { count: number };
+
+  if (remainingProjects.count > 0) {
+    throw new Error(
+      `Cleanup failed: ${remainingProjects.count} test projects remain`
+    );
   }
 });
 
@@ -684,6 +756,156 @@ describe("duplicateEstimate", () => {
 });
 
 // ============================================================================
+// finalizeEstimate - Canonical final SOV selection by project
+// ============================================================================
+
+describe("finalizeEstimate", () => {
+  test("locks estimate and marks it canonical for a single linked project", async () => {
+    const createRes = await createEstimate(
+      makeRequest({
+        job_name: `${TEST_PREFIX}FinalizeSingleProject`,
+      })
+    );
+    const { id } = (await createRes.json()) as { id: string };
+    testEstimateIds.push(id);
+
+    const projectId = await createTestProject(
+      `${TEST_PREFIX}FinalizeSingleProjectRoot`
+    );
+
+    await db.run(
+      `INSERT INTO project_estimates (project_id, estimate_id, source)
+       VALUES (?, ?, ?)
+       ON CONFLICT DO NOTHING`,
+      [projectId, Number(id), "test"]
+    );
+
+    const response = await finalizeEstimate(makePostRequestWithParams({ id }));
+    expect(response.status).toBe(200);
+
+    const estimate = (await db
+      .prepare("SELECT is_locked FROM estimates WHERE id = ?")
+      .get(id)) as { is_locked: number };
+    expect(estimate.is_locked).toBe(1);
+
+    const canonical = (await db
+      .prepare(
+        `SELECT estimate_id, is_canonical, canonicalized_at
+         FROM project_estimates
+         WHERE project_id = ?
+           AND estimate_id = ?`
+      )
+      .get(projectId, Number(id))) as {
+      estimate_id: number;
+      is_canonical: boolean;
+      canonicalized_at: string | null;
+    };
+
+    expect(canonical.estimate_id).toBe(Number(id));
+    expect(canonical.is_canonical).toBe(true);
+    expect(canonical.canonicalized_at).toBeTruthy();
+  });
+
+  test("returns 409 when estimate links to multiple projects without explicit project_id", async () => {
+    const createRes = await createEstimate(
+      makeRequest({
+        job_name: `${TEST_PREFIX}FinalizeAmbiguousProject`,
+      })
+    );
+    const { id } = (await createRes.json()) as { id: string };
+    testEstimateIds.push(id);
+
+    const projectA = await createTestProject(
+      `${TEST_PREFIX}FinalizeAmbiguousA`
+    );
+    const projectB = await createTestProject(
+      `${TEST_PREFIX}FinalizeAmbiguousB`
+    );
+
+    await db.run(
+      `INSERT INTO project_estimates (project_id, estimate_id, source)
+       VALUES (?, ?, ?), (?, ?, ?)
+       ON CONFLICT DO NOTHING`,
+      [projectA, Number(id), "test", projectB, Number(id), "test"]
+    );
+
+    const response = await finalizeEstimate(makePostRequestWithParams({ id }));
+    expect(response.status).toBe(409);
+
+    const body = (await response.json()) as {
+      code?: string;
+      project_ids?: number[];
+    };
+
+    expect(body.code).toBe("ambiguous_project_link");
+    expect(body.project_ids).toEqual([projectA, projectB]);
+  });
+
+  test("respects explicit project_id and switches canonical estimate", async () => {
+    const projectId = await createTestProject(
+      `${TEST_PREFIX}FinalizeExplicitProject`
+    );
+
+    const firstEstimateRes = await createEstimate(
+      makeRequest({
+        job_name: `${TEST_PREFIX}FinalizeExplicitFirst`,
+      })
+    );
+    const secondEstimateRes = await createEstimate(
+      makeRequest({
+        job_name: `${TEST_PREFIX}FinalizeExplicitSecond`,
+      })
+    );
+
+    const { id: firstId } = (await firstEstimateRes.json()) as { id: string };
+    const { id: secondId } = (await secondEstimateRes.json()) as {
+      id: string;
+    };
+    testEstimateIds.push(firstId, secondId);
+
+    await db.run(
+      `INSERT INTO project_estimates (project_id, estimate_id, source)
+       VALUES (?, ?, ?), (?, ?, ?)
+       ON CONFLICT DO NOTHING`,
+      [projectId, Number(firstId), "test", projectId, Number(secondId), "test"]
+    );
+
+    await db.run(
+      `UPDATE project_estimates
+       SET is_canonical = CASE WHEN estimate_id = ? THEN TRUE ELSE FALSE END,
+           canonicalized_at = CASE WHEN estimate_id = ? THEN now() ELSE canonicalized_at END
+       WHERE project_id = ?`,
+      [Number(firstId), Number(firstId), projectId]
+    );
+
+    const response = await finalizeEstimate(
+      makePostRequestWithParams(
+        { id: secondId },
+        { project_id: projectId, source: "test_override" }
+      )
+    );
+    expect(response.status).toBe(200);
+
+    const rows = (await db
+      .prepare(
+        `SELECT estimate_id, is_canonical
+         FROM project_estimates
+         WHERE project_id = ?
+         ORDER BY estimate_id ASC`
+      )
+      .all(projectId)) as Array<{
+      estimate_id: number;
+      is_canonical: boolean;
+    }>;
+
+    const firstRow = rows.find((row) => row.estimate_id === Number(firstId));
+    const secondRow = rows.find((row) => row.estimate_id === Number(secondId));
+
+    expect(firstRow?.is_canonical).toBe(false);
+    expect(secondRow?.is_canonical).toBe(true);
+  });
+});
+
 // getEstimatePdf - THE CRITICAL TEST: Verify PDF contains actual data
 // ============================================================================
 

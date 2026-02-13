@@ -67,6 +67,27 @@ interface ApiEstimateResponse {
   linked_takeoff?: { id: string; name: string } | null;
 }
 
+function getLineItemRateAndTotal(item: ApiLineItem): {
+  rate: number;
+  total: number;
+} {
+  const quantity = Number.isFinite(item.quantity) ? item.quantity : 0;
+  const unitCost = Number.isFinite(item.unit_cost) ? item.unit_cost : 0;
+  const unitPrice = Number.isFinite(item.unit_price) ? item.unit_price : 0;
+
+  if (unitCost > 0) {
+    return {
+      rate: unitCost,
+      total: quantity * unitCost,
+    };
+  }
+
+  return {
+    rate: unitPrice,
+    total: quantity * unitPrice,
+  };
+}
+
 // Transform API response to EditorEstimate format
 function transformToEditorEstimate(api: ApiEstimateResponse): EditorEstimate {
   const version = api.current_version;
@@ -76,19 +97,21 @@ function transformToEditorEstimate(api: ApiEstimateResponse): EditorEstimate {
     name: s.name,
   }));
 
-  const lineItems: EditorLineItem[] = (version.line_items || []).map(
-    (item) => ({
+  const lineItems: EditorLineItem[] = (version.line_items || []).map((item) => {
+    const { rate, total } = getLineItemRateAndTotal(item);
+
+    return {
       id: item.id,
       item: item.item_name || item.description,
       description: item.description || item.notes || "",
       qty: item.quantity,
       uom: item.unit,
-      cost: item.unit_cost ?? item.unit_price,
-      total: item.quantity * item.unit_price,
+      cost: rate,
+      total,
       sectionId: item.section_id || undefined,
       isAlternate: item.is_excluded === 1,
-    })
-  );
+    };
+  });
 
   const total = lineItems.reduce((sum, item) => sum + item.total, 0);
 
@@ -136,6 +159,7 @@ export function EstimateEditorPage() {
     <EstimateWorkspace
       estimateId={apiEstimate.id}
       initialEstimate={initialEstimate}
+      initialIsLocked={apiEstimate.is_locked === 1}
       initialUpdatedAt={apiEstimate.updated_at}
       jobName={apiEstimate.job_name || apiEstimate.base_number}
       linkedTakeoff={linkedTakeoff}

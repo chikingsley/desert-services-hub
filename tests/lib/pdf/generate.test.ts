@@ -1,20 +1,28 @@
 import { describe, expect, test } from "bun:test";
 import { writeFileSync } from "node:fs";
+import { createLineItems } from "@/lib/catalog";
 import {
   generateEstimatePDF,
   getEstimatePDFFilename,
 } from "@/lib/pdf/estimate/generate-estimate-pdf.server";
 import { getPdfTestOutputPath } from "./output-path";
 
+const CATALOG_NAME_ERROR_RE = /catalog code or exact catalog name/i;
+
+const baseLineItems = createLineItems([
+  { code: "CM-003", qty: 500 },
+  { code: "CM-001", qty: 1 },
+  { code: "CM-005", qty: 12 },
+]);
+
 const testQuote = {
   estimateNumber: "251227-01",
   date: new Date().toISOString(),
-  estimator: "John Smith",
-  estimatorEmail: "john@desertservices.com",
+  estimator: "Jared Aiken",
+  estimatorEmail: "jared@desertservices.net",
   billTo: {
     companyName: "ABC General Contractors",
-    address: "1234 Commerce Blvd, Suite 500",
-    address2: "Phoenix, AZ 85001",
+    address: "1234 Commerce Blvd, Phoenix, AZ 85001",
     email: "contact@abcgeneral.com",
     phone: "(602) 555-0100",
   },
@@ -22,42 +30,17 @@ const testQuote = {
     siteName: "Sunset Ridge Phase 2",
     address: "7890 N Scottsdale Rd, Scottsdale, AZ 85250",
   },
-  project: { name: "Sunset Ridge Development Phase 2" },
-  siteAddress: {
-    line1: "7890 N Scottsdale Rd",
-    line2: "Scottsdale, AZ 85250",
-  },
   sections: [],
-  lineItems: [
-    {
-      id: "1",
-      item: "Silt Fence",
-      description: "Install silt fence per SWPPP",
-      qty: 500,
-      uom: "LF",
-      cost: 3.5,
-      total: 1750,
-    },
-    {
-      id: "2",
-      item: "Rock Check Dam",
-      description: "Type A rock check dam",
-      qty: 5,
-      uom: "EA",
-      cost: 450,
-      total: 2250,
-    },
-    {
-      id: "3",
-      item: "Inlet Protection",
-      description: "Curb inlet  protection",
-      qty: 12,
-      uom: "EA",
-      cost: 125,
-      total: 1500,
-    },
-  ],
-  total: 5500,
+  lineItems: baseLineItems.map((item, index) => ({
+    id: String(index + 1),
+    item: item.item,
+    description: item.description,
+    qty: item.qty,
+    uom: item.uom,
+    cost: item.cost,
+    total: item.total,
+  })),
+  total: baseLineItems.reduce((sum, item) => sum + item.total, 0),
 };
 
 describe("PDF Generation", () => {
@@ -67,7 +50,6 @@ describe("PDF Generation", () => {
     expect(buffer).toBeInstanceOf(Buffer);
     expect(buffer.length).toBeGreaterThan(0);
 
-    // PDF files start with %PDF
     const header = buffer.subarray(0, 4).toString();
     expect(header).toBe("%PDF");
   });
@@ -79,6 +61,27 @@ describe("PDF Generation", () => {
     writeFileSync(outPath, buffer);
 
     expect(buffer.length).toBeGreaterThan(0);
+  });
+
+  test("rejects non-catalog line items", async () => {
+    const invalidQuote = {
+      ...testQuote,
+      lineItems: [
+        {
+          id: "bad-1",
+          item: "Silt Fence",
+          description: "not catalog",
+          qty: 1,
+          uom: "LF",
+          cost: 10,
+          total: 10,
+        },
+      ],
+    };
+
+    await expect(generateEstimatePDF(invalidQuote)).rejects.toThrow(
+      CATALOG_NAME_ERROR_RE
+    );
   });
 
   test("generates correct filename", () => {

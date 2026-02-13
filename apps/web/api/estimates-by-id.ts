@@ -1,8 +1,13 @@
 /**
  * Estimate by ID API handlers
- * Routes: /api/estimates/:id, /api/estimates/:id/pdf, /api/estimates/:id/duplicate, /api/estimates/:id/takeoff
+ * Routes: /api/estimates/:id, /api/estimates/:id/pdf, /api/estimates/:id/duplicate, /api/estimates/:id/finalize, /api/estimates/:id/takeoff
  */
 import { db } from "@lib/db/hub";
+import {
+  getCanonicalEstimateForProject,
+  linkEstimateToProject,
+  setCanonicalEstimateForProject,
+} from "@lib/db/repositories/project-estimate";
 import type {
   EditorEstimate,
   EditorLineItem,
@@ -45,6 +50,57 @@ function parseEstimateId(rawId: string): number | null {
     return null;
   }
   return id;
+}
+
+function parseFinalizeProjectId(value: unknown): number | null | "invalid" {
+  if (value === undefined || value === null) {
+    return null;
+  }
+
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed <= 0) {
+    return "invalid";
+  }
+
+  return parsed;
+}
+
+function normalizeNullableText(
+  value: string | null | undefined
+): string | null {
+  if (!value) {
+    return null;
+  }
+
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
+function extractJobAddressFromLineItems(
+  lineItems: EstimateLineItemRow[]
+): string | null {
+  for (const item of lineItems) {
+    const description = item.description ?? "";
+    if (!description || !/ESTIMATE FOR:/i.test(description)) {
+      continue;
+    }
+
+    const lines = description
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0);
+    const markerIndex = lines.findIndex((line) => /ESTIMATE FOR:/i.test(line));
+    if (markerIndex < 0) {
+      continue;
+    }
+
+    const addressLines = lines.slice(markerIndex + 2);
+    if (addressLines.length > 0) {
+      return addressLines.join(", ");
+    }
+  }
+
+  return null;
 }
 
 // Generate a unique base number (YYMMDD format with suffix for duplicates)
@@ -117,17 +173,36 @@ export async function getEstimate(req: BunRequest): Promise<Response> {
         created_at: estimate.created_at,
       } satisfies EstimateVersionRow);
 
+    const extractedEstimate = estimate as EstimateRow & {
+      extracted_job_name?: string | null;
+      extracted_estimator?: string | null;
+    };
+
+    const inferredJobAddress = extractJobAddressFromLineItems(lineItems);
+    const jobAddress =
+      normalizeNullableText(estimate.job_address) ??
+      normalizeNullableText(estimate.location) ??
+      inferredJobAddress;
+    const jobName =
+      normalizeNullableText(estimate.job_name) ??
+      normalizeNullableText(extractedEstimate.extracted_job_name) ??
+      estimate.name;
+    const estimator =
+      normalizeNullableText(estimate.estimator) ??
+      normalizeNullableText(extractedEstimate.extracted_estimator);
+
     return Response.json({
       id: estimate.id,
       base_number: estimate.base_number ?? estimate.estimate_number,
       takeoff_id: estimate.takeoff_id,
-      job_name: estimate.job_name || estimate.name,
-      job_address: estimate.job_address,
+      job_name: jobName,
+      job_address: jobAddress,
       client_name: estimate.client_name ?? estimate.contractor,
-      client_address: estimate.client_address ?? estimate.location,
+      client_address:
+        estimate.client_address ?? estimate.location ?? jobAddress,
       client_email: estimate.client_email,
       client_phone: estimate.client_phone,
-      estimator: estimate.estimator,
+      estimator,
       estimator_email: estimate.estimator_email,
       notes: estimate.notes,
       status: estimate.status ?? estimate.bid_status ?? "draft",
@@ -199,6 +274,14 @@ export async function updateEstimate(req: BunRequest): Promise<Response> {
     if (payload.client_phone !== undefined) {
       updateFields.push("client_phone = ?");
       updateValues.push(payload.client_phone || null);
+    }
+    if (payload.estimator !== undefined) {
+      updateFields.push("estimator = ?");
+      updateValues.push(payload.estimator || null);
+    }
+    if (payload.estimator_email !== undefined) {
+      updateFields.push("estimator_email = ?");
+      updateValues.push(payload.estimator_email || null);
     }
     if (payload.notes !== undefined) {
       updateFields.push("notes = ?");
@@ -389,6 +472,142 @@ export async function updateEstimate(req: BunRequest): Promise<Response> {
   }
 }
 
+// POST /api/estimates/:id/finalize - Lock estimate and set project canonical final SOV
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: finalize flow handles explicit and implicit project linkage outcomes.
+export async function finalizeEstimate(req: BunRequest): Promise<Response> {
+  try {
+    const id = parseEstimateId(req.params.id);
+    if (!id) {
+      return Response.json({ error: "Estimate not found" }, { status: 404 });
+    }
+
+    const estimate = await db
+      .prepare("SELECT id FROM estimates WHERE id = ?")
+      .get(id);
+
+    if (!estimate) {
+      return Response.json({ error: "Estimate not found" }, { status: 404 });
+    }
+
+    let rawBody: unknown = {};
+    try {
+      rawBody = await req.json();
+    } catch {
+      rawBody = {};
+    }
+
+    const body =
+      rawBody && typeof rawBody === "object" && !Array.isArray(rawBody)
+        ? (rawBody as Record<string, unknown>)
+        : {};
+
+    const parsedProjectId = parseFinalizeProjectId(body.project_id);
+    if (parsedProjectId === "invalid") {
+      return Response.json(
+        { error: "project_id must be a positive integer" },
+        { status: 400 }
+      );
+    }
+
+    const source =
+      typeof body.source === "string" && body.source.trim().length > 0
+        ? body.source.trim()
+        : "estimate_editor_finalize";
+
+    const linkedRows = (await db
+      .prepare(
+        `SELECT DISTINCT project_id
+         FROM project_estimates
+         WHERE estimate_id = ?
+         ORDER BY project_id ASC`
+      )
+      .all(id)) as Array<{ project_id: number }>;
+
+    const linkedProjectIds = linkedRows.map((row) => row.project_id);
+
+    let projectId: number | null = parsedProjectId;
+    if (projectId === null) {
+      if (linkedProjectIds.length === 0) {
+        return Response.json(
+          {
+            error:
+              "Estimate is not linked to any project. Provide project_id to finalize.",
+            code: "missing_project_link",
+          },
+          { status: 409 }
+        );
+      }
+
+      if (linkedProjectIds.length > 1) {
+        return Response.json(
+          {
+            error:
+              "Estimate links to multiple projects. Provide project_id to finalize deterministically.",
+            code: "ambiguous_project_link",
+            project_ids: linkedProjectIds,
+          },
+          { status: 409 }
+        );
+      }
+
+      projectId = linkedProjectIds[0] ?? null;
+    }
+
+    if (projectId === null) {
+      return Response.json(
+        { error: "Failed to resolve project for finalize" },
+        { status: 500 }
+      );
+    }
+
+    if (!linkedProjectIds.includes(projectId)) {
+      const linked = await linkEstimateToProject(projectId, id, source);
+      if (!linked) {
+        return Response.json(
+          { error: "Failed to link estimate to project" },
+          { status: 500 }
+        );
+      }
+    }
+
+    const canonicalSet = await setCanonicalEstimateForProject(
+      projectId,
+      id,
+      source
+    );
+    if (!canonicalSet) {
+      return Response.json(
+        { error: "Failed to set canonical estimate for project" },
+        { status: 500 }
+      );
+    }
+
+    await db
+      .prepare(
+        `UPDATE estimates
+         SET is_locked = 1, updated_at = now()
+         WHERE id = ?`
+      )
+      .run(id);
+
+    const canonical = await getCanonicalEstimateForProject(projectId);
+
+    return Response.json({
+      success: true,
+      estimate_id: id,
+      project_id: projectId,
+      is_locked: 1,
+      canonicalized_at: canonical?.canonicalizedAt ?? null,
+    });
+  } catch (error) {
+    console.error("Failed to finalize estimate:", error);
+    return Response.json(
+      { error: "Failed to finalize estimate" },
+      { status: 500 }
+    );
+  }
+}
+
 // DELETE /api/estimates/:id - Delete an estimate
 export async function deleteEstimate(req: BunRequest): Promise<Response> {
   try {
@@ -463,29 +682,52 @@ export async function getEstimatePdf(req: BunRequest): Promise<Response> {
       description: item.description || item.notes || "",
       qty: item.quantity,
       uom: item.unit,
-      cost: item.unit_price,
-      total: item.quantity * item.unit_price,
+      cost: item.unit_cost ?? item.unit_price,
+      total: item.quantity * (item.unit_cost ?? item.unit_price),
       sectionId: item.section_id || undefined,
       isAlternate: item.is_excluded === 1,
     }));
 
     const total = lineItems.reduce((sum, item) => sum + item.total, 0);
+    const extractedEstimate = estimate as EstimateRow & {
+      extracted_job_name?: string | null;
+      extracted_estimator?: string | null;
+    };
+
+    const inferredJobAddress = extractJobAddressFromLineItems(lineItemsData);
+    const jobAddress =
+      normalizeNullableText(estimate.job_address) ??
+      normalizeNullableText(estimate.location) ??
+      inferredJobAddress;
+    const jobName =
+      normalizeNullableText(estimate.job_name) ??
+      normalizeNullableText(extractedEstimate.extracted_job_name) ??
+      estimate.name;
+    const estimator =
+      normalizeNullableText(estimate.estimator) ??
+      normalizeNullableText(extractedEstimate.extracted_estimator);
+
+    const createdAtValue =
+      estimate.created_at instanceof Date
+        ? estimate.created_at.toISOString()
+        : estimate.created_at || new Date().toISOString();
 
     const editorEstimate: EditorEstimate = {
       estimateNumber:
         estimate.base_number ?? estimate.estimate_number ?? estimate.name,
-      date: estimate.created_at || new Date().toISOString(),
-      estimator: estimate.estimator || "",
+      date: createdAtValue,
+      estimator: estimator || "",
       estimatorEmail: estimate.estimator_email || "",
       billTo: {
-        companyName: estimate.client_name || "",
-        address: estimate.client_address || "",
+        companyName: estimate.client_name || estimate.contractor || "",
+        address:
+          estimate.client_address || estimate.location || jobAddress || "",
         email: estimate.client_email || "",
         phone: estimate.client_phone || "",
       },
       jobInfo: {
-        siteName: estimate.job_name || estimate.name || "",
-        address: estimate.job_address || "",
+        siteName: jobName || "",
+        address: jobAddress || "",
       },
       sections,
       lineItems,

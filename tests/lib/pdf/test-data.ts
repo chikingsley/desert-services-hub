@@ -206,8 +206,8 @@ const total = lineItems.reduce((sum, item) => sum + item.total, 0);
 export const maxCatalogQuote: EditorEstimate = {
   estimateNumber: "E-2026-TEST",
   date: new Date().toISOString(),
-  estimator: "John Smith",
-  estimatorEmail: "john@desertservicesaz.com",
+  estimator: "Jared Aiken",
+  estimatorEmail: "jared@desertservices.net",
   billTo: {
     companyName: "Southwest Construction Partners LLC",
     address: "4521 E Camelback Road, Suite 200\nPhoenix, AZ 85018",

@@ -30,6 +30,7 @@ interface InlineEstimateEditorProps {
     ref: { reset: (estimate: EditorEstimate) => void } | null
   ) => void;
   estimateId?: string | null;
+  compactRows?: boolean;
 }
 
 export function InlineEstimateEditor({
@@ -40,6 +41,7 @@ export function InlineEstimateEditor({
   onEstimateChange,
   onSaveRef,
   onResetRef,
+  compactRows = false,
 }: InlineEstimateEditorProps) {
   const {
     estimate,
@@ -186,11 +188,15 @@ export function InlineEstimateEditor({
     };
   }, [estimate, onSave, updateSaveStatus]);
 
+  const showCompactRows = compactRows;
+
   const renderLineItem = useCallback(
     (item: EditorLineItem, catalogCategoryId?: string) => (
       <>
         {/* Desktop view */}
-        <div className="hidden items-center md:flex">
+        <div
+          className={showCompactRows ? "hidden" : "hidden items-center md:flex"}
+        >
           <Button
             className="h-9 w-9 shrink-0 rounded-lg p-0 transition-transform hover:scale-105"
             onClick={() => removeLineItem(item.id)}
@@ -260,7 +266,13 @@ export function InlineEstimateEditor({
         </div>
 
         {/* Mobile view */}
-        <div className="space-y-2 rounded-xl border border-border/50 bg-card p-4 shadow-sm md:hidden">
+        <div
+          className={
+            showCompactRows
+              ? "space-y-2 rounded-xl border border-border/50 bg-card p-4 shadow-sm"
+              : "space-y-2 rounded-xl border border-border/50 bg-card p-4 shadow-sm md:hidden"
+          }
+        >
           <div className="flex items-center justify-between">
             <span className="font-medium text-muted-foreground text-xs uppercase tracking-wide">
               Item
@@ -286,15 +298,6 @@ export function InlineEstimateEditor({
               </Button>
             </div>
           </div>
-          <ItemCombobox
-            catalog={catalog}
-            categoryId={catalogCategoryId}
-            className="h-10"
-            currentValue={item.item}
-            onSelect={(catalogItem) =>
-              updateLineItemFromCatalog(item.id, catalogItem)
-            }
-          />
           <Input
             className="h-10 rounded-lg border-border/50 bg-background text-sm"
             onChange={(e) =>
@@ -303,52 +306,87 @@ export function InlineEstimateEditor({
             placeholder="Description"
             value={item.description}
           />
-          <div className="grid grid-cols-2 gap-2">
-            <Input
-              className="h-10 rounded-lg border-border/50 bg-background text-sm"
-              inputMode="decimal"
-              onChange={(e) =>
-                updateLineItem(
-                  item.id,
-                  "qty",
-                  Number.parseFloat(e.target.value) || 0
-                )
-              }
-              placeholder="Qty"
-              type="number"
-              value={item.qty}
-            />
-            <Input
-              className="h-10 rounded-lg border-border/50 bg-background text-sm"
-              onChange={(e) => updateLineItem(item.id, "uom", e.target.value)}
-              placeholder="U/M"
-              value={item.uom}
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            <Input
-              className="h-10 rounded-lg border-border/50 bg-background text-sm"
-              inputMode="decimal"
-              onChange={(e) =>
-                updateLineItem(
-                  item.id,
-                  "cost",
-                  Number.parseFloat(e.target.value) || 0
-                )
-              }
-              placeholder="Cost"
-              step="0.01"
-              type="number"
-              value={item.cost}
-            />
-            <div className="flex h-10 items-center justify-end font-mono font-semibold text-sm">
-              {formatCurrency(item.total)}
+          <div className="grid grid-cols-[minmax(0,1fr)_3.9rem_3.4rem_4.9rem_5.1rem] gap-2">
+            <div className="min-w-0">
+              <p className="mb-1 text-[10px] text-muted-foreground uppercase tracking-wide">
+                Item
+              </p>
+              <ItemCombobox
+                catalog={catalog}
+                categoryId={catalogCategoryId}
+                className="h-10"
+                currentValue={item.item}
+                onSelect={(catalogItem) =>
+                  updateLineItemFromCatalog(item.id, catalogItem)
+                }
+              />
+            </div>
+            <div className="min-w-0">
+              <p className="mb-1 text-[10px] text-muted-foreground uppercase tracking-wide">
+                Amt
+              </p>
+              <Input
+                className="h-10 rounded-lg border-border/50 bg-background px-2 text-xs"
+                inputMode="decimal"
+                onChange={(e) =>
+                  updateLineItem(
+                    item.id,
+                    "qty",
+                    Number.parseFloat(e.target.value) || 0
+                  )
+                }
+                placeholder="Amt"
+                type="number"
+                value={item.qty}
+              />
+            </div>
+            <div className="min-w-0">
+              <p className="mb-1 text-[10px] text-muted-foreground uppercase tracking-wide">
+                U/M
+              </p>
+              <div className="flex h-10 items-center justify-center rounded-lg border border-border/50 bg-muted/50 px-1 text-[11px] text-muted-foreground">
+                {item.uom}
+              </div>
+            </div>
+            <div className="min-w-0">
+              <p className="mb-1 text-[10px] text-muted-foreground uppercase tracking-wide">
+                Cost
+              </p>
+              <Input
+                className="h-10 rounded-lg border-border/50 bg-background px-2 text-xs"
+                inputMode="decimal"
+                onChange={(e) =>
+                  updateLineItem(
+                    item.id,
+                    "cost",
+                    Number.parseFloat(e.target.value) || 0
+                  )
+                }
+                placeholder="Cost"
+                step="0.01"
+                type="number"
+                value={item.cost}
+              />
+            </div>
+            <div className="min-w-0">
+              <p className="mb-1 text-[10px] text-muted-foreground uppercase tracking-wide">
+                Tot
+              </p>
+              <div className="flex h-10 items-center justify-end rounded-lg border border-border/50 bg-muted/30 px-2 text-right font-mono font-semibold text-xs whitespace-nowrap">
+                {formatCurrency(item.total)}
+              </div>
             </div>
           </div>
         </div>
       </>
     ),
-    [catalog, removeLineItem, updateLineItem, updateLineItemFromCatalog]
+    [
+      catalog,
+      removeLineItem,
+      showCompactRows,
+      updateLineItem,
+      updateLineItemFromCatalog,
+    ]
   );
 
   // Single-pass grouping: build Map<sectionId, items[]> then derive both lists
@@ -639,7 +677,13 @@ export function InlineEstimateEditor({
           {/* Line Items Table */}
           <div className="space-y-2">
             {/* Table Header */}
-            <div className="mb-2 hidden items-center px-1 font-medium text-muted-foreground text-xs uppercase tracking-wide md:flex">
+            <div
+              className={
+                showCompactRows
+                  ? "mb-2 hidden items-center px-1 font-medium text-muted-foreground text-xs uppercase tracking-wide"
+                  : "mb-2 hidden items-center px-1 font-medium text-muted-foreground text-xs uppercase tracking-wide md:flex"
+              }
+            >
               <div className="w-9 shrink-0" />
               <div className="ml-2 min-w-0 flex-[2]">Item</div>
               <div className="ml-2 w-9 shrink-0" />

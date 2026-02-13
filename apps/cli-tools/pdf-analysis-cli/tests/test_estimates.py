@@ -14,8 +14,10 @@ from pdf_analysis.estimates import (
     Estimate,
     EstimateLineItem,
     SectionType,
+    _decode_cid_glyphs,
     _is_taxable,
     _parse_money,
+    _parse_qty,
     extract_estimate,
 )
 
@@ -86,6 +88,18 @@ def find_items(est: Estimate, name: str) -> list[EstimateLineItem]:
     lower = name.lower()
     return [li for li in est.line_items if lower in li.item.lower()]
 
+
+
+
+class TestCidDecoding:
+    def test_decode_digit_glyphs(self):
+        assert _decode_cid_glyphs("(cid:55)(cid:55)0.00") == "770.00"
+
+    def test_parse_money_with_cid_digits(self):
+        assert _parse_money("(cid:55)(cid:55)0.00") == 770.00
+
+    def test_parse_qty_with_cid_digits(self):
+        assert _parse_qty("(cid:55)3") == 73.0
 
 # ---------------------------------------------------------------------------
 # 1. VEG BUILDING (3 pages, sections, Permit Filing embedded, Rental Tax 0)

@@ -2,6 +2,7 @@
 // Uses pdfmake Node.js API with shared font/logo infrastructure
 
 import type { EditorEstimate } from "@lib/db/types";
+import { validateAndNormalizeEditorEstimateForPdf } from "@lib/estimating/estimate-payload-validation";
 import { PDFDocument } from "pdf-lib";
 import pdfmake from "pdfmake";
 import { initFonts } from "../shared/fonts";
@@ -68,9 +69,10 @@ export async function generateEstimatePDF(
   estimate: EditorEstimate,
   options?: EstimatePDFOptions
 ): Promise<Uint8Array> {
+  const sanitizedEstimate = validateAndNormalizeEditorEstimateForPdf(estimate);
   const logoBase64 = await loadLogo();
   const estimatePDF = await generateEstimateMainPDF(
-    estimate,
+    sanitizedEstimate,
     logoBase64,
     options
   );

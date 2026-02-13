@@ -954,13 +954,13 @@ export function buildEstimateDocDefinition(
                 {
                   stack: [
                     {
-                      text: `Phone: ${COMPANY.phoneCompact}`,
+                      text: `Phone: ${estimate.estimatorPhone || COMPANY.phoneCompact}`,
                       alignment: "center",
                       color: "#fff",
                       fontSize: 9,
                     },
                     {
-                      text: `Email: ${estimate.estimatorEmail}`,
+                      text: `Email: ${estimate.estimatorEmail || COMPANY.email}`,
                       alignment: "center",
                       color: "#fff",
                       fontSize: 9,

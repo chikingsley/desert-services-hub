@@ -2,6 +2,7 @@
 // Uses pdfmake browser build for live preview in iframe
 
 import type { EditorEstimate } from "@lib/db/types";
+import { validateAndNormalizeEditorEstimateForPdf } from "@lib/estimating/estimate-payload-validation";
 import pdfMake from "pdfmake/build/pdfmake";
 import timesFonts from "pdfmake/build/standard-fonts/Times";
 import pdfFonts from "pdfmake/build/vfs_fonts";
@@ -105,9 +106,10 @@ export async function generateEstimatePDFBlob(
   estimate: EditorEstimate,
   options?: EstimatePDFOptions
 ): Promise<Blob> {
+  const sanitizedEstimate = validateAndNormalizeEditorEstimateForPdf(estimate);
   const logoBase64 = await getLogoBase64();
   const docDefinition = buildEstimateDocDefinition(
-    estimate,
+    sanitizedEstimate,
     logoBase64,
     options
   );
@@ -138,9 +140,10 @@ export async function openEstimatePDF(
   estimate: EditorEstimate,
   options?: EstimatePDFOptions
 ): Promise<void> {
+  const sanitizedEstimate = validateAndNormalizeEditorEstimateForPdf(estimate);
   const logoBase64 = await getLogoBase64();
   const docDefinition = buildEstimateDocDefinition(
-    estimate,
+    sanitizedEstimate,
     logoBase64,
     options
   );

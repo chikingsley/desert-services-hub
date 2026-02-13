@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router";
+import { toast } from "sonner";
 import { FloatingPdfOptions } from "@/apps/web/frontend/components/estimates/floating-pdf-options";
 import { InlineEstimateEditor } from "@/apps/web/frontend/components/estimates/inline-estimate-editor";
 import { PageHeader } from "@/apps/web/frontend/components/page-header";
@@ -28,6 +29,8 @@ import type { EstimatePDFOptions } from "@/lib/pdf/estimate/build-estimate-doc-d
 import { generateEstimatePDFBlob } from "@/lib/pdf/estimate/generate-estimate-pdf.client";
 
 type SaveStatus = "saved" | "saving" | "unsaved";
+
+const COMPACT_EDITOR_BREAKPOINT = 1180;
 
 interface SaveButtonProps {
   isManualSaving: boolean;
@@ -72,6 +75,7 @@ interface EstimateWorkspaceProps {
   versionId: string;
   jobName: string;
   linkedTakeoff: { id: string; name: string } | null;
+  initialIsLocked?: boolean;
   initialUpdatedAt?: string;
 }
 
@@ -113,6 +117,31 @@ interface ApiEstimateResponse {
   };
 }
 
+function getLineItemRateAndTotal(item: {
+  quantity: number;
+  unit_cost: number;
+  unit_price: number;
+}): {
+  rate: number;
+  total: number;
+} {
+  const quantity = Number.isFinite(item.quantity) ? item.quantity : 0;
+  const unitCost = Number.isFinite(item.unit_cost) ? item.unit_cost : 0;
+  const unitPrice = Number.isFinite(item.unit_price) ? item.unit_price : 0;
+
+  if (unitCost > 0) {
+    return {
+      rate: unitCost,
+      total: quantity * unitCost,
+    };
+  }
+
+  return {
+    rate: unitPrice,
+    total: quantity * unitPrice,
+  };
+}
+
 function apiToEditorEstimate(
   api: ApiEstimateResponse,
   current: EditorEstimate
@@ -145,17 +174,21 @@ function apiToEditorEstimate(
       name: s.name,
       title: s.title,
     })),
-    lineItems: version.line_items.map((item) => ({
-      id: item.id,
-      item: item.item_name ?? item.description,
-      description: item.description || item.notes || "",
-      qty: item.quantity,
-      uom: item.unit,
-      cost: item.unit_cost ?? item.unit_price,
-      total: item.quantity * item.unit_price,
-      sectionId: item.section_id ?? undefined,
-      isAlternate: item.is_excluded === 1,
-    })),
+    lineItems: version.line_items.map((item) => {
+      const { rate, total } = getLineItemRateAndTotal(item);
+
+      return {
+        id: item.id,
+        item: item.item_name ?? item.description,
+        description: item.description || item.notes || "",
+        qty: item.quantity,
+        uom: item.unit,
+        cost: rate,
+        total,
+        sectionId: item.section_id ?? undefined,
+        isAlternate: item.is_excluded === 1,
+      };
+    }),
     total: version.total,
   };
 }
@@ -166,6 +199,7 @@ export function EstimateWorkspace({
   versionId: _versionId,
   jobName,
   linkedTakeoff,
+  initialIsLocked = false,
   initialUpdatedAt,
 }: EstimateWorkspaceProps) {
   const { isMobile, open, openMobile, setOpen, setOpenMobile } = useSidebar();
@@ -175,6 +209,8 @@ export function EstimateWorkspace({
   } | null>(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(true);
   const [previewEstimate, setPreviewEstimate] = useState(initialEstimate);
+  const editorPanelRef = useRef<HTMLDivElement | null>(null);
+  const [isEditorCompact, setIsEditorCompact] = useState(false);
 
   // PDF blob URL for iframe preview
   const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null);
@@ -197,6 +233,8 @@ export function EstimateWorkspace({
     save: () => Promise<void>;
   } | null>(null);
   const [isManualSaving, setIsManualSaving] = useState(false);
+  const [isFinalizing, setIsFinalizing] = useState(false);
+  const [isFinalized, setIsFinalized] = useState(initialIsLocked);
 
   // External update detection
   const lastKnownUpdateRef = useRef<string | null>(null);
@@ -250,6 +288,29 @@ export function EstimateWorkspace({
     }
   }, [isPreviewOpen, autoHideSidebar, isMobile, setOpen, setOpenMobile]);
 
+  useEffect(() => {
+    const panel = editorPanelRef.current;
+    if (!panel || typeof ResizeObserver === "undefined") {
+      return;
+    }
+
+    const updateCompactState = (width: number) => {
+      setIsEditorCompact(width < COMPACT_EDITOR_BREAKPOINT);
+    };
+
+    updateCompactState(panel.getBoundingClientRect().width);
+
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (!entry) {
+        return;
+      }
+      updateCompactState(entry.contentRect.width);
+    });
+
+    observer.observe(panel);
+    return () => observer.disconnect();
+  }, []);
   // Generate PDF blob when estimate or options change
   useEffect(() => {
     let currentUrl: string | null = null;
@@ -344,6 +405,8 @@ export function EstimateWorkspace({
         base_number: estimate.estimateNumber,
         job_name: estimate.jobInfo.siteName || "Untitled Estimate",
         job_address: estimate.jobInfo.address || null,
+        estimator: estimate.estimator || null,
+        estimator_email: estimate.estimatorEmail || null,
         client_name: estimate.billTo.companyName || null,
         client_address: estimate.billTo.address || null,
         client_email: estimate.billTo.email || null,
@@ -411,9 +474,51 @@ export function EstimateWorkspace({
     link.click();
   };
 
-  const handleFinalize = () => {
-    // TODO: Implement version finalization
+  const handleFinalize = async () => {
+    if (isFinalizing || isFinalized) {
+      return;
+    }
+
+    setIsFinalizing(true);
+    try {
+      const response = await fetch(`/api/estimates/${estimateId}/finalize`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ source: "estimate_editor_finalize" }),
+      });
+
+      const data = (await response.json()) as {
+        error?: string;
+        project_ids?: number[];
+      };
+
+      if (!response.ok) {
+        if (response.status === 409 && data.project_ids?.length) {
+          throw new Error(
+            `Estimate is linked to multiple projects (${data.project_ids.join(", ")}). Re-run finalize with an explicit project id.`
+          );
+        }
+
+        throw new Error(data.error || "Failed to finalize estimate");
+      }
+
+      setIsFinalized(true);
+      toast.success("Estimate finalized and set as project canonical SOV");
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Failed to finalize estimate";
+      toast.error(message);
+    } finally {
+      setIsFinalizing(false);
+    }
   };
+
+  let finalizeLabel = "Finalize";
+  if (isFinalized) {
+    finalizeLabel = "Finalized";
+  } else if (isFinalizing) {
+    finalizeLabel = "Finalizing...";
+  }
 
   const breadcrumbs = [
     { label: "Estimates", href: "/estimates" },
@@ -486,9 +591,14 @@ export function EstimateWorkspace({
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <Button onClick={handleFinalize} size="sm">
+      <Button
+        disabled={isFinalizing || isFinalized}
+        onClick={handleFinalize}
+        size="sm"
+        variant={isFinalized ? "outline" : "default"}
+      >
         <Lock className="mr-2 h-4 w-4" />
-        Finalize
+        {finalizeLabel}
       </Button>
     </div>
   );
@@ -503,9 +613,10 @@ export function EstimateWorkspace({
           className={`flex h-full flex-col ${isPreviewOpen ? "lg:flex-row" : ""}`}
         >
           {/* Editor Panel */}
-          <div className="flex h-full min-w-0 flex-1">
+          <div className="flex h-full min-w-0 flex-1" ref={editorPanelRef}>
             <InlineEstimateEditor
               catalog={catalog}
+              compactRows={isEditorCompact}
               estimateId={estimateId}
               initialEstimate={initialEstimate}
               onEstimateChange={setPreviewEstimate}

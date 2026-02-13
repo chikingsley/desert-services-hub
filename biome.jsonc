@@ -40,6 +40,7 @@
       "!docs/_archive",
       "!apps/workers/docusign-file-automation/_reference",
       "!apps/workers/permit-workers/tests/e2e/screenshots",
+      "!tests/e2e/screenshots",
       "!**/.wrangler",
       "!**/.cursor",
       "!**/inspections-app-idea"
@@ -49,13 +50,38 @@
     {
       "includes": [
         "docs/_archive/**",
-        "apps/workers/docusign-file-automation/_reference/**"
+        "apps/workers/docusign-file-automation/_reference/**",
+        "apps/workers/permit-workers/experiments/**",
+        "tests/e2e/screenshots/**"
       ],
       "linter": {
         "enabled": false
       },
+      "assist": {
+        "enabled": false
+      },
       "formatter": {
         "enabled": false
+      }
+    },
+    {
+      "includes": ["apps/workers/permit-workers/src/form-data.ts"],
+      "linter": {
+        "rules": {
+          "nursery": {
+            "noExcessiveLinesPerFile": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["apps/workers/permit-workers/src/portal/create/fill/**"],
+      "linter": {
+        "rules": {
+          "complexity": {
+            "noExcessiveCognitiveComplexity": "off"
+          }
+        }
       }
     },
     {

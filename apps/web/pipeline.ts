@@ -143,7 +143,12 @@ const updateExtractionSuccess = db.prepare(`
     extracted_at = now(),
     extracted_grand_total = ?,
     extracted_job_name = ?,
-    extracted_estimator = ?
+    extracted_estimator = ?,
+    job_name = COALESCE(NULLIF(TRIM(job_name), ''), NULLIF(TRIM(?), ''), job_name),
+    job_address = COALESCE(NULLIF(TRIM(job_address), ''), NULLIF(TRIM(?), ''), job_address),
+    estimator = COALESCE(NULLIF(TRIM(estimator), ''), NULLIF(TRIM(?), ''), estimator),
+    client_name = COALESCE(NULLIF(TRIM(client_name), ''), NULLIF(TRIM(?), ''), client_name),
+    client_address = COALESCE(NULLIF(TRIM(client_address), ''), NULLIF(TRIM(?), ''), client_address)
   WHERE id = ?
 `);
 
@@ -475,6 +480,11 @@ async function runExtraction(
         result.grand_total,
         result.header.job_name,
         result.header.estimator,
+        result.header.job_name,
+        result.header.job_address,
+        result.header.estimator,
+        result.header.gc_name,
+        result.header.gc_address,
         estimate.id
       );
     });

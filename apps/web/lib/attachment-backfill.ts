@@ -15,6 +15,7 @@ import type { GraphEmailClient } from "@email/client";
 import { createGraphClient } from "@email/sync/config";
 import { db } from "@lib/db/hub";
 import { updateAttachmentExtraction } from "@lib/db/repositories/attachment";
+import { isSubjectCompatibleWithProject } from "@lib/project-subject-guard";
 import { processFilesIntake } from "@/apps/web/lib/files-intake";
 
 const LOG = "[attachment-backfill]";
@@ -180,13 +181,27 @@ async function processOneAttachment(
 
     // Link document records to email, attachment, and project
     let anySuccess = false;
+    let projectLinkSkipped = false;
     for (const r of results) {
       if (r.documentId) {
+        let projectIdForDocument: number | null = att.project_id;
+        const subjectForGuard = att.subject ?? "";
+        if (
+          projectIdForDocument !== null &&
+          !(await isSubjectCompatibleWithProject({
+            projectId: projectIdForDocument,
+            subject: subjectForGuard,
+          }))
+        ) {
+          projectIdForDocument = null;
+          projectLinkSkipped = true;
+        }
+
         await updateDocumentBackfillLinks.run(
           r.documentId,
           att.email_id,
           att.attachment_id_pk,
-          att.project_id
+          projectIdForDocument
         );
         anySuccess = true;
       }
@@ -194,7 +209,10 @@ async function processOneAttachment(
 
     if (anySuccess) {
       await updateAttachmentExtraction(att.attachment_id_pk, "success");
-      console.log(`${LOG}   OK: ${att.name} -> project #${att.project_id}`);
+      const projectSummary = projectLinkSkipped
+        ? "project link skipped by subject guard"
+        : `project #${att.project_id}`;
+      console.log(`${LOG}   OK: ${att.name} -> ${projectSummary}`);
       return { type: "succeeded" };
     }
 

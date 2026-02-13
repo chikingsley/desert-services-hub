@@ -120,7 +120,7 @@ for (const folder of folders) {
     totalNotFound += stats.notFound;
 
     console.log(
-      `  Linked: ${stats.directLinks} direct, ${stats.threadExpanded} via threads, ${stats.notFound} not found`
+      `  Linked: ${stats.directLinks} direct, ${stats.threadExpanded} via threads, ${stats.notFound} not found, ${stats.skippedSubjectMismatch} skipped by subject guard`
     );
 
     // Check for dust permit issued emails

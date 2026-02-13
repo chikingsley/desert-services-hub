@@ -44,6 +44,7 @@ import { createEstimate, listEstimates } from "@/api/estimates";
 import {
   deleteEstimate,
   duplicateEstimate,
+  finalizeEstimate,
   getEstimate,
   getEstimatePdf,
   getEstimateTakeoff,
@@ -53,6 +54,7 @@ import { healthCheck } from "@/api/health";
 import { searchMonday } from "@/api/monday";
 import { listPermits } from "@/api/permits";
 import { listProjects } from "@/api/projects";
+import { getProjectFinalSov } from "@/api/projects-by-id";
 import { createTakeoff, listTakeoffs } from "@/api/takeoffs";
 import {
   deleteTakeoff,
@@ -99,6 +101,9 @@ const server = serve({
     "/api/estimates/:id/duplicate": {
       POST: h(duplicateEstimate),
     },
+    "/api/estimates/:id/finalize": {
+      POST: h(finalizeEstimate),
+    },
     "/api/estimates/:id/takeoff": {
       GET: h(getEstimateTakeoff),
     },
@@ -137,6 +142,9 @@ const server = serve({
     // Projects
     "/api/projects": {
       GET: h(listProjects),
+    },
+    "/api/projects/:id/final-sov": {
+      GET: h(getProjectFinalSov),
     },
 
     // Dust Permits

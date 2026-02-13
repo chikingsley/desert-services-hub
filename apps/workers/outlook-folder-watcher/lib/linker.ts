@@ -8,6 +8,7 @@ import {
   findEstimateCandidatesForEmail,
   linkEmailToEstimate,
 } from "@lib/db/repositories/estimate-email";
+import { isSubjectCompatibleWithProject } from "@lib/project-subject-guard";
 
 interface MessageForLinking {
   id?: string;
@@ -28,19 +29,34 @@ function uniqueNonEmpty(values: Array<string | undefined>): string[] {
   return [...dedup];
 }
 
+const findConversationProjectAnchor = db.query<
+  { id: number },
+  [string, number]
+>("SELECT id FROM emails WHERE conversation_id = ? AND project_id = ? LIMIT 1");
+
 /**
  * Link messages to a Supabase Postgres project.
  *
  * 1. Match each message by internet_message_id or Graph message_id
  * 2. Set project_id on matched emails
  * 3. Expand via conversation threads — all emails in same conversation get linked
+ *
+ * Safety guard:
+ * - Never auto-link by folder membership alone when the message subject does not
+ *   resemble the target project known names/aliases.
  */
 export async function linkMessages(
   hubProjectId: number,
   messages: MessageForLinking[]
-): Promise<{ directLinks: number; threadExpanded: number; notFound: number }> {
+): Promise<{
+  directLinks: number;
+  threadExpanded: number;
+  notFound: number;
+  skippedSubjectMismatch: number;
+}> {
   let directLinks = 0;
   let notFound = 0;
+  let skippedSubjectMismatch = 0;
   const conversationIds = new Set<string>();
 
   for (const msg of messages) {
@@ -48,6 +64,7 @@ export async function linkMessages(
       id: number;
       project_id: number | null;
       conversation_id: string | null;
+      subject: string | null;
     } | null = null;
 
     // Try internet_message_id first (cross-mailbox, most reliable)
@@ -58,10 +75,11 @@ export async function linkMessages(
             id: number;
             project_id: number | null;
             conversation_id: string | null;
+            subject: string | null;
           },
           [string]
         >(
-          "SELECT id, project_id, conversation_id FROM emails WHERE internet_message_id = ?"
+          "SELECT id, project_id, conversation_id, subject FROM emails WHERE internet_message_id = ?"
         )
         .get(msg.internetMessageId);
     }
@@ -74,10 +92,11 @@ export async function linkMessages(
             id: number;
             project_id: number | null;
             conversation_id: string | null;
+            subject: string | null;
           },
           [string]
         >(
-          "SELECT id, project_id, conversation_id FROM emails WHERE message_id = ?"
+          "SELECT id, project_id, conversation_id, subject FROM emails WHERE message_id = ?"
         )
         .get(msg.id);
     }
@@ -95,6 +114,27 @@ export async function linkMessages(
     // Linked to a different project — don't overwrite
     if (email.project_id !== null) {
       continue;
+    }
+
+    const subjectForGuard = msg.subject ?? email.subject ?? "";
+    let hasConversationAnchor = false;
+    if (email.conversation_id) {
+      const conversationAnchor = await findConversationProjectAnchor.get(
+        email.conversation_id,
+        hubProjectId
+      );
+      hasConversationAnchor = Boolean(conversationAnchor);
+    }
+
+    if (!hasConversationAnchor) {
+      const subjectCompatible = await isSubjectCompatibleWithProject({
+        projectId: hubProjectId,
+        subject: subjectForGuard,
+      });
+      if (!subjectCompatible) {
+        skippedSubjectMismatch++;
+        continue;
+      }
     }
 
     await db.run("UPDATE emails SET project_id = ? WHERE id = ?", [
@@ -129,7 +169,7 @@ export async function linkMessages(
     [hubProjectId, hubProjectId, hubProjectId, hubProjectId]
   );
 
-  return { directLinks, threadExpanded, notFound };
+  return { directLinks, threadExpanded, notFound, skippedSubjectMismatch };
 }
 
 export async function linkMessagesToProjectEstimates(

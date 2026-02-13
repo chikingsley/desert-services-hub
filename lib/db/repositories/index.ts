@@ -121,8 +121,11 @@ export {
 } from "@lib/db/repositories/project";
 // Project ↔ Estimate
 export {
+  getCanonicalEstimateForProject,
+  getCanonicalProjectSov,
   getEstimatesForProject,
   linkEstimateToProject,
+  setCanonicalEstimateForProject,
 } from "@lib/db/repositories/project-estimate";
 export type { ProjectMatchReviewSource } from "@lib/db/repositories/project-match-review";
 // Project Match Review Queue

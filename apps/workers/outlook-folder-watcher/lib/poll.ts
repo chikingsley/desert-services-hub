@@ -136,9 +136,13 @@ async function handleNewMessages(
 
   const stats = await linkMessages(hubProjectId, toLink);
 
-  if (stats.directLinks > 0 || stats.threadExpanded > 0) {
+  if (
+    stats.directLinks > 0 ||
+    stats.threadExpanded > 0 ||
+    stats.skippedSubjectMismatch > 0
+  ) {
     console.log(
-      `[Link] "${folderName}": ${stats.directLinks} direct, ${stats.threadExpanded} via threads, ${stats.notFound} not found`
+      `[Link] "${folderName}": ${stats.directLinks} direct, ${stats.threadExpanded} via threads, ${stats.notFound} not found, ${stats.skippedSubjectMismatch} skipped by subject guard`
     );
     await logEvent("emails_linked", folderId, folderName, {
       ...stats,

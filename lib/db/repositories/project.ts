@@ -188,10 +188,34 @@ export async function linkEmailToProject(
   emailId: number,
   projectId: number
 ): Promise<void> {
-  await db.run("UPDATE emails SET project_id = ? WHERE id = ?", [
-    projectId,
-    emailId,
-  ]);
+  const existing = await db
+    .query<{ project_id: number | null }, [number]>(
+      "SELECT project_id FROM emails WHERE id = ?"
+    )
+    .get(emailId);
+
+  if (!existing) {
+    return;
+  }
+
+  if (existing.project_id === projectId) {
+    return;
+  }
+
+  if (existing.project_id !== null) {
+    console.warn(
+      `[project-link] Skipping project overwrite for email #${emailId}: existing #${existing.project_id}, requested #${projectId}`
+    );
+    return;
+  }
+
+  const result = await db.run(
+    "UPDATE emails SET project_id = ? WHERE id = ? AND project_id IS NULL",
+    [projectId, emailId]
+  );
+  if (result.count === 0) {
+    return;
+  }
 
   await db.run(
     `

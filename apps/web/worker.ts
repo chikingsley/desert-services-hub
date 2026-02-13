@@ -26,6 +26,7 @@ import {
 import { ensureEstimateHasCurrentVersion } from "@lib/db/repositories/estimate-version";
 import type { InsertAttachmentData, InsertEmailData } from "@lib/db/types";
 import { htmlToText } from "@lib/html-to-text";
+import { isSubjectCompatibleWithProject } from "@lib/project-subject-guard";
 import {
   createSharePointClientFromEnv,
   uploadLocalFileToProjectSubfolder,
@@ -897,6 +898,20 @@ async function autoLinkDocument(
           projectId = convMatch.project_id;
         }
       }
+    }
+  }
+
+  if (projectId) {
+    const subjectCompatible = await isSubjectCompatibleWithProject({
+      projectId,
+      subject: normalized,
+      additionalHints: [originalSubject],
+    });
+    if (!subjectCompatible) {
+      console.warn(
+        `[doc-link] Subject guard skipped project #${projectId} for document #${documentId}`
+      );
+      projectId = null;
     }
   }
 

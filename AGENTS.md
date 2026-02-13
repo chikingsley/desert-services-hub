@@ -26,6 +26,7 @@ This repo runs with a Docker Compose runtime:
 
 - `just code-check` : typecheck + lint
 - `just fix`        : autofix lint issues
+- `just docs-path-check` : validates AGENTS/skill file-path references stay aligned
 
 Note: repo tests include **integration coverage** that can trigger Microsoft device-login and create Outlook drafts.
 
@@ -77,6 +78,13 @@ Project-linking runtime (shared matcher):
 - Shared text normalization/token helpers live in `lib/project-matching.ts`.
 - Folder watcher flow: project linking + thread expansion + deterministic single-estimate linking + ranked multi-estimate linking + periodic estimate-email backfill.
 - Ambiguous project matches are persisted to `project_match_reviews` (`status='pending'`) for manual triage instead of silent fallback.
+
+## Email/Document Linking Safety (Required)
+
+- Never trust folder membership alone for project linking; require subject/name evidence or an existing same-project thread anchor.
+- Never auto-overwrite a non-null `emails.project_id` with a different project ID; create review/triage evidence instead.
+- For attachment/document backfills, do not copy `emails.project_id` into `documents.project_id` when the email subject does not match project hints.
+- Before generating contract/safety deliverables from linked records, run `just triage-audit <project_id>` and resolve cross-project evidence first.
 
 ## Debugging Shortcuts
 
@@ -152,6 +160,8 @@ Project-linking runtime (shared matcher):
 For "find this project / build a packet / what is linked?" work, run a deterministic audit first:
 
 - `just triage-audit <project_id>`
+- `just triage-resolve "<search-term>"` (schema-safe candidate lookup)
+- `just triage-followup-story "<query>" "<exact_subject>" "<since-YYYY-MM-DD>" "<counterparty-domain>"` (deduped timeline)
 
 Definition of done (triage-ready baseline):
 
@@ -178,6 +188,15 @@ To avoid schema drift mistakes during agent runs, prefer this order:
 1. Live DB introspection (`\\d+ <table>`, targeted SQL) against the self-hosted Postgres container (`supabase_db_desert-services-hub`).
 2. Current migrations under `supabase/migrations/`.
 3. Runtime usage in repo (`lib/db/repositories/*`, `apps/web/api/*`).
+
+For triage lookups, run the schema-safe helper before ad-hoc SQL:
+
+- `just triage-resolve "<search-term>"`
+
+Legacy drift traps to avoid:
+
+- `projects` uses `name` (not `project_name`).
+- `estimates` does **not** have `project_id`; project linkage is via `project_estimates`.
 
 Do not assume older columns still exist just because old code/comments mention them.
 

@@ -54,9 +54,14 @@ typecheck:
 
 code-check:
     @{{BUN}} run check
+    @just docs-path-check
 
 fix:
     @{{BUN}} run fix
+
+# Validate AGENTS/skill path references stay aligned with real files.
+docs-path-check:
+    @{{BUN}} run scripts/check-doc-paths.ts
 
 # Webhook Jobs: inspect / requeue background jobs in the `webhook_jobs` table.
 jobs *args:
@@ -65,6 +70,29 @@ jobs *args:
 # Deterministic project triage audit (linkage/completeness/DOD).
 triage-audit project_id:
     @scripts/triage-audit.sh --project-id {{project_id}}
+
+# Resolve project/estimate candidates using schema-safe SQL.
+triage-resolve query:
+    @cat scripts/sql/triage_resolve_candidates.sql | docker exec -i supabase_db_desert-services-hub psql -U postgres -d postgres -v q='{{query}}'
+
+# Build a deduplicated post-date follow-up story for a project/account search query.
+triage-followup-story query exact_subject since="2025-12-01" counterparty_domain="tofeldent.com":
+    @cat scripts/sql/triage_followup_story.sql | docker exec -i supabase_db_desert-services-hub psql -U postgres -d postgres \
+      -v query='{{query}}' \
+      -v since='{{since}}' \
+      -v exact_subject='{{exact_subject}}' \
+      -v counterparty_domain='{{counterparty_domain}}'
+
+# Single-shot project story JSON from sparse input.
+# Examples:
+#   PROJECT_ID=103 just project-story
+#   SUBJECT="FW: DPX8 - Site Surrender Project" SINCE=2026-02-01 TIMELINE_LIMIT=12 just project-story
+project-story:
+    @scripts/project-story.sh
+
+# Smoke test for project-story resolution + latency sanity.
+project-story-smoke:
+    @scripts/project-story-smoke.sh
 
 # Refresh deduplicated project-email materialized view.
 email-dedup-refresh:

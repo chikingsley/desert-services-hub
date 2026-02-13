@@ -20,15 +20,11 @@
 # Workers
 !apps/workers/estimate-poller/lib/
 !apps/workers/estimate-email-linker/lib/
-!apps/workers/contract-intake/lib/
-!apps/workers/dust-permit-intake/lib/
 !apps/workers/outlook-folder-watcher/lib/
 !apps/workers/estimates-sync-worker/lib/
 !apps/workers/swppp-sync/cli/
 !apps/workers/swppp-sync/lib/
 
-# Email attachment backfill worker
-!apps/workers/files-email-intake/lib/
 
 # Notifications worker
 !apps/workers/notifications/cli/

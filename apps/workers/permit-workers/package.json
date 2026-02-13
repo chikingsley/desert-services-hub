@@ -21,7 +21,9 @@
     "test:e2e": "bun test --max-concurrency 1 tests/e2e/ --bail 10",
     "test:api": "bun test tests/api/",
     "exp:custom-map:smoke": "bun experiments/custom-map-rehydrate/smoke.ts",
-    "exp:custom-map:run": "bun experiments/custom-map-rehydrate/run.ts"
+    "exp:custom-map:run": "bun experiments/custom-map-rehydrate/run.ts",
+    "exp:custom-map:dataset": "bun experiments/custom-map-rehydrate/dataset-builder.ts",
+    "exp:custom-map:benchmark": "bun experiments/custom-map-rehydrate/benchmark.ts"
   },
   "dependencies": {
     "@azure/identity": "^4.13.0",

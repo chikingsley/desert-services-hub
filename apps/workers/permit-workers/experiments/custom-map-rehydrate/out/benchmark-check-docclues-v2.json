@@ -1,0 +1,311 @@
+{
+  "generatedAt": "2026-02-13T07:57:35.948Z",
+  "durationMs": 3875,
+  "options": {
+    "inputPath": "experiments/custom-map-rehydrate/out/dataset-run.json",
+    "limit": 5,
+    "parallel": 2,
+    "maxApns": 4,
+    "iouGrid": 90,
+    "withDocClues": true,
+    "docContainer": "supabase_db_desert-services-hub",
+    "docLimit": 10,
+    "docMinConfidence": 0.55,
+    "thresholds": {
+      "minIou": 0.25,
+      "minAreaRatio": 0.5,
+      "maxAreaRatio": 2,
+      "maxCentroidErrorM": 120
+    }
+  },
+  "summary": {
+    "totalInput": 5,
+    "scored": 5,
+    "skipped": 0,
+    "errors": 0,
+    "averageIou": 0.07494239631336405,
+    "averageCentroidErrorM": 176.4920466672391,
+    "averageAreaRatio": 0.4062623141887758,
+    "passRates": {
+      "all": 0.2,
+      "iou": 0.2,
+      "area": 0.4,
+      "centroid": 0.4
+    }
+  },
+  "iouBins": {
+    "gte_0_75": 0,
+    "gte_0_50": 0,
+    "gte_0_25": 1,
+    "lt_0_25": 4
+  },
+  "results": [
+    {
+      "permitId": "D0062038",
+      "status": "scored",
+      "reason": null,
+      "hints": {
+        "projectName": "Diamond View at Ballpark Village",
+        "address": "1650 S BULLARD AVE",
+        "city": "GOODYEAR",
+        "parcelRaw": "500-08-996",
+        "apnCandidates": [
+          "500-08-996"
+        ]
+      },
+      "prediction": {
+        "source": "apn_clipped_by_doc",
+        "apnsUsed": [
+          "500-08-996"
+        ],
+        "polygonCount": 1
+      },
+      "documentClues": {
+        "enabled": true,
+        "docsUsed": 10,
+        "roads": 14,
+        "intersections": 8,
+        "hasCoordinates": false,
+        "hasEstimatedSize": true,
+        "consensusConfidence": null,
+        "boundsMode": "parcel-southwest-corner-size",
+        "boundsApplied": true
+      },
+      "groundTruth": {
+        "polygonVertices": 27,
+        "centroid": {
+          "lat": 33.43422385419445,
+          "lng": -112.37733711884025
+        }
+      },
+      "metrics": {
+        "centroidErrorM": 346.9922371821609,
+        "areaRatio": 0.660581473968898,
+        "iou": 0,
+        "passCentroid": false,
+        "passArea": true,
+        "passIou": false
+      },
+      "debug": [
+        "prediction from APN (1 polygons)",
+        "doc-clues: documents queried: 10",
+        "doc-clues: disturbed acreage extracted: 30.33",
+        "doc-clues: applied bounds clipping (parcel-southwest-corner-size)"
+      ]
+    },
+    {
+      "permitId": "D0064908",
+      "status": "scored",
+      "reason": null,
+      "hints": {
+        "projectName": "VEG Building",
+        "address": null,
+        "city": "GOODYEAR",
+        "parcelRaw": "501-72-958J",
+        "apnCandidates": [
+          "501-72-958J"
+        ]
+      },
+      "prediction": {
+        "source": "apn_clipped_by_doc",
+        "apnsUsed": [
+          "501-72-958J"
+        ],
+        "polygonCount": 1
+      },
+      "documentClues": {
+        "enabled": true,
+        "docsUsed": 10,
+        "roads": 14,
+        "intersections": 1,
+        "hasCoordinates": true,
+        "hasEstimatedSize": true,
+        "consensusConfidence": 0.982,
+        "boundsMode": "rehydrate-bounds",
+        "boundsApplied": true
+      },
+      "groundTruth": {
+        "polygonVertices": 13,
+        "centroid": {
+          "lat": 33.464930709852695,
+          "lng": -112.3788085468389
+        }
+      },
+      "metrics": {
+        "centroidErrorM": 315.30100137756807,
+        "areaRatio": 0.04587482219061166,
+        "iou": 0,
+        "passCentroid": false,
+        "passArea": false,
+        "passIou": false
+      },
+      "debug": [
+        "prediction from APN (1 polygons)",
+        "doc-clues: documents queried: 10",
+        "doc-clues: address extracted from docs: 104 W WIGWAM BLVD",
+        "doc-clues: disturbed acreage extracted: 0.1",
+        "doc-clues: applied bounds clipping (rehydrate-bounds)"
+      ]
+    },
+    {
+      "permitId": "D0063189",
+      "status": "scored",
+      "reason": null,
+      "hints": {
+        "projectName": "Modera PV",
+        "address": null,
+        "city": "PHOENIX",
+        "parcelRaw": "167-25-163",
+        "apnCandidates": [
+          "167-25-163"
+        ]
+      },
+      "prediction": {
+        "source": "apn_clipped_by_doc",
+        "apnsUsed": [
+          "167-25-163"
+        ],
+        "polygonCount": 1
+      },
+      "documentClues": {
+        "enabled": true,
+        "docsUsed": 10,
+        "roads": 14,
+        "intersections": 0,
+        "hasCoordinates": true,
+        "hasEstimatedSize": true,
+        "consensusConfidence": 0.982,
+        "boundsMode": "rehydrate-bounds",
+        "boundsApplied": true
+      },
+      "groundTruth": {
+        "polygonVertices": 7,
+        "centroid": {
+          "lat": 33.60114845411386,
+          "lng": -111.98313546302813
+        }
+      },
+      "metrics": {
+        "centroidErrorM": 60.723945333128725,
+        "areaRatio": 0,
+        "iou": 0,
+        "passCentroid": true,
+        "passArea": false,
+        "passIou": false
+      },
+      "debug": [
+        "prediction from APN (1 polygons)",
+        "doc-clues: documents queried: 10",
+        "doc-clues: address extracted from docs: 230 S SIESTA LANE",
+        "doc-clues: disturbed acreage extracted: 0.1",
+        "doc-clues: applied bounds clipping (rehydrate-bounds)"
+      ]
+    },
+    {
+      "permitId": "D0061951",
+      "status": "scored",
+      "reason": null,
+      "hints": {
+        "projectName": "GSQ Building 1",
+        "address": "1775 N GLOBE DR",
+        "city": "GOODYEAR",
+        "parcelRaw": "501-73-985",
+        "apnCandidates": [
+          "501-73-985"
+        ]
+      },
+      "prediction": {
+        "source": "apn_clipped_by_doc",
+        "apnsUsed": [
+          "501-73-985"
+        ],
+        "polygonCount": 1
+      },
+      "documentClues": {
+        "enabled": true,
+        "docsUsed": 10,
+        "roads": 14,
+        "intersections": 2,
+        "hasCoordinates": true,
+        "hasEstimatedSize": true,
+        "consensusConfidence": 0.982,
+        "boundsMode": "rehydrate-bounds",
+        "boundsApplied": true
+      },
+      "groundTruth": {
+        "polygonVertices": 17,
+        "centroid": {
+          "lat": 33.46670405858998,
+          "lng": -112.38299303855256
+        }
+      },
+      "metrics": {
+        "centroidErrorM": 17.92355126799567,
+        "areaRatio": 0.9565484730477558,
+        "iou": 0.3747119815668203,
+        "passCentroid": true,
+        "passArea": true,
+        "passIou": true
+      },
+      "debug": [
+        "prediction from APN (1 polygons)",
+        "doc-clues: documents queried: 10",
+        "doc-clues: disturbed acreage extracted: 0.1",
+        "doc-clues: applied bounds clipping (rehydrate-bounds)"
+      ]
+    },
+    {
+      "permitId": "D0062291",
+      "status": "scored",
+      "reason": null,
+      "hints": {
+        "projectName": "Bethany Bay",
+        "address": null,
+        "city": "GLENDALE",
+        "parcelRaw": "501-03-009M",
+        "apnCandidates": [
+          "501-03-009M"
+        ]
+      },
+      "prediction": {
+        "source": "apn",
+        "apnsUsed": [
+          "501-03-009M"
+        ],
+        "polygonCount": 1
+      },
+      "documentClues": {
+        "enabled": true,
+        "docsUsed": 10,
+        "roads": 14,
+        "intersections": 0,
+        "hasCoordinates": true,
+        "hasEstimatedSize": true,
+        "consensusConfidence": 0.982,
+        "boundsMode": "rehydrate-bounds",
+        "boundsApplied": false
+      },
+      "groundTruth": {
+        "polygonVertices": 9,
+        "centroid": {
+          "lat": 33.52454411803586,
+          "lng": -112.4211092360623
+        }
+      },
+      "metrics": {
+        "centroidErrorM": 141.5194981753421,
+        "areaRatio": 0.3683068017366136,
+        "iou": 0,
+        "passCentroid": false,
+        "passArea": false,
+        "passIou": false
+      },
+      "debug": [
+        "prediction from APN (1 polygons)",
+        "doc-clues: documents queried: 10",
+        "doc-clues: address extracted from docs: 2777 E. CAMELBACK RD",
+        "doc-clues: disturbed acreage extracted: 0.1"
+      ]
+    }
+  ]
+}

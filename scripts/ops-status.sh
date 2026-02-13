@@ -35,6 +35,7 @@ echo
 echo "== Resolver Link Outcomes =="
 sql "SELECT COUNT(*) AS resolver_links_total,
             COUNT(*) FILTER (WHERE match_detail LIKE 'email_resolver project_single%') AS project_single_links,
+            COUNT(*) FILTER (WHERE match_detail LIKE 'email_resolver project_canonical%') AS project_canonical_links,
             COUNT(*) FILTER (WHERE match_detail LIKE 'email_resolver deterministic%') AS deterministic_links,
             COUNT(*) FILTER (WHERE match_detail LIKE 'email_resolver spark model=%') AS spark_links
      FROM estimate_emails
@@ -74,6 +75,32 @@ sql "WITH r AS (
      FROM c;"
 echo
 
+echo "== Project Estimate Coverage =="
+sql "SELECT COUNT(*) AS projects_total,
+            COUNT(*) FILTER (WHERE EXISTS (SELECT 1 FROM project_estimates pe WHERE pe.project_id = p.id)) AS projects_with_estimates,
+            COUNT(*) FILTER (WHERE NOT EXISTS (SELECT 1 FROM project_estimates pe WHERE pe.project_id = p.id)) AS projects_without_estimates
+     FROM projects p;"
+sql "SELECT COUNT(*) AS emails_with_project,
+            COUNT(*) FILTER (WHERE EXISTS (SELECT 1 FROM project_estimates pe WHERE pe.project_id = e.project_id)) AS emails_on_projects_with_estimates,
+            COUNT(*) FILTER (WHERE NOT EXISTS (SELECT 1 FROM project_estimates pe WHERE pe.project_id = e.project_id)) AS emails_on_projects_without_estimates
+     FROM emails e
+     WHERE e.project_id IS NOT NULL;"
+sql "SELECT p.id,
+            p.name,
+            p.lifecycle_state,
+            COUNT(e.id) AS linked_emails
+     FROM projects p
+     LEFT JOIN emails e ON e.project_id = p.id
+     WHERE NOT EXISTS (
+       SELECT 1
+       FROM project_estimates pe
+       WHERE pe.project_id = p.id
+     )
+     GROUP BY p.id, p.name, p.lifecycle_state
+     ORDER BY linked_emails DESC, p.id ASC
+     LIMIT 20;"
+echo
+
 echo "== Contract Packets =="
 sql "SELECT COUNT(*) AS contract_queue_total,
             COUNT(*) FILTER (WHERE is_sla_breached) AS contract_queue_sla_breached
@@ -104,4 +131,3 @@ if curl -fsS -m 8 "https://contracts-dispatcher.cheez2012.workers.dev/health" >/
 else
   echo "WARN: contracts-dispatcher health endpoint not reachable"
 fi
-

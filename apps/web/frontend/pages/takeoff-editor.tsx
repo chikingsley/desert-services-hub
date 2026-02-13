@@ -259,17 +259,14 @@ export function TakeoffEditorPage() {
       }
 
       // Load PDF URL
-      if (takeoff?.pdf_url?.startsWith("minio://")) {
-        try {
-          const pdfRes = await fetch(`/api/takeoffs/${id}/pdf`);
-          if (pdfRes.ok) {
-            const pdfData = (await pdfRes.json()) as { url: string };
-            setPdfFile(pdfData.url);
-          }
-        } catch {
-          setPdfFile(null);
-        }
-      } else if (takeoff?.pdf_url) {
+      if (!takeoff?.pdf_url) {
+        setPdfFile(null);
+      } else if (
+        takeoff.pdf_url.startsWith("minio://") ||
+        takeoff.pdf_url.startsWith("sharepoint://")
+      ) {
+        setPdfFile(`/api/takeoffs/${id}/pdf`);
+      } else {
         setPdfFile(takeoff.pdf_url);
       }
     }

@@ -3,9 +3,16 @@
  * Routes: /api/takeoffs/:id, /api/takeoffs/:id/pdf, /api/takeoffs/:id/estimate
  */
 import { db } from "@lib/db/hub";
+import { createSharePointClientFromEnv } from "@lib/sharepoint/intake-upload";
+import {
+  decodeSharePointPdfPath,
+  isExternalPdfUrl,
+} from "../../lib/takeoff-pdf-storage";
 
 // Bun extends Request with params from route matching
 type BunRequest = Request & { params: { id: string } };
+
+const SHAREPOINT_NOT_FOUND_RE = /404|itemNotFound/i;
 
 // GET /api/takeoffs/:id - Get a single takeoff
 export async function getTakeoff(req: BunRequest): Promise<Response> {
@@ -95,10 +102,58 @@ export async function getTakeoffPdf(req: BunRequest): Promise<Response> {
     );
   }
 
-  return Response.json(
-    { error: "PDF serving not available -- storage migrated to SharePoint" },
-    { status: 501 }
-  );
+  if (isExternalPdfUrl(takeoff.pdf_url)) {
+    return Response.redirect(takeoff.pdf_url, 302);
+  }
+
+  const sharePointPath = decodeSharePointPdfPath(takeoff.pdf_url);
+  if (!sharePointPath) {
+    return Response.json(
+      {
+        error: "Unsupported PDF storage reference",
+        takeoffId: id,
+      },
+      { status: 422 }
+    );
+  }
+
+  const sharePointClient = createSharePointClientFromEnv();
+  if (!sharePointClient) {
+    return Response.json(
+      {
+        error: "SharePoint client not configured",
+        takeoffId: id,
+      },
+      { status: 500 }
+    );
+  }
+
+  try {
+    const pdfBuffer = await sharePointClient.download(sharePointPath);
+    const fileName = sharePointPath.split("/").pop() || `${id}.pdf`;
+
+    return new Response(new Uint8Array(pdfBuffer), {
+      headers: {
+        "Content-Type": "application/pdf",
+        "Content-Disposition": `inline; filename="${fileName.replace(/"/g, "")}"`,
+        "Cache-Control": "private, max-age=60",
+      },
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    const notFound = SHAREPOINT_NOT_FOUND_RE.test(message);
+
+    return Response.json(
+      {
+        error: notFound
+          ? "PDF not found in SharePoint"
+          : "Failed to fetch PDF from SharePoint",
+        takeoffId: id,
+        details: message,
+      },
+      { status: notFound ? 404 : 502 }
+    );
+  }
 }
 
 // GET /api/takeoffs/:id/estimate - Get linked estimate

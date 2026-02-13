@@ -88,7 +88,7 @@ export function NewTakeoffDialog({ children }: NewTakeoffDialogProps) {
         [key: string]: unknown;
       };
 
-      // 2. Upload PDF to MinIO AIStor
+      // 2. Upload PDF to SharePoint-backed storage
       const formData = new FormData();
       formData.append("file", file);
       formData.append("takeoffId", takeoff.id);
@@ -104,7 +104,10 @@ export function NewTakeoffDialog({ children }: NewTakeoffDialogProps) {
         throw new Error(errorData.error || "Failed to upload PDF");
       }
 
-      const uploadData = (await uploadRes.json()) as { filename: string };
+      const uploadData = (await uploadRes.json()) as { pdfUrl?: string };
+      if (!uploadData.pdfUrl) {
+        throw new Error("Upload response missing pdfUrl");
+      }
 
       // 3. Update takeoff with PDF reference
       await fetch(`/api/takeoffs/${takeoff.id}`, {
@@ -112,7 +115,7 @@ export function NewTakeoffDialog({ children }: NewTakeoffDialogProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...takeoff,
-          pdf_url: `minio://${uploadData.filename}`,
+          pdf_url: uploadData.pdfUrl,
         }),
       });
 

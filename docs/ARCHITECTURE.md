@@ -45,8 +45,6 @@ What everything does, how it fits together, and what's redundant.
 
 **permit-workers** — Dockerized Playwright automation for Maricopa County Dust Control Portal. Create, revise, renew, close permits. Includes React dashboard, REST API, VNC access. Uses Gemini for PDF parsing.
 
-**email-sync** — Polls Microsoft Graph API every 5min, incremental sync of all 12 mailboxes + M365 groups into Supabase Postgres. Runs enrichment pipeline after each cycle (domain extraction, platform senders, account linking). CLI: `bun cli/sync.ts`, `bun cli/status.ts`.
-
 **notifications** — Polls Supabase Postgres every 5min for events needing notifications (permit expirations, estimate wins, permit submissions/issuances). Stakeholder-based routing — configurable per event type. CLI: `bun cli/watch.ts`, `bun cli/status.ts`, `bun cli/seed-stakeholders.ts`.
 
 ---
@@ -82,8 +80,8 @@ What everything does, how it fits together, and what's redundant.
 
 These are a pipeline, not redundancy: Monday→DB (#1), DB+emails→joins (#3), Monday→SharePoint (#2).
 
-**Email sync now has an always-on worker:**
-`email-sync` worker polls every 5 minutes. The manual `email-cli/sync/mailboxes.ts` still works for one-off syncs with custom options (date ranges, specific mailboxes).
+**Email sync is handled by the web worker timers:**
+`outlook-folder-watcher` polls Graph deltas every 30s. The `estimate-email-linker` backfills estimate↔email links every 60s. M365 group sync runs every 15min. The manual `email-cli/sync/mailboxes.ts` still works for one-off syncs with custom options (date ranges, specific mailboxes).
 
 **SWPPP data in two places:**
 `sharepoint-cli/swppp/db.ts` has the old standalone swppp-master.db. `swppp-sync` worker now syncs directly into Supabase Postgres. The old db.ts and swppp-master.db are vestigial — Supabase Postgres is the canonical source.
@@ -105,8 +103,8 @@ SharePoint
   Projects/Active/ folders ──→ outlook-folder-watcher (60s) ──→ Supabase Postgres folder tracking
 
 Microsoft Graph (Email)
-  12 mailboxes ──→ email-sync worker (5min) ──→ Supabase Postgres emails + attachments + enrichment
-  M365 groups ──→ email-sync worker (5min) ──→ Supabase Postgres emails
+  12 mailboxes ──→ outlook-folder-watcher (30s) ──→ Supabase Postgres emails + attachments
+  M365 groups ──→ web worker group sync (15min) ──→ Supabase Postgres emails
 
 Inspection Emails
   inspections@desertservices.app ──→ inspections-email-worker ──→ SharePoint PDFs

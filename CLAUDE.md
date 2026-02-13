@@ -13,11 +13,12 @@ Monorepo for Desert Services operations: estimating, dust permits, contracts, no
 
 ```text
 apps/
-  web/                    # Frontend SPA + API + background worker (estimates, catalog, notifications)
+  web/                    # Frontend SPA + API + background worker
+    api/                  # Domain-grouped API routes (estimates/, emails/, projects/, takeoffs/, webhooks/, contracts/)
+    jobs/                 # Background job modules (config, queue, dispatch, monday-sync, email-processing, etc.)
   workers/
     permit-workers/       # Maricopa County dust permit browser automation (Playwright)
     notifications/        # Email notification triggers, delivery, stakeholder routing
-    email-sync/           # Outlook email sync via Microsoft Graph
     inspections-email-worker/  # ComplianceGo → SharePoint (Cloudflare Worker)
     docusign-file-automation/  # DocuSign contract dispatch (Cloudflare Worker)
     intake-worker/        # Cloudflare email ingress -> webhooks intake API
@@ -191,8 +192,8 @@ Email arrives → Graph webhook → POST /api/webhooks/outlook
 
 - Create/update estimate payload validation is centralized in `lib/estimating/estimate-payload-validation.ts`.
 - API enforcement points:
-  - `apps/web/api/estimates.ts` (`POST /api/estimates`)
-  - `apps/web/api/estimates-by-id.ts` (`PUT /api/estimates/:id`)
+  - `apps/web/api/estimates/estimates.ts` (`POST /api/estimates`)
+  - `apps/web/api/estimates/estimates-by-id.ts` (`PUT /api/estimates/:id`)
 - Required invariants:
   - Line items must resolve to catalog code or exact catalog item name.
   - Persist canonical `item_name` + catalog `description` only (no free-form description drift).
@@ -202,7 +203,7 @@ Email arrives → Graph webhook → POST /api/webhooks/outlook
 - Validation failures return HTTP `400` with issue details; do not implement silent defaulting.
 - Write-path warning: direct SQL writes can bypass these guards. For estimate creation/updates, use validated API/CLI paths.
 - Regression tests:
-  - `apps/web/api/estimates.test.ts`
+  - `apps/web/api/estimates/estimates.test.ts`
   - `tests/components/estimates/estimate-workspace.test.ts`
 
 ## Database

@@ -3,11 +3,11 @@
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
-type Finding = {
+interface Finding {
   doc: string;
   token: string;
   resolvedPath: string;
-};
+}
 
 const repoRoot = process.cwd();
 const repoAbsolutePrefix = `${repoRoot}/`;
@@ -16,15 +16,6 @@ const docFiles = [
   "AGENTS.md",
   ...Array.from(new Bun.Glob(".agents/skills/**/SKILL.md").scanSync()),
 ];
-
-const allowedMissing = new Set<string>([
-  "apps/workers/contract-intake/",
-  "apps/workers/files-email-intake/",
-  "apps/workers/dust-permit-intake/",
-  "data/triage/1400-w-3rd/sssp-input.json",
-  "data/sds/sds-input.json",
-  "data/reports/contracts-pending.csv",
-]);
 
 const repoPathPrefixes = [
   "AGENTS.md",
@@ -60,29 +51,53 @@ const ignoredTokenPrefixes = [
   "/api/",
 ];
 
+const TRIM_QUOTES_RE = /^['"]+|['"]+$/g;
+const HAS_WHITESPACE_RE = /\s/;
+const BACKTICK_TOKEN_RE = /`([^`\n]+)`/g;
+
 function normalizeToken(raw: string): string {
   let token = raw.trim();
-  token = token.replace(/^['"]+|['"]+$/g, "");
+  token = token.replace(TRIM_QUOTES_RE, "");
   return token;
 }
 
 function isPathCandidate(token: string): boolean {
-  if (!token) return false;
-  if (/\s/.test(token)) return false;
-  if (token.includes("*")) return false;
-  if (token.includes("...")) return false;
-  if (token.includes("<") || token.includes(">")) return false;
-  if (token.includes("(") || token.includes(")")) return false;
-  if (token.includes("@@")) return false;
-
-  for (const prefix of ignoredTokenPrefixes) {
-    if (token.startsWith(prefix)) return false;
+  if (!token) {
+    return false;
+  }
+  if (HAS_WHITESPACE_RE.test(token)) {
+    return false;
+  }
+  if (token.includes("*")) {
+    return false;
+  }
+  if (token.includes("...")) {
+    return false;
+  }
+  if (token.includes("<") || token.includes(">")) {
+    return false;
+  }
+  if (token.includes("(") || token.includes(")")) {
+    return false;
+  }
+  if (token.includes("@@")) {
+    return false;
   }
 
-  if (token.startsWith(repoAbsolutePrefix)) return true;
+  for (const prefix of ignoredTokenPrefixes) {
+    if (token.startsWith(prefix)) {
+      return false;
+    }
+  }
+
+  if (token.startsWith(repoAbsolutePrefix)) {
+    return true;
+  }
 
   for (const prefix of repoPathPrefixes) {
-    if (token.startsWith(prefix)) return true;
+    if (token.startsWith(prefix)) {
+      return true;
+    }
   }
 
   return false;
@@ -98,10 +113,14 @@ function resolveTokenPath(token: string): string | null {
 
 function collectBacktickTokens(markdown: string): string[] {
   const tokens: string[] = [];
-  const regex = /`([^`\n]+)`/g;
+  const regex = new RegExp(BACKTICK_TOKEN_RE);
   let match: RegExpExecArray | null;
 
-  while ((match = regex.exec(markdown)) !== null) {
+  while (true) {
+    match = regex.exec(markdown);
+    if (!match) {
+      break;
+    }
     tokens.push(match[1]);
   }
 
@@ -122,11 +141,14 @@ for (const doc of docFiles) {
 
   for (const rawToken of tokens) {
     const token = normalizeToken(rawToken);
-    if (!isPathCandidate(token)) continue;
-    if (allowedMissing.has(token)) continue;
+    if (!isPathCandidate(token)) {
+      continue;
+    }
 
     const resolvedPath = resolveTokenPath(token);
-    if (!resolvedPath) continue;
+    if (!resolvedPath) {
+      continue;
+    }
 
     checkedCount += 1;
 
@@ -139,9 +161,13 @@ for (const doc of docFiles) {
 if (missing.length > 0) {
   console.error("doc path alignment check failed");
   for (const finding of missing) {
-    console.error(`- ${finding.doc}: \`${finding.token}\` -> ${finding.resolvedPath}`);
+    console.error(
+      `- ${finding.doc}: \`${finding.token}\` -> ${finding.resolvedPath}`
+    );
   }
   process.exit(1);
 }
 
-console.log(`doc path alignment check passed (${checkedCount} references checked)`);
+console.log(
+  `doc path alignment check passed (${checkedCount} references checked)`
+);

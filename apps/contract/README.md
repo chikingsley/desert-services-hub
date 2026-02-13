@@ -1,39 +1,31 @@
-# Contract Service
+# Contract Operations
 
-Contract intake, reconciliation, and project creation.
+Contract packet intake, reconciliation, and post-contract handoff.
 
-## Quick Start
+## Start Here
 
-Use the `/contract-intake` skill to process contracts end-to-end.
+- `docs/contracts/README.md` - Contracts docs index.
+- `docs/contracts/post-contract-process.md` - Canonical process after packet receipt.
+- `docs/contracts/validation-policy.md` - Fail-closed validation policy and command flow.
+- `docs/contract-packet-lifecycle-2026-02-12.md` - Canonical packet status model and queue view.
 
-## Docs by Phase
+## Core Workflow Docs
 
-### V0: Triage / Minimum Intake
+- `apps/contract/WORKFLOW.md` - End-to-end extraction/reconciliation workflow.
+- `apps/contract/contracts-master.md` - Full checklist from intake through handoff.
+- `apps/contract/PROJECT.md` - Track model, stage SLAs, and execution notes.
 
-- `../intake/schema.md` - V0/V1/V2 intake schema (start here)
+## Operational Templates
 
-### V1: Contract Processing
+- `apps/contract/templates/01-extract-contract.md`
+- `apps/contract/templates/02-reconcile.md`
+- `apps/contract/templates/03-check-insurance.md`
+- `apps/contract/templates/04-respond-to-gc.md`
+- `apps/contract/templates/05-internal-handoff.md`
+- `apps/contract/templates/project-record-template.md` - Fillable per-project record.
+- `apps/contract/templates/project-record-schema.md` - Full field inventory.
 
-- `contract-reconciliation-template.md` - How to reconcile contract vs estimate
-- `contract-intake-checklist.md` - Human + Agent task checklist
-- `contract-intake-process.md` - End-to-end workflow
+## Ground Truth and Validation
 
-### V2: Full Project Setup
-
-- `notion-project-record-schema.md` - Complete Notion page schema
-- `data-needed.md` - All data fields needed for full setup
-
-## Reference
-
-- `internalcontracts-email-sample.md` - Example internal contracts email
-
-## Test Fixtures
-
-- `test-fixtures/greenway-embrey/` - Sample contract/estimate pair
-- `test-fixtures/kiwanis-caliente/` - Sample contract/estimate pair
-
-## Code
-
-- `client.ts` - Contract parsing utilities
-- `reconcile.ts` - Reconciliation logic
-- `types.ts` - TypeScript types
+- `apps/contract/ground-truth/README.md` - Labeled project examples.
+- `apps/contract/review/tests/test_ground_truth.py` - Scanner regression tests.

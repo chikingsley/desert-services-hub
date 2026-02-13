@@ -42,7 +42,7 @@ Note: repo tests include **integration coverage** that can trigger Microsoft dev
 - `sections` cannot be updated without `line_items` in the same payload.
 - Validation failures must hard-fail with `400` (issues payload), never silent fallback.
 - Regression coverage for this behavior lives in:
-  - `apps/web/api/estimates.test.ts`
+  - `apps/web/api/estimates/estimates.test.ts`
   - `tests/components/estimates/estimate-workspace.test.ts`
 
 ## Runtime Inventory
@@ -63,13 +63,8 @@ Active worker/runtime components:
 - In-process web worker modules: `apps/web/lib/files-intake.ts`, `apps/web/lib/attachment-backfill.ts`, `apps/workers/outlook-folder-watcher/lib/poll.ts`, `apps/workers/estimate-email-linker/lib/poll.ts`.
 - Docker services: `notifications`, `swppp-sync`, `permit-worker`, plus `web`/`webhooks`.
 
-Removed worker folders:
-- `apps/workers/contract-intake/`
-- `apps/workers/files-email-intake/`
-- `apps/workers/dust-permit-intake/`
-
 Notes:
-- If you still see old worker directories locally, they are usually untracked leftovers (`node_modules`/build artifacts), not active tracked runtime code.
+- Intake runtime lives in `apps/web/lib/*` and `apps/web/worker.ts`; avoid reintroducing legacy standalone intake worker folders.
 
 Estimate-email linking runtime:
 - Runs inside `apps/web/worker.ts` as a periodic backfill timer (every 60s).
@@ -207,7 +202,7 @@ Do not assume older columns still exist just because old code/comments mention t
 To prevent regressions from ad-hoc query patterns:
 
 - `/api/emails` default no-filter list must use `public.email_list_dedup_mv`.
-- `/api/emails` filtered list/search paths must use canonical logic in `apps/web/api/emails.ts` (not new bespoke scans).
+- `/api/emails` filtered list/search paths must use canonical logic in `apps/web/api/emails/emails.ts` (not new bespoke scans).
 - Email search must prefer `search_document @@ websearch_to_tsquery(...)` when available.
 - Estimate fuzzy candidate matching must use `lib/db/repositories/estimate-email.ts` query shape aligned to trigram index usage.
 - Queue/dequeue logic must reuse canonical prepared statements in `apps/web/worker.ts`.

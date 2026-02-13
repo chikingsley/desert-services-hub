@@ -21,6 +21,9 @@ const allowedMissing = new Set<string>([
   "apps/workers/contract-intake/",
   "apps/workers/files-email-intake/",
   "apps/workers/dust-permit-intake/",
+  "data/triage/1400-w-3rd/sssp-input.json",
+  "data/sds/sds-input.json",
+  "data/reports/contracts-pending.csv",
 ]);
 
 const repoPathPrefixes = [

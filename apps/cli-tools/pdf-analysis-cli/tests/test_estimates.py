@@ -160,7 +160,7 @@ class TestVeg:
         item = find_item(est, "narrative")
         assert item is not None
         assert item.qty == 1
-        assert item.unit_cost == 1350.00
+        assert item.unit_price == 1350.00
         assert item.total == 1350.00
 
     def test_swppp_sign(self, est: Estimate):
@@ -177,7 +177,7 @@ class TestVeg:
         item = find_item(est, "inspection")
         assert item is not None
         assert item.qty == 21
-        assert item.unit_cost == 195.00
+        assert item.unit_price == 195.00
         assert item.total == 4095.00
 
     def test_mobilization(self, est: Estimate):
@@ -190,7 +190,7 @@ class TestVeg:
         item = find_item(est, "compost filter")
         assert item is not None
         assert item.qty == 1560
-        assert item.unit_cost == 2.75
+        assert item.unit_price == 2.75
         assert item.total == 4290.00
 
     def test_rock_entrance(self, est: Estimate):
@@ -276,7 +276,7 @@ class TestLegacy:
         item = find_item(est, "compost filter")
         assert item is not None
         assert item.qty == 2857
-        assert item.unit_cost == 2.45
+        assert item.unit_price == 2.45
         assert item.total == 6999.65
 
     def test_inlet_protection(self, est: Estimate):
@@ -418,7 +418,7 @@ class TestKiwanis:
         item = find_item(est, "permit")
         assert item is not None
         assert item.qty == 1
-        assert item.unit_cost == 1630.00
+        assert item.unit_price == 1630.00
         assert item.total == 1630.00
 
     # -- Rock entrance --
@@ -484,7 +484,7 @@ class TestModera:
         item = find_item(est, "compost filter")
         assert item is not None
         assert item.qty == 3000
-        assert item.unit_cost == 2.75
+        assert item.unit_price == 2.75
         assert item.total == 8250.00
 
     def test_rock_entrance(self, est: Estimate):

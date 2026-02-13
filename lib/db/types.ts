@@ -515,7 +515,6 @@ export interface EstimateLineItemRow {
   description: string;
   quantity: number;
   unit: string;
-  unit_cost: number;
   unit_price: number;
   is_excluded: number;
   notes: string | null;
@@ -576,7 +575,6 @@ export interface EstimateLineItem {
   description: string;
   quantity: number;
   unit: string;
-  unit_cost: number;
   unit_price: number;
   is_excluded: boolean;
   notes: string | null;

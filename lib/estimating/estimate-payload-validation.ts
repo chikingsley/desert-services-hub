@@ -23,7 +23,6 @@ const lineItemSchema = z
     qty: z.coerce.number().finite().nonnegative().optional(),
     unit: z.string().trim().optional(),
     uom: z.string().trim().optional(),
-    unit_cost: z.coerce.number().finite().nonnegative().optional(),
     unit_price: z.coerce.number().finite().nonnegative().optional(),
     cost: z.coerce.number().finite().nonnegative().optional(),
     notes: stringOrNullSchema.optional(),
@@ -87,7 +86,6 @@ export interface NormalizedEstimateLineItem {
   description: string;
   quantity: number;
   unit: string;
-  unit_cost: number;
   unit_price: number;
   notes?: string | null;
   is_excluded?: boolean;
@@ -161,7 +159,10 @@ function normalizeText(
 function normalizeAddress(
   value: string | null | undefined,
   fieldLabel: string,
-  errors: string[]
+  errors: string[],
+  options?: {
+    allowSingleLineAddress?: boolean;
+  }
 ): string | null | undefined {
   const normalized = normalizeText(value);
   if (normalized === undefined || normalized === null) {
@@ -186,6 +187,10 @@ function normalizeAddress(
   }
 
   if (line1.length === 0 || line2.length === 0) {
+    if (options?.allowSingleLineAddress) {
+      return normalized;
+    }
+
     errors.push(
       `${fieldLabel} must be formatted as a two-line address (street on line 1, city/state/zip on line 2).`
     );
@@ -300,7 +305,6 @@ function normalizeLineItems(
     const unitPrice = firstFiniteNumber(
       rawItem.unit_price,
       rawItem.cost,
-      rawItem.unit_cost,
       catalogItem.price
     );
     if (unitPrice === undefined || unitPrice < 0) {
@@ -323,20 +327,8 @@ function normalizeLineItems(
       return;
     }
 
-    const unitCost = firstFiniteNumber(
-      rawItem.unit_cost,
-      rawItem.cost,
-      unitPrice
-    );
-
     const isExcluded =
       rawItem.is_excluded === true || rawItem.is_excluded === 1;
-    if (unitCost === undefined || unitCost < 0) {
-      errors.push(
-        `Line item ${position}: unit_cost must be a valid non-negative number.`
-      );
-      return;
-    }
 
     const unit = allowUnitOverride
       ? normalizeText(rawItem.unit ?? rawItem.uom)
@@ -361,7 +353,7 @@ function normalizeLineItems(
       );
       if (hasMismatch) {
         errors.push(
-          `Line item ${position}: inspection description dollar amount must match unit cost (${unitPrice.toFixed(2)}).`
+          `Line item ${position}: inspection description dollar amount must match unit price (${unitPrice.toFixed(2)}).`
         );
         return;
       }
@@ -373,7 +365,6 @@ function normalizeLineItems(
       description,
       quantity,
       unit,
-      unit_cost: unitCost,
       unit_price: unitPrice,
       notes: normalizeText(rawItem.notes) ?? null,
       is_excluded: isExcluded,
@@ -422,7 +413,10 @@ function requireCoreFields(
 }
 
 export function validateCreateEstimatePayload(
-  body: unknown
+  body: unknown,
+  options?: {
+    allowSingleLineAddress?: boolean;
+  }
 ): NormalizedCreateEstimatePayload {
   const parsed = createPayloadSchema.safeParse(body);
   if (!parsed.success) {
@@ -440,12 +434,14 @@ export function validateCreateEstimatePayload(
   const normalizedJobAddress = normalizeAddress(
     payload.job_address,
     "job_address",
-    errors
+    errors,
+    options
   );
   const normalizedClientAddress = normalizeAddress(
     payload.client_address,
     "client_address",
-    errors
+    errors,
+    options
   );
 
   if (normalizedLineItems !== undefined && normalizedLineItems.length > 0) {
@@ -624,9 +620,10 @@ function normalizeDigits(value: string): string {
   return value.replace(/\D/g, "");
 }
 
-function resolveEstimatorContact(
-  estimatorName: string
-): { email: string; phone: string } {
+function resolveEstimatorContact(estimatorName: string): {
+  email: string;
+  phone: string;
+} {
   const contact =
     ESTIMATOR_DIRECTORY[estimatorName as keyof typeof ESTIMATOR_DIRECTORY];
   if (!contact) {
@@ -686,14 +683,45 @@ const LEGACY_PDF_ITEM_NAME_ALIASES: Record<string, string> = {
   "rp 40 yard container": "40 yd Roll-Off",
   "tank installation": "Full Tank System Install",
   "waste water tank": "Waste Tank Service (1x/week)",
+  "water truck cleanout": "Water Truck w/ Operator",
+  "hand wash": "Handwash Station (1x/week)",
+  "portable to": "Standard Porta John (1x/week)",
 };
+
+const CID_MARKER_RE = /\(cid:[^)]+\)/g;
+const ELLIPSIS_RE = /\.{3,}/g;
+const COLLAPSE_WHITESPACE_RE = /\s+/g;
+const MOBILIZATION_PREFIX_RE = /^mobilization ch/;
+const INSPECTIONS_PREFIX_RE = /^inspections?/;
+const WATER_TRUCK_SERVICE_PREFIX_RE = /^water truck ser/;
+const WATER_TRUCK_CLEANOUT_PREFIX_RE = /^water truck cleanout/;
+const STREET_SWEEPER_PREFIX_RE = /^street swee/;
+const PJ_SERVICE_1_PREFIX_RE = /^pj service\s*1/;
+const PJ_SERVICE_2_PREFIX_RE = /^pj service\s*2/;
+const PJ_SERVICE_3_PREFIX_RE = /^pj service\s*3/;
+const HW_SERVICE_1_PREFIX_RE = /^hw service\s*1/;
+const HW_SERVICE_2_PREFIX_RE = /^hw service\s*2/;
+const HW_SERVICE_3_PREFIX_RE = /^hw service\s*3/;
+const DELIVERY_REMOVAL_PREFIX_RE = /^delivery\/remov/;
+const PORTABLE_TO_PREFIX_RE = /^portable to/;
+const HAND_WASH_PREFIX_RE = /^hand wash/;
+const BACKFLOW_CERT_PREFIX_RE = /^backflow certifi/;
+const ADA_COMPLIANT_PREFIX_RE = /^ada compliant/;
+const SWPPP_RESERVE_RE = /swppp reserve/;
+const SWPPP_PLAN_DESIGN_RE = /swppp plan de/;
+const COMPOST_FILTER_RE = /compost filter/;
+const SILT_FENCE_INSTALL_RE = /silt fence instal/;
+const PRESSURE_WASHING_RE = /pressure washin/;
+const LOT_WASH_RE = /lot wash/;
+const TEXTURA_OR_PROCORE_RE = /textura|procore|gcpay/;
+const CCIP_OR_OCIP_RE = /ccip|ocip|insurance|prequal/;
 
 function normalizeAliasKey(value: string): string {
   return value
     .toLowerCase()
-    .replace(/\(cid:[^)]+\)/g, "")
-    .replace(/\.{3,}/g, "")
-    .replace(/\s+/g, " ")
+    .replace(CID_MARKER_RE, "")
+    .replace(ELLIPSIS_RE, "")
+    .replace(COLLAPSE_WHITESPACE_RE, " ")
     .trim();
 }
 
@@ -709,45 +737,64 @@ function resolveLegacyPdfItemAlias(
     return alias;
   }
 
-  if (/^mobilization ch/.test(itemKey) || itemKey === "charge") {
+  if (MOBILIZATION_PREFIX_RE.test(itemKey) || itemKey === "charge") {
     return "Mobilization / Trip Charge";
   }
 
-  if (/^inspections?/.test(itemKey)) {
+  if (INSPECTIONS_PREFIX_RE.test(itemKey)) {
     return "SWPPP Inspections";
   }
 
-  if (/^water truck ser/.test(itemKey) || /^street swee/.test(itemKey)) {
-    return /^street swee/.test(itemKey)
+  if (
+    WATER_TRUCK_SERVICE_PREFIX_RE.test(itemKey) ||
+    WATER_TRUCK_CLEANOUT_PREFIX_RE.test(itemKey) ||
+    STREET_SWEEPER_PREFIX_RE.test(itemKey)
+  ) {
+    return STREET_SWEEPER_PREFIX_RE.test(itemKey)
       ? "Street Sweeper w/ Operator"
       : "Water Truck w/ Operator";
   }
 
-  if (/^pj service\s*1/.test(itemKey)) {
+  if (PJ_SERVICE_1_PREFIX_RE.test(itemKey)) {
     return "Standard Porta John (1x/week)";
   }
-  if (/^pj service\s*2/.test(itemKey)) {
+  if (PJ_SERVICE_2_PREFIX_RE.test(itemKey)) {
     return "Standard Porta John (2x/week)";
   }
-  if (/^pj service\s*3/.test(itemKey)) {
+  if (PJ_SERVICE_3_PREFIX_RE.test(itemKey)) {
     return "Standard Porta John (3x/week)";
   }
 
-  if (/^hw service\s*1/.test(itemKey)) {
+  if (HW_SERVICE_1_PREFIX_RE.test(itemKey)) {
     return "Handwash Station (1x/week)";
   }
-  if (/^hw service\s*2/.test(itemKey)) {
+  if (HW_SERVICE_2_PREFIX_RE.test(itemKey)) {
     return "Handwash Station (2x/week)";
   }
-  if (/^hw service\s*3/.test(itemKey)) {
+  if (HW_SERVICE_3_PREFIX_RE.test(itemKey)) {
     return "Handwash Station (3x/week)";
   }
 
-  if (/^delivery\/remov/.test(itemKey) || itemKey === "delivery/removal fee") {
+  if (
+    DELIVERY_REMOVAL_PREFIX_RE.test(itemKey) ||
+    itemKey === "delivery/removal fee"
+  ) {
     return "Porta John Delivery/Pickup";
   }
 
-  if (/^ada compliant/.test(itemKey)) {
+  if (PORTABLE_TO_PREFIX_RE.test(itemKey)) {
+    return "Standard Porta John (1x/week)";
+  }
+
+  if (HAND_WASH_PREFIX_RE.test(itemKey)) {
+    return "Handwash Station (1x/week)";
+  }
+
+  if (BACKFLOW_CERT_PREFIX_RE.test(itemKey)) {
+    return "Backflow Device Rental (Monthly)";
+  }
+
+  if (ADA_COMPLIANT_PREFIX_RE.test(itemKey)) {
     if (itemKey.includes("2x")) {
       return "ADA Porta John (2x/week)";
     }
@@ -757,32 +804,32 @@ function resolveLegacyPdfItemAlias(
     return "ADA Porta John (1x/week)";
   }
 
-  if (/swppp reserve/.test(itemKey) || /swppp reserve/.test(descriptionKey)) {
+  if (SWPPP_RESERVE_RE.test(itemKey) || SWPPP_RESERVE_RE.test(descriptionKey)) {
     return "SWPPP Reserve";
   }
 
-  if (/swppp plan de/.test(itemKey)) {
+  if (SWPPP_PLAN_DESIGN_RE.test(itemKey)) {
     return "SWPPP Plan Design";
   }
 
-  if (/compost filter/.test(itemKey)) {
+  if (COMPOST_FILTER_RE.test(itemKey)) {
     return "Compost Filter Sock";
   }
 
-  if (/silt fence instal/.test(itemKey)) {
+  if (SILT_FENCE_INSTALL_RE.test(itemKey)) {
     return "Wire-Backed Silt Fence";
   }
 
-  if (/pressure washin/.test(itemKey) || /lot wash/.test(descriptionKey)) {
+  if (PRESSURE_WASHING_RE.test(itemKey) || LOT_WASH_RE.test(descriptionKey)) {
     return "Water Truck w/ Operator";
   }
 
   if (itemKey === "misc" || itemKey === "misc fees") {
-    if (/textura|procore|gcpay/.test(descriptionKey)) {
+    if (TEXTURA_OR_PROCORE_RE.test(descriptionKey)) {
       return "Textura/Procore Processing";
     }
 
-    if (/ccip|ocip|insurance|prequal/.test(descriptionKey)) {
+    if (CCIP_OR_OCIP_RE.test(descriptionKey)) {
       return "CCIP/OCIP/Insurance Portal";
     }
   }
@@ -808,7 +855,6 @@ function normalizeLineItemsForPdf(
           description: lineItem.description,
           quantity: lineItem.qty,
           unit: lineItem.uom,
-          unit_cost: lineItem.cost,
           unit_price: lineItem.cost,
           notes: lineItem.notes,
           is_excluded: lineItem.isAlternate ? 1 : 0,
@@ -866,7 +912,6 @@ function normalizeLineItemsForPdf(
       description: normalizeText(lineItem.description) ?? aliasedName,
       quantity,
       unit: normalizeText(lineItem.uom) ?? "Each",
-      unit_cost: cost,
       unit_price: cost,
       notes: normalizeText(lineItem.notes) ?? null,
       is_excluded: lineItem.isAlternate === true,
@@ -912,33 +957,38 @@ export function validateAndNormalizeEditorEstimateForPdf(
     );
   }
 
-  const normalized = validateCreateEstimatePayload({
-    job_name: payload.jobInfo.siteName,
-    job_address: payload.jobInfo.address,
-    client_name: payload.billTo.companyName,
-    client_address: payload.billTo.address,
-    client_email: payload.billTo.email,
-    client_phone: payload.billTo.phone,
-    sections: payload.sections.map((section) => ({
-      id: section.id,
-      name: section.name,
-      title: section.title,
-      show_subtotal: section.showSubtotal,
-    })),
-  });
+  const normalized = validateCreateEstimatePayload(
+    {
+      job_name: payload.jobInfo.siteName,
+      job_address: payload.jobInfo.address,
+      client_name: payload.billTo.companyName,
+      client_address: payload.billTo.address,
+      client_email: payload.billTo.email,
+      client_phone: payload.billTo.phone,
+      sections: payload.sections.map((section) => ({
+        id: section.id,
+        name: section.name,
+        title: section.title,
+        show_subtotal: section.showSubtotal,
+      })),
+    },
+    {
+      allowSingleLineAddress: true,
+    }
+  );
 
   const normalizedLineItems = normalizeLineItemsForPdf(
     payload.lineItems,
     validationErrors
   ).map((lineItem, index) => {
     const sourceId = payload.lineItems[index]?.id;
-    const rowTotal = Number((lineItem.quantity * lineItem.unit_price).toFixed(2));
+    const rowTotal = Number(
+      (lineItem.quantity * lineItem.unit_price).toFixed(2)
+    );
 
     return {
       id:
-        sourceId && sourceId.trim().length > 0
-          ? sourceId
-          : `line-${index + 1}`,
+        sourceId && sourceId.trim().length > 0 ? sourceId : `line-${index + 1}`,
       item: lineItem.item_name,
       description: lineItem.description,
       qty: lineItem.quantity,

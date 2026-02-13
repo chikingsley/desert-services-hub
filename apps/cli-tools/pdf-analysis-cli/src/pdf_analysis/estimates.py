@@ -50,7 +50,7 @@ class EstimateLineItem(BaseModel):
     description: str
     qty: float
     unit: str | None = None
-    unit_cost: float
+    unit_price: float
     total: float
     taxable: bool = False
     section: SectionType = SectionType.REQUIRED
@@ -169,10 +169,10 @@ def _parse_money_relaxed(value: str | None) -> float | None:
     return float(m.group(1).replace(",", ""))
 
 
-def _derive_qty_from_total(total: float | None, unit_cost: float | None) -> float | None:
-    if total is None or unit_cost is None or unit_cost == 0:
+def _derive_qty_from_total(total: float | None, unit_price: float | None) -> float | None:
+    if total is None or unit_price is None or unit_price == 0:
         return None
-    raw = total / unit_cost
+    raw = total / unit_price
     rounded_whole = round(raw)
     if abs(raw - rounded_whole) < 1e-6:
         return float(rounded_whole)
@@ -459,14 +459,14 @@ def extract_estimate(pdf_path: str | Path) -> Estimate:
 
             # Try to parse as a priced line item
             qty = _parse_qty(qty_cell)
-            unit_cost = _parse_money(cost_cell)
+            unit_price = _parse_money(cost_cell)
             total = _parse_money(total_cell)
             taxable = _is_taxable(total_cell)
 
             if qty is None:
-                qty = _derive_qty_from_total(total, unit_cost)
-            if unit_cost is None and qty is not None and qty != 0 and total is not None:
-                unit_cost = round(total / qty, 2)
+                qty = _derive_qty_from_total(total, unit_price)
+            if unit_price is None and qty is not None and qty != 0 and total is not None:
+                unit_price = round(total / qty, 2)
 
             # Row has numeric data -> line item
             if total is not None and qty is not None:
@@ -478,7 +478,7 @@ def extract_estimate(pdf_path: str | Path) -> Estimate:
                         description=desc_cell.split("\n")[0] if desc_cell else "",
                         qty=qty,
                         unit=None,
-                        unit_cost=unit_cost or 0.0,
+                        unit_price=unit_price or 0.0,
                         total=total,
                         taxable=taxable,
                         section=section,
@@ -529,21 +529,21 @@ def extract_estimate(pdf_path: str | Path) -> Estimate:
                     continue
 
                 qty = _parse_qty(qty_cell)
-                unit_cost = _parse_money(cost_cell)
+                unit_price = _parse_money(cost_cell)
                 total = _parse_money(total_cell)
 
                 if total is None:
                     total = _parse_money_relaxed(total_cell)
-                if unit_cost is None:
-                    unit_cost = _parse_money_relaxed(cost_cell)
+                if unit_price is None:
+                    unit_price = _parse_money_relaxed(cost_cell)
                 if qty is None:
-                    qty = _derive_qty_from_total(total, unit_cost)
-                if unit_cost is None and qty is not None and qty != 0 and total is not None:
-                    unit_cost = round(total / qty, 2)
-                if total is None and qty is not None and unit_cost is not None:
-                    total = round(qty * unit_cost, 2)
+                    qty = _derive_qty_from_total(total, unit_price)
+                if unit_price is None and qty is not None and qty != 0 and total is not None:
+                    unit_price = round(total / qty, 2)
+                if total is None and qty is not None and unit_price is not None:
+                    total = round(qty * unit_price, 2)
 
-                if total is None or qty is None or unit_cost is None:
+                if total is None or qty is None or unit_price is None:
                     continue
 
                 line_items.append(
@@ -552,7 +552,7 @@ def extract_estimate(pdf_path: str | Path) -> Estimate:
                         description=desc_cell.split("\n")[0] if desc_cell else "",
                         qty=qty,
                         unit=None,
-                        unit_cost=unit_cost,
+                        unit_price=unit_price,
                         total=total,
                         taxable=_is_taxable(total_cell),
                         section=SectionType.REQUIRED,

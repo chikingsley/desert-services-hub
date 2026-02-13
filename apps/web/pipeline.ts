@@ -63,7 +63,7 @@ interface ExtractedEstimate {
     description: string;
     qty: number;
     unit: string | null;
-    unit_cost: number;
+    unit_price: number;
     total: number;
     taxable: boolean;
     section: string;
@@ -132,8 +132,8 @@ const insertVersion = db.prepare(`
 
 const insertLineItem = db.prepare(`
   INSERT INTO estimate_line_items
-    (id, version_id, item_name, description, quantity, unit, unit_cost, unit_price, sort_order)
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    (id, version_id, item_name, description, quantity, unit, unit_price, sort_order)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 `);
 
 const updateExtractionSuccess = db.prepare(`
@@ -470,8 +470,7 @@ async function runExtraction(
           li.description,
           li.qty,
           li.unit ?? "EA",
-          li.unit_cost,
-          li.total,
+          li.unit_price,
           i
         );
       }

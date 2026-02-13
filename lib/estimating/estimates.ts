@@ -178,7 +178,6 @@ export async function getEstimateWithDetails(id: string): Promise<
         description,
         quantity,
         unit,
-        unit_cost,
         unit_price,
         notes,
         sort_order
@@ -208,9 +207,8 @@ function mapCreateLineItemToValidationInput(
     description: item.description,
     quantity: item.quantity,
     unit: item.unit,
-    unit_cost: item.unit_cost,
-    unit_price: item.unit_cost,
-    cost: item.unit_cost,
+    unit_price: item.unit_price,
+    cost: item.unit_price,
     notes: item.notes,
   };
 }
@@ -325,8 +323,8 @@ export async function createEstimate(
         : null;
       await db
         .prepare(
-          `INSERT INTO estimate_line_items (id, version_id, section_id, item_name, description, quantity, unit, unit_cost, unit_price, notes, sort_order)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+          `INSERT INTO estimate_line_items (id, version_id, section_id, item_name, description, quantity, unit, unit_price, notes, sort_order)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
         )
         .run(
           lineItemId,
@@ -336,7 +334,6 @@ export async function createEstimate(
           item.description,
           item.quantity,
           item.unit,
-          item.unit_cost,
           item.unit_price,
           item.notes ?? null,
           sortOrder
@@ -485,8 +482,8 @@ export async function duplicateEstimate(
       : null;
     await db
       .prepare(
-        `INSERT INTO estimate_line_items (id, version_id, section_id, item_name, description, quantity, unit, unit_cost, unit_price, notes, sort_order)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        `INSERT INTO estimate_line_items (id, version_id, section_id, item_name, description, quantity, unit, unit_price, notes, sort_order)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
       )
       .run(
         newLineItemId,
@@ -496,8 +493,7 @@ export async function duplicateEstimate(
         item.description,
         item.quantity,
         item.unit,
-        item.unit_cost,
-        item.unit_price || item.unit_cost,
+        item.unit_price,
         item.notes || null,
         item.sort_order
       );
@@ -556,16 +552,15 @@ export async function applyLineItemChanges(
           description: change.description,
           quantity: change.quantity,
           unit: change.unit,
-          unit_cost: change.unit_cost,
-          unit_price: change.unit_cost,
-          cost: change.unit_cost,
+          unit_price: change.unit_price,
+          cost: change.unit_price,
           notes: change.notes,
         });
         const lineItemId = crypto.randomUUID();
         await db
           .prepare(
-            `INSERT INTO estimate_line_items (id, version_id, section_id, item_name, description, quantity, unit, unit_cost, unit_price, notes, sort_order)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+            `INSERT INTO estimate_line_items (id, version_id, section_id, item_name, description, quantity, unit, unit_price, notes, sort_order)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
           )
           .run(
             lineItemId,
@@ -575,7 +570,6 @@ export async function applyLineItemChanges(
             item.description,
             item.quantity,
             item.unit,
-            item.unit_cost,
             item.unit_price,
             item.notes ?? null,
             nextSortOrder
@@ -616,19 +610,15 @@ export async function applyLineItemChanges(
             description: change.description ?? existingItem.description,
             quantity: change.quantity ?? existingItem.quantity,
             unit: change.unit ?? existingItem.unit,
-            unit_cost: change.unit_cost ?? existingItem.unit_cost,
-            unit_price:
-              change.unit_cost ??
-              existingItem.unit_price ??
-              existingItem.unit_cost,
-            cost: change.unit_cost ?? existingItem.unit_cost,
+            unit_price: change.unit_price ?? existingItem.unit_price,
+            cost: change.unit_price ?? existingItem.unit_price,
             notes: change.notes ?? existingItem.notes ?? undefined,
           });
 
           await db
             .prepare(
               `UPDATE estimate_line_items
-               SET section_id = ?, item_name = ?, description = ?, quantity = ?, unit = ?, unit_cost = ?, unit_price = ?, notes = ?, updated_at = now()
+               SET section_id = ?, item_name = ?, description = ?, quantity = ?, unit = ?, unit_price = ?, notes = ?, updated_at = now()
                WHERE id = ? AND version_id = ?`
             )
             .run(
@@ -637,7 +627,6 @@ export async function applyLineItemChanges(
               item.description,
               item.quantity,
               item.unit,
-              item.unit_cost,
               item.unit_price,
               item.notes ?? null,
               change.id,

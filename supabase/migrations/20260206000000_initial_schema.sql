@@ -258,7 +258,6 @@ CREATE TABLE IF NOT EXISTS estimate_line_items (
   description TEXT NOT NULL,
   quantity REAL NOT NULL DEFAULT 1,
   unit TEXT NOT NULL DEFAULT 'EA',
-  unit_cost REAL NOT NULL DEFAULT 0,
   unit_price REAL NOT NULL DEFAULT 0,
   is_excluded INTEGER NOT NULL DEFAULT 0,
   notes TEXT,

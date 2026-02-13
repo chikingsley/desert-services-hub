@@ -28,7 +28,7 @@ export async function generateEstimatePdfById(
   const currentVersion = details.current_version;
 
   const editorLineItems = currentVersion.line_items.map((i) => {
-    const unitPrice = i.unit_price ?? i.unit_cost;
+    const unitPrice = i.unit_price ?? i.unit_price;
     return {
       id: i.id,
       item: i.item_name || i.description,

@@ -22,7 +22,7 @@ export interface TakeoffItemConfig {
   /** Optional unit label (e.g., "LF", "SF", "EA") */
   unit?: string;
   /** Optional unit cost for estimating */
-  unitCost?: number;
+  unitPrice?: number;
 }
 
 /**

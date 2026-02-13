@@ -42,7 +42,7 @@ describe("createEstimate guardrails", () => {
             item_name: PRIMARY_ITEM.name,
             description: "ignored",
             quantity: 1,
-            unit_cost: 100,
+            unit_price: 100,
           },
         ],
       })
@@ -60,7 +60,7 @@ describe("createEstimate guardrails", () => {
           item_name: PRIMARY_ITEM.name,
           description: "custom text should not persist",
           quantity: 2,
-          unit_cost: 111,
+          unit_price: 111,
         },
       ],
     });
@@ -97,7 +97,7 @@ describe("applyLineItemChanges guardrails", () => {
           item_name: PRIMARY_ITEM.name,
           description: PRIMARY_ITEM.description,
           quantity: 1,
-          unit_cost: 100,
+          unit_price: 100,
         },
       ],
     });
@@ -110,7 +110,7 @@ describe("applyLineItemChanges guardrails", () => {
           item_name: "Not In Catalog",
           description: "bad",
           quantity: 1,
-          unit_cost: 10,
+          unit_price: 10,
         },
       ])
     ).rejects.toThrow(CATALOG_ERROR_RE);
@@ -127,7 +127,7 @@ describe("applyLineItemChanges guardrails", () => {
           item_name: PRIMARY_ITEM.name,
           description: PRIMARY_ITEM.description,
           quantity: 1,
-          unit_cost: 100,
+          unit_price: 100,
         },
       ],
     });
@@ -144,7 +144,7 @@ describe("applyLineItemChanges guardrails", () => {
         item_name: SECONDARY_ITEM.name,
         description: "this should be replaced",
         quantity: 3,
-        unit_cost: 95,
+        unit_price: 95,
       },
     ]);
 

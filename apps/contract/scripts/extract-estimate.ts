@@ -18,7 +18,7 @@ export interface EstimateLineItem {
   description: string;
   qty: number;
   unit: string | null;
-  unitCost: number;
+  unitPrice: number;
   total: number;
   taxable: boolean;
   section: "required" | "phase1" | "phase2" | "additional_services" | "misc";
@@ -190,7 +190,7 @@ function extractLineItems(text: string): EstimateLineItem[] {
 
   let inAdditionalServices = false;
 
-  // Pattern: qty unitCost total (with optional T for taxable)
+  // Pattern: qty unitPrice total (with optional T for taxable)
   // This pattern finds price triplets anywhere in the text
   // Examples: "1 1,350.00 1,350.00" or "24 1,100.00 26,400.00T"
   const pricePattern =
@@ -199,13 +199,13 @@ function extractLineItems(text: string): EstimateLineItem[] {
   // Find all price matches
   for (const match of text.matchAll(pricePattern)) {
     const qtyStr = match[1];
-    const unitCostStr = match[2];
+    const unitPriceStr = match[2];
     const totalStr = match[3];
-    if (!(qtyStr && unitCostStr && totalStr)) {
+    if (!(qtyStr && unitPriceStr && totalStr)) {
       continue;
     }
     const qty = Number.parseFloat(qtyStr.replace(/,/g, ""));
-    const unitCost = Number.parseFloat(unitCostStr.replace(/,/g, ""));
+    const unitPrice = Number.parseFloat(unitPriceStr.replace(/,/g, ""));
     const total = Number.parseFloat(totalStr.replace(/,/g, ""));
     const taxable = match[4] === "T";
 
@@ -218,8 +218,8 @@ function extractLineItems(text: string): EstimateLineItem[] {
       continue;
     }
 
-    // Skip if qty * unitCost doesn't roughly equal total (sanity check)
-    const expectedTotal = qty * unitCost;
+    // Skip if qty * unitPrice doesn't roughly equal total (sanity check)
+    const expectedTotal = qty * unitPrice;
     if (Math.abs(expectedTotal - total) > 1 && qty !== 0) {
       continue;
     }
@@ -282,7 +282,7 @@ function extractLineItems(text: string): EstimateLineItem[] {
       description,
       qty,
       unit: category.unit,
-      unitCost,
+      unitPrice,
       total,
       taxable,
       section: inAdditionalServices ? "additional_services" : category.section,

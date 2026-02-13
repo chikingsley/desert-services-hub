@@ -290,7 +290,7 @@ def estimate(
         for item in result.line_items:
             tax_marker = " (T)" if item.taxable else ""
             lines.append(
-                f"  {item.item}: {item.description} — {item.qty} x ${item.unit_cost:.2f} = ${item.total:.2f}{tax_marker}"
+                f"  {item.item}: {item.description} — {item.qty} x ${item.unit_price:.2f} = ${item.total:.2f}{tax_marker}"
             )
         if result.additional_services:
             lines.append("")

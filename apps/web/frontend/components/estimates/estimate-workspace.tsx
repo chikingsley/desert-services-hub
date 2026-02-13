@@ -108,7 +108,6 @@ interface ApiEstimateResponse {
       description: string;
       quantity: number;
       unit: string;
-      unit_cost: number;
       unit_price: number;
       is_excluded: number;
       notes: string | null;
@@ -119,22 +118,13 @@ interface ApiEstimateResponse {
 
 function getLineItemRateAndTotal(item: {
   quantity: number;
-  unit_cost: number;
   unit_price: number;
 }): {
   rate: number;
   total: number;
 } {
   const quantity = Number.isFinite(item.quantity) ? item.quantity : 0;
-  const unitCost = Number.isFinite(item.unit_cost) ? item.unit_cost : 0;
   const unitPrice = Number.isFinite(item.unit_price) ? item.unit_price : 0;
-
-  if (unitCost > 0) {
-    return {
-      rate: unitCost,
-      total: quantity * unitCost,
-    };
-  }
 
   return {
     rate: unitPrice,
@@ -427,7 +417,6 @@ export function EstimateWorkspace({
           qty: item.qty,
           unit: item.uom,
           uom: item.uom,
-          unit_cost: item.cost,
           unit_price: item.cost,
           cost: item.cost,
           notes: null,

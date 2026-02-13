@@ -9,8 +9,7 @@ export interface EstimateLineItem {
   description: string;
   quantity: number;
   unit: string;
-  unit_cost: number;
-  unit_price?: number;
+  unit_price: number;
   notes?: string | null;
   sort_order: number;
 }
@@ -80,7 +79,7 @@ export interface CreateEstimateInput {
     description: string;
     quantity?: number;
     unit?: string;
-    unit_cost?: number;
+    unit_price?: number;
     notes?: string;
   }>;
   total?: number;
@@ -106,7 +105,7 @@ export interface LineItemChange {
   description?: string;
   quantity?: number;
   unit?: string;
-  unit_cost?: number;
+  unit_price?: number;
   notes?: string;
 }
 

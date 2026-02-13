@@ -1404,7 +1404,6 @@ export function getTakeoffItems() {
       description: bundle.description,
       unit: bundle.unit,
       unitPrice: 0,
-      unitCost: 0,
       color: bundle.color,
       type: bundle.toolType,
       isBundle: true,

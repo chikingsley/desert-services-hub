@@ -23,7 +23,6 @@ export interface TakeoffCatalogItem {
   description: string | null;
   unit: string;
   unitPrice: number;
-  unitCost: number;
   color: string;
   type: "count" | "linear" | "area";
   isBundle?: boolean;
@@ -120,7 +119,6 @@ export interface TakeoffSummaryItem {
   name: string;
   description: string;
   unitPrice: number;
-  unitCost: number;
   sectionName: string;
   isFromBundle?: boolean;
   bundleName?: string;
@@ -203,7 +201,7 @@ export function aggregateTakeoffAnnotations(
             name: bundleItem.name,
             description: "",
             unitPrice: bundleItem.price,
-            unitCost: bundleItem.price * 0.7, // Estimated cost margin
+            /// Estimated cost margin
             sectionName: catalogItem.label, // Use bundle name as section
             isFromBundle: true,
             bundleName: catalogItem.label,
@@ -225,7 +223,6 @@ export function aggregateTakeoffAnnotations(
         name: catalogItem.label,
         description: catalogItem.description || "",
         unitPrice: catalogItem.unitPrice,
-        unitCost: catalogItem.unitCost,
         sectionName,
       });
     }
@@ -246,7 +243,6 @@ export function convertToEstimateLineItems(
     description: item.description || item.name,
     quantity: Math.round(item.quantity * 100) / 100, // Round to 2 decimal places
     unit: item.unit,
-    unit_cost: item.unitCost,
     unit_price: item.unitPrice,
     is_excluded: false,
     notes: null,

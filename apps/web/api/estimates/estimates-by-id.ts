@@ -30,6 +30,9 @@ import { generateBaseNumber } from "@lib/utils";
 // Bun extends Request with params from route matching
 type BunRequest = Request & { params: { id: string } };
 
+const ESTIMATE_FOR_MARKER_RE = /ESTIMATE FOR:/i;
+const WINDOWS_NEWLINE_RE = /\r?\n/;
+
 async function getPreferredEstimateVersion(
   estimateId: number
 ): Promise<EstimateVersionRow | undefined> {
@@ -81,15 +84,17 @@ function extractJobAddressFromLineItems(
 ): string | null {
   for (const item of lineItems) {
     const description = item.description ?? "";
-    if (!description || !/ESTIMATE FOR:/i.test(description)) {
+    if (!(description && ESTIMATE_FOR_MARKER_RE.test(description))) {
       continue;
     }
 
     const lines = description
-      .split(/\r?\n/)
+      .split(WINDOWS_NEWLINE_RE)
       .map((line) => line.trim())
       .filter((line) => line.length > 0);
-    const markerIndex = lines.findIndex((line) => /ESTIMATE FOR:/i.test(line));
+    const markerIndex = lines.findIndex((line) =>
+      ESTIMATE_FOR_MARKER_RE.test(line)
+    );
     if (markerIndex < 0) {
       continue;
     }
@@ -412,7 +417,7 @@ export async function updateEstimate(req: BunRequest): Promise<Response> {
                 }
               }
 
-              itemPlaceholders.push("(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+              itemPlaceholders.push("(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
               itemValues.push(
                 lineItemId,
                 version.id,
@@ -421,7 +426,6 @@ export async function updateEstimate(req: BunRequest): Promise<Response> {
                 item.description,
                 item.quantity,
                 item.unit,
-                item.unit_cost,
                 item.unit_price,
                 item.notes ?? null,
                 item.is_excluded ? 1 : 0,
@@ -430,7 +434,7 @@ export async function updateEstimate(req: BunRequest): Promise<Response> {
               sortOrder += 1;
             }
             await db.run(
-              `INSERT INTO estimate_line_items (id, version_id, section_id, item_name, description, quantity, unit, unit_cost, unit_price, notes, is_excluded, sort_order) VALUES ${itemPlaceholders.join(", ")}`,
+              `INSERT INTO estimate_line_items (id, version_id, section_id, item_name, description, quantity, unit, unit_price, notes, is_excluded, sort_order) VALUES ${itemPlaceholders.join(", ")}`,
               itemValues
             );
           }
@@ -682,8 +686,8 @@ export async function getEstimatePdf(req: BunRequest): Promise<Response> {
       description: item.description || item.notes || "",
       qty: item.quantity,
       uom: item.unit,
-      cost: item.unit_cost ?? item.unit_price,
-      total: item.quantity * (item.unit_cost ?? item.unit_price),
+      cost: item.unit_price,
+      total: item.quantity * item.unit_price,
       sectionId: item.section_id || undefined,
       isAlternate: item.is_excluded === 1,
     }));
@@ -708,9 +712,9 @@ export async function getEstimatePdf(req: BunRequest): Promise<Response> {
       normalizeNullableText(extractedEstimate.extracted_estimator);
 
     const createdAtValue =
-      estimate.created_at instanceof Date
-        ? estimate.created_at.toISOString()
-        : estimate.created_at || new Date().toISOString();
+      typeof estimate.created_at === "string" && estimate.created_at.length > 0
+        ? estimate.created_at
+        : new Date().toISOString();
 
     const editorEstimate: EditorEstimate = {
       estimateNumber:
@@ -854,7 +858,7 @@ export async function duplicateEstimate(req: BunRequest): Promise<Response> {
           const newSectionId = item.section_id
             ? (sectionIdMap.get(item.section_id) ?? null)
             : null;
-          itemPlaceholders.push("(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+          itemPlaceholders.push("(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
           itemValues.push(
             newLineItemId,
             newVersionId,
@@ -863,7 +867,6 @@ export async function duplicateEstimate(req: BunRequest): Promise<Response> {
             item.description,
             item.quantity,
             item.unit,
-            item.unit_cost,
             item.unit_price,
             item.notes,
             item.is_excluded,
@@ -871,7 +874,7 @@ export async function duplicateEstimate(req: BunRequest): Promise<Response> {
           );
         }
         await db.run(
-          `INSERT INTO estimate_line_items (id, version_id, section_id, item_name, description, quantity, unit, unit_cost, unit_price, notes, is_excluded, sort_order) VALUES ${itemPlaceholders.join(", ")}`,
+          `INSERT INTO estimate_line_items (id, version_id, section_id, item_name, description, quantity, unit, unit_price, notes, is_excluded, sort_order) VALUES ${itemPlaceholders.join(", ")}`,
           itemValues
         );
       }

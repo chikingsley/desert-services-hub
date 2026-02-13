@@ -53,7 +53,6 @@ export interface CanonicalProjectSovLineItem {
   description: string;
   quantity: number;
   unit: string;
-  unitCost: number;
   unitPrice: number;
   isExcluded: boolean;
   notes: string | null;
@@ -99,12 +98,19 @@ export async function setCanonicalEstimateForProject(
         [projectId, estimateId, source]
       );
 
+      // Clear old canonical first (partial unique index allows only one TRUE per project)
       await db.run(
         `UPDATE project_estimates
-         SET is_canonical = CASE WHEN estimate_id = ? THEN TRUE ELSE FALSE END,
-             canonicalized_at = CASE WHEN estimate_id = ? THEN now() ELSE canonicalized_at END
-         WHERE project_id = ?`,
-        [estimateId, estimateId, projectId]
+         SET is_canonical = FALSE
+         WHERE project_id = ? AND is_canonical = TRUE`,
+        [projectId]
+      );
+
+      await db.run(
+        `UPDATE project_estimates
+         SET is_canonical = TRUE, canonicalized_at = now()
+         WHERE project_id = ? AND estimate_id = ?`,
+        [projectId, estimateId]
       );
     });
 
@@ -271,7 +277,6 @@ export async function getCanonicalProjectSov(
         description: string;
         quantity: number;
         unit: string;
-        unit_cost: number;
         unit_price: number;
         is_excluded: number;
         notes: string | null;
@@ -284,7 +289,6 @@ export async function getCanonicalProjectSov(
            description,
            quantity,
            unit,
-           unit_cost,
            unit_price,
            is_excluded,
            notes,
@@ -312,7 +316,6 @@ export async function getCanonicalProjectSov(
       description: item.description,
       quantity: item.quantity,
       unit: item.unit,
-      unitCost: item.unit_cost,
       unitPrice: item.unit_price,
       isExcluded: item.is_excluded === 1,
       notes: item.notes,

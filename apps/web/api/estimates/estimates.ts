@@ -281,8 +281,8 @@ export async function createEstimate(req: Request): Promise<Response> {
 
     const result = await db.transaction(async () => {
       const insertResult = await db.run(
-        `INSERT INTO estimates (base_number, takeoff_id, name, job_name, job_address, client_name, client_address, client_email, client_phone, notes, bid_status, status, is_locked)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `INSERT INTO estimates (base_number, takeoff_id, name, job_name, job_address, client_name, client_address, client_email, client_phone, estimator, estimator_email, notes, bid_status, status, is_locked)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
          RETURNING id`,
         [
           baseNumber,
@@ -294,6 +294,8 @@ export async function createEstimate(req: Request): Promise<Response> {
           payload.client_address || null,
           payload.client_email || null,
           payload.client_phone || null,
+          payload.estimator || null,
+          payload.estimator_email || null,
           payload.notes || null,
           status,
           status,
@@ -344,7 +346,7 @@ export async function createEstimate(req: Request): Promise<Response> {
 
         for (const item of lineItems) {
           const lineItemId = crypto.randomUUID();
-          itemPlaceholders.push("(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+          itemPlaceholders.push("(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
           itemValues.push(
             lineItemId,
             versionId,
@@ -355,7 +357,6 @@ export async function createEstimate(req: Request): Promise<Response> {
             item.description,
             item.quantity,
             item.unit,
-            item.unit_cost,
             item.unit_price,
             item.notes ?? null,
             item.is_excluded ? 1 : 0,
@@ -365,7 +366,7 @@ export async function createEstimate(req: Request): Promise<Response> {
         }
 
         await db.run(
-          `INSERT INTO estimate_line_items (id, version_id, section_id, item_name, description, quantity, unit, unit_cost, unit_price, notes, is_excluded, sort_order) VALUES ${itemPlaceholders.join(", ")}`,
+          `INSERT INTO estimate_line_items (id, version_id, section_id, item_name, description, quantity, unit, unit_price, notes, is_excluded, sort_order) VALUES ${itemPlaceholders.join(", ")}`,
           itemValues
         );
       }

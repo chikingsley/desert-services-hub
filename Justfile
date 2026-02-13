@@ -147,6 +147,12 @@ contracts-pending-csv out="data/reports/contracts-pending.csv":
 ops-status:
     @scripts/ops-status.sh
 
+# Controlled resolver backfill for historical coverage.
+# Example:
+#   just email-resolver-backfill --scope project-estimate-gap --limit 20000 --apply
+email-resolver-backfill *args:
+    @scripts/email-resolver-backfill.sh {{args}}
+
 [private]
 _health strict:
     #!/usr/bin/env bash

@@ -802,15 +802,18 @@ export async function syncEstimates(): Promise<SyncResult> {
   for (const item of items) {
     try {
       const row = extractEstimateRow(item, accountSnapshots);
+      const estimateAccountId = row.accountMondayId
+        ? (accountIdByMondayId.get(row.accountMondayId) ?? null)
+        : null;
       const upsertResult = (await db.run(
         `INSERT INTO estimates (
           monday_item_id, name, estimate_number, contractor,
           group_id, group_title, monday_url,
-          account_monday_id, account_domain,
+          account_id, account_monday_id, account_domain,
           bid_status, bid_value, awarded_value, bid_source,
           awarded, due_date, location, sharepoint_url,
           synced_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, now(), now())
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, now(), now())
         ON CONFLICT(monday_item_id) DO UPDATE SET
           name = excluded.name,
           estimate_number = COALESCE(excluded.estimate_number, estimates.estimate_number),
@@ -818,6 +821,7 @@ export async function syncEstimates(): Promise<SyncResult> {
           group_id = excluded.group_id,
           group_title = excluded.group_title,
           monday_url = excluded.monday_url,
+          account_id = COALESCE(excluded.account_id, estimates.account_id),
           account_monday_id = COALESCE(excluded.account_monday_id, estimates.account_monday_id),
           account_domain = COALESCE(excluded.account_domain, estimates.account_domain),
           bid_status = excluded.bid_status,
@@ -839,6 +843,7 @@ export async function syncEstimates(): Promise<SyncResult> {
           row.groupId,
           row.groupTitle,
           row.mondayUrl,
+          estimateAccountId,
           row.accountMondayId,
           row.accountDomain,
           row.bidStatus,

@@ -111,7 +111,8 @@ function parseProjectRow(row: Record<string, unknown>): Project {
     locationCity: row.location_city as string | null,
     locationState: row.location_state as string | null,
     locationZip: row.location_zip as string | null,
-    status: (row.status as string) ?? "active",
+    status:
+      (row.lifecycle_state as string) ?? (row.status as string) ?? "active",
     contractStatus: (row.contract_status as string) ?? "Pending",
     dustPermitStatus: (row.dust_permit_status as string) ?? "Not Needed",
     noiStatus: (row.noi_status as string) ?? "Not Needed",

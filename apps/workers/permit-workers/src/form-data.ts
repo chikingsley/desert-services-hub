@@ -671,7 +671,7 @@ export const DEFAULTS: FormData = {
   permitContact: {
     email: "chi@desertservices.net",
     name: "Chi Ejimofor",
-    phone: "(304) 216-8700",
+    phone: "(304) 405-2446",
   },
 
   violation: {

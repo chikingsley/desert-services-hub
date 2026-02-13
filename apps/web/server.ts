@@ -9,12 +9,9 @@
  */
 
 import { file, serve } from "bun";
-import {
-  getArchiveIndex,
-  getAttachment,
-  getConversation,
-  listArchives,
-} from "@/api/archive";
+// -- Webhooks --
+// (webhooks are registered in webhooks.ts, not here)
+// -- Flat (single-concern) --
 import {
   getAutomationStatus,
   postAutomationClipboardCopy,
@@ -25,11 +22,19 @@ import {
   postAutomationStop,
 } from "@/api/automation";
 import { getCatalog, getTakeoffItems } from "@/api/catalog";
-import { listContracts } from "@/api/contracts";
+// -- Contracts --
+import {
+  getArchiveIndex,
+  getAttachment,
+  getConversation,
+  listArchives,
+} from "@/api/contracts/archive";
+import { listContracts } from "@/api/contracts/contracts";
+// -- Emails --
 import {
   downloadEmailAttachment,
   listEmailAttachments,
-} from "@/api/email-attachments";
+} from "@/api/emails/attachments";
 import {
   getEmail,
   getEmailEstimateCandidates,
@@ -39,8 +44,9 @@ import {
   markDomainAsSpam,
   setDomainRule,
   setEmailClassification,
-} from "@/api/emails";
-import { createEstimate, listEstimates } from "@/api/estimates";
+} from "@/api/emails/emails";
+// -- Estimates --
+import { createEstimate, listEstimates } from "@/api/estimates/estimates";
 import {
   deleteEstimate,
   duplicateEstimate,
@@ -49,20 +55,22 @@ import {
   getEstimatePdf,
   getEstimateTakeoff,
   updateEstimate,
-} from "@/api/estimates-by-id";
+} from "@/api/estimates/estimates-by-id";
 import { healthCheck } from "@/api/health";
 import { searchMonday } from "@/api/monday";
 import { listPermits } from "@/api/permits";
-import { listProjects } from "@/api/projects";
-import { getProjectFinalSov } from "@/api/projects-by-id";
-import { createTakeoff, listTakeoffs } from "@/api/takeoffs";
+// -- Projects --
+import { listProjects } from "@/api/projects/projects";
+import { getProjectFinalSov } from "@/api/projects/projects-by-id";
+// -- Takeoffs --
+import { createTakeoff, listTakeoffs } from "@/api/takeoffs/takeoffs";
 import {
   deleteTakeoff,
   getTakeoff,
   getTakeoffEstimate,
   getTakeoffPdf,
   updateTakeoff,
-} from "@/api/takeoffs-by-id";
+} from "@/api/takeoffs/takeoffs-by-id";
 import { checkPdfExists, uploadPdf } from "@/api/upload";
 
 // Bun.serve route handlers expect BunRequest<path> but our API handlers use standard

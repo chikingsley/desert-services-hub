@@ -36,11 +36,15 @@ interface ContractsApiResponse {
   };
 }
 
-function queueStateForRow(row: ContractRow): "new_project_needed" | "linked_existing" {
+function queueStateForRow(
+  row: ContractRow
+): "new_project_needed" | "linked_existing" {
   return row.project_name ? "linked_existing" : "new_project_needed";
 }
 
-function stateBadgeClass(state: "new_project_needed" | "linked_existing"): string {
+function stateBadgeClass(
+  state: "new_project_needed" | "linked_existing"
+): string {
   if (state === "linked_existing") {
     return "border-emerald-500/25 bg-emerald-500/10 text-emerald-700";
   }
@@ -79,7 +83,9 @@ export function ContractsIntakeExperimentPage() {
   }, [queueItems, statusFilter]);
 
   const selectedItem =
-    filteredItems.find((item) => item.id === selectedId) ?? filteredItems[0] ?? null;
+    filteredItems.find((item) => item.id === selectedId) ??
+    filteredItems[0] ??
+    null;
 
   const isInitialLoading = isLoading && !data;
 
@@ -103,8 +109,8 @@ export function ContractsIntakeExperimentPage() {
           <div className="flex items-center gap-2 text-muted-foreground text-sm">
             <ArrowRightLeft className="h-4 w-4" />
             <span>
-              Prototype queue view on top of current contracts data. Current source:
-              won estimates.
+              Prototype queue view on top of current contracts data. Current
+              source: won estimates.
             </span>
           </div>
 
@@ -124,7 +130,9 @@ export function ContractsIntakeExperimentPage() {
                     onClick={() => setStatusFilter("new_project_needed")}
                     size="sm"
                     variant={
-                      statusFilter === "new_project_needed" ? "default" : "outline"
+                      statusFilter === "new_project_needed"
+                        ? "default"
+                        : "outline"
                     }
                   >
                     New Project
@@ -151,12 +159,17 @@ export function ContractsIntakeExperimentPage() {
                     onClick={() => setSelectedId(item.id)}
                     type="button"
                   >
-                    <div className="mb-1 truncate font-medium text-sm">{item.name}</div>
+                    <div className="mb-1 truncate font-medium text-sm">
+                      {item.name}
+                    </div>
                     <div className="mb-2 truncate text-muted-foreground text-xs">
                       {item.contractor || "Unknown contractor"} •{" "}
                       {item.estimate_number || "No estimate #"}
                     </div>
-                    <Badge className={stateBadgeClass(item.queueState)} variant="outline">
+                    <Badge
+                      className={stateBadgeClass(item.queueState)}
+                      variant="outline"
+                    >
                       {item.queueState === "linked_existing"
                         ? "Linked Existing"
                         : "New Project Needed"}
@@ -182,7 +195,9 @@ export function ContractsIntakeExperimentPage() {
               ) : (
                 <div className="space-y-5 p-6">
                   <div className="space-y-1">
-                    <div className="font-semibold text-lg">{selectedItem.name}</div>
+                    <div className="font-semibold text-lg">
+                      {selectedItem.name}
+                    </div>
                     <div className="text-muted-foreground text-sm">
                       {selectedItem.contractor || "Unknown contractor"}
                     </div>
@@ -190,25 +205,33 @@ export function ContractsIntakeExperimentPage() {
 
                   <div className="grid gap-3 sm:grid-cols-2">
                     <div>
-                      <div className="mb-1 text-muted-foreground text-xs">Estimate #</div>
+                      <div className="mb-1 text-muted-foreground text-xs">
+                        Estimate #
+                      </div>
                       <div className="font-medium text-sm">
                         {selectedItem.estimate_number || "-"}
                       </div>
                     </div>
                     <div>
-                      <div className="mb-1 text-muted-foreground text-xs">Linked Project</div>
+                      <div className="mb-1 text-muted-foreground text-xs">
+                        Linked Project
+                      </div>
                       <div className="font-medium text-sm">
                         {selectedItem.project_name || "Not linked"}
                       </div>
                     </div>
                     <div>
-                      <div className="mb-1 text-muted-foreground text-xs">Location</div>
+                      <div className="mb-1 text-muted-foreground text-xs">
+                        Location
+                      </div>
                       <div className="font-medium text-sm">
                         {selectedItem.location || "-"}
                       </div>
                     </div>
                     <div>
-                      <div className="mb-1 text-muted-foreground text-xs">Value</div>
+                      <div className="mb-1 text-muted-foreground text-xs">
+                        Value
+                      </div>
                       <div className="font-medium text-sm">
                         {selectedItem.awarded_value || selectedItem.bid_value
                           ? formatCurrency(
@@ -221,7 +244,9 @@ export function ContractsIntakeExperimentPage() {
                   </div>
 
                   <div className="rounded-lg border border-border/60 bg-muted/20 p-4">
-                    <div className="mb-2 font-medium text-sm">Planned Queue Actions</div>
+                    <div className="mb-2 font-medium text-sm">
+                      Planned Queue Actions
+                    </div>
                     <div className="mb-3 text-muted-foreground text-xs">
                       Placeholder actions for the intake workflow.
                     </div>
@@ -241,7 +266,9 @@ export function ContractsIntakeExperimentPage() {
                   </div>
 
                   <div className="text-muted-foreground text-xs">
-                    {isValidating ? "Refreshing..." : `Total rows loaded: ${data.items.length}`}
+                    {isValidating
+                      ? "Refreshing..."
+                      : `Total rows loaded: ${data.items.length}`}
                   </div>
                 </div>
               )}

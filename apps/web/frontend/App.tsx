@@ -25,8 +25,8 @@ import {
 } from "@/apps/web/frontend/components/ui/sidebar";
 import { AutomationPage } from "@/apps/web/frontend/pages/automation";
 import { CatalogPage } from "@/apps/web/frontend/pages/catalog";
-import { ContractsIntakeExperimentPage } from "@/apps/web/frontend/pages/contracts-intake-experiment";
 import { ContractsPage } from "@/apps/web/frontend/pages/contracts";
+import { ContractsIntakeExperimentPage } from "@/apps/web/frontend/pages/contracts-intake-experiment";
 // Pages
 import { DashboardPage } from "@/apps/web/frontend/pages/dashboard";
 import { EmailsPage } from "@/apps/web/frontend/pages/emails";

@@ -51,7 +51,9 @@ const DEFAULT_BATCH_SIZE = 50;
 const DEFAULT_DAYS_BACK = 30;
 const DEFAULT_SEARCH_LIMIT = 50;
 const MAX_EMAILS_DEFAULT = 500;
+const MAX_TRANSLATE_IDS_BATCH = 1000;
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
+const IMMUTABLE_ID_PREFERENCE = 'IdType="ImmutableId"';
 
 /**
  * Rate Limiter for Microsoft Graph API
@@ -236,6 +238,21 @@ export class GraphEmailClient {
   }
 
   /**
+   * Wrap Graph client so every request asks for immutable Outlook IDs.
+   *
+   * This prevents ID churn when messages move between folders in the same mailbox.
+   */
+  private withImmutableIdPreference(client: Client): Client {
+    const baseApi = client.api.bind(client);
+    const patched = client as unknown as { api: (path: string) => unknown };
+    patched.api = (path: string) =>
+      (
+        baseApi(path) as { header: (key: string, value: string) => unknown }
+      ).header("Prefer", IMMUTABLE_ID_PREFERENCE);
+    return client;
+  }
+
+  /**
    * Initialize with user authentication via Device Code flow.
    *
    * Prompts user to sign in via browser using a device code. Token is cached
@@ -339,7 +356,9 @@ export class GraphEmailClient {
       },
     };
 
-    this.client = Client.initWithMiddleware({ authProvider });
+    this.client = this.withImmutableIdPreference(
+      Client.initWithMiddleware({ authProvider })
+    );
   }
 
   /**
@@ -362,7 +381,9 @@ export class GraphEmailClient {
         { scopes }
       );
 
-      this.client = Client.initWithMiddleware({ authProvider });
+      this.client = this.withImmutableIdPreference(
+        Client.initWithMiddleware({ authProvider })
+      );
     }
     return this.client;
   }
@@ -385,6 +406,50 @@ export class GraphEmailClient {
    */
   private getMessagesPath(userId?: string): string {
     return `${this.getBasePath(userId)}/messages`;
+  }
+
+  /**
+   * Translate mutable REST message IDs to immutable IDs.
+   *
+   * Graph limit is 1,000 IDs per request, so this method batches automatically.
+   */
+  async translateMessageIdsToImmutable(
+    messageIds: string[],
+    userId?: string
+  ): Promise<Map<string, string>> {
+    const out = new Map<string, string>();
+    if (messageIds.length === 0) {
+      return out;
+    }
+
+    const client = this.getClient();
+    const basePath = this.getBasePath(userId);
+
+    for (let i = 0; i < messageIds.length; i += MAX_TRANSLATE_IDS_BATCH) {
+      const chunk = messageIds.slice(i, i + MAX_TRANSLATE_IDS_BATCH);
+      await this.rateLimiter.throttle();
+
+      const response = (await client
+        .api(`${basePath}/translateExchangeIds`)
+        .post({
+          inputIds: chunk,
+          sourceIdType: "restId",
+          targetIdType: "restImmutableEntryId",
+        })) as {
+        value?: Array<{
+          sourceId?: string;
+          targetId?: string;
+        }>;
+      };
+
+      for (const item of response.value ?? []) {
+        if (item.sourceId && item.targetId) {
+          out.set(item.sourceId, item.targetId);
+        }
+      }
+    }
+
+    return out;
   }
 
   /**

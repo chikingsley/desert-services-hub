@@ -9,9 +9,9 @@
 
 import { serve } from "bun";
 import { healthCheck } from "@/api/health";
-import { handleMondayWebhook } from "@/api/webhooks";
-import { handleIntakeWebhook } from "@/api/webhooks-intake";
-import { handleOutlookWebhook } from "@/api/webhooks-outlook";
+import { handleIntakeWebhook } from "@/api/webhooks/intake";
+import { handleMondayWebhook } from "@/api/webhooks/monday";
+import { handleOutlookWebhook } from "@/api/webhooks/outlook";
 import { startWorker } from "@/apps/web/worker";
 
 const h = (handler: unknown) => handler as never;

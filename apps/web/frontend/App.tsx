@@ -25,6 +25,7 @@ import {
 } from "@/apps/web/frontend/components/ui/sidebar";
 import { AutomationPage } from "@/apps/web/frontend/pages/automation";
 import { CatalogPage } from "@/apps/web/frontend/pages/catalog";
+import { ContractsIntakeExperimentPage } from "@/apps/web/frontend/pages/contracts-intake-experiment";
 import { ContractsPage } from "@/apps/web/frontend/pages/contracts";
 // Pages
 import { DashboardPage } from "@/apps/web/frontend/pages/dashboard";
@@ -133,6 +134,10 @@ const router = createBrowserRouter([
       {
         path: "contracts",
         element: <ContractsPage />,
+      },
+      {
+        path: "experiments/contracts-intake",
+        element: <ContractsIntakeExperimentPage />,
       },
       {
         path: "projects",

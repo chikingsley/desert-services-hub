@@ -239,6 +239,8 @@ const server = serve({
     "/takeoffs/*": homepage,
     "/contracts": homepage,
     "/contracts/*": homepage,
+    "/experiments": homepage,
+    "/experiments/*": homepage,
     "/projects": homepage,
     "/projects/*": homepage,
     "/permits": homepage,

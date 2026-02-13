@@ -1,0 +1,23 @@
+{
+  "projectName": "Lexington 420 - Building D",
+  "parcelNumber": null,
+  "address": "NEC Reems Rd & Northern Pkwy",
+  "city": "Glendale",
+  "state": "AZ",
+  "county": "Maricopa",
+  "roads": [
+    { "name": "Reems Rd", "direction": "west", "isPrimary": true },
+    { "name": "Northern Pkwy", "direction": "south", "isPrimary": true },
+    { "name": "N 177th Ave", "direction": "east", "isPrimary": false }
+  ],
+  "intersections": [
+    {
+      "road1": "Reems Rd",
+      "road2": "Northern Pkwy",
+      "cornerPosition": "southwest"
+    }
+  ],
+  "scaleInfo": "1 inch = 100 feet",
+  "estimatedSizeMeters": 280,
+  "coordinates": { "lat": 33.561333, "lng": -112.39168 }
+}

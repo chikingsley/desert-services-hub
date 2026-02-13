@@ -57,7 +57,9 @@ emails/
 
 # Local data and experiments
 data/overrides/
-experiments/
+experiments/*
+!experiments/custom-map-rehydrate/
+!experiments/custom-map-rehydrate/**
 ca-permit/
 
 # Debug snapshots, large fixtures, and test output

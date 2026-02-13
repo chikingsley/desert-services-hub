@@ -19,7 +19,9 @@
     "check": "bun run typecheck && bun run lint",
     "test": "bun test",
     "test:e2e": "bun test --max-concurrency 1 tests/e2e/ --bail 10",
-    "test:api": "bun test tests/api/"
+    "test:api": "bun test tests/api/",
+    "exp:custom-map:smoke": "bun experiments/custom-map-rehydrate/smoke.ts",
+    "exp:custom-map:run": "bun experiments/custom-map-rehydrate/run.ts"
   },
   "dependencies": {
     "@azure/identity": "^4.13.0",

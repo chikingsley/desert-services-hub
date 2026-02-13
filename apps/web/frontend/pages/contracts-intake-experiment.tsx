@@ -188,11 +188,7 @@ export function ContractsIntakeExperimentPage() {
               <div className="border-border/50 border-b px-5 py-4">
                 <div className="font-medium text-sm">Detail Panel</div>
               </div>
-              {!selectedItem ? (
-                <div className="p-6 text-muted-foreground text-sm">
-                  Select a queue item.
-                </div>
-              ) : (
+              {selectedItem ? (
                 <div className="space-y-5 p-6">
                   <div className="space-y-1">
                     <div className="font-semibold text-lg">
@@ -270,6 +266,10 @@ export function ContractsIntakeExperimentPage() {
                       ? "Refreshing..."
                       : `Total rows loaded: ${data.items.length}`}
                   </div>
+                </div>
+              ) : (
+                <div className="p-6 text-muted-foreground text-sm">
+                  Select a queue item.
                 </div>
               )}
             </div>

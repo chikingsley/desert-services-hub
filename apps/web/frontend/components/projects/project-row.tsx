@@ -290,7 +290,7 @@ export function ProjectRow({ project }: { project: ProjectRowData }) {
             ))}
             {overflowCount > 0 ? (
               <Badge
-                className="border-muted-foreground/20 bg-muted text-muted-foreground whitespace-nowrap"
+                className="whitespace-nowrap border-muted-foreground/20 bg-muted text-muted-foreground"
                 variant="outline"
               >
                 +{overflowCount} more

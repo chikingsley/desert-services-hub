@@ -372,7 +372,7 @@ export function InlineEstimateEditor({
               <p className="mb-1 text-[10px] text-muted-foreground uppercase tracking-wide">
                 Tot
               </p>
-              <div className="flex h-10 items-center justify-end rounded-lg border border-border/50 bg-muted/30 px-2 text-right font-mono font-semibold text-xs whitespace-nowrap">
+              <div className="flex h-10 items-center justify-end whitespace-nowrap rounded-lg border border-border/50 bg-muted/30 px-2 text-right font-mono font-semibold text-xs">
                 {formatCurrency(item.total)}
               </div>
             </div>

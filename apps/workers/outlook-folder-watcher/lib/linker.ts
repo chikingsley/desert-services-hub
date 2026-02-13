@@ -17,7 +17,7 @@ interface MessageForLinking {
   subject?: string;
 }
 
-function uniqueNonEmpty(values: Array<string | undefined>): string[] {
+function uniqueNonEmpty(values: Array<string | null | undefined>): string[] {
   const dedup = new Set<string>();
   for (const value of values) {
     const normalized = (value ?? "").trim();
@@ -270,6 +270,39 @@ export async function linkMessagesToProjectEstimates(
     };
   }
 
+  const project = await db
+    .query<
+      {
+        name: string | null;
+        outlook_folder: string | null;
+        contractor: string | null;
+        address: string | null;
+      },
+      [number]
+    >(
+      `SELECT name, outlook_folder, contractor, address
+       FROM projects
+       WHERE id = ?`
+    )
+    .get(hubProjectId);
+  const aliasRows = await db
+    .query<{ alias: string }, [number]>(
+      `SELECT alias
+       FROM project_aliases
+       WHERE project_id = ?
+       ORDER BY created_at DESC, id DESC
+       LIMIT 20`
+    )
+    .all(hubProjectId);
+  const projectHints = uniqueNonEmpty([
+    folderName,
+    project?.name,
+    project?.outlook_folder,
+    ...aliasRows.map((row) => row.alias),
+  ]);
+  const contractorHints = uniqueNonEmpty([project?.contractor]);
+  const addressHints = uniqueNonEmpty([project?.address]);
+
   const existingRows = await db
     .query<{ email_id: number; estimate_id: number }>(
       `SELECT email_id, estimate_id
@@ -312,7 +345,10 @@ export async function linkMessagesToProjectEstimates(
     }
 
     const match = await findEstimateCandidatesForEmail(emailId, {
-      projectHints: [folderName],
+      projectHints,
+      contractorHints,
+      addressHints,
+      restrictEstimateIds: projectEstimateIds,
       limit: 5,
     });
     const best = match?.decision.best;
@@ -329,7 +365,7 @@ export async function linkMessagesToProjectEstimates(
       best.estimateId,
       emailId,
       "script",
-      `folder_watcher ranked_match score=${best.score} project_id=${hubProjectId}`
+      `folder_watcher ranked_match score=${best.score} confidence=${best.confidence} project_id=${hubProjectId}`
     );
     linked++;
   }

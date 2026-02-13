@@ -118,6 +118,40 @@ export async function insertEmail(data: InsertEmailData): Promise<number> {
     isSpam(data.fromEmail, data.subject).isSpam || rule?.is_excluded ? 1 : 0;
   const classification = rule?.classification ?? null;
 
+  // If we already know this message via internet_message_id in the same mailbox,
+  // update that row's Graph message_id to the newest value before upsert.
+  // This keeps downstream FK relationships stable when IDs change after moves.
+  if (data.internetMessageId) {
+    const existingByInternet = await db
+      .query<{ id: number; message_id: string }, [number, string]>(
+        `SELECT id, message_id
+         FROM emails
+         WHERE mailbox_id = ?
+           AND internet_message_id = ?
+         ORDER BY id
+         LIMIT 1`
+      )
+      .get(data.mailboxId, data.internetMessageId);
+
+    if (
+      existingByInternet?.message_id &&
+      existingByInternet.message_id !== data.messageId
+    ) {
+      const existingByNewMessageId = await db
+        .query<{ id: number }, [string]>(
+          "SELECT id FROM emails WHERE message_id = ? LIMIT 1"
+        )
+        .get(data.messageId);
+
+      if (!existingByNewMessageId) {
+        await db.run("UPDATE emails SET message_id = ? WHERE id = ?", [
+          data.messageId,
+          existingByInternet.id,
+        ]);
+      }
+    }
+  }
+
   await db.run(
     `INSERT INTO emails (
       message_id, internet_message_id, mailbox_id, conversation_id, subject, normalized_subject, from_email, from_name,

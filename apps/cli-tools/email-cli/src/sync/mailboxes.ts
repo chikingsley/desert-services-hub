@@ -39,6 +39,18 @@ import {
 } from "@lib/db/repositories";
 import type { InsertAttachmentData, InsertEmailData } from "@lib/db/types";
 
+const enqueueEmailResolveIfNotQueued = db.prepare(`
+  INSERT INTO webhook_jobs (job_type, payload)
+  SELECT 'email_resolve', ?
+  WHERE NOT EXISTS (
+    SELECT 1
+    FROM webhook_jobs
+    WHERE job_type = 'email_resolve'
+      AND status IN ('pending', 'processing')
+      AND payload::jsonb->>'emailId' = ?
+  )
+`);
+
 /**
  * Syncs a single mailbox with full body and attachment metadata
  */
@@ -179,6 +191,11 @@ async function syncMailboxFull(
           await linkEmailToProject(emailId, siblingWithProject.project_id);
         }
       }
+
+      await enqueueEmailResolveIfNotQueued.run(
+        JSON.stringify({ emailId }),
+        String(emailId)
+      );
 
       // Store attachment metadata only (no MinIO upload)
       if (fetchAttachments) {

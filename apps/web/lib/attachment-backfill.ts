@@ -34,7 +34,7 @@ interface UnprocessedAttachment {
   size: number | null;
   email_id: number;
   message_id: string;
-  project_id: number;
+  project_id: number | null;
   subject: string | null;
   from_email: string | null;
   mailbox_email: string;
@@ -45,7 +45,15 @@ export interface BackfillResult {
   skipped: number;
   succeeded: number;
   failed: number;
+  elapsedMs: number;
+  attachmentsPerMinute: number;
   errors: string[];
+}
+
+export interface ProcessUnprocessedAttachmentsOptions {
+  batchSize?: number;
+  mailboxAllowlist?: string[];
+  includeNonProjectForAllowlistedMailboxes?: boolean;
 }
 
 // ============================================================================
@@ -96,7 +104,10 @@ function shouldSkip(att: UnprocessedAttachment): boolean {
 // Queries
 // ============================================================================
 
-const getUnprocessedAttachments = db.query<UnprocessedAttachment, [number]>(`
+const getUnprocessedAttachments = db.query<
+  UnprocessedAttachment,
+  [number, number, string, number]
+>(`
   SELECT
     a.id as attachment_id_pk,
     a.attachment_id as graph_attachment_id,
@@ -113,9 +124,25 @@ const getUnprocessedAttachments = db.query<UnprocessedAttachment, [number]>(`
   JOIN emails e ON e.id = a.email_id
   JOIN mailboxes m ON m.id = e.mailbox_id
   LEFT JOIN documents d ON d.attachment_id = a.id
-  WHERE e.project_id IS NOT NULL
-    AND (a.extraction_status IS NULL OR a.extraction_status = 'pending')
+  WHERE (a.extraction_status IS NULL OR a.extraction_status = 'pending')
     AND d.id IS NULL
+    AND (
+      (
+        e.project_id IS NOT NULL
+        AND (
+          $2 = 0
+          OR (
+            $3 <> ''
+            AND lower(m.email) = ANY(string_to_array(lower($3), ','))
+          )
+        )
+      )
+      OR (
+        $4 = 1
+        AND $3 <> ''
+        AND lower(m.email) = ANY(string_to_array(lower($3), ','))
+      )
+    )
   ORDER BY e.received_at DESC
   LIMIT $1
 `);
@@ -209,9 +236,12 @@ async function processOneAttachment(
 
     if (anySuccess) {
       await updateAttachmentExtraction(att.attachment_id_pk, "success");
-      const projectSummary = projectLinkSkipped
-        ? "project link skipped by subject guard"
-        : `project #${att.project_id}`;
+      let projectSummary = "no project link";
+      if (att.project_id !== null) {
+        projectSummary = projectLinkSkipped
+          ? "project link skipped by subject guard"
+          : `project #${att.project_id}`;
+      }
       console.log(`${LOG}   OK: ${att.name} -> ${projectSummary}`);
       return { type: "succeeded" };
     }
@@ -239,24 +269,56 @@ async function processOneAttachment(
 // ============================================================================
 
 export async function processUnprocessedAttachments(
-  batchSize = 50
+  options: ProcessUnprocessedAttachmentsOptions = {}
 ): Promise<BackfillResult> {
+  const startedAt = Date.now();
+  const batchSize = Math.max(1, options.batchSize ?? 50);
+  const mailboxAllowlist = [
+    ...new Set(
+      (options.mailboxAllowlist ?? [])
+        .map((value) => value.trim().toLowerCase())
+        .filter(Boolean)
+    ),
+  ];
+  const includeNonProjectForAllowlistedMailboxes =
+    options.includeNonProjectForAllowlistedMailboxes === true &&
+    mailboxAllowlist.length > 0;
+  const restrictProjectLinkedToAllowlistedMailboxes =
+    mailboxAllowlist.length > 0;
+
+  if (
+    options.includeNonProjectForAllowlistedMailboxes &&
+    mailboxAllowlist.length === 0
+  ) {
+    console.warn(
+      `${LOG} includeNonProjectForAllowlistedMailboxes=true ignored (allowlist empty)`
+    );
+  }
+
   const result: BackfillResult = {
     processed: 0,
     skipped: 0,
     succeeded: 0,
     failed: 0,
+    elapsedMs: 0,
+    attachmentsPerMinute: 0,
     errors: [],
   };
 
-  const attachments = await getUnprocessedAttachments.all(batchSize);
+  const attachments = await getUnprocessedAttachments.all(
+    batchSize,
+    restrictProjectLinkedToAllowlistedMailboxes ? 1 : 0,
+    mailboxAllowlist.join(","),
+    includeNonProjectForAllowlistedMailboxes ? 1 : 0
+  );
 
   if (attachments.length === 0) {
+    result.elapsedMs = Date.now() - startedAt;
     return result;
   }
 
   console.log(
-    `${LOG} Processing batch of ${attachments.length} attachments (concurrency: ${CONCURRENCY})`
+    `${LOG} Processing batch of ${attachments.length} attachments (concurrency: ${CONCURRENCY}, scope: ${restrictProjectLinkedToAllowlistedMailboxes ? `allowlisted project-linked (${mailboxAllowlist.join(", ")})${includeNonProjectForAllowlistedMailboxes ? " + allowlisted non-project" : ""}` : "project-linked only"})`
   );
 
   await mkdir(BACKFILL_DIR, { recursive: true });
@@ -317,6 +379,13 @@ export async function processUnprocessedAttachments(
   console.log(
     `${LOG} Batch complete: ${result.processed} processed (${result.succeeded} ok, ${result.failed} failed), ${result.skipped} skipped`
   );
+
+  result.elapsedMs = Date.now() - startedAt;
+  const processedOrSkipped = result.processed + result.skipped;
+  result.attachmentsPerMinute =
+    result.elapsedMs > 0
+      ? (processedOrSkipped / result.elapsedMs) * 60_000
+      : processedOrSkipped;
 
   return result;
 }

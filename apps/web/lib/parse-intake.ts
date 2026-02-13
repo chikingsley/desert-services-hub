@@ -9,6 +9,7 @@
  * Results are stored in the documents table with the reconciled markdown
  * as the summary and the full parse output as raw_extraction.
  */
+import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { db } from "@lib/db/hub";
 
@@ -22,6 +23,16 @@ const PDF_ANALYSIS_CWD = join(
 );
 
 const LOG = "[doc-parse]";
+
+function resolveUvBin(): string {
+  if (process.env.UV_BIN?.trim()) {
+    return process.env.UV_BIN.trim();
+  }
+  if (existsSync("/root/.local/bin/uv")) {
+    return "/root/.local/bin/uv";
+  }
+  return "uv";
+}
 
 // ============================================================================
 // Types
@@ -98,8 +109,9 @@ const insertDocumentError = db.prepare(`
 // ============================================================================
 
 async function runParse(pdfPath: string): Promise<ParseOutput> {
+  const uvBin = resolveUvBin();
   const proc = Bun.spawn(
-    ["uv", "run", "pdf-analysis", "parse", pdfPath, "--format", "json"],
+    [uvBin, "run", "pdf-analysis", "parse", pdfPath, "--format", "json"],
     {
       cwd: PDF_ANALYSIS_CWD,
       stdout: "pipe",
@@ -124,8 +136,9 @@ async function runParse(pdfPath: string): Promise<ParseOutput> {
 }
 
 async function runClassify(pdfPath: string): Promise<ClassifyOutput> {
+  const uvBin = resolveUvBin();
   const proc = Bun.spawn(
-    ["uv", "run", "pdf-analysis", "classify", pdfPath, "--format", "json"],
+    [uvBin, "run", "pdf-analysis", "classify", pdfPath, "--format", "json"],
     {
       cwd: PDF_ANALYSIS_CWD,
       stdout: "pipe",

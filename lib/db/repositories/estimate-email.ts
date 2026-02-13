@@ -271,6 +271,7 @@ export interface EstimateMatchHintInput {
   projectHints?: string[];
   addressHints?: string[];
   queryHints?: string[];
+  restrictEstimateIds?: number[];
   limit?: number;
 }
 
@@ -365,6 +366,19 @@ function uniqueStrings(values: Array<string | null | undefined>): string[] {
       continue;
     }
     dedup.add(trimmed);
+  }
+  return [...dedup];
+}
+
+function uniquePositiveInts(
+  values: Array<number | null | undefined>
+): number[] {
+  const dedup = new Set<number>();
+  for (const value of values) {
+    if (typeof value !== "number" || !Number.isInteger(value) || value <= 0) {
+      continue;
+    }
+    dedup.add(value);
   }
   return [...dedup];
 }
@@ -561,6 +575,26 @@ async function fetchEstimateRowsByRef(
        ORDER BY updated_at DESC`
     )
     .all(...estimateNumbers);
+}
+
+async function fetchEstimateRowsByIds(
+  estimateIds: number[]
+): Promise<EstimateCandidateRow[]> {
+  if (estimateIds.length === 0) {
+    return [];
+  }
+  const placeholders = estimateIds.map(() => "?").join(", ");
+  return await db
+    .query<EstimateCandidateRow, number[]>(
+      `SELECT
+         id, name, job_name, contractor, estimate_number,
+         monday_item_id::text as monday_item_id, account_domain,
+         job_address, location, bid_status, updated_at
+       FROM estimates
+       WHERE id IN (${placeholders})
+       ORDER BY updated_at DESC`
+    )
+    .all(...estimateIds);
 }
 
 async function fetchEstimateRowsByMondayItemId(
@@ -908,18 +942,11 @@ export async function findEstimateCandidatesForEmail(
 
   const rowsById = new Map<number, EstimateCandidateRow>();
   const limit = Math.max(1, Math.min(25, hints.limit ?? 10));
+  const restrictedEstimateIds = uniquePositiveInts(
+    hints.restrictEstimateIds ?? []
+  ).slice(0, 1000);
 
   const hintText = buildTextBundleForHints(context);
-  const exactEstimateRefs = uniqueStrings([
-    ...context.estimateReferenceHints,
-    ...extractEstimateNumbers(hintText),
-  ])
-    .map((value) => normalizeEstimateNumberDigits(value))
-    .filter((value): value is string => Boolean(value));
-  const mondayItemHints = uniqueStrings([
-    ...context.mondayItemHints,
-    ...extractMondayItemIds(hintText),
-  ]);
 
   const addRows = (rows: EstimateCandidateRow[]) => {
     for (const row of rows) {
@@ -927,28 +954,43 @@ export async function findEstimateCandidatesForEmail(
     }
   };
 
-  addRows(await fetchEstimateRowsByRef(exactEstimateRefs));
-  addRows(await fetchEstimateRowsByMondayItemId(mondayItemHints));
+  if (restrictedEstimateIds.length > 0) {
+    addRows(await fetchEstimateRowsByIds(restrictedEstimateIds));
+  } else {
+    const exactEstimateRefs = uniqueStrings([
+      ...context.estimateReferenceHints,
+      ...extractEstimateNumbers(hintText),
+    ])
+      .map((value) => normalizeEstimateNumberDigits(value))
+      .filter((value): value is string => Boolean(value));
+    const mondayItemHints = uniqueStrings([
+      ...context.mondayItemHints,
+      ...extractMondayItemIds(hintText),
+    ]);
 
-  if (context.fromDomain) {
-    addRows(await fetchEstimateRowsByDomain(context.fromDomain));
-  }
+    addRows(await fetchEstimateRowsByRef(exactEstimateRefs));
+    addRows(await fetchEstimateRowsByMondayItemId(mondayItemHints));
 
-  const fuzzySearchInputs = uniqueStrings([
-    context.subject,
-    ...context.projectHints,
-    ...context.contractorHints,
-    ...context.addressHints,
-    ...context.queryHints,
-    ...extractSearchTermsFromText(context.subject, 5),
-    ...extractSearchTermsFromText(context.bodyPreview, 5),
-    ...context.attachmentNames.flatMap((name) =>
-      extractSearchTermsFromText(name, 3)
-    ),
-  ]).slice(0, 12);
+    if (context.fromDomain) {
+      addRows(await fetchEstimateRowsByDomain(context.fromDomain));
+    }
 
-  for (const search of fuzzySearchInputs) {
-    addRows(await fetchEstimateRowsByFuzzySearch(search, 25));
+    const fuzzySearchInputs = uniqueStrings([
+      context.subject,
+      ...context.projectHints,
+      ...context.contractorHints,
+      ...context.addressHints,
+      ...context.queryHints,
+      ...extractSearchTermsFromText(context.subject, 5),
+      ...extractSearchTermsFromText(context.bodyPreview, 5),
+      ...context.attachmentNames.flatMap((name) =>
+        extractSearchTermsFromText(name, 3)
+      ),
+    ]).slice(0, 12);
+
+    for (const search of fuzzySearchInputs) {
+      addRows(await fetchEstimateRowsByFuzzySearch(search, 25));
+    }
   }
 
   const candidates = rankEstimateCandidates(

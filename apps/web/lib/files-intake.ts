@@ -11,6 +11,7 @@
  * This module replaces processContractsEmailIntake as the main entry point
  * for the files_intake job type.
  */
+import { existsSync } from "node:fs";
 import { mkdir, readdir, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { extractFile } from "@kreuzberg/node";
@@ -37,6 +38,16 @@ const PDF_ANALYSIS_CWD = join(
 );
 
 const LOG = "[files-intake]";
+
+function resolveUvBin(): string {
+  if (process.env.UV_BIN?.trim()) {
+    return process.env.UV_BIN.trim();
+  }
+  if (existsSync("/root/.local/bin/uv")) {
+    return "/root/.local/bin/uv";
+  }
+  return "uv";
+}
 
 // ============================================================================
 // File Category Detection
@@ -213,8 +224,9 @@ interface OcrOutput {
 }
 
 async function runOcr(imagePath: string): Promise<OcrOutput> {
+  const uvBin = resolveUvBin();
   const proc = Bun.spawn(
-    ["uv", "run", "pdf-analysis", "ocr", imagePath, "--format", "json"],
+    [uvBin, "run", "pdf-analysis", "ocr", imagePath, "--format", "json"],
     {
       cwd: PDF_ANALYSIS_CWD,
       stdout: "pipe",

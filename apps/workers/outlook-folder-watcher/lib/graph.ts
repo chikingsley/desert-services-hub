@@ -6,6 +6,7 @@
 import { clearTokenCache, getGraphTokenCached } from "@lib/graph/token";
 
 const GRAPH_BASE = "https://graph.microsoft.com/v1.0";
+const IMMUTABLE_ID_PREFERENCE = 'IdType="ImmutableId"';
 
 export function getAccessToken(): Promise<string> {
   return getGraphTokenCached();
@@ -22,14 +23,20 @@ async function graphFetch(url: string, maxRetries = 3): Promise<Response> {
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     let token = await getAccessToken();
     const res = await fetch(url, {
-      headers: { Authorization: `Bearer ${token}` },
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Prefer: IMMUTABLE_ID_PREFERENCE,
+      },
     });
 
     if (res.status === 401 && attempt === 0) {
       clearTokenCache();
       token = await getAccessToken();
       const retry = await fetch(url, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Prefer: IMMUTABLE_ID_PREFERENCE,
+        },
       });
       if (retry.ok) {
         return retry;

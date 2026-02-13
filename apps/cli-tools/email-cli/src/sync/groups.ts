@@ -35,6 +35,18 @@ const enqueueIntake = db.prepare(
   "INSERT INTO webhook_jobs (job_type, payload) VALUES ('intake', ?)"
 );
 
+const enqueueEmailResolveIfNotQueued = db.prepare(`
+  INSERT INTO webhook_jobs (job_type, payload)
+  SELECT 'email_resolve', ?
+  WHERE NOT EXISTS (
+    SELECT 1
+    FROM webhook_jobs
+    WHERE job_type = 'email_resolve'
+      AND status IN ('pending', 'processing')
+      AND payload::jsonb->>'emailId' = ?
+  )
+`);
+
 const ATTACHMENTS_DIR = join(
   import.meta.dir,
   "../../../../..",
@@ -191,6 +203,11 @@ async function syncGroup(
               await linkEmailToProject(emailId, siblingWithProject.project_id);
             }
           }
+
+          await enqueueEmailResolveIfNotQueued.run(
+            JSON.stringify({ emailId }),
+            String(emailId)
+          );
 
           // Store attachment metadata + download files
           const pdfPaths: string[] = [];

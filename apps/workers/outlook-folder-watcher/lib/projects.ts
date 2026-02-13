@@ -176,7 +176,24 @@ async function adoptProjectForFolder(params: {
   contractor: string | null;
 }): Promise<void> {
   await db.run(
-    "UPDATE projects SET outlook_folder = COALESCE(outlook_folder, ?), contractor = COALESCE(contractor, ?), updated_at = now() WHERE id = ?",
+    `UPDATE projects
+     SET
+       outlook_folder = COALESCE(outlook_folder, ?),
+       contractor = COALESCE(contractor, ?),
+       lifecycle_state = CASE
+         WHEN lifecycle_state = 'archived' THEN lifecycle_state
+         ELSE 'active'
+       END,
+       promoted_at = CASE
+         WHEN lifecycle_state = 'archived' THEN promoted_at
+         ELSE COALESCE(promoted_at, now())
+       END,
+       lost_at = CASE
+         WHEN lifecycle_state = 'archived' THEN lost_at
+         ELSE NULL
+       END,
+       updated_at = now()
+     WHERE id = ?`,
     [params.folderName, params.contractor, params.projectId]
   );
   await addProjectAlias(params.projectId, params.folderName, "learned");

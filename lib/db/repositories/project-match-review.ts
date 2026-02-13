@@ -10,7 +10,10 @@ import type {
 } from "@lib/db/types";
 import { normalizeProjectAlias } from "@lib/project-matching";
 
-export type ProjectMatchReviewSource = "folder_watcher" | "dust_permit_intake";
+export type ProjectMatchReviewSource =
+  | "folder_watcher"
+  | "dust_permit_intake"
+  | "email_resolver";
 
 interface ReviewRow {
   id: number;

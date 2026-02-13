@@ -1,3 +1,5 @@
+/// <reference types="@cloudflare/workers-types" />
+
 /**
  * Desert Services Monday Status Sync Worker
  *

@@ -25,7 +25,8 @@
     "confidence": "high",
     "missingFields": [],
     "warnings": [
-      "Applicant address line 1 contained only street number '104' - combined with line 2"
+      "Applicant address line 1 contained only street number '104' - combined with line 2",
+      "Site coordinates derived from first outfall (older NOI format)"
     ]
   }
 }

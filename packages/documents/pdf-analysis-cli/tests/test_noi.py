@@ -10,6 +10,7 @@ from pathlib import Path
 
 import pytest
 
+from pdf_analysis.ingest import extract_text
 from pdf_analysis.noi import (
     NOIExtraction,
     _format_phone,
@@ -22,9 +23,9 @@ from pdf_analysis.noi import (
 # Paths
 # ---------------------------------------------------------------------------
 
-# Navigate from pdf-analysis-cli/tests/ → repo root → permit-workers fixtures
+# Navigate from pdf-analysis-cli/tests/ → repo root → dust-permits fixtures
 _REPO = Path(__file__).resolve().parent.parent.parent.parent.parent
-FIXTURES = _REPO / "apps" / "workers" / "permit-workers" / "tests" / "fixtures"
+FIXTURES = _REPO / "apps" / "dust-permits" / "tests" / "fixtures"
 PDFS = FIXTURES / "pdfs"
 EXPECTED = FIXTURES / "expected"
 
@@ -89,7 +90,8 @@ class TestBjerkBuilders:
     def result(self) -> NOIExtraction:
         pdf = PDFS / "NOI-Innovative_Commercial_Building-113509-Bjerk_Builders_LLC-2025-11-14.pdf"
         assert pdf.exists(), f"Fixture not found: {pdf}"
-        return extract_noi(pdf)
+        text_result = extract_text(pdf)
+        return extract_noi(text_result.text)
 
     @pytest.fixture()
     def expected(self) -> dict:
@@ -153,7 +155,8 @@ class TestBPRCompanies:
     def result(self) -> NOIExtraction:
         pdf = PDFS / "NOI-PV_Redevelopment_Phase_5-110437-BPR_Companies_LLC-2025-08-12.pdf"
         assert pdf.exists(), f"Fixture not found: {pdf}"
-        return extract_noi(pdf)
+        text_result = extract_text(pdf)
+        return extract_noi(text_result.text)
 
     @pytest.fixture()
     def expected(self) -> dict:
@@ -200,7 +203,8 @@ class TestSLC114131:
     def result(self) -> NOIExtraction:
         pdf = PDFS / "noi_swppp" / "NOI 114131_CGP25_NEWPERMIT_NOI_CERTIFICATE.pdf"
         assert pdf.exists(), f"Fixture not found: {pdf}"
-        return extract_noi(pdf)
+        text_result = extract_text(pdf)
+        return extract_noi(text_result.text)
 
     def test_applicant(self, result: NOIExtraction):
         assert result.applicant_name == "STEVENS LEINWEBER CONSTRUCTION, INC."

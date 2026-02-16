@@ -110,6 +110,105 @@ function calculatePolygonArea(
   return Math.abs(area) / 2;
 }
 
+// Calculate quantity for a single annotation based on its type
+function calculateAnnotationQuantity(
+  annotation: TakeoffAnnotation,
+  pixelsPerFoot: number
+): number {
+  switch (annotation.type) {
+    case "count":
+      return 1;
+    case "polyline":
+      return annotation.points
+        ? calculatePolylineLength(annotation.points) / pixelsPerFoot
+        : 0;
+    case "polygon":
+      return annotation.points
+        ? calculatePolygonArea(annotation.points) / pixelsPerFoot ** 2
+        : 0;
+    default:
+      return 0;
+  }
+}
+
+// Accumulate quantities from annotations by item ID
+function accumulateQuantitiesByItem(
+  annotations: TakeoffAnnotation[],
+  catalogMap: Map<string, TakeoffCatalogItem>,
+  pixelsPerFoot: number
+): Map<string, number> {
+  const quantities = new Map<string, number>();
+
+  for (const ann of annotations) {
+    if (!catalogMap.has(ann.itemId)) {
+      continue;
+    }
+    const quantity = calculateAnnotationQuantity(ann, pixelsPerFoot);
+    const existing = quantities.get(ann.itemId) ?? 0;
+    quantities.set(ann.itemId, existing + quantity);
+  }
+
+  return quantities;
+}
+
+// Expand a bundle item into individual summary items
+function expandBundleIntoItems(
+  bundleId: string,
+  totalQuantity: number,
+  catalogItem: TakeoffCatalogItem,
+  summaryMap: Map<string, TakeoffSummaryItem>
+): void {
+  const requiredItems =
+    catalogItem.bundleItems?.filter((b) => b.isRequired) ?? [];
+
+  for (const bundleItem of requiredItems) {
+    const itemQuantity = totalQuantity * bundleItem.quantityMultiplier;
+    const itemKey = `${bundleId}-${bundleItem.itemId}`;
+    const existing = summaryMap.get(itemKey);
+
+    if (existing) {
+      existing.quantity += itemQuantity;
+    } else {
+      summaryMap.set(itemKey, {
+        itemId: bundleItem.itemId,
+        label: bundleItem.name,
+        quantity: itemQuantity,
+        unit: bundleItem.unit,
+        catalogCode: bundleItem.code,
+        name: bundleItem.name,
+        description: "",
+        unitPrice: bundleItem.price,
+        sectionName: catalogItem.label,
+        isFromBundle: true,
+        bundleName: catalogItem.label,
+        isRequired: bundleItem.isRequired,
+      });
+    }
+  }
+}
+
+// Add a direct (non-bundle or empty-bundle) item to summary
+function addDirectItem(
+  itemId: string,
+  totalQuantity: number,
+  catalogItem: TakeoffCatalogItem,
+  summaryMap: Map<string, TakeoffSummaryItem>
+): void {
+  const sectionName = catalogItem.subcategoryName || catalogItem.categoryName;
+
+  summaryMap.set(itemId, {
+    itemId,
+    label: catalogItem.label,
+    quantity: totalQuantity,
+    unit: catalogItem.unit,
+    catalogCode: catalogItem.code,
+    name: catalogItem.label,
+    description: catalogItem.description || "",
+    unitPrice: catalogItem.unitPrice,
+    sectionName,
+  });
+}
+
 export interface TakeoffSummaryItem {
   itemId: string;
   label: string;
@@ -134,97 +233,34 @@ export function aggregateTakeoffAnnotations(
   catalogItems?: TakeoffCatalogItem[]
 ): TakeoffSummaryItem[] {
   const safeAnnotations = Array.isArray(annotations) ? annotations : [];
-  const summaryMap = new Map<string, TakeoffSummaryItem>();
-
-  // Build lookup map from catalog items (bundles)
   const catalogMap = catalogItems
     ? buildCatalogMap(catalogItems)
     : new Map<string, TakeoffCatalogItem>();
 
-  // First pass: calculate total quantity per bundle/item
-  const bundleQuantities = new Map<string, number>();
+  // Step 1: Accumulate total quantity per item
+  const itemQuantities = accumulateQuantitiesByItem(
+    safeAnnotations,
+    catalogMap,
+    pixelsPerFoot
+  );
 
-  for (const ann of safeAnnotations) {
-    const catalogItem = catalogMap.get(ann.itemId);
+  // Step 2: Expand bundles into individual items
+  const summaryMap = new Map<string, TakeoffSummaryItem>();
+
+  for (const [itemId, totalQuantity] of itemQuantities) {
+    const catalogItem = catalogMap.get(itemId);
     if (!catalogItem) {
       continue;
     }
 
-    let quantity = 0;
+    const hasRequiredBundleItems =
+      catalogItem.isBundle &&
+      catalogItem.bundleItems?.some((b) => b.isRequired);
 
-    if (ann.type === "count") {
-      quantity = 1;
-    } else if (ann.type === "polyline" && ann.points) {
-      const lengthPoints = calculatePolylineLength(ann.points);
-      quantity = lengthPoints / pixelsPerFoot;
-    } else if (ann.type === "polygon" && ann.points) {
-      const areaPoints = calculatePolygonArea(ann.points);
-      quantity = areaPoints / (pixelsPerFoot * pixelsPerFoot);
-    }
-
-    const existing = bundleQuantities.get(ann.itemId) || 0;
-    bundleQuantities.set(ann.itemId, existing + quantity);
-  }
-
-  // Second pass: expand bundles into individual items
-  for (const [bundleId, totalQuantity] of bundleQuantities) {
-    const catalogItem = catalogMap.get(bundleId);
-    if (!catalogItem) {
-      continue;
-    }
-
-    // Check if this is a bundle with required items
-    const requiredBundleItems =
-      catalogItem.isBundle && catalogItem.bundleItems
-        ? catalogItem.bundleItems.filter((b) => b.isRequired)
-        : [];
-
-    if (requiredBundleItems.length > 0) {
-      // Expand bundle into individual required items
-      for (const bundleItem of requiredBundleItems) {
-        // Calculate quantity with multiplier
-        const itemQuantity = totalQuantity * bundleItem.quantityMultiplier;
-
-        // Create unique key for this item
-        const itemKey = `${bundleId}-${bundleItem.itemId}`;
-
-        const existing = summaryMap.get(itemKey);
-        if (existing) {
-          existing.quantity += itemQuantity;
-        } else {
-          summaryMap.set(itemKey, {
-            itemId: bundleItem.itemId,
-            label: bundleItem.name,
-            quantity: itemQuantity,
-            unit: bundleItem.unit,
-            catalogCode: bundleItem.code,
-            name: bundleItem.name,
-            description: "",
-            unitPrice: bundleItem.price,
-            /// Estimated cost margin
-            sectionName: catalogItem.label, // Use bundle name as section
-            isFromBundle: true,
-            bundleName: catalogItem.label,
-            isRequired: bundleItem.isRequired,
-          });
-        }
-      }
+    if (hasRequiredBundleItems) {
+      expandBundleIntoItems(itemId, totalQuantity, catalogItem, summaryMap);
     } else {
-      // Non-bundle item OR bundle with no required items - use catalog item directly
-      const sectionName =
-        catalogItem.subcategoryName || catalogItem.categoryName;
-
-      summaryMap.set(bundleId, {
-        itemId: bundleId,
-        label: catalogItem.label,
-        quantity: totalQuantity,
-        unit: catalogItem.unit,
-        catalogCode: catalogItem.code,
-        name: catalogItem.label,
-        description: catalogItem.description || "",
-        unitPrice: catalogItem.unitPrice,
-        sectionName,
-      });
+      addDirectItem(itemId, totalQuantity, catalogItem, summaryMap);
     }
   }
 

@@ -23,7 +23,12 @@
         "noBarrelFile": "off"
       },
       "nursery": {
-        "noExcessiveLinesPerFile": "error",
+        "noExcessiveLinesPerFile": {
+          "level": "error",
+          "options": {
+            "maxLines": 500
+          }
+        },
         "useSortedClasses": {
           "level": "warn",
           "fix": "safe",
@@ -65,7 +70,12 @@
       }
     },
     {
-      "includes": ["apps/dust-permits/src/form-data.ts"],
+      "includes": [
+        "**/*.test.ts",
+        "**/*.test.tsx",
+        "**/*.integration.test.ts",
+        "apps/dust-permits/src/form-data.ts"
+      ],
       "linter": {
         "rules": {
           "nursery": {

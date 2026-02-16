@@ -1,15 +1,8 @@
 /**
  * Build a deterministic alignment report for source-packet candidates.
  *
- * This script compares fields extracted from selected source attachments against
+ * Compares fields extracted from selected source attachments against
  * canonical ground-truth rows in CANONICAL_DOCS.tsv.
- *
- * Current deterministic fields:
- * - project.name (from estimate header.job_name)
- * - project.address_line1 (from estimate header.job_address)
- * - operator.company (from estimate header.gc_name)
- * - dates.swppp_preparation_date (from estimate header.date)
- * - permit.number_best_effort (from NOI extraction, fallback to filename token)
  *
  * Usage:
  *   bun packages/narratives/scripts/narrative_inventory/report-packet-alignment.ts
@@ -18,6 +11,8 @@
 import { existsSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
+
+import { csvEscape, normalizeText } from "./shared";
 
 const DEFAULT_CANONICAL_DOCS =
   "packages/narratives/workflows/eva-jayson-variable-inventory/artifacts/CANONICAL_DOCS.tsv";
@@ -38,7 +33,6 @@ const FIELD_KEYS = [
 ] as const;
 
 type FieldKey = (typeof FIELD_KEYS)[number];
-
 type CanonicalRow = Record<string, string>;
 
 interface PairRow {
@@ -71,24 +65,21 @@ interface NoiExtractionResult {
   permit_id?: string | null;
 }
 
-function csvEscape(value: string): string {
-  if (value.includes(",") || value.includes('"') || value.includes("\n")) {
-    return `"${value.replaceAll('"', '""')}"`;
-  }
-  return value;
+interface PairEvalResult {
+  comparisons: {
+    field: FieldKey;
+    expected: string;
+    actual: string;
+    ok: boolean;
+  }[];
+  hasEstimate: boolean;
+  hasNoiPermit: boolean;
 }
 
-function normalizeText(value: string): string {
-  return value
-    .toLowerCase()
-    .replaceAll(/[^a-z0-9]+/g, " ")
-    .replaceAll(/\s+/g, " ")
-    .trim();
-}
+// --- Normalization helpers ---
 
 function normalizePermit(value: string): string {
-  const digits = value.replaceAll(/\D+/g, "");
-  return digits;
+  return value.replaceAll(/\D+/g, "");
 }
 
 function normalizeDateMMDDYYYY(value: string): string {
@@ -96,7 +87,6 @@ function normalizeDateMMDDYYYY(value: string): string {
   if (!raw) {
     return "";
   }
-
   const mdy = raw.match(MDY_DATE_PATTERN);
   if (mdy) {
     const mm = mdy[1]?.padStart(2, "0");
@@ -107,12 +97,10 @@ function normalizeDateMMDDYYYY(value: string): string {
     }
     return `${mm}/${dd}/${yyyy}`;
   }
-
   const iso = raw.match(ISO_DATE_PATTERN);
   if (iso) {
     return `${iso[2]}/${iso[3]}/${iso[1]}`;
   }
-
   return raw;
 }
 
@@ -130,16 +118,16 @@ function fieldsEqual(
   return normalizeText(expected) === normalizeText(actual);
 }
 
+// --- Data loading ---
+
 function parseCanonicalRows(tsvPath: string): Map<string, CanonicalRow> {
   const text = readFileSync(tsvPath, "utf8");
   const lines = text.split("\n").filter((l) => l.trim() !== "");
   if (lines.length < 2) {
     return new Map();
   }
-
   const header = lines[0]?.split("\t");
   const rows = new Map<string, CanonicalRow>();
-
   for (const line of lines.slice(1)) {
     const cols = line.split("\t");
     const row: CanonicalRow = {};
@@ -155,7 +143,6 @@ function parseCanonicalRows(tsvPath: string): Map<string, CanonicalRow> {
       rows.set(docId, row);
     }
   }
-
   return rows;
 }
 
@@ -176,12 +163,13 @@ function parsePairs(path: string): PairRow[] {
   return parsed as PairRow[];
 }
 
+// --- PDF extraction runners ---
+
 function runEstimateExtract(pdfPath: string): EstimateExtractionResult | null {
   if (!existsSync(pdfPath)) {
     return null;
   }
   const absolutePdfPath = resolve(pdfPath);
-
   const proc = Bun.spawnSync({
     cmd: [
       "uv",
@@ -197,16 +185,13 @@ function runEstimateExtract(pdfPath: string): EstimateExtractionResult | null {
     stderr: "pipe",
     stdout: "pipe",
   });
-
   if (proc.exitCode !== 0) {
     return null;
   }
-
   const stdout = Buffer.from(proc.stdout).toString("utf8").trim();
   if (!stdout) {
     return null;
   }
-
   try {
     return JSON.parse(stdout) as EstimateExtractionResult;
   } catch {
@@ -219,7 +204,6 @@ function runNoiExtract(pdfPath: string): string | null {
     return null;
   }
   const absolutePdfPath = resolve(pdfPath);
-
   const textProc = Bun.spawnSync({
     cmd: [
       "uv",
@@ -238,17 +222,14 @@ function runNoiExtract(pdfPath: string): string | null {
   if (textProc.exitCode !== 0) {
     return null;
   }
-
   const text = Buffer.from(textProc.stdout).toString("utf8").trim();
   if (!text) {
     return null;
   }
-
   const tempTextPath = join(
     tmpdir(),
     `noi-align-${process.pid}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.txt`
   );
-
   try {
     writeFileSync(tempTextPath, text, "utf8");
     const noiProc = Bun.spawnSync({
@@ -269,7 +250,6 @@ function runNoiExtract(pdfPath: string): string | null {
     if (noiProc.exitCode !== 0) {
       return null;
     }
-
     const stdout = Buffer.from(noiProc.stdout).toString("utf8").trim();
     if (!stdout) {
       return null;
@@ -299,6 +279,153 @@ function buildExtractedValues(params: {
     "project.name": h?.job_name?.trim() ?? "",
   };
 }
+
+// --- Per-pair evaluation ---
+
+function evaluateOnePair(params: {
+  pair: PairRow;
+  row: CanonicalRow;
+  estimateCache: Map<string, EstimateHeader | null>;
+  noiPermitCache: Map<string, string | null>;
+}): PairEvalResult | null {
+  const packetJsonPath = join(
+    DEFAULT_OUTPUT_DIR,
+    params.pair.packet_id,
+    "packet.json"
+  );
+  if (!existsSync(packetJsonPath)) {
+    return null;
+  }
+
+  const packet = JSON.parse(readFileSync(packetJsonPath, "utf8")) as {
+    selected?: {
+      noi?: { attachment_name?: string; downloaded_path?: string | null };
+      estimate?: {
+        attachment_name?: string;
+        downloaded_path?: string | null;
+      };
+    };
+  };
+
+  const estimatePath = packet.selected?.estimate?.downloaded_path ?? null;
+  const noiPath = packet.selected?.noi?.downloaded_path ?? null;
+  const noiAttachmentName =
+    packet.selected?.noi?.attachment_name ??
+    params.pair.noi?.selectedAttachment ??
+    "";
+
+  let estimateHeader: EstimateHeader | null = null;
+  if (estimatePath && existsSync(estimatePath)) {
+    if (params.estimateCache.has(estimatePath)) {
+      estimateHeader = params.estimateCache.get(estimatePath) ?? null;
+    } else {
+      const estimateExtract = runEstimateExtract(estimatePath);
+      estimateHeader = estimateExtract?.header ?? null;
+      params.estimateCache.set(estimatePath, estimateHeader);
+    }
+  }
+
+  let noiPermitNumber = parsePermitFromNoiName(noiAttachmentName);
+  let hasNoiPermit = false;
+  if (noiPath && existsSync(noiPath)) {
+    if (!params.noiPermitCache.has(noiPath)) {
+      params.noiPermitCache.set(noiPath, runNoiExtract(noiPath));
+    }
+    const extractedNoiPermit = params.noiPermitCache.get(noiPath) ?? null;
+    if (extractedNoiPermit) {
+      noiPermitNumber = extractedNoiPermit;
+      hasNoiPermit = true;
+    }
+  }
+
+  const extracted = buildExtractedValues({ estimateHeader, noiPermitNumber });
+  const comparisons = FIELD_KEYS.map((field) => {
+    const expected = (params.row[field] ?? "").trim();
+    const actual = (extracted[field] ?? "").trim();
+    return {
+      actual,
+      expected,
+      field,
+      ok: fieldsEqual(field, expected, actual),
+    };
+  });
+
+  return { comparisons, hasEstimate: Boolean(estimateHeader), hasNoiPermit };
+}
+
+// --- Report writers ---
+
+function writeAlignmentReport(params: {
+  fieldStats: Map<FieldKey, { matches: number; total: number }>;
+  docsWithCanonical: number;
+  docsWithEstimate: number;
+  docsWithNoiPermit: number;
+}): void {
+  const fieldRows = FIELD_KEYS.map((field) => {
+    const stat = params.fieldStats.get(field);
+    if (!stat) {
+      return "";
+    }
+    const rate =
+      stat.total > 0 ? ((100 * stat.matches) / stat.total).toFixed(1) : "0.0";
+    return `| ${field} | ${stat.matches} | ${stat.total} | ${rate}% |`;
+  })
+    .filter(Boolean)
+    .join("\n");
+
+  const md = `# Source Packet Alignment Report
+
+- Canonical rows evaluated: ${params.docsWithCanonical}
+- Rows with parseable estimate PDF: ${params.docsWithEstimate}
+- Rows with parseable NOI permit: ${params.docsWithNoiPermit}
+- Generated: ${new Date().toISOString()}
+
+## Field Match Rates
+
+| Field | Matches | Total | Rate |
+| --- | ---: | ---: | ---: |
+${fieldRows}
+
+## Notes
+
+- This report uses deterministic estimate parsing + NOI extraction (fallback: NOI filename permit token).
+- Storm plan PDF extraction is not included in this first pass.
+- Use \`alignment.csv\` for row-level mismatch triage.
+`;
+
+  writeFileSync(join(DEFAULT_OUTPUT_DIR, "alignment.md"), md, "utf8");
+}
+
+function accumulateComparisons(params: {
+  result: PairEvalResult;
+  pair: PairRow;
+  fieldStats: Map<FieldKey, { matches: number; total: number }>;
+  csvLines: string[];
+}): void {
+  for (const c of params.result.comparisons) {
+    const stat = params.fieldStats.get(c.field);
+    if (!stat) {
+      continue;
+    }
+    stat.total += 1;
+    if (c.ok) {
+      stat.matches += 1;
+    }
+    params.csvLines.push(
+      [
+        csvEscape(params.pair.doc_id),
+        csvEscape(params.pair.packet_id),
+        String(params.pair.narrative_email_id),
+        c.field,
+        c.ok ? "1" : "0",
+        csvEscape(c.expected),
+        csvEscape(c.actual),
+      ].join(",")
+    );
+  }
+}
+
+// --- Main ---
 
 function main(): void {
   const canonical = parseCanonicalRows(DEFAULT_CANONICAL_DOCS);
@@ -336,90 +463,22 @@ function main(): void {
     }
     docsWithCanonical += 1;
 
-    const packetJsonPath = join(
-      DEFAULT_OUTPUT_DIR,
-      pair.packet_id,
-      "packet.json"
-    );
-    if (!existsSync(packetJsonPath)) {
+    const result = evaluateOnePair({
+      estimateCache,
+      noiPermitCache,
+      pair,
+      row,
+    });
+    if (!result) {
       continue;
     }
-
-    const packet = JSON.parse(readFileSync(packetJsonPath, "utf8")) as {
-      selected?: {
-        noi?: { attachment_name?: string; downloaded_path?: string | null };
-        estimate?: {
-          attachment_name?: string;
-          downloaded_path?: string | null;
-        };
-      };
-    };
-
-    const estimatePath = packet.selected?.estimate?.downloaded_path ?? null;
-    const noiPath = packet.selected?.noi?.downloaded_path ?? null;
-    const noiAttachmentName =
-      packet.selected?.noi?.attachment_name ??
-      pair.noi?.selectedAttachment ??
-      "";
-
-    let estimateHeader: EstimateHeader | null = null;
-    if (estimatePath && existsSync(estimatePath)) {
-      if (estimateCache.has(estimatePath)) {
-        estimateHeader = estimateCache.get(estimatePath) ?? null;
-      } else {
-        const estimateExtract = runEstimateExtract(estimatePath);
-        estimateHeader = estimateExtract?.header ?? null;
-        estimateCache.set(estimatePath, estimateHeader);
-      }
-    }
-
-    if (estimateHeader) {
+    if (result.hasEstimate) {
       docsWithEstimate += 1;
     }
-
-    let noiPermitNumber = parsePermitFromNoiName(noiAttachmentName);
-    if (noiPath && existsSync(noiPath)) {
-      if (!noiPermitCache.has(noiPath)) {
-        noiPermitCache.set(noiPath, runNoiExtract(noiPath));
-      }
-      const extractedNoiPermit = noiPermitCache.get(noiPath) ?? null;
-      if (extractedNoiPermit) {
-        noiPermitNumber = extractedNoiPermit;
-        docsWithNoiPermit += 1;
-      }
+    if (result.hasNoiPermit) {
+      docsWithNoiPermit += 1;
     }
-
-    const extracted = buildExtractedValues({
-      estimateHeader,
-      noiPermitNumber,
-    });
-
-    for (const field of FIELD_KEYS) {
-      const expected = (row[field] ?? "").trim();
-      const actual = (extracted[field] ?? "").trim();
-      const ok = fieldsEqual(field, expected, actual);
-
-      const stat = fieldStats.get(field);
-      if (!stat) {
-        continue;
-      }
-      stat.total += 1;
-      if (ok) {
-        stat.matches += 1;
-      }
-
-      csvLines.push(
-        [
-          csvEscape(pair.doc_id),
-          csvEscape(pair.packet_id),
-          String(pair.narrative_email_id),
-          field,
-          ok ? "1" : "0",
-          csvEscape(expected),
-          csvEscape(actual),
-        ].join(",")
-      );
-    }
+    accumulateComparisons({ csvLines, fieldStats, pair, result });
   }
   csvLines.push("");
 
@@ -429,44 +488,12 @@ function main(): void {
     "utf8"
   );
 
-  const mdLines: string[] = [];
-  mdLines.push("# Source Packet Alignment Report");
-  mdLines.push("");
-  mdLines.push(`- Canonical rows evaluated: ${docsWithCanonical}`);
-  mdLines.push(`- Rows with parseable estimate PDF: ${docsWithEstimate}`);
-  mdLines.push(`- Rows with parseable NOI permit: ${docsWithNoiPermit}`);
-  mdLines.push(`- Generated: ${new Date().toISOString()}`);
-  mdLines.push("");
-  mdLines.push("## Field Match Rates");
-  mdLines.push("");
-  mdLines.push("| Field | Matches | Total | Rate |");
-  mdLines.push("| --- | ---: | ---: | ---: |");
-  for (const field of FIELD_KEYS) {
-    const stat = fieldStats.get(field);
-    if (!stat) {
-      continue;
-    }
-    const rate =
-      stat.total > 0 ? ((100 * stat.matches) / stat.total).toFixed(1) : "0.0";
-    mdLines.push(`| ${field} | ${stat.matches} | ${stat.total} | ${rate}% |`);
-  }
-  mdLines.push("");
-  mdLines.push("## Notes");
-  mdLines.push("");
-  mdLines.push(
-    "- This report uses deterministic estimate parsing + NOI extraction (fallback: NOI filename permit token)."
-  );
-  mdLines.push(
-    "- Storm plan PDF extraction is not included in this first pass."
-  );
-  mdLines.push("- Use `alignment.csv` for row-level mismatch triage.");
-  mdLines.push("");
-
-  writeFileSync(
-    join(DEFAULT_OUTPUT_DIR, "alignment.md"),
-    `${mdLines.join("\n")}\n`,
-    "utf8"
-  );
+  writeAlignmentReport({
+    docsWithCanonical,
+    docsWithEstimate,
+    docsWithNoiPermit,
+    fieldStats,
+  });
 
   console.log(`Wrote ${join(DEFAULT_OUTPUT_DIR, "alignment.csv")}`);
   console.log(`Wrote ${join(DEFAULT_OUTPUT_DIR, "alignment.md")}`);

@@ -458,6 +458,57 @@ function finalizeCandidate(
   };
 }
 
+function parsePositiveIntIds(raw: unknown): number[] {
+  if (!Array.isArray(raw)) {
+    return [];
+  }
+  return raw
+    .map((value) => Number(value))
+    .filter((value) => Number.isInteger(value) && value > 0);
+}
+
+function parseOneSparkRecord(entry: unknown): SparkContactRecord | null {
+  if (!entry || typeof entry !== "object") {
+    return null;
+  }
+
+  const record = entry as Record<string, unknown>;
+  const email = normalizeEmailAddress(
+    typeof record.email === "string" ? record.email : null
+  );
+  const name = normalizeName(
+    typeof record.name === "string" ? record.name : null
+  );
+
+  if (!(email || name)) {
+    return null;
+  }
+
+  return {
+    company: normalizeName(
+      typeof record.company === "string" ? record.company : null
+    ),
+    confidence: clampConfidence(
+      typeof record.confidence === "number" ? record.confidence : 0
+    ),
+    email,
+    evidenceAttachmentIds: parsePositiveIntIds(record.evidenceAttachmentIds),
+    evidenceDocumentIds: parsePositiveIntIds(record.evidenceDocumentIds),
+    evidenceEmailIds: parsePositiveIntIds(record.evidenceEmailIds),
+    name,
+    phone: normalizePhone(
+      typeof record.phone === "string" ? record.phone : null
+    ),
+    reason:
+      typeof record.reason === "string"
+        ? normalizeWhitespace(record.reason)
+        : "",
+    title: normalizeName(
+      typeof record.title === "string" ? record.title : null
+    ),
+  };
+}
+
 function parseSparkContactRecords(raw: unknown): SparkContactRecord[] {
   if (!Array.isArray(raw)) {
     return [];
@@ -465,67 +516,10 @@ function parseSparkContactRecords(raw: unknown): SparkContactRecord[] {
 
   const out: SparkContactRecord[] = [];
   for (const entry of raw) {
-    if (!entry || typeof entry !== "object") {
-      continue;
+    const parsed = parseOneSparkRecord(entry);
+    if (parsed) {
+      out.push(parsed);
     }
-
-    const record = entry as Record<string, unknown>;
-    const email = normalizeEmailAddress(
-      typeof record.email === "string" ? record.email : null
-    );
-    const name = normalizeName(
-      typeof record.name === "string" ? record.name : null
-    );
-    const phone = normalizePhone(
-      typeof record.phone === "string" ? record.phone : null
-    );
-
-    if (!(email || name)) {
-      continue;
-    }
-
-    const confidence = clampConfidence(
-      typeof record.confidence === "number" ? record.confidence : 0
-    );
-    const reason =
-      typeof record.reason === "string"
-        ? normalizeWhitespace(record.reason)
-        : "";
-
-    const emailIds = Array.isArray(record.evidenceEmailIds)
-      ? record.evidenceEmailIds
-          .map((value) => Number(value))
-          .filter((value) => Number.isInteger(value) && value > 0)
-      : [];
-
-    const documentIds = Array.isArray(record.evidenceDocumentIds)
-      ? record.evidenceDocumentIds
-          .map((value) => Number(value))
-          .filter((value) => Number.isInteger(value) && value > 0)
-      : [];
-
-    const attachmentIds = Array.isArray(record.evidenceAttachmentIds)
-      ? record.evidenceAttachmentIds
-          .map((value) => Number(value))
-          .filter((value) => Number.isInteger(value) && value > 0)
-      : [];
-
-    out.push({
-      company: normalizeName(
-        typeof record.company === "string" ? record.company : null
-      ),
-      confidence,
-      email,
-      evidenceAttachmentIds: attachmentIds,
-      evidenceDocumentIds: documentIds,
-      evidenceEmailIds: emailIds,
-      name,
-      phone,
-      reason,
-      title: normalizeName(
-        typeof record.title === "string" ? record.title : null
-      ),
-    });
   }
 
   return out;
@@ -827,13 +821,10 @@ async function fetchContactsByNames(
   return out;
 }
 
-function collectDeterministicCandidates(
-  emails: EmailRow[],
-  documents: DocumentRow[],
-  attachments: AttachmentRow[]
-): Map<string, CandidateAccumulator> {
-  const map = new Map<string, CandidateAccumulator>();
-
+function collectFromEmails(
+  map: Map<string, CandidateAccumulator>,
+  emails: EmailRow[]
+): void {
   for (const row of emails) {
     const fromEmail = normalizeEmailAddress(row.from_email);
     const fromName = normalizeName(row.from_name);
@@ -900,7 +891,12 @@ function collectDeterministicCandidates(
       });
     }
   }
+}
 
+function collectFromDocuments(
+  map: Map<string, CandidateAccumulator>,
+  documents: DocumentRow[]
+): void {
   for (const row of documents) {
     const sourceText = `${row.file_name ?? ""}\n${row.summary ?? ""}`;
     const foundEmails = pickExternalEmailCandidates(
@@ -928,7 +924,12 @@ function collectDeterministicCandidates(
       });
     }
   }
+}
 
+function collectFromAttachments(
+  map: Map<string, CandidateAccumulator>,
+  attachments: AttachmentRow[]
+): void {
   for (const row of attachments) {
     const sourceText = `${row.name}\n${row.extracted_text ?? ""}`.slice(
       0,
@@ -961,7 +962,17 @@ function collectDeterministicCandidates(
       });
     }
   }
+}
 
+function collectDeterministicCandidates(
+  emails: EmailRow[],
+  documents: DocumentRow[],
+  attachments: AttachmentRow[]
+): Map<string, CandidateAccumulator> {
+  const map = new Map<string, CandidateAccumulator>();
+  collectFromEmails(map, emails);
+  collectFromDocuments(map, documents);
+  collectFromAttachments(map, attachments);
   return map;
 }
 
@@ -1101,6 +1112,132 @@ function sortCandidates(
   });
 }
 
+function mergeSparkRecords(
+  candidateMap: Map<string, CandidateAccumulator>,
+  records: SparkContactRecord[]
+): void {
+  for (const record of records) {
+    addCandidateEvidence(candidateMap, {
+      company: record.company,
+      confidence: Math.max(0.55, record.confidence),
+      email: record.email,
+      name: record.name,
+      note: record.reason,
+      phone: record.phone,
+      source: "spark",
+      title: record.title,
+    });
+
+    const key = candidateKeyOf(record.email, record.name, record.phone);
+    if (!key) {
+      continue;
+    }
+
+    const candidate = candidateMap.get(key);
+    if (!candidate) {
+      continue;
+    }
+
+    for (const emailId of record.evidenceEmailIds) {
+      candidate.evidenceEmailIds.add(emailId);
+    }
+    for (const documentId of record.evidenceDocumentIds) {
+      candidate.evidenceDocumentIds.add(documentId);
+    }
+    for (const attachmentId of record.evidenceAttachmentIds) {
+      candidate.evidenceAttachmentIds.add(attachmentId);
+    }
+  }
+}
+
+function classifyCandidate(
+  candidate: ProjectContactCandidate,
+  ctx: {
+    requireLlm: boolean;
+    targetEstimateId: number | null;
+    contactMaps: {
+      byEmail: Map<string, ContactMatch>;
+      byName: Map<string, ContactMatch>;
+    };
+    linkedEstimateContactIds: Set<number>;
+    createThreshold: number;
+  }
+): ProjectContactProposal {
+  const skipProposal = (reason: string): ProjectContactProposal => ({
+    action: "skip_low_confidence",
+    candidate,
+    confidence: candidate.confidence,
+    contactEmail: null,
+    contactId: null,
+    contactName: null,
+    reason,
+  });
+
+  if (ctx.requireLlm && !candidate.sources.includes("spark")) {
+    return skipProposal("no_spark_evidence");
+  }
+
+  const hasLinkTarget =
+    typeof ctx.targetEstimateId === "number" ||
+    candidate.evidenceEmailIds.length > 0;
+  if (!hasLinkTarget) {
+    return skipProposal("no_link_target");
+  }
+
+  const candidateEmail = normalizeEmailAddress(candidate.email);
+  const candidateName = normalizeName(candidate.name)?.toLowerCase() ?? null;
+
+  const emailMatch = candidateEmail
+    ? ctx.contactMaps.byEmail.get(candidateEmail)
+    : undefined;
+  const nameMatch =
+    !emailMatch && candidateName
+      ? ctx.contactMaps.byName.get(candidateName)
+      : undefined;
+  const match = emailMatch ?? nameMatch;
+
+  if (match) {
+    if (ctx.linkedEstimateContactIds.has(match.contactId)) {
+      return {
+        action: "already_linked",
+        candidate,
+        confidence: candidate.confidence,
+        contactEmail: match.contactEmail,
+        contactId: match.contactId,
+        contactName: match.contactName,
+        reason: "already_linked_to_project_estimate",
+      };
+    }
+
+    return {
+      action: "link_existing_contact",
+      candidate,
+      confidence: candidate.confidence,
+      contactEmail: match.contactEmail,
+      contactId: match.contactId,
+      contactName: match.contactName,
+      reason: emailMatch ? "matched_by_email" : "matched_by_name",
+    };
+  }
+
+  if (
+    candidate.confidence >= ctx.createThreshold &&
+    (candidate.email || candidate.name)
+  ) {
+    return {
+      action: "create_contact",
+      candidate,
+      confidence: candidate.confidence,
+      contactEmail: null,
+      contactId: null,
+      contactName: null,
+      reason: "no_existing_contact_match",
+    };
+  }
+
+  return skipProposal("insufficient_confidence_or_identity");
+}
+
 export async function resolveProjectContacts(
   projectId: number,
   options: ResolveProjectContactsOptions = {}
@@ -1164,38 +1301,7 @@ export async function resolveProjectContacts(
     );
   }
 
-  for (const record of spark.records) {
-    addCandidateEvidence(candidateMap, {
-      company: record.company,
-      confidence: Math.max(0.55, record.confidence),
-      email: record.email,
-      name: record.name,
-      note: record.reason,
-      phone: record.phone,
-      source: "spark",
-      title: record.title,
-    });
-
-    const key = candidateKeyOf(record.email, record.name, record.phone);
-    if (!key) {
-      continue;
-    }
-
-    const candidate = candidateMap.get(key);
-    if (!candidate) {
-      continue;
-    }
-
-    for (const emailId of record.evidenceEmailIds) {
-      candidate.evidenceEmailIds.add(emailId);
-    }
-    for (const documentId of record.evidenceDocumentIds) {
-      candidate.evidenceDocumentIds.add(documentId);
-    }
-    for (const attachmentId of record.evidenceAttachmentIds) {
-      candidate.evidenceAttachmentIds.add(attachmentId);
-    }
-  }
+  mergeSparkRecords(candidateMap, spark.records);
 
   const candidates = sortCandidates(
     [...candidateMap.values()].map(finalizeCandidate)
@@ -1227,102 +1333,15 @@ export async function resolveProjectContacts(
   );
 
   const targetEstimateId = selectTargetEstimateId(projectEstimates);
-  const proposals: ProjectContactProposal[] = [];
-
-  for (const candidate of candidates) {
-    if (requireLlm && !candidate.sources.includes("spark")) {
-      proposals.push({
-        action: "skip_low_confidence",
-        candidate,
-        confidence: candidate.confidence,
-        contactEmail: null,
-        contactId: null,
-        contactName: null,
-        reason: "no_spark_evidence",
-      });
-      continue;
-    }
-
-    const hasLinkTarget =
-      typeof targetEstimateId === "number" ||
-      candidate.evidenceEmailIds.length > 0;
-    if (!hasLinkTarget) {
-      proposals.push({
-        action: "skip_low_confidence",
-        candidate,
-        confidence: candidate.confidence,
-        contactEmail: null,
-        contactId: null,
-        contactName: null,
-        reason: "no_link_target",
-      });
-      continue;
-    }
-
-    const candidateEmail = normalizeEmailAddress(candidate.email);
-    const candidateName = normalizeName(candidate.name)?.toLowerCase() ?? null;
-
-    const emailMatch = candidateEmail
-      ? contactMaps.byEmail.get(candidateEmail)
-      : undefined;
-    const nameMatch =
-      !emailMatch && candidateName
-        ? contactMaps.byName.get(candidateName)
-        : undefined;
-    const match = emailMatch ?? nameMatch;
-
-    if (match) {
-      if (linkedEstimateContactIds.has(match.contactId)) {
-        proposals.push({
-          action: "already_linked",
-          candidate,
-          confidence: candidate.confidence,
-          contactEmail: match.contactEmail,
-          contactId: match.contactId,
-          contactName: match.contactName,
-          reason: "already_linked_to_project_estimate",
-        });
-        continue;
-      }
-
-      proposals.push({
-        action: "link_existing_contact",
-        candidate,
-        confidence: candidate.confidence,
-        contactEmail: match.contactEmail,
-        contactId: match.contactId,
-        contactName: match.contactName,
-        reason: emailMatch ? "matched_by_email" : "matched_by_name",
-      });
-      continue;
-    }
-
-    if (
-      candidate.confidence >= createThreshold &&
-      (candidate.email || candidate.name)
-    ) {
-      proposals.push({
-        action: "create_contact",
-        candidate,
-        confidence: candidate.confidence,
-        contactEmail: null,
-        contactId: null,
-        contactName: null,
-        reason: "no_existing_contact_match",
-      });
-      continue;
-    }
-
-    proposals.push({
-      action: "skip_low_confidence",
-      candidate,
-      confidence: candidate.confidence,
-      contactEmail: null,
-      contactId: null,
-      contactName: null,
-      reason: "insufficient_confidence_or_identity",
-    });
-  }
+  const proposals = candidates.map((candidate) =>
+    classifyCandidate(candidate, {
+      contactMaps,
+      createThreshold,
+      linkedEstimateContactIds,
+      requireLlm,
+      targetEstimateId,
+    })
+  );
 
   return {
     candidates,
@@ -1503,6 +1522,60 @@ async function attachProjectAccountToEstimates(
   return rows.length;
 }
 
+async function applyOneProposal(
+  proposal: ProjectContactProposal,
+  result: ProjectContactResolutionResult,
+  summary: ApplyProjectContactResolutionResult
+): Promise<void> {
+  if (proposal.action === "skip_low_confidence") {
+    return;
+  }
+
+  const hasLinkTarget =
+    typeof result.targetEstimateId === "number" ||
+    proposal.candidate.evidenceEmailIds.length > 0;
+  if (!hasLinkTarget) {
+    return;
+  }
+
+  let { contactId } = proposal;
+
+  if (proposal.action === "create_contact") {
+    const upsert = await upsertLocalContact(result.project, proposal.candidate);
+    contactId = upsert.id;
+    if (upsert.created) {
+      summary.contactsCreated += 1;
+    }
+  }
+
+  if (typeof contactId !== "number") {
+    return;
+  }
+
+  const linked = await insertEstimateContactLink(
+    result.targetEstimateId,
+    contactId
+  );
+  if (linked) {
+    summary.estimateLinksInserted += 1;
+  }
+
+  const accountAttached = await attachAccountIfMissing(
+    contactId,
+    result.project.accountId
+  );
+  if (accountAttached) {
+    summary.contactsAccountAttached += 1;
+  }
+
+  for (const emailId of proposal.candidate.evidenceEmailIds) {
+    const inserted = await insertContactEmailLink(contactId, emailId);
+    if (inserted) {
+      summary.emailLinksInserted += 1;
+    }
+  }
+}
+
 export async function applyProjectContactResolution(
   result: ProjectContactResolutionResult
 ): Promise<ApplyProjectContactResolutionResult> {
@@ -1515,57 +1588,7 @@ export async function applyProjectContactResolution(
   };
 
   for (const proposal of result.proposals) {
-    if (proposal.action === "skip_low_confidence") {
-      continue;
-    }
-
-    const hasLinkTarget =
-      typeof result.targetEstimateId === "number" ||
-      proposal.candidate.evidenceEmailIds.length > 0;
-    if (!hasLinkTarget) {
-      continue;
-    }
-
-    let { contactId } = proposal;
-
-    if (proposal.action === "create_contact") {
-      const upsert = await upsertLocalContact(
-        result.project,
-        proposal.candidate
-      );
-      contactId = upsert.id;
-      if (upsert.created) {
-        summary.contactsCreated += 1;
-      }
-    }
-
-    if (typeof contactId !== "number") {
-      continue;
-    }
-
-    const linked = await insertEstimateContactLink(
-      result.targetEstimateId,
-      contactId
-    );
-    if (linked) {
-      summary.estimateLinksInserted += 1;
-    }
-
-    const accountAttached = await attachAccountIfMissing(
-      contactId,
-      result.project.accountId
-    );
-    if (accountAttached) {
-      summary.contactsAccountAttached += 1;
-    }
-
-    const emailIds = proposal.candidate.evidenceEmailIds;
-    for (const emailId of emailIds) {
-      const inserted = await insertContactEmailLink(contactId, emailId);
-      if (inserted) {
-        summary.emailLinksInserted += 1;
-      }
-    }
+    await applyOneProposal(proposal, result, summary);
   }
 
   summary.estimatesAccountAttached = await attachProjectAccountToEstimates(

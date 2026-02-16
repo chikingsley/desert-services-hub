@@ -87,6 +87,75 @@ const SHAREPOINT_PATH_REGEX = /Shared%20Documents\/(.+)/;
  * Run a full SharePoint folder sync.
  * Fetches all items from Monday, creates/moves folders, uploads files.
  */
+async function syncOneItem(
+  item: MondayItem,
+  token: string,
+  driveId: string,
+  result: SharePointSyncResult
+): Promise<void> {
+  const targetFolder = STATUS_MAP[item.bidStatus] ?? DEFAULT_STATUS;
+  const currentFolder = parseStatusFromUrl(item.sharepointUrl);
+
+  const folderPath = buildCustomerProjectsPath({
+    accountName: item.accountName,
+    projectName: item.baseName,
+    statusFolder: targetFolder,
+  });
+
+  if (!item.sharepointUrl && item.files.length > 0) {
+    const created = await ensureFolderExists(token, driveId, folderPath);
+    if (!created) {
+      return;
+    }
+
+    const uploaded = await uploadItemFiles(token, driveId, folderPath, item);
+    result.filesUploaded += uploaded;
+
+    const url = buildSharePointUrl(folderPath);
+    await updateMondayUrl(item.id, url, item.name);
+    result.created++;
+    console.log(
+      `[SharePoint] Created: ${item.name} → ${item.baseName}/ (${uploaded} files)`
+    );
+    return;
+  }
+
+  if (item.sharepointUrl && currentFolder && currentFolder !== targetFolder) {
+    const moved = await moveProjectFolder(
+      token,
+      driveId,
+      item.sharepointUrl,
+      currentFolder,
+      targetFolder
+    );
+    if (!moved) {
+      result.skipped++;
+      return;
+    }
+
+    const newUrl = item.sharepointUrl.replace(currentFolder, targetFolder);
+    await updateMondayUrl(item.id, newUrl, item.name);
+
+    const uploaded = await uploadItemFiles(token, driveId, folderPath, item);
+    result.filesUploaded += uploaded;
+    result.moved++;
+    console.log(
+      `[SharePoint] Moved: ${item.name} (${currentFolder} → ${targetFolder})`
+    );
+    return;
+  }
+
+  if (item.sharepointUrl && item.files.length > 0) {
+    const uploaded = await uploadItemFiles(token, driveId, folderPath, item);
+    if (uploaded > 0) {
+      result.filesUploaded += uploaded;
+      console.log(`[SharePoint] Uploaded ${uploaded} new files: ${item.name}`);
+    }
+  }
+
+  result.skipped++;
+}
+
 export async function syncSharePointFolders(): Promise<SharePointSyncResult> {
   const result: SharePointSyncResult = {
     processed: 0,
@@ -107,89 +176,8 @@ export async function syncSharePointFolders(): Promise<SharePointSyncResult> {
 
     for (const item of items) {
       result.processed++;
-
       try {
-        const targetFolder = STATUS_MAP[item.bidStatus] ?? DEFAULT_STATUS;
-        const currentFolder = parseStatusFromUrl(item.sharepointUrl);
-
-        const folderPath = buildCustomerProjectsPath({
-          accountName: item.accountName,
-          projectName: item.baseName,
-          statusFolder: targetFolder,
-        });
-
-        if (!item.sharepointUrl && item.files.length > 0) {
-          // No URL but has files — create folder and upload
-          const created = await ensureFolderExists(token, driveId, folderPath);
-          if (created) {
-            const uploaded = await uploadItemFiles(
-              token,
-              driveId,
-              folderPath,
-              item
-            );
-            result.filesUploaded += uploaded;
-
-            const url = buildSharePointUrl(folderPath);
-            await updateMondayUrl(item.id, url, item.name);
-            result.created++;
-            console.log(
-              `[SharePoint] Created: ${item.name} → ${item.baseName}/ (${uploaded} files)`
-            );
-          }
-        } else if (
-          item.sharepointUrl &&
-          currentFolder &&
-          currentFolder !== targetFolder
-        ) {
-          // URL exists but wrong folder — move
-          const moved = await moveProjectFolder(
-            token,
-            driveId,
-            item.sharepointUrl,
-            currentFolder,
-            targetFolder
-          );
-          if (moved) {
-            const newUrl = item.sharepointUrl.replace(
-              currentFolder,
-              targetFolder
-            );
-            await updateMondayUrl(item.id, newUrl, item.name);
-
-            const uploaded = await uploadItemFiles(
-              token,
-              driveId,
-              folderPath,
-              item
-            );
-            result.filesUploaded += uploaded;
-
-            result.moved++;
-            console.log(
-              `[SharePoint] Moved: ${item.name} (${currentFolder} → ${targetFolder})`
-            );
-          } else {
-            result.skipped++;
-          }
-        } else if (item.sharepointUrl && item.files.length > 0) {
-          // URL exists, correct folder — check for new files
-          const uploaded = await uploadItemFiles(
-            token,
-            driveId,
-            folderPath,
-            item
-          );
-          if (uploaded > 0) {
-            result.filesUploaded += uploaded;
-            console.log(
-              `[SharePoint] Uploaded ${uploaded} new files: ${item.name}`
-            );
-          }
-          result.skipped++;
-        } else {
-          result.skipped++;
-        }
+        await syncOneItem(item, token, driveId, result);
       } catch (error) {
         const msg = `${item.name}: ${error}`;
         result.errors.push(msg);
@@ -243,6 +231,74 @@ async function mondayQuery(query: string): Promise<unknown> {
   return json.data;
 }
 
+interface RawColumnValue {
+  id: string;
+  text?: string;
+  value?: string;
+  display_value?: string;
+}
+
+function extractFileAssets(columnValues: RawColumnValue[]): FileAsset[] {
+  const files: FileAsset[] = [];
+  for (const colId of FILE_COLUMNS) {
+    const col = columnValues.find((c) => c.id === colId);
+    if (!col?.value) {
+      continue;
+    }
+    try {
+      const parsed = JSON.parse(col.value);
+      if (!parsed?.files?.length) {
+        continue;
+      }
+      for (const file of parsed.files) {
+        if (file.assetId && file.name) {
+          files.push({
+            id: file.assetId.toString(),
+            name: file.name,
+            url: "",
+            columnId: colId,
+            subfolder: FILE_COLUMN_MAP[colId],
+          });
+        }
+      }
+    } catch {
+      // Invalid JSON, skip
+    }
+  }
+  return files;
+}
+
+function transformRawItem(rawItem: {
+  id: string;
+  name: string;
+  column_values: RawColumnValue[];
+}): MondayItem {
+  const accountCol = rawItem.column_values.find(
+    (c) => c.id === ACCOUNTS_COLUMN
+  );
+  const statusCol = rawItem.column_values.find(
+    (c) => c.id === BID_STATUS_COLUMN
+  );
+  const urlCol = rawItem.column_values.find(
+    (c) => c.id === SHAREPOINT_URL_COLUMN
+  );
+
+  const { isVariant, baseName, suffix } = parseVariantPrefix(rawItem.name);
+  const files = extractFileAssets(rawItem.column_values);
+
+  return {
+    id: rawItem.id,
+    name: rawItem.name,
+    accountName: accountCol?.display_value || accountCol?.text || "Unknown",
+    bidStatus: statusCol?.text || "",
+    sharepointUrl: urlCol?.text ? extractUrl(urlCol.text) : null,
+    files,
+    isVariant,
+    variantSuffix: suffix,
+    baseName,
+  };
+}
+
 async function getEstimateItems(): Promise<MondayItem[]> {
   const items: MondayItem[] = [];
   let cursor: string | null = null;
@@ -286,12 +342,7 @@ async function getEstimateItems(): Promise<MondayItem[]> {
             id: string;
             name: string;
             group: { title: string };
-            column_values: Array<{
-              id: string;
-              text?: string;
-              value?: string;
-              display_value?: string;
-            }>;
+            column_values: RawColumnValue[];
           }>;
         };
       }>;
@@ -300,61 +351,9 @@ async function getEstimateItems(): Promise<MondayItem[]> {
     const page = data.boards?.[0]?.items_page;
     if (page?.items) {
       for (const item of page.items) {
-        if (SKIP_GROUPS.has(item.group.title)) {
-          continue;
+        if (!SKIP_GROUPS.has(item.group.title)) {
+          items.push(transformRawItem(item));
         }
-
-        const accountCol = item.column_values.find(
-          (c) => c.id === ACCOUNTS_COLUMN
-        );
-        const statusCol = item.column_values.find(
-          (c) => c.id === BID_STATUS_COLUMN
-        );
-        const urlCol = item.column_values.find(
-          (c) => c.id === SHAREPOINT_URL_COLUMN
-        );
-
-        // Parse variant prefix
-        const { isVariant, baseName, suffix } = parseVariantPrefix(item.name);
-
-        // Extract files from all file columns
-        const files: FileAsset[] = [];
-        for (const colId of FILE_COLUMNS) {
-          const col = item.column_values.find((c) => c.id === colId);
-          if (col?.value) {
-            try {
-              const parsed = JSON.parse(col.value);
-              if (parsed?.files?.length > 0) {
-                for (const file of parsed.files) {
-                  if (file.assetId && file.name) {
-                    files.push({
-                      id: file.assetId.toString(),
-                      name: file.name,
-                      url: "",
-                      columnId: colId,
-                      subfolder: FILE_COLUMN_MAP[colId],
-                    });
-                  }
-                }
-              }
-            } catch {
-              // Invalid JSON, skip
-            }
-          }
-        }
-
-        items.push({
-          id: item.id,
-          name: item.name,
-          accountName:
-            accountCol?.display_value || accountCol?.text || "Unknown",
-          bidStatus: statusCol?.text || "",
-          sharepointUrl: urlCol?.text ? extractUrl(urlCol.text) : null,
-          files,
-          isVariant,
-          variantSuffix: suffix,
-          baseName,
-        });
       }
     }
     cursor = page?.cursor ?? null;

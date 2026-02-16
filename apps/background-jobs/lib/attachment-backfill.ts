@@ -164,17 +164,51 @@ type AttachmentOutcome =
   | { type: "succeeded" }
   | { type: "failed"; error: string };
 
+async function linkResultsToDocuments(
+  results: Awaited<ReturnType<typeof processFilesIntake>>,
+  att: UnprocessedAttachment
+): Promise<{ anySuccess: boolean; projectLinkSkipped: boolean }> {
+  let anySuccess = false;
+  let projectLinkSkipped = false;
+
+  for (const r of results) {
+    if (!r.documentId) {
+      continue;
+    }
+
+    let projectIdForDocument: number | null = att.project_id;
+    if (projectIdForDocument !== null) {
+      const compatible = await isSubjectCompatibleWithProject({
+        projectId: projectIdForDocument,
+        subject: att.subject ?? "",
+      });
+      if (!compatible) {
+        projectIdForDocument = null;
+        projectLinkSkipped = true;
+      }
+    }
+
+    await updateDocumentBackfillLinks.run(
+      r.documentId,
+      att.email_id,
+      att.attachment_id_pk,
+      projectIdForDocument
+    );
+    anySuccess = true;
+  }
+
+  return { anySuccess, projectLinkSkipped };
+}
+
 async function processOneAttachment(
   att: UnprocessedAttachment,
   client: GraphEmailClient
 ): Promise<AttachmentOutcome> {
-  // Check skip rules first (no download needed)
   if (shouldSkip(att)) {
     await updateAttachmentExtraction(att.attachment_id_pk, "skipped");
     return { type: "skipped" };
   }
 
-  // File extension from attachment name
   const ext = att.name.includes(".")
     ? att.name.split(".").pop()?.toLowerCase()
     : "bin";
@@ -183,7 +217,6 @@ async function processOneAttachment(
     `${att.email_id}-${att.attachment_id_pk}.${ext}`
   );
 
-  // Download from Graph API
   console.log(
     `${LOG}   Downloading: "${att.name}" (${att.content_type}, ${att.size ?? "?"} bytes) from ${att.mailbox_email}`
   );
@@ -197,7 +230,6 @@ async function processOneAttachment(
   await Bun.write(localPath, buffer);
 
   try {
-    // Run through the file analysis pipeline (Kreuzberg-first for PDFs, OCR fallback)
     const results = await processFilesIntake({
       attachmentPaths: [localPath],
       originalSubject: att.subject ?? "",
@@ -206,33 +238,10 @@ async function processOneAttachment(
       forwarderEmail: att.mailbox_email,
     });
 
-    // Link document records to email, attachment, and project
-    let anySuccess = false;
-    let projectLinkSkipped = false;
-    for (const r of results) {
-      if (r.documentId) {
-        let projectIdForDocument: number | null = att.project_id;
-        const subjectForGuard = att.subject ?? "";
-        if (
-          projectIdForDocument !== null &&
-          !(await isSubjectCompatibleWithProject({
-            projectId: projectIdForDocument,
-            subject: subjectForGuard,
-          }))
-        ) {
-          projectIdForDocument = null;
-          projectLinkSkipped = true;
-        }
-
-        await updateDocumentBackfillLinks.run(
-          r.documentId,
-          att.email_id,
-          att.attachment_id_pk,
-          projectIdForDocument
-        );
-        anySuccess = true;
-      }
-    }
+    const { anySuccess, projectLinkSkipped } = await linkResultsToDocuments(
+      results,
+      att
+    );
 
     if (anySuccess) {
       await updateAttachmentExtraction(att.attachment_id_pk, "success");
@@ -255,7 +264,6 @@ async function processOneAttachment(
     );
     return { type: "failed", error: `${att.name}: ${errMsg}` };
   } finally {
-    // Clean up temp file
     try {
       await unlink(localPath);
     } catch {
@@ -268,11 +276,14 @@ async function processOneAttachment(
 // Main — Concurrent Processing
 // ============================================================================
 
-export async function processUnprocessedAttachments(
-  options: ProcessUnprocessedAttachmentsOptions = {}
-): Promise<BackfillResult> {
-  const startedAt = Date.now();
-  const batchSize = Math.max(1, options.batchSize ?? 50);
+function resolveBackfillOptions(
+  options: ProcessUnprocessedAttachmentsOptions
+): {
+  batchSize: number;
+  mailboxAllowlist: string[];
+  includeNonProject: boolean;
+  restrictToAllowlist: boolean;
+} {
   const mailboxAllowlist = [
     ...new Set(
       (options.mailboxAllowlist ?? [])
@@ -280,11 +291,6 @@ export async function processUnprocessedAttachments(
         .filter(Boolean)
     ),
   ];
-  const includeNonProjectForAllowlistedMailboxes =
-    options.includeNonProjectForAllowlistedMailboxes === true &&
-    mailboxAllowlist.length > 0;
-  const restrictProjectLinkedToAllowlistedMailboxes =
-    mailboxAllowlist.length > 0;
 
   if (
     options.includeNonProjectForAllowlistedMailboxes &&
@@ -294,6 +300,52 @@ export async function processUnprocessedAttachments(
       `${LOG} includeNonProjectForAllowlistedMailboxes=true ignored (allowlist empty)`
     );
   }
+
+  return {
+    batchSize: Math.max(1, options.batchSize ?? 50),
+    mailboxAllowlist,
+    includeNonProject:
+      options.includeNonProjectForAllowlistedMailboxes === true &&
+      mailboxAllowlist.length > 0,
+    restrictToAllowlist: mailboxAllowlist.length > 0,
+  };
+}
+
+function tallyOutcome(
+  outcome: PromiseSettledResult<AttachmentOutcome>,
+  result: BackfillResult
+): void {
+  const o =
+    outcome.status === "fulfilled"
+      ? outcome.value
+      : { type: "failed" as const, error: String(outcome.reason) };
+
+  switch (o.type) {
+    case "skipped":
+      result.skipped++;
+      break;
+    case "succeeded":
+      result.processed++;
+      result.succeeded++;
+      break;
+    case "failed":
+      result.processed++;
+      result.failed++;
+      result.errors.push(o.error);
+      break;
+    default:
+      result.processed++;
+      result.failed++;
+      result.errors.push("Unknown outcome type");
+      break;
+  }
+}
+
+export async function processUnprocessedAttachments(
+  options: ProcessUnprocessedAttachmentsOptions = {}
+): Promise<BackfillResult> {
+  const startedAt = Date.now();
+  const opts = resolveBackfillOptions(options);
 
   const result: BackfillResult = {
     processed: 0,
@@ -306,10 +358,10 @@ export async function processUnprocessedAttachments(
   };
 
   const attachments = await getUnprocessedAttachments.all(
-    batchSize,
-    restrictProjectLinkedToAllowlistedMailboxes ? 1 : 0,
-    mailboxAllowlist.join(","),
-    includeNonProjectForAllowlistedMailboxes ? 1 : 0
+    opts.batchSize,
+    opts.restrictToAllowlist ? 1 : 0,
+    opts.mailboxAllowlist.join(","),
+    opts.includeNonProject ? 1 : 0
   );
 
   if (attachments.length === 0) {
@@ -318,15 +370,12 @@ export async function processUnprocessedAttachments(
   }
 
   console.log(
-    `${LOG} Processing batch of ${attachments.length} attachments (concurrency: ${CONCURRENCY}, scope: ${restrictProjectLinkedToAllowlistedMailboxes ? `allowlisted project-linked (${mailboxAllowlist.join(", ")})${includeNonProjectForAllowlistedMailboxes ? " + allowlisted non-project" : ""}` : "project-linked only"})`
+    `${LOG} Processing batch of ${attachments.length} attachments (concurrency: ${CONCURRENCY}, scope: ${opts.restrictToAllowlist ? `allowlisted project-linked (${opts.mailboxAllowlist.join(", ")})${opts.includeNonProject ? " + allowlisted non-project" : ""}` : "project-linked only"})`
   );
 
   await mkdir(BACKFILL_DIR, { recursive: true });
-
-  // Single Graph client for the entire batch (token is cached internally)
   const client = createGraphClient();
 
-  // Process in chunks of CONCURRENCY
   for (let i = 0; i < attachments.length; i += CONCURRENCY) {
     const chunk = attachments.slice(i, i + CONCURRENCY);
 
@@ -349,30 +398,7 @@ export async function processUnprocessedAttachments(
     );
 
     for (const outcome of outcomes) {
-      const o =
-        outcome.status === "fulfilled"
-          ? outcome.value
-          : { type: "failed" as const, error: String(outcome.reason) };
-
-      switch (o.type) {
-        case "skipped":
-          result.skipped++;
-          break;
-        case "succeeded":
-          result.processed++;
-          result.succeeded++;
-          break;
-        case "failed":
-          result.processed++;
-          result.failed++;
-          result.errors.push(o.error);
-          break;
-        default:
-          result.processed++;
-          result.failed++;
-          result.errors.push("Unknown outcome type");
-          break;
-      }
+      tallyOutcome(outcome, result);
     }
   }
 

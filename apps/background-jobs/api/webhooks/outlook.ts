@@ -57,6 +57,50 @@ function parseMailboxFromResource(resource: string): string | null {
   return candidate.includes("@") ? candidate : null;
 }
 
+async function enqueueNotification(
+  notification: OutlookNotification
+): Promise<boolean> {
+  let mailboxEmail = parseMailboxFromResource(notification.resource);
+  if (!mailboxEmail) {
+    const mapped = await lookupMailboxBySubscriptionStmt.get(
+      notification.subscriptionId
+    );
+    mailboxEmail = mapped?.mailbox_email ?? null;
+  }
+  const messageId = notification.resourceData?.id;
+
+  if (!(mailboxEmail && messageId)) {
+    console.warn(
+      "[webhook:outlook] Skipping notification with missing data:",
+      notification.resource
+    );
+    return false;
+  }
+
+  // Skip noisy updates for messages we already ingested.
+  if (notification.changeType === "updated") {
+    const existingEmail = await existingEmailStmt.get(messageId);
+    if (existingEmail) {
+      return false;
+    }
+  }
+
+  // Deduplicate if this message is already queued/processing.
+  const queued = await existingQueuedJobStmt.get(messageId);
+  if (queued) {
+    return false;
+  }
+
+  const payload = JSON.stringify({
+    messageId,
+    mailboxEmail,
+    changeType: notification.changeType,
+    subscriptionId: notification.subscriptionId,
+  });
+  await enqueueStmt.run(payload);
+  return true;
+}
+
 export async function handleOutlookWebhook(req: Request): Promise<Response> {
   const url = new URL(req.url);
 
@@ -95,49 +139,12 @@ export async function handleOutlookWebhook(req: Request): Promise<Response> {
     }
   }
 
-  // Enqueue each notification as a job
   let enqueued = 0;
   for (const notification of notifications) {
-    let mailboxEmail = parseMailboxFromResource(notification.resource);
-    if (!mailboxEmail) {
-      const mapped = await lookupMailboxBySubscriptionStmt.get(
-        notification.subscriptionId
-      );
-      mailboxEmail = mapped?.mailbox_email ?? null;
+    const wasEnqueued = await enqueueNotification(notification);
+    if (wasEnqueued) {
+      enqueued++;
     }
-    const messageId = notification.resourceData?.id;
-
-    if (!(mailboxEmail && messageId)) {
-      console.warn(
-        "[webhook:outlook] Skipping notification with missing data:",
-        notification.resource
-      );
-      continue;
-    }
-
-    const payload = JSON.stringify({
-      messageId,
-      mailboxEmail,
-      changeType: notification.changeType,
-      subscriptionId: notification.subscriptionId,
-    });
-
-    // Skip noisy updates for messages we already ingested.
-    if (notification.changeType === "updated") {
-      const existingEmail = await existingEmailStmt.get(messageId);
-      if (existingEmail) {
-        continue;
-      }
-    }
-
-    // Deduplicate if this message is already queued/processing.
-    const queued = await existingQueuedJobStmt.get(messageId);
-    if (queued) {
-      continue;
-    }
-
-    await enqueueStmt.run(payload);
-    enqueued++;
   }
 
   if (enqueued > 0) {

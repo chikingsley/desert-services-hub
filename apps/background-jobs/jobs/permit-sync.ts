@@ -57,6 +57,40 @@ async function waitForPermitSyncWatermarkAdvance(
   return false;
 }
 
+function parseSyncResponseBody(
+  rawBody: string
+): { success?: unknown; error?: unknown } | null {
+  try {
+    const parsed = rawBody ? (JSON.parse(rawBody) as unknown) : null;
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed)
+      ? (parsed as { success?: unknown; error?: unknown })
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+function validateSyncResponse(
+  response: Response,
+  rawBody: string,
+  payload: { success?: unknown; error?: unknown } | null
+): void {
+  if (!response.ok) {
+    const snippet = rawBody.slice(0, 200);
+    throw new Error(
+      `Permit company sync HTTP ${response.status}: ${snippet || "(empty)"}`
+    );
+  }
+
+  if (payload && typeof payload.success === "boolean" && !payload.success) {
+    const err =
+      typeof payload.error === "string" && payload.error.trim().length > 0
+        ? payload.error.trim()
+        : "unknown error";
+    throw new Error(`Permit company sync failed: ${err}`);
+  }
+}
+
 async function runPermitSyncNow(): Promise<void> {
   const startedAt = Date.now();
   const previousWatermark = await getPermitSyncWatermark();
@@ -72,31 +106,8 @@ async function runPermitSyncNow(): Promise<void> {
     });
 
     const rawBody = await response.text().catch(() => "");
-    let payload: { success?: unknown; error?: unknown } | null = null;
-    try {
-      const parsed = rawBody ? (JSON.parse(rawBody) as unknown) : null;
-      payload =
-        parsed && typeof parsed === "object" && !Array.isArray(parsed)
-          ? (parsed as { success?: unknown; error?: unknown })
-          : null;
-    } catch {
-      payload = null;
-    }
-
-    if (!response.ok) {
-      const snippet = rawBody.slice(0, 200);
-      throw new Error(
-        `Permit company sync HTTP ${response.status}: ${snippet || "(empty)"}`
-      );
-    }
-
-    if (payload && typeof payload.success === "boolean" && !payload.success) {
-      const err =
-        typeof payload.error === "string" && payload.error.trim().length > 0
-          ? payload.error.trim()
-          : "unknown error";
-      throw new Error(`Permit company sync failed: ${err}`);
-    }
+    const payload = parseSyncResponseBody(rawBody);
+    validateSyncResponse(response, rawBody, payload);
 
     lastPermitSyncCompletedAt = Date.now();
     return;

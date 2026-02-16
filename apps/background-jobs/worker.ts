@@ -283,6 +283,93 @@ export async function startWorker(): Promise<void> {
 // Notification Poll Timer
 // ============================================================================
 
+async function processQueuedNotifications(
+  client: ReturnType<typeof createDraftClientFromEnv>,
+  maxEvents: number
+): Promise<number> {
+  const queued = await loadQueuedNotifications(maxEvents);
+  let processed = 0;
+
+  for (const queuedNotification of queued) {
+    const event = queuedNotification.event;
+    const stakeholders = await getStakeholders(event.eventType);
+
+    if (stakeholders.length === 0) {
+      await updateNotificationStatus(queuedNotification.id, "failed", {
+        error: "No active stakeholders configured for event type",
+      });
+      processed++;
+      continue;
+    }
+
+    try {
+      const draft = await createNotificationDraft({
+        client,
+        event,
+        stakeholders,
+        mailbox: NOTIFICATIONS_MAILBOX,
+      });
+      await updateNotificationStatus(queuedNotification.id, "drafted", {
+        draftId: draft.id,
+      });
+    } catch (err) {
+      await updateNotificationStatus(queuedNotification.id, "failed", {
+        error: (err as Error).message,
+      });
+    }
+    processed++;
+  }
+
+  return processed;
+}
+
+async function deliverNewEvents(
+  events: import("./lib/notifications/events").PendingEvent[],
+  deliveryMode: NotificationDeliveryMode,
+  draftClient: ReturnType<typeof createDraftClientFromEnv> | null
+): Promise<void> {
+  for (const event of events) {
+    const stakeholders = await getStakeholders(event.eventType);
+    const recipientList = stakeholders.map((s) => s.email).join(", ");
+
+    console.log(
+      `[worker]   [${event.eventType}] ${event.subject} → ${recipientList || "(no stakeholders)"}`
+    );
+
+    if (stakeholders.length === 0) {
+      await recordNotification(
+        event,
+        "failed",
+        undefined,
+        "No active stakeholders configured for event type"
+      );
+      continue;
+    }
+
+    if (deliveryMode === "log" || !draftClient) {
+      await recordNotification(event, "pending");
+      continue;
+    }
+
+    try {
+      const draft = await createNotificationDraft({
+        client: draftClient,
+        event,
+        stakeholders,
+        mailbox: NOTIFICATIONS_MAILBOX,
+      });
+      await recordNotification(event, "drafted", draft.id);
+    } catch (err) {
+      await recordNotification(
+        event,
+        "failed",
+        undefined,
+        (err as Error).message
+      );
+    }
+  }
+}
+
 function initNotificationTimer(): void {
   let deliveryMode: NotificationDeliveryMode = NOTIFICATIONS_DELIVERY_MODE;
   let draftClient: ReturnType<typeof createDraftClientFromEnv> | null = null;
@@ -303,41 +390,12 @@ function initNotificationTimer(): void {
   );
 
   registerTimer("Notifications", NOTIFICATIONS_INTERVAL_MS, async () => {
-    let processedCount = 0;
     const cappedMax = Math.max(0, NOTIFICATIONS_MAX_EVENTS);
+    let processedCount = 0;
 
     // Process queued pending notifications first (draft mode only)
     if (deliveryMode === "draft" && draftClient) {
-      const queued = await loadQueuedNotifications(cappedMax);
-      for (const queuedNotification of queued) {
-        const event = queuedNotification.event;
-        const stakeholders = await getStakeholders(event.eventType);
-
-        if (stakeholders.length === 0) {
-          await updateNotificationStatus(queuedNotification.id, "failed", {
-            error: "No active stakeholders configured for event type",
-          });
-          processedCount++;
-          continue;
-        }
-
-        try {
-          const draft = await createNotificationDraft({
-            client: draftClient,
-            event,
-            stakeholders,
-            mailbox: NOTIFICATIONS_MAILBOX,
-          });
-          await updateNotificationStatus(queuedNotification.id, "drafted", {
-            draftId: draft.id,
-          });
-        } catch (err) {
-          await updateNotificationStatus(queuedNotification.id, "failed", {
-            error: (err as Error).message,
-          });
-        }
-        processedCount++;
-      }
+      processedCount = await processQueuedNotifications(draftClient, cappedMax);
     }
 
     // Detect new events
@@ -346,7 +404,7 @@ function initNotificationTimer(): void {
     const pendingEvents = events.slice(0, remainingBudget);
 
     if (pendingEvents.length === 0 && processedCount === 0) {
-      return; // Nothing to do
+      return;
     }
 
     if (pendingEvents.length > 0) {
@@ -355,46 +413,7 @@ function initNotificationTimer(): void {
       );
     }
 
-    for (const event of pendingEvents) {
-      const stakeholders = await getStakeholders(event.eventType);
-      const recipientList = stakeholders.map((s) => s.email).join(", ");
-
-      console.log(
-        `[worker]   [${event.eventType}] ${event.subject} → ${recipientList || "(no stakeholders)"}`
-      );
-
-      if (stakeholders.length === 0) {
-        await recordNotification(
-          event,
-          "failed",
-          undefined,
-          "No active stakeholders configured for event type"
-        );
-        continue;
-      }
-
-      if (deliveryMode === "log" || !draftClient) {
-        await recordNotification(event, "pending");
-        continue;
-      }
-
-      try {
-        const draft = await createNotificationDraft({
-          client: draftClient,
-          event,
-          stakeholders,
-          mailbox: NOTIFICATIONS_MAILBOX,
-        });
-        await recordNotification(event, "drafted", draft.id);
-      } catch (err) {
-        await recordNotification(
-          event,
-          "failed",
-          undefined,
-          (err as Error).message
-        );
-      }
-    }
+    await deliverNewEvents(pendingEvents, deliveryMode, draftClient);
   });
 }
 

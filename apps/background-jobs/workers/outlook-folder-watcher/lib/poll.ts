@@ -174,6 +174,59 @@ async function handleNewMessages(
   }
 }
 
+// -- Message Polling --
+
+async function pollTrackedFolderMessages(
+  mailbox: string,
+  folder: {
+    folder_id: string;
+    display_name: string;
+    project_id: number;
+    messages_delta_link: string | null;
+  }
+): Promise<void> {
+  try {
+    const msgResult = await messagesDelta(
+      mailbox,
+      folder.folder_id,
+      folder.messages_delta_link
+    );
+    const added = msgResult.changes.filter((m) => !m["@removed"]);
+    if (added.length > 0) {
+      await handleNewMessages(
+        folder.display_name,
+        folder.folder_id,
+        folder.project_id,
+        added
+      );
+    }
+    await updateTrackedFolder(folder.folder_id, {
+      messages_delta_link: msgResult.deltaLink,
+      last_synced_at: new Date().toISOString(),
+    });
+  } catch (err) {
+    if (err instanceof DeltaExpiredError) {
+      console.warn(
+        `[FolderWatcher] Message delta expired for "${folder.display_name}", will resync`
+      );
+      await updateTrackedFolder(folder.folder_id, {
+        messages_delta_link: null,
+      });
+      await logEvent("delta_expired", folder.folder_id, folder.display_name, {
+        type: "messages",
+      });
+    } else {
+      console.error(
+        `[FolderWatcher] Error polling "${folder.display_name}":`,
+        err
+      );
+      await logEvent("error", folder.folder_id, folder.display_name, {
+        error: String(err),
+      });
+    }
+  }
+}
+
 // -- Main Poll --
 
 /**
@@ -242,54 +295,14 @@ export async function pollFolderWatcher(): Promise<boolean> {
   const tracked = await getTrackedFolders();
 
   for (const folder of tracked) {
-    // Skip folders without a matched project
     if (folder.project_id === null) {
       continue;
     }
 
-    try {
-      const msgResult = await messagesDelta(
-        mailbox,
-        folder.folder_id,
-        folder.messages_delta_link
-      );
-
-      const added = msgResult.changes.filter((m) => !m["@removed"]);
-
-      if (added.length > 0) {
-        await handleNewMessages(
-          folder.display_name,
-          folder.folder_id,
-          folder.project_id,
-          added
-        );
-      }
-
-      await updateTrackedFolder(folder.folder_id, {
-        messages_delta_link: msgResult.deltaLink,
-        last_synced_at: new Date().toISOString(),
-      });
-    } catch (err) {
-      if (err instanceof DeltaExpiredError) {
-        console.warn(
-          `[FolderWatcher] Message delta expired for "${folder.display_name}", will resync`
-        );
-        await updateTrackedFolder(folder.folder_id, {
-          messages_delta_link: null,
-        });
-        await logEvent("delta_expired", folder.folder_id, folder.display_name, {
-          type: "messages",
-        });
-      } else {
-        console.error(
-          `[FolderWatcher] Error polling "${folder.display_name}":`,
-          err
-        );
-        await logEvent("error", folder.folder_id, folder.display_name, {
-          error: String(err),
-        });
-      }
-    }
+    await pollTrackedFolderMessages(mailbox, {
+      ...folder,
+      project_id: folder.project_id,
+    });
   }
 
   await setConfig("last_poll_at", new Date().toISOString());

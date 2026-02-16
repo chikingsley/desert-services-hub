@@ -207,19 +207,62 @@ function docTypeToSharePointSubfolder(documentType: string | null): string {
   return "Contracts";
 }
 
+interface EmailMatch {
+  id: number;
+  project_id: number | null;
+  conversation_id: string | null;
+}
+
+async function resolveProjectFromConversation(
+  match: EmailMatch
+): Promise<number | null> {
+  if (match.project_id) {
+    return match.project_id;
+  }
+  if (!match.conversation_id) {
+    return null;
+  }
+  const convMatch = await findProjectByConversation.get(match.conversation_id);
+  return convMatch?.project_id ?? null;
+}
+
+async function findMatchingEmail(
+  normalized: string,
+  originalFrom: string
+): Promise<{ emailId: number; projectId: number | null } | null> {
+  // Strategy 1: subject + sender match
+  if (originalFrom) {
+    const match = await findEmailBySubjectAndSender.get(
+      normalized,
+      originalFrom
+    );
+    if (match) {
+      const projectId = await resolveProjectFromConversation(match);
+      return { emailId: match.id, projectId };
+    }
+  }
+
+  // Strategy 2: subject match only
+  const match = await findEmailBySubject.get(normalized);
+  if (match) {
+    const projectId = await resolveProjectFromConversation(match);
+    return { emailId: match.id, projectId };
+  }
+
+  return null;
+}
+
 export async function autoLinkDocument(
   documentId: number,
   originalSubject: string,
   originalFrom: string,
   forwarderEmail: string
 ): Promise<void> {
-  // Strip FW:/RE: prefixes for matching
   const normalized = originalSubject
     .replace(/^(?:fw|fwd|re|forwarded):\s*/gi, "")
     .trim();
 
   if (!normalized) {
-    // Still store metadata even if we can't match
     await updateDocumentLink.run(
       documentId,
       null,
@@ -231,46 +274,9 @@ export async function autoLinkDocument(
     return;
   }
 
-  let emailId: number | null = null;
-  let projectId: number | null = null;
-
-  // Strategy 1: subject + sender match
-  if (originalFrom) {
-    const match = await findEmailBySubjectAndSender.get(
-      normalized,
-      originalFrom
-    );
-    if (match) {
-      emailId = match.id;
-      projectId = match.project_id;
-      // If no project_id on this email, try conversation thread
-      if (!projectId && match.conversation_id) {
-        const convMatch = await findProjectByConversation.get(
-          match.conversation_id
-        );
-        if (convMatch) {
-          projectId = convMatch.project_id;
-        }
-      }
-    }
-  }
-
-  // Strategy 2: subject match only
-  if (!emailId) {
-    const match = await findEmailBySubject.get(normalized);
-    if (match) {
-      emailId = match.id;
-      projectId = match.project_id;
-      if (!projectId && match.conversation_id) {
-        const convMatch = await findProjectByConversation.get(
-          match.conversation_id
-        );
-        if (convMatch) {
-          projectId = convMatch.project_id;
-        }
-      }
-    }
-  }
+  const found = await findMatchingEmail(normalized, originalFrom);
+  const emailId = found?.emailId ?? null;
+  let projectId = found?.projectId ?? null;
 
   if (projectId) {
     const subjectCompatible = await isSubjectCompatibleWithProject({
@@ -323,6 +329,67 @@ export async function backfillContractPacketDocuments(): Promise<{
 
 type FilesIntakeResult = Awaited<ReturnType<typeof processFilesIntake>>[number];
 
+async function trySharePointUpload(documentId: number): Promise<void> {
+  const sp = getSharePointClient();
+  if (!sp) {
+    return;
+  }
+
+  const row = await getDocumentUploadMeta.get(documentId);
+  if (!(row?.project_id && row.file_path && row.file_name)) {
+    return;
+  }
+
+  const subfolder = docTypeToSharePointSubfolder(row.document_type ?? null);
+
+  const uploaded = await uploadLocalFileToProjectSubfolder(sp, {
+    projectId: row.project_id,
+    subfolder,
+    localPath: row.file_path,
+    originalFileName: row.file_name,
+    stableSuffix: String(documentId),
+  });
+
+  if (uploaded) {
+    console.log(
+      `[doc-sharepoint] Document #${documentId} uploaded to ${uploaded.folderUrl}`
+    );
+  }
+}
+
+async function postProcessResult(
+  r: FilesIntakeResult,
+  filesPayload: ContractsEmailIntakePayload
+): Promise<boolean> {
+  if (!(r.documentId && filesPayload.originalSubject)) {
+    return false;
+  }
+
+  try {
+    await autoLinkDocument(
+      r.documentId,
+      filesPayload.originalSubject,
+      filesPayload.originalFrom,
+      filesPayload.forwarderEmail
+    );
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error);
+    console.warn(`[doc-link] Failed for document #${r.documentId}: ${msg}`);
+    return false;
+  }
+
+  try {
+    await trySharePointUpload(r.documentId);
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error);
+    console.warn(
+      `[doc-sharepoint] Upload failed for document #${r.documentId}: ${msg}`
+    );
+  }
+
+  return true;
+}
+
 export function startIntakePostProcessing(
   results: FilesIntakeResult[],
   filesPayload: ContractsEmailIntakePayload
@@ -330,57 +397,9 @@ export function startIntakePostProcessing(
   (async () => {
     let linkedCount = 0;
     for (const r of results) {
-      if (!(r.documentId && filesPayload.originalSubject)) {
-        continue;
-      }
-
-      try {
-        await autoLinkDocument(
-          r.documentId,
-          filesPayload.originalSubject,
-          filesPayload.originalFrom,
-          filesPayload.forwarderEmail
-        );
+      const linked = await postProcessResult(r, filesPayload);
+      if (linked) {
         linkedCount++;
-      } catch (error) {
-        const msg = error instanceof Error ? error.message : String(error);
-        console.warn(`[doc-link] Failed for document #${r.documentId}: ${msg}`);
-      }
-
-      // Best-effort SharePoint upload once the document has a project_id.
-      try {
-        const sp = getSharePointClient();
-        if (!sp) {
-          continue;
-        }
-
-        const row = await getDocumentUploadMeta.get(r.documentId);
-        if (!(row?.project_id && row.file_path && row.file_name)) {
-          continue;
-        }
-
-        const subfolder = docTypeToSharePointSubfolder(
-          row.document_type ?? null
-        );
-
-        const uploaded = await uploadLocalFileToProjectSubfolder(sp, {
-          projectId: row.project_id,
-          subfolder,
-          localPath: row.file_path,
-          originalFileName: row.file_name,
-          stableSuffix: String(r.documentId),
-        });
-
-        if (uploaded) {
-          console.log(
-            `[doc-sharepoint] Document #${r.documentId} uploaded to ${uploaded.folderUrl}`
-          );
-        }
-      } catch (error) {
-        const msg = error instanceof Error ? error.message : String(error);
-        console.warn(
-          `[doc-sharepoint] Upload failed for document #${r.documentId}: ${msg}`
-        );
       }
     }
 

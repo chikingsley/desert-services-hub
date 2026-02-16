@@ -279,6 +279,167 @@ async function downloadAssetToTemp(
   return path;
 }
 
+type TriageOutcome =
+  | "no_asset"
+  | "asset_unavailable"
+  | "non_pdf"
+  | "ocr_failed"
+  | "non_estimate"
+  | "fixed_by_retry"
+  | "retry_failed"
+  | "unknown";
+
+async function triageOneRow(
+  row: TriageRow,
+  provider: string,
+  log: (line: string) => void
+): Promise<TriageOutcome> {
+  const label = `${row.monday_item_id} ${row.name}`;
+  const extension = (row.file_extension ?? "").toLowerCase();
+
+  if (!(row.monday_asset_id && row.file_name)) {
+    await markFailed.run(
+      buildErrorTag(
+        "no_asset",
+        "No estimate-column asset found for failed row",
+        row.extraction_error
+      ),
+      row.id
+    );
+    log(`[triage] ${label}: no asset`);
+    return "no_asset";
+  }
+
+  if (extension !== ".pdf") {
+    await markFailed.run(
+      buildErrorTag(
+        "non_pdf",
+        `Estimate column file is non-PDF (${row.file_name})`,
+        row.extraction_error
+      ),
+      row.id
+    );
+    log(`[triage] ${label}: non-pdf (${row.file_name})`);
+    return "non_pdf";
+  }
+
+  let probePath: string | null =
+    row.local_path && existsSync(row.local_path) ? row.local_path : null;
+
+  if (!probePath) {
+    probePath = await downloadAssetToTemp(
+      row.monday_item_id,
+      row.monday_asset_id,
+      row.file_name
+    );
+  }
+
+  if (!probePath) {
+    await markFailed.run(
+      buildErrorTag(
+        "asset_unavailable",
+        "Could not access asset/public_url for OCR triage",
+        row.extraction_error
+      ),
+      row.id
+    );
+    log(`[triage] ${label}: asset unavailable`);
+    return "asset_unavailable";
+  }
+
+  const ocr = await runOcrPreview(probePath, provider);
+
+  if (probePath !== row.local_path) {
+    try {
+      rmSync(probePath, { force: true });
+    } catch {
+      // no-op
+    }
+  }
+
+  if (!ocr.ok) {
+    await markFailed.run(
+      buildErrorTag(
+        "ocr_failed",
+        ocr.error ?? "OCR preview failed",
+        row.extraction_error
+      ),
+      row.id
+    );
+    log(`[triage] ${label}: ocr failed`);
+    return "ocr_failed";
+  }
+
+  const classification = classifyFromOcrText(ocr.text);
+
+  if (classification.kind === "non_estimate") {
+    await markFailed.run(
+      buildErrorTag(
+        "non_estimate",
+        classification.reason,
+        row.extraction_error
+      ),
+      row.id
+    );
+    log(`[triage] ${label}: non-estimate (${classification.reason})`);
+    return "non_estimate";
+  }
+
+  if (classification.kind === "estimate_like") {
+    await processItemFiles(row.monday_item_id);
+    const after = await getEstimateStatus.get(row.id);
+    if (after?.extraction_status === "success") {
+      log(`[triage] ${label}: retry succeeded`);
+      return "fixed_by_retry";
+    }
+    await markFailed.run(
+      buildErrorTag(
+        "estimate_like_retry_failed",
+        classification.reason,
+        after?.extraction_error ?? row.extraction_error
+      ),
+      row.id
+    );
+    log(`[triage] ${label}: retry failed`);
+    return "retry_failed";
+  }
+
+  await markFailed.run(
+    buildErrorTag("unknown", classification.reason, row.extraction_error),
+    row.id
+  );
+  log(`[triage] ${label}: unknown (${classification.reason})`);
+  return "unknown";
+}
+
+function tallyTriageOutcome(
+  outcome: TriageOutcome,
+  result: EstimateExtractionTriageResult
+): void {
+  switch (outcome) {
+    case "no_asset":
+    case "asset_unavailable":
+      result.skippedNoAsset++;
+      break;
+    case "non_pdf":
+      result.markedNonPdf++;
+      break;
+    case "ocr_failed":
+    case "unknown":
+      result.markedUnknown++;
+      break;
+    case "non_estimate":
+      result.markedNonEstimate++;
+      break;
+    case "fixed_by_retry":
+      result.fixedByRetry++;
+      break;
+    case "retry_failed":
+      result.retryStillFailed++;
+      break;
+  }
+}
+
 export async function runEstimateExtractionTriage(
   options?: EstimateExtractionTriageOptions
 ): Promise<EstimateExtractionTriageResult> {
@@ -311,147 +472,21 @@ export async function runEstimateExtractionTriage(
     log(`[triage] candidate rows=${rows.length} provider=${provider}`);
   }
 
-  let markedNonEstimate = 0;
-  let markedUnknown = 0;
-  let markedNonPdf = 0;
-  let fixedByRetry = 0;
-  let retryStillFailed = 0;
-  let skippedNoAsset = 0;
-
-  for (const row of rows) {
-    const label = `${row.monday_item_id} ${row.name}`;
-    const extension = (row.file_extension ?? "").toLowerCase();
-
-    if (!(row.monday_asset_id && row.file_name)) {
-      await markFailed.run(
-        buildErrorTag(
-          "no_asset",
-          "No estimate-column asset found for failed row",
-          row.extraction_error
-        ),
-        row.id
-      );
-      skippedNoAsset++;
-      log(`[triage] ${label}: no asset`);
-      continue;
-    }
-
-    if (extension !== ".pdf") {
-      await markFailed.run(
-        buildErrorTag(
-          "non_pdf",
-          `Estimate column file is non-PDF (${row.file_name})`,
-          row.extraction_error
-        ),
-        row.id
-      );
-      markedNonPdf++;
-      log(`[triage] ${label}: non-pdf (${row.file_name})`);
-      continue;
-    }
-
-    let probePath: string | null =
-      row.local_path && existsSync(row.local_path) ? row.local_path : null;
-
-    if (!probePath) {
-      probePath = await downloadAssetToTemp(
-        row.monday_item_id,
-        row.monday_asset_id,
-        row.file_name
-      );
-    }
-
-    if (!probePath) {
-      await markFailed.run(
-        buildErrorTag(
-          "asset_unavailable",
-          "Could not access asset/public_url for OCR triage",
-          row.extraction_error
-        ),
-        row.id
-      );
-      skippedNoAsset++;
-      log(`[triage] ${label}: asset unavailable`);
-      continue;
-    }
-
-    const ocr = await runOcrPreview(probePath, provider);
-
-    if (probePath !== row.local_path) {
-      try {
-        rmSync(probePath, { force: true });
-      } catch {
-        // no-op
-      }
-    }
-
-    if (!ocr.ok) {
-      await markFailed.run(
-        buildErrorTag(
-          "ocr_failed",
-          ocr.error ?? "OCR preview failed",
-          row.extraction_error
-        ),
-        row.id
-      );
-      markedUnknown++;
-      log(`[triage] ${label}: ocr failed`);
-      continue;
-    }
-
-    const classification = classifyFromOcrText(ocr.text);
-
-    if (classification.kind === "non_estimate") {
-      await markFailed.run(
-        buildErrorTag(
-          "non_estimate",
-          classification.reason,
-          row.extraction_error
-        ),
-        row.id
-      );
-      markedNonEstimate++;
-      log(`[triage] ${label}: non-estimate (${classification.reason})`);
-      continue;
-    }
-
-    if (classification.kind === "estimate_like") {
-      await processItemFiles(row.monday_item_id);
-      const after = await getEstimateStatus.get(row.id);
-      if (after?.extraction_status === "success") {
-        fixedByRetry++;
-        log(`[triage] ${label}: retry succeeded`);
-      } else {
-        await markFailed.run(
-          buildErrorTag(
-            "estimate_like_retry_failed",
-            classification.reason,
-            after?.extraction_error ?? row.extraction_error
-          ),
-          row.id
-        );
-        retryStillFailed++;
-        log(`[triage] ${label}: retry failed`);
-      }
-      continue;
-    }
-
-    await markFailed.run(
-      buildErrorTag("unknown", classification.reason, row.extraction_error),
-      row.id
-    );
-    markedUnknown++;
-    log(`[triage] ${label}: unknown (${classification.reason})`);
-  }
-
-  return {
+  const result: EstimateExtractionTriageResult = {
     candidateRows: rows.length,
     processedRows: rows.length,
-    fixedByRetry,
-    markedNonEstimate,
-    markedUnknown,
-    markedNonPdf,
-    retryStillFailed,
-    skippedNoAsset,
+    fixedByRetry: 0,
+    markedNonEstimate: 0,
+    markedUnknown: 0,
+    markedNonPdf: 0,
+    retryStillFailed: 0,
+    skippedNoAsset: 0,
   };
+
+  for (const row of rows) {
+    const outcome = await triageOneRow(row, provider, log);
+    tallyTriageOutcome(outcome, result);
+  }
+
+  return result;
 }

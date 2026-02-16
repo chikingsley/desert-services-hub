@@ -46,6 +46,65 @@ const findConversationProjectAnchor = db.query<
  * - Never auto-link by folder membership alone when the message subject does not
  *   resemble the target project known names/aliases.
  */
+interface EmailRecord {
+  id: number;
+  project_id: number | null;
+  conversation_id: string | null;
+  subject: string | null;
+}
+
+async function findEmailByMessage(
+  msg: MessageForLinking
+): Promise<EmailRecord | null> {
+  if (msg.internetMessageId) {
+    const found = await db
+      .query<EmailRecord, [string]>(
+        "SELECT id, project_id, conversation_id, subject FROM emails WHERE internet_message_id = ?"
+      )
+      .get(msg.internetMessageId);
+    if (found) {
+      return found;
+    }
+  }
+
+  if (msg.id) {
+    return (
+      db
+        .query<EmailRecord, [string]>(
+          "SELECT id, project_id, conversation_id, subject FROM emails WHERE message_id = ?"
+        )
+        .get(msg.id) ?? null
+    );
+  }
+
+  return null;
+}
+
+async function shouldLinkMessage(
+  email: EmailRecord,
+  msg: MessageForLinking,
+  hubProjectId: number
+): Promise<boolean> {
+  if (email.project_id === hubProjectId || email.project_id !== null) {
+    return false;
+  }
+
+  if (email.conversation_id) {
+    const anchor = await findConversationProjectAnchor.get(
+      email.conversation_id,
+      hubProjectId
+    );
+    if (anchor) {
+      return true;
+    }
+  }
+
+  return isSubjectCompatibleWithProject({
+    projectId: hubProjectId,
+    subject: msg.subject ?? email.subject ?? "",
+  });
+}
+
 export async function linkMessages(
   hubProjectId: number,
   messages: MessageForLinking[]
@@ -61,81 +120,23 @@ export async function linkMessages(
   const conversationIds = new Set<string>();
 
   for (const msg of messages) {
-    let email: {
-      id: number;
-      project_id: number | null;
-      conversation_id: string | null;
-      subject: string | null;
-    } | null = null;
-
-    // Try internet_message_id first (cross-mailbox, most reliable)
-    if (msg.internetMessageId) {
-      email = await db
-        .query<
-          {
-            id: number;
-            project_id: number | null;
-            conversation_id: string | null;
-            subject: string | null;
-          },
-          [string]
-        >(
-          "SELECT id, project_id, conversation_id, subject FROM emails WHERE internet_message_id = ?"
-        )
-        .get(msg.internetMessageId);
-    }
-
-    // Fallback to Graph message_id (mailbox-specific but higher coverage)
-    if (!email && msg.id) {
-      email = await db
-        .query<
-          {
-            id: number;
-            project_id: number | null;
-            conversation_id: string | null;
-            subject: string | null;
-          },
-          [string]
-        >(
-          "SELECT id, project_id, conversation_id, subject FROM emails WHERE message_id = ?"
-        )
-        .get(msg.id);
-    }
+    const email = await findEmailByMessage(msg);
 
     if (!email) {
       notFound++;
       continue;
     }
 
-    // Already linked to this project — skip
     if (email.project_id === hubProjectId) {
       continue;
     }
 
-    // Linked to a different project — don't overwrite
-    if (email.project_id !== null) {
-      continue;
-    }
-
-    const subjectForGuard = msg.subject ?? email.subject ?? "";
-    let hasConversationAnchor = false;
-    if (email.conversation_id) {
-      const conversationAnchor = await findConversationProjectAnchor.get(
-        email.conversation_id,
-        hubProjectId
-      );
-      hasConversationAnchor = Boolean(conversationAnchor);
-    }
-
-    if (!hasConversationAnchor) {
-      const subjectCompatible = await isSubjectCompatibleWithProject({
-        projectId: hubProjectId,
-        subject: subjectForGuard,
-      });
-      if (!subjectCompatible) {
+    const linkable = await shouldLinkMessage(email, msg, hubProjectId);
+    if (!linkable) {
+      if (email.project_id === null) {
         skippedSubjectMismatch++;
-        continue;
       }
+      continue;
     }
 
     await db.run("UPDATE emails SET project_id = ? WHERE id = ?", [

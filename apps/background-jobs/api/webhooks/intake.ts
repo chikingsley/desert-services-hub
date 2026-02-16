@@ -273,6 +273,37 @@ async function downloadFileLink(
 // Main Handler
 // =============================================================================
 
+async function saveAttachmentsToDisk(
+  attachments: IncomingAttachment[],
+  jobDir: string
+): Promise<string[]> {
+  const paths: string[] = [];
+  for (const att of attachments) {
+    const filename = sanitizeFilename(
+      ensureFilenameExtension(att.filename || "attachment", att.contentType)
+    );
+    const filePath = join(jobDir, filename);
+    const buffer = Buffer.from(att.content, "base64");
+    await Bun.write(filePath, buffer);
+    paths.push(filePath);
+  }
+  return paths;
+}
+
+async function downloadFileLinks(
+  links: FileLink[],
+  jobDir: string
+): Promise<string[]> {
+  const paths: string[] = [];
+  for (const link of links) {
+    const result = await downloadFileLink(link, jobDir);
+    if (result) {
+      paths.push(result.path);
+    }
+  }
+  return paths;
+}
+
 export async function handleIntakeWebhook(req: Request): Promise<Response> {
   let body: IncomingPayload;
   try {
@@ -297,31 +328,17 @@ export async function handleIntakeWebhook(req: Request): Promise<Response> {
   const jobDir = join(INTAKE_DIR, jobId);
   await mkdir(jobDir, { recursive: true });
 
-  // Save direct attachments to disk
-  const attachmentPaths: string[] = [];
-  for (const att of body.attachments ?? []) {
-    const filename = sanitizeFilename(
-      ensureFilenameExtension(att.filename || "attachment", att.contentType)
-    );
-    const filePath = join(jobDir, filename);
-    const buffer = Buffer.from(att.content, "base64");
-    await Bun.write(filePath, buffer);
-    attachmentPaths.push(filePath);
-  }
+  const attachmentPaths = await saveAttachmentsToDisk(
+    body.attachments ?? [],
+    jobDir
+  );
 
-  // Download linked files
-  let downloadedCount = 0;
-  for (const link of body.fileLinks ?? []) {
-    const result = await downloadFileLink(link, jobDir);
-    if (result) {
-      attachmentPaths.push(result.path);
-      downloadedCount++;
-    }
-  }
+  const downloadedPaths = await downloadFileLinks(body.fileLinks ?? [], jobDir);
+  attachmentPaths.push(...downloadedPaths);
 
   if (hasLinks) {
     console.log(
-      `${LOG} Downloaded ${downloadedCount}/${body.fileLinks?.length ?? 0} linked file(s)`
+      `${LOG} Downloaded ${downloadedPaths.length}/${body.fileLinks?.length ?? 0} linked file(s)`
     );
   }
 

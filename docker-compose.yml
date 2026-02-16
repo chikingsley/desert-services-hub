@@ -27,15 +27,15 @@ services:
     command: ["bun", "run", "apps/web/server.ts"]
 
   # ==========================================================================
-  # Webhooks — Monday + Outlook webhook receiver + background worker
+  # Background Jobs — webhook receiver + job queue + sync timers
   # ==========================================================================
-  webhooks:
+  background-jobs:
     build:
       context: .
       dockerfile: Dockerfile
     container_name: desert-webhooks
     ports:
-      - "4747:4747"
+      - "4000:4747"
     env_file: .env
     environment:
       NODE_ENV: production
@@ -65,7 +65,7 @@ services:
       retries: 3
       start_period: 5s
     restart: unless-stopped
-    command: ["bun", "run", "apps/webhooks/webhooks.ts"]
+    command: ["bun", "run", "apps/background-jobs/webhooks.ts"]
 
   # ==========================================================================
   # Notifications Poller — event detection + draft queueing
@@ -82,7 +82,7 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     restart: unless-stopped
-    command: ["bun", "run", "apps/workers/notifications/cli/watch.ts", "--delivery=log"]
+    command: ["bun", "run", "apps/notifications/cli/watch.ts", "--delivery=log"]
 
   # ==========================================================================
   # SWPPP Master Poller — SharePoint SWPPP Master Excel → Postgres sync
@@ -140,20 +140,6 @@ services:
       start_period: 20s
     restart: unless-stopped
 
-  # ==========================================================================
-  # Cloudflare Tunnel — Exposes services publicly
-  # ==========================================================================
-  tunnel:
-    image: cloudflare/cloudflared:latest
-    container_name: desert-tunnel
-    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
-    depends_on:
-      webhooks:
-        condition: service_healthy
-      permit-worker:
-        condition: service_healthy
-    restart: unless-stopped
-
 volumes:
   webhooks-data:
   permit-data:
@@ -166,12 +152,12 @@ volumes:
 #   docker compose up -d
 #
 # Web app:        http://localhost:3000
-# Webhooks:       http://localhost:4747 (tunneled to monday-estimates.desertservices.app)
+# Background Jobs: http://localhost:4747 (tunneled to webhooks.desertservices.app)
 # Permit Worker:  http://localhost:47822 (API + Dashboard)
 # Permit VNC:     http://localhost:47821 (watch browser automation)
 #
 # Logs:           docker compose logs -f web
-#                 docker compose logs -f webhooks
+#                 docker compose logs -f background-jobs
 #                 docker compose logs -f notifications
 #                 docker compose logs -f swppp-sync
 #                 docker compose logs -f permit-worker

@@ -250,10 +250,9 @@ Each Docker service maps to an entrypoint in the codebase.
 | Service | Container | Port | Entrypoint | Package |
 |---------|-----------|------|-----------|---------|
 | `web` | `desert-web` | 3000 | `apps/web/server.ts` | `apps/web/` |
-| `webhooks` | `desert-webhooks` | 4747 | `apps/web/webhooks.ts` | `apps/web/` + `apps/workers/job-runner/` |
+| `background-jobs` | `desert-webhooks` | 4747 | `apps/background-jobs/webhooks.ts` | `apps/background-jobs/` |
 | `permit-worker` | `desert-permit-worker` | 47822 | `packages/dust-permits/src/index.ts` | `packages/dust-permits/` |
-| `buildingconnected-sync` | `desert-buildingconnected-sync` | -- | `apps/workers/buildingconnected-file-sync/cli/watch.ts` | `apps/workers/buildingconnected-file-sync/` |
-| `notifications` | `desert-notifications` | -- | `apps/workers/notifications/cli/watch.ts` | `apps/workers/notifications/` |
+| `notifications` | `desert-notifications` | -- | `apps/notifications/cli/watch.ts` | `apps/notifications/` |
 | `swppp-sync` | `desert-swppp-sync` | -- | `packages/sharepoint/workers/swppp-master-poller/cli/sync.ts` | `packages/sharepoint/` |
 | `tunnel` | `desert-tunnel` | -- | Cloudflare tunnel config | -- |
 
@@ -261,18 +260,20 @@ Each Docker service maps to an entrypoint in the codebase.
 
 | Worker | Folder | Purpose |
 |--------|--------|---------|
-| `intake-worker` | `apps/workers/intake-worker/` | Email intake from Cloudflare email routing |
-| `inspections-email-worker` | `apps/workers/inspections-email-worker/` | ComplianceGo → SharePoint |
-| `monday-status-sync-worker` | `apps/workers/monday-status-sync-worker/` | Monday.com status sync |
+| `intake-worker` | `apps/cf-workers/intake-worker/` | Email intake from Cloudflare email routing |
+| `inspections-email-worker` | `apps/cf-workers/inspections-email-worker/` | ComplianceGo → SharePoint |
+| `monday-status-sync-worker` | `apps/cf-workers/monday-status-sync-worker/` | Monday.com status sync |
+| `docusign-file-automation` | `apps/cf-workers/docusign-file-automation/` | DocuSign contract dispatch |
 
-**Sub-workers** (run inside the `webhooks` container via job-runner):
+**In-process worker modules** (run inside the `background-jobs` container via timers/job queue):
 
 | Worker | Folder | Trigger |
 |--------|--------|---------|
-| `estimate-poller` | `apps/workers/estimate-poller/` | Timer (every 60s) |
-| `estimate-email-linker` | `apps/workers/estimate-email-linker/` | Timer (every 60s) |
-| `outlook-folder-watcher` | `apps/workers/outlook-folder-watcher/` | Timer (every 30s) |
-| `estimates-sync-worker` | `apps/workers/estimates-sync-worker/` | Job dispatch |
+| `estimate-poller` | `apps/background-jobs/workers/estimate-poller/` | Timer (every 60s) |
+| `estimate-email-linker` | `apps/background-jobs/workers/estimate-email-linker/` | Timer (every 60s) |
+| `outlook-folder-watcher` | `apps/background-jobs/workers/outlook-folder-watcher/` | Timer (every 30s) |
+| `estimates-sync-worker` | `apps/background-jobs/workers/estimates-sync-worker/` | Job dispatch |
+| `buildingconnected-file-sync` | `apps/background-jobs/workers/buildingconnected-file-sync/` | Attachment backfill |
 
 ---
 
@@ -379,18 +380,16 @@ Packages that have been moved to their domain folders:
 | `packages/email/src/html-to-text.ts` | Complete | `lib/html-to-text.ts` → all importers were in email package |
 | `packages/email/src/project-subject-guard.ts` | Complete | `lib/project-subject-guard.ts` → all importers were email intake |
 
-Workers still in `apps/workers/` (to be evaluated for migration into packages):
+In-process worker modules now live in `apps/background-jobs/workers/`. Future migration into packages:
 
-| Worker | Target Package | Notes |
-|--------|---------------|-------|
-| `notifications/` | `packages/email/` | Rename: "email automation", not just notifications |
-| `outlook-folder-watcher/` | `packages/email/` | Email domain owns folder watching |
-| `estimate-email-linker/` | `packages/email/` or `packages/estimates/` | TBD |
-| `estimate-poller/` | `packages/estimates/` | Monday.com estimate sync |
-| `estimates-sync-worker/` | `packages/sharepoint/` or `packages/estimates/` | SharePoint folder sync |
-| `swppp-sync/` | `packages/sharepoint/` | Moved → `packages/sharepoint/workers/swppp-master-poller/` |
-| `buildingconnected-file-sync/` | `packages/buildingconnected/` (future) | Needs own package |
-| `job-runner/` | `apps/workers/job-runner/` | Stays -- orchestrator, not domain logic |
+| Worker | Current Location | Target Package | Notes |
+|--------|-----------------|---------------|-------|
+| `notifications` | `apps/notifications/` | `packages/email/` | Rename: "email automation", not just notifications |
+| `outlook-folder-watcher` | `apps/background-jobs/workers/` | `packages/email/` | Email domain owns folder watching |
+| `estimate-email-linker` | `apps/background-jobs/workers/` | `packages/email/` or `packages/estimates/` | TBD |
+| `estimate-poller` | `apps/background-jobs/workers/` | `packages/estimates/` | Monday.com estimate sync |
+| `estimates-sync-worker` | `apps/background-jobs/workers/` | `packages/sharepoint/` or `packages/estimates/` | SharePoint folder sync |
+| `buildingconnected-file-sync` | `apps/background-jobs/workers/` | `packages/buildingconnected/` (future) | Needs own package |
 
 Remaining in `lib/` (genuinely cross-cutting, used by multiple domains):
 

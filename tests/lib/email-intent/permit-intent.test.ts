@@ -2,13 +2,13 @@ import { describe, expect, test } from "bun:test";
 import {
   classifyPermitIntentHeuristic,
   parseAttachmentNames,
-} from "@/apps/webhooks/lib/email-intent/permit-intent";
-import { resolveFinalIntent } from "@/apps/webhooks/lib/email-intent/permit-intent-report";
+} from "@/apps/background-jobs/lib/email-intent/permit-intent";
+import { resolveFinalIntent } from "@/apps/background-jobs/lib/email-intent/permit-intent-report";
 import type {
   PermitIntent,
   PermitIntentModelResult,
   PermitIntentRow,
-} from "@/apps/webhooks/lib/email-intent/permit-intent-types";
+} from "@/apps/background-jobs/lib/email-intent/permit-intent-types";
 
 interface FixtureCase {
   id: string;

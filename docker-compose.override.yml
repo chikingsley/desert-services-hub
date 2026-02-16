@@ -2,7 +2,7 @@ services:
   web:
     extra_hosts:
       - "host.docker.internal:host-gateway"
-  webhooks:
+  background-jobs:
     extra_hosts:
       - "host.docker.internal:host-gateway"
   permit-worker:

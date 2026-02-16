@@ -26,6 +26,7 @@ const EXCLUDED_DIRS = new Set([
   // One-per-entity DB repositories
   "lib/db/repositories",
   // One-per-job / one-per-command / one-per-sync-strategy
+  "apps/background-jobs/jobs",
   "apps/web/jobs",
   "packages/email/cli",
   "packages/email/src",

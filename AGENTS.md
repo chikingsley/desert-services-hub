@@ -58,16 +58,15 @@ Docker Compose (see `docker-compose.yml`):
 ## Runtime Truth (2026-02-12)
 
 Active worker/runtime components:
-- Cloudflare workers: `intake-worker`, `monday-status-sync-worker`, `inspections-email-worker`, `docusign-file-automation` (dispatcher partial).
-- In-process web worker modules (SharePoint sync): `apps/workers/estimates-sync-worker/lib/sharepoint-sync.ts` (runs in `sync_full` job, no longer a CF Worker).
-- In-process web worker modules: `apps/web/lib/files-intake.ts`, `apps/web/lib/attachment-backfill.ts`, `apps/workers/outlook-folder-watcher/lib/poll.ts`, `apps/workers/estimate-email-linker/lib/poll.ts`.
-- Docker services: `notifications`, `swppp-sync`, `permit-worker`, plus `web`/`webhooks`.
+- Cloudflare Workers (`apps/cf-workers/`): `intake-worker`, `monday-status-sync-worker`, `inspections-email-worker`, `docusign-file-automation` (dispatcher partial).
+- In-process background-jobs modules (`apps/background-jobs/workers/`): `estimates-sync-worker`, `outlook-folder-watcher`, `estimate-email-linker`, `estimate-poller`, `buildingconnected-file-sync`.
+- Docker services: `background-jobs` (webhooks + job queue + sync timers), `notifications`, `swppp-sync`, `permit-worker`, `web`.
 
 Notes:
-- Intake runtime lives in `apps/web/lib/*` and `apps/workers/job-runner/lib/worker.ts`; avoid reintroducing legacy standalone intake worker folders.
+- Intake runtime lives in `apps/background-jobs/lib/*`; avoid reintroducing legacy standalone intake worker folders.
 
 Estimate-email linking runtime:
-- Runs inside `apps/web/worker.ts` as a periodic backfill timer (every 60s).
+- Runs inside `apps/background-jobs/worker.ts` as a periodic backfill timer (every 60s).
 - No separate `systemd` unit should run for estimate-email-linker.
 
 Project-linking runtime (shared matcher):

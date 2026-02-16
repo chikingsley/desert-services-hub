@@ -21,28 +21,28 @@ It is intentionally present-state only: no deprecated architecture history.
 | Service | Entry | Responsibility |
 |---|---|---|
 | `web` | `apps/web/server.ts` | Frontend + API server on `:3000` |
-| `webhooks` | `apps/web/webhooks.ts` | Webhook ingress + in-process job worker on `:4747` |
-| `notifications` | `apps/workers/notifications/cli/watch.ts` | Notification polling and draft generation |
+| `background-jobs` | `apps/background-jobs/webhooks.ts` | Webhook ingress + job queue + sync timers on `:4747` |
+| `notifications` | `apps/notifications/cli/watch.ts` | Notification polling and draft generation |
 | `swppp-sync` | `packages/sharepoint/workers/swppp-master-poller/cli/sync.ts` | SWPPP Master Excel → Postgres poller |
 | `permit-worker` | `packages/dust-permits` | Permit automation API + VNC |
 | `tunnel` (optional) | Cloudflared | Public ingress |
 
 ### Cloudflare Worker Deployments
 
-- `intake-worker` (`apps/workers/intake-worker`)
-- `estimates-sync` (`apps/workers/estimates-sync-worker`)
-- `monday-status-sync` (`apps/workers/monday-status-sync-worker`)
-- `inspection-router` (`apps/workers/inspections-email-worker`)
-- `contracts-dispatcher` (`apps/workers/docusign-file-automation/ds-contracts-dispatcher`)
+- `intake-worker` (`apps/cf-workers/intake-worker`)
+- `estimates-sync` (`apps/cf-workers/estimates-sync-worker`)
+- `monday-status-sync` (`apps/cf-workers/monday-status-sync-worker`)
+- `inspection-router` (`apps/cf-workers/inspections-email-worker`)
+- `contracts-dispatcher` (`apps/cf-workers/docusign-file-automation/ds-contracts-dispatcher`)
 
 ### In-Process Worker Modules
 
-Loaded by `apps/web/worker.ts`:
-- Intake processing: `apps/web/lib/files-intake.ts`
-- Attachment backfill: `apps/web/lib/attachment-backfill.ts`
-- Estimate extraction triage: `apps/web/lib/estimate-extraction-triage.ts`
-- Folder watcher poll: `apps/workers/outlook-folder-watcher/lib/poll.ts`
-- Estimate linker poll: `apps/workers/estimate-email-linker/lib/poll.ts`
+Loaded by `apps/background-jobs/worker.ts`:
+- Intake processing: `apps/background-jobs/lib/files-intake.ts`
+- Attachment backfill: `apps/background-jobs/lib/attachment-backfill.ts`
+- Estimate extraction triage: `apps/background-jobs/lib/estimate-extraction-triage.ts`
+- Folder watcher poll: `apps/background-jobs/workers/outlook-folder-watcher/lib/poll.ts`
+- Estimate linker poll: `apps/background-jobs/workers/estimate-email-linker/lib/poll.ts`
 
 ## Canonical Runtime Flows
 

@@ -13,19 +13,23 @@ Monorepo for Desert Services operations: estimating, dust permits, contracts, no
 
 ```text
 apps/
-  web/                    # Frontend SPA + API + background worker
+  web/                    # Frontend SPA + API
     api/                  # Domain-grouped API routes (estimates/, emails/, projects/, takeoffs/, webhooks/, contracts/)
-    jobs/                 # Background job modules (config, queue, dispatch, monday-sync, email-processing, etc.)
-  workers/
-    notifications/        # Email notification triggers, delivery, stakeholder routing
-    inspections-email-worker/  # ComplianceGo → SharePoint (Cloudflare Worker)
-    docusign-file-automation/  # DocuSign contract dispatch (Cloudflare Worker)
-    intake-worker/        # Cloudflare email ingress -> webhooks intake API
-    estimate-poller/
-    estimates-sync-worker/
+  background-jobs/        # Webhook receiver + job queue + sync timers (Docker: desert-webhooks)
+    api/                  # Webhook HTTP routes (monday, outlook, intake)
+    jobs/                 # Job queue handlers (sync, email, intake, permits)
+    workers/              # In-process timer modules
+      estimate-email-linker/
+      estimate-poller/
+      estimates-sync-worker/
+      buildingconnected-file-sync/
+      outlook-folder-watcher/
+  notifications/          # Email notification triggers, delivery, stakeholder routing (Docker: desert-notifications)
+  cf-workers/             # Cloudflare Workers (deployed to CF Edge)
+    inspections-email-worker/  # ComplianceGo → SharePoint
+    docusign-file-automation/  # DocuSign contract dispatch
+    intake-worker/        # Email ingress → background-jobs intake API
     monday-status-sync-worker/
-    estimate-email-linker/    # In-process linker logic used by web worker timer
-    outlook-folder-watcher/
 packages/
   monday/               # Monday.com API operations
   email/                # Email templates, sync scripts, Graph CLI tooling
@@ -58,8 +62,8 @@ All services run on gmk-server. **Claude Code runs directly on gmk-server — ne
 
 | Service | Container | Port | Purpose |
 |---------|-----------|------|---------|
-| `web` | `desert-web` | 3000 | Frontend + API + background job worker |
-| `webhooks` | `desert-webhooks` | 4747 | Monday + Outlook webhook receiver |
+| `web` | `desert-web` | 3000 | Frontend + API |
+| `background-jobs` | `desert-webhooks` | 4747 | Webhook receiver + job queue + sync timers |
 | `permit-worker` | `desert-permit-worker` | 47822 (API), 47821 (VNC) | Browser automation for Maricopa permits |
 | `notifications` | `desert-notifications` | — | Notifications poll loop (event detection + draft queueing) |
 | `swppp-sync` | `desert-swppp-sync` | — | SWPPP Master sync poll loop |
@@ -67,7 +71,7 @@ All services run on gmk-server. **Claude Code runs directly on gmk-server — ne
 
 ### Public URLs (via Cloudflare Tunnel)
 
-- `webhooks.desertservices.app` → webhooks container (port 4747)
+- `webhooks.desertservices.app` → background-jobs container (port 4747)
 - `web.desertservices.app` → web container (port 3000)
 
 ### Inter-Container Networking
@@ -77,7 +81,7 @@ All containers share `desert-services-hub_default` Docker network. Use **service
 ```text
 web → permit-worker:47822    # Scrape permits, generate PDFs
 web → host.docker.internal:54322  # Postgres (self-hosted Supabase stack DB container)
-webhooks → host.docker.internal:54322  # Postgres
+background-jobs → host.docker.internal:54322  # Postgres
 notifications → host.docker.internal:54322  # Postgres
 swppp-sync → host.docker.internal:54322  # Postgres + Graph-backed SWPPP master reads
 ```
@@ -86,7 +90,7 @@ swppp-sync → host.docker.internal:54322  # Postgres + Graph-backed SWPPP maste
 
 ```bash
 # Build & deploy
-docker compose build web webhooks permit-worker notifications swppp-sync
+docker compose build web background-jobs permit-worker notifications swppp-sync
 docker compose up -d
 
 # Rebuild single service
@@ -94,7 +98,7 @@ docker compose build web && docker compose up -d web
 
 # Logs
 docker compose logs -f web
-docker compose logs -f webhooks
+docker compose logs -f background-jobs
 docker compose logs -f notifications
 docker compose logs -f swppp-sync
 docker compose logs -f permit-worker
@@ -157,7 +161,7 @@ Source of truth for Maricopa tier pricing and fee split:
 - `lib/db/types.ts` → `DUST_PERMIT_TIERS`
   - Includes acreage bands, total price, ADEQ fee, and filing/admin fee.
 - Billing computation uses the same table:
-  - `apps/workers/notifications/lib/email-triggers.ts` (`computeCostBreakdown`).
+  - `apps/notifications/lib/email-triggers.ts` (`computeCostBreakdown`).
 
 ## Notification Pipeline
 
@@ -240,10 +244,10 @@ Connection: `@lib/db/hub` provides a Postgres client with SQLite-compatible API 
 ### Email Linking Runtime Notes
 
 - Canonical runtime:
-  - Folder watcher polling runs in `apps/workers/job-runner/lib/worker.ts` via `pollFolderWatcher()` every 30s.
-  - Estimate-email backfill runs in `apps/workers/job-runner/lib/worker.ts` via `pollEstimateEmailLinker()` every 60s.
+  - Folder watcher polling runs in `apps/background-jobs/worker.ts` via `pollFolderWatcher()` every 30s.
+  - Estimate-email backfill runs in `apps/background-jobs/worker.ts` via `pollEstimateEmailLinker()` every 60s.
   - Do not run parallel `systemd` services for folder watcher or estimate-email-linker.
-- Folder watcher project linking (`apps/workers/outlook-folder-watcher/lib/projects.ts`):
+- Folder watcher project linking (`apps/background-jobs/workers/outlook-folder-watcher/lib/projects.ts`):
   - Folder-to-project matching is centralized in `findProjectByFolder()` and the shared matcher contract:
     - `findBestProjectMatch({ primaryText, aliasHints, contractorHint })`.
     - Reason-scored candidates from `findProjectCandidates()` combine:
@@ -267,7 +271,7 @@ Connection: `@lib/db/hub` provides a Postgres client with SQLite-compatible API 
 - Intake/project linking:
   - Uses shared project matcher contract (`lib/project-matching.ts` + `lib/db/repositories/project.ts`) for consistency across webhook intake, folder watcher, and SWPPP reconciliation.
   - Non-auto-link outcomes are persisted to `project_match_reviews` for operator triage.
-- Periodic estimate-email backfill (`apps/workers/estimate-email-linker/lib/poll.ts`):
+- Periodic estimate-email backfill (`apps/background-jobs/workers/estimate-email-linker/lib/poll.ts`):
   - Processes unlinked candidate emails incrementally using cursor `estimate_email_linker_last_email_id` in `estimate_poller_config`.
   - Matching priority:
     1. Monday pulse/item ID exact match (`monday_pulse_id`).

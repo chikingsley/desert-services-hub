@@ -6,7 +6,7 @@ Last updated: 2026-02-12
 
 This runbook covers the DocuSign dispatcher worker:
 
-- Worker: `apps/workers/docusign-file-automation/ds-contracts-dispatcher`
+- Worker: `apps/cf-workers/docusign-file-automation/ds-contracts-dispatcher`
 - Endpoint: `https://contracts-dispatcher.cheez2012.workers.dev/health`
 - Trigger modes:
   - Cloudflare Email handler (`contracts-dispatch@desertservices.app`)

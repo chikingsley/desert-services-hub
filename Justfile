@@ -77,10 +77,10 @@ jobs *args:
 #   just project-seed-sync
 #   just project-seed-sync-dry limit=250 stale_days=45
 project-seed-sync stale_days="45":
-    @{{BUN}} apps/workers/estimate-poller/cli/project-seed-sync.ts --stale-days {{stale_days}}
+    @{{BUN}} apps/background-jobs/workers/estimate-poller/cli/project-seed-sync.ts --stale-days {{stale_days}}
 
 project-seed-sync-dry limit="250" stale_days="45":
-    @{{BUN}} apps/workers/estimate-poller/cli/project-seed-sync.ts --dry-run --limit {{limit}} --stale-days {{stale_days}}
+    @{{BUN}} apps/background-jobs/workers/estimate-poller/cli/project-seed-sync.ts --dry-run --limit {{limit}} --stale-days {{stale_days}}
 
 # Refresh deduplicated project-email materialized view.
 email-dedup-refresh:
@@ -291,10 +291,10 @@ _cf_check strict:
     fi
 
     workers=(
-      "apps/workers/intake-worker|intake-worker|https://intake-worker.cheez2012.workers.dev/health"
-      "apps/workers/estimates-sync-worker|estimates-sync|https://estimates-sync.cheez2012.workers.dev/"
-      "apps/workers/monday-status-sync-worker|monday-status-sync|https://monday-status-sync.cheez2012.workers.dev/"
-      "apps/workers/inspections-email-worker|inspection-router|https://inspection-router.cheez2012.workers.dev/"
+      "apps/cf-workers/intake-worker|intake-worker|https://intake-worker.cheez2012.workers.dev/health"
+      "apps/cf-workers/estimates-sync-worker|estimates-sync|https://estimates-sync.cheez2012.workers.dev/"
+      "apps/cf-workers/monday-status-sync-worker|monday-status-sync|https://monday-status-sync.cheez2012.workers.dev/"
+      "apps/cf-workers/inspections-email-worker|inspection-router|https://inspection-router.cheez2012.workers.dev/"
     )
 
     for worker in "${workers[@]}"; do

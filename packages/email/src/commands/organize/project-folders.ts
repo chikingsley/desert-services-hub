@@ -65,7 +65,7 @@ export async function createProjectFolderCommand(options: {
 
   if (!watchFolderId) {
     throw new Error(
-      "Folder watcher is not initialized (missing folder_watcher_config.watch_folder_id). Run: bun apps/workers/outlook-folder-watcher/cli/init.ts"
+      "Folder watcher is not initialized (missing folder_watcher_config.watch_folder_id). Run: bun apps/background-jobs/workers/outlook-folder-watcher/cli/init.ts"
     );
   }
   if (
@@ -127,7 +127,7 @@ export async function mkdirProjectFolderCommand(options: {
   const watchFolderId = await getFolderWatcherConfigValue("watch_folder_id");
   if (!watchFolderId) {
     throw new Error(
-      "Folder watcher is not initialized (missing folder_watcher_config.watch_folder_id). Run: bun apps/workers/outlook-folder-watcher/cli/init.ts"
+      "Folder watcher is not initialized (missing folder_watcher_config.watch_folder_id). Run: bun apps/background-jobs/workers/outlook-folder-watcher/cli/init.ts"
     );
   }
 

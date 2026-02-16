@@ -5,6 +5,34 @@
  * message handling, attachments, search, and Microsoft 365 Groups.
  */
 
+import type { RateLimiter } from "@email/rate-limiter";
+import type { Client } from "@microsoft/microsoft-graph-client";
+
+/** Authentication mode for GraphEmailClient */
+export type AuthMode = "app" | "user";
+
+/** Recursive mail folder structure returned by listFoldersRecursive */
+export interface MailFolderWithChildren {
+  id: string;
+  displayName: string;
+  parentFolderId: string | null;
+  children?: MailFolderWithChildren[];
+}
+
+/**
+ * Shared context passed to operation modules.
+ * Implemented by GraphEmailClient — operation functions
+ * use this interface instead of depending on the class directly.
+ */
+export interface GraphClientContext {
+  getClient(): Client;
+  getBasePath(userId?: string): string;
+  getMessagesPath(userId?: string): string;
+  rateLimiter: RateLimiter;
+  authMode: AuthMode;
+  config: EmailConfig;
+}
+
 /**
  * Configuration for authenticating with Microsoft Graph API via Azure AD.
  * Used to initialize the GraphEmailClient with app-only or delegated auth.

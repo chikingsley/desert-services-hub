@@ -1,13 +1,10 @@
-#!/usr/bin/env bun
-/**
- * Manual M365 group conversation sync.
- */
 import { ALL_GROUPS, MS_PER_DAY } from "@email/sync/config";
 import {
   printGroupSyncSummary,
   showGroupStatus,
   syncAllGroups,
 } from "@email/sync/groups";
+import { runPostProcessing } from "./post-processing";
 
 interface GroupSyncOptions {
   since?: Date;
@@ -20,7 +17,6 @@ function getArgValue(args: string[], flag: string): string | undefined {
   if (equalsArg) {
     return equalsArg.split("=", 2)[1];
   }
-
   const index = args.indexOf(`--${flag}`);
   const value = args[index + 1];
   if (index === -1 || !value || value.startsWith("--")) {
@@ -48,13 +44,29 @@ function parseArgs(args: string[]): GroupSyncOptions {
   }
 
   if (groupArg) {
-    options.groups = groupArg.split(",").map((groupName) => groupName.trim());
+    options.groups = groupArg.split(",").map((g) => g.trim());
   }
 
   return options;
 }
 
-function showHeader(options: GroupSyncOptions): void {
+function printHelp(): void {
+  console.log(`
+M365 Group Conversations Sync
+
+Usage:
+  bun packages/email/cli/cli.ts sync-groups [options]
+  bun packages/email/cli/cli.ts sync-groups status
+
+Options:
+  --since <date>        Sync conversations since date (YYYY-MM-DD)
+  --months <n>          Sync last N months
+  --group <list>        Specific group(s) (comma-separated)
+  --no-attachments      Skip downloading attachments
+`);
+}
+
+function printHeader(options: GroupSyncOptions): void {
   console.log("=".repeat(60));
   console.log("M365 GROUP CONVERSATIONS SYNC");
   console.log("=".repeat(60));
@@ -65,50 +77,15 @@ function showHeader(options: GroupSyncOptions): void {
     `Groups: ${options.groups?.join(", ") ?? Object.keys(ALL_GROUPS).join(", ")}`
   );
   console.log(
-    `Attachments: ${options.downloadAttachments ? "download enabled" : "metadata only (--no-attachments)"}`
+    `Attachments: ${options.downloadAttachments ? "download enabled" : "metadata only"}`
   );
-  console.log("(Auto-paginates to fetch all conversations)");
   console.log(`${"=".repeat(60)}\n`);
 }
 
-async function runGroupPostProcessing(): Promise<void> {
-  const { processPlatformEmails } = await import(
-    "@email/sync/platform-extraction"
-  );
-  const { linkEmailsToAccounts } = await import("@email/sync/link-accounts");
-
-  console.log(`\n${"=".repeat(60)}`);
-  console.log("EXTRACTING PLATFORM SENDERS");
-  console.log(`${"=".repeat(60)}\n`);
-  await processPlatformEmails();
-
-  console.log(`\n${"=".repeat(60)}`);
-  console.log("LINKING TO ACCOUNTS");
-  console.log(`${"=".repeat(60)}\n`);
-  const linkStats = await linkEmailsToAccounts();
-  const totalLinked =
-    linkStats.linkedByPlatformDomain +
-    linkStats.linkedByForwardDomain +
-    linkStats.linkedByDirectDomain +
-    linkStats.linkedByNameLookup +
-    linkStats.linkedByAlias +
-    linkStats.linkedByConversation;
-  console.log(`Newly linked: ${totalLinked}`);
-  console.log(`Accounts created: ${linkStats.accountsCreated}`);
-}
-
-async function main() {
-  const args = process.argv.slice(2);
-
+export async function handleGroupSync(args: string[]): Promise<void> {
   if (args.includes("--help") || args.includes("-h")) {
-    console.log(`
-Email Group Sync CLI
-
-Usage:
-  bun packages/email/cli/sync-groups.ts [--since=2025-01-01] [--group=internalcontracts] [--months=6]
-  bun packages/email/cli/sync-groups.ts status
-    `);
-    process.exit(0);
+    printHelp();
+    return;
   }
 
   if (args.includes("status")) {
@@ -117,7 +94,7 @@ Usage:
   }
 
   const options = parseArgs(args);
-  showHeader(options);
+  printHeader(options);
 
   const results = await syncAllGroups({
     ...options,
@@ -146,13 +123,8 @@ Usage:
   });
 
   printGroupSyncSummary(results);
-  await runGroupPostProcessing();
+  await runPostProcessing();
   console.log(`\n${"=".repeat(60)}`);
   console.log("SYNC COMPLETE");
   console.log("=".repeat(60));
 }
-
-main().catch((error) => {
-  console.error("Sync failed:", error);
-  process.exit(1);
-});

@@ -5,7 +5,7 @@ import { GraphEmailClient } from "@email/index";
 
 // All company mailboxes to sync
 // NOTE: internalcontracts@ is a Microsoft 365 Group, not a mailbox.
-// Use sync-groups.ts to sync group conversations instead.
+// Use `cli.ts sync-groups` to sync group conversations instead.
 export const ALL_MAILBOXES = [
   "chi@desertservices.net",
   "contracts@desertservices.net",

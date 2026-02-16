@@ -20,6 +20,7 @@ import { readHandlers } from "@email/commands/read";
 import { searchHandlers } from "@email/commands/search";
 import { sendHandlers } from "@email/commands/send";
 import { signOrderHandlers } from "@email/commands/sign-orders";
+import { syncHandlers } from "@email/commands/sync";
 import { templateHandlers } from "@email/commands/templates";
 import type { CommandHandler } from "@email/commands/types";
 
@@ -38,6 +39,7 @@ const handlers: Record<string, CommandHandler> = {
   ...templateHandlers,
   ...groupHandlers,
   ...mailboxHandlers,
+  ...syncHandlers,
 };
 
 // ============================================================================
@@ -67,6 +69,11 @@ Email Commands:
   thread <messageId>          Get email thread
   download-attachments <id>   Download attachments from an email
   folders                     List mail folders (supports --recursive)
+
+Sync Commands:
+  sync-mailboxes [options]    Sync email from all/specific mailboxes
+  sync-mailboxes status       Show sync status for all mailboxes + groups
+  sync-groups [options]       Sync M365 group conversations
 
 Admin Commands:
   mailboxes                   List all tenant mailboxes from Graph API

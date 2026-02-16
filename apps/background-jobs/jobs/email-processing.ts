@@ -2,11 +2,11 @@
  * Email notification processing -- thin wrapper over package implementation.
  */
 
-import type { EmailNotificationAdapters } from "@email/jobs/email-notification-processing";
+import type { EmailNotificationAdapters } from "@email/handlers/webhook-notification-handler";
 import {
   enrichSingleEmail as processEmail,
   processEmailNotification as processEmailNotificationWithAdapters,
-} from "@email/jobs/email-notification-processing";
+} from "@email/handlers/webhook-notification-handler";
 import { detectDustPermitEmailTrigger } from "../lib/notifications/email-triggers";
 import { FWD_RE, INTERNAL_DOMAINS } from "./config";
 import { enqueueEmailResolve, enqueueJob } from "./queue";

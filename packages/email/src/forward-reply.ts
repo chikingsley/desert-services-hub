@@ -8,33 +8,21 @@
  * as if you were on the original thread.
  */
 
+interface EmailContact {
+  email: string;
+  name?: string;
+}
+
 export interface ParsedForward {
-  originalFrom: { email: string; name?: string } | null;
-  originalTo: { email: string; name?: string }[];
-  originalCc: { email: string; name?: string }[];
+  originalFrom: EmailContact | null;
+  originalTo: EmailContact[];
+  originalCc: EmailContact[];
   originalSubject: string | null;
   originalDate: string | null;
   originalBody: string;
-  forwardedByBody: string; // Any content added by the forwarder before the forward block
+  /** Content added by the forwarder before the forward block */
+  forwardedByBody: string;
 }
-
-// ============================================================================
-// Regex Patterns (module-level for performance)
-// ============================================================================
-
-const RE_HEADER_SEPARATOR = /[;,]/;
-const RE_NAMED_EMAIL = /^(.+?)\s*<([^>]+)>$/;
-const RE_QUOTE_STRIP = /^["']|["']$/g;
-const RE_PLAIN_EMAIL = /^[\w.-]+@[\w.-]+\.\w+$/;
-const RE_ANY_EMAIL = /([\w.-]+@[\w.-]+\.\w+)/;
-const RE_DIV_REPLY = /<\/div><div>/i;
-const RE_HR_TAG = /^(.*?)<hr/is;
-const RE_DOUBLE_NEWLINE = /\n\n/;
-const RE_OUTLOOK_HEADER =
-  /^(From:\s*.+?\nSent:\s*.+?\nTo:\s*.+?(?:\nCc:\s*.+?)?\nSubject:\s*.+?)\n/im;
-const RE_HTML_TAG = /<[^>]*>/g;
-const RE_FORWARD_PREFIX = /^(FW|Fwd|FWD):\s*/i;
-const RE_REPLY_PREFIX = /^(RE|Re):\s*/i;
 
 export interface ReplyFromForwardOptions {
   /** The forwarded email body (HTML or text) */
@@ -52,8 +40,8 @@ export interface ReplyFromForwardOptions {
 }
 
 export interface ConstructedReply {
-  to: { email: string; name?: string }[];
-  cc: { email: string; name?: string }[];
+  to: EmailContact[];
+  cc: EmailContact[];
   subject: string;
   /** Combined body (reply + quoted) - use replyBody/quotedContent for proper signature placement */
   body: string;
@@ -64,58 +52,84 @@ export interface ConstructedReply {
   quotedContent: string;
 }
 
-// Patterns for detecting forwarded message headers (plain text)
+// -- Regex patterns (module-level for performance) --
+
+const RE_HEADER_SEPARATOR = /[;,]/;
+const RE_NAMED_EMAIL = /^(.+?)\s*<([^>]+)>$/;
+const RE_QUOTE_STRIP = /^["']|["']$/g;
+const RE_PLAIN_EMAIL = /^[\w.-]+@[\w.-]+\.\w+$/;
+const RE_ANY_EMAIL = /([\w.-]+@[\w.-]+\.\w+)/;
+const RE_DIV_REPLY = /<\/div><div>/i;
+const RE_HR_TAG = /^(.*?)<hr/is;
+const RE_DOUBLE_NEWLINE = /\n\n/;
+const RE_OUTLOOK_HEADER =
+  /^(From:\s*.+?\nSent:\s*.+?\nTo:\s*.+?(?:\nCc:\s*.+?)?\nSubject:\s*.+?)\n/im;
+const RE_HTML_TAG = /<[^>]*>/g;
+const RE_FORWARD_PREFIX = /^(FW|Fwd|FWD):\s*/i;
+const RE_REPLY_PREFIX = /^(RE|Re):\s*/i;
+
+// -- Forward header patterns by email client --
+
 const OUTLOOK_FORWARD_PATTERNS = {
-  // Outlook: "From: Name <email>" or "From: email"
   from: /^From:\s*(?:([^<\n]+?)\s*<([^>\n]+)>|([^\n<]+))$/im,
-  // Outlook: "Sent: Monday, January 13, 2025 10:30 AM"
   sent: /^Sent:\s*(.+)$/im,
-  // Outlook: "To: Name <email>; Name2 <email2>" or just emails
   to: /^To:\s*(.+)$/im,
-  // Outlook: "Cc: Name <email>; Name2 <email2>"
   cc: /^Cc:\s*(.+)$/im,
-  // Outlook: "Subject: Re: Something"
   subject: /^Subject:\s*(.+)$/im,
 };
 
-// Patterns for HTML forwarded emails (Outlook style with <b>From:</b>)
 const HTML_FORWARD_PATTERNS = {
-  // <b>From:</b> Name &lt;email&gt;<br> or <b>From:</b> Name <email><br>
   from: /<b>From:<\/b>\s*(?:([^<&\n]+?)\s*(?:&lt;|<)([^>&\n]+)(?:&gt;|>)|([^<\n]+?))\s*<br/i,
-  // <b>Sent:</b> Friday, January 16, 2026 8:34:20 PM<br>
   sent: /<b>Sent:<\/b>\s*([^<]+?)\s*<br/i,
-  // <b>To:</b> Name &lt;email&gt;; Name2 &lt;email2&gt;<br>
   to: /<b>To:<\/b>\s*([^<]*?(?:<[^>]*>[^<]*)*?)\s*<br/i,
-  // <b>Cc:</b> ...
   cc: /<b>Cc:<\/b>\s*([^<]*?(?:<[^>]*>[^<]*)*?)\s*<br/i,
-  // <b>Subject:</b> Subject text</font>
   subject: /<b>Subject:<\/b>\s*([^<]+?)(?:<\/font>|<br|<div)/i,
 };
 
 const GMAIL_FORWARD_MARKER = /^-{5,}\s*Forwarded message\s*-{5,}$/im;
 
 const GMAIL_FORWARD_PATTERNS = {
-  cc: /^Cc:\s*(.+)$/im,
-  date: /^Date:\s*(.+)$/im,
   from: /^From:\s*(?:([^<\n]+?)\s*<([^>\n]+)>|([^\n<]+))$/im,
-  subject: /^Subject:\s*(.+)$/im,
+  date: /^Date:\s*(.+)$/im,
   to: /^To:\s*(.+)$/im,
+  cc: /^Cc:\s*(.+)$/im,
+  subject: /^Subject:\s*(.+)$/im,
 };
 
-/**
- * Parse email addresses from a header line
- * Handles formats like:
- * - "Name <email@example.com>"
- * - "email@example.com"
- * - "Name <email@example.com>; Name2 <email2@example.com>"
- * - "Name <email@example.com>, Name2 <email2@example.com>"
- */
-function parseEmailAddresses(
-  headerValue: string
-): { email: string; name?: string }[] {
-  const results: { email: string; name?: string }[] = [];
+// -- Shared HTML entity map --
 
-  // Split by semicolon or comma (common separators)
+const HTML_ENTITIES: [RegExp, string][] = [
+  [/&lt;/g, "<"],
+  [/&gt;/g, ">"],
+  [/&amp;/g, "&"],
+  [/&nbsp;/g, " "],
+  [/&quot;/g, '"'],
+];
+
+function decodeHtmlEntities(text: string): string {
+  let result = text;
+  for (const [pattern, replacement] of HTML_ENTITIES) {
+    result = result.replaceAll(pattern, replacement);
+  }
+  return result;
+}
+
+function htmlToText(html: string): string {
+  const withNewlines = html
+    .replaceAll(/<br\s*\/?>/gi, "\n")
+    .replaceAll(/<\/div>/gi, "\n")
+    .replaceAll(/<\/p>/gi, "\n\n")
+    .replace(RE_HTML_TAG, "");
+
+  return decodeHtmlEntities(withNewlines)
+    .replaceAll(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
+// -- Email address parsing --
+
+function parseEmailAddresses(headerValue: string): EmailContact[] {
+  const results: EmailContact[] = [];
   const parts = headerValue.split(RE_HEADER_SEPARATOR).map((p) => p.trim());
 
   for (const part of parts) {
@@ -123,7 +137,6 @@ function parseEmailAddresses(
       continue;
     }
 
-    // Try "Name <email>" format
     const namedMatch = part.match(RE_NAMED_EMAIL);
     if (namedMatch?.[1] && namedMatch[2]) {
       results.push({
@@ -133,14 +146,11 @@ function parseEmailAddresses(
       continue;
     }
 
-    // Try plain email format
-    const emailMatch = part.match(RE_PLAIN_EMAIL);
-    if (emailMatch) {
+    if (RE_PLAIN_EMAIL.test(part)) {
       results.push({ email: part.toLowerCase() });
       continue;
     }
 
-    // Try to extract email from anywhere in the string
     const anyEmailMatch = part.match(RE_ANY_EMAIL);
     if (anyEmailMatch?.[1]) {
       results.push({ email: anyEmailMatch[1].toLowerCase() });
@@ -151,115 +161,83 @@ function parseEmailAddresses(
 }
 
 /**
- * Convert HTML to plain text (basic)
+ * Extract a sender from a regex match with named/plain email capture groups.
+ * Groups: [1] = name, [2] = email (named format), [3] = plain email fallback.
  */
-function htmlToText(html: string): string {
-  return html
-    .replaceAll(/<br\s*\/?>/gi, "\n")
-    .replaceAll(/<\/div>/gi, "\n")
-    .replaceAll(/<\/p>/gi, "\n\n")
-    .replace(RE_HTML_TAG, "")
-    .replaceAll(/&nbsp;/g, " ")
-    .replaceAll(/&lt;/g, "<")
-    .replaceAll(/&gt;/g, ">")
-    .replaceAll(/&amp;/g, "&")
-    .replaceAll(/&quot;/g, '"')
-    .replaceAll(/\n{3,}/g, "\n\n")
-    .trim();
-}
-
-/**
- * Parse HTML entities to text
- */
-function decodeHtmlEntities(text: string): string {
-  return text
-    .replaceAll(/&lt;/g, "<")
-    .replaceAll(/&gt;/g, ">")
-    .replaceAll(/&amp;/g, "&")
-    .replaceAll(/&nbsp;/g, " ")
-    .replaceAll(/&quot;/g, '"');
-}
-
-/**
- * Parse a forwarded email to extract original message details
- */
-export function parseForwardedEmail(body: string): ParsedForward {
-  const result: ParsedForward = {
-    forwardedByBody: "",
-    originalBody: "",
-    originalCc: [],
-    originalDate: null,
-    originalFrom: null,
-    originalSubject: null,
-    originalTo: [],
-  };
-
-  const isHtml = body.includes("<b>From:</b>") || body.includes("<b>Sent:</b>");
-
-  // Try HTML parsing first for Outlook HTML forwards
-  if (isHtml) {
-    // Parse using HTML patterns
-    const fromMatch = body.match(HTML_FORWARD_PATTERNS.from);
-    if (fromMatch) {
-      if (fromMatch[1] && fromMatch[2]) {
-        result.originalFrom = {
-          email: decodeHtmlEntities(fromMatch[2].trim()).toLowerCase(),
-          name: decodeHtmlEntities(fromMatch[1].trim()),
-        };
-      } else if (fromMatch[3]) {
-        const email = decodeHtmlEntities(fromMatch[3].trim()).toLowerCase();
-        if (email.includes("@")) {
-          result.originalFrom = { email };
-        }
-      }
-    }
-
-    const sentMatch = body.match(HTML_FORWARD_PATTERNS.sent);
-    if (sentMatch?.[1]) {
-      result.originalDate = decodeHtmlEntities(sentMatch[1].trim());
-    }
-
-    const toMatch = body.match(HTML_FORWARD_PATTERNS.to);
-    if (toMatch?.[1]) {
-      const toText = decodeHtmlEntities(toMatch[1].replace(RE_HTML_TAG, ""));
-      result.originalTo = parseEmailAddresses(toText);
-    }
-
-    const ccMatch = body.match(HTML_FORWARD_PATTERNS.cc);
-    if (ccMatch?.[1]) {
-      const ccText = decodeHtmlEntities(ccMatch[1].replace(RE_HTML_TAG, ""));
-      result.originalCc = parseEmailAddresses(ccText);
-    }
-
-    const subjectMatch = body.match(HTML_FORWARD_PATTERNS.subject);
-    if (subjectMatch?.[1]) {
-      result.originalSubject = decodeHtmlEntities(subjectMatch[1].trim());
-    }
-
-    // Extract body after the forward header block
-    const divRplyMatch = body.match(RE_DIV_REPLY);
-    if (divRplyMatch) {
-      const afterHeaders = body.slice(
-        body.indexOf(divRplyMatch[0]) + divRplyMatch[0].length
-      );
-      result.originalBody = htmlToText(afterHeaders);
-    } else {
-      result.originalBody = htmlToText(body);
-    }
-
-    // Extract pre-forward content (comment added by forwarder)
-    const hrMatch = body.match(RE_HR_TAG);
-    if (hrMatch?.[1]) {
-      result.forwardedByBody = htmlToText(hrMatch[1]);
-    }
-
-    return result;
+function extractFromMatch(
+  match: RegExpMatchArray,
+  decode: (s: string) => string = (s) => s
+): EmailContact | null {
+  if (match[1] && match[2]) {
+    return {
+      email: decode(match[2].trim()).toLowerCase(),
+      name: decode(match[1].trim()),
+    };
   }
 
-  // Fall back to plain text parsing
+  const raw = (match[3] || match[1] || "").trim();
+  const email = decode(raw).toLowerCase();
+  return email.includes("@") ? { email } : null;
+}
+
+// -- Forward email parsing --
+
+function parseHtmlForward(body: string): ParsedForward {
+  const result = emptyParsedForward();
+
+  const fromMatch = body.match(HTML_FORWARD_PATTERNS.from);
+  if (fromMatch) {
+    result.originalFrom = extractFromMatch(fromMatch, decodeHtmlEntities);
+  }
+
+  const sentMatch = body.match(HTML_FORWARD_PATTERNS.sent);
+  if (sentMatch?.[1]) {
+    result.originalDate = decodeHtmlEntities(sentMatch[1].trim());
+  }
+
+  const toMatch = body.match(HTML_FORWARD_PATTERNS.to);
+  if (toMatch?.[1]) {
+    result.originalTo = parseEmailAddresses(
+      decodeHtmlEntities(toMatch[1].replace(RE_HTML_TAG, ""))
+    );
+  }
+
+  const ccMatch = body.match(HTML_FORWARD_PATTERNS.cc);
+  if (ccMatch?.[1]) {
+    result.originalCc = parseEmailAddresses(
+      decodeHtmlEntities(ccMatch[1].replace(RE_HTML_TAG, ""))
+    );
+  }
+
+  const subjectMatch = body.match(HTML_FORWARD_PATTERNS.subject);
+  if (subjectMatch?.[1]) {
+    result.originalSubject = decodeHtmlEntities(subjectMatch[1].trim());
+  }
+
+  // Extract body after the forward header block
+  const divReplyMatch = body.match(RE_DIV_REPLY);
+  if (divReplyMatch) {
+    const afterHeaders = body.slice(
+      body.indexOf(divReplyMatch[0]) + divReplyMatch[0].length
+    );
+    result.originalBody = htmlToText(afterHeaders);
+  } else {
+    result.originalBody = htmlToText(body);
+  }
+
+  // Extract pre-forward content (comment added by forwarder)
+  const hrMatch = body.match(RE_HR_TAG);
+  if (hrMatch?.[1]) {
+    result.forwardedByBody = htmlToText(hrMatch[1]);
+  }
+
+  return result;
+}
+
+function parsePlainTextForward(body: string): ParsedForward {
+  const result = emptyParsedForward();
   const textBody = body.includes("<") ? htmlToText(body) : body;
 
-  // Check for Gmail-style forward marker
   const gmailMarkerMatch = textBody.match(GMAIL_FORWARD_MARKER);
 
   let headerSection: string;
@@ -267,14 +245,12 @@ export function parseForwardedEmail(body: string): ParsedForward {
   let preForwardContent = "";
 
   if (gmailMarkerMatch) {
-    // Gmail format: split at the marker
     const markerIndex = textBody.indexOf(gmailMarkerMatch[0]);
     preForwardContent = textBody.slice(0, markerIndex).trim();
     const afterMarker = textBody.slice(
       markerIndex + gmailMarkerMatch[0].length
     );
 
-    // Find where headers end and body begins (double newline)
     const headerEndMatch = afterMarker.match(RE_DOUBLE_NEWLINE);
     if (headerEndMatch) {
       headerSection = afterMarker.slice(0, headerEndMatch.index);
@@ -286,47 +262,31 @@ export function parseForwardedEmail(body: string): ParsedForward {
       bodySection = "";
     }
   } else {
-    // Outlook format: look for "From:" followed by "Sent:" pattern
     const outlookHeaderMatch = textBody.match(RE_OUTLOOK_HEADER);
 
-    if (outlookHeaderMatch?.[1]) {
-      const headerStart = textBody.indexOf(outlookHeaderMatch[0]);
-      preForwardContent = textBody.slice(0, headerStart).trim();
-      headerSection = outlookHeaderMatch[1];
-      bodySection = textBody.slice(headerStart + outlookHeaderMatch[0].length);
-    } else {
-      // Couldn't parse - return the whole thing as body
+    if (!outlookHeaderMatch?.[1]) {
       result.originalBody = textBody;
       return result;
     }
+
+    const headerStart = textBody.indexOf(outlookHeaderMatch[0]);
+    preForwardContent = textBody.slice(0, headerStart).trim();
+    headerSection = outlookHeaderMatch[1];
+    bodySection = textBody.slice(headerStart + outlookHeaderMatch[0].length);
   }
 
   result.forwardedByBody = preForwardContent;
 
-  // Parse headers
+  // Select patterns based on detected format
   const patterns = gmailMarkerMatch
     ? GMAIL_FORWARD_PATTERNS
     : OUTLOOK_FORWARD_PATTERNS;
 
-  // From
   const fromMatch = headerSection.match(patterns.from);
   if (fromMatch) {
-    if (fromMatch[1] && fromMatch[2]) {
-      // "Name <email>" format
-      result.originalFrom = {
-        email: fromMatch[2].trim().toLowerCase(),
-        name: fromMatch[1].trim(),
-      };
-    } else {
-      // Plain email
-      const email = (fromMatch[3] || fromMatch[1] || "").trim().toLowerCase();
-      if (email.includes("@")) {
-        result.originalFrom = { email };
-      }
-    }
+    result.originalFrom = extractFromMatch(fromMatch);
   }
 
-  // Date/Sent
   const datePattern = gmailMarkerMatch
     ? GMAIL_FORWARD_PATTERNS.date
     : OUTLOOK_FORWARD_PATTERNS.sent;
@@ -335,113 +295,80 @@ export function parseForwardedEmail(body: string): ParsedForward {
     result.originalDate = dateMatch[1].trim();
   }
 
-  // To
   const toMatch = headerSection.match(patterns.to);
   if (toMatch?.[1]) {
     result.originalTo = parseEmailAddresses(toMatch[1]);
   }
 
-  // CC
   const ccMatch = headerSection.match(patterns.cc);
   if (ccMatch?.[1]) {
     result.originalCc = parseEmailAddresses(ccMatch[1]);
   }
 
-  // Subject
   const subjectMatch = headerSection.match(patterns.subject);
   if (subjectMatch?.[1]) {
     result.originalSubject = subjectMatch[1].trim();
   }
 
-  // Body
   result.originalBody = bodySection.trim();
 
   return result;
 }
 
+function emptyParsedForward(): ParsedForward {
+  return {
+    forwardedByBody: "",
+    originalBody: "",
+    originalCc: [],
+    originalDate: null,
+    originalFrom: null,
+    originalSubject: null,
+    originalTo: [],
+  };
+}
+
 /**
- * Clean up a subject line - remove FW:/Fwd: prefixes and ensure RE: prefix
+ * Parse a forwarded email to extract original message details.
  */
+export function parseForwardedEmail(body: string): ParsedForward {
+  const isHtml = body.includes("<b>From:</b>") || body.includes("<b>Sent:</b>");
+  return isHtml ? parseHtmlForward(body) : parsePlainTextForward(body);
+}
+
+// -- Reply construction --
+
 function cleanSubject(subject: string | null): string {
   if (subject === null) {
     return "RE: (no subject)";
   }
 
-  // Remove forward prefixes
   const cleaned = subject
     .replace(RE_FORWARD_PREFIX, "")
     .replace(RE_REPLY_PREFIX, "")
     .trim();
 
-  // Add RE: prefix
   return `RE: ${cleaned}`;
 }
 
-/**
- * Build a quoted block from the original message
- */
-function _buildQuotedBlock(parsed: ParsedForward): string {
-  const lines: string[] = [];
-
-  lines.push("");
-  lines.push("---");
-  lines.push("");
-
-  if (parsed.originalFrom) {
-    const fromDisplay = parsed.originalFrom.name
-      ? `${parsed.originalFrom.name} <${parsed.originalFrom.email}>`
-      : parsed.originalFrom.email;
-    lines.push(`> From: ${fromDisplay}`);
-  }
-
-  if (parsed.originalDate) {
-    lines.push(`> Sent: ${parsed.originalDate}`);
-  }
-
-  if (parsed.originalTo.length > 0) {
-    const toDisplay = parsed.originalTo
-      .map((r) => (r.name ? `${r.name} <${r.email}>` : r.email))
-      .join("; ");
-    lines.push(`> To: ${toDisplay}`);
-  }
-
-  if (parsed.originalCc.length > 0) {
-    const ccDisplay = parsed.originalCc
-      .map((r) => (r.name ? `${r.name} <${r.email}>` : r.email))
-      .join("; ");
-    lines.push(`> Cc: ${ccDisplay}`);
-  }
-
-  if (parsed.originalSubject) {
-    lines.push(`> Subject: ${parsed.originalSubject}`);
-  }
-
-  lines.push(">");
-
-  // Quote the original body
-  const bodyLines = parsed.originalBody.split("\n");
-  for (const line of bodyLines) {
-    lines.push(`> ${line}`);
-  }
-
-  return lines.join("\n");
+function formatContactHtml(contact: EmailContact): string {
+  return contact.name
+    ? `${contact.name} &lt;${contact.email}&gt;`
+    : contact.email;
 }
 
-/**
- * Build HTML quoted block
- */
-function buildQuotedBlockHtml(parsed: ParsedForward): string {
-  const parts: string[] = [];
+function formatContactListHtml(contacts: EmailContact[]): string {
+  return contacts.map(formatContactHtml).join("; ");
+}
 
-  parts.push(
-    '<div style="border-left: 2px solid #ccc; padding-left: 10px; margin-top: 20px; color: #666;">'
-  );
+function buildQuotedBlockHtml(parsed: ParsedForward): string {
+  const parts: string[] = [
+    '<div style="border-left: 2px solid #ccc; padding-left: 10px; margin-top: 20px; color: #666;">',
+  ];
 
   if (parsed.originalFrom) {
-    const fromDisplay = parsed.originalFrom.name
-      ? `${parsed.originalFrom.name} &lt;${parsed.originalFrom.email}&gt;`
-      : parsed.originalFrom.email;
-    parts.push(`<div><strong>From:</strong> ${fromDisplay}</div>`);
+    parts.push(
+      `<div><strong>From:</strong> ${formatContactHtml(parsed.originalFrom)}</div>`
+    );
   }
 
   if (parsed.originalDate) {
@@ -449,17 +376,15 @@ function buildQuotedBlockHtml(parsed: ParsedForward): string {
   }
 
   if (parsed.originalTo.length > 0) {
-    const toDisplay = parsed.originalTo
-      .map((r) => (r.name ? `${r.name} &lt;${r.email}&gt;` : r.email))
-      .join("; ");
-    parts.push(`<div><strong>To:</strong> ${toDisplay}</div>`);
+    parts.push(
+      `<div><strong>To:</strong> ${formatContactListHtml(parsed.originalTo)}</div>`
+    );
   }
 
   if (parsed.originalCc.length > 0) {
-    const ccDisplay = parsed.originalCc
-      .map((r) => (r.name ? `${r.name} &lt;${r.email}&gt;` : r.email))
-      .join("; ");
-    parts.push(`<div><strong>Cc:</strong> ${ccDisplay}</div>`);
+    parts.push(
+      `<div><strong>Cc:</strong> ${formatContactListHtml(parsed.originalCc)}</div>`
+    );
   }
 
   if (parsed.originalSubject) {
@@ -470,7 +395,6 @@ function buildQuotedBlockHtml(parsed: ParsedForward): string {
 
   parts.push("<br>");
 
-  // Add the original body
   const bodyHtml = parsed.originalBody
     .split("\n")
     .map((line) => `<div>${line || "&nbsp;"}</div>`)
@@ -482,8 +406,26 @@ function buildQuotedBlockHtml(parsed: ParsedForward): string {
   return parts.join("\n");
 }
 
+function filterRecipients(
+  contacts: EmailContact[],
+  excludeSet: Set<string>
+): EmailContact[] {
+  return contacts.filter((c) => !excludeSet.has(c.email));
+}
+
+function wrapReplyAsHtml(replyContent: string): string {
+  if (replyContent.includes("<")) {
+    return replyContent;
+  }
+
+  return replyContent
+    .split("\n")
+    .map((line) => `<div>${line || "<br>"}</div>`)
+    .join("\n");
+}
+
 /**
- * Construct a reply email from a forwarded message
+ * Construct a reply email from a forwarded message.
  *
  * Returns separate replyBody and quotedContent so the caller can insert
  * a signature between them.
@@ -493,70 +435,45 @@ export function constructReplyFromForward(
 ): ConstructedReply {
   const parsed = parseForwardedEmail(options.forwardedBody);
 
-  // Build recipient lists
   const excludeSet = new Set<string>([
     options.yourEmail.toLowerCase(),
-    ...(options.excludeEmails || []).map((e) => e.toLowerCase()),
+    ...(options.excludeEmails ?? []).map((e) => e.toLowerCase()),
   ]);
-
   if (options.forwarderEmail) {
     excludeSet.add(options.forwarderEmail.toLowerCase());
   }
 
-  // To: original sender
-  const to: { email: string; name?: string }[] = [];
+  // To: original sender (unless excluded)
+  const to: EmailContact[] = [];
   if (parsed.originalFrom && !excludeSet.has(parsed.originalFrom.email)) {
     to.push(parsed.originalFrom);
   }
 
-  // CC: original To + original CC (minus exclusions)
-  const cc: { email: string; name?: string }[] = [];
+  // CC: original To (if opted in) + original CC, minus exclusions
+  const ccSources =
+    options.includeOriginalTo !== false
+      ? [...parsed.originalTo, ...parsed.originalCc]
+      : [...parsed.originalCc];
+  const cc = filterRecipients(ccSources, excludeSet);
 
-  if (options.includeOriginalTo !== false) {
-    for (const recipient of parsed.originalTo) {
-      if (!excludeSet.has(recipient.email)) {
-        cc.push(recipient);
-      }
-    }
-  }
-
-  for (const recipient of parsed.originalCc) {
-    if (!excludeSet.has(recipient.email)) {
-      cc.push(recipient);
-    }
-  }
-
-  // Subject
   const subject = cleanSubject(parsed.originalSubject);
-
-  // Build quoted block
-  const quotedBlock = buildQuotedBlockHtml(parsed);
-
-  // Wrap reply content in HTML if it's not already
-  const replyHtml = options.replyContent.includes("<")
-    ? options.replyContent
-    : options.replyContent
-        .split("\n")
-        .map((line) => `<div>${line || "<br>"}</div>`)
-        .join("\n");
-
-  // Combined body (for backwards compatibility) - but caller should use
-  // replyBody + signature + quotedContent for proper ordering
-  const body = `${replyHtml}\n${quotedBlock}`;
+  const quotedContent = buildQuotedBlockHtml(parsed);
+  const replyBody = wrapReplyAsHtml(options.replyContent);
+  const body = `${replyBody}\n${quotedContent}`;
 
   return {
     body,
     bodyType: "html",
     cc,
-    quotedContent: quotedBlock,
-    replyBody: replyHtml,
+    quotedContent,
+    replyBody,
     subject,
     to,
   };
 }
 
 /**
- * Parse and preview what the reply would look like (for testing)
+ * Parse and preview what the reply would look like (for testing).
  */
 export function previewReplyFromForward(options: ReplyFromForwardOptions): {
   parsed: ParsedForward;

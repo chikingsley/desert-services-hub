@@ -10,10 +10,9 @@ import { db } from "@lib/db/hub";
 import { ensureEstimateHasCurrentVersion } from "@lib/db/repositories/estimate-version";
 import { getItemsRich, type MondayItemRich } from "@monday/client";
 import { BOARD_IDS, ESTIMATING_COLUMNS } from "@monday/types";
+import { fetchAccountSnapshots, fetchContactSnapshots } from "./sync-monday";
 import {
   collectEstimateContactPairs,
-  fetchAccountSnapshots,
-  fetchContactSnapshots,
   type LinkStats,
   type MondayAccountSnapshot,
   sanitizeMondayId,

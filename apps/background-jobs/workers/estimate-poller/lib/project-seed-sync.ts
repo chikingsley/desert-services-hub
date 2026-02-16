@@ -1,69 +1,25 @@
 import { db } from "@lib/db/hub";
-import { normalizeProjectNameKey } from "@lib/db/repositories/project";
-import { parseVariantPrefix } from "@sharepoint/paths";
 import {
-  batchFetchGroupMap,
-  batchFetchMap,
-  batchFetchRows,
-  chunk,
-} from "./sql-utils";
+  applyCanonicalUpdates,
+  chooseLinkedProjectId,
+  deriveDesiredState,
+  deriveSeedDescriptor,
+  type EstimateSeedRow,
+  fetchEstimateProjectLinks,
+  fetchEstimateRows,
+  fetchProjectsByIds,
+  fetchProjectsByNormalizedName,
+  fetchProjectsBySeedKey,
+  getEstimatePriority,
+  type ProjectSeedRow,
+  reduceToGroup,
+  type SeedGroup,
+  SQL_BATCH_SIZE,
+  upsertProjectEstimateLinks,
+} from "./project-seed-data";
+import { chunk } from "./sql-utils";
 
-const ACTIVE_BID_STATUSES = new Set(["won", "pending won", "add to projects"]);
-const LOST_BID_STATUSES = new Set(["lost", "duplicates", "gc not awarded"]);
-const PROJECT_LINK_SOURCE = "estimate_seed_sync";
-const SQL_BATCH_SIZE = 250;
-
-interface EstimateSeedRow {
-  id: number;
-  name: string;
-  job_name: string | null;
-  contractor: string | null;
-  account_id: number | null;
-  location: string | null;
-  job_address: string | null;
-  bid_status: string | null;
-  awarded: number | null;
-  updated_at: string;
-}
-
-interface ProjectSeedRow {
-  id: number;
-  lifecycle_state: string | null;
-  seed_key: string | null;
-  seed_source: string | null;
-  name: string;
-  normalized_name: string | null;
-  address: string | null;
-  account_id: number | null;
-  contractor: string | null;
-}
-
-interface ExistingEstimateProjectLink {
-  estimate_id: number;
-  project_id: number;
-}
-
-interface SeedDescriptor {
-  seedKey: string;
-  normalizedName: string;
-  displayName: string;
-  hasLocationKey: boolean;
-  addressHint: string | null;
-}
-
-interface SeedGroup {
-  seedKey: string;
-  normalizedName: string;
-  hasLocationKey: boolean;
-  estimates: EstimateSeedRow[];
-  representativeName: string;
-  representativeAddress: string | null;
-  representativeAccountId: number | null;
-  representativeContractor: string | null;
-  latestEvidenceAt: string;
-  activeSignal: boolean;
-  allLostSignal: boolean;
-}
+// ── Exported option/stat types ────────────────────────────────────────
 
 export interface ProjectSeedSyncOptions {
   dryRun?: boolean;
@@ -93,351 +49,302 @@ export interface ProjectSeedStaleStats {
   movedToLost: number;
 }
 
-function normalizeBidStatus(value: string | null | undefined): string | null {
-  const normalized = (value ?? "").trim().toLowerCase();
-  return normalized.length > 0 ? normalized : null;
+// ── Mutable state for the sync transaction ────────────────────────────
+
+interface SeedSyncState {
+  stats: ProjectSeedSyncStats;
+  dryRun: boolean;
+  estimateLinkedProjects: Map<number, Set<number>>;
+  projectLinkedEstimateIds: Map<number, Set<number>>;
+  projectsById: Map<number, ProjectSeedRow>;
+  projectsBySeedKey: Map<string, ProjectSeedRow>;
+  projectsByNormalizedName: Map<string, ProjectSeedRow[]>;
+  linkRowsToInsert: Array<{ projectId: number; estimateId: number }>;
+  canonicalByProject: Map<number, { estimateId: number; priority: number }>;
 }
 
-function parseTimestampMs(value: string | null | undefined): number {
-  if (!value) {
-    return 0;
-  }
-  const parsed = Date.parse(value);
-  return Number.isFinite(parsed) ? parsed : 0;
-}
+// ── Per-group sub-functions ───────────────────────────────────────────
 
-function normalizeLocationKey(value: string | null | undefined): string | null {
-  const normalized = (value ?? "")
-    .toLowerCase()
-    .replace(/[^\w\s]/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-  return normalized.length > 0 ? normalized : null;
-}
-
-function deriveSeedDescriptor(row: EstimateSeedRow): SeedDescriptor | null {
-  const sourceName = (row.job_name ?? row.name ?? "").trim();
-  if (!sourceName) {
-    return null;
-  }
-
-  const variant = parseVariantPrefix(sourceName);
-  const displayName = variant.baseName.trim();
-  const normalizedName = normalizeProjectNameKey(displayName);
-  if (!normalizedName) {
-    return null;
-  }
-
-  const rawAddress = (row.job_address ?? row.location ?? "").trim();
-  const locationKey = normalizeLocationKey(rawAddress);
-  const hasLocationKey = Boolean(locationKey);
-
-  return {
-    seedKey: locationKey ? `${normalizedName}::${locationKey}` : normalizedName,
-    normalizedName,
-    displayName,
-    hasLocationKey,
-    addressHint: rawAddress || null,
-  };
-}
-
-function getEstimatePriority(row: EstimateSeedRow): number {
-  const status = normalizeBidStatus(row.bid_status);
-  let score = 0;
-
-  if ((row.awarded ?? 0) === 1) {
-    score += 200;
-  }
-  if (status && ACTIVE_BID_STATUSES.has(status)) {
-    score += 150;
-  }
-  if (status === "bid sent") {
-    score += 40;
-  }
-  if ((row.job_address ?? row.location ?? "").trim().length > 0) {
-    score += 20;
-  }
-  score += parseTimestampMs(row.updated_at) / 1_000_000_000_000;
-  return score;
-}
-
-function reduceToGroup(seedKey: string, rows: EstimateSeedRow[]): SeedGroup {
-  const ranked = [...rows].sort((lhs, rhs) => {
-    const byScore = getEstimatePriority(rhs) - getEstimatePriority(lhs);
-    if (byScore !== 0) {
-      return byScore;
-    }
-    return rhs.id - lhs.id;
-  });
-
-  const best = ranked[0];
-  const descriptor = best ? deriveSeedDescriptor(best) : null;
-  if (!(best && descriptor)) {
-    throw new Error(`Invalid seed group ${seedKey}`);
-  }
-
-  const statuses = ranked.map((row) => normalizeBidStatus(row.bid_status));
-  const activeSignal = ranked.some((row) => {
-    if ((row.awarded ?? 0) === 1) {
-      return true;
-    }
-    const status = normalizeBidStatus(row.bid_status);
-    return status ? ACTIVE_BID_STATUSES.has(status) : false;
-  });
-  const hasKnownStatus = statuses.some((status) => status !== null);
-  const hasNonLostNonActive = statuses.some(
-    (status) =>
-      status !== null &&
-      !LOST_BID_STATUSES.has(status) &&
-      !ACTIVE_BID_STATUSES.has(status)
-  );
-  const allLostSignal = hasKnownStatus && !activeSignal && !hasNonLostNonActive;
-
-  let latestEvidenceAt = best.updated_at;
-  for (const row of ranked) {
-    if (parseTimestampMs(row.updated_at) > parseTimestampMs(latestEvidenceAt)) {
-      latestEvidenceAt = row.updated_at;
-    }
-  }
-
-  return {
-    seedKey,
-    normalizedName: descriptor.normalizedName,
-    hasLocationKey: descriptor.hasLocationKey,
-    estimates: ranked,
-    representativeName: descriptor.displayName,
-    representativeAddress: descriptor.addressHint,
-    representativeAccountId: best.account_id ?? null,
-    representativeContractor: best.contractor ?? null,
-    latestEvidenceAt,
-    activeSignal,
-    allLostSignal,
-  };
-}
-
-async function fetchEstimateRows(limit?: number): Promise<EstimateSeedRow[]> {
-  if (limit && limit > 0) {
-    return await db
-      .query<EstimateSeedRow>(
-        `SELECT
-           id,
-           name,
-           job_name,
-           contractor,
-           account_id,
-           location,
-           job_address,
-           bid_status,
-           awarded,
-           updated_at
-         FROM estimates
-         WHERE trim(COALESCE(job_name, name, '')) <> ''
-         ORDER BY updated_at DESC, id DESC
-         LIMIT ?`
-      )
-      .all(limit);
-  }
-
-  return await db
-    .query<EstimateSeedRow>(
-      `SELECT
-         id,
-         name,
-         job_name,
-         contractor,
-         account_id,
-         location,
-         job_address,
-         bid_status,
-         awarded,
-         updated_at
-       FROM estimates
-       WHERE trim(COALESCE(job_name, name, '')) <> ''
-       ORDER BY id ASC`
-    )
-    .all();
-}
-
-const PROJECT_SEED_COLUMNS =
-  "id, lifecycle_state, seed_key, seed_source, name, normalized_name, address, account_id, contractor";
-
-async function fetchEstimateProjectLinks(
-  estimateIds: number[]
-): Promise<ExistingEstimateProjectLink[]> {
-  return batchFetchRows<ExistingEstimateProjectLink>(
-    estimateIds,
-    SQL_BATCH_SIZE,
-    (ph) =>
-      `SELECT estimate_id, project_id FROM project_estimates WHERE estimate_id IN (${ph})`
-  );
-}
-
-async function fetchProjectsByIds(
-  projectIds: number[]
-): Promise<Map<number, ProjectSeedRow>> {
-  return batchFetchMap<number, ProjectSeedRow>(
-    projectIds,
-    SQL_BATCH_SIZE,
-    (ph) => `SELECT ${PROJECT_SEED_COLUMNS} FROM projects WHERE id IN (${ph})`,
-    (row) => row.id
-  );
-}
-
-async function fetchProjectsBySeedKey(
-  seedKeys: string[]
-): Promise<Map<string, ProjectSeedRow>> {
-  return batchFetchMap<string, ProjectSeedRow>(
-    seedKeys,
-    SQL_BATCH_SIZE,
-    (ph) =>
-      `SELECT ${PROJECT_SEED_COLUMNS} FROM projects WHERE seed_key IN (${ph})`,
-    (row) => row.seed_key ?? null
-  );
-}
-
-async function fetchProjectsByNormalizedName(
-  normalizedNames: string[]
-): Promise<Map<string, ProjectSeedRow[]>> {
-  return batchFetchGroupMap<string, ProjectSeedRow>(
-    normalizedNames,
-    SQL_BATCH_SIZE,
-    (ph) =>
-      `SELECT ${PROJECT_SEED_COLUMNS} FROM projects WHERE normalized_name IN (${ph})`,
-    (row) => row.normalized_name ?? null
-  );
-}
-
-function projectStateRank(value: string | null | undefined): number {
-  switch ((value ?? "").toLowerCase()) {
-    case "active":
-      return 30;
-    case "seed":
-      return 20;
-    case "lost":
-      return 10;
-    case "archived":
-      return 0;
-    default:
-      return 0;
-  }
-}
-
-function chooseLinkedProjectId(
-  linkedProjectIds: number[],
+function findProjectForGroup(
   group: SeedGroup,
-  projectsById: Map<number, ProjectSeedRow>
+  state: SeedSyncState
 ): number | null {
-  if (linkedProjectIds.length === 0) {
+  const linkedIds: number[] = [];
+  for (const estimate of group.estimates) {
+    const set = state.estimateLinkedProjects.get(estimate.id);
+    if (!set) {
+      continue;
+    }
+    linkedIds.push(...set);
+  }
+
+  let projectId = chooseLinkedProjectId(linkedIds, group, state.projectsById);
+
+  if (!projectId) {
+    const bySeed = state.projectsBySeedKey.get(group.seedKey);
+    if (bySeed) {
+      projectId = bySeed.id;
+    }
+  }
+
+  if (!(projectId || group.hasLocationKey)) {
+    const candidates =
+      state.projectsByNormalizedName
+        .get(group.normalizedName)
+        ?.filter((project) => project.seed_key === null) ?? [];
+    if (candidates.length === 1) {
+      projectId = candidates[0]?.id ?? null;
+    }
+  }
+
+  return projectId;
+}
+
+async function createProjectForGroup(
+  group: SeedGroup,
+  state: SeedSyncState
+): Promise<{ projectId: number; project: ProjectSeedRow } | null> {
+  state.stats.projectsCreated++;
+  if (state.dryRun) {
     return null;
   }
 
-  const sorted = [...new Set(linkedProjectIds)].sort((lhsId, rhsId) => {
-    const lhs = projectsById.get(lhsId);
-    const rhs = projectsById.get(rhsId);
+  const desiredState = deriveDesiredState("seed", group);
+  if (desiredState === "active") {
+    state.stats.promotedToActive++;
+  } else if (desiredState === "lost") {
+    state.stats.movedToLost++;
+  }
 
-    const lhsSeedMatch = lhs?.seed_key === group.seedKey ? 1 : 0;
-    const rhsSeedMatch = rhs?.seed_key === group.seedKey ? 1 : 0;
-    if (lhsSeedMatch !== rhsSeedMatch) {
-      return rhsSeedMatch - lhsSeedMatch;
-    }
+  const inserted = (await db.run(
+    `INSERT INTO projects (
+       name, normalized_name, address,
+       account_id, contractor, lifecycle_state,
+       seed_key, seed_source,
+       promoted_at, lost_at,
+       last_evidence_at, updated_at
+     )
+     VALUES (
+       ?, ?, ?,
+       (SELECT id FROM accounts WHERE id = ?), ?, ?,
+       ?, 'estimate_sync',
+       CASE WHEN ? = 'active' THEN now() ELSE NULL END,
+       CASE WHEN ? = 'lost' THEN now() ELSE NULL END,
+       ?::timestamptz, now()
+     )
+     RETURNING
+       id, lifecycle_state, seed_key, seed_source,
+       name, normalized_name, address, account_id, contractor`,
+    [
+      group.representativeName,
+      group.normalizedName,
+      group.representativeAddress,
+      group.representativeAccountId,
+      group.representativeContractor,
+      desiredState,
+      group.seedKey,
+      desiredState,
+      desiredState,
+      group.latestEvidenceAt,
+    ]
+  )) as ProjectSeedRow[];
 
-    const byState =
-      projectStateRank(rhs?.lifecycle_state) -
-      projectStateRank(lhs?.lifecycle_state);
-    if (byState !== 0) {
-      return byState;
-    }
-    return lhsId - rhsId;
-  });
+  const project = inserted[0] ?? null;
+  const projectId = project?.id ?? null;
+  if (!(projectId && project)) {
+    return null;
+  }
 
-  return sorted[0] ?? null;
+  state.projectsById.set(projectId, project);
+  state.projectsBySeedKey.set(group.seedKey, project);
+  return { projectId, project };
 }
 
-function deriveDesiredState(
-  currentState: string | null | undefined,
-  group: SeedGroup
-): "seed" | "active" | "lost" | "archived" {
-  const current = (currentState ?? "seed").toLowerCase();
-  if (current === "archived") {
-    return "archived";
-  }
-  // Do not auto-promote to active from estimate status alone.
-  // Operational "active" is driven by concrete workflow anchors (e.g. folder linkage).
-  if (current === "seed" && group.allLostSignal) {
-    return "lost";
-  }
-  if (current === "lost") {
-    return "lost";
-  }
-  if (current === "active") {
-    return "active";
-  }
-  return "seed";
-}
-
-async function upsertProjectEstimateLinks(
-  rows: Array<{ projectId: number; estimateId: number }>
-): Promise<number> {
-  let inserted = 0;
-  for (const batch of chunk(rows, SQL_BATCH_SIZE)) {
-    const valuesSql = batch.map(() => "(?, ?, ?)").join(", ");
-    const args: Array<number | string> = [];
-    for (const row of batch) {
-      args.push(row.projectId, row.estimateId, PROJECT_LINK_SOURCE);
-    }
-    const result = await db.run(
-      `INSERT INTO project_estimates (project_id, estimate_id, source)
-       VALUES ${valuesSql}
-       ON CONFLICT (project_id, estimate_id) DO NOTHING`,
-      args
-    );
-    inserted += result.count ?? 0;
-  }
-  return inserted;
-}
-
-async function applyCanonicalUpdates(
-  rows: Array<{ projectId: number; estimateId: number }>
+async function updateProjectForGroup(
+  projectId: number,
+  project: ProjectSeedRow,
+  group: SeedGroup,
+  state: SeedSyncState
 ): Promise<void> {
-  for (const batch of chunk(rows, SQL_BATCH_SIZE)) {
-    const valuesSql = batch.map(() => "(?, ?)").join(", ");
-    const args: number[] = [];
-    for (const row of batch) {
-      args.push(row.projectId, row.estimateId);
+  state.stats.projectsUpdated++;
+  const desiredState = deriveDesiredState(project.lifecycle_state, group);
+  const previous = (project.lifecycle_state ?? "seed").toLowerCase();
+
+  if (desiredState === "active" && previous !== "active") {
+    state.stats.promotedToActive++;
+  }
+  if (desiredState === "lost" && previous === "seed") {
+    state.stats.movedToLost++;
+  }
+
+  if (state.dryRun) {
+    return;
+  }
+
+  const updated = (await db.run(
+    `UPDATE projects
+     SET
+       name = CASE
+         WHEN lifecycle_state = 'seed' THEN ?
+         ELSE name
+       END,
+       normalized_name = COALESCE(normalized_name, ?),
+       address = COALESCE(address, ?),
+       account_id = CASE
+         WHEN account_id IS NOT NULL
+           AND EXISTS (
+             SELECT 1 FROM accounts WHERE accounts.id = projects.account_id
+           )
+           THEN account_id
+         WHEN ?::int IS NOT NULL
+           AND EXISTS (
+             SELECT 1 FROM accounts WHERE accounts.id = ?::int
+           )
+           THEN ?::int
+         ELSE NULL
+       END,
+       contractor = COALESCE(contractor, ?),
+       seed_key = CASE
+         WHEN seed_key IS NULL THEN ?
+         ELSE seed_key
+       END,
+       seed_source = COALESCE(seed_source, 'estimate_sync'),
+       lifecycle_state = ?,
+       promoted_at = CASE
+         WHEN ? = 'active' THEN COALESCE(promoted_at, now())
+         ELSE promoted_at
+       END,
+       lost_at = CASE
+         WHEN ? = 'active' THEN NULL
+         WHEN ? = 'lost' THEN COALESCE(lost_at, now())
+         ELSE lost_at
+       END,
+       last_evidence_at = GREATEST(
+         COALESCE(last_evidence_at, '-infinity'::timestamptz),
+         ?::timestamptz
+       ),
+       updated_at = now()
+     WHERE id = ?
+     RETURNING
+       id, lifecycle_state, seed_key, seed_source,
+       name, normalized_name, address, account_id, contractor`,
+    [
+      group.representativeName,
+      group.normalizedName,
+      group.representativeAddress,
+      group.representativeAccountId,
+      group.representativeAccountId,
+      group.representativeAccountId,
+      group.representativeContractor,
+      group.seedKey,
+      desiredState,
+      desiredState,
+      desiredState,
+      desiredState,
+      group.latestEvidenceAt,
+      projectId,
+    ]
+  )) as ProjectSeedRow[];
+
+  const next = updated[0];
+  if (next) {
+    state.projectsById.set(next.id, next);
+    if (next.seed_key) {
+      state.projectsBySeedKey.set(next.seed_key, next);
     }
-
-    await db.run(
-      `WITH canonical(project_id, estimate_id) AS (
-         VALUES ${valuesSql}
-       )
-       UPDATE project_estimates pe
-       SET is_canonical = FALSE
-       FROM canonical
-       WHERE pe.project_id = canonical.project_id
-         AND pe.is_canonical = TRUE
-         AND pe.estimate_id <> canonical.estimate_id`,
-      args
-    );
-
-    await db.run(
-      `WITH canonical(project_id, estimate_id) AS (
-         VALUES ${valuesSql}
-       )
-       UPDATE project_estimates pe
-       SET
-         is_canonical = TRUE,
-         canonicalized_at = CASE
-           WHEN pe.is_canonical = TRUE THEN pe.canonicalized_at
-           ELSE now()
-         END
-       FROM canonical
-       WHERE pe.project_id = canonical.project_id
-         AND pe.estimate_id = canonical.estimate_id
-         AND pe.is_canonical IS DISTINCT FROM TRUE`,
-      args
-    );
   }
 }
+
+function linkGroupEstimates(
+  group: SeedGroup,
+  projectId: number,
+  state: SeedSyncState
+): void {
+  for (const estimate of group.estimates) {
+    const linked =
+      state.estimateLinkedProjects.get(estimate.id) ?? new Set<number>();
+    if (linked.size > 0 && !linked.has(projectId)) {
+      state.stats.linkConflicts++;
+      continue;
+    }
+
+    if (!linked.has(projectId)) {
+      linked.add(projectId);
+      state.estimateLinkedProjects.set(estimate.id, linked);
+      const perProject =
+        state.projectLinkedEstimateIds.get(projectId) ?? new Set<number>();
+      perProject.add(estimate.id);
+      state.projectLinkedEstimateIds.set(projectId, perProject);
+      state.linkRowsToInsert.push({ projectId, estimateId: estimate.id });
+    }
+  }
+
+  const projectEstimateIds = state.projectLinkedEstimateIds.get(projectId);
+  if (!projectEstimateIds || projectEstimateIds.size === 0) {
+    return;
+  }
+
+  const rankedLinked = group.estimates
+    .filter((estimate) => projectEstimateIds.has(estimate.id))
+    .map((estimate) => ({
+      estimateId: estimate.id,
+      priority: getEstimatePriority(estimate),
+    }))
+    .sort((lhs, rhs) => rhs.priority - lhs.priority);
+  const top = rankedLinked[0];
+  if (!top) {
+    return;
+  }
+
+  const currentCanonical = state.canonicalByProject.get(projectId);
+  if (!currentCanonical || top.priority > currentCanonical.priority) {
+    state.canonicalByProject.set(projectId, top);
+  }
+}
+
+// ── Group orchestration ───────────────────────────────────────────────
+
+async function resolveOrCreateProject(
+  group: SeedGroup,
+  state: SeedSyncState
+): Promise<number | null> {
+  const existingId = findProjectForGroup(group, state);
+
+  if (!existingId) {
+    const created = await createProjectForGroup(group, state);
+    return created?.projectId ?? null;
+  }
+
+  const project = state.projectsById.get(existingId);
+  if (project) {
+    await updateProjectForGroup(existingId, project, group, state);
+  }
+  return existingId;
+}
+
+async function finalizeLinks(state: SeedSyncState): Promise<void> {
+  if (!state.dryRun && state.linkRowsToInsert.length > 0) {
+    state.stats.linksInserted = await upsertProjectEstimateLinks(
+      state.linkRowsToInsert
+    );
+  } else {
+    state.stats.linksInserted = state.linkRowsToInsert.length;
+  }
+
+  const canonicalRows = [...state.canonicalByProject.entries()].map(
+    ([pid, value]) => ({
+      projectId: pid,
+      estimateId: value.estimateId,
+    })
+  );
+
+  if (!state.dryRun && canonicalRows.length > 0) {
+    await applyCanonicalUpdates(canonicalRows);
+  }
+  state.stats.canonicalized = canonicalRows.length;
+}
+
+// ── Main sync orchestrator ────────────────────────────────────────────
 
 export async function syncProjectSeedsFromEstimates(
   options: ProjectSeedSyncOptions = {}
@@ -523,267 +430,26 @@ export async function syncProjectSeedsFromEstimates(
     }
   }
 
-  const linkRowsToInsert: Array<{ projectId: number; estimateId: number }> = [];
-  const canonicalByProject = new Map<
-    number,
-    { estimateId: number; priority: number }
-  >();
+  const state: SeedSyncState = {
+    stats,
+    dryRun,
+    estimateLinkedProjects,
+    projectLinkedEstimateIds,
+    projectsById,
+    projectsBySeedKey,
+    projectsByNormalizedName,
+    linkRowsToInsert: [],
+    canonicalByProject: new Map(),
+  };
 
   const run = async () => {
     for (const group of seedGroups) {
-      const linkedIds: number[] = [];
-      for (const estimate of group.estimates) {
-        const set = estimateLinkedProjects.get(estimate.id);
-        if (!set) {
-          continue;
-        }
-        linkedIds.push(...set);
-      }
-
-      let projectId = chooseLinkedProjectId(linkedIds, group, projectsById);
-      if (!projectId) {
-        const bySeed = projectsBySeedKey.get(group.seedKey);
-        if (bySeed) {
-          projectId = bySeed.id;
-        }
-      }
-      if (!(projectId || group.hasLocationKey)) {
-        const candidates =
-          projectsByNormalizedName
-            .get(group.normalizedName)
-            ?.filter((project) => project.seed_key === null) ?? [];
-        if (candidates.length === 1) {
-          projectId = candidates[0]?.id ?? null;
-        }
-      }
-
-      let project = projectId ? (projectsById.get(projectId) ?? null) : null;
-
-      if (!projectId) {
-        stats.projectsCreated++;
-        if (dryRun) {
-          continue;
-        }
-        const desiredState = deriveDesiredState("seed", group);
-        if (desiredState === "active") {
-          stats.promotedToActive++;
-        } else if (desiredState === "lost") {
-          stats.movedToLost++;
-        }
-        const inserted = (await db.run(
-          `INSERT INTO projects (
-             name,
-             normalized_name,
-             address,
-             account_id,
-             contractor,
-             lifecycle_state,
-             seed_key,
-             seed_source,
-             promoted_at,
-             lost_at,
-             last_evidence_at,
-             updated_at
-           )
-           VALUES (
-             ?, ?, ?, (SELECT id FROM accounts WHERE id = ?), ?, ?, ?, 'estimate_sync',
-             CASE WHEN ? = 'active' THEN now() ELSE NULL END,
-             CASE WHEN ? = 'lost' THEN now() ELSE NULL END,
-             ?::timestamptz,
-             now()
-           )
-           RETURNING
-             id,
-             lifecycle_state,
-             seed_key,
-             seed_source,
-             name,
-             normalized_name,
-             address,
-             account_id,
-             contractor`,
-          [
-            group.representativeName,
-            group.normalizedName,
-            group.representativeAddress,
-            group.representativeAccountId,
-            group.representativeContractor,
-            desiredState,
-            group.seedKey,
-            desiredState,
-            desiredState,
-            group.latestEvidenceAt,
-          ]
-        )) as ProjectSeedRow[];
-
-        project = inserted[0] ?? null;
-        projectId = project?.id ?? null;
-        if (!(projectId && project)) {
-          continue;
-        }
-        projectsById.set(projectId, project);
-        projectsBySeedKey.set(group.seedKey, project);
-      } else if (project && projectId) {
-        stats.projectsUpdated++;
-        const desiredState = deriveDesiredState(project.lifecycle_state, group);
-        const previous = (project.lifecycle_state ?? "seed").toLowerCase();
-        if (desiredState === "active" && previous !== "active") {
-          stats.promotedToActive++;
-        }
-        if (desiredState === "lost" && previous === "seed") {
-          stats.movedToLost++;
-        }
-
-        if (!dryRun) {
-          const updated = (await db.run(
-            `UPDATE projects
-             SET
-               name = CASE
-                 WHEN lifecycle_state = 'seed' THEN ?
-                 ELSE name
-               END,
-               normalized_name = COALESCE(normalized_name, ?),
-               address = COALESCE(address, ?),
-               account_id = CASE
-                 WHEN account_id IS NOT NULL
-                   AND EXISTS (
-                     SELECT 1
-                     FROM accounts
-                     WHERE accounts.id = projects.account_id
-                   )
-                   THEN account_id
-                 WHEN ?::int IS NOT NULL
-                   AND EXISTS (
-                     SELECT 1
-                     FROM accounts
-                     WHERE accounts.id = ?::int
-                   )
-                   THEN ?::int
-                 ELSE NULL
-               END,
-               contractor = COALESCE(contractor, ?),
-               seed_key = CASE
-                 WHEN seed_key IS NULL THEN ?
-                 ELSE seed_key
-               END,
-               seed_source = COALESCE(seed_source, 'estimate_sync'),
-               lifecycle_state = ?,
-               promoted_at = CASE
-                 WHEN ? = 'active' THEN COALESCE(promoted_at, now())
-                 ELSE promoted_at
-               END,
-               lost_at = CASE
-                 WHEN ? = 'active' THEN NULL
-                 WHEN ? = 'lost' THEN COALESCE(lost_at, now())
-                 ELSE lost_at
-               END,
-               last_evidence_at = GREATEST(
-                 COALESCE(last_evidence_at, '-infinity'::timestamptz),
-                 ?::timestamptz
-               ),
-               updated_at = now()
-             WHERE id = ?
-             RETURNING
-               id,
-               lifecycle_state,
-               seed_key,
-               seed_source,
-               name,
-               normalized_name,
-               address,
-               account_id,
-               contractor`,
-            [
-              group.representativeName,
-              group.normalizedName,
-              group.representativeAddress,
-              group.representativeAccountId,
-              group.representativeAccountId,
-              group.representativeAccountId,
-              group.representativeContractor,
-              group.seedKey,
-              desiredState,
-              desiredState,
-              desiredState,
-              desiredState,
-              group.latestEvidenceAt,
-              projectId,
-            ]
-          )) as ProjectSeedRow[];
-          const next = updated[0];
-          if (next) {
-            project = next;
-            projectsById.set(project.id, next);
-            if (next.seed_key) {
-              projectsBySeedKey.set(next.seed_key, next);
-            }
-          }
-        }
-      }
-
-      if (!projectId) {
-        continue;
-      }
-
-      for (const estimate of group.estimates) {
-        const linked =
-          estimateLinkedProjects.get(estimate.id) ?? new Set<number>();
-        if (linked.size > 0 && !linked.has(projectId)) {
-          stats.linkConflicts++;
-          continue;
-        }
-
-        if (!linked.has(projectId)) {
-          linked.add(projectId);
-          estimateLinkedProjects.set(estimate.id, linked);
-          const perProject =
-            projectLinkedEstimateIds.get(projectId) ?? new Set<number>();
-          perProject.add(estimate.id);
-          projectLinkedEstimateIds.set(projectId, perProject);
-          linkRowsToInsert.push({ projectId, estimateId: estimate.id });
-        }
-      }
-
-      const projectEstimateIds = projectLinkedEstimateIds.get(projectId);
-      if (!projectEstimateIds || projectEstimateIds.size === 0) {
-        continue;
-      }
-
-      const rankedLinked = group.estimates
-        .filter((estimate) => projectEstimateIds.has(estimate.id))
-        .map((estimate) => ({
-          estimateId: estimate.id,
-          priority: getEstimatePriority(estimate),
-        }))
-        .sort((lhs, rhs) => rhs.priority - lhs.priority);
-      const top = rankedLinked[0];
-      if (!top) {
-        continue;
-      }
-
-      const currentCanonical = canonicalByProject.get(projectId);
-      if (!currentCanonical || top.priority > currentCanonical.priority) {
-        canonicalByProject.set(projectId, top);
+      const projectId = await resolveOrCreateProject(group, state);
+      if (projectId) {
+        linkGroupEstimates(group, projectId, state);
       }
     }
-
-    if (!dryRun && linkRowsToInsert.length > 0) {
-      stats.linksInserted = await upsertProjectEstimateLinks(linkRowsToInsert);
-    } else {
-      stats.linksInserted = linkRowsToInsert.length;
-    }
-
-    const canonicalRows = [...canonicalByProject.entries()].map(
-      ([projectId, value]) => ({
-        projectId,
-        estimateId: value.estimateId,
-      })
-    );
-
-    if (!dryRun && canonicalRows.length > 0) {
-      await applyCanonicalUpdates(canonicalRows);
-    }
-    stats.canonicalized = canonicalRows.length;
+    await finalizeLinks(state);
   };
 
   if (dryRun) {
@@ -794,6 +460,8 @@ export async function syncProjectSeedsFromEstimates(
   await db.transaction(run);
   return stats;
 }
+
+// ── Stale seed cleanup ────────────────────────────────────────────────
 
 export async function markStaleProjectSeeds(
   options: ProjectSeedStaleOptions = {}

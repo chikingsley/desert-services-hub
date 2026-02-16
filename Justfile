@@ -62,11 +62,11 @@ fix:
 
 # Validate AGENTS/skill path references stay aligned with real files.
 docs-path-check:
-    @{{BUN}} run scripts/check-doc-paths.ts
+    @{{BUN}} run .github/scripts/check-doc-paths.ts
 
 # Flag source directories with too many files (default: 10).
 folder-size-check:
-    @{{BUN}} run scripts/check-folder-size.ts
+    @{{BUN}} run .github/scripts/check-folder-size.ts
 
 # Webhook Jobs: inspect / requeue background jobs in the `webhook_jobs` table.
 jobs *args:

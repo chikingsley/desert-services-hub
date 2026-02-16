@@ -5,7 +5,7 @@ on:
     paths:
       - "AGENTS.md"
       - ".agents/skills/**"
-      - "scripts/check-doc-paths.ts"
+      - ".github/scripts/check-doc-paths.ts"
       - "Justfile"
       - ".github/workflows/guardrails-doc-paths.yml"
   push:
@@ -14,7 +14,7 @@ on:
     paths:
       - "AGENTS.md"
       - ".agents/skills/**"
-      - "scripts/check-doc-paths.ts"
+      - ".github/scripts/check-doc-paths.ts"
       - "Justfile"
       - ".github/workflows/guardrails-doc-paths.yml"
 
@@ -31,4 +31,4 @@ jobs:
           bun-version: "1.3.8"
 
       - name: Validate AGENTS/skill path references
-        run: bun run scripts/check-doc-paths.ts
+        run: bun run .github/scripts/check-doc-paths.ts

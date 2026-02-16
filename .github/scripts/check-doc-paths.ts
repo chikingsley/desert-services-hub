@@ -26,7 +26,7 @@ const repoPathPrefixes = [
   "docker-compose.yml",
   "apps/",
   "lib/",
-  "scripts/",
+  ".github/",
   "supabase/",
   "data/",
   "docs/",

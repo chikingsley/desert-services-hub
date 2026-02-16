@@ -1,8 +1,9 @@
 """
-PDF utilities using PyMuPDF.
+PDF utilities using PyMuPDF and Kreuzberg.
 
 Provides PDF splitting, page extraction, and file info operations.
 Handles large documents that exceed Mistral's limits (50MB, 1000 pages).
+Uses kreuzberg for metadata extraction, pymupdf for PDF manipulation.
 """
 
 import logging
@@ -10,6 +11,7 @@ import math
 from pathlib import Path
 
 import pymupdf
+from kreuzberg import extract_file_sync
 
 from pdf_analysis.mistral_types import (
     DEFAULT_CHUNK_SIZE,
@@ -25,7 +27,7 @@ logger = logging.getLogger(__name__)
 
 def get_pdf_info(file_path: str) -> PDFInfo:
     """
-    Get information about a PDF file.
+    Get information about a PDF file using kreuzberg.
 
     Args:
         file_path: Path to the PDF file.
@@ -47,32 +49,30 @@ def get_pdf_info(file_path: str) -> PDFInfo:
 
     file_size = path.stat().st_size
 
-    doc = pymupdf.open(file_path)
-    try:
-        page_count = len(doc)
-        is_encrypted = doc.is_encrypted
+    # Use kreuzberg for metadata extraction
+    result = extract_file_sync(file_path)
+    page_count = result.metadata.get("page_count", 0)
+    is_encrypted = result.metadata.get("is_encrypted", False)
 
-        # Calculate if splitting is needed
-        needs_splitting = file_size > MAX_FILE_SIZE_BYTES or page_count > MAX_PAGES
+    # Calculate if splitting is needed
+    needs_splitting = file_size > MAX_FILE_SIZE_BYTES or page_count > MAX_PAGES
 
-        # Calculate recommended chunks
-        if needs_splitting:
-            # Use page-based chunking (more predictable than size-based)
-            recommended_chunks = math.ceil(page_count / DEFAULT_CHUNK_SIZE)
-        else:
-            recommended_chunks = 1
+    # Calculate recommended chunks
+    if needs_splitting:
+        # Use page-based chunking (more predictable than size-based)
+        recommended_chunks = math.ceil(page_count / DEFAULT_CHUNK_SIZE)
+    else:
+        recommended_chunks = 1
 
-        return PDFInfo(
-            file_path=str(path.absolute()),
-            file_size_bytes=file_size,
-            file_size_mb=file_size / (1024 * 1024),
-            page_count=page_count,
-            is_encrypted=is_encrypted,
-            needs_splitting=needs_splitting,
-            recommended_chunks=recommended_chunks,
-        )
-    finally:
-        doc.close()
+    return PDFInfo(
+        file_path=str(path.absolute()),
+        file_size_bytes=file_size,
+        file_size_mb=file_size / (1024 * 1024),
+        page_count=page_count,
+        is_encrypted=is_encrypted,
+        needs_splitting=needs_splitting,
+        recommended_chunks=recommended_chunks,
+    )
 
 
 def split_pdf(
@@ -293,7 +293,7 @@ def pdf_to_images(
 
 def get_page_count(file_path: str) -> int:
     """
-    Get the page count of a PDF without loading the full document info.
+    Get the page count of a PDF using kreuzberg.
 
     Args:
         file_path: Path to the PDF file.
@@ -301,8 +301,5 @@ def get_page_count(file_path: str) -> int:
     Returns:
         Number of pages in the PDF.
     """
-    doc = pymupdf.open(file_path)
-    try:
-        return len(doc)
-    finally:
-        doc.close()
+    result = extract_file_sync(file_path)
+    return result.metadata.get("page_count", 0)

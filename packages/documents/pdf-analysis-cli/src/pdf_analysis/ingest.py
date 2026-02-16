@@ -1,7 +1,7 @@
 """Document ingestion pipeline: text extraction → LLM analysis → structured JSON.
 
 Two-phase approach:
-1. Fast text extraction via pymupdf (no API calls)
+1. Fast text extraction via kreuzberg (Rust-based, no API calls)
 2. LLM analysis for classification + structured extraction (Ollama/Gemini/Mistral)
 
 The LLM decides what the document is and extracts relevant fields.
@@ -15,7 +15,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-import pymupdf
+from kreuzberg import ExtractionConfig, OcrConfig, PageConfig, extract_file_sync
 
 from pdf_analysis.config import Settings
 from pdf_analysis.provider_manager import ProviderManager
@@ -58,30 +58,12 @@ class IngestResult:
 # ---------------------------------------------------------------------------
 
 
-def _has_text_layer(pdf_path: Path, sample_pages: int = 5) -> tuple[bool, int]:
-    """Quick check if PDF has a text layer using pymupdf (milliseconds, not minutes).
-
-    Samples up to ``sample_pages`` pages. Returns (has_text, page_count).
-    """
-    import pymupdf
-
-    doc = pymupdf.open(pdf_path)
-    try:
-        page_count = len(doc)
-        check = min(sample_pages, page_count)
-        for i in range(check):
-            if doc.load_page(i).get_text().strip():
-                return True, page_count
-        return False, page_count
-    finally:
-        doc.close()
-
-
 def extract_text(pdf_path: Path, max_pages: int = 0) -> TextResult:
-    """Extract text from a PDF using pdfplumber. No LLM calls.
+    """Extract text from a PDF using kreuzberg. No LLM calls.
 
-    Runs a fast pymupdf pre-check first — if the PDF has no text layer
-    (pure scanned images), skips the expensive pdfplumber extraction entirely.
+    Uses kreuzberg for fast, reliable text extraction with automatic OCR fallback
+    for scanned documents. Extracts with page markers for compatibility with
+    chunking/parsing logic.
 
     Args:
         pdf_path: Path to PDF file.
@@ -92,41 +74,34 @@ def extract_text(pdf_path: Path, max_pages: int = 0) -> TextResult:
     """
     path = Path(pdf_path)
 
-    # Fast pre-check: skip pdfplumber entirely for pure-image PDFs
-    has_text, page_count = _has_text_layer(path)
-    if not has_text:
+    # Extract with page markers (<!-- PAGE N --> format)
+    config = ExtractionConfig(
+        pages=PageConfig(insert_page_markers=True),
+        force_ocr=False,  # Use text layer if available, OCR only if needed
+    )
+
+    try:
+        result = extract_file_sync(str(path), config=config)
+
+        page_count = result.metadata.get("page_count", 0)
+        has_text = bool(result.content.strip())
+
+        return TextResult(
+            text=result.content,
+            page_count=page_count,
+            has_text=has_text,
+            filename=path.name,
+            pages_with_text=page_count if has_text else 0,
+        )
+    except Exception as e:
+        # Return empty result if extraction fails
         return TextResult(
             text="",
-            page_count=page_count,
+            page_count=0,
             has_text=False,
             filename=path.name,
             pages_with_text=0,
         )
-
-    pages_text: list[str] = []
-    pages_with_text = 0
-
-    with pdfplumber.open(path) as pdf:
-        page_count = len(pdf.pages)
-        limit = min(max_pages, page_count) if max_pages > 0 else page_count
-
-        for page in pdf.pages[:limit]:
-            page_text = page.extract_text()
-            if page_text and page_text.strip():
-                pages_text.append(page_text)
-                pages_with_text += 1
-            else:
-                pages_text.append("")
-
-    full_text = "\n\n".join(f"--- Page {i + 1} ---\n{t}" for i, t in enumerate(pages_text) if t)
-
-    return TextResult(
-        text=full_text,
-        page_count=page_count,
-        has_text=pages_with_text > 0,
-        filename=path.name,
-        pages_with_text=pages_with_text,
-    )
 
 
 # ---------------------------------------------------------------------------
@@ -184,7 +159,7 @@ async def ingest_pdf(
 ) -> IngestResult:
     """Full ingestion: text extraction → LLM analysis → structured result.
 
-    1. Extracts text with pdfplumber
+    1. Extracts text with kreuzberg (fast Rust-based extraction)
     2. If no text, falls back to OCR via provider manager
     3. Sends text to LLM for classification + extraction
     4. Returns structured IngestResult
@@ -193,9 +168,9 @@ async def ingest_pdf(
     path = Path(pdf_path)
     manager = ProviderManager(settings or Settings())
 
-    # Phase 1: text extraction
+    # Phase 1: text extraction with kreuzberg
     text_result = extract_text(path)
-    text_method = "pdfplumber"
+    text_method = "kreuzberg"
     raw_text = text_result.text
 
     # If no text, use OCR

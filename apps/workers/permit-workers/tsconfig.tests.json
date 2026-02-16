@@ -1,8 +1,0 @@
-{
-  "extends": "./tsconfig.json",
-  "include": ["tests/**/*"],
-  "exclude": ["node_modules", "docs", "logs", "map-test"],
-  "compilerOptions": {
-    "strictNullChecks": true
-  }
-}

@@ -57,15 +57,11 @@
         "address": "1650 S BULLARD AVE",
         "city": "GOODYEAR",
         "parcelRaw": "500-08-996",
-        "apnCandidates": [
-          "500-08-996"
-        ]
+        "apnCandidates": ["500-08-996"]
       },
       "prediction": {
         "source": "apn",
-        "apnsUsed": [
-          "500-08-996"
-        ],
+        "apnsUsed": ["500-08-996"],
         "polygonCount": 1
       },
       "documentClues": null,
@@ -84,9 +80,7 @@
         "passArea": true,
         "passIou": false
       },
-      "debug": [
-        "prediction from APN (1 polygons)"
-      ]
+      "debug": ["prediction from APN (1 polygons)"]
     },
     {
       "permitId": "D0064908",
@@ -97,15 +91,11 @@
         "address": null,
         "city": "GOODYEAR",
         "parcelRaw": "501-72-958J",
-        "apnCandidates": [
-          "501-72-958J"
-        ]
+        "apnCandidates": ["501-72-958J"]
       },
       "prediction": {
         "source": "apn",
-        "apnsUsed": [
-          "501-72-958J"
-        ],
+        "apnsUsed": ["501-72-958J"],
         "polygonCount": 1
       },
       "documentClues": null,
@@ -124,9 +114,7 @@
         "passArea": false,
         "passIou": false
       },
-      "debug": [
-        "prediction from APN (1 polygons)"
-      ]
+      "debug": ["prediction from APN (1 polygons)"]
     }
   ]
 }

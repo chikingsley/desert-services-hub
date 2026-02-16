@@ -1,8 +1,5 @@
 import { calculateBoundsFromCenter, calculateBoundsFromCorner } from "./bounds";
-import {
-  calculateConsensusConfidence,
-  clusterSignals,
-} from "./consensus";
+import { calculateConsensusConfidence, clusterSignals } from "./consensus";
 import { geocodeAddress, geocodeIntersection } from "./geocoding";
 import { getRoadGeometryByName } from "./roads";
 import type {
@@ -31,10 +28,7 @@ function dedupeRoads(roads: ExtractedPlanHints["roads"]): string[] {
   return unique;
 }
 
-function pickSiteSizeMeters(
-  hints: ExtractedPlanHints,
-  options: RehydrateOptions
-): number {
+function pickSiteSizeMeters(hints: ExtractedPlanHints, options: RehydrateOptions): number {
   const defaultSize = options.defaultSiteSizeMeters ?? 150;
   const hinted = hints.estimatedSizeMeters ?? defaultSize;
   return Math.max(20, Math.min(1200, hinted));
@@ -65,7 +59,7 @@ function findBestCornerSignal(signals: LocationSignal[]): {
 async function buildSignals(
   hints: ExtractedPlanHints,
   options: RehydrateOptions,
-  log: string[]
+  log: string[],
 ): Promise<LocationSignal[]> {
   const signals: LocationSignal[] = [];
 
@@ -93,10 +87,7 @@ async function buildSignals(
     log.push(`signal: address geocode ${coords ? "ok" : "miss"}`);
   }
 
-  const intersections = hints.intersections.slice(
-    0,
-    options.maxIntersections ?? 4
-  );
+  const intersections = hints.intersections.slice(0, options.maxIntersections ?? 4);
 
   for (const intersection of intersections) {
     if (!(hints.city && hints.state)) {
@@ -108,7 +99,7 @@ async function buildSignals(
       intersection.road2,
       hints.city,
       hints.state,
-      options.googleMapsApiKey
+      options.googleMapsApiKey,
     );
 
     signals.push({
@@ -120,7 +111,7 @@ async function buildSignals(
     });
 
     log.push(
-      `signal: intersection ${intersection.road1} & ${intersection.road2} ${coords ? "ok" : "miss"}`
+      `signal: intersection ${intersection.road1} & ${intersection.road2} ${coords ? "ok" : "miss"}`,
     );
   }
 
@@ -160,7 +151,7 @@ async function buildRoadGeometry(
   hints: ExtractedPlanHints,
   consensusLocation: LatLng | null,
   options: RehydrateOptions,
-  log: string[]
+  log: string[],
 ): Promise<RoadGeometry[]> {
   if (!options.enableRoadGeometry) {
     return [];
@@ -191,7 +182,7 @@ async function buildRoadGeometry(
 
 export async function runRehydratedPipeline(
   hints: ExtractedPlanHints,
-  options: RehydrateOptions = {}
+  options: RehydrateOptions = {},
 ): Promise<RehydrateResult> {
   const log: string[] = [];
   const clusterRadius = options.clusterRadiusMeters ?? 500;
@@ -207,24 +198,16 @@ export async function runRehydratedPipeline(
 
   if (primaryCluster) {
     log.push(
-      `cluster: primary size=${primaryCluster.signals.length} radius=${primaryCluster.radiusMeters.toFixed(1)}m`
+      `cluster: primary size=${primaryCluster.signals.length} radius=${primaryCluster.radiusMeters.toFixed(1)}m`,
     );
   } else {
     log.push("cluster: none");
   }
 
   const consensusLocation = primaryCluster?.centroid ?? null;
-  const consensusConfidence = calculateConsensusConfidence(
-    primaryCluster,
-    validSignalCount
-  );
+  const consensusConfidence = calculateConsensusConfidence(primaryCluster, validSignalCount);
 
-  const roadGeometries = await buildRoadGeometry(
-    hints,
-    consensusLocation,
-    options,
-    log
-  );
+  const roadGeometries = await buildRoadGeometry(hints, consensusLocation, options, log);
 
   let suggestedBounds = null;
   if (consensusLocation) {
@@ -237,15 +220,11 @@ export async function runRehydratedPipeline(
         cornerSignal.coords,
         cornerSignal.cornerPosition,
         sizeMeters,
-        aspectRatio
+        aspectRatio,
       );
       log.push(`bounds: corner-based (${cornerSignal.cornerPosition})`);
     } else {
-      suggestedBounds = calculateBoundsFromCenter(
-        consensusLocation,
-        sizeMeters,
-        aspectRatio
-      );
+      suggestedBounds = calculateBoundsFromCenter(consensusLocation, sizeMeters, aspectRatio);
       log.push("bounds: center-based");
     }
   }

@@ -51,7 +51,6 @@ export interface Estimate {
   sourceFile: string;
 }
 
-// Top-level regex patterns for extraction
 const ESTIMATE_NUMBER_REGEX = /Estimate #\s*[\n\r]*(\d+)(-R\d+)?/;
 const DATE_REGEX = /Date\s*[\n\r]*(\d{1,2}\/\d{1,2}\/\d{4})/;
 const GC_REGEX = /To:\s*[\n\r]*([\s\S]*?)(?=Job Name)/;
@@ -60,10 +59,30 @@ const ESTIMATOR_REGEX = /Estimator\s*[\n\r]*([^\n\r]+)/;
 const JOB_ADDRESS_REGEX =
   /SWPPP ESTIMATE FOR:\s*[\n\r]*[^\n\r]+[\n\r]+([^\n\r]+)[\n\r]+([^\n\r]+)/;
 const DATE_CONTEXT_REGEX = /\d{1,2}\/\d{1,2}\/\d{4}\s*$/;
+const PRICE_PATTERN = /(\d[\d,]*)\s+(\d[\d,]*\.\d{2})\s+(\d[\d,]*\.\d{2})(T)?/g;
 const PRICE_TRIPLET_REGEX = /\d[\d,]*\s+\d[\d,]*\.\d{2}\s+\d[\d,]*\.\d{2}/;
 const DESC_ITEM_REGEX =
   /([A-Z][A-Za-z\s]+(?:Protection|Entrance|Sock|Narrative|Sign|Kit|Inspection|Filing|Charge|Certification|Rental|Grate))/;
 const RENTAL_TAX_REGEX = /Rental Tax\s+(\d[\d,]*\.\d{2})\s+(\d[\d,]*\.\d{2})/;
+
+interface ItemCategory {
+  section: EstimateLineItem["section"];
+  unit: string | null;
+}
+
+interface ParsedPriceTriplet {
+  qty: number;
+  unitPrice: number;
+  total: number;
+  taxable: boolean;
+  matchIndex: number;
+}
+
+interface ResolvedItemDetails {
+  itemName: string;
+  description: string;
+  category: ItemCategory;
+}
 
 /**
  * Parse estimate text into structured format
@@ -87,16 +106,13 @@ export function parseEstimateText(text: string, sourceFile: string): Estimate {
 }
 
 function extractHeader(text: string): EstimateHeader {
-  // Extract estimate number (may include revision like -R1)
   const estimateMatch = text.match(ESTIMATE_NUMBER_REGEX);
   const estimateNumber = estimateMatch?.[1] ?? "";
   const revision = estimateMatch?.[2] ?? null;
 
-  // Extract date
   const dateMatch = text.match(DATE_REGEX);
   const date = dateMatch?.[1] ?? "";
 
-  // Extract GC name and address
   const gcMatch = text.match(GC_REGEX);
   let gcName = "";
   let gcAddress = "";
@@ -104,20 +120,17 @@ function extractHeader(text: string): EstimateHeader {
     const gcLines = gcMatch[1]
       .trim()
       .split("\n")
-      .filter((l) => l.trim());
+      .filter((line) => line.trim());
     gcName = gcLines[0] ?? "";
     gcAddress = gcLines.slice(1).join(", ");
   }
 
-  // Extract job name
   const jobNameMatch = text.match(JOB_NAME_REGEX);
   const jobName = jobNameMatch?.[1]?.trim() ?? "";
 
-  // Extract estimator
   const estimatorMatch = text.match(ESTIMATOR_REGEX);
   const estimator = estimatorMatch?.[1]?.trim() ?? "";
 
-  // Extract job address
   const addressMatch = text.match(JOB_ADDRESS_REGEX);
   let jobAddress = "";
   if (addressMatch?.[1] && addressMatch[2]) {
@@ -136,7 +149,6 @@ function extractHeader(text: string): EstimateHeader {
   };
 }
 
-// Item categorization rules
 const ITEM_RULES: Record<
   string,
   { section: EstimateLineItem["section"]; unit?: string }
@@ -166,10 +178,7 @@ const ITEM_RULES: Record<
   textura: { section: "required", unit: "ea" },
 };
 
-function categorizeItem(description: string): {
-  section: EstimateLineItem["section"];
-  unit: string | null;
-} {
+function categorizeItem(description: string): ItemCategory {
   const lowerDesc = description.toLowerCase();
 
   for (const [pattern, config] of Object.entries(ITEM_RULES)) {
@@ -181,111 +190,137 @@ function categorizeItem(description: string): {
   return { section: "misc", unit: null };
 }
 
+function parseNumber(raw: string): number {
+  return Number.parseFloat(raw.replaceAll(/,/g, ""));
+}
+
+function parsePriceTripletMatch(
+  match: RegExpMatchArray
+): ParsedPriceTriplet | null {
+  const qtyStr = match[1];
+  const unitPriceStr = match[2];
+  const totalStr = match[3];
+  if (!(qtyStr && unitPriceStr && totalStr)) {
+    return null;
+  }
+
+  return {
+    qty: parseNumber(qtyStr),
+    unitPrice: parseNumber(unitPriceStr),
+    total: parseNumber(totalStr),
+    taxable: match[4] === "T",
+    matchIndex: match.index ?? 0,
+  };
+}
+
+function getContextBefore(
+  text: string,
+  matchIndex: number,
+  length: number
+): string {
+  return text.slice(Math.max(0, matchIndex - length), matchIndex);
+}
+
+function shouldSkipPriceTriplet(
+  triplet: ParsedPriceTriplet,
+  contextBefore: string
+): boolean {
+  if (DATE_CONTEXT_REGEX.test(contextBefore)) {
+    return true;
+  }
+
+  const expectedTotal = triplet.qty * triplet.unitPrice;
+  if (Math.abs(expectedTotal - triplet.total) > 1 && triplet.qty !== 0) {
+    return true;
+  }
+
+  if (triplet.qty === 0 && triplet.total === 0) {
+    return true;
+  }
+
+  return contextBefore.toLowerCase().includes("rental tax");
+}
+
+function sectionIsAdditionalServices(
+  text: string,
+  matchIndex: number
+): boolean {
+  return text.slice(0, matchIndex).includes("ADDITIONAL SERVICES");
+}
+
+function toItemName(pattern: string): string {
+  return pattern
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
+function resolveItemDetailsFromContext(
+  lookbackText: string
+): ResolvedItemDetails {
+  let itemName = "Misc";
+  let category = categorizeItem(lookbackText);
+
+  const lowerLookback = lookbackText.toLowerCase();
+  for (const pattern of Object.keys(ITEM_RULES)) {
+    const patternIndex = lowerLookback.lastIndexOf(pattern);
+    if (patternIndex === -1) {
+      continue;
+    }
+
+    const textAfterPattern = lookbackText.slice(patternIndex);
+    if (PRICE_TRIPLET_REGEX.test(textAfterPattern)) {
+      continue;
+    }
+
+    itemName = toItemName(pattern);
+    const rule = ITEM_RULES[pattern];
+    if (rule) {
+      category = { section: rule.section, unit: rule.unit ?? null };
+    }
+    break;
+  }
+
+  const descMatch = lookbackText.match(DESC_ITEM_REGEX);
+  const description = descMatch?.[1]?.trim() ?? itemName;
+
+  return { category, description, itemName };
+}
+
 function extractLineItems(text: string): EstimateLineItem[] {
   const items: EstimateLineItem[] = [];
-
-  // Check if text is space-separated (PDF extraction) or newline-separated
-  const _isSpaceSeparated =
-    !text.includes("\n") || text.split("\n").length < 10;
-
   let inAdditionalServices = false;
 
-  // Pattern: qty unitPrice total (with optional T for taxable)
-  // This pattern finds price triplets anywhere in the text
-  // Examples: "1 1,350.00 1,350.00" or "24 1,100.00 26,400.00T"
-  const pricePattern =
-    /(\d[\d,]*)\s+(\d[\d,]*\.\d{2})\s+(\d[\d,]*\.\d{2})(T)?/g;
-
-  // Find all price matches
-  for (const match of text.matchAll(pricePattern)) {
-    const qtyStr = match[1];
-    const unitPriceStr = match[2];
-    const totalStr = match[3];
-    if (!(qtyStr && unitPriceStr && totalStr)) {
-      continue;
-    }
-    const qty = Number.parseFloat(qtyStr.replaceAll(/,/g, ""));
-    const unitPrice = Number.parseFloat(unitPriceStr.replaceAll(/,/g, ""));
-    const total = Number.parseFloat(totalStr.replaceAll(/,/g, ""));
-    const taxable = match[4] === "T";
-
-    // Skip if this looks like a date (month/day/year pattern nearby)
-    const contextBefore = text.slice(
-      Math.max(0, match.index - 50),
-      match.index
-    );
-    if (DATE_CONTEXT_REGEX.test(contextBefore)) {
+  for (const match of text.matchAll(PRICE_PATTERN)) {
+    const triplet = parsePriceTripletMatch(match);
+    if (!triplet) {
       continue;
     }
 
-    // Skip if qty * unitPrice doesn't roughly equal total (sanity check)
-    const expectedTotal = qty * unitPrice;
-    if (Math.abs(expectedTotal - total) > 1 && qty !== 0) {
+    const contextBefore = getContextBefore(text, triplet.matchIndex, 50);
+    if (shouldSkipPriceTriplet(triplet, contextBefore)) {
       continue;
     }
 
-    // Skip items with 0 qty and 0 total (budgetary placeholders)
-    if (qty === 0 && total === 0) {
-      continue;
-    }
-
-    // Skip rental tax line
-    if (contextBefore.toLowerCase().includes("rental tax")) {
-      continue;
-    }
-
-    // Check if we're in additional services section
-    const textBeforeMatch = text.slice(0, match.index);
-    if (textBeforeMatch.includes("ADDITIONAL SERVICES")) {
-      inAdditionalServices = true;
-    }
-
-    // Get context before the match to determine the item type
-    // Look for known item patterns in the preceding text
-    const lookbackText = text.slice(
-      Math.max(0, match.index - 200),
-      match.index
+    inAdditionalServices ||= sectionIsAdditionalServices(
+      text,
+      triplet.matchIndex
     );
 
-    let itemName = "Misc";
-    let category: {
-      section: EstimateLineItem["section"];
-      unit: string | null;
-    } = categorizeItem(lookbackText);
-
-    for (const pattern of Object.keys(ITEM_RULES)) {
-      // Check if pattern appears in lookback and is the most recent one
-      const patternIndex = lookbackText.toLowerCase().lastIndexOf(pattern);
-      if (patternIndex !== -1) {
-        // Make sure there isn't another price triplet between the pattern and our match
-        const textAfterPattern = lookbackText.slice(patternIndex);
-        if (!PRICE_TRIPLET_REGEX.test(textAfterPattern)) {
-          itemName = pattern
-            .split(" ")
-            .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-            .join(" ");
-          const rule = ITEM_RULES[pattern];
-          if (rule) {
-            category = { section: rule.section, unit: rule.unit ?? null };
-          }
-          break;
-        }
-      }
-    }
-
-    // Extract a short description from context
-    const descMatch = lookbackText.match(DESC_ITEM_REGEX);
-    const description = descMatch?.[1]?.trim() ?? itemName;
+    const lookbackText = getContextBefore(text, triplet.matchIndex, 200);
+    const item = resolveItemDetailsFromContext(lookbackText);
 
     items.push({
-      description,
-      item: itemName,
-      qty,
-      section: inAdditionalServices ? "additional_services" : category.section,
-      taxable,
-      total,
-      unit: category.unit,
-      unitPrice,
+      description: item.description,
+      item: item.itemName,
+      qty: triplet.qty,
+      section: inAdditionalServices
+        ? "additional_services"
+        : item.category.section,
+      taxable: triplet.taxable,
+      total: triplet.total,
+      unit: item.category.unit,
+      unitPrice: triplet.unitPrice,
     });
   }
 
@@ -296,7 +331,6 @@ function extractTax(
   text: string,
   lineItems: EstimateLineItem[]
 ): EstimateTax | null {
-  // Look for Rental Tax line
   const taxMatch = text.match(RENTAL_TAX_REGEX);
 
   const taxAmountStr = taxMatch?.[2];
@@ -311,7 +345,7 @@ function extractTax(
     return {
       taxAmount,
       taxRate: Math.round(taxRate * 10_000) / 10_000,
-      taxableSubtotal, // Round to 4 decimal places
+      taxableSubtotal,
     };
   }
 
@@ -319,7 +353,6 @@ function extractTax(
 }
 
 function extractTotal(text: string): number {
-  // Look for the final total (usually last dollar amount before page marker)
   const matches = text.match(/\$(\d[\d,]*\.\d{2})/g);
   const lastMatch = matches?.at(-1);
   if (lastMatch) {
@@ -328,5 +361,4 @@ function extractTotal(text: string): number {
   return 0;
 }
 
-// Export for testing
 export { extractHeader, extractLineItems, extractTax, extractTotal };

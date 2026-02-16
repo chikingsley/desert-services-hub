@@ -21,12 +21,14 @@ import {
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
   SidebarRail,
   SidebarSeparator,
 } from "@/apps/web/frontend/components/ui/sidebar";
+import {
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+} from "@/apps/web/frontend/components/ui/sidebar-menu";
 import { fetcher } from "@/apps/web/frontend/lib/fetcher";
 
 interface AutomationSidebarStatus {

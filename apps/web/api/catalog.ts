@@ -7,7 +7,7 @@ import {
   catalog,
   findItem,
   takeoffBundles,
-} from "@estimates/catalog";
+} from "@estimates/catalog/catalog";
 
 function buildTakeoffItemCodeSet(): Set<string> {
   const codes = new Set<string>();

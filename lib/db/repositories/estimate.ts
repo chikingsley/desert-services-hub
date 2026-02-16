@@ -39,6 +39,31 @@ function parseEstimateRow(row: Record<string, unknown>): Estimate {
   };
 }
 
+function toEstimateUpsertParams(data: UpsertEstimateData): unknown[] {
+  return [
+    data.mondayItemId,
+    data.name,
+    data.estimateNumber ?? null,
+    data.contractor ?? null,
+    data.groupId ?? null,
+    data.groupTitle ?? null,
+    data.mondayUrl ?? null,
+    data.accountMondayId ?? null,
+    data.accountDomain ?? null,
+    data.bidStatus ?? null,
+    data.bidValue ?? null,
+    data.awardedValue ?? null,
+    data.bidSource ?? null,
+    Number(data.awarded === true),
+    data.dueDate ?? null,
+    data.location ?? null,
+    data.sharepointUrl ?? null,
+    data.estimateStorageBucket ?? null,
+    data.estimateStoragePath ?? null,
+    data.estimateFileName ?? null,
+  ];
+}
+
 export async function upsertEstimate(
   data: UpsertEstimateData
 ): Promise<number> {
@@ -71,28 +96,7 @@ export async function upsertEstimate(
       estimate_file_name = COALESCE(excluded.estimate_file_name, estimates.estimate_file_name),
       synced_at = now(),
       updated_at = now()`,
-    [
-      data.mondayItemId,
-      data.name,
-      data.estimateNumber ?? null,
-      data.contractor ?? null,
-      data.groupId ?? null,
-      data.groupTitle ?? null,
-      data.mondayUrl ?? null,
-      data.accountMondayId ?? null,
-      data.accountDomain ?? null,
-      data.bidStatus ?? null,
-      data.bidValue ?? null,
-      data.awardedValue ?? null,
-      data.bidSource ?? null,
-      data.awarded ? 1 : 0,
-      data.dueDate ?? null,
-      data.location ?? null,
-      data.sharepointUrl ?? null,
-      data.estimateStorageBucket ?? null,
-      data.estimateStoragePath ?? null,
-      data.estimateFileName ?? null,
-    ]
+    toEstimateUpsertParams(data)
   );
 
   const row = await db

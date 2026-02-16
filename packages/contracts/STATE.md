@@ -1,81 +1,65 @@
 # Contract Processing - Current State
 
-**Updated:** 2026-01-27
-**Next:** Test new workflow on next incoming contract
+**Updated:** 2026-02-16
+**Architecture:** See `ARCHITECTURE.md` for the full pipeline map with gaps.
 
 ---
 
 ## What's Working
 
-### New Workflow (January 2026)
+### Automated (Running Now)
 
-Redesigned workflow with anti-hallucination measures:
+- **Email storage:** Emails to contracts@ are captured in `emails` table with attachments downloaded
+- **Project creation:** Estimate sync auto-creates projects from Monday.com estimates (~60s poll)
+- **Project-estimate linking:** `project_estimates` join table maintained automatically
+- **Intake pipeline:** When emails are manually forwarded to intake@, full OCR + classification + linking works
+- **Document classifier:** Heuristic classifier detects contract, subcontract, sov, insurance, po, plan_set, noi, etc.
+- **Contract packet schema:** `contract_packets` + `contract_packet_documents` tables with lifecycle states + SLA tracking
+- **SOV master:** `project_sov_master` + revision history for canonical estimate-based SOV
+- **Web UI:** Contracts list with search, filter, sort, detail panel
 
-- **Queue-based entry:** `workflow/queue.ts` - view contracts@ queue from Supabase Postgres
-- **Document collection:** `workflow/collect.ts` - gather PDFs into project folders
-- **Citation-based extraction:** `workflow/extract.ts` - every value requires source quote
-- **Business rule validation:** `workflow/validate.ts` - Tucson, fines, mobilization rules
-- **Math-verified reconciliation:** `workflow/reconcile.ts` - KEPT/REMOVED/ADDED tracking
-- **Template-based emails:** `templates/*.hbs` - section filling, not free-form generation
+### Manual Steps Required
 
-### Infrastructure
-
-- **PDF Analysis OCR:** `apps/pdf-analysis/` - Unified Python OCR (Gemini/local/Mistral providers)
-- **Email census:** `services/email/census/` - 41+ contracts indexed by normalized_subject
-- **Zod schemas:** `schemas/` - structured output with citation requirements
-
----
-
-## Recent Issues Fixed
-
-From Sun Health La Loma RGS run (see `projects/ground-truth/project-1073-sun-health-rgs/issues.md`):
-
-1. ✅ Fabricated scope items → Citation requirement enforces source quotes
-2. ✅ Assumed owner → Explicit null if not in documents
-3. ✅ Invented retention/billing → Source validation
-4. ✅ Math errors → Reconciliation must balance
-5. ✅ Free-form emails → Template-based generation
+- **Email classification:** Must manually classify emails as CONTRACT in web UI
+- **Attachment processing:** Must forward to intake@ to trigger parsing (emails from contracts@ don't auto-process)
+- **Project linking:** Contract emails aren't auto-linked to projects (folder watcher only watches Projects/Active/)
+- **Packet creation:** No auto-creation of contract_packets when contract arrives
+- **SOV comparison:** No automated line-item extraction from contract PDFs
 
 ---
 
-## Workflow Commands
+## Current Test Case: Redpoint Headquarters
 
-```bash
-# View contract queue
-bun services/contract/workflow/queue.ts list
+First real contract to test the pipeline: `"1000 - Subcontrat.002 - SWPPP ($7,930.00) - Redpoint Headquarters."`
 
-# Collect documents for a contract
-bun services/contract/workflow/collect.ts collect "Project Name"
-
-# Run OCR on a PDF
-bun services/contract/workflow/extract.ts ocr ./path/to/file.pdf
-
-# Validate reconciliation
-bun services/contract/workflow/reconcile.ts validate ./path/to/folder
-```
-
----
-
-## Next Steps
-
-1. **Test on next contract** - Run full workflow on incoming contract
-2. **Wire up LLM extraction** - Connect Claude/Gemini to extraction prompts
-3. **Add email sending** - Auto-send from templates
-4. **Build UI** - Contract queue management interface
+| What | Status |
+|------|--------|
+| Email stored (7 copies) | ✅ |
+| Attachments downloaded (3 files × 7) | ✅ but `extraction_status = 'pending'` |
+| Project exists (#24243) | ✅ |
+| Estimate linked (02112623) | ✅ but `bid_status` still "Bid Sent" |
+| Email classified | ❌ NULL |
+| Email linked to project | ❌ NULL |
+| Documents parsed | ❌ None in `documents` table |
+| Contract packet | ❌ None exists |
 
 ---
 
-## Backlog
+## Priority Gaps (From ARCHITECTURE.md)
 
-1. Monday/Notion integration after processing
-2. Auto-mark competing bids as lost
-3. SharePoint folder automation
+1. **Gap 1:** Contract emails don't trigger any processing after storage
+2. **Gap 2:** No email-to-project linking for contracts folder
+3. **Gap 3:** No auto-creation of contract packets
+4. **Gap 4:** No SOV extraction from contract PDFs for comparison
+5. **Gap 5:** No automated outgoing document generation
 
 ---
 
 ## Related Docs
 
-- `WORKFLOW.md` - Full workflow documentation
+- `ARCHITECTURE.md` - Full pipeline map, data flow, file references, gap analysis
+- `docs/post-contract-process.md` - Stage-by-stage process after packet receipt
+- `docs/contract-packet-lifecycle-2026-02-12.md` - Packet model specification
+- `WORKFLOW.md` - Detailed workflow with anti-hallucination measures
 - `contracts-master.md` - 15-step process checklist
-- `projects/ground-truth/PATTERNS.md` - Validation rule patterns
-- `projects/ground-truth/project-1073-sun-health-rgs/issues.md` - Problem log from last run
+- `templates/` - GC response, internal handoff, extraction, reconciliation templates

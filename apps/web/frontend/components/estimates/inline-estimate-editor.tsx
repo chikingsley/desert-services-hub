@@ -2,20 +2,15 @@
 
 import type { Catalog } from "@estimates/catalog/types";
 import type { EditorEstimate, EditorLineItem } from "@lib/db/types";
-import { CalendarIcon, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CatalogCombobox } from "@/apps/web/frontend/components/estimates/catalog-combobox";
-import { ItemCombobox } from "@/apps/web/frontend/components/estimates/item-combobox";
+import { EstimateHeaderForm } from "@/apps/web/frontend/components/estimates/estimate-header-form";
+import { EstimateLineItemRow } from "@/apps/web/frontend/components/estimates/estimate-line-item-row";
 import { SectionCombobox } from "@/apps/web/frontend/components/estimates/section-combobox";
 import { Button } from "@/apps/web/frontend/components/ui/button";
-import { Calendar } from "@/apps/web/frontend/components/ui/calendar";
 import { Input } from "@/apps/web/frontend/components/ui/input";
 import { Label } from "@/apps/web/frontend/components/ui/label";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/apps/web/frontend/components/ui/popover";
 import { useEstimateEditor } from "@/hooks/use-estimate-editor";
 import { formatCurrency } from "@/lib/utils";
 
@@ -251,205 +246,6 @@ export function InlineEstimateEditor({
 
   const showCompactRows = compactRows;
 
-  const renderLineItem = useCallback(
-    (item: EditorLineItem, catalogCategoryId?: string) => (
-      <>
-        {/* Desktop view */}
-        <div
-          className={showCompactRows ? "hidden" : "hidden items-center md:flex"}
-        >
-          <Button
-            className="h-9 w-9 shrink-0 rounded-lg p-0 transition-transform hover:scale-105"
-            onClick={() => removeLineItem(item.id)}
-            size="sm"
-            variant="destructive"
-          >
-            X
-          </Button>
-          <Button
-            className="ml-2 h-9 rounded-lg px-2 font-semibold text-xs"
-            onClick={() =>
-              updateLineItem(item.id, "isAlternate", !item.isAlternate)
-            }
-            size="sm"
-            variant={item.isAlternate ? "destructive" : "outline"}
-          >
-            ALT
-          </Button>
-          <div className="ml-2 min-w-0 flex-[2]">
-            <ItemCombobox
-              catalog={catalog}
-              categoryId={catalogCategoryId}
-              currentValue={item.item}
-              onSelect={(catalogItem) =>
-                updateLineItemFromCatalog(item.id, catalogItem)
-              }
-            />
-          </div>
-          <Input
-            className="ml-2 h-9 min-w-0 flex-[3] rounded-lg border-border/50 bg-background text-sm transition-colors focus:border-primary"
-            onChange={(e) =>
-              updateLineItem(item.id, "description", e.target.value)
-            }
-            value={item.description}
-          />
-          <Input
-            className="ml-2 h-9 w-20 rounded-lg border-border/50 bg-background text-sm transition-colors focus:border-primary"
-            onChange={(e) =>
-              updateLineItem(
-                item.id,
-                "qty",
-                Number.parseFloat(e.target.value) || 0
-              )
-            }
-            type="number"
-            value={item.qty}
-          />
-          <div className="ml-2 flex h-9 w-16 shrink-0 items-center justify-center rounded-lg border border-border/50 bg-muted/50 text-muted-foreground text-xs">
-            {item.uom}
-          </div>
-          <Input
-            className="ml-2 h-9 w-24 rounded-lg border-border/50 bg-background text-left text-sm transition-colors focus:border-primary"
-            onChange={(e) =>
-              updateLineItem(
-                item.id,
-                "cost",
-                Number.parseFloat(e.target.value) || 0
-              )
-            }
-            step="0.01"
-            type="number"
-            value={item.cost}
-          />
-          <div className="ml-2 flex h-9 w-28 shrink-0 items-center justify-end font-medium font-mono text-sm">
-            {formatCurrency(item.total)}
-          </div>
-        </div>
-
-        {/* Mobile view */}
-        <div
-          className={
-            showCompactRows
-              ? "space-y-2 rounded-xl border border-border/50 bg-card p-4 shadow-sm"
-              : "space-y-2 rounded-xl border border-border/50 bg-card p-4 shadow-sm md:hidden"
-          }
-        >
-          <div className="flex items-center justify-between">
-            <span className="font-medium text-muted-foreground text-xs uppercase tracking-wide">
-              Item
-            </span>
-            <div className="flex gap-2">
-              <Button
-                className="h-8 w-8 rounded-lg p-0"
-                onClick={() => removeLineItem(item.id)}
-                size="sm"
-                variant="destructive"
-              >
-                X
-              </Button>
-              <Button
-                className="h-8 rounded-lg px-2 font-semibold text-xs"
-                onClick={() =>
-                  updateLineItem(item.id, "isAlternate", !item.isAlternate)
-                }
-                size="sm"
-                variant={item.isAlternate ? "destructive" : "outline"}
-              >
-                ALT
-              </Button>
-            </div>
-          </div>
-          <Input
-            className="h-10 rounded-lg border-border/50 bg-background text-sm"
-            onChange={(e) =>
-              updateLineItem(item.id, "description", e.target.value)
-            }
-            placeholder="Description"
-            value={item.description}
-          />
-          <div className="grid grid-cols-[minmax(0,1fr)_3.9rem_3.4rem_4.9rem_5.1rem] gap-2">
-            <div className="min-w-0">
-              <p className="mb-1 text-[10px] text-muted-foreground uppercase tracking-wide">
-                Item
-              </p>
-              <ItemCombobox
-                catalog={catalog}
-                categoryId={catalogCategoryId}
-                className="h-10"
-                currentValue={item.item}
-                onSelect={(catalogItem) =>
-                  updateLineItemFromCatalog(item.id, catalogItem)
-                }
-              />
-            </div>
-            <div className="min-w-0">
-              <p className="mb-1 text-[10px] text-muted-foreground uppercase tracking-wide">
-                Amt
-              </p>
-              <Input
-                className="h-10 rounded-lg border-border/50 bg-background px-2 text-xs"
-                inputMode="decimal"
-                onChange={(e) =>
-                  updateLineItem(
-                    item.id,
-                    "qty",
-                    Number.parseFloat(e.target.value) || 0
-                  )
-                }
-                placeholder="Amt"
-                type="number"
-                value={item.qty}
-              />
-            </div>
-            <div className="min-w-0">
-              <p className="mb-1 text-[10px] text-muted-foreground uppercase tracking-wide">
-                U/M
-              </p>
-              <div className="flex h-10 items-center justify-center rounded-lg border border-border/50 bg-muted/50 px-1 text-[11px] text-muted-foreground">
-                {item.uom}
-              </div>
-            </div>
-            <div className="min-w-0">
-              <p className="mb-1 text-[10px] text-muted-foreground uppercase tracking-wide">
-                Cost
-              </p>
-              <Input
-                className="h-10 rounded-lg border-border/50 bg-background px-2 text-xs"
-                inputMode="decimal"
-                onChange={(e) =>
-                  updateLineItem(
-                    item.id,
-                    "cost",
-                    Number.parseFloat(e.target.value) || 0
-                  )
-                }
-                placeholder="Cost"
-                step="0.01"
-                type="number"
-                value={item.cost}
-              />
-            </div>
-            <div className="min-w-0">
-              <p className="mb-1 text-[10px] text-muted-foreground uppercase tracking-wide">
-                Tot
-              </p>
-              <div className="flex h-10 items-center justify-end whitespace-nowrap rounded-lg border border-border/50 bg-muted/30 px-2 text-right font-mono font-semibold text-xs">
-                {formatCurrency(item.total)}
-              </div>
-            </div>
-          </div>
-        </div>
-      </>
-    ),
-    [
-      catalog,
-      removeLineItem,
-      showCompactRows,
-      updateLineItem,
-      updateLineItemFromCatalog,
-    ]
-  );
-
   // Single-pass grouping: build Map<sectionId, items[]> then derive both lists
   const { unsectioned, sectionGroups } = useMemo(() => {
     const bySection = new Map<string | undefined, EditorLineItem[]>();
@@ -474,192 +270,10 @@ export function InlineEstimateEditor({
   return (
     <div className="flex flex-1 flex-col gap-6 overflow-y-auto p-6 pb-28 lg:p-8 lg:pb-8">
       <div className="space-y-6">
-        {/* Header Info */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <div className="grid gap-2">
-            <Label
-              className="font-medium text-muted-foreground text-xs uppercase tracking-wide"
-              htmlFor="estimator"
-            >
-              Estimator
-            </Label>
-            <Input
-              className="h-10 rounded-lg border-border/50 bg-background transition-colors focus:border-primary"
-              id="estimator"
-              onChange={(e) =>
-                updateEstimate((p) => ({ ...p, estimator: e.target.value }))
-              }
-              placeholder="Estimator name"
-              value={estimate.estimator}
-            />
-          </div>
-          <div className="grid gap-2">
-            <Label
-              className="font-medium text-muted-foreground text-xs uppercase tracking-wide"
-              htmlFor="date"
-            >
-              Date
-            </Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  className="h-10 w-full justify-between rounded-lg border-border/50 bg-background font-normal transition-colors hover:border-primary"
-                  variant="outline"
-                >
-                  <span>
-                    {new Date(estimate.date).toLocaleDateString("en-US", {
-                      month: "2-digit",
-                      day: "2-digit",
-                      year: "numeric",
-                    })}
-                  </span>
-                  <CalendarIcon className="h-4 w-4 text-muted-foreground" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
-                <Calendar
-                  defaultMonth={new Date(estimate.date)}
-                  mode="single"
-                  onSelect={(date) => {
-                    if (date) {
-                      updateEstimate((p) => ({
-                        ...p,
-                        date: date.toISOString(),
-                      }));
-                    }
-                  }}
-                  selected={new Date(estimate.date)}
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-          <div className="grid gap-2">
-            <Label
-              className="font-medium text-muted-foreground text-xs uppercase tracking-wide"
-              htmlFor="estimateNumber"
-            >
-              Estimate #
-            </Label>
-            <Input
-              className="h-10 rounded-lg border-border/50 bg-background font-mono transition-colors focus:border-primary"
-              id="estimateNumber"
-              onChange={(e) =>
-                updateEstimate((p) => ({
-                  ...p,
-                  estimateNumber: e.target.value,
-                }))
-              }
-              value={estimate.estimateNumber}
-            />
-          </div>
-        </div>
-
-        {/* Bill To and Job Info */}
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          {/* Bill To */}
-          <div className="rounded-xl border border-border/50 bg-muted/20 p-5">
-            <h3 className="mb-4 flex items-center gap-2 font-display font-semibold text-sm">
-              <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-primary/10 text-primary text-xs">
-                1
-              </span>
-              Bill To
-            </h3>
-            <div className="space-y-4">
-              <div className="grid gap-2">
-                <Label
-                  className="font-medium text-muted-foreground text-xs uppercase tracking-wide"
-                  htmlFor="companyName"
-                >
-                  Company Name
-                </Label>
-                <Input
-                  className="h-10 rounded-lg border-border/50 bg-background transition-colors focus:border-primary"
-                  id="companyName"
-                  onChange={(e) =>
-                    updateEstimate((p) => ({
-                      ...p,
-                      billTo: { ...p.billTo, companyName: e.target.value },
-                    }))
-                  }
-                  placeholder="Company name"
-                  value={estimate.billTo.companyName}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label
-                  className="font-medium text-muted-foreground text-xs uppercase tracking-wide"
-                  htmlFor="companyAddress"
-                >
-                  Company Address
-                </Label>
-                <Input
-                  className="h-10 rounded-lg border-border/50 bg-background transition-colors focus:border-primary"
-                  id="companyAddress"
-                  onChange={(e) =>
-                    updateEstimate((p) => ({
-                      ...p,
-                      billTo: { ...p.billTo, address: e.target.value },
-                    }))
-                  }
-                  placeholder="Enter company address..."
-                  value={estimate.billTo.address}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Job Info */}
-          <div className="rounded-xl border border-border/50 bg-muted/20 p-5">
-            <h3 className="mb-4 flex items-center gap-2 font-display font-semibold text-sm">
-              <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-primary/10 text-primary text-xs">
-                2
-              </span>
-              Job Information
-            </h3>
-            <div className="space-y-4">
-              <div className="grid gap-2">
-                <Label
-                  className="font-medium text-muted-foreground text-xs uppercase tracking-wide"
-                  htmlFor="jobName"
-                >
-                  Job Name
-                </Label>
-                <Input
-                  className="h-10 rounded-lg border-border/50 bg-background transition-colors focus:border-primary"
-                  id="jobName"
-                  onChange={(e) =>
-                    updateEstimate((p) => ({
-                      ...p,
-                      jobInfo: { ...p.jobInfo, siteName: e.target.value },
-                    }))
-                  }
-                  placeholder="Job name"
-                  value={estimate.jobInfo.siteName}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label
-                  className="font-medium text-muted-foreground text-xs uppercase tracking-wide"
-                  htmlFor="jobAddress"
-                >
-                  Job Address
-                </Label>
-                <Input
-                  className="h-10 rounded-lg border-border/50 bg-background transition-colors focus:border-primary"
-                  id="jobAddress"
-                  onChange={(e) =>
-                    updateEstimate((p) => ({
-                      ...p,
-                      jobInfo: { ...p.jobInfo, address: e.target.value },
-                    }))
-                  }
-                  placeholder="Enter job address..."
-                  value={estimate.jobInfo.address}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
+        <EstimateHeaderForm
+          estimate={estimate}
+          updateEstimate={updateEstimate}
+        />
 
         {/* Line Items */}
         <div>
@@ -757,7 +371,16 @@ export function InlineEstimateEditor({
 
             {/* Unsectioned items */}
             {unsectioned.map((item) => (
-              <div key={item.id}>{renderLineItem(item, undefined)}</div>
+              <div key={item.id}>
+                <EstimateLineItemRow
+                  catalog={catalog}
+                  compactRows={showCompactRows}
+                  item={item}
+                  onRemove={removeLineItem}
+                  onUpdate={updateLineItem}
+                  onUpdateFromCatalog={updateLineItemFromCatalog}
+                />
+              </div>
             ))}
 
             {/* Sectioned items */}
@@ -809,7 +432,15 @@ export function InlineEstimateEditor({
                         className="border-border/30 border-b px-2 py-1 last:border-b-0"
                         key={item.id}
                       >
-                        {renderLineItem(item, section.catalogCategoryId)}
+                        <EstimateLineItemRow
+                          catalog={catalog}
+                          catalogCategoryId={section.catalogCategoryId}
+                          compactRows={showCompactRows}
+                          item={item}
+                          onRemove={removeLineItem}
+                          onUpdate={updateLineItem}
+                          onUpdateFromCatalog={updateLineItemFromCatalog}
+                        />
                       </div>
                     ))}
                     <div className="flex items-center justify-end border-border/30 border-t bg-primary/5 px-4 py-2">

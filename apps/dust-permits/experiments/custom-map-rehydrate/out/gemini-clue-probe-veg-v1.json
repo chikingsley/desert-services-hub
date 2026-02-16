@@ -8,9 +8,7 @@
     "maxDocsPerPermit": 4,
     "maxDocBytes": 12582912,
     "maxIou": 0.25,
-    "permitIds": [
-      "D0064908"
-    ],
+    "permitIds": ["D0064908"],
     "model": "gemini-2.5-flash"
   },
   "permits": [

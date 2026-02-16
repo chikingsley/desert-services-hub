@@ -62,15 +62,11 @@
         "address": "1650 S BULLARD AVE",
         "city": "GOODYEAR",
         "parcelRaw": "500-08-996",
-        "apnCandidates": [
-          "500-08-996"
-        ]
+        "apnCandidates": ["500-08-996"]
       },
       "prediction": {
         "source": "coord_parcel_override",
-        "apnsUsed": [
-          "500-08-996"
-        ],
+        "apnsUsed": ["500-08-996"],
         "polygonCount": 1
       },
       "documentClues": {
@@ -118,15 +114,11 @@
         "address": null,
         "city": "GOODYEAR",
         "parcelRaw": "501-72-958J",
-        "apnCandidates": [
-          "501-72-958J"
-        ]
+        "apnCandidates": ["501-72-958J"]
       },
       "prediction": {
         "source": "apn_size_normalized_by_doc",
-        "apnsUsed": [
-          "501-72-958J"
-        ],
+        "apnsUsed": ["501-72-958J"],
         "polygonCount": 1
       },
       "documentClues": {
@@ -176,15 +168,11 @@
         "address": null,
         "city": "PHOENIX",
         "parcelRaw": "167-25-163",
-        "apnCandidates": [
-          "167-25-163"
-        ]
+        "apnCandidates": ["167-25-163"]
       },
       "prediction": {
         "source": "coord_parcel_override",
-        "apnsUsed": [
-          "167-25-163"
-        ],
+        "apnsUsed": ["167-25-163"],
         "polygonCount": 1
       },
       "documentClues": {
@@ -233,15 +221,11 @@
         "address": "1775 N GLOBE DR",
         "city": "GOODYEAR",
         "parcelRaw": "501-73-985",
-        "apnCandidates": [
-          "501-73-985"
-        ]
+        "apnCandidates": ["501-73-985"]
       },
       "prediction": {
         "source": "apn",
-        "apnsUsed": [
-          "501-73-985"
-        ],
+        "apnsUsed": ["501-73-985"],
         "polygonCount": 1
       },
       "documentClues": {
@@ -289,15 +273,11 @@
         "address": null,
         "city": "GLENDALE",
         "parcelRaw": "501-03-009M",
-        "apnCandidates": [
-          "501-03-009M"
-        ]
+        "apnCandidates": ["501-03-009M"]
       },
       "prediction": {
         "source": "coord_parcel_override",
-        "apnsUsed": [
-          "501-03-009M"
-        ],
+        "apnsUsed": ["501-03-009M"],
         "polygonCount": 1
       },
       "documentClues": {
@@ -347,9 +327,7 @@
         "address": null,
         "city": "GOODYEAR",
         "parcelRaw": "501-71-980",
-        "apnCandidates": [
-          "501-71-980"
-        ]
+        "apnCandidates": ["501-71-980"]
       },
       "prediction": {
         "source": "none",
@@ -394,15 +372,11 @@
         "address": null,
         "city": "SURPRISE",
         "parcelRaw": "501-44-991A",
-        "apnCandidates": [
-          "501-44-991A"
-        ]
+        "apnCandidates": ["501-44-991A"]
       },
       "prediction": {
         "source": "coord_parcel_override",
-        "apnsUsed": [
-          "501-44-991A"
-        ],
+        "apnsUsed": ["501-44-991A"],
         "polygonCount": 1
       },
       "documentClues": {
@@ -452,15 +426,11 @@
         "address": null,
         "city": "SURPRISE",
         "parcelRaw": "501-44-991A",
-        "apnCandidates": [
-          "501-44-991A"
-        ]
+        "apnCandidates": ["501-44-991A"]
       },
       "prediction": {
         "source": "coord_parcel_override",
-        "apnsUsed": [
-          "501-44-991A"
-        ],
+        "apnsUsed": ["501-44-991A"],
         "polygonCount": 1
       },
       "documentClues": {
@@ -510,15 +480,11 @@
         "address": "4210 W OPPORTUNITY WAY",
         "city": "PHOENIX",
         "parcelRaw": "203-03-019",
-        "apnCandidates": [
-          "203-03-019"
-        ]
+        "apnCandidates": ["203-03-019"]
       },
       "prediction": {
         "source": "apn_clipped_by_doc",
-        "apnsUsed": [
-          "203-03-019"
-        ],
+        "apnsUsed": ["203-03-019"],
         "polygonCount": 1
       },
       "documentClues": {
@@ -569,15 +535,11 @@
         "address": "14100 S DENNY WAY",
         "city": "LITCHFIELD PARK",
         "parcelRaw": "501-62-022K",
-        "apnCandidates": [
-          "501-62-022K"
-        ]
+        "apnCandidates": ["501-62-022K"]
       },
       "prediction": {
         "source": "coord_parcel_override",
-        "apnsUsed": [
-          "501-62-022K"
-        ],
+        "apnsUsed": ["501-62-022K"],
         "polygonCount": 1
       },
       "documentClues": {
@@ -626,15 +588,11 @@
         "address": "14100 S DENNY WAY",
         "city": "LITCHFIELD PARK",
         "parcelRaw": "501-62-022K",
-        "apnCandidates": [
-          "501-62-022K"
-        ]
+        "apnCandidates": ["501-62-022K"]
       },
       "prediction": {
         "source": "coord_parcel_override",
-        "apnsUsed": [
-          "501-62-022K"
-        ],
+        "apnsUsed": ["501-62-022K"],
         "polygonCount": 1
       },
       "documentClues": {
@@ -683,15 +641,11 @@
         "address": null,
         "city": "PHOENIX",
         "parcelRaw": "167-25-165",
-        "apnCandidates": [
-          "167-25-165"
-        ]
+        "apnCandidates": ["167-25-165"]
       },
       "prediction": {
         "source": "coord_parcel_override",
-        "apnsUsed": [
-          "167-25-165"
-        ],
+        "apnsUsed": ["167-25-165"],
         "polygonCount": 1
       },
       "documentClues": {
@@ -741,15 +695,11 @@
         "address": "7800 W Encanto Blvd",
         "city": "Phoenix",
         "parcelRaw": "102-39-929",
-        "apnCandidates": [
-          "102-39-929"
-        ]
+        "apnCandidates": ["102-39-929"]
       },
       "prediction": {
         "source": "apn_size_normalized_by_doc",
-        "apnsUsed": [
-          "102-39-929"
-        ],
+        "apnsUsed": ["102-39-929"],
         "polygonCount": 1
       },
       "documentClues": {
@@ -797,15 +747,11 @@
         "address": null,
         "city": "Phoenix",
         "parcelRaw": "102-39-929",
-        "apnCandidates": [
-          "102-39-929"
-        ]
+        "apnCandidates": ["102-39-929"]
       },
       "prediction": {
         "source": "apn_size_normalized_by_doc",
-        "apnsUsed": [
-          "102-39-929"
-        ],
+        "apnsUsed": ["102-39-929"],
         "polygonCount": 1
       },
       "documentClues": {
@@ -854,15 +800,11 @@
         "address": "7750 W Encanto Blvd",
         "city": "Phoenix",
         "parcelRaw": "102-39-930",
-        "apnCandidates": [
-          "102-39-930"
-        ]
+        "apnCandidates": ["102-39-930"]
       },
       "prediction": {
         "source": "apn_size_normalized_by_doc",
-        "apnsUsed": [
-          "102-39-930"
-        ],
+        "apnsUsed": ["102-39-930"],
         "polygonCount": 1
       },
       "documentClues": {
@@ -910,15 +852,11 @@
         "address": null,
         "city": "BUCKEYE",
         "parcelRaw": "504-28-990",
-        "apnCandidates": [
-          "504-28-990"
-        ]
+        "apnCandidates": ["504-28-990"]
       },
       "prediction": {
         "source": "coord_parcel_override",
-        "apnsUsed": [
-          "504-28-990"
-        ],
+        "apnsUsed": ["504-28-990"],
         "polygonCount": 1
       },
       "documentClues": {
@@ -967,15 +905,11 @@
         "address": null,
         "city": "BUCKEYE",
         "parcelRaw": "504-28-990",
-        "apnCandidates": [
-          "504-28-990"
-        ]
+        "apnCandidates": ["504-28-990"]
       },
       "prediction": {
         "source": "coord_parcel_override",
-        "apnsUsed": [
-          "504-28-990"
-        ],
+        "apnsUsed": ["504-28-990"],
         "polygonCount": 1
       },
       "documentClues": {
@@ -1024,15 +958,11 @@
         "address": "10256 E ELLIOT RD",
         "city": "MESA",
         "parcelRaw": "304-01-006N",
-        "apnCandidates": [
-          "304-01-006N"
-        ]
+        "apnCandidates": ["304-01-006N"]
       },
       "prediction": {
         "source": "apn_size_normalized_by_doc",
-        "apnsUsed": [
-          "304-01-006N"
-        ],
+        "apnsUsed": ["304-01-006N"],
         "polygonCount": 1
       },
       "documentClues": {
@@ -1081,15 +1011,11 @@
         "address": "7400 E OSBORN RD",
         "city": "SCOTTSDALE",
         "parcelRaw": "130-22-128",
-        "apnCandidates": [
-          "130-22-128"
-        ]
+        "apnCandidates": ["130-22-128"]
       },
       "prediction": {
         "source": "apn",
-        "apnsUsed": [
-          "130-22-128"
-        ],
+        "apnsUsed": ["130-22-128"],
         "polygonCount": 1
       },
       "documentClues": {
@@ -1137,15 +1063,11 @@
         "address": null,
         "city": "GLENDALE",
         "parcelRaw": "501-04-009Z",
-        "apnCandidates": [
-          "501-04-009Z"
-        ]
+        "apnCandidates": ["501-04-009Z"]
       },
       "prediction": {
         "source": "apn_size_normalized_by_doc",
-        "apnsUsed": [
-          "501-04-009Z"
-        ],
+        "apnsUsed": ["501-04-009Z"],
         "polygonCount": 1
       },
       "documentClues": {
@@ -1195,9 +1117,7 @@
         "address": null,
         "city": "MESA",
         "parcelRaw": "220-82-018F",
-        "apnCandidates": [
-          "220-82-018F"
-        ]
+        "apnCandidates": ["220-82-018F"]
       },
       "prediction": {
         "source": "none",
@@ -1243,15 +1163,11 @@
         "address": null,
         "city": "SURPRISE",
         "parcelRaw": "503-69-003H",
-        "apnCandidates": [
-          "503-69-003H"
-        ]
+        "apnCandidates": ["503-69-003H"]
       },
       "prediction": {
         "source": "coord_parcel_override",
-        "apnsUsed": [
-          "503-69-003H"
-        ],
+        "apnsUsed": ["503-69-003H"],
         "polygonCount": 1
       },
       "documentClues": {
@@ -1300,9 +1216,7 @@
         "address": "15235 W LOWER BUCKEYE PKWY",
         "city": "GOODYEAR",
         "parcelRaw": "500-07-015P",
-        "apnCandidates": [
-          "500-07-015P"
-        ]
+        "apnCandidates": ["500-07-015P"]
       },
       "prediction": {
         "source": "none",
@@ -1347,15 +1261,11 @@
         "address": null,
         "city": "SURPRISE",
         "parcelRaw": "501-40-995",
-        "apnCandidates": [
-          "501-40-995"
-        ]
+        "apnCandidates": ["501-40-995"]
       },
       "prediction": {
         "source": "coord_parcel_override",
-        "apnsUsed": [
-          "501-40-995"
-        ],
+        "apnsUsed": ["501-40-995"],
         "polygonCount": 1
       },
       "documentClues": {
@@ -1404,15 +1314,11 @@
         "address": "6504 N 67th Ave",
         "city": "Glendale",
         "parcelRaw": "144-05-010C",
-        "apnCandidates": [
-          "144-05-010C"
-        ]
+        "apnCandidates": ["144-05-010C"]
       },
       "prediction": {
         "source": "coord_parcel_override",
-        "apnsUsed": [
-          "14405184"
-        ],
+        "apnsUsed": ["14405184"],
         "polygonCount": 1
       },
       "documentClues": {
@@ -1461,15 +1367,11 @@
         "address": null,
         "city": "Glendale",
         "parcelRaw": "144-05-184",
-        "apnCandidates": [
-          "144-05-184"
-        ]
+        "apnCandidates": ["144-05-184"]
       },
       "prediction": {
         "source": "coord_parcel_override",
-        "apnsUsed": [
-          "144-05-184"
-        ],
+        "apnsUsed": ["144-05-184"],
         "polygonCount": 1
       },
       "documentClues": {
@@ -1519,15 +1421,11 @@
         "address": "6504 N 67TH AVE",
         "city": "GLENDALE",
         "parcelRaw": "144-05-184",
-        "apnCandidates": [
-          "144-05-184"
-        ]
+        "apnCandidates": ["144-05-184"]
       },
       "prediction": {
         "source": "coord_parcel_override",
-        "apnsUsed": [
-          "144-05-184"
-        ],
+        "apnsUsed": ["144-05-184"],
         "polygonCount": 1
       },
       "documentClues": {
@@ -1576,15 +1474,11 @@
         "address": "6504 N 67TH AVE",
         "city": "GLENDALE",
         "parcelRaw": "144-05-184",
-        "apnCandidates": [
-          "144-05-184"
-        ]
+        "apnCandidates": ["144-05-184"]
       },
       "prediction": {
         "source": "coord_parcel_override",
-        "apnsUsed": [
-          "144-05-184"
-        ],
+        "apnsUsed": ["144-05-184"],
         "polygonCount": 1
       },
       "documentClues": {
@@ -1633,9 +1527,7 @@
         "address": null,
         "city": "MESA",
         "parcelRaw": "304-34-015D",
-        "apnCandidates": [
-          "304-34-015D"
-        ]
+        "apnCandidates": ["304-34-015D"]
       },
       "prediction": {
         "source": "none",
@@ -1680,15 +1572,11 @@
         "address": "2955 W INOVATION ST",
         "city": "CHANDLER",
         "parcelRaw": "303-36-873",
-        "apnCandidates": [
-          "303-36-873"
-        ]
+        "apnCandidates": ["303-36-873"]
       },
       "prediction": {
         "source": "apn_size_normalized_by_doc",
-        "apnsUsed": [
-          "303-36-873"
-        ],
+        "apnsUsed": ["303-36-873"],
         "polygonCount": 1
       },
       "documentClues": {

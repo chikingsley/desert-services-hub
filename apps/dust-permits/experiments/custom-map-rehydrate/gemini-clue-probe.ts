@@ -110,8 +110,7 @@ function parseArgs(argv: string[]): CliArgs {
   const args = [...argv];
 
   let benchmarkPath = DEFAULT_BENCHMARK_PATH;
-  let outPath =
-    "experiments/custom-map-rehydrate/out/gemini-clue-probe.json";
+  let outPath = "experiments/custom-map-rehydrate/out/gemini-clue-probe.json";
   let maxPermits = 5;
   let maxDocsPerPermit = 2;
   let maxDocBytes = 12 * 1024 * 1024;
@@ -162,7 +161,6 @@ function parseArgs(argv: string[]): CliArgs {
     if (arg === "--model") {
       model = args[i + 1] ?? model;
       i += 1;
-      continue;
     }
   }
 
@@ -199,7 +197,7 @@ async function runPsqlJsonQuery<T>(sql: string): Promise<T[]> {
       "-c",
       sql,
     ],
-    { stdout: "pipe", stderr: "pipe" }
+    { stdout: "pipe", stderr: "pipe" },
   );
 
   const [exitCode, stdoutText, stderrText] = await Promise.all([
@@ -209,9 +207,7 @@ async function runPsqlJsonQuery<T>(sql: string): Promise<T[]> {
   ]);
 
   if (exitCode !== 0) {
-    throw new Error(
-      `psql failed (exit=${exitCode}): ${stderrText.trim() || "unknown"}`
-    );
+    throw new Error(`psql failed (exit=${exitCode}): ${stderrText.trim() || "unknown"}`);
   }
 
   const output = stdoutText.trim();
@@ -302,7 +298,7 @@ function normalizeExtraction(value: unknown): ProbeExtraction | null {
           };
         })
         .filter((item): item is { lat: number; lng: number; context: string | null } =>
-          Boolean(item)
+          Boolean(item),
         )
     : [];
 
@@ -325,13 +321,13 @@ function normalizeExtraction(value: unknown): ProbeExtraction | null {
         })
         .filter(
           (
-            item
+            item,
           ): item is {
             apn: string;
             lat: number;
             lng: number;
             context: string | null;
-          } => Boolean(item)
+          } => Boolean(item),
         )
     : [];
 
@@ -354,7 +350,7 @@ function normalizeExtraction(value: unknown): ProbeExtraction | null {
 
 async function downloadAttachment(
   emailId: number,
-  attachmentId: number
+  attachmentId: number,
 ): Promise<{ ok: boolean; bytes: ArrayBuffer | null; error: string | null }> {
   const url = `http://localhost:3000/api/emails/${emailId}/attachments/db:${attachmentId}/download`;
 
@@ -383,7 +379,7 @@ async function downloadAttachment(
 async function extractWithGemini(
   ai: GoogleGenAI,
   model: string,
-  pdfBytes: ArrayBuffer
+  pdfBytes: ArrayBuffer,
 ): Promise<ProbeExtraction | null> {
   const base64 = Buffer.from(pdfBytes).toString("base64");
 
@@ -413,7 +409,7 @@ async function extractWithGemini(
 
 function selectPermits(
   args: CliArgs,
-  benchmark: BenchmarkInput
+  benchmark: BenchmarkInput,
 ): Array<{ permitId: string; iou: number | null }> {
   const results = benchmark.results ?? [];
 
@@ -532,7 +528,7 @@ async function main(): Promise<void> {
 
     results.push(probe);
     console.log(
-      `permit ${probe.permitId}: docs=${probe.docsAttempted}, extracted=${probe.docsSucceeded}`
+      `permit ${probe.permitId}: docs=${probe.docsAttempted}, extracted=${probe.docsSucceeded}`,
     );
   }
 

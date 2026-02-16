@@ -1,0 +1,4 @@
+interface:
+  display_name: "Monday Column Semantics"
+  short_description: "Correct Monday relation/mirror value handling"
+  default_prompt: "Use $monday-graphql-column-semantics to audit column values, fallback paths, and migration parity safely."

@@ -107,6 +107,265 @@ function buildEmailSrcDoc(rawHtml: string): string {
   return `<!doctype html><html><head>${injected}</head><body>${rawHtml}</body></html>`;
 }
 
+function buildSrcDocIfHtml(bodyHtml: string | null | undefined): string | null {
+  if (!bodyHtml) {
+    return null;
+  }
+  if (!looksLikeHtml(bodyHtml)) {
+    return null;
+  }
+  return buildEmailSrcDoc(bodyHtml);
+}
+
+function handleIframeLoad(
+  iframe: HTMLIFrameElement,
+  setHeight: (h: number) => void
+): void {
+  const doc = iframe.contentDocument;
+  if (!doc?.body) {
+    return;
+  }
+  // Force links out of the sandbox so JS-enabled pages don't render
+  // inside the iframe (which triggers "JavaScript disabled").
+  for (const a of Array.from(doc.querySelectorAll("a[href]"))) {
+    a.setAttribute("target", "_blank");
+    a.setAttribute("rel", "noopener noreferrer");
+  }
+
+  // Also intercept clicks to ensure the iframe never navigates.
+  // (Some HTML email templates override target or use weird markup.)
+  doc.addEventListener(
+    "click",
+    (ev) => {
+      const t = ev.target as Element | null;
+      const a = t?.closest?.("a[href]") as HTMLAnchorElement | null;
+      if (!a) {
+        return;
+      }
+
+      const href = a.getAttribute("href") ?? "";
+      if (
+        !href ||
+        href.startsWith("#") ||
+        href.toLowerCase().startsWith("javascript:")
+      ) {
+        return;
+      }
+
+      ev.preventDefault();
+      ev.stopPropagation();
+
+      const resolved = (() => {
+        try {
+          return new URL(href, doc.baseURI).toString();
+        } catch {
+          return href;
+        }
+      })();
+
+      window.open(resolved, "_blank", "noopener,noreferrer");
+    },
+    { capture: true }
+  );
+
+  setHeight(Math.max(300, doc.body.scrollHeight + 32));
+}
+
+function AttachmentsSection({
+  email,
+  attachmentsData,
+  attachmentsError,
+  attachmentsLoading,
+}: {
+  email: Email;
+  attachmentsData: EmailAttachmentsResponse | undefined;
+  attachmentsError: Error | undefined;
+  attachmentsLoading: boolean;
+}) {
+  const attachments = attachmentsData?.attachments ?? [];
+  const unavailableReason = attachmentsData?.unavailableReason ?? null;
+
+  const openUrl = (att: EmailAttachmentItem) =>
+    `/api/emails/${email.id}/attachments/${encodeURIComponent(att.id)}/download?inline=1`;
+  const downloadUrl = (att: EmailAttachmentItem) =>
+    `/api/emails/${email.id}/attachments/${encodeURIComponent(att.id)}/download`;
+
+  const header = (
+    <div className="flex items-center gap-2 text-muted-foreground text-sm">
+      <Paperclip className="h-3.5 w-3.5" />
+      <span>Attachments</span>
+    </div>
+  );
+
+  if (attachmentsLoading) {
+    return (
+      <div className="space-y-2">
+        {header}
+        <div className="text-muted-foreground text-sm">
+          Loading attachments...
+        </div>
+      </div>
+    );
+  }
+
+  if (attachmentsError) {
+    return (
+      <div className="space-y-2">
+        {header}
+        <div className="text-muted-foreground text-sm">
+          Attachments unavailable ({attachmentsError.message})
+        </div>
+      </div>
+    );
+  }
+
+  if (unavailableReason) {
+    return (
+      <div className="space-y-2">
+        {header}
+        <div className="text-muted-foreground text-sm">
+          Attachments unavailable ({unavailableReason})
+        </div>
+      </div>
+    );
+  }
+
+  if (attachments.length > 0) {
+    return (
+      <div className="space-y-2">
+        {header}
+        <div className="space-y-1">
+          {attachments.map((att) => (
+            <div
+              className="flex items-center justify-between gap-2 rounded-md border border-border bg-muted/20 px-2 py-1.5"
+              key={att.id}
+            >
+              <div className="min-w-0">
+                <div className="truncate text-sm">{att.name}</div>
+                {(att.contentType || att.size) && (
+                  <div className="truncate text-muted-foreground text-xs">
+                    {att.contentType ?? ""}
+                    {att.contentType && att.size ? " • " : ""}
+                    {att.size ? `${Math.round(att.size / 1024)} KB` : ""}
+                  </div>
+                )}
+              </div>
+
+              <div className="flex shrink-0 items-center gap-2">
+                <Button asChild size="sm" variant="outline">
+                  <a
+                    href={openUrl(att)}
+                    rel="noopener noreferrer"
+                    target="_blank"
+                  >
+                    Open
+                  </a>
+                </Button>
+                <Button asChild size="sm" variant="outline">
+                  <a href={downloadUrl(att)}>Download</a>
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (email.attachmentNames.length > 0) {
+    return (
+      <div className="space-y-2">
+        {header}
+        <div className="flex flex-wrap gap-2">
+          {email.attachmentNames.map((name) => (
+            <Badge className="gap-1 font-normal" key={name} variant="secondary">
+              <Paperclip className="h-3 w-3" />
+              {name}
+            </Badge>
+          ))}
+        </div>
+        <div className="text-muted-foreground text-sm">
+          Attachment content is not available in the hub yet. Use "Open in
+          Outlook" to access them.
+        </div>
+      </div>
+    );
+  }
+
+  if (email.hasAttachments) {
+    return (
+      <div className="space-y-2">
+        {header}
+        <div className="text-muted-foreground text-sm">
+          This email reports attachments, but none were indexed in the hub. Use
+          "Open in Outlook" to access them.
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      {header}
+      <div className="text-muted-foreground text-sm">No attachments.</div>
+    </div>
+  );
+}
+
+function EmailMetadataGrid({ email }: { email: Email }) {
+  return (
+    <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-sm">
+      <span className="text-muted-foreground">Date</span>
+      <span>{formatDate(email.receivedAt)}</span>
+
+      {email.toEmails.length > 0 && (
+        <>
+          <span className="text-muted-foreground">To</span>
+          <span className="truncate">{email.toEmails.join(", ")}</span>
+        </>
+      )}
+
+      {email.ccEmails.length > 0 && (
+        <>
+          <span className="text-muted-foreground">CC</span>
+          <span className="truncate">{email.ccEmails.join(", ")}</span>
+        </>
+      )}
+
+      {email.classification && (
+        <>
+          <span className="text-muted-foreground">Type</span>
+          <span>
+            <Badge
+              className={
+                CLASSIFICATION_COLORS[email.classification] ||
+                "bg-muted text-muted-foreground"
+              }
+              variant="outline"
+            >
+              {email.classification.replace(/_/g, " ")}
+            </Badge>
+          </span>
+        </>
+      )}
+
+      {email.projectName && (
+        <>
+          <span className="text-muted-foreground">Project</span>
+          <span>{email.projectName}</span>
+        </>
+      )}
+
+      {email.contractorName && (
+        <>
+          <span className="text-muted-foreground">Contractor</span>
+          <span>{email.contractorName}</span>
+        </>
+      )}
+    </div>
+  );
+}
+
 const CLASSIFICATION_COLORS: Record<string, string> = {
   CONTRACT: "bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-300",
   DUST_PERMIT:
@@ -163,160 +422,10 @@ export function EmailDetailPanel({
     setIframeHeight(400);
   }, [emailId]);
 
-  const attachmentsUi = useMemo(() => {
-    if (!email) {
-      return null;
-    }
-
-    const attachments = attachmentsData?.attachments ?? [];
-    const unavailableReason = attachmentsData?.unavailableReason ?? null;
-
-    const openUrl = (att: EmailAttachmentItem) =>
-      `/api/emails/${email.id}/attachments/${encodeURIComponent(att.id)}/download?inline=1`;
-    const downloadUrl = (att: EmailAttachmentItem) =>
-      `/api/emails/${email.id}/attachments/${encodeURIComponent(att.id)}/download`;
-
-    const header = (
-      <div className="flex items-center gap-2 text-muted-foreground text-sm">
-        <Paperclip className="h-3.5 w-3.5" />
-        <span>Attachments</span>
-      </div>
-    );
-
-    if (attachmentsLoading) {
-      return (
-        <div className="space-y-2">
-          {header}
-          <div className="text-muted-foreground text-sm">
-            Loading attachments...
-          </div>
-        </div>
-      );
-    }
-
-    if (attachmentsError) {
-      return (
-        <div className="space-y-2">
-          {header}
-          <div className="text-muted-foreground text-sm">
-            Attachments unavailable ({attachmentsError.message})
-          </div>
-        </div>
-      );
-    }
-
-    if (unavailableReason) {
-      return (
-        <div className="space-y-2">
-          {header}
-          <div className="text-muted-foreground text-sm">
-            Attachments unavailable ({unavailableReason})
-          </div>
-        </div>
-      );
-    }
-
-    if (attachments.length > 0) {
-      return (
-        <div className="space-y-2">
-          {header}
-          <div className="space-y-1">
-            {attachments.map((att) => (
-              <div
-                className="flex items-center justify-between gap-2 rounded-md border border-border bg-muted/20 px-2 py-1.5"
-                key={att.id}
-              >
-                <div className="min-w-0">
-                  <div className="truncate text-sm">{att.name}</div>
-                  {(att.contentType || att.size) && (
-                    <div className="truncate text-muted-foreground text-xs">
-                      {att.contentType ?? ""}
-                      {att.contentType && att.size ? " • " : ""}
-                      {att.size ? `${Math.round(att.size / 1024)} KB` : ""}
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex shrink-0 items-center gap-2">
-                  <Button asChild size="sm" variant="outline">
-                    <a
-                      href={openUrl(att)}
-                      rel="noopener noreferrer"
-                      target="_blank"
-                    >
-                      Open
-                    </a>
-                  </Button>
-                  <Button asChild size="sm" variant="outline">
-                    <a href={downloadUrl(att)}>Download</a>
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      );
-    }
-
-    if (email.attachmentNames.length > 0) {
-      return (
-        <div className="space-y-2">
-          {header}
-          <div className="flex flex-wrap gap-2">
-            {email.attachmentNames.map((name) => (
-              <Badge
-                className="gap-1 font-normal"
-                key={name}
-                variant="secondary"
-              >
-                <Paperclip className="h-3 w-3" />
-                {name}
-              </Badge>
-            ))}
-          </div>
-          <div className="text-muted-foreground text-sm">
-            Attachment content is not available in the hub yet. Use "Open in
-            Outlook" to access them.
-          </div>
-        </div>
-      );
-    }
-
-    if (email.hasAttachments) {
-      return (
-        <div className="space-y-2">
-          {header}
-          <div className="text-muted-foreground text-sm">
-            This email reports attachments, but none were indexed in the hub.
-            Use "Open in Outlook" to access them.
-          </div>
-        </div>
-      );
-    }
-
-    return (
-      <div className="space-y-2">
-        {header}
-        <div className="text-muted-foreground text-sm">No attachments.</div>
-      </div>
-    );
-  }, [
-    attachmentsData?.attachments,
-    attachmentsData?.unavailableReason,
-    attachmentsError,
-    attachmentsLoading,
-    email,
-  ]);
-
-  const iframeSrcDoc = useMemo(() => {
-    if (!email?.bodyHtml) {
-      return null;
-    }
-    if (!looksLikeHtml(email.bodyHtml)) {
-      return null;
-    }
-    return buildEmailSrcDoc(email.bodyHtml);
-  }, [email?.bodyHtml]);
+  const iframeSrcDoc = useMemo(
+    () => buildSrcDocIfHtml(email?.bodyHtml),
+    [email?.bodyHtml]
+  );
 
   return (
     <Sheet onOpenChange={(isOpen) => !isOpen && onClose()} open={open}>
@@ -353,59 +462,7 @@ export function EmailDetailPanel({
 
             {/* Metadata */}
             <div className="space-y-3 px-4">
-              <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-sm">
-                <span className="text-muted-foreground">Date</span>
-                <span>{formatDate(email.receivedAt)}</span>
-
-                {email.toEmails.length > 0 && (
-                  <>
-                    <span className="text-muted-foreground">To</span>
-                    <span className="truncate">
-                      {email.toEmails.join(", ")}
-                    </span>
-                  </>
-                )}
-
-                {email.ccEmails.length > 0 && (
-                  <>
-                    <span className="text-muted-foreground">CC</span>
-                    <span className="truncate">
-                      {email.ccEmails.join(", ")}
-                    </span>
-                  </>
-                )}
-
-                {email.classification && (
-                  <>
-                    <span className="text-muted-foreground">Type</span>
-                    <span>
-                      <Badge
-                        className={
-                          CLASSIFICATION_COLORS[email.classification] ||
-                          "bg-muted text-muted-foreground"
-                        }
-                        variant="outline"
-                      >
-                        {email.classification.replace(/_/g, " ")}
-                      </Badge>
-                    </span>
-                  </>
-                )}
-
-                {email.projectName && (
-                  <>
-                    <span className="text-muted-foreground">Project</span>
-                    <span>{email.projectName}</span>
-                  </>
-                )}
-
-                {email.contractorName && (
-                  <>
-                    <span className="text-muted-foreground">Contractor</span>
-                    <span>{email.contractorName}</span>
-                  </>
-                )}
-              </div>
+              <EmailMetadataGrid email={email} />
 
               {/* Recipients (dedup) */}
               {recipients.length > 1 && (
@@ -427,7 +484,12 @@ export function EmailDetailPanel({
               )}
 
               {/* Attachments */}
-              {attachmentsUi}
+              <AttachmentsSection
+                attachmentsData={attachmentsData}
+                attachmentsError={attachmentsError}
+                attachmentsLoading={attachmentsLoading}
+                email={email}
+              />
 
               {/* Actions */}
               <div className="flex gap-2">
@@ -464,66 +526,9 @@ export function EmailDetailPanel({
                 // biome-ignore lint/a11y/noNoninteractiveElementInteractions: iframe onLoad is used to tweak sandboxed HTML.
                 <iframe
                   className="w-full rounded-lg border border-border bg-white"
-                  onLoad={(e) => {
-                    const iframe = e.currentTarget;
-                    const doc = iframe.contentDocument;
-                    if (doc?.body) {
-                      // Force links out of the sandbox so JS-enabled pages don't render
-                      // inside the iframe (which triggers "JavaScript disabled").
-                      for (const a of Array.from(
-                        doc.querySelectorAll("a[href]")
-                      )) {
-                        a.setAttribute("target", "_blank");
-                        a.setAttribute("rel", "noopener noreferrer");
-                      }
-
-                      // Also intercept clicks to ensure the iframe never navigates.
-                      // (Some HTML email templates override target or use weird markup.)
-                      doc.addEventListener(
-                        "click",
-                        (ev) => {
-                          const t = ev.target as Element | null;
-                          const a = t?.closest?.(
-                            "a[href]"
-                          ) as HTMLAnchorElement | null;
-                          if (!a) {
-                            return;
-                          }
-
-                          const href = a.getAttribute("href") ?? "";
-                          if (
-                            !href ||
-                            href.startsWith("#") ||
-                            href.toLowerCase().startsWith("javascript:")
-                          ) {
-                            return;
-                          }
-
-                          ev.preventDefault();
-                          ev.stopPropagation();
-
-                          const resolved = (() => {
-                            try {
-                              return new URL(href, doc.baseURI).toString();
-                            } catch {
-                              return href;
-                            }
-                          })();
-
-                          window.open(
-                            resolved,
-                            "_blank",
-                            "noopener,noreferrer"
-                          );
-                        },
-                        { capture: true }
-                      );
-
-                      setIframeHeight(
-                        Math.max(300, doc.body.scrollHeight + 32)
-                      );
-                    }
-                  }}
+                  onLoad={(e) =>
+                    handleIframeLoad(e.currentTarget, setIframeHeight)
+                  }
                   sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox"
                   srcDoc={iframeSrcDoc}
                   style={{ height: iframeHeight }}

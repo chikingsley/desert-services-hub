@@ -216,7 +216,7 @@ export async function generatePartBPdf(
         current = current.parentElement;
       }
 
-      if (container) {
+      if (container && container instanceof HTMLElement) {
         // Mark this container with a data attribute so we can target it with CSS
         container.dataset.pdfPartB = "true";
         return true;
@@ -282,7 +282,7 @@ export async function generatePartBPdf(
     // Step 5: Clean up data attribute (print styles don't need removal - they only affect print)
     await page.evaluate(() => {
       const container = document.querySelector("[data-pdf-part-b]");
-      if (container) {
+      if (container && container instanceof HTMLElement) {
         delete container.dataset.pdfPartB;
       }
     });

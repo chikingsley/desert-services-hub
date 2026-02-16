@@ -2,16 +2,18 @@
 
 Maricopa County dust permit browser automation. Playwright-based portal scraping, PDF generation, permit lifecycle management (create, renew, revise, close).
 
-## CLI Quick Actions
+## API Quick Actions (Preferred)
 
-| User Says | CLI Command |
-|-----------|-------------|
-| "Download PDF D0061391" | `bun src/cli.ts scrape D0061391 --pdf` |
-| "Download to current dir" | `bun src/cli.ts scrape D0061391 --pdf --output .` |
-| "Close permit D0056240" | `bun src/cli.ts close D0056240` |
-| "Renew permit D0058823" | `bun src/cli.ts renew D0058823 --company "Company Name"` |
+| User Says | API Call |
+|-----------|----------|
+| "Download PDF D0061391" | `curl -X POST http://localhost:47822/api/scrape/pdf -H 'Content-Type: application/json' -d '{"permitId":"D0061391"}'` |
+| "Close permit D0056240" | `curl -X POST http://localhost:47822/api/permits/D0056240/close -H 'Content-Type: application/json' -d '{}'` |
+| "Renew permit D0058823" | `curl -X POST http://localhost:47822/api/permits/D0058823/renew -H 'Content-Type: application/json' -d '{"companyName":"Company Name"}'` |
+| "Revise contact on D0064070" | `curl -X POST http://localhost:47822/api/permits/D0064070/revise -H 'Content-Type: application/json' -d '{"revisionType":"contact","notes":"..."}'` |
 
-**PDF Output:** Default `tests/output/pdfs/D0XXXXXX.pdf`, override with `--output /path`
+## Legacy CLI (Debug Only)
+
+The package-local CLI still exists for debugging from `apps/dust-permits`, but cross-service/runtime callers should use the API (or `PermitClient`).
 
 ## API Endpoints (port 47822)
 

@@ -93,66 +93,122 @@ function normalizeSubjectInternal(subject: string | null): string | null {
     .trim();
 }
 
-// ============================================
-// CRUD Operations
-// ============================================
+interface DomainRuleRow {
+  classification: string | null;
+  is_excluded: boolean;
+}
 
-export async function insertEmail(data: InsertEmailData): Promise<number> {
-  const normalized = normalizeSubjectInternal(data.subject ?? null);
+function getSenderDomain(fromEmail: string | null | undefined): string {
+  return fromEmail?.split("@")[1]?.toLowerCase() ?? "";
+}
 
-  // Check domain_rules table for classification + exclusion
-  const fromDomain = data.fromEmail?.split("@")[1]?.toLowerCase() ?? "";
-  const rule = fromDomain
-    ? ((await db
-        .prepare(
-          `SELECT classification, is_excluded FROM domain_rules
-           WHERE ? LIKE '%' || domain ORDER BY length(domain) DESC LIMIT 1`
-        )
-        .get(fromDomain)) as {
-        classification: string | null;
-        is_excluded: boolean;
-      } | null)
-    : null;
-
-  // Excluded if: code-level spam check OR domain_rules says so
-  const excluded =
-    isSpam(data.fromEmail, data.subject).isSpam || rule?.is_excluded ? 1 : 0;
-  const classification = rule?.classification ?? null;
-
-  // If we already know this message via internet_message_id in the same mailbox,
-  // update that row's Graph message_id to the newest value before upsert.
-  // This keeps downstream FK relationships stable when IDs change after moves.
-  if (data.internetMessageId) {
-    const existingByInternet = await db
-      .query<{ id: number; message_id: string }, [number, string]>(
-        `SELECT id, message_id
-         FROM emails
-         WHERE mailbox_id = ?
-           AND internet_message_id = ?
-         ORDER BY id
-         LIMIT 1`
-      )
-      .get(data.mailboxId, data.internetMessageId);
-
-    if (
-      existingByInternet?.message_id &&
-      existingByInternet.message_id !== data.messageId
-    ) {
-      const existingByNewMessageId = await db
-        .query<{ id: number }, [string]>(
-          "SELECT id FROM emails WHERE message_id = ? LIMIT 1"
-        )
-        .get(data.messageId);
-
-      if (!existingByNewMessageId) {
-        await db.run("UPDATE emails SET message_id = ? WHERE id = ?", [
-          data.messageId,
-          existingByInternet.id,
-        ]);
-      }
-    }
+async function getDomainRule(
+  fromDomain: string
+): Promise<DomainRuleRow | null> {
+  if (fromDomain.length === 0) {
+    return null;
   }
 
+  return (await db
+    .prepare(
+      `SELECT classification, is_excluded FROM domain_rules
+       WHERE ? LIKE '%' || domain ORDER BY length(domain) DESC LIMIT 1`
+    )
+    .get(fromDomain)) as DomainRuleRow | null;
+}
+
+function resolveExclusion(
+  data: InsertEmailData,
+  rule: DomainRuleRow | null
+): {
+  excluded: number;
+  classification: string | null;
+} {
+  const spamHit = isSpam(data.fromEmail, data.subject).isSpam;
+  return {
+    excluded: spamHit || rule?.is_excluded === true ? 1 : 0,
+    classification: rule?.classification ?? null,
+  };
+}
+
+async function reconcileMessageIdByInternetId(
+  data: InsertEmailData
+): Promise<void> {
+  if (!data.internetMessageId) {
+    return;
+  }
+
+  const existingByInternet = await db
+    .query<{ id: number; message_id: string }, [number, string]>(
+      `SELECT id, message_id
+       FROM emails
+       WHERE mailbox_id = ?
+         AND internet_message_id = ?
+       ORDER BY id
+       LIMIT 1`
+    )
+    .get(data.mailboxId, data.internetMessageId);
+
+  if (
+    !existingByInternet?.message_id ||
+    existingByInternet.message_id === data.messageId
+  ) {
+    return;
+  }
+
+  const existingByNewMessageId = await db
+    .query<{ id: number }, [string]>(
+      "SELECT id FROM emails WHERE message_id = ? LIMIT 1"
+    )
+    .get(data.messageId);
+
+  if (!existingByNewMessageId) {
+    await db.run("UPDATE emails SET message_id = ? WHERE id = ?", [
+      data.messageId,
+      existingByInternet.id,
+    ]);
+  }
+}
+
+function toEmailUpsertParams(params: {
+  data: InsertEmailData;
+  normalizedSubject: string | null;
+  excluded: number;
+  classification: string | null;
+}): Array<string | number | null> {
+  const { data, normalizedSubject, excluded, classification } = params;
+
+  return [
+    data.messageId,
+    data.internetMessageId ?? null,
+    data.mailboxId,
+    data.conversationId ?? null,
+    data.subject ?? null,
+    normalizedSubject,
+    data.fromEmail ?? null,
+    data.fromName ?? null,
+    JSON.stringify(data.toEmails ?? []),
+    JSON.stringify(data.ccEmails ?? []),
+    data.receivedAt,
+    data.hasAttachments ? 1 : 0,
+    JSON.stringify(data.attachmentNames ?? []),
+    data.bodyPreview ?? null,
+    data.bodyFull ?? null,
+    data.bodyHtml ?? null,
+    data.webUrl ?? null,
+    JSON.stringify(data.categories ?? []),
+    excluded,
+    classification,
+    classification ? "domain_rule" : null,
+  ];
+}
+
+async function upsertEmailRecord(params: {
+  data: InsertEmailData;
+  normalizedSubject: string | null;
+  excluded: number;
+  classification: string | null;
+}): Promise<void> {
   await db.run(
     `INSERT INTO emails (
       message_id, internet_message_id, mailbox_id, conversation_id, subject, normalized_subject, from_email, from_name,
@@ -174,38 +230,39 @@ export async function insertEmail(data: InsertEmailData): Promise<number> {
       body_html = excluded.body_html,
       categories = excluded.categories,
       is_excluded = excluded.is_excluded`,
-    [
-      data.messageId,
-      data.internetMessageId ?? null,
-      data.mailboxId,
-      data.conversationId ?? null,
-      data.subject ?? null,
-      normalized,
-      data.fromEmail ?? null,
-      data.fromName ?? null,
-      JSON.stringify(data.toEmails ?? []),
-      JSON.stringify(data.ccEmails ?? []),
-      data.receivedAt,
-      data.hasAttachments ? 1 : 0,
-      JSON.stringify(data.attachmentNames ?? []),
-      data.bodyPreview ?? null,
-      data.bodyFull ?? null,
-      data.bodyHtml ?? null,
-      data.webUrl ?? null,
-      JSON.stringify(data.categories ?? []),
-      excluded,
-      classification,
-      classification ? "domain_rule" : null,
-    ]
+    toEmailUpsertParams(params)
   );
+}
 
+async function getInsertedEmailId(messageId: string): Promise<number> {
   const row = await db
     .query<{ id: number }, [string]>(
       "SELECT id FROM emails WHERE message_id = ?"
     )
-    .get(data.messageId);
+    .get(messageId);
 
   return row?.id ?? 0;
+}
+
+// ============================================
+// CRUD Operations
+// ============================================
+
+export async function insertEmail(data: InsertEmailData): Promise<number> {
+  const normalizedSubject = normalizeSubjectInternal(data.subject ?? null);
+  const fromDomain = getSenderDomain(data.fromEmail);
+  const rule = await getDomainRule(fromDomain);
+  const { excluded, classification } = resolveExclusion(data, rule);
+
+  await reconcileMessageIdByInternetId(data);
+  await upsertEmailRecord({
+    data,
+    normalizedSubject,
+    excluded,
+    classification,
+  });
+
+  return await getInsertedEmailId(data.messageId);
 }
 
 export async function getEmailByMessageId(

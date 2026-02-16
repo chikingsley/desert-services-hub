@@ -103,7 +103,9 @@ async function fillCategoryB1(page: Page, data: FormData): Promise<void> {
         page,
         b1.otherDescription,
         data.categoryB1.otherDescription,
-        { labelFallback: "Other:" }
+        {
+          labelFallback: "Other:",
+        }
       );
     }
   } else {

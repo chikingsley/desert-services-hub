@@ -4,11 +4,11 @@
 
 import { MAX_CONCURRENT_JOBS } from "./config";
 import {
+  processContractEmailReceivedJob,
   processDownloadFilesJob,
   processDustPermitIssuedEmailJob,
   processDustPermitPaymentJob,
   processEmailNotificationJob,
-  processEmailResolveJobFromQueue,
   processIntakeJob,
   processSyncFullJob,
   processSyncItemJob,
@@ -59,10 +59,6 @@ export async function processNextJob(): Promise<void> {
         await processEmailNotificationJob(job);
         break;
 
-      case "email_resolve":
-        await processEmailResolveJobFromQueue(job);
-        break;
-
       case "files_intake":
       case "contracts_email_intake":
       case "intake":
@@ -75,6 +71,10 @@ export async function processNextJob(): Promise<void> {
 
       case "dust_permit_issued_email":
         await processDustPermitIssuedEmailJob(job);
+        break;
+
+      case "contract_email_received":
+        await processContractEmailReceivedJob(job);
         break;
 
       default:

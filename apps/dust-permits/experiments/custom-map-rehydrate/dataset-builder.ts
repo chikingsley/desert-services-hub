@@ -95,7 +95,6 @@ function parseArgs(argv: string[]): CliArgs {
         .map((s) => s.trim())
         .filter(Boolean);
       i += 1;
-      continue;
     }
   }
 
@@ -172,10 +171,7 @@ FROM (
 `.trim();
 }
 
-async function runPsqlJsonQuery(
-  container: string,
-  sql: string
-): Promise<PermitDatasetRow[]> {
+async function runPsqlJsonQuery(container: string, sql: string): Promise<PermitDatasetRow[]> {
   const proc = Bun.spawn(
     [
       "docker",
@@ -195,7 +191,7 @@ async function runPsqlJsonQuery(
     {
       stdout: "pipe",
       stderr: "pipe",
-    }
+    },
   );
 
   const [exitCode, stdoutText, stderrText] = await Promise.all([
@@ -206,9 +202,7 @@ async function runPsqlJsonQuery(
 
   if (exitCode !== 0) {
     const stderr = stderrText.trim();
-    throw new Error(
-      `psql query failed (exit=${exitCode})${stderr ? `: ${stderr}` : ""}`
-    );
+    throw new Error(`psql query failed (exit=${exitCode})${stderr ? `: ${stderr}` : ""}`);
   }
 
   const output = stdoutText.trim();

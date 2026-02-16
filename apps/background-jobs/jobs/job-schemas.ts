@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { ContractsEmailIntakePayload } from "../lib/files-intake";
 import type {
+  ContractEmailJobPayload,
   IssuedJobPayload,
   PaymentJobPayload,
 } from "../lib/notifications/email-triggers";
@@ -40,3 +41,14 @@ export const ISSUED_PAYLOAD_SCHEMA: z.ZodType<IssuedJobPayload> = z.object({
   bodyText: z.string(),
   subject: NON_EMPTY_STRING_SCHEMA,
 });
+
+export const CONTRACT_EMAIL_PAYLOAD_SCHEMA: z.ZodType<ContractEmailJobPayload> =
+  z.object({
+    emailId: z.number().int().positive(),
+    messageId: NON_EMPTY_STRING_SCHEMA,
+    mailboxEmail: NON_EMPTY_STRING_SCHEMA,
+    subject: z.string(),
+    fromEmail: z.string(),
+    bodyText: z.string(),
+    hasAttachments: z.boolean(),
+  });

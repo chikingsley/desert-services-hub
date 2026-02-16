@@ -1,6 +1,6 @@
 import type { EstimatePDFOptions } from "@documents/pdf/estimate/build-estimate-doc-definition";
 import { generateEstimatePDFBlob } from "@documents/pdf/estimate/generate-estimate-pdf.client";
-import { catalog } from "@estimates/catalog";
+import { catalog } from "@estimates/catalog/catalog";
 import type { EditorEstimate } from "@lib/db/types";
 import {
   ChevronDown,
@@ -17,6 +17,10 @@ import { toast } from "sonner";
 import { FloatingPdfOptions } from "@/apps/web/frontend/components/estimates/floating-pdf-options";
 import { InlineEstimateEditor } from "@/apps/web/frontend/components/estimates/inline-estimate-editor";
 import { PageHeader } from "@/apps/web/frontend/components/page-header";
+import {
+  SaveButtonIcon,
+  SaveButtonLabel,
+} from "@/apps/web/frontend/components/save-button";
 import { Button } from "@/apps/web/frontend/components/ui/button";
 import {
   DropdownMenu,
@@ -27,47 +31,13 @@ import {
 import { useSidebar } from "@/apps/web/frontend/components/ui/sidebar";
 import { Spinner } from "@/apps/web/frontend/components/ui/spinner";
 import { useSettings } from "@/hooks/use-settings";
-
-type SaveStatus = "saved" | "saving" | "unsaved";
+import type { ApiEstimateResponse } from "./estimate-workspace-helpers";
+import {
+  apiToEditorEstimate,
+  editorToApiPayload,
+} from "./estimate-workspace-helpers";
 
 const COMPACT_EDITOR_BREAKPOINT = 1180;
-
-interface SaveButtonProps {
-  isManualSaving: boolean;
-  saveStatus: SaveStatus;
-}
-
-function SaveButtonIcon({ isManualSaving, saveStatus }: SaveButtonProps) {
-  if (isManualSaving || saveStatus === "saving") {
-    return <Spinner className="mr-2 h-4 w-4" />;
-  }
-
-  if (saveStatus === "saved") {
-    return (
-      <span className="mr-2 flex h-4 w-4 items-center justify-center rounded-full bg-green-500/20">
-        <span className="h-2 w-2 rounded-full bg-green-500" />
-      </span>
-    );
-  }
-
-  return (
-    <span className="mr-2 flex h-4 w-4 items-center justify-center rounded-full bg-amber-500/20">
-      <span className="h-2 w-2 rounded-full bg-amber-500" />
-    </span>
-  );
-}
-
-function SaveButtonLabel({ isManualSaving, saveStatus }: SaveButtonProps) {
-  if (isManualSaving) {
-    return "Saving...";
-  }
-
-  if (saveStatus === "saved") {
-    return "Saved";
-  }
-
-  return "Save";
-}
 
 interface EstimateWorkspaceProps {
   initialEstimate: EditorEstimate;
@@ -77,110 +47,6 @@ interface EstimateWorkspaceProps {
   linkedTakeoff: { id: string; name: string } | null;
   initialIsLocked?: boolean;
   initialUpdatedAt?: string;
-}
-
-// Convert API response to EditorEstimate format
-interface ApiEstimateResponse {
-  id: string;
-  base_number: string;
-  job_name: string;
-  job_address: string | null;
-  client_name: string | null;
-  estimator: string | null;
-  estimator_email: string | null;
-  client_address: string | null;
-  client_email: string | null;
-  client_phone: string | null;
-  updated_at: string;
-  current_version?: {
-    id: string;
-    total: number;
-    sections: Array<{
-      id: string;
-      name: string;
-      title?: string;
-      sort_order: number;
-    }>;
-    line_items: Array<{
-      id: string;
-      section_id: string | null;
-      item_name: string | null;
-      description: string;
-      quantity: number;
-      unit: string;
-      unit_price: number;
-      is_excluded: number;
-      notes: string | null;
-      sort_order: number;
-    }>;
-  };
-}
-
-function getLineItemRateAndTotal(item: {
-  quantity: number;
-  unit_price: number;
-}): {
-  rate: number;
-  total: number;
-} {
-  const quantity = Number.isFinite(item.quantity) ? item.quantity : 0;
-  const unitPrice = Number.isFinite(item.unit_price) ? item.unit_price : 0;
-
-  return {
-    rate: unitPrice,
-    total: quantity * unitPrice,
-  };
-}
-
-function apiToEditorEstimate(
-  api: ApiEstimateResponse,
-  current: EditorEstimate
-): EditorEstimate {
-  const version = api.current_version;
-  if (!version) {
-    return current;
-  }
-
-  return {
-    estimateNumber: api.base_number || current.estimateNumber,
-    date: current.date,
-    estimator: api.estimator ?? current.estimator,
-    estimatorEmail: api.estimator_email ?? current.estimatorEmail,
-    billTo: {
-      companyName: api.client_name ?? "",
-      address: (api.client_address ?? current.billTo.address).replaceAll(
-        "\n",
-        ", "
-      ),
-      email: api.client_email ?? "",
-      phone: api.client_phone ?? "",
-    },
-    jobInfo: {
-      siteName: api.job_name,
-      address: (api.job_address ?? "").replaceAll("\n", ", "),
-    },
-    sections: version.sections.map((s) => ({
-      id: s.id,
-      name: s.name,
-      title: s.title,
-    })),
-    lineItems: version.line_items.map((item) => {
-      const { rate, total } = getLineItemRateAndTotal(item);
-
-      return {
-        id: item.id,
-        item: item.item_name ?? item.description,
-        description: item.description || item.notes || "",
-        qty: item.quantity,
-        uom: item.unit,
-        cost: rate,
-        total,
-        sectionId: item.section_id ?? undefined,
-        isAlternate: item.is_excluded === 1,
-      };
-    }),
-    total: version.total,
-  };
 }
 
 export function EstimateWorkspace({
@@ -382,47 +248,7 @@ export function EstimateWorkspace({
 
   const handleSave = useCallback(
     async (estimate: EditorEstimate) => {
-      const nonEmptyLineItems = estimate.lineItems.filter(
-        (item) => item.item.trim() !== ""
-      );
-      const computedTotal = nonEmptyLineItems.reduce(
-        (sum, item) => sum + item.total,
-        0
-      );
-
-      // Convert editor format to API format
-      const payload = {
-        base_number: estimate.estimateNumber,
-        job_name: estimate.jobInfo.siteName || "Untitled Estimate",
-        job_address: estimate.jobInfo.address || null,
-        estimator: estimate.estimator || null,
-        estimator_email: estimate.estimatorEmail || null,
-        client_name: estimate.billTo.companyName || null,
-        client_address: estimate.billTo.address || null,
-        client_email: estimate.billTo.email || null,
-        client_phone: estimate.billTo.phone || null,
-        status: "draft",
-        total: computedTotal,
-        sections: estimate.sections.map((s) => ({
-          id: s.id,
-          name: s.name,
-          title: s.title,
-        })),
-        line_items: nonEmptyLineItems.map((item) => ({
-          section_id: item.sectionId,
-          item_name: item.item,
-          item: item.item,
-          description: item.description,
-          quantity: item.qty,
-          qty: item.qty,
-          unit: item.uom,
-          uom: item.uom,
-          unit_price: item.cost,
-          cost: item.cost,
-          notes: null,
-          is_excluded: item.isAlternate ? 1 : 0,
-        })),
-      };
+      const payload = editorToApiPayload(estimate);
 
       const res = await fetch(`/api/estimates/${estimateId}`, {
         method: "PUT",
@@ -542,14 +368,8 @@ export function EstimateWorkspace({
         size="sm"
         variant={saveStatus === "unsaved" ? "default" : "outline"}
       >
-        <SaveButtonIcon
-          isManualSaving={isManualSaving}
-          saveStatus={saveStatus}
-        />
-        <SaveButtonLabel
-          isManualSaving={isManualSaving}
-          saveStatus={saveStatus}
-        />
+        <SaveButtonIcon isSaving={isManualSaving} saveStatus={saveStatus} />
+        <SaveButtonLabel isSaving={isManualSaving} saveStatus={saveStatus} />
       </Button>
 
       <DropdownMenu>

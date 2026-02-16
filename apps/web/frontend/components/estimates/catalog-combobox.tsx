@@ -37,58 +37,57 @@ interface FlattenedItem {
   isPickOne?: boolean;
 }
 
+function flattenSubcategory(
+  category: Catalog["categories"][number],
+  sub: NonNullable<Catalog["categories"][number]["subcategories"]>[number],
+  items: FlattenedItem[]
+): void {
+  if (sub.hidden) {
+    return;
+  }
+  if (sub.id === "dust-permits") {
+    items.push({
+      value: `${category.id}::DUST-PERMIT`,
+      label: "Dust Permit (by acreage)",
+      price: "Enter acreage to calculate",
+      categoryId: category.id,
+      categoryName: category.name,
+      subcategoryId: sub.id,
+      subcategoryName: sub.name,
+    });
+    return;
+  }
+  const isPickOne = sub.selectionMode === "pick-one";
+  for (const item of sub.items) {
+    items.push({
+      value: `${category.id}::${sub.id}::${item.code}`,
+      label: item.name,
+      price: `$${item.price.toFixed(2)}/${item.unit}`,
+      categoryId: category.id,
+      categoryName: category.name,
+      subcategoryId: sub.id,
+      subcategoryName: sub.name,
+      isPickOne,
+    });
+  }
+}
+
 function flattenCatalog(catalog: Catalog): FlattenedItem[] {
   const items: FlattenedItem[] = [];
-
   for (const category of catalog.categories) {
-    if (category.items && category.items.length > 0) {
-      for (const item of category.items) {
-        items.push({
-          value: `${category.id}::${item.code}`,
-          label: item.name,
-          price: `$${item.price.toFixed(2)}/${item.unit}`,
-          categoryId: category.id,
-          categoryName: category.name,
-        });
-      }
+    for (const item of category.items ?? []) {
+      items.push({
+        value: `${category.id}::${item.code}`,
+        label: item.name,
+        price: `$${item.price.toFixed(2)}/${item.unit}`,
+        categoryId: category.id,
+        categoryName: category.name,
+      });
     }
-
-    if (category.subcategories) {
-      for (const sub of category.subcategories) {
-        if (sub.hidden) {
-          continue;
-        }
-
-        if (sub.id === "dust-permits") {
-          items.push({
-            value: `${category.id}::DUST-PERMIT`,
-            label: "Dust Permit (by acreage)",
-            price: "Enter acreage to calculate",
-            categoryId: category.id,
-            categoryName: category.name,
-            subcategoryId: sub.id,
-            subcategoryName: sub.name,
-          });
-          continue;
-        }
-
-        const isPickOne = sub.selectionMode === "pick-one";
-        for (const item of sub.items) {
-          items.push({
-            value: `${category.id}::${sub.id}::${item.code}`,
-            label: item.name,
-            price: `$${item.price.toFixed(2)}/${item.unit}`,
-            categoryId: category.id,
-            categoryName: category.name,
-            subcategoryId: sub.id,
-            subcategoryName: sub.name,
-            isPickOne,
-          });
-        }
-      }
+    for (const sub of category.subcategories ?? []) {
+      flattenSubcategory(category, sub, items);
     }
   }
-
   return items;
 }
 

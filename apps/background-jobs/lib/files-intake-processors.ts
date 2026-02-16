@@ -2,14 +2,13 @@
  * Files Intake — Per-Type Processors
  *
  * Individual file processors extracted from files-intake.ts:
- *   - PDF (fast Kreuzberg extraction for text-based PDFs)
- *   - Images (OCR via pdf-analysis)
+ *   - PDF (Kreuzberg extraction, optional Kreuzberg OCR pass)
+ *   - Images (Kreuzberg extraction, optional Kreuzberg OCR pass)
  *   - Office documents (Kreuzberg native extraction)
  *   - Text files (direct read)
  *   - ZIP archives (extract + recursive processing)
  *   - Unsupported files (metadata-only storage)
  */
-import { existsSync } from "node:fs";
 import { mkdir, readdir, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { extractFile } from "@kreuzberg/node";
@@ -23,22 +22,11 @@ import type {
 // Config
 // ============================================================================
 
-const PDF_ANALYSIS_CWD = join(
-  import.meta.dir,
-  "../../../packages/documents/pdf-analysis-cli"
-);
-
 const LOG = "[files-intake]";
-
-function resolveUvBin(): string {
-  if (process.env.UV_BIN?.trim()) {
-    return process.env.UV_BIN.trim();
-  }
-  if (existsSync("/root/.local/bin/uv")) {
-    return "/root/.local/bin/uv";
-  }
-  return "uv";
-}
+const MIN_KREUZBERG_TEXT_LENGTH = 100;
+const KREUZBERG_OCR_BACKEND = process.env.KREUZBERG_OCR_BACKEND?.trim() || null;
+const KREUZBERG_OCR_LANGUAGE =
+  process.env.KREUZBERG_OCR_LANGUAGE?.trim() || undefined;
 
 // ============================================================================
 // Types
@@ -50,12 +38,13 @@ export interface EmailMeta {
   forwarderEmail: string;
 }
 
-interface OcrOutput {
-  text: string;
-  pages: number[];
-  processing_time_ms: number;
-  model: string;
-  provider: string;
+interface KreuzbergExtraction {
+  content: string;
+  tables: string[];
+  metadata: Record<string, unknown>;
+  extractor: string;
+  ocrAttempted: boolean;
+  ocrError?: string;
 }
 
 // ============================================================================
@@ -89,96 +78,137 @@ const insertFileError = db.prepare(`
 `);
 
 // ============================================================================
-// Fast PDF Extraction — Kreuzberg (text-based PDFs only)
+// Kreuzberg Extraction Helpers
 // ============================================================================
 
-const MIN_KREUZBERG_TEXT_LENGTH = 100;
+function getOcrConfig(): { backend: string; language?: string } | null {
+  if (!KREUZBERG_OCR_BACKEND) {
+    return null;
+  }
+  if (KREUZBERG_OCR_LANGUAGE) {
+    return { backend: KREUZBERG_OCR_BACKEND, language: KREUZBERG_OCR_LANGUAGE };
+  }
+  return { backend: KREUZBERG_OCR_BACKEND };
+}
 
-export async function processPdfFast(
+async function extractWithKreuzberg(
+  filePath: string,
+  options?: { minTextLength?: number; preferOcr?: boolean }
+): Promise<KreuzbergExtraction> {
+  const minTextLength = options?.minTextLength ?? 0;
+  const preferOcr = options?.preferOcr ?? false;
+  const firstPass = await extractFile(filePath);
+
+  let content = firstPass.content ?? "";
+  let tables = firstPass.tables?.map((table) => table.markdown) ?? [];
+  const metadata =
+    (firstPass.metadata as Record<string, unknown> | undefined) ?? {};
+  const ocrConfig = getOcrConfig();
+  const shouldTryOcr =
+    ocrConfig !== null && (preferOcr || content.length < minTextLength);
+
+  let ocrAttempted = false;
+  let ocrError: string | undefined;
+  let extractor = "kreuzberg";
+
+  if (shouldTryOcr && ocrConfig) {
+    ocrAttempted = true;
+    try {
+      const ocrPass = await extractFile(filePath, null, {
+        forceOcr: true,
+        ocr: ocrConfig,
+      });
+      const ocrContent = ocrPass.content ?? "";
+      if (ocrContent.length > content.length) {
+        content = ocrContent;
+        tables = ocrPass.tables?.map((table) => table.markdown) ?? tables;
+      }
+      extractor = `kreuzberg+ocr:${ocrConfig.backend}`;
+    } catch (error) {
+      ocrError = error instanceof Error ? error.message : String(error);
+    }
+  }
+
+  return { content, tables, metadata, extractor, ocrAttempted, ocrError };
+}
+
+// ============================================================================
+// PDF Processing — Kreuzberg
+// ============================================================================
+
+export async function processPdf(
   pdfPath: string,
   emailMeta: EmailMeta
-): Promise<ParseIntakeResultType | null> {
+): Promise<ParseIntakeResultType> {
   const fileName = pdfPath.split("/").pop() ?? pdfPath;
   const started = performance.now();
 
   try {
-    const result = await extractFile(pdfPath);
-    const content = result.content ?? "";
+    const extracted = await extractWithKreuzberg(pdfPath, {
+      minTextLength: MIN_KREUZBERG_TEXT_LENGTH,
+    });
+    const elapsed = Math.round(performance.now() - started);
 
-    if (content.length >= MIN_KREUZBERG_TEXT_LENGTH) {
-      const elapsed = Math.round(performance.now() - started);
+    const rawExtraction = {
+      text_content: extracted.content,
+      table_count: extracted.tables.length,
+      tables: extracted.tables,
+      metadata: extracted.metadata,
+      extractor: extracted.extractor,
+      char_count: extracted.content.length,
+      ocr_attempted: extracted.ocrAttempted,
+      ocr_error: extracted.ocrError ?? null,
+    };
 
-      const rawExtraction = {
-        text_content: content,
-        table_count: result.tables?.length ?? 0,
-        tables: result.tables?.map((t) => t.markdown) ?? [],
-        metadata: result.metadata ?? {},
-        extractor: "kreuzberg",
-        char_count: content.length,
-      };
+    const row = (await insertFileRecord.get(
+      "pdf_document",
+      pdfPath,
+      fileName,
+      extracted.content.slice(0, 10_000),
+      JSON.stringify(rawExtraction),
+      extracted.extractor,
+      elapsed,
+      emailMeta.originalFrom || null,
+      emailMeta.originalSubject || null,
+      emailMeta.forwarderEmail || null
+    )) as { id: number } | null;
 
-      const row = (await insertFileRecord.get(
-        "pdf_document",
-        pdfPath,
-        fileName,
-        content.slice(0, 10_000),
-        JSON.stringify(rawExtraction),
-        "kreuzberg",
-        elapsed,
-        emailMeta.originalFrom || null,
-        emailMeta.originalSubject || null,
-        emailMeta.forwarderEmail || null
-      )) as { id: number } | null;
-
-      console.log(
-        `${LOG}   Fast PDF #${row?.id}: ${content.length} chars in ${elapsed}ms (kreuzberg)`
-      );
-
-      return {
-        documentId: row?.id ?? null,
-        fileName,
-        documentType: "pdf_document",
-        pageCount: 0,
-        processingTimeMs: elapsed,
-      };
-    }
-
-    return null;
-  } catch {
-    return null;
-  }
-}
-
-// ============================================================================
-// Image Processing — OCR via pdf-analysis
-// ============================================================================
-
-async function runOcr(imagePath: string): Promise<OcrOutput> {
-  const uvBin = resolveUvBin();
-  const proc = Bun.spawn(
-    [uvBin, "run", "pdf-analysis", "ocr", imagePath, "--format", "json"],
-    {
-      cwd: PDF_ANALYSIS_CWD,
-      stdout: "pipe",
-      stderr: "pipe",
-      env: { ...process.env, PATH: process.env.PATH ?? "" },
-    }
-  );
-
-  const timeout = setTimeout(() => proc.kill(), 120_000);
-  const stdout = await new Response(proc.stdout).text();
-  const stderr = await new Response(proc.stderr).text();
-  const exitCode = await proc.exited;
-  clearTimeout(timeout);
-
-  if (exitCode !== 0) {
-    throw new Error(
-      `pdf-analysis ocr exit ${exitCode}: ${stderr.trim().slice(0, 500)}`
+    console.log(
+      `${LOG}   Stored PDF #${row?.id}: ${extracted.content.length} chars in ${elapsed}ms (${extracted.extractor})`
     );
-  }
 
-  return JSON.parse(stdout) as OcrOutput;
+    return {
+      documentId: row?.id ?? null,
+      fileName,
+      documentType: "pdf_document",
+      pageCount: 0,
+      processingTimeMs: elapsed,
+    };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error(`${LOG}   Failed PDF ${fileName}: ${msg}`);
+    await insertFileError.run(
+      pdfPath,
+      fileName,
+      msg.slice(0, 1000),
+      emailMeta.originalFrom || null,
+      emailMeta.originalSubject || null,
+      emailMeta.forwarderEmail || null
+    );
+    return {
+      documentId: null,
+      fileName,
+      documentType: "error",
+      pageCount: 0,
+      processingTimeMs: 0,
+      error: msg,
+    };
+  }
 }
+
+// ============================================================================
+// Image Processing — Kreuzberg (optionally with OCR backend)
+// ============================================================================
 
 export async function processImage(
   imagePath: string,
@@ -188,23 +218,30 @@ export async function processImage(
   const started = performance.now();
 
   try {
-    console.log(`${LOG}   OCR image: ${fileName}`);
-    const ocrResult = await runOcr(imagePath);
+    const extracted = await extractWithKreuzberg(imagePath, {
+      minTextLength: 1,
+      preferOcr: true,
+    });
     const elapsed = Math.round(performance.now() - started);
 
     const rawExtraction = {
-      ocr_text: ocrResult.text,
-      ocr_model: ocrResult.model,
-      ocr_provider: ocrResult.provider,
+      text_content: extracted.content,
+      table_count: extracted.tables.length,
+      tables: extracted.tables,
+      metadata: extracted.metadata,
+      extractor: extracted.extractor,
+      char_count: extracted.content.length,
+      ocr_attempted: extracted.ocrAttempted,
+      ocr_error: extracted.ocrError ?? null,
     };
 
     const row = (await insertFileRecord.get(
       "image_ocr",
       imagePath,
       fileName,
-      ocrResult.text,
+      extracted.content.slice(0, 10_000),
       JSON.stringify(rawExtraction),
-      ocrResult.model,
+      extracted.extractor,
       elapsed,
       emailMeta.originalFrom || null,
       emailMeta.originalSubject || null,
@@ -212,7 +249,7 @@ export async function processImage(
     )) as { id: number } | null;
 
     console.log(
-      `${LOG}   Stored image #${row?.id}: ${ocrResult.text.length} chars OCR'd in ${elapsed}ms`
+      `${LOG}   Stored image #${row?.id}: ${extracted.content.length} chars in ${elapsed}ms (${extracted.extractor})`
     );
 
     return {

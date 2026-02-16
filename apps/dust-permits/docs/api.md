@@ -80,10 +80,10 @@ Create a dust permit application using FormData.
 **Request Body:**
 ```typescript
 {
-  flow: "new-company" | "existing-company" | "renew";
-  companyName?: string;           // Required for existing-company, renew
-  copyFromApp?: string;           // App ID to copy from (has default)
-  formData?: DeepPartial<FormData>;
+  flow: "new-company" | "existing-company";
+  companyName?: string;           // Required for existing-company
+  copyFromApp?: string;           // Optional source permit/app to copy from
+  formDataPath?: string;          // Path inside permit-worker container
 }
 ```
 
@@ -93,28 +93,13 @@ Create a dust permit application using FormData.
 |------|-------------|
 | `new-company` | Create app with new company (must fill applicant info) |
 | `existing-company` | Create app under existing company (company data pre-filled) |
-| `renew` | Renew existing permit (most data pre-filled from source) |
 
 **Example (existing-company):**
 ```json
 {
   "flow": "existing-company",
   "companyName": "Sundt Construction",
-  "formData": {
-    "primaryContact": {
-      "firstName": "John",
-      "lastName": "Smith",
-      "title": "Project Manager",
-      "email": "john@example.com",
-      "phone": "(602) 555-0100"
-    },
-    "project": {
-      "name": "Downtown Tower",
-      "description": "Commercial high-rise construction",
-      "startDate": "01/15/2025",
-      "endDate": "01/15/2026"
-    }
-  }
+  "formDataPath": "/app/data/overrides/downtown-tower.json"
 }
 ```
 
@@ -246,7 +231,8 @@ Revise an existing permit.
 **Request Body:**
 ```typescript
 {
-  // Revision-specific fields TBD
+  revisionType: string;   // e.g. "contact", "acreage", "boundary"
+  notes?: string;
 }
 ```
 

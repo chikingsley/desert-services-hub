@@ -84,6 +84,142 @@ function uniqueNonEmpty(values: Array<string | null | undefined>): string[] {
   return [...out];
 }
 
+interface EstimateHintContext {
+  restrictEstimateIds: number[];
+  projectHints: string[];
+  contractorHints: string[];
+  addressHints: string[];
+  immediateResult: EstimateResolutionResult | null;
+}
+
+async function tryLinkSingleProjectEstimate(
+  emailId: number,
+  projectId: number,
+  restrictEstimateIds: number[]
+): Promise<EstimateResolutionResult | null> {
+  if (restrictEstimateIds.length !== 1) {
+    return null;
+  }
+
+  const onlyEstimateId = restrictEstimateIds[0];
+  const linked = await linkEmailToEstimate(
+    onlyEstimateId,
+    emailId,
+    "script",
+    `email_resolver project_single project_id=${projectId}`
+  );
+  if (!linked) {
+    return null;
+  }
+
+  return {
+    status: "linked_project_single",
+    emailId,
+    estimateId: onlyEstimateId,
+    detail: "project_single",
+  };
+}
+
+async function tryLinkCanonicalProjectEstimate(
+  emailId: number,
+  projectId: number,
+  restrictEstimateIds: number[]
+): Promise<EstimateResolutionResult | null> {
+  if (restrictEstimateIds.length <= 1) {
+    return null;
+  }
+
+  const canonicalRows = await getCanonicalProjectEstimateIds.all(projectId);
+  const canonicalEstimateIds = [
+    ...new Set(canonicalRows.map((row) => row.estimate_id)),
+  ];
+  if (canonicalEstimateIds.length !== 1) {
+    return null;
+  }
+
+  const canonicalEstimateId = canonicalEstimateIds[0];
+  const linked = await linkEmailToEstimate(
+    canonicalEstimateId,
+    emailId,
+    "script",
+    `email_resolver project_canonical project_id=${projectId} canonical_estimate_id=${canonicalEstimateId}`
+  );
+  if (!linked) {
+    return null;
+  }
+
+  return {
+    status: "linked_project_canonical",
+    emailId,
+    estimateId: canonicalEstimateId,
+    detail: "project_canonical",
+  };
+}
+
+async function buildEstimateHintContext(
+  emailId: number,
+  email: EmailEstimateRow
+): Promise<EstimateHintContext> {
+  let restrictEstimateIds: number[] = [];
+  let projectHints = uniqueNonEmpty([email.project_name, email.subject]);
+  let contractorHints = uniqueNonEmpty([email.contractor_name]);
+  let addressHints: string[] = [];
+
+  if (email.project_id === null) {
+    return {
+      restrictEstimateIds,
+      projectHints,
+      contractorHints,
+      addressHints,
+      immediateResult: null,
+    };
+  }
+
+  const projectEstimateRows = await getProjectEstimateIds.all(email.project_id);
+  restrictEstimateIds = [
+    ...new Set(projectEstimateRows.map((row) => row.estimate_id)),
+  ];
+
+  const project = await getProjectHintsRow.get(email.project_id);
+  const aliases = await getProjectAliases.all(email.project_id);
+  projectHints = uniqueNonEmpty([
+    ...projectHints,
+    project?.name,
+    project?.outlook_folder,
+    ...aliases.map((row) => row.alias),
+  ]);
+  contractorHints = uniqueNonEmpty([...contractorHints, project?.contractor]);
+  addressHints = uniqueNonEmpty([project?.address]);
+
+  const singleProjectResult = await tryLinkSingleProjectEstimate(
+    emailId,
+    email.project_id,
+    restrictEstimateIds
+  );
+  if (singleProjectResult) {
+    return {
+      restrictEstimateIds,
+      projectHints,
+      contractorHints,
+      addressHints,
+      immediateResult: singleProjectResult,
+    };
+  }
+
+  const canonicalProjectResult = await tryLinkCanonicalProjectEstimate(
+    emailId,
+    email.project_id,
+    restrictEstimateIds
+  );
+  return {
+    restrictEstimateIds,
+    projectHints,
+    contractorHints,
+    addressHints,
+    immediateResult: canonicalProjectResult,
+  };
+}
+
 export async function resolveEmailToEstimate(
   emailId: number,
   options: ResolveEmailToEstimateOptions = {}
@@ -110,85 +246,19 @@ export async function resolveEmailToEstimate(
     };
   }
 
-  let restrictEstimateIds: number[] = [];
-  let projectHints: string[] = uniqueNonEmpty([
-    email.project_name,
-    email.subject,
-  ]);
-  let contractorHints: string[] = uniqueNonEmpty([email.contractor_name]);
-  let addressHints: string[] = [];
-
-  if (email.project_id !== null) {
-    const projectEstimateRows = await getProjectEstimateIds.all(
-      email.project_id
-    );
-    restrictEstimateIds = [
-      ...new Set(projectEstimateRows.map((row) => row.estimate_id)),
-    ];
-
-    const project = await getProjectHintsRow.get(email.project_id);
-    const aliases = await getProjectAliases.all(email.project_id);
-    projectHints = uniqueNonEmpty([
-      ...projectHints,
-      project?.name,
-      project?.outlook_folder,
-      ...aliases.map((row) => row.alias),
-    ]);
-    contractorHints = uniqueNonEmpty([...contractorHints, project?.contractor]);
-    addressHints = uniqueNonEmpty([project?.address]);
-
-    if (restrictEstimateIds.length === 1) {
-      const onlyEstimateId = restrictEstimateIds[0];
-      const linked = await linkEmailToEstimate(
-        onlyEstimateId,
-        emailId,
-        "script",
-        `email_resolver project_single project_id=${email.project_id}`
-      );
-      if (linked) {
-        return {
-          status: "linked_project_single",
-          emailId,
-          estimateId: onlyEstimateId,
-          detail: "project_single",
-        };
-      }
-    }
-
-    if (restrictEstimateIds.length > 1) {
-      const canonicalRows = await getCanonicalProjectEstimateIds.all(
-        email.project_id
-      );
-      const canonicalEstimateIds = [
-        ...new Set(canonicalRows.map((row) => row.estimate_id)),
-      ];
-
-      if (canonicalEstimateIds.length === 1) {
-        const canonicalEstimateId = canonicalEstimateIds[0];
-        const linked = await linkEmailToEstimate(
-          canonicalEstimateId,
-          emailId,
-          "script",
-          `email_resolver project_canonical project_id=${email.project_id} canonical_estimate_id=${canonicalEstimateId}`
-        );
-        if (linked) {
-          return {
-            status: "linked_project_canonical",
-            emailId,
-            estimateId: canonicalEstimateId,
-            detail: "project_canonical",
-          };
-        }
-      }
-    }
+  const hintContext = await buildEstimateHintContext(emailId, email);
+  if (hintContext.immediateResult) {
+    return hintContext.immediateResult;
   }
 
   const match = await findEstimateCandidatesForEmail(emailId, {
-    projectHints,
-    contractorHints,
-    addressHints,
+    projectHints: hintContext.projectHints,
+    contractorHints: hintContext.contractorHints,
+    addressHints: hintContext.addressHints,
     restrictEstimateIds:
-      restrictEstimateIds.length > 1 ? restrictEstimateIds : [],
+      hintContext.restrictEstimateIds.length > 1
+        ? hintContext.restrictEstimateIds
+        : [],
     limit,
   });
 

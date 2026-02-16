@@ -13,11 +13,9 @@ import {
 } from "../lib/notifications/email-triggers";
 import { PROJECT_SEED_STALE_DAYS } from "./config";
 import { processEmailNotification } from "./email-processing";
-import { processEmailResolveJob } from "./email-resolver";
 import { startIntakePostProcessing } from "./intake-processing";
 import {
   EMAIL_NOTIFICATION_PAYLOAD_SCHEMA,
-  EMAIL_RESOLVE_PAYLOAD_SCHEMA,
   INTAKE_PAYLOAD_SCHEMA,
   ISSUED_PAYLOAD_SCHEMA,
   PAYMENT_PAYLOAD_SCHEMA,
@@ -160,13 +158,6 @@ export async function processEmailNotificationJob(
   );
 }
 
-export async function processEmailResolveJobFromQueue(
-  job: WebhookJob
-): Promise<void> {
-  const { emailId } = parseJobPayload(job, EMAIL_RESOLVE_PAYLOAD_SCHEMA);
-  await processEmailResolveJob(emailId);
-}
-
 export async function processIntakeJob(job: WebhookJob): Promise<void> {
   if (job.job_type !== "intake") {
     console.warn(
@@ -226,4 +217,13 @@ export async function processDustPermitIssuedEmailJob(
 ): Promise<void> {
   const payload = parseJobPayload(job, ISSUED_PAYLOAD_SCHEMA);
   await handleIssuedEmail(payload);
+}
+
+export async function processContractEmailReceivedJob(
+  job: WebhookJob
+): Promise<void> {
+  const { CONTRACT_EMAIL_PAYLOAD_SCHEMA } = await import("./job-schemas");
+  const { processContractEmailJob } = await import("./contract-email-handler");
+  const payload = parseJobPayload(job, CONTRACT_EMAIL_PAYLOAD_SCHEMA);
+  await processContractEmailJob(payload);
 }

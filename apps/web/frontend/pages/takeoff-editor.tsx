@@ -25,125 +25,24 @@ import {
   PageError,
   PageLoading,
 } from "@/apps/web/frontend/components/page-loading";
+import {
+  SaveButtonIcon,
+  SaveButtonLabel,
+} from "@/apps/web/frontend/components/save-button";
 import { FloatingTools } from "@/apps/web/frontend/components/takeoffs/floating-tools";
+import {
+  computeItemMeasurements,
+  mapToolType,
+} from "@/apps/web/frontend/components/takeoffs/takeoff-measurements";
+import {
+  type PresetItem,
+  SCALE_PRESETS,
+} from "@/apps/web/frontend/components/takeoffs/takeoff-presets";
 import { Button } from "@/apps/web/frontend/components/ui/button";
 import { Spinner } from "@/apps/web/frontend/components/ui/spinner";
 import { fetcher } from "@/apps/web/frontend/lib/fetcher";
 
 type SaveStatus = "saved" | "saving" | "unsaved";
-
-interface SaveButtonProps {
-  isSaving: boolean;
-  saveStatus: SaveStatus;
-}
-
-function SaveButtonIcon({ isSaving, saveStatus }: SaveButtonProps) {
-  if (isSaving || saveStatus === "saving") {
-    return <Spinner className="mr-2 h-4 w-4" />;
-  }
-
-  if (saveStatus === "saved") {
-    return (
-      <span className="mr-2 flex h-4 w-4 items-center justify-center rounded-full bg-green-500/20">
-        <span className="h-2 w-2 rounded-full bg-green-500" />
-      </span>
-    );
-  }
-
-  return (
-    <span className="mr-2 flex h-4 w-4 items-center justify-center rounded-full bg-amber-500/20">
-      <span className="h-2 w-2 rounded-full bg-amber-500" />
-    </span>
-  );
-}
-
-function SaveButtonLabel({ isSaving, saveStatus }: SaveButtonProps) {
-  if (isSaving) {
-    return "Saving...";
-  }
-  if (saveStatus === "saved") {
-    return "Saved";
-  }
-  return "Save";
-}
-
-// Preset item type interface
-export interface PresetItem {
-  id: string;
-  label: string;
-  color: string;
-  type: "count" | "linear" | "area";
-}
-
-// Common architectural/engineering scales
-export const SCALE_PRESETS = [
-  { id: "1_5", label: "1\" = 5'", pixelsPerFoot: 72 / 5 },
-  { id: "1_10", label: "1\" = 10'", pixelsPerFoot: 72 / 10 },
-  { id: "1_20", label: "1\" = 20'", pixelsPerFoot: 72 / 20 },
-  { id: "1_30", label: "1\" = 30'", pixelsPerFoot: 72 / 30 },
-  { id: "1_40", label: "1\" = 40'", pixelsPerFoot: 72 / 40 },
-  { id: "1_50", label: "1\" = 50'", pixelsPerFoot: 72 / 50 },
-  { id: "1_100", label: "1\" = 100'", pixelsPerFoot: 72 / 100 },
-  { id: "custom", label: "Custom...", pixelsPerFoot: 0 },
-] as const;
-
-// Lazy load TakeoffViewer to avoid SSR issues with PDF.js
-const TakeoffViewer = lazy(() =>
-  import("@/apps/web/frontend/components/takeoffs/takeoff-viewer").then(
-    (mod) => ({
-      default: mod.TakeoffViewer,
-    })
-  )
-);
-
-// Map preset item types to takeoff tool types
-function mapToolType(
-  presetType: "count" | "linear" | "area"
-): TakeoffToolType | null {
-  switch (presetType) {
-    case "count":
-      return "count";
-    case "linear":
-      return "polyline";
-    case "area":
-      return "polygon";
-    default:
-      return null;
-  }
-}
-
-// Calculate polyline length in PDF points
-function calculatePolylineLength(
-  points: Array<{ x1: number; y1: number; width: number; height: number }>
-): number {
-  let totalLength = 0;
-  for (let i = 1; i < points.length; i++) {
-    const prev = points[i - 1];
-    const curr = points[i];
-    const x1 = (prev.x1 / prev.width) * 72 * (prev.width / 72);
-    const y1 = (prev.y1 / prev.height) * 72 * (prev.height / 72);
-    const x2 = (curr.x1 / curr.width) * 72 * (curr.width / 72);
-    const y2 = (curr.y1 / curr.height) * 72 * (curr.height / 72);
-    totalLength += Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
-  }
-  return totalLength;
-}
-
-// Calculate polygon area in PDF points squared
-function calculatePolygonArea(
-  points: Array<{ x1: number; y1: number; width: number; height: number }>
-): number {
-  if (points.length < 3) {
-    return 0;
-  }
-  let area = 0;
-  for (let i = 0; i < points.length; i++) {
-    const curr = points[i];
-    const next = points[(i + 1) % points.length];
-    area += curr.x1 * next.y1 - next.x1 * curr.y1;
-  }
-  return Math.abs(area) / 2;
-}
 
 interface TakeoffData {
   id: string;
@@ -153,6 +52,15 @@ interface TakeoffData {
   page_scales: Record<number, string>;
   status: string;
 }
+
+// Lazy load TakeoffViewer to avoid SSR issues with PDF.js
+const TakeoffViewer = lazy(() =>
+  import("@/apps/web/frontend/components/takeoffs/takeoff-viewer").then(
+    (mod) => ({
+      default: mod.TakeoffViewer,
+    })
+  )
+);
 
 export function TakeoffEditorPage() {
   const { id } = useParams();
@@ -350,55 +258,15 @@ export function TakeoffEditorPage() {
   );
 
   // Calculate counts and measurements
-  const counts = useMemo(() => {
-    const safeAnnotations = Array.isArray(annotations) ? annotations : [];
-    return presetItems
-      .map((item) => {
-        const itemAnnotations = safeAnnotations.filter(
-          (a) => a.itemId === item.id
-        );
-
-        if (item.type === "linear") {
-          let totalLength = 0;
-          for (const ann of itemAnnotations) {
-            if (ann.type === "polyline" && ann.points) {
-              totalLength += calculatePolylineLength(ann.points);
-            }
-          }
-          const feet = totalLength / currentScale.pixelsPerFoot;
-          return {
-            ...item,
-            value: feet > 0 ? `${Math.round(feet)} LF` : "0 LF",
-            count: itemAnnotations.length,
-            rawValue: feet,
-          };
-        }
-
-        if (item.type === "area") {
-          let totalArea = 0;
-          for (const ann of itemAnnotations) {
-            if (ann.type === "polygon" && ann.points) {
-              totalArea += calculatePolygonArea(ann.points);
-            }
-          }
-          const sqFeet = totalArea / currentScale.pixelsPerFoot ** 2;
-          return {
-            ...item,
-            value: sqFeet > 0 ? `${Math.round(sqFeet)} SF` : "0 SF",
-            count: itemAnnotations.length,
-            rawValue: sqFeet,
-          };
-        }
-
-        return {
-          ...item,
-          value: itemAnnotations.length,
-          count: itemAnnotations.length,
-          rawValue: itemAnnotations.length,
-        };
-      })
-      .filter((item) => item.count > 0);
-  }, [annotations, currentScale.pixelsPerFoot, presetItems]);
+  const counts = useMemo(
+    () =>
+      computeItemMeasurements(
+        annotations,
+        presetItems,
+        currentScale.pixelsPerFoot
+      ),
+    [annotations, currentScale.pixelsPerFoot, presetItems]
+  );
 
   const activeTool: TakeoffToolType | null = selectedItem
     ? mapToolType(selectedItem.type)
@@ -629,6 +497,7 @@ export function TakeoffEditorPage() {
           onClearAll={handleClearAll}
           onScaleChange={handleScaleChange}
           onSelectItem={setSelectedItem}
+          scalePresets={SCALE_PRESETS}
           selectedItem={selectedItem}
           totalPages={totalPages}
         />

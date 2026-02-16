@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
-import { findItem } from "@estimates/catalog";
+import { findItem } from "@estimates/catalog/catalog";
 import { db } from "@lib/db/hub";
 import {
   linkEstimateToProject,
@@ -105,9 +105,9 @@ describe("getProjectFinalSov", () => {
         job_address: "200 South Test Ave, Phoenix, Arizona 85002",
         line_items: [
           {
-            item: catalogItem.name,
-            qty: 2,
-            cost: 175,
+            item_name: catalogItem.name,
+            quantity: 2,
+            unit_price: 175,
           },
         ],
       })

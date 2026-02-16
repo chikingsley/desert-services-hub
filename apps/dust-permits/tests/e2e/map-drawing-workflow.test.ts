@@ -448,7 +448,7 @@ describe("Map Drawing Workflow", () => {
       const clickResult = await esriFrame?.evaluate(() => {
         // Try clicking the template by ID (tpick-surface-6 = Disturbed Area)
         const disturbedArea = document.querySelector("#tpick-surface-6");
-        if (disturbedArea) {
+        if (disturbedArea && disturbedArea instanceof HTMLElement) {
           disturbedArea.click();
           return {
             clicked: "Disturbed Area",

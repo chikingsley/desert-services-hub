@@ -25,9 +25,8 @@ Scope boundary:
 | Service | Entry | Responsibility |
 |---|---|---|
 | `web` | `apps/web/server.ts` | Frontend + API server on `:3000` |
-| `background-jobs` | `apps/background-jobs/webhooks.ts` | Webhook ingress + job queue + sync timers on `:4747` |
+| `background-jobs` | `apps/background-jobs/webhooks.ts` | Webhook ingress + job queue + sync timers (notifications + SWPPP master sync) on `:4747` |
 | ~~`notifications`~~ | *(absorbed into background-jobs)* | Notification polling runs as timer in worker.ts |
-| `swppp-sync` | `packages/sharepoint/workers/swppp-master-poller/cli/sync.ts` | SWPPP Master Excel → Postgres poller |
 | `permit-worker` | `apps/dust-permits` | Permit automation API + VNC |
 | `tunnel` (optional) | Cloudflared | Public ingress |
 
@@ -37,7 +36,6 @@ Scope boundary:
 - `estimates-sync` (`apps/cf-workers/estimates-sync-worker`)
 - `monday-status-sync` (`apps/cf-workers/monday-status-sync-worker`)
 - `inspection-router` (`apps/cf-workers/inspections-email-worker`)
-- `contracts-dispatcher` (`apps/cf-workers/docusign-file-automation/ds-contracts-dispatcher`)
 
 ### In-Process Worker Modules
 
@@ -47,6 +45,7 @@ Loaded by `apps/background-jobs/worker.ts`:
 - Estimate extraction triage: `apps/background-jobs/lib/estimate-extraction-triage.ts`
 - Folder watcher poll: `apps/background-jobs/workers/outlook-folder-watcher/lib/poll.ts`
 - Estimate linker poll: `apps/background-jobs/workers/estimate-email-linker/lib/poll.ts`
+- SWPPP master poll: `packages/sharepoint/workers/swppp-master-poller/lib/sync.ts`
 
 ## Canonical Runtime Flows
 

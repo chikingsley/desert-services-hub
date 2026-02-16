@@ -22,6 +22,7 @@
       "@documents/*": ["packages/documents/src/*"],
       "@takeoff/*": ["packages/takeoff/src/*"],
       "@estimates/*": ["packages/estimates/src/*"],
+      "@permits/*": ["packages/permits/src/*"],
       "@lib/*": ["lib/*"]
     }
   },

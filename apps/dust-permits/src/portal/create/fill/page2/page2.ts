@@ -137,7 +137,7 @@ async function parseLocationsTable(page: Page): Promise<LocationRow[]> {
 
     for (const radio of radios) {
       const match = radio.id.match(selectRadioRe);
-      if (!match) {
+      if (!(match && match[1])) {
         continue;
       }
       const index = Number.parseInt(match[1], 10);

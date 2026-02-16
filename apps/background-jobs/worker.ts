@@ -14,6 +14,7 @@
 
 import { pollEstimateEmailLinker } from "@background-jobs/workers/estimate-email-linker/lib/poll";
 import { pollFolderWatcher } from "@background-jobs/workers/outlook-folder-watcher/lib/poll";
+import { syncAll as syncSwpppMaster } from "../../packages/sharepoint/workers/swppp-master-poller/lib/sync";
 import {
   ATTACHMENT_BACKFILL_BATCH_SIZE,
   ATTACHMENT_BACKFILL_INCLUDE_NON_PROJECT_ALLOWLIST,
@@ -35,6 +36,7 @@ import {
   NOTIFICATIONS_MAX_EVENTS,
   POLL_INTERVAL_MS,
   RENEWAL_INTERVAL_MS,
+  SWPPP_MASTER_SYNC_INTERVAL_MS,
 } from "./jobs/config";
 import { getActiveJobCount, processNextJob } from "./jobs/dispatch";
 import { backfillContractPacketDocuments } from "./jobs/intake-processing";
@@ -111,7 +113,7 @@ function clearAllTimers(): void {
 export async function startWorker(): Promise<void> {
   console.log("[worker] Starting background job processor");
   console.log(
-    `[worker] Poll interval: ${POLL_INTERVAL_MS}ms, max concurrency: ${MAX_CONCURRENT_JOBS}, Full sync: ${FULL_SYNC_INTERVAL_MS / 60_000}min, Folder watcher: ${FOLDER_WATCHER_INTERVAL_MS / 1000}s, Estimate linker backfill: ${ESTIMATE_LINKER_INTERVAL_MS / 1000}s, Estimate triage: ${ESTIMATE_TRIAGE_ENABLED ? `${ESTIMATE_TRIAGE_INTERVAL_MS / 1000}s (${ESTIMATE_TRIAGE_MAX_ROWS}/run via ${ESTIMATE_TRIAGE_PROVIDER || "mistral"})` : "disabled"}, Attachment backfill: ${ATTACHMENT_BACKFILL_INTERVAL_MS / 60_000}min (batch=${ATTACHMENT_BACKFILL_BATCH_SIZE}, includeNonProjectAllowlist=${ATTACHMENT_BACKFILL_INCLUDE_NON_PROJECT_ALLOWLIST}, allowlist=${ATTACHMENT_BACKFILL_MAILBOX_ALLOWLIST.length > 0 ? ATTACHMENT_BACKFILL_MAILBOX_ALLOWLIST.join(",") : "none"}), Contract packet autolink: ${CONTRACT_PACKET_AUTOLINK_INTERVAL_MS / 1000}s`
+    `[worker] Poll interval: ${POLL_INTERVAL_MS}ms, max concurrency: ${MAX_CONCURRENT_JOBS}, Full sync: ${FULL_SYNC_INTERVAL_MS / 60_000}min, Folder watcher: ${FOLDER_WATCHER_INTERVAL_MS / 1000}s, Estimate linker backfill: ${ESTIMATE_LINKER_INTERVAL_MS / 1000}s, SWPPP master sync: ${SWPPP_MASTER_SYNC_INTERVAL_MS / 1000}s, Estimate triage: ${ESTIMATE_TRIAGE_ENABLED ? `${ESTIMATE_TRIAGE_INTERVAL_MS / 1000}s (${ESTIMATE_TRIAGE_MAX_ROWS}/run via ${ESTIMATE_TRIAGE_PROVIDER || "mistral"})` : "disabled"}, Attachment backfill: ${ATTACHMENT_BACKFILL_INTERVAL_MS / 60_000}min (batch=${ATTACHMENT_BACKFILL_BATCH_SIZE}, includeNonProjectAllowlist=${ATTACHMENT_BACKFILL_INCLUDE_NON_PROJECT_ALLOWLIST}, allowlist=${ATTACHMENT_BACKFILL_MAILBOX_ALLOWLIST.length > 0 ? ATTACHMENT_BACKFILL_MAILBOX_ALLOWLIST.join(",") : "none"}), Contract packet autolink: ${CONTRACT_PACKET_AUTOLINK_INTERVAL_MS / 1000}s`
   );
 
   // Recover stale jobs from previous crashes
@@ -185,6 +187,19 @@ export async function startWorker(): Promise<void> {
           `[worker] Estimate linker: ${stats.linksInserted} linked, ${stats.processedEmails} processed, ${stats.skippedAmbiguous} ambiguous, ${stats.skippedNoSignal} no-signal`
         );
       }
+    },
+    { runImmediately: true }
+  );
+
+  // SWPPP master sync -- pull worksheet rows from SharePoint and upsert swppp_work_orders.
+  registerTimer(
+    "SWPPP master sync",
+    SWPPP_MASTER_SYNC_INTERVAL_MS,
+    async () => {
+      const summary = await syncSwpppMaster();
+      console.log(
+        `[worker] SWPPP master sync: ${summary.totalRows} rows, ${summary.totalLinked} linked, ${summary.totalUnlinked} unlinked (${summary.duration}ms)`
+      );
     },
     { runImmediately: true }
   );

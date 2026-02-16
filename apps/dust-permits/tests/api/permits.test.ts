@@ -16,15 +16,15 @@ beforeAll(async () => {
 
 describe("handleListPermits", () => {
   it("returns array of permits", async () => {
-    const response = api.handleListPermits();
+    const response = await api.handleListPermits();
     expect(response.status).toBe(200);
 
     const data = await response.json();
     expect(Array.isArray(data)).toBe(true);
   });
 
-  it("returns JSON content type", () => {
-    const response = api.handleListPermits();
+  it("returns JSON content type", async () => {
+    const response = await api.handleListPermits();
     const contentType = response.headers.get("content-type");
     expect(contentType).toContain("application/json");
   });
@@ -32,7 +32,7 @@ describe("handleListPermits", () => {
 
 describe("handleGetPermit", () => {
   it("returns 404 for non-existent permit", async () => {
-    const response = api.handleGetPermit("NONEXISTENT123");
+    const response = await api.handleGetPermit("NONEXISTENT123");
     expect(response.status).toBe(404);
 
     const data = await response.json();
@@ -40,7 +40,7 @@ describe("handleGetPermit", () => {
   });
 
   it("returns permit data for valid ID if permits exist", async () => {
-    const listResponse = api.handleListPermits();
+    const listResponse = await api.handleListPermits();
     const permits = await listResponse.json();
 
     if (permits.length > 0) {
@@ -48,7 +48,7 @@ describe("handleGetPermit", () => {
       if (!permitId) {
         return;
       }
-      const response = api.handleGetPermit(permitId);
+      const response = await api.handleGetPermit(permitId);
       expect(response.status).toBe(200);
 
       const data = await response.json();

@@ -3,15 +3,14 @@
 ## Project Structure & Module Organization
 
 - `src/`: main TypeScript codebase.
-  - `src/index.ts`: Bun server entrypoint (API + UI routes).
-  - `src/cli.ts` + `src/commands/`: CLI interface.
-  - `src/handlers/`: request schemas + orchestration.
+  - `src/index.ts`: Bun server entrypoint (HTTP API).
+  - `src/api/`: HTTP route handlers.
+  - `src/handlers/`: business logic and request orchestration.
   - `src/portal/`: Playwright browser automation for the Maricopa portal.
   - `src/components/`, `src/index.html`, `src/frontend.tsx`, `src/index.css`: dashboard UI.
-  - `src/db/`, `src/email/`, `src/lib/`, `src/form-data.ts`: data access + shared types.
+  - `src/db/`, `src/lib/`, `src/form-data.ts`: data access + shared types.
 - `tests/`: `bun:test` suites (E2E in `tests/e2e`, API/lib tests in `tests/api` and `tests/lib`).
-- `docs/`: workflows, architecture, API docs, and page snapshots.
-- `scripts/`, `data/`: operational scripts and seed inputs.
+- `docs/`: workflows, architecture, and API documentation.
 
 ## Build, Test, and Development Commands
 
@@ -19,10 +18,10 @@
 - `bun run dev`: run the server with HMR.
 - `bun run start`: production server.
 - `bun run build`: build assets via `build.ts`.
-- `bun run cli`: run CLI commands (e.g., `bun run permit:sync`, `bun run permit:renew`).
-- `bun run check`: typecheck + lint.
 - `bun test`: run all tests.
-- `bun run create`: run the full E2E create-flow test.
+- `bun run test:e2e`: run E2E tests.
+- `bun run test:api`: run API tests.
+- `bun run check`: typecheck + lint.
 
 ## Coding Style & Naming Conventions
 

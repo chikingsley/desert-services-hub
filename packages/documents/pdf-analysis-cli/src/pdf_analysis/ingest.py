@@ -1,7 +1,7 @@
 """Document ingestion pipeline: text extraction → LLM analysis → structured JSON.
 
 Two-phase approach:
-1. Fast text extraction via pdfplumber (no API calls)
+1. Fast text extraction via pymupdf (no API calls)
 2. LLM analysis for classification + structured extraction (Ollama/Gemini/Mistral)
 
 The LLM decides what the document is and extracts relevant fields.
@@ -15,7 +15,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-import pdfplumber
+import pymupdf
 
 from pdf_analysis.config import Settings
 from pdf_analysis.provider_manager import ProviderManager
@@ -28,7 +28,7 @@ from pdf_analysis.types import ProviderSelector
 
 @dataclass(slots=True)
 class TextResult:
-    """Raw text extraction result (pdfplumber, no LLM)."""
+    """Raw text extraction result (pymupdf, no LLM)."""
 
     text: str
     page_count: int

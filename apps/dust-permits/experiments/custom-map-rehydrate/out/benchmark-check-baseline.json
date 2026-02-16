@@ -49,15 +49,11 @@
         "address": "1650 S BULLARD AVE",
         "city": "GOODYEAR",
         "parcelRaw": "500-08-996",
-        "apnCandidates": [
-          "500-08-996"
-        ]
+        "apnCandidates": ["500-08-996"]
       },
       "prediction": {
         "source": "apn",
-        "apnsUsed": [
-          "500-08-996"
-        ],
+        "apnsUsed": ["500-08-996"],
         "polygonCount": 1
       },
       "documentClues": null,
@@ -76,9 +72,7 @@
         "passArea": true,
         "passIou": false
       },
-      "debug": [
-        "prediction from APN (1 polygons)"
-      ]
+      "debug": ["prediction from APN (1 polygons)"]
     },
     {
       "permitId": "D0064908",
@@ -89,15 +83,11 @@
         "address": null,
         "city": "GOODYEAR",
         "parcelRaw": "501-72-958J",
-        "apnCandidates": [
-          "501-72-958J"
-        ]
+        "apnCandidates": ["501-72-958J"]
       },
       "prediction": {
         "source": "apn",
-        "apnsUsed": [
-          "501-72-958J"
-        ],
+        "apnsUsed": ["501-72-958J"],
         "polygonCount": 1
       },
       "documentClues": null,
@@ -116,9 +106,7 @@
         "passArea": false,
         "passIou": false
       },
-      "debug": [
-        "prediction from APN (1 polygons)"
-      ]
+      "debug": ["prediction from APN (1 polygons)"]
     },
     {
       "permitId": "D0063189",
@@ -129,15 +117,11 @@
         "address": null,
         "city": "PHOENIX",
         "parcelRaw": "167-25-163",
-        "apnCandidates": [
-          "167-25-163"
-        ]
+        "apnCandidates": ["167-25-163"]
       },
       "prediction": {
         "source": "apn",
-        "apnsUsed": [
-          "167-25-163"
-        ],
+        "apnsUsed": ["167-25-163"],
         "polygonCount": 1
       },
       "documentClues": null,
@@ -156,9 +140,7 @@
         "passArea": true,
         "passIou": false
       },
-      "debug": [
-        "prediction from APN (1 polygons)"
-      ]
+      "debug": ["prediction from APN (1 polygons)"]
     },
     {
       "permitId": "D0061951",
@@ -169,15 +151,11 @@
         "address": "1775 N GLOBE DR",
         "city": "GOODYEAR",
         "parcelRaw": "501-73-985",
-        "apnCandidates": [
-          "501-73-985"
-        ]
+        "apnCandidates": ["501-73-985"]
       },
       "prediction": {
         "source": "apn",
-        "apnsUsed": [
-          "501-73-985"
-        ],
+        "apnsUsed": ["501-73-985"],
         "polygonCount": 1
       },
       "documentClues": null,
@@ -196,9 +174,7 @@
         "passArea": true,
         "passIou": true
       },
-      "debug": [
-        "prediction from APN (1 polygons)"
-      ]
+      "debug": ["prediction from APN (1 polygons)"]
     },
     {
       "permitId": "D0062291",
@@ -209,15 +185,11 @@
         "address": null,
         "city": "GLENDALE",
         "parcelRaw": "501-03-009M",
-        "apnCandidates": [
-          "501-03-009M"
-        ]
+        "apnCandidates": ["501-03-009M"]
       },
       "prediction": {
         "source": "apn",
-        "apnsUsed": [
-          "501-03-009M"
-        ],
+        "apnsUsed": ["501-03-009M"],
         "polygonCount": 1
       },
       "documentClues": null,
@@ -236,9 +208,7 @@
         "passArea": false,
         "passIou": false
       },
-      "debug": [
-        "prediction from APN (1 polygons)"
-      ]
+      "debug": ["prediction from APN (1 polygons)"]
     }
   ]
 }

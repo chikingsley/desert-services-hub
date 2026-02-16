@@ -62,15 +62,11 @@
         "address": "1650 S BULLARD AVE",
         "city": "GOODYEAR",
         "parcelRaw": "500-08-996",
-        "apnCandidates": [
-          "500-08-996"
-        ]
+        "apnCandidates": ["500-08-996"]
       },
       "prediction": {
         "source": "coord_parcel_override",
-        "apnsUsed": [
-          "500-08-996"
-        ],
+        "apnsUsed": ["500-08-996"],
         "polygonCount": 1
       },
       "documentClues": {
@@ -118,15 +114,11 @@
         "address": null,
         "city": "GOODYEAR",
         "parcelRaw": "501-72-958J",
-        "apnCandidates": [
-          "501-72-958J"
-        ]
+        "apnCandidates": ["501-72-958J"]
       },
       "prediction": {
         "source": "apn",
-        "apnsUsed": [
-          "501-72-958J"
-        ],
+        "apnsUsed": ["501-72-958J"],
         "polygonCount": 1
       },
       "documentClues": {
@@ -176,15 +168,11 @@
         "address": null,
         "city": "PHOENIX",
         "parcelRaw": "167-25-163",
-        "apnCandidates": [
-          "167-25-163"
-        ]
+        "apnCandidates": ["167-25-163"]
       },
       "prediction": {
         "source": "coord_parcel_override",
-        "apnsUsed": [
-          "167-25-163"
-        ],
+        "apnsUsed": ["167-25-163"],
         "polygonCount": 1
       },
       "documentClues": {
@@ -233,15 +221,11 @@
         "address": "1775 N GLOBE DR",
         "city": "GOODYEAR",
         "parcelRaw": "501-73-985",
-        "apnCandidates": [
-          "501-73-985"
-        ]
+        "apnCandidates": ["501-73-985"]
       },
       "prediction": {
         "source": "apn",
-        "apnsUsed": [
-          "501-73-985"
-        ],
+        "apnsUsed": ["501-73-985"],
         "polygonCount": 1
       },
       "documentClues": {
@@ -289,15 +273,11 @@
         "address": null,
         "city": "GLENDALE",
         "parcelRaw": "501-03-009M",
-        "apnCandidates": [
-          "501-03-009M"
-        ]
+        "apnCandidates": ["501-03-009M"]
       },
       "prediction": {
         "source": "coord_parcel_override",
-        "apnsUsed": [
-          "501-03-009M"
-        ],
+        "apnsUsed": ["501-03-009M"],
         "polygonCount": 1
       },
       "documentClues": {
@@ -347,9 +327,7 @@
         "address": null,
         "city": "GOODYEAR",
         "parcelRaw": "501-71-980",
-        "apnCandidates": [
-          "501-71-980"
-        ]
+        "apnCandidates": ["501-71-980"]
       },
       "prediction": {
         "source": "none",
@@ -394,15 +372,11 @@
         "address": null,
         "city": "SURPRISE",
         "parcelRaw": "501-44-991A",
-        "apnCandidates": [
-          "501-44-991A"
-        ]
+        "apnCandidates": ["501-44-991A"]
       },
       "prediction": {
         "source": "coord_parcel_override",
-        "apnsUsed": [
-          "501-44-991A"
-        ],
+        "apnsUsed": ["501-44-991A"],
         "polygonCount": 1
       },
       "documentClues": {
@@ -452,15 +426,11 @@
         "address": null,
         "city": "SURPRISE",
         "parcelRaw": "501-44-991A",
-        "apnCandidates": [
-          "501-44-991A"
-        ]
+        "apnCandidates": ["501-44-991A"]
       },
       "prediction": {
         "source": "coord_parcel_override",
-        "apnsUsed": [
-          "501-44-991A"
-        ],
+        "apnsUsed": ["501-44-991A"],
         "polygonCount": 1
       },
       "documentClues": {
@@ -510,15 +480,11 @@
         "address": "4210 W OPPORTUNITY WAY",
         "city": "PHOENIX",
         "parcelRaw": "203-03-019",
-        "apnCandidates": [
-          "203-03-019"
-        ]
+        "apnCandidates": ["203-03-019"]
       },
       "prediction": {
         "source": "apn",
-        "apnsUsed": [
-          "203-03-019"
-        ],
+        "apnsUsed": ["203-03-019"],
         "polygonCount": 1
       },
       "documentClues": {
@@ -566,15 +532,11 @@
         "address": "14100 S DENNY WAY",
         "city": "LITCHFIELD PARK",
         "parcelRaw": "501-62-022K",
-        "apnCandidates": [
-          "501-62-022K"
-        ]
+        "apnCandidates": ["501-62-022K"]
       },
       "prediction": {
         "source": "coord_parcel_override",
-        "apnsUsed": [
-          "501-62-022K"
-        ],
+        "apnsUsed": ["501-62-022K"],
         "polygonCount": 1
       },
       "documentClues": {
@@ -623,15 +585,11 @@
         "address": "14100 S DENNY WAY",
         "city": "LITCHFIELD PARK",
         "parcelRaw": "501-62-022K",
-        "apnCandidates": [
-          "501-62-022K"
-        ]
+        "apnCandidates": ["501-62-022K"]
       },
       "prediction": {
         "source": "coord_parcel_override",
-        "apnsUsed": [
-          "501-62-022K"
-        ],
+        "apnsUsed": ["501-62-022K"],
         "polygonCount": 1
       },
       "documentClues": {
@@ -680,15 +638,11 @@
         "address": null,
         "city": "PHOENIX",
         "parcelRaw": "167-25-165",
-        "apnCandidates": [
-          "167-25-165"
-        ]
+        "apnCandidates": ["167-25-165"]
       },
       "prediction": {
         "source": "coord_parcel_override",
-        "apnsUsed": [
-          "167-25-165"
-        ],
+        "apnsUsed": ["167-25-165"],
         "polygonCount": 1
       },
       "documentClues": {

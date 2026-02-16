@@ -22,12 +22,12 @@ interface AutomationStatus {
   lastActivityAt: string | null;
   lastKeepAliveAt: string | null;
   lastLoginAt: string | null;
-  lastPortalPinAt: string | null;
+  lastPortalPinAt?: string | null;
   lastError: string | null;
   keepAliveEnabled: boolean;
   keepAliveIntervalMs: number;
-  portalHomePinEnabled: boolean;
-  portalHomePinIntervalMs: number;
+  portalHomePinEnabled?: boolean;
+  portalHomePinIntervalMs?: number;
   viewportWidth: number;
   viewportHeight: number;
   vncUrl: string;
@@ -63,88 +63,89 @@ function formatTimestamp(value: string | null): string {
   return date.toLocaleString();
 }
 
-interface AutomationPageProps {
-  visible?: boolean;
+function getSessionDisplay(data: AutomationStatus | undefined): {
+  label: string;
+  dotClass: string;
+} {
+  if (!data) {
+    return { label: "Checking", dotClass: "bg-red-500" };
+  }
+  if (data.portalReady) {
+    return { label: "Ready", dotClass: "bg-green-500" };
+  }
+  if (data.active) {
+    return { label: "Login Needed", dotClass: "bg-amber-500" };
+  }
+  return { label: "Offline", dotClass: "bg-red-500" };
 }
 
-export function AutomationPage({ visible = true }: AutomationPageProps) {
-  const [action, setAction] = useState<AutomationActionEndpoint | null>(null);
+function usePortalStatusToasts(data: AutomationStatus | undefined): void {
   const previousPortalReady = useRef<boolean | null>(null);
   const previousBusy = useRef<boolean | null>(null);
-  const autoEnsureAttempted = useRef(false);
-  const { data, error, isLoading, mutate } = useSWR<AutomationStatus>(
-    "/api/automation/status",
-    fetcher,
-    {
-      refreshInterval: visible ? 5000 : 0,
-      dedupingInterval: 2000,
-      shouldRetryOnError: true,
+
+  useEffect(() => {
+    if (!data) {
+      return;
     }
-  );
-
-  const fallbackVncUrl = useMemo(
-    () =>
-      `${window.location.protocol}//${window.location.hostname}:47821/vnc.html?autoconnect=true&resize=scale&reconnect=true&reconnect_delay=2000&view_only=false&shared=true`,
-    []
-  );
-  const vncUrl = data?.vncUrl || fallbackVncUrl;
-
-  const postAutomation = useCallback(
-    async (
-      endpoint: AutomationActionEndpoint,
-      options?: RunActionOptions
-    ): Promise<AutomationActionPayload> => {
-      const headers =
-        options?.body === undefined
-          ? undefined
-          : { "content-type": "application/json" };
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers,
-        body:
-          options?.body === undefined
-            ? undefined
-            : JSON.stringify(options.body),
-      });
-      const payload = (await response.json().catch(() => ({}))) as
-        | AutomationActionPayload
-        | undefined;
-      if (!response.ok || payload?.success === false) {
-        throw new Error(
-          payload?.error || `Request failed with status ${response.status}`
-        );
+    if (previousPortalReady.current === null) {
+      previousPortalReady.current = data.portalReady;
+      return;
+    }
+    if (previousPortalReady.current !== data.portalReady) {
+      if (data.portalReady) {
+        toast.success("Dust portal is ready");
+      } else {
+        toast.error("Dust portal requires login");
       }
-      return payload ?? {};
-    },
-    []
-  );
+      previousPortalReady.current = data.portalReady;
+    }
+  }, [data]);
 
-  const runAction = useCallback(
-    async (
-      endpoint: AutomationActionEndpoint,
-      successMessage: string,
-      options?: RunActionOptions
-    ): Promise<void> => {
-      setAction(endpoint);
-      try {
-        await postAutomation(endpoint, options);
-        if (!options?.silentSuccess) {
-          toast.success(successMessage);
-        }
-        await mutate();
-      } catch (actionError) {
-        const message =
-          actionError instanceof Error
-            ? actionError.message
-            : String(actionError);
-        toast.error(message);
-      } finally {
-        setAction(null);
-      }
-    },
-    [mutate, postAutomation]
-  );
+  useEffect(() => {
+    if (!data) {
+      return;
+    }
+    if (previousBusy.current === null) {
+      previousBusy.current = data.busy;
+      return;
+    }
+    if (previousBusy.current && !data.busy) {
+      toast.success("Automation step finished");
+    }
+    previousBusy.current = data.busy;
+  }, [data]);
+}
 
+async function postAutomation(
+  endpoint: AutomationActionEndpoint,
+  options?: RunActionOptions
+): Promise<AutomationActionPayload> {
+  const headers =
+    options?.body === undefined
+      ? undefined
+      : { "content-type": "application/json" };
+  const response = await fetch(endpoint, {
+    method: "POST",
+    headers,
+    body:
+      options?.body === undefined ? undefined : JSON.stringify(options.body),
+  });
+  const payload = (await response.json().catch(() => ({}))) as
+    | AutomationActionPayload
+    | undefined;
+  if (!response.ok || payload?.success === false) {
+    throw new Error(
+      payload?.error || `Request failed with status ${response.status}`
+    );
+  }
+  return payload ?? {};
+}
+
+function useClipboardBridge(
+  visible: boolean,
+  mutate: () => Promise<unknown>,
+  setAction: (action: AutomationActionEndpoint | null) => void
+): void {
   const pasteFromLocalClipboard = useCallback(async (): Promise<void> => {
     setAction("/api/automation/clipboard/paste");
     try {
@@ -168,7 +169,7 @@ export function AutomationPage({ visible = true }: AutomationPageProps) {
     } finally {
       setAction(null);
     }
-  }, [mutate, postAutomation]);
+  }, [mutate, setAction]);
 
   const copySelectionToLocalClipboard = useCallback(async (): Promise<void> => {
     setAction("/api/automation/clipboard/copy");
@@ -191,7 +192,7 @@ export function AutomationPage({ visible = true }: AutomationPageProps) {
     } finally {
       setAction(null);
     }
-  }, [postAutomation]);
+  }, [setAction]);
 
   useEffect(() => {
     if (!visible) {
@@ -219,6 +220,139 @@ export function AutomationPage({ visible = true }: AutomationPageProps) {
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [copySelectionToLocalClipboard, pasteFromLocalClipboard, visible]);
+}
+
+function ActionButtons({
+  action,
+  disabled,
+  runAction,
+}: {
+  action: AutomationActionEndpoint | null;
+  disabled: boolean;
+  runAction: (endpoint: AutomationActionEndpoint, msg: string) => Promise<void>;
+}) {
+  return (
+    <div className="flex flex-wrap gap-2">
+      <Button
+        className="gap-2"
+        disabled={disabled}
+        onClick={() =>
+          runAction("/api/automation/ready", "Portal session is ready")
+        }
+      >
+        {action === "/api/automation/ready" ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : (
+          <CheckCircle2 className="h-4 w-4" />
+        )}
+        Ensure Bot Ready
+      </Button>
+      <Button
+        className="gap-2"
+        disabled={disabled}
+        onClick={() =>
+          runAction("/api/automation/keepalive", "Keepalive ping completed")
+        }
+        variant="outline"
+      >
+        {action === "/api/automation/keepalive" ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : (
+          <RefreshCw className="h-4 w-4" />
+        )}
+        Keep Alive Ping
+      </Button>
+      <Button
+        className="gap-2"
+        disabled={disabled}
+        onClick={() => runAction("/api/automation/stop", "Session stopped")}
+        variant="outline"
+      >
+        {action === "/api/automation/stop" ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : (
+          <Square className="h-4 w-4" />
+        )}
+        Stop Session
+      </Button>
+    </div>
+  );
+}
+
+function VncStatusOverlay({ portalReady }: { portalReady: boolean }) {
+  return (
+    <div className="absolute bottom-3 left-3 flex items-center gap-2 rounded-full border border-border bg-black/80 px-3 py-1.5 font-mono text-xs backdrop-blur-sm">
+      <span className="relative flex h-2 w-2">
+        <span
+          className={`absolute inline-flex h-full w-full animate-ping rounded-full ${
+            portalReady ? "bg-green-400" : "bg-amber-400"
+          } opacity-75`}
+        />
+        <span
+          className={`relative inline-flex h-2 w-2 rounded-full ${
+            portalReady ? "bg-green-500" : "bg-amber-500"
+          }`}
+        />
+      </span>
+      <span className="text-muted-foreground">
+        {portalReady ? "Portal ready" : "Portal not ready"}
+      </span>
+    </div>
+  );
+}
+
+interface AutomationPageProps {
+  visible?: boolean;
+}
+
+export function AutomationPage({ visible = true }: AutomationPageProps) {
+  const [action, setAction] = useState<AutomationActionEndpoint | null>(null);
+  const autoEnsureAttempted = useRef(false);
+  const { data, error, isLoading, mutate } = useSWR<AutomationStatus>(
+    "/api/automation/status",
+    fetcher,
+    {
+      refreshInterval: visible ? 5000 : 0,
+      dedupingInterval: 2000,
+      shouldRetryOnError: true,
+    }
+  );
+  usePortalStatusToasts(data);
+
+  const fallbackVncUrl = useMemo(
+    () =>
+      `${window.location.protocol}//${window.location.hostname}:47821/vnc.html?autoconnect=true&resize=scale&reconnect=true&reconnect_delay=2000&view_only=false&shared=true`,
+    []
+  );
+  const vncUrl = data?.vncUrl || fallbackVncUrl;
+
+  const runAction = useCallback(
+    async (
+      endpoint: AutomationActionEndpoint,
+      successMessage: string,
+      options?: RunActionOptions
+    ): Promise<void> => {
+      setAction(endpoint);
+      try {
+        await postAutomation(endpoint, options);
+        if (!options?.silentSuccess) {
+          toast.success(successMessage);
+        }
+        await mutate();
+      } catch (actionError) {
+        const message =
+          actionError instanceof Error
+            ? actionError.message
+            : String(actionError);
+        toast.error(message);
+      } finally {
+        setAction(null);
+      }
+    },
+    [mutate]
+  );
+
+  useClipboardBridge(visible, mutate, setAction);
 
   useEffect(() => {
     if (!visible || autoEnsureAttempted.current) {
@@ -230,62 +364,25 @@ export function AutomationPage({ visible = true }: AutomationPageProps) {
     }).catch(() => undefined);
   }, [runAction, visible]);
 
-  useEffect(() => {
-    if (!data) {
-      return;
-    }
-
-    if (previousPortalReady.current === null) {
-      previousPortalReady.current = data.portalReady;
-      return;
-    }
-
-    if (previousPortalReady.current !== data.portalReady) {
-      if (data.portalReady) {
-        toast.success("Dust portal is ready");
-      } else {
-        toast.error("Dust portal requires login");
-      }
-      previousPortalReady.current = data.portalReady;
-    }
-  }, [data]);
-
-  useEffect(() => {
-    if (!data) {
-      return;
-    }
-
-    if (previousBusy.current === null) {
-      previousBusy.current = data.busy;
-      return;
-    }
-
-    if (previousBusy.current && !data.busy) {
-      toast.success("Automation step finished");
-    }
-
-    previousBusy.current = data.busy;
-  }, [data]);
-
-  let sessionState = "Checking";
-  let sessionDotClass = "bg-red-500";
-  if (data) {
-    if (data.portalReady) {
-      sessionState = "Ready";
-      sessionDotClass = "bg-green-500";
-    } else if (data.active) {
-      sessionState = "Login Needed";
-      sessionDotClass = "bg-amber-500";
-    } else {
-      sessionState = "Offline";
-      sessionDotClass = "bg-red-500";
-    }
-  }
+  const { label: sessionState, dotClass: sessionDotClass } =
+    getSessionDisplay(data);
   const actionPending = action !== null;
   const busyLabel = data?.busy ? data.currentOperation || "Running" : "Idle";
   const viewportWidth = data?.viewportWidth || 1280;
   const viewportHeight = data?.viewportHeight || 1024;
   const vncAspectRatio = `${viewportWidth} / ${viewportHeight}`;
+  const homePinTelemetryAvailable =
+    (data?.lastPortalPinAt ?? null) !== null ||
+    typeof data?.portalHomePinEnabled === "boolean";
+  const lastPinnedHomeLabel = homePinTelemetryAvailable
+    ? formatTimestamp(data?.lastPortalPinAt ?? null)
+    : "N/A";
+  let homePinLabel = "N/A";
+  if (homePinTelemetryAvailable) {
+    homePinLabel = data?.portalHomePinEnabled
+      ? `On (${Math.round((data.portalHomePinIntervalMs || 0) / 1000)}s)`
+      : "Off";
+  }
   const rootClassName = visible
     ? "flex flex-col"
     : "pointer-events-none fixed inset-0 -z-10 opacity-0";
@@ -304,55 +401,11 @@ export function AutomationPage({ visible = true }: AutomationPageProps) {
               <span className={`h-2.5 w-2.5 rounded-full ${sessionDotClass}`} />
               <span>{sessionState}</span>
             </div>
-            <div className="flex flex-wrap gap-2">
-              <Button
-                className="gap-2"
-                disabled={actionPending}
-                onClick={() =>
-                  runAction("/api/automation/ready", "Portal session is ready")
-                }
-              >
-                {action === "/api/automation/ready" ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <CheckCircle2 className="h-4 w-4" />
-                )}
-                Ensure Bot Ready
-              </Button>
-              <Button
-                className="gap-2"
-                disabled={actionPending}
-                onClick={() =>
-                  runAction(
-                    "/api/automation/keepalive",
-                    "Keepalive ping completed"
-                  )
-                }
-                variant="outline"
-              >
-                {action === "/api/automation/keepalive" ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <RefreshCw className="h-4 w-4" />
-                )}
-                Keep Alive Ping
-              </Button>
-              <Button
-                className="gap-2"
-                disabled={actionPending}
-                onClick={() =>
-                  runAction("/api/automation/stop", "Session stopped")
-                }
-                variant="outline"
-              >
-                {action === "/api/automation/stop" ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Square className="h-4 w-4" />
-                )}
-                Stop Session
-              </Button>
-            </div>
+            <ActionButtons
+              action={action}
+              disabled={actionPending}
+              runAction={runAction}
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-2 text-muted-foreground text-sm lg:grid-cols-6">
@@ -361,21 +414,14 @@ export function AutomationPage({ visible = true }: AutomationPageProps) {
             <div>
               Last keepalive: {formatTimestamp(data?.lastKeepAliveAt ?? null)}
             </div>
-            <div>
-              Last pinned home: {formatTimestamp(data?.lastPortalPinAt ?? null)}
-            </div>
+            <div>Last pinned home: {lastPinnedHomeLabel}</div>
             <div>
               Keepalive:{" "}
               {data?.keepAliveEnabled
                 ? `On (${Math.round((data.keepAliveIntervalMs || 0) / 1000)}s)`
                 : "Off"}
             </div>
-            <div>
-              Home pin:{" "}
-              {data?.portalHomePinEnabled
-                ? `On (${Math.round((data.portalHomePinIntervalMs || 0) / 1000)}s)`
-                : "Off"}
-            </div>
+            <div>Home pin: {homePinLabel}</div>
           </div>
 
           <div className="mt-3 text-muted-foreground text-xs">
@@ -416,23 +462,7 @@ export function AutomationPage({ visible = true }: AutomationPageProps) {
             />
           </div>
 
-          <div className="absolute bottom-3 left-3 flex items-center gap-2 rounded-full border border-border bg-black/80 px-3 py-1.5 font-mono text-xs backdrop-blur-sm">
-            <span className="relative flex h-2 w-2">
-              <span
-                className={`absolute inline-flex h-full w-full animate-ping rounded-full ${
-                  data?.portalReady ? "bg-green-400" : "bg-amber-400"
-                } opacity-75`}
-              />
-              <span
-                className={`relative inline-flex h-2 w-2 rounded-full ${
-                  data?.portalReady ? "bg-green-500" : "bg-amber-500"
-                }`}
-              />
-            </span>
-            <span className="text-muted-foreground">
-              {data?.portalReady ? "Portal ready" : "Portal not ready"}
-            </span>
-          </div>
+          <VncStatusOverlay portalReady={data?.portalReady ?? false} />
         </div>
 
         {isLoading && (

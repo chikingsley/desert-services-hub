@@ -11,42 +11,19 @@ import type {
   EditorSection,
 } from "@lib/db/types";
 import { useCallback } from "react";
+import type { CatalogItemInfo } from "@/apps/web/frontend/lib/catalog-item-info";
 import { useUndoRedo } from "@/hooks/use-undo-redo";
+import {
+  collectCategoryLineItems,
+  createEmptyEstimate,
+  maybePairSiltFence,
+  recalcTotal,
+  resolveCatalogSelection,
+} from "./estimate-editor-helpers";
 
 export interface UseEstimateEditorOptions {
   initialEstimate?: EditorEstimate;
   catalog: Catalog;
-}
-
-function generateEstimateNumber(sequenceNum = 1): string {
-  const now = new Date();
-  const yy = String(now.getFullYear()).slice(-2);
-  const mm = String(now.getMonth() + 1).padStart(2, "0");
-  const dd = String(now.getDate()).padStart(2, "0");
-  const seq = String(sequenceNum).padStart(2, "0");
-  return `${yy}${mm}${dd}${seq}`;
-}
-
-function createEmptyEstimate(): EditorEstimate {
-  return {
-    billTo: {
-      companyName: "",
-      address: "",
-      email: "",
-      phone: "",
-    },
-    date: new Date().toISOString(),
-    estimateNumber: generateEstimateNumber(1),
-    estimator: "",
-    estimatorEmail: "",
-    jobInfo: {
-      siteName: "",
-      address: "",
-    },
-    lineItems: [],
-    sections: [],
-    total: 0,
-  };
 }
 
 export function useEstimateEditor({
@@ -87,9 +64,7 @@ export function useEstimateEditor({
           }
           return item;
         });
-        const total = updated
-          .filter((item) => !item.isStruck)
-          .reduce((sum, item) => sum + item.total, 0);
+        const total = recalcTotal(updated);
         return { ...prev, lineItems: updated, total };
       });
     },
@@ -98,15 +73,7 @@ export function useEstimateEditor({
 
   // Update a line item from a catalog selection (copies name, description, price, unit)
   const updateLineItemFromCatalog = useCallback(
-    (
-      id: string,
-      catalogItem: {
-        name: string;
-        description: string;
-        price: number;
-        unit: string;
-      }
-    ) => {
+    (id: string, catalogItem: CatalogItemInfo) => {
       updateEstimate((prev) => {
         const updated = prev.lineItems.map((item) => {
           if (item.id === id) {
@@ -122,9 +89,7 @@ export function useEstimateEditor({
           }
           return item;
         });
-        const total = updated
-          .filter((item) => !item.isStruck)
-          .reduce((sum, item) => sum + item.total, 0);
+        const total = recalcTotal(updated);
         return { ...prev, lineItems: updated, total };
       });
     },
@@ -152,9 +117,7 @@ export function useEstimateEditor({
       updateEstimate((prev) => {
         const itemToRemove = prev.lineItems.find((item) => item.id === id);
         const updated = prev.lineItems.filter((item) => item.id !== id);
-        const total = updated
-          .filter((item) => !item.isStruck)
-          .reduce((sum, item) => sum + item.total, 0);
+        const total = recalcTotal(updated);
 
         let updatedSections = prev.sections;
         if (itemToRemove?.sectionId) {
@@ -247,43 +210,22 @@ export function useEstimateEditor({
             : [...prev.sections, { id: categoryId, name: category.name }];
 
           const updated = [...prev.lineItems, newItem];
-          const total = updated
-            .filter((item) => !item.isStruck)
-            .reduce((sum, item) => sum + item.total, 0);
+          const total = recalcTotal(updated);
 
           return { ...prev, lineItems: updated, sections: newSections, total };
         });
         return;
       }
 
-      let catalogItem: CatalogItem | undefined;
-      let subcategory: CatalogSubcategory | undefined;
-
-      if (parts.length === 2) {
-        const itemCode = parts[1];
-        if (!itemCode) {
-          return;
-        }
-        const result = findCatalogItem(categoryId, itemCode);
-        if (result) {
-          catalogItem = result.item;
-          ({ subcategory } = result);
-        }
-      } else {
-        const subId = parts[1];
-        const itemCode = parts[2];
-        subcategory = category.subcategories?.find((s) => s.id === subId);
-        if (subcategory) {
-          catalogItem = subcategory.items.find((i) => i.code === itemCode);
-        }
-      }
-
-      if (!catalogItem) {
+      const resolved = resolveCatalogSelection(
+        parts,
+        category,
+        findCatalogItem
+      );
+      if (!resolved) {
         return;
       }
-
-      // Note: pick-one is just a UI hint, we don't enforce it by auto-removing items
-      // Users manage duplicates manually
+      const { catalogItem, subcategory } = resolved;
 
       updateEstimate((prev) => {
         let updatedLineItems = prev.lineItems;
@@ -317,42 +259,19 @@ export function useEstimateEditor({
           updatedLineItems = [...updatedLineItems, newItem];
         }
 
-        if (catalogItem.code === "CM-003") {
-          const siltFence = findCatalogItem(categoryId, "CM-004")?.item;
-          const hasSiltFenceAlternate = siltFence
-            ? updatedLineItems.some(
-                (existing) =>
-                  existing.item === siltFence.name &&
-                  existing.sectionId === categoryId
-              )
-            : true;
-
-          if (siltFence && !hasSiltFenceAlternate) {
-            updatedLineItems = [
-              ...updatedLineItems,
-              {
-                cost: siltFence.price,
-                description: siltFence.description,
-                id: crypto.randomUUID(),
-                isAlternate: true,
-                item: siltFence.name,
-                qty: 0,
-                sectionId: categoryId,
-                total: 0,
-                uom: siltFence.unit,
-              },
-            ];
-          }
-        }
+        updatedLineItems = maybePairSiltFence(
+          updatedLineItems,
+          catalogItem,
+          categoryId,
+          findCatalogItem
+        );
 
         const sectionExists = prev.sections.some((s) => s.id === categoryId);
         const newSections = sectionExists
           ? prev.sections
           : [...prev.sections, { id: categoryId, name: category.name }];
 
-        const total = updatedLineItems
-          .filter((item) => !item.isStruck)
-          .reduce((sum, item) => sum + item.total, 0);
+        const total = recalcTotal(updatedLineItems);
 
         return {
           ...prev,
@@ -372,62 +291,17 @@ export function useEstimateEditor({
         return;
       }
 
-      const newItems: EditorLineItem[] = [];
-      const timestamp = Date.now();
-
-      if (category.items) {
-        for (const item of category.items) {
-          const qty = item.defaultQty ?? 1;
-          newItems.push({
-            cost: item.price,
-            description: item.description,
-            id: `${timestamp}-${item.code}`,
-            item: item.name,
-            qty,
-            sectionId: categoryId,
-            total: item.price * qty,
-            uom: item.unit,
-          });
-        }
-      }
-
-      if (category.subcategories) {
-        for (const sub of category.subcategories) {
-          if (sub.hidden) {
-            continue;
-          }
-          const isPickOne = sub.selectionMode === "pick-one";
-          const itemsToAdd = isPickOne ? [sub.items[0]] : sub.items;
-
-          for (const item of itemsToAdd) {
-            if (!item) {
-              continue;
-            }
-            const qty = item.defaultQty ?? 1;
-            newItems.push({
-              cost: item.price,
-              description: item.description,
-              id: `${timestamp}-${item.code}`,
-              item: item.name,
-              qty,
-              sectionId: categoryId,
-              subcategoryId: sub.id,
-              total: item.price * qty,
-              uom: item.unit,
-            });
-          }
-        }
-      }
-
+      const newItems = collectCategoryLineItems(
+        category,
+        Date.now(),
+        categoryId
+      );
       if (newItems.length === 0) {
         return;
       }
 
       updateEstimate((prev) => {
-        // Generate unique section ID to allow multiple sections of same category
         const sectionId = crypto.randomUUID();
-
-        // Update all new items to use the new section ID
         const itemsWithSectionId = newItems.map((item) => ({
           ...item,
           sectionId,
@@ -443,11 +317,12 @@ export function useEstimateEditor({
         ];
 
         const updated = [...prev.lineItems, ...itemsWithSectionId];
-        const total = updated
-          .filter((item) => !item.isStruck)
-          .reduce((sum, item) => sum + item.total, 0);
-
-        return { ...prev, lineItems: updated, sections: newSections, total };
+        return {
+          ...prev,
+          lineItems: updated,
+          sections: newSections,
+          total: recalcTotal(updated),
+        };
       });
     },
     [catalog, updateEstimate]
@@ -460,9 +335,7 @@ export function useEstimateEditor({
           (item) => item.sectionId !== sectionId
         );
         const updatedSections = prev.sections.filter((s) => s.id !== sectionId);
-        const total = updatedItems
-          .filter((item) => !item.isStruck)
-          .reduce((sum, item) => sum + item.total, 0);
+        const total = recalcTotal(updatedItems);
         return {
           ...prev,
           lineItems: updatedItems,
@@ -531,9 +404,7 @@ export function useEstimateEditor({
         }));
 
         const updated = [...prev.lineItems, ...newItems];
-        const total = updated
-          .filter((item) => !item.isStruck)
-          .reduce((sum, item) => sum + item.total, 0);
+        const total = recalcTotal(updated);
 
         return {
           ...prev,

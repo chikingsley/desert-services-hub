@@ -55,6 +55,8 @@ services:
       EMAIL_RESOLVER_SPARK_CONFIDENCE_MIN: ${EMAIL_RESOLVER_SPARK_CONFIDENCE_MIN:-0.80}
       NOTIFICATIONS_DELIVERY_MODE: ${NOTIFICATIONS_DELIVERY_MODE:-log}
       NOTIFICATIONS_MAILBOX: ${NOTIFICATIONS_MAILBOX:-chi@desertservices.net}
+      ATTACHMENT_BACKFILL_MAILBOX_ALLOWLIST: ${ATTACHMENT_BACKFILL_MAILBOX_ALLOWLIST:-contracts@desertservices.net}
+      ATTACHMENT_BACKFILL_INCLUDE_NON_PROJECT_ALLOWLIST: ${ATTACHMENT_BACKFILL_INCLUDE_NON_PROJECT_ALLOWLIST:-1}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:
@@ -70,23 +72,6 @@ services:
     command: ["bun", "run", "apps/background-jobs/webhooks.ts"]
 
   # ==========================================================================
-  # SWPPP Master Poller — SharePoint SWPPP Master Excel → Postgres sync
-  # ==========================================================================
-  swppp-sync:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: desert-swppp-sync
-    env_file: .env
-    environment:
-      NODE_ENV: production
-      DATABASE_URL: postgresql://postgres:postgres@host.docker.internal:54322/postgres
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    restart: unless-stopped
-    command: ["bun", "run", "packages/sharepoint/workers/swppp-master-poller/cli/sync.ts"]
-
-  # ==========================================================================
   # Permit Worker — Browser automation for Maricopa County dust permits
   # ==========================================================================
   permit-worker:
@@ -96,7 +81,7 @@ services:
     container_name: desert-permit-worker
     ports:
       - "47822:47822" # API server
-      - "47821:6080"  # noVNC web interface
+      - "6080:6080"   # noVNC web interface (maricopa-vnc.desertservices.app)
     env_file: .env
     environment:
       NODE_ENV: production
@@ -137,11 +122,10 @@ volumes:
 # Web app:        http://localhost:3000
 # Background Jobs: http://localhost:4747 (tunneled to webhooks.desertservices.app)
 # Permit Worker:  http://localhost:47822 (API + Dashboard)
-# Permit VNC:     http://localhost:47821 (watch browser automation)
+# Permit VNC:     http://localhost:6080 (watch browser automation / maricopa-vnc.desertservices.app)
 #
 # Logs:           docker compose logs -f web
 #                 docker compose logs -f background-jobs
-#                 docker compose logs -f swppp-sync
 #                 docker compose logs -f permit-worker
 # Rebuild:        docker compose build && docker compose up -d
 # =============================================================================

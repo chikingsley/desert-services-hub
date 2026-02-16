@@ -6,12 +6,16 @@
  */
 
 import { db } from "@lib/db/hub";
+import { PermitClient, PermitWorkerError } from "@permits/client";
 import {
   PAYMENT_PERMIT_SYNC_COOLDOWN_MS,
   PAYMENT_PERMIT_SYNC_TIMEOUT_MS,
-  PERMIT_WORKER_URL,
   POINT_AND_PAY_INVOICE_RE,
 } from "./config";
+
+// -- Client --
+
+const permitClient = new PermitClient();
 
 // -- State --
 
@@ -57,62 +61,19 @@ async function waitForPermitSyncWatermarkAdvance(
   return false;
 }
 
-function parseSyncResponseBody(
-  rawBody: string
-): { success?: unknown; error?: unknown } | null {
-  try {
-    const parsed = rawBody ? (JSON.parse(rawBody) as unknown) : null;
-    return parsed && typeof parsed === "object" && !Array.isArray(parsed)
-      ? (parsed as { success?: unknown; error?: unknown })
-      : null;
-  } catch {
-    return null;
-  }
-}
-
-function validateSyncResponse(
-  response: Response,
-  rawBody: string,
-  payload: { success?: unknown; error?: unknown } | null
-): void {
-  if (!response.ok) {
-    const snippet = rawBody.slice(0, 200);
-    throw new Error(
-      `Permit company sync HTTP ${response.status}: ${snippet || "(empty)"}`
-    );
-  }
-
-  if (payload && typeof payload.success === "boolean" && !payload.success) {
-    const err =
-      typeof payload.error === "string" && payload.error.trim().length > 0
-        ? payload.error.trim()
-        : "unknown error";
-    throw new Error(`Permit company sync failed: ${err}`);
-  }
-}
-
 async function runPermitSyncNow(): Promise<void> {
   const startedAt = Date.now();
   const previousWatermark = await getPermitSyncWatermark();
 
   const fetchTimeoutMs = Math.min(60_000, PAYMENT_PERMIT_SYNC_TIMEOUT_MS);
-  const controller = new AbortController();
-  const fetchTimer = setTimeout(() => controller.abort(), fetchTimeoutMs);
 
   try {
-    const response = await fetch(`${PERMIT_WORKER_URL}/api/sync/company`, {
-      method: "POST",
-      signal: controller.signal,
-    });
-
-    const rawBody = await response.text().catch(() => "");
-    const payload = parseSyncResponseBody(rawBody);
-    validateSyncResponse(response, rawBody, payload);
-
+    await permitClient.syncCompany({ timeoutMs: fetchTimeoutMs });
     lastPermitSyncCompletedAt = Date.now();
     return;
   } catch (error) {
-    if (error instanceof Error && error.name === "AbortError") {
+    const isTimeout = error instanceof PermitWorkerError && error.status === 0;
+    if (isTimeout) {
       console.warn(
         "[worker] Permit company sync request timed out; waiting for watermark..."
       );
@@ -121,10 +82,9 @@ async function runPermitSyncNow(): Promise<void> {
       console.warn(`[worker] Permit company sync request failed: ${msg}`);
       throw error;
     }
-  } finally {
-    clearTimeout(fetchTimer);
   }
 
+  // Timeout fallback: poll DB watermark to detect if sync completed server-side
   const remainingMs = Math.max(
     0,
     PAYMENT_PERMIT_SYNC_TIMEOUT_MS - (Date.now() - startedAt)

@@ -9,7 +9,6 @@ import type { BrowserContext, Page } from "playwright";
 import { chromium } from "playwright";
 import type { BrowserInstance } from "@/portal/types";
 import { config, getHeadlessSetting } from "./config";
-import { navigateToMyDustApps } from "./helpers";
 import { login } from "./login";
 
 export type { BrowserInstance } from "@/portal/types";
@@ -28,8 +27,6 @@ const DEFAULT_KEEP_OPEN_TIMEOUT_MS = 15 * 60 * 1000;
 const MIN_KEEP_OPEN_TIMEOUT_MS = 30_000;
 const DEFAULT_KEEP_ALIVE_INTERVAL_MS = 5 * 60 * 1000;
 const MIN_KEEP_ALIVE_INTERVAL_MS = 60_000;
-const DEFAULT_PORTAL_HOME_PIN_INTERVAL_MS = 10 * 60 * 1000;
-const MIN_PORTAL_HOME_PIN_INTERVAL_MS = 60_000;
 const DEFAULT_VIEWPORT_WIDTH = 1280;
 const DEFAULT_VIEWPORT_HEIGHT = 1024;
 const VIEWPORT_PATTERN_RE = /^(\d+)\s*[xX]\s*(\d+)$/;
@@ -63,8 +60,8 @@ function parseViewport(
     return null;
   }
 
-  const width = Number.parseInt(match[1], 10);
-  const height = Number.parseInt(match[2], 10);
+  const width = Number.parseInt(match[1] ?? "", 10);
+  const height = Number.parseInt(match[2] ?? "", 10);
   if (!(Number.isFinite(width) && Number.isFinite(height))) {
     return null;
   }
@@ -80,13 +77,6 @@ const KEEP_ALIVE_INTERVAL_MS = Math.max(
   MIN_KEEP_ALIVE_INTERVAL_MS,
   parsePositiveInt(process.env.PERMIT_WORKER_KEEP_ALIVE_INTERVAL_MS) ??
     DEFAULT_KEEP_ALIVE_INTERVAL_MS
-);
-const PORTAL_HOME_PIN_ENABLED =
-  process.env.PERMIT_WORKER_PORTAL_HOME_PIN_ENABLED !== "false";
-const PORTAL_HOME_PIN_INTERVAL_MS = Math.max(
-  MIN_PORTAL_HOME_PIN_INTERVAL_MS,
-  parsePositiveInt(process.env.PERMIT_WORKER_PORTAL_HOME_PIN_INTERVAL_MS) ??
-    DEFAULT_PORTAL_HOME_PIN_INTERVAL_MS
 );
 const RESOLVED_VIEWPORT = parseViewport(
   process.env.PERMIT_WORKER_BROWSER_VIEWPORT
@@ -225,7 +215,6 @@ export interface BrowserSession {
   lastActivityAtMs: number;
   lastKeepAliveAtMs: number | null;
   lastLoginAtMs: number | null;
-  lastPortalPinAtMs: number | null;
   lastError: string | null;
   operationDepth: number;
   currentOperation: string | null;
@@ -245,13 +234,10 @@ export interface BrowserSessionStatus {
   lastActivityAt: string | null;
   lastKeepAliveAt: string | null;
   lastLoginAt: string | null;
-  lastPortalPinAt: string | null;
   lastError: string | null;
   currentUrl: string | null;
   keepAliveEnabled: boolean;
   keepAliveIntervalMs: number;
-  portalHomePinEnabled: boolean;
-  portalHomePinIntervalMs: number;
   viewportWidth: number;
   viewportHeight: number;
 }
@@ -364,42 +350,6 @@ async function reloginSession(session: BrowserSession): Promise<boolean> {
   }
 }
 
-async function maybePinPortalHomeIfIdle(
-  session: BrowserSession
-): Promise<void> {
-  if (!PORTAL_HOME_PIN_ENABLED) {
-    return;
-  }
-  if (session.operationDepth > 0) {
-    return;
-  }
-  const now = Date.now();
-  if (
-    session.lastPortalPinAtMs &&
-    now - session.lastPortalPinAtMs < PORTAL_HOME_PIN_INTERVAL_MS
-  ) {
-    return;
-  }
-
-  try {
-    const currentUrl = session.instance.page.url();
-    if (!currentUrl.includes("dm.maricopa.gov")) {
-      await session.instance.page.goto(config.dustPermitUrl, {
-        timeout: 30_000,
-        waitUntil: "domcontentloaded",
-      });
-    }
-    const pinned = await navigateToMyDustApps(session.instance.page);
-    if (pinned) {
-      session.lastPortalPinAtMs = Date.now();
-      touchSessionActivity();
-    }
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    session.lastError = `Portal home pin failed: ${message}`;
-  }
-}
-
 async function runKeepAlive(options?: {
   allowRelogin?: boolean;
   force?: boolean;
@@ -440,10 +390,6 @@ async function runKeepAlive(options?: {
     );
     const body = await response.text().catch(() => "");
     const lowerBody = body.toLowerCase();
-    const hasLoggedInMarkers =
-      lowerBody.includes("my dust control") ||
-      lowerBody.includes("my dust apps") ||
-      lowerBody.includes("logout");
     const hasLoginMarkers =
       lowerBody.includes("login") &&
       (lowerBody.includes("username") ||
@@ -453,11 +399,13 @@ async function runKeepAlive(options?: {
     session.lastKeepAliveAtMs = Date.now();
     touchSessionActivity();
 
-    if (response.ok && hasLoggedInMarkers) {
+    // Portal pages vary (dashboard/detail/about), but the login page consistently
+    // includes credential fields. Treat "no login form + HTTP 200" as logged in
+    // to avoid false negatives on pages like "Last Pinned Home" or detail screens.
+    if (response.ok() && !hasLoginMarkers) {
       session.isLoggedIn = true;
       session.portalReady = true;
       session.lastError = null;
-      await maybePinPortalHomeIfIdle(session);
       return {
         active: true,
         isLoggedIn: true,
@@ -545,7 +493,6 @@ export async function getOrCreateBrowserSession(): Promise<BrowserSession> {
     lastError: loggedIn ? null : "Failed to login to portal",
     lastKeepAliveAtMs: null,
     lastLoginAtMs: loggedIn ? now : null,
-    lastPortalPinAtMs: null,
     operationDepth: 0,
     portalReady: loggedIn,
     startedAtMs: now,
@@ -761,9 +708,6 @@ export function getSessionStatus(): BrowserSessionStatus {
     lastError: globalSession?.lastError ?? null,
     lastKeepAliveAt: isoOrNull(globalSession?.lastKeepAliveAtMs ?? null),
     lastLoginAt: isoOrNull(globalSession?.lastLoginAtMs ?? null),
-    lastPortalPinAt: isoOrNull(globalSession?.lastPortalPinAtMs ?? null),
-    portalHomePinEnabled: PORTAL_HOME_PIN_ENABLED,
-    portalHomePinIntervalMs: PORTAL_HOME_PIN_INTERVAL_MS,
     portalReady: globalSession?.portalReady ?? false,
     startedAt: isoOrNull(globalSession?.startedAtMs ?? null),
     viewportHeight: RESOLVED_VIEWPORT.height,

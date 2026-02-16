@@ -4,7 +4,8 @@
   "private": true,
   "workspaces": {
     "packages": [
-      "apps/workers/*"
+      "apps/cf-workers/*",
+      "apps/cf-workers/*/*"
     ],
     "catalog": {
       "@azure/identity": "^4.13.0",
@@ -13,7 +14,7 @@
       "@types/bun": "^1.3.8",
       "typescript": "^5.9.3",
       "ultracite": "7.1.3",
-      "wrangler": "^4.61.1",
+      "wrangler": "^4.65.0",
       "@cloudflare/workers-types": "^4.20260131.0"
     }
   },

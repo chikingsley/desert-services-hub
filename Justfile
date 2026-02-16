@@ -36,7 +36,7 @@ services-enable-only:
     @just services-install
 
 services-status:
-    @docker compose ps notifications swppp-sync
+    @docker compose ps background-jobs
 
 # Cloudflare worker deployment checks (best effort; requires token scope for deployments list).
 cf-check:
@@ -164,7 +164,7 @@ _health strict:
     echo "== Docker Compose =="
     if command -v docker >/dev/null 2>&1 && docker compose version >/dev/null 2>&1; then
       running_services="$(docker compose ps --status running --services 2>/dev/null || true)"
-      required_docker_services=(web webhooks permit-worker notifications swppp-sync)
+      required_docker_services=(web background-jobs permit-worker)
       optional_docker_services=(tunnel)
 
       for service in "${required_docker_services[@]}"; do
@@ -189,7 +189,7 @@ _health strict:
     echo
     echo "== HTTP Health Endpoints =="
     check_http_health "web" "http://localhost:3000/api/health" required
-    check_http_health "webhooks" "http://localhost:4747/api/health" required
+    check_http_health "background-jobs" "http://localhost:4747/api/health" required
     check_http_health "permit-worker" "http://localhost:47822/health" required
 
     echo

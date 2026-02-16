@@ -138,7 +138,7 @@ async function runPsqlJsonQuery<T>(container: string, sql: string): Promise<T[]>
       "-c",
       sql,
     ],
-    { stdout: "pipe", stderr: "pipe" }
+    { stdout: "pipe", stderr: "pipe" },
   );
 
   const [exitCode, stdoutText, stderrText] = await Promise.all([
@@ -149,7 +149,7 @@ async function runPsqlJsonQuery<T>(container: string, sql: string): Promise<T[]>
 
   if (exitCode !== 0) {
     throw new Error(
-      `gemini clue query failed (exit=${exitCode}): ${stderrText.trim() || "unknown"}`
+      `gemini clue query failed (exit=${exitCode}): ${stderrText.trim() || "unknown"}`,
     );
   }
 
@@ -164,7 +164,7 @@ async function runPsqlJsonQuery<T>(container: string, sql: string): Promise<T[]>
 async function loadProjectDocs(
   projectId: number,
   maxRows: number,
-  container: string
+  container: string,
 ): Promise<DocumentRow[]> {
   const safeProjectId = Math.floor(projectId);
   const safeLimit = Math.max(1, Math.min(60, Math.floor(maxRows)));
@@ -200,7 +200,7 @@ FROM (
 }
 
 async function readFromDisk(
-  filePath: string
+  filePath: string,
 ): Promise<{ ok: boolean; bytes: ArrayBuffer | null; error: string | null }> {
   try {
     const file = Bun.file(filePath);
@@ -221,7 +221,7 @@ async function readFromDisk(
 
 async function downloadAttachment(
   emailId: number,
-  attachmentId: number
+  attachmentId: number,
 ): Promise<{ ok: boolean; bytes: ArrayBuffer | null; error: string | null }> {
   const url = `http://localhost:3000/api/emails/${emailId}/attachments/db:${attachmentId}/download`;
 
@@ -247,9 +247,7 @@ async function downloadAttachment(
   }
 }
 
-async function resolveDocumentBytes(
-  doc: DocumentRow
-): Promise<{
+async function resolveDocumentBytes(doc: DocumentRow): Promise<{
   ok: boolean;
   bytes: ArrayBuffer | null;
   source: "disk" | "attachment_api";
@@ -297,7 +295,7 @@ async function resolveDocumentBytes(
 async function extractFromPdf(
   ai: GoogleGenAI,
   model: string,
-  bytes: ArrayBuffer
+  bytes: ArrayBuffer,
 ): Promise<GeminiExtraction> {
   const base64 = Buffer.from(bytes).toString("base64");
   const response = await ai.models.generateContent({
@@ -325,7 +323,7 @@ async function extractFromPdf(
 export async function buildGeminiDocumentCluesForPermit(
   permitId: string,
   projectId: number | null,
-  options: GeminiDocumentClueOptions
+  options: GeminiDocumentClueOptions,
 ): Promise<GeminiDocumentClueResult> {
   const debug: string[] = [];
 
@@ -375,16 +373,12 @@ export async function buildGeminiDocumentCluesForPermit(
   for (const doc of picked) {
     const resolved = await resolveDocumentBytes(doc);
     if (!(resolved.ok && resolved.bytes)) {
-      debug.push(
-        `gemini: doc ${doc.id} source failed (${resolved.error ?? "unknown"})`
-      );
+      debug.push(`gemini: doc ${doc.id} source failed (${resolved.error ?? "unknown"})`);
       continue;
     }
 
     if (resolved.bytes.byteLength > options.maxDocBytes) {
-      debug.push(
-        `gemini: doc ${doc.id} skipped oversized (${resolved.bytes.byteLength} bytes)`
-      );
+      debug.push(`gemini: doc ${doc.id} skipped oversized (${resolved.bytes.byteLength} bytes)`);
       continue;
     }
 
@@ -424,17 +418,17 @@ export async function buildGeminiDocumentCluesForPermit(
       docsProcessed += 1;
 
       debug.push(
-        `gemini: doc ${doc.id} extracted source=${resolved.source} coords=${directCoordinates.length + pairCoordinates.length} apns=${directApns.length}`
+        `gemini: doc ${doc.id} extracted source=${resolved.source} coords=${directCoordinates.length + pairCoordinates.length} apns=${directApns.length}`,
       );
     } catch (error) {
       debug.push(
-        `gemini: doc ${doc.id} extraction failed (${error instanceof Error ? error.message : String(error)})`
+        `gemini: doc ${doc.id} extraction failed (${error instanceof Error ? error.message : String(error)})`,
       );
     }
   }
 
   debug.push(
-    `gemini: permit ${sqlEscape(permitId)} docs_tried=${picked.length} docs_processed=${docsProcessed}`
+    `gemini: permit ${sqlEscape(permitId)} docs_tried=${picked.length} docs_processed=${docsProcessed}`,
   );
 
   return {

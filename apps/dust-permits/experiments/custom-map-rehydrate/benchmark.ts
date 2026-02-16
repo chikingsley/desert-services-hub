@@ -3,10 +3,10 @@
 import { mkdir } from "node:fs/promises";
 import { dirname } from "node:path";
 import {
+  type ParcelData,
   queryParcelByAPN,
   queryParcelByCoordinates,
   queryParcelsByAddress,
-  type ParcelData,
 } from "../../src/lib/assessor";
 import { queryPermitMapFeatures } from "../../src/lib/dust-features";
 import { calculateBoundsFromCenter } from "./bounds";
@@ -115,8 +115,7 @@ type BenchmarkResult = {
 
 const EARTH_RADIUS_M = 6_371_000;
 const DEFAULT_DOC_CONTAINER = "supabase_db_desert-services-hub";
-const DEFAULT_HISTORY_PATH =
-  "experiments/custom-map-rehydrate/ITERATION_LOG.md";
+const DEFAULT_HISTORY_PATH = "experiments/custom-map-rehydrate/ITERATION_LOG.md";
 const OVERRIDE_DELTA_TIE_TOLERANCE_M = 30;
 
 function nowStamp(): string {
@@ -350,7 +349,6 @@ function parseArgs(argv: string[]): CliArgs {
     if (arg === "--label") {
       label = args[i + 1] ?? null;
       i += 1;
-      continue;
     }
   }
 
@@ -386,11 +384,7 @@ function parseArgs(argv: string[]): CliArgs {
     throw new Error(`Invalid --doc-max-coord-delta: ${docMaxCoordDeltaM}`);
   }
 
-  if (
-    !Number.isFinite(docClipMinAreaShare) ||
-    docClipMinAreaShare < 0 ||
-    docClipMinAreaShare > 1
-  ) {
+  if (!Number.isFinite(docClipMinAreaShare) || docClipMinAreaShare < 0 || docClipMinAreaShare > 1) {
     throw new Error(`Invalid --doc-clip-min-area-share: ${docClipMinAreaShare}`);
   }
 
@@ -540,9 +534,8 @@ function pointInPolygon(point: LatLng, polygon: LatLng[]): boolean {
     }
 
     const intersects =
-      (pi.lat > point.lat) !== (pj.lat > point.lat) &&
-      point.lng <
-        ((pj.lng - pi.lng) * (point.lat - pi.lat)) / (pj.lat - pi.lat) + pi.lng;
+      pi.lat > point.lat !== pj.lat > point.lat &&
+      point.lng < ((pj.lng - pi.lng) * (point.lat - pi.lat)) / (pj.lat - pi.lat) + pi.lng;
 
     if (intersects) {
       inside = !inside;
@@ -556,9 +549,7 @@ function metersBetween(a: LatLng, b: LatLng): number {
   const dLng = ((b.lng - a.lng) * Math.PI) / 180;
   const lat1 = (a.lat * Math.PI) / 180;
   const lat2 = (b.lat * Math.PI) / 180;
-  const h =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
   return 2 * EARTH_RADIUS_M * Math.asin(Math.sqrt(h));
 }
 
@@ -659,11 +650,7 @@ function weightedCentroid(polygons: LatLng[][]): LatLng {
   return polygons[0] ? polygonCentroid(polygons[0]) : { lat: 0, lng: 0 };
 }
 
-function scalePolygonAroundAnchor(
-  polygon: LatLng[],
-  anchor: LatLng,
-  scale: number
-): LatLng[] {
+function scalePolygonAroundAnchor(polygon: LatLng[], anchor: LatLng, scale: number): LatLng[] {
   if (polygon.length < 3 || !Number.isFinite(scale) || scale <= 0) {
     return [];
   }
@@ -714,7 +701,7 @@ function allBounds(polygons: LatLng[][]): {
 function approximateSetMetrics(
   predicted: LatLng[][],
   truth: LatLng[],
-  grid: number
+  grid: number,
 ): {
   iou: number;
   predAreaM2: number;
@@ -730,11 +717,11 @@ function approximateSetMetrics(
   const midLat = (bounds.north + bounds.south) / 2;
   const widthM = metersBetween(
     { lat: midLat, lng: bounds.west },
-    { lat: midLat, lng: bounds.east }
+    { lat: midLat, lng: bounds.east },
   );
   const heightM = metersBetween(
     { lat: bounds.south, lng: bounds.west },
-    { lat: bounds.north, lng: bounds.west }
+    { lat: bounds.north, lng: bounds.west },
   );
   const bboxAreaM2 = widthM * heightM;
 
@@ -802,7 +789,7 @@ function edgeIntersection(
   start: LatLng,
   end: LatLng,
   bounds: Bounds,
-  edge: ClipEdge
+  edge: ClipEdge,
 ): LatLng | null {
   const dLat = end.lat - start.lat;
   const dLng = end.lng - start.lng;
@@ -836,11 +823,7 @@ function edgeIntersection(
   };
 }
 
-function clipPolygonByEdge(
-  polygon: LatLng[],
-  bounds: Bounds,
-  edge: ClipEdge
-): LatLng[] {
+function clipPolygonByEdge(polygon: LatLng[], bounds: Bounds, edge: ClipEdge): LatLng[] {
   const output: LatLng[] = [];
   if (polygon.length === 0) {
     return output;
@@ -895,21 +878,12 @@ function parseInputPermits(input: unknown): InputPermit[] {
   if (Array.isArray(input)) {
     return input.map((row) => ({
       permitId: String((row as Record<string, unknown>).permitId ?? ""),
-      projectName: ((row as Record<string, unknown>).projectName ??
-        null) as string | null,
-      address: ((row as Record<string, unknown>).address ?? null) as
-        | string
-        | null,
+      projectName: ((row as Record<string, unknown>).projectName ?? null) as string | null,
+      address: ((row as Record<string, unknown>).address ?? null) as string | null,
       city: ((row as Record<string, unknown>).city ?? null) as string | null,
-      parcel: ((row as Record<string, unknown>).parcel ?? null) as
-        | string
-        | null,
-      status: ((row as Record<string, unknown>).status ?? null) as
-        | string
-        | null,
-      projectId: ((row as Record<string, unknown>).projectId ?? null) as
-        | number
-        | null,
+      parcel: ((row as Record<string, unknown>).parcel ?? null) as string | null,
+      status: ((row as Record<string, unknown>).status ?? null) as string | null,
+      projectId: ((row as Record<string, unknown>).projectId ?? null) as number | null,
       docCount: Number((row as Record<string, unknown>).docCount ?? 0),
     }));
   }
@@ -927,7 +901,7 @@ function parseInputPermits(input: unknown): InputPermit[] {
 
 async function resolvePredictionPolygons(
   permit: InputPermit,
-  maxApns: number
+  maxApns: number,
 ): Promise<{
   source: PredictionSource;
   apnsUsed: string[];
@@ -956,7 +930,7 @@ async function resolvePredictionPolygons(
       apnsUsed.push(apn);
     } catch (error) {
       debug.push(
-        `queryParcelByAPN(${apn}) failed: ${error instanceof Error ? error.message : String(error)}`
+        `queryParcelByAPN(${apn}) failed: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }
@@ -981,10 +955,7 @@ async function resolvePredictionPolygons(
     let chosen: ParcelData | null = null;
     if (apnCandidates.length > 0) {
       const apnSet = new Set(apnCandidates.map(cleanApn));
-      chosen =
-        addressMatches.find((m) => apnSet.has(cleanApn(m.apn))) ??
-        addressMatches[0] ??
-        null;
+      chosen = addressMatches.find((m) => apnSet.has(cleanApn(m.apn))) ?? addressMatches[0] ?? null;
     } else {
       chosen = addressMatches[0] ?? null;
     }
@@ -1004,7 +975,7 @@ async function resolvePredictionPolygons(
     };
   } catch (error) {
     debug.push(
-      `queryParcelsByAddress failed: ${error instanceof Error ? error.message : String(error)}`
+      `queryParcelsByAddress failed: ${error instanceof Error ? error.message : String(error)}`,
     );
     return { source: "none", apnsUsed: [], polygons: [], debug };
   }
@@ -1012,7 +983,7 @@ async function resolvePredictionPolygons(
 
 function buildFallbackBoundsFromHints(
   sizeMeters: number | null,
-  coordinates: LatLng | null
+  coordinates: LatLng | null,
 ): { bounds: Bounds | null; mode: string | null } {
   if (!sizeMeters || sizeMeters <= 0) {
     return { bounds: null, mode: null };
@@ -1031,16 +1002,14 @@ function buildFallbackBoundsFromHints(
 async function evaluatePermit(
   permit: InputPermit,
   options: CliArgs,
-  documentCache: Map<number, any[]>
+  documentCache: Map<number, any[]>,
 ): Promise<BenchmarkResult> {
   const debug: string[] = [];
   const apnCandidates = extractApnCandidates(permit.parcel);
 
   try {
     const mapData = await queryPermitMapFeatures(permit.permitId);
-    const truthPolygon = normalizePolygon(
-      mapData.disturbedArea?.latLngCoordinates ?? []
-    );
+    const truthPolygon = normalizePolygon(mapData.disturbedArea?.latLngCoordinates ?? []);
 
     if (truthPolygon.length < 3) {
       return {
@@ -1089,7 +1058,7 @@ async function evaluatePermit(
           state: "AZ",
           county: "Maricopa",
         },
-        documentCache as Map<number, any[]>
+        documentCache as Map<number, any[]>,
       );
 
       debug.push(...clueResult.debug.map((d) => `doc-clues: ${d}`));
@@ -1098,15 +1067,13 @@ async function evaluatePermit(
         ...clueResult.hints,
         roads: [...clueResult.hints.roads],
         intersections: [...clueResult.hints.intersections],
-        coordinates: clueResult.hints.coordinates
-          ? { ...clueResult.hints.coordinates }
-          : null,
+        coordinates: clueResult.hints.coordinates ? { ...clueResult.hints.coordinates } : null,
         coordinateCandidates: dedupeCoordinates(
           (clueResult.hints.coordinateCandidates ?? []).map((coord) => ({
             lat: coord.lat,
             lng: coord.lng,
           })),
-          10
+          10,
         ),
       };
 
@@ -1126,21 +1093,17 @@ async function evaluatePermit(
             maxDocs: options.geminiMaxDocs,
             maxDocBytes: options.geminiMaxDocBytes,
             container: options.docContainer,
-          }
+          },
         );
 
         debug.push(...geminiClues.debug.map((d) => `doc-gemini: ${d}`));
 
         if (geminiClues.coordinates.length > 0) {
           hintsForPipeline.coordinateCandidates = dedupeCoordinates(
-            [
-              ...geminiClues.coordinates,
-              ...(hintsForPipeline.coordinateCandidates ?? []),
-            ],
-            10
+            [...geminiClues.coordinates, ...(hintsForPipeline.coordinateCandidates ?? [])],
+            10,
           );
-          hintsForPipeline.coordinates =
-            hintsForPipeline.coordinateCandidates[0] ?? null;
+          hintsForPipeline.coordinates = hintsForPipeline.coordinateCandidates[0] ?? null;
         }
       }
 
@@ -1149,7 +1112,7 @@ async function evaluatePermit(
           ...(hintsForPipeline.coordinates ? [hintsForPipeline.coordinates] : []),
           ...(hintsForPipeline.coordinateCandidates ?? []),
         ],
-        10
+        10,
       );
 
       if (predictionPolygons.length > 0 && allCoordinates.length > 0) {
@@ -1164,7 +1127,7 @@ async function evaluatePermit(
           }
 
           debug.push(
-            `doc-clues: dropped outlier coordinates (${coordDelta.toFixed(1)}m from parcel center)`
+            `doc-clues: dropped outlier coordinates (${coordDelta.toFixed(1)}m from parcel center)`,
           );
         }
 
@@ -1173,37 +1136,26 @@ async function evaluatePermit(
         hintsForPipeline.coordinateCandidates = allCoordinates;
       }
 
-      hintsForPipeline.coordinates =
-        (hintsForPipeline.coordinateCandidates ?? [])[0] ?? null;
+      hintsForPipeline.coordinates = (hintsForPipeline.coordinateCandidates ?? [])[0] ?? null;
 
-      if (
-        options.docCoordinateParcelOverride &&
-        predictionPolygons.length === 1
-      ) {
+      if (options.docCoordinateParcelOverride && predictionPolygons.length === 1) {
         const coordCandidates = hintsForPipeline.coordinateCandidates ?? [];
         if (coordCandidates.length > 0) {
           const basePoly = predictionPolygons[0];
           if (basePoly) {
             const baseCenter = polygonCentroid(basePoly);
-            const baseApnSet = new Set(
-              basePrediction.apnsUsed.map((apn) => cleanApn(apn))
-            );
+            const baseApnSet = new Set(basePrediction.apnsUsed.map((apn) => cleanApn(apn)));
 
-            let bestOverride:
-              | {
-                  polygon: LatLng[];
-                  deltaM: number;
-                  apn: string | null;
-                  coordinate: LatLng;
-                }
-              | null = null;
+            let bestOverride: {
+              polygon: LatLng[];
+              deltaM: number;
+              apn: string | null;
+              coordinate: LatLng;
+            } | null = null;
 
             for (const coord of coordCandidates) {
               try {
-                const coordParcel = await queryParcelByCoordinates(
-                  coord.lat,
-                  coord.lng
-                );
+                const coordParcel = await queryParcelByCoordinates(coord.lat, coord.lng);
                 const coordPoly = normalizePolygon(coordParcel?.polygon ?? []);
                 if (coordPoly.length < 3) {
                   continue;
@@ -1213,12 +1165,8 @@ async function evaluatePermit(
                 const deltaM = metersBetween(baseCenter, coordCenter);
                 const coordInBase = pointInPolygon(coord, basePoly);
 
-                const coordApnClean = coordParcel?.apn
-                  ? cleanApn(coordParcel.apn)
-                  : "";
-                const sameApn = coordApnClean
-                  ? baseApnSet.has(coordApnClean)
-                  : false;
+                const coordApnClean = coordParcel?.apn ? cleanApn(coordParcel.apn) : "";
+                const sameApn = coordApnClean ? baseApnSet.has(coordApnClean) : false;
 
                 const valid =
                   !sameApn &&
@@ -1243,7 +1191,7 @@ async function evaluatePermit(
                 }
               } catch (error) {
                 debug.push(
-                  `doc-clues: coordinate parcel candidate failed: ${error instanceof Error ? error.message : String(error)}`
+                  `doc-clues: coordinate parcel candidate failed: ${error instanceof Error ? error.message : String(error)}`,
                 );
               }
             }
@@ -1253,11 +1201,11 @@ async function evaluatePermit(
               predictionSource = "coord_parcel_override";
               hintsForPipeline.coordinates = bestOverride.coordinate;
               debug.push(
-                `doc-clues: coordinate parcel override applied (delta=${bestOverride.deltaM.toFixed(1)}m, apn=${bestOverride.apn ?? "n/a"}, candidates=${coordCandidates.length})`
+                `doc-clues: coordinate parcel override applied (delta=${bestOverride.deltaM.toFixed(1)}m, apn=${bestOverride.apn ?? "n/a"}, candidates=${coordCandidates.length})`,
               );
             } else {
               debug.push(
-                `doc-clues: coordinate parcel override skipped (no valid candidate from ${coordCandidates.length})`
+                `doc-clues: coordinate parcel override skipped (no valid candidate from ${coordCandidates.length})`,
               );
             }
           }
@@ -1277,11 +1225,7 @@ async function evaluatePermit(
           const targetAreaM2 = hintsForPipeline.estimatedSizeMeters ** 2;
           const overageRatio = targetAreaM2 > 0 ? baseAreaM2 / targetAreaM2 : 0;
 
-          if (
-            baseAreaM2 > 0 &&
-            targetAreaM2 > 0 &&
-            overageRatio >= options.docSizeOverageRatio
-          ) {
+          if (baseAreaM2 > 0 && targetAreaM2 > 0 && overageRatio >= options.docSizeOverageRatio) {
             let anchor = polygonCentroid(polygon);
             if (
               hintsForPipeline.coordinates &&
@@ -1291,17 +1235,10 @@ async function evaluatePermit(
             }
 
             const rawScale = Math.sqrt(targetAreaM2 / baseAreaM2);
-            const appliedScale = Math.max(
-              options.docSizeMinScale,
-              Math.min(0.98, rawScale)
-            );
+            const appliedScale = Math.max(options.docSizeMinScale, Math.min(0.98, rawScale));
 
             if (appliedScale < 0.98) {
-              const scaled = scalePolygonAroundAnchor(
-                polygon,
-                anchor,
-                appliedScale
-              );
+              const scaled = scalePolygonAroundAnchor(polygon, anchor, appliedScale);
               if (scaled.length >= 3) {
                 predictionPolygons = [scaled];
                 predictionSource = "apn_size_normalized_by_doc";
@@ -1310,7 +1247,7 @@ async function evaluatePermit(
                     overageRatio.toFixed(2) +
                     "x, scale=" +
                     appliedScale.toFixed(3) +
-                    ")"
+                    ")",
                 );
               }
             }
@@ -1327,17 +1264,15 @@ async function evaluatePermit(
       });
 
       let bounds =
-        rehydrate.suggestedBounds &&
-        rehydrate.consensusConfidence >= options.docMinConfidence
+        rehydrate.suggestedBounds && rehydrate.consensusConfidence >= options.docMinConfidence
           ? rehydrate.suggestedBounds
           : null;
       let boundsMode = bounds ? "rehydrate-bounds" : null;
 
-
       if (!bounds) {
         const fallback = buildFallbackBoundsFromHints(
           hintsForPipeline.estimatedSizeMeters,
-          hintsForPipeline.coordinates
+          hintsForPipeline.coordinates,
         );
         bounds = fallback.bounds;
         boundsMode = fallback.mode;
@@ -1346,33 +1281,26 @@ async function evaluatePermit(
       let boundsApplied = false;
       const clipEligible = Boolean(bounds) && boundsMode === "rehydrate-bounds";
       if (clipEligible && predictionPolygons.length > 0) {
-        const beforeAreaM2 = predictionPolygons.reduce(
-          (sum, poly) => sum + polygonAreaM2(poly),
-          0
-        );
+        const beforeAreaM2 = predictionPolygons.reduce((sum, poly) => sum + polygonAreaM2(poly), 0);
 
         const clipped = predictionPolygons
           .map((poly) => clipPolygonToBounds(poly, bounds as Bounds))
           .filter((poly) => poly.length >= 3);
 
         if (clipped.length > 0) {
-          const clippedAreaM2 = clipped.reduce(
-            (sum, poly) => sum + polygonAreaM2(poly),
-            0
-          );
-          const clippedAreaShare =
-            beforeAreaM2 > 0 ? clippedAreaM2 / beforeAreaM2 : 0;
+          const clippedAreaM2 = clipped.reduce((sum, poly) => sum + polygonAreaM2(poly), 0);
+          const clippedAreaShare = beforeAreaM2 > 0 ? clippedAreaM2 / beforeAreaM2 : 0;
 
           if (clippedAreaShare >= options.docClipMinAreaShare) {
             predictionPolygons = clipped;
             predictionSource = "apn_clipped_by_doc";
             boundsApplied = true;
             debug.push(
-              `doc-clues: applied bounds clipping (${boundsMode ?? "n/a"}, share=${clippedAreaShare.toFixed(3)})`
+              `doc-clues: applied bounds clipping (${boundsMode ?? "n/a"}, share=${clippedAreaShare.toFixed(3)})`,
             );
           } else {
             debug.push(
-              `doc-clues: skipped clipping due to small area share (${clippedAreaShare.toFixed(3)} < ${options.docClipMinAreaShare.toFixed(3)})`
+              `doc-clues: skipped clipping due to small area share (${clippedAreaShare.toFixed(3)} < ${options.docClipMinAreaShare.toFixed(3)})`,
             );
           }
         }
@@ -1389,13 +1317,10 @@ async function evaluatePermit(
         intersections: clueResult.extracted.intersections,
         hasCoordinates: Boolean(hintsForPipeline.coordinates),
         hasEstimatedSize: clueResult.extracted.hasEstimatedSize,
-        consensusConfidence: rehydrate.consensusLocation
-          ? rehydrate.consensusConfidence
-          : null,
+        consensusConfidence: rehydrate.consensusLocation ? rehydrate.consensusConfidence : null,
         boundsMode,
         boundsApplied,
       };
-
     }
     if (predictionPolygons.length === 0) {
       return {
@@ -1428,19 +1353,12 @@ async function evaluatePermit(
     const predCentroid = weightedCentroid(predictionPolygons);
     const centroidErrorM = metersBetween(truthCentroid, predCentroid);
 
-    const setMetrics = approximateSetMetrics(
-      predictionPolygons,
-      truthPolygon,
-      options.iouGrid
-    );
+    const setMetrics = approximateSetMetrics(predictionPolygons, truthPolygon, options.iouGrid);
 
     const areaRatio =
-      setMetrics.truthAreaM2 > 0
-        ? setMetrics.predAreaM2 / setMetrics.truthAreaM2
-        : 0;
+      setMetrics.truthAreaM2 > 0 ? setMetrics.predAreaM2 / setMetrics.truthAreaM2 : 0;
     const passCentroid = centroidErrorM <= options.maxCentroidErrorM;
-    const passArea =
-      areaRatio >= options.minAreaRatio && areaRatio <= options.maxAreaRatio;
+    const passArea = areaRatio >= options.minAreaRatio && areaRatio <= options.maxAreaRatio;
     const passIou = setMetrics.iou >= options.minIou;
 
     return {
@@ -1534,7 +1452,7 @@ function iouBins(results: BenchmarkResult[]): Record<string, number> {
 async function runWithConcurrency<T, R>(
   items: T[],
   parallel: number,
-  worker: (item: T, index: number) => Promise<R>
+  worker: (item: T, index: number) => Promise<R>,
 ): Promise<R[]> {
   const results = new Array<R>(items.length);
   let index = 0;
@@ -1577,7 +1495,7 @@ async function appendIterationHistory(
   },
   bins: Record<string, number>,
   outputPath: string,
-  top: Array<{ permitId: string; iou: number; source: PredictionSource }>
+  top: Array<{ permitId: string; iou: number; source: PredictionSource }>,
 ): Promise<void> {
   const ts = new Date().toISOString();
   const title = options.label ? `${ts} - ${options.label}` : ts;
@@ -1604,10 +1522,7 @@ async function appendIterationHistory(
   const separator = normalizedCurrent.endsWith("\n\n") ? "" : "\n";
 
   await mkdir(dirname(options.historyPath), { recursive: true });
-  await Bun.write(
-    options.historyPath,
-    `${normalizedCurrent}${separator}${lines.join("\n")}`
-  );
+  await Bun.write(options.historyPath, `${normalizedCurrent}${separator}${lines.join("\n")}`);
 }
 
 async function main(): Promise<void> {
@@ -1620,8 +1535,7 @@ async function main(): Promise<void> {
 
   const raw = await file.json();
   const allPermits = parseInputPermits(raw).filter((p) => Boolean(p.permitId));
-  const permits =
-    options.limit === null ? allPermits : allPermits.slice(0, options.limit);
+  const permits = options.limit === null ? allPermits : allPermits.slice(0, options.limit);
 
   if (permits.length === 0) {
     throw new Error("No permits found in input");
@@ -1637,39 +1551,28 @@ async function main(): Promise<void> {
   const startedAt = Date.now();
   const documentCache = new Map<number, any[]>();
 
-  const results = await runWithConcurrency(
-    permits,
-    options.parallel,
-    async (permit, idx) => {
-      const result = await evaluatePermit(permit, options, documentCache);
-      const label =
-        result.status === "scored"
-          ? `IoU=${result.metrics?.iou.toFixed(3) ?? "n/a"}`
-          : result.reason ?? "skip";
-      console.log(
-        `[${idx + 1}/${permits.length}] ${result.permitId} -> ${result.status} (${label})`
-      );
-      return result;
-    }
-  );
+  const results = await runWithConcurrency(permits, options.parallel, async (permit, idx) => {
+    const result = await evaluatePermit(permit, options, documentCache);
+    const label =
+      result.status === "scored"
+        ? `IoU=${result.metrics?.iou.toFixed(3) ?? "n/a"}`
+        : (result.reason ?? "skip");
+    console.log(`[${idx + 1}/${permits.length}] ${result.permitId} -> ${result.status} (${label})`);
+    return result;
+  });
 
   const scored = results.filter((r) => r.status === "scored" && r.metrics);
   const skipped = results.filter((r) => r.status === "skipped");
   const errored = results.filter((r) => r.status === "error");
 
-  const ious = scored
-    .map((r) => r.metrics?.iou ?? 0)
-    .filter((v) => Number.isFinite(v));
+  const ious = scored.map((r) => r.metrics?.iou ?? 0).filter((v) => Number.isFinite(v));
   const centroidErrors = scored
     .map((r) => r.metrics?.centroidErrorM ?? 0)
     .filter((v) => Number.isFinite(v));
-  const areaRatios = scored
-    .map((r) => r.metrics?.areaRatio ?? 0)
-    .filter((v) => Number.isFinite(v));
+  const areaRatios = scored.map((r) => r.metrics?.areaRatio ?? 0).filter((v) => Number.isFinite(v));
 
   const passAll = scored.filter(
-    (r) =>
-      r.metrics?.passIou && r.metrics.passArea && r.metrics.passCentroid
+    (r) => r.metrics?.passIou && r.metrics.passArea && r.metrics.passCentroid,
   ).length;
   const passIou = scored.filter((r) => r.metrics?.passIou).length;
   const passArea = scored.filter((r) => r.metrics?.passArea).length;
@@ -1742,13 +1645,7 @@ async function main(): Promise<void> {
         source: r.prediction.source,
       }));
 
-    await appendIterationHistory(
-      options,
-      summary,
-      output.iouBins,
-      options.outputPath,
-      top
-    );
+    await appendIterationHistory(options, summary, output.iouBins, options.outputPath, top);
   }
 
   console.log("\n=== Benchmark Summary ===");

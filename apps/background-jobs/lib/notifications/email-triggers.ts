@@ -1,9 +1,8 @@
 /**
- * Email Trigger Detection for Dust Permit Notifications
+ * Email Trigger Parsers & Cost Breakdown
  *
- * Detects incoming emails that should trigger notification workflows:
- * - PointAndPay payment confirmations → billing + submitted notifications
- * - Maricopa County "Dust Permit Issued" → issued notification
+ * Data parsing functions used by job handlers AFTER triage dispatch.
+ * Detection/classification is handled by the unified triage system.
  *
  * Job handler implementations live in ./email-trigger-handlers.ts
  */
@@ -17,16 +16,9 @@ export {
 } from "./email-trigger-handlers";
 
 // ============================================================================
-// Detection
+// Parser Regexes
 // ============================================================================
 
-export type DustPermitEmailTrigger = "pointandpay_payment" | "maricopa_issued";
-
-const SUBJECT_DUST_PERMIT_ISSUED_RE = /dust permit issued/i;
-const BODY_POINT_AND_PAY_ACCOUNT_RE = /Account Number:\s*IV\d+/i;
-const BODY_POINT_AND_PAY_CONFIRMATION_RE = /Confirmation ID:\s*\d+/i;
-const BODY_MARICOPA_ISSUED_RE =
-  /application\s+D\d{7}\s+has been processed and approved/i;
 const POINT_AND_PAY_INVOICE_RE = /Account Number:\s*(IV\d+)/i;
 const POINT_AND_PAY_COUNTY_INVOICE_NUMBER_RE = /Invoice Number:\s*(\d+)/i;
 const POINT_AND_PAY_PRODUCT_LINE_RE =
@@ -46,36 +38,42 @@ const MARICOPA_SUBJECT_FACILITY_NAME_RE =
   /Dust Permit Issued\s*--\s*(.+?)(?:,|$)/i;
 const MARICOPA_FACILITY_ADDRESS_RE =
   /Facility Address:\s*(.+?)(?=\s*Dust control|\r?\n|$)/i;
+const DUST_PERMIT_ISSUED_SUBJECT_RE = /\bdust permit issued\b/i;
+const POINT_AND_PAY_SENDER_RE = /@pointandpay\.com$/i;
+const MARICOPA_SENDER_RE = /@maricopa\.gov$/i;
+
+export type DustPermitEmailTrigger = "pointandpay_payment" | "maricopa_issued";
 
 export function detectDustPermitEmailTrigger(
   fromEmail: string,
   subject: string,
-  body?: string
+  bodyText?: string
 ): DustPermitEmailTrigger | null {
-  const from = fromEmail.toLowerCase().trim();
+  const sender = fromEmail.trim();
+  const body = bodyText ?? "";
 
-  if (from === "noreply@pointandpay.com") {
+  if (POINT_AND_PAY_SENDER_RE.test(sender)) {
+    return "pointandpay_payment";
+  }
+
+  if (MARICOPA_SENDER_RE.test(sender)) {
+    return DUST_PERMIT_ISSUED_SUBJECT_RE.test(subject)
+      ? "maricopa_issued"
+      : null;
+  }
+
+  if (
+    POINT_AND_PAY_INVOICE_RE.test(body) &&
+    POINT_AND_PAY_CONFIRMATION_RE.test(body)
+  ) {
     return "pointandpay_payment";
   }
 
   if (
-    from === "no-reply@maricopa.gov" &&
-    SUBJECT_DUST_PERMIT_ISSUED_RE.test(subject)
+    DUST_PERMIT_ISSUED_SUBJECT_RE.test(subject) ||
+    (MARICOPA_PERMIT_NUMBER_RE.test(body) && MARICOPA_FACILITY_ID_RE.test(body))
   ) {
     return "maricopa_issued";
-  }
-
-  if (body) {
-    if (
-      BODY_POINT_AND_PAY_ACCOUNT_RE.test(body) &&
-      BODY_POINT_AND_PAY_CONFIRMATION_RE.test(body)
-    ) {
-      return "pointandpay_payment";
-    }
-
-    if (BODY_MARICOPA_ISSUED_RE.test(body)) {
-      return "maricopa_issued";
-    }
   }
 
   return null;
@@ -180,6 +178,16 @@ export function parseMaricopaIssuedEmail(
 // ============================================================================
 // Job Handler Types
 // ============================================================================
+
+export interface ContractEmailJobPayload {
+  emailId: number;
+  messageId: string;
+  mailboxEmail: string;
+  subject: string;
+  fromEmail: string;
+  bodyText: string;
+  hasAttachments: boolean;
+}
 
 export interface PaymentJobPayload {
   emailId: number;

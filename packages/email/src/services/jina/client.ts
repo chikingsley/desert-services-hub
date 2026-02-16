@@ -16,6 +16,13 @@
  * - Classifier: 20 RPM
  * - Segmenter: 200 RPM
  */
+
+import type { SearchJsonResult } from "./search";
+import {
+  parseSearchResults as parseSearchResultsFromMarkdown,
+  searchJsonWithHeaders,
+  searchWithHeaders,
+} from "./search";
 import type {
   JinaClassifyOptions,
   JinaClassifyResponse,
@@ -31,8 +38,6 @@ import type {
   JinaSegmentResponse,
   Tokenizer,
 } from "./types";
-
-const URL_REGEX = /\]\((https?:\/\/[^)]+)\)/;
 
 function getApiKey(): string {
   const key = process.env.JINA_API_KEY;
@@ -127,78 +132,6 @@ async function jinaPost<T>(
 // Search API (s.jina.ai)
 // ============================================================================
 
-interface SearchJsonResult {
-  data: { title: string; url: string; content: string }[];
-}
-
-function buildSearchUrl(query: string, options: JinaSearchOptions): string {
-  const params = new URLSearchParams({ q: query });
-
-  if (options.country) {
-    params.set("gl", options.country);
-  }
-  if (options.language) {
-    params.set("hl", options.language);
-  }
-  if (options.num) {
-    params.set("num", String(options.num));
-  }
-  if (options.page) {
-    params.set("page", String(options.page));
-  }
-
-  return `https://s.jina.ai/?${params}`;
-}
-
-function buildSearchHeaders(
-  options: JinaSearchOptions,
-  baseHeaders: Record<string, string>
-): Record<string, string> {
-  const headers = { ...baseHeaders };
-
-  if (options.noContent) {
-    headers["X-Respond-With"] = "no-content";
-  }
-  if (options.engine) {
-    headers["X-Engine"] = options.engine;
-  }
-  if (options.site) {
-    headers["X-Site"] = options.site;
-  }
-  if (options.format) {
-    headers["X-Return-Format"] = options.format;
-  }
-  if (options.withFavicon) {
-    headers["X-With-Favicon"] = "true";
-  }
-  if (options.noCache) {
-    headers["X-No-Cache"] = "true";
-  }
-  if (options.timeout) {
-    headers["X-Timeout"] = String(options.timeout);
-  }
-
-  return headers;
-}
-
-async function executeSearch(
-  query: string,
-  options: JinaSearchOptions,
-  baseHeaders: Record<string, string>
-): Promise<Response> {
-  const url = buildSearchUrl(query, options);
-  const headers = buildSearchHeaders(options, baseHeaders);
-  const response = await fetch(url, { headers });
-
-  if (response.ok) {
-    return response;
-  }
-
-  throw new Error(
-    `Jina search failed: ${response.status} ${response.statusText}`
-  );
-}
-
 /**
  * Search the web - returns raw markdown
  */
@@ -206,8 +139,7 @@ export async function search(
   query: string,
   options: JinaSearchOptions = {}
 ): Promise<string> {
-  const response = await executeSearch(query, options, buildAuthHeader());
-  return response.text();
+  return await searchWithHeaders(query, options, buildAuthHeader());
 }
 
 /**
@@ -217,49 +149,14 @@ export async function searchJson(
   query: string,
   options: Omit<JinaSearchOptions, "format"> = {}
 ): Promise<SearchJsonResult> {
-  const response = await executeSearch(query, options, {
-    ...buildAuthHeader(),
-    Accept: "application/json",
-  });
-  return response.json() as Promise<SearchJsonResult>;
+  return await searchJsonWithHeaders(query, options, buildAuthHeader());
 }
 
 /**
  * Parse search results from raw markdown response
  */
 export function parseSearchResults(rawResponse: string): JinaSearchResult[] {
-  const results: JinaSearchResult[] = [];
-  const lines = rawResponse.split("\n");
-  let currentResult: Partial<JinaSearchResult> | null = null;
-
-  for (const line of lines) {
-    if (line.startsWith("### ")) {
-      if (currentResult?.title && currentResult?.url) {
-        results.push(currentResult as JinaSearchResult);
-      }
-      currentResult = { title: line.slice(4).trim() };
-    } else if (currentResult) {
-      if (line.includes("](http")) {
-        const urlMatch = line.match(URL_REGEX);
-        if (urlMatch) {
-          currentResult.url = urlMatch[1];
-        }
-      } else if (line.trim() && !line.startsWith("#")) {
-        if (currentResult.description) {
-          currentResult.content =
-            `${currentResult.content ?? ""}\n${line}`.trim();
-        } else {
-          currentResult.description = line.trim();
-        }
-      }
-    }
-  }
-
-  if (currentResult?.title && currentResult?.url) {
-    results.push(currentResult as JinaSearchResult);
-  }
-
-  return results;
+  return parseSearchResultsFromMarkdown(rawResponse);
 }
 
 // ============================================================================

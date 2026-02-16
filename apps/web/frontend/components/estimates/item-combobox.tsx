@@ -17,14 +17,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/apps/web/frontend/components/ui/popover";
+import type { CatalogItemInfo } from "@/apps/web/frontend/lib/catalog-item-info";
 import { cn } from "@/lib/utils";
-
-interface CatalogItemInfo {
-  name: string;
-  description: string;
-  price: number;
-  unit: string;
-}
 
 interface ItemComboboxProps {
   catalog: Catalog;
@@ -37,14 +31,55 @@ interface ItemComboboxProps {
 
 interface FlattenedItem {
   id: string;
+  code: string;
   name: string;
   description: string;
   price: number;
   unit: string;
+  defaultQty?: number;
   categoryId: string;
   categoryName: string;
   subcategoryId?: string;
   subcategoryName?: string;
+}
+
+function flattenCategory(
+  category: Catalog["categories"][number],
+  items: FlattenedItem[]
+): void {
+  for (const item of category.items ?? []) {
+    items.push({
+      id: `${category.id}::${item.code}`,
+      code: item.code,
+      name: item.name,
+      description: item.description || "",
+      price: item.price,
+      unit: item.unit,
+      defaultQty: item.defaultQty,
+      categoryId: category.id,
+      categoryName: category.name,
+    });
+  }
+  for (const sub of category.subcategories ?? []) {
+    if (sub.hidden) {
+      continue;
+    }
+    for (const item of sub.items) {
+      items.push({
+        id: `${category.id}::${sub.id}::${item.code}`,
+        code: item.code,
+        name: item.name,
+        description: item.description || "",
+        price: item.price,
+        unit: item.unit,
+        defaultQty: item.defaultQty,
+        categoryId: category.id,
+        categoryName: category.name,
+        subcategoryId: sub.id,
+        subcategoryName: sub.name,
+      });
+    }
+  }
 }
 
 function flattenCatalogItems(
@@ -52,52 +87,12 @@ function flattenCatalogItems(
   filterCategoryId?: string
 ): FlattenedItem[] {
   const items: FlattenedItem[] = [];
-
   for (const category of catalog.categories) {
-    // Skip if filtering by category and this isn't the one
     if (filterCategoryId && category.id !== filterCategoryId) {
       continue;
     }
-
-    // Direct items under category
-    if (category.items && category.items.length > 0) {
-      for (const item of category.items) {
-        items.push({
-          id: `${category.id}::${item.code}`,
-          name: item.name,
-          description: item.description || "",
-          price: item.price,
-          unit: item.unit,
-          categoryId: category.id,
-          categoryName: category.name,
-        });
-      }
-    }
-
-    // Items in subcategories
-    if (category.subcategories) {
-      for (const sub of category.subcategories) {
-        if (sub.hidden) {
-          continue;
-        }
-
-        for (const item of sub.items) {
-          items.push({
-            id: `${category.id}::${sub.id}::${item.code}`,
-            name: item.name,
-            description: item.description || "",
-            price: item.price,
-            unit: item.unit,
-            categoryId: category.id,
-            categoryName: category.name,
-            subcategoryId: sub.id,
-            subcategoryName: sub.name,
-          });
-        }
-      }
-    }
+    flattenCategory(category, items);
   }
-
   return items;
 }
 
@@ -131,10 +126,12 @@ export function ItemCombobox({
 
   const handleSelect = (item: FlattenedItem) => {
     onSelect({
+      code: item.code,
       name: item.name,
       description: item.description,
       price: item.price,
       unit: item.unit,
+      defaultQty: item.defaultQty,
     });
     setOpen(false);
     setInputValue("");

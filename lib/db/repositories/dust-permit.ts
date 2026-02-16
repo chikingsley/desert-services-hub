@@ -37,6 +37,34 @@ function parsePermitRow(row: Record<string, unknown>): Permit {
   };
 }
 
+function toPermitUpsertParams(data: UpsertPermitData): unknown[] {
+  return [
+    data.id,
+    data.projectName ?? null,
+    data.facilityId ?? null,
+    data.accountId ?? null,
+    data.projectId ?? null,
+    data.companyName ?? null,
+    data.portalCompanyId ?? null,
+    data.status ?? null,
+    data.submittedDate ?? null,
+    data.effectiveDate ?? null,
+    data.expirationDate ?? null,
+    data.closedDate ?? null,
+    data.previousAppId ?? null,
+    data.projectStartDate ?? null,
+    data.projectEndDate ?? null,
+    data.address ?? null,
+    data.city ?? null,
+    data.parcel ?? null,
+    Number(data.isBlockPermit === true),
+    Number(data.isAccelerated === true),
+    data.invoiceNumber ?? null,
+    data.invoiceCharges ?? null,
+    data.invoiceBalance ?? null,
+  ];
+}
+
 export async function upsertPermit(data: UpsertPermitData): Promise<void> {
   await db.run(
     `INSERT INTO dust_permits_filed_by_desert_services (
@@ -70,31 +98,7 @@ export async function upsertPermit(data: UpsertPermitData): Promise<void> {
       invoice_charges = COALESCE(excluded.invoice_charges, dust_permits_filed_by_desert_services.invoice_charges),
       invoice_balance = COALESCE(excluded.invoice_balance, dust_permits_filed_by_desert_services.invoice_balance),
       updated_at = (extract(epoch FROM now()))::bigint`,
-    [
-      data.id,
-      data.projectName ?? null,
-      data.facilityId ?? null,
-      data.accountId ?? null,
-      data.projectId ?? null,
-      data.companyName ?? null,
-      data.portalCompanyId ?? null,
-      data.status ?? null,
-      data.submittedDate ?? null,
-      data.effectiveDate ?? null,
-      data.expirationDate ?? null,
-      data.closedDate ?? null,
-      data.previousAppId ?? null,
-      data.projectStartDate ?? null,
-      data.projectEndDate ?? null,
-      data.address ?? null,
-      data.city ?? null,
-      data.parcel ?? null,
-      data.isBlockPermit ? 1 : 0,
-      data.isAccelerated ? 1 : 0,
-      data.invoiceNumber ?? null,
-      data.invoiceCharges ?? null,
-      data.invoiceBalance ?? null,
-    ]
+    toPermitUpsertParams(data)
   );
 }
 

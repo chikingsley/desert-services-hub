@@ -22,6 +22,14 @@ type SafetyAction = "init" | "generate";
 type QuotingKind = "estimate";
 type QuotingAction = "generate" | "pdf";
 type StormwaterKind = "noi-guide" | "quickstart";
+type CliDomain = "safety" | "quoting" | "stormwater";
+
+interface CliRoute {
+  domain?: string;
+  kindArg?: string;
+  actionArg?: string;
+  rest: string[];
+}
 
 function isSafetyDocKind(value: string): value is SafetyDocKind {
   return value === "sds" || value === "sssp";
@@ -43,6 +51,10 @@ function isStormwaterKind(value: string): value is StormwaterKind {
   return value === "noi-guide" || value === "quickstart";
 }
 
+function isCliDomain(value: string): value is CliDomain {
+  return value === "safety" || value === "quoting" || value === "stormwater";
+}
+
 function help(): void {
   console.log(`
 Desert PDF Generation CLI
@@ -59,6 +71,15 @@ Usage:
   bun packages/documents/pdf-generation-cli/cli/cli.ts stormwater noi-guide generate --out <output.pdf>
   bun packages/documents/pdf-generation-cli/cli/cli.ts stormwater quickstart generate --out <output.pdf>
 `);
+}
+
+function parseRoute(argv: string[]): CliRoute {
+  const [domain, kindArg, actionArg, ...rest] = argv;
+  return { actionArg, domain, kindArg, rest };
+}
+
+function shouldShowHelp(route: CliRoute): boolean {
+  return !route.domain || route.domain === "--help" || route.domain === "-h";
 }
 
 async function handleSafetyInit(
@@ -234,63 +255,83 @@ async function handleStormwaterGenerate(
   console.log(`Wrote PDF: ${outPath}`);
 }
 
-async function main(): Promise<void> {
-  const [domain, kindArg, actionArg, ...rest] = Bun.argv.slice(2);
+function parseSafetyRoute(route: CliRoute): {
+  kind: SafetyDocKind;
+  action: SafetyAction;
+} {
+  if (!(route.kindArg && isSafetyDocKind(route.kindArg))) {
+    die("Missing or invalid document type. Expected one of: sssp, sds");
+  }
+  if (!(route.actionArg && isSafetyAction(route.actionArg))) {
+    die("Missing or invalid action. Expected one of: init, generate");
+  }
+  return { action: route.actionArg, kind: route.kindArg };
+}
 
-  if (!domain || domain === "--help" || domain === "-h") {
+function parseQuotingRoute(route: CliRoute): { kind: QuotingKind } {
+  if (!(route.kindArg && isQuotingKind(route.kindArg))) {
+    die("Missing or invalid quoting type. Expected: estimate");
+  }
+  if (!(route.actionArg && isQuotingAction(route.actionArg))) {
+    die("Missing or invalid quoting action. Expected one of: generate, pdf");
+  }
+  return { kind: route.kindArg };
+}
+
+function parseStormwaterRoute(route: CliRoute): { kind: StormwaterKind } {
+  if (!(route.kindArg && isStormwaterKind(route.kindArg))) {
+    die(
+      "Missing or invalid stormwater type. Expected one of: noi-guide, quickstart"
+    );
+  }
+  if (route.actionArg !== "generate") {
+    die("Missing or invalid stormwater action. Expected: generate");
+  }
+  return { kind: route.kindArg };
+}
+
+async function dispatchSafety(route: CliRoute): Promise<void> {
+  const parsed = parseSafetyRoute(route);
+  if (parsed.action === "init") {
+    await handleSafetyInit(parsed.kind, route.rest);
+    return;
+  }
+  await handleSafetyGenerate(parsed.kind, route.rest);
+}
+
+async function dispatchQuoting(route: CliRoute): Promise<void> {
+  parseQuotingRoute(route);
+  await handleQuotingEstimateGenerate(route.rest);
+}
+
+async function dispatchStormwater(route: CliRoute): Promise<void> {
+  const parsed = parseStormwaterRoute(route);
+  await handleStormwaterGenerate(parsed.kind, route.rest);
+}
+
+const DOMAIN_DISPATCH: Record<CliDomain, (route: CliRoute) => Promise<void>> = {
+  safety: dispatchSafety,
+  quoting: dispatchQuoting,
+  stormwater: dispatchStormwater,
+};
+
+async function main(): Promise<void> {
+  const route = parseRoute(Bun.argv.slice(2));
+
+  if (shouldShowHelp(route)) {
     help();
     process.exit(0);
   }
 
-  if (domain === "safety") {
-    if (!(kindArg && isSafetyDocKind(kindArg))) {
-      die("Missing or invalid document type. Expected one of: sssp, sds");
-    }
-
-    if (!(actionArg && isSafetyAction(actionArg))) {
-      die("Missing or invalid action. Expected one of: init, generate");
-    }
-
-    if (actionArg === "init") {
-      await handleSafetyInit(kindArg, rest);
-      process.exit(0);
-    }
-
-    await handleSafetyGenerate(kindArg, rest);
-    process.exit(0);
+  const domain = route.domain;
+  if (!(domain && isCliDomain(domain))) {
+    die(
+      `Unknown namespace: ${route.domain}. Expected one of: safety, quoting, stormwater`
+    );
   }
 
-  if (domain === "quoting") {
-    if (!(kindArg && isQuotingKind(kindArg))) {
-      die("Missing or invalid quoting type. Expected: estimate");
-    }
-
-    if (!(actionArg && isQuotingAction(actionArg))) {
-      die("Missing or invalid quoting action. Expected one of: generate, pdf");
-    }
-
-    await handleQuotingEstimateGenerate(rest);
-    process.exit(0);
-  }
-
-  if (domain === "stormwater") {
-    if (!(kindArg && isStormwaterKind(kindArg))) {
-      die(
-        "Missing or invalid stormwater type. Expected one of: noi-guide, quickstart"
-      );
-    }
-
-    if (actionArg !== "generate") {
-      die("Missing or invalid stormwater action. Expected: generate");
-    }
-
-    await handleStormwaterGenerate(kindArg, rest);
-    process.exit(0);
-  }
-
-  die(
-    `Unknown namespace: ${domain}. Expected one of: safety, quoting, stormwater`
-  );
+  await DOMAIN_DISPATCH[domain](route);
+  process.exit(0);
 }
 
 main().catch((error) => {

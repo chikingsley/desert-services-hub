@@ -22,6 +22,7 @@
 !packages/monday/
 !packages/email/
 !packages/estimates/
+!packages/permits/
 !packages/takeoff/
 
 # Permit worker (browser automation)

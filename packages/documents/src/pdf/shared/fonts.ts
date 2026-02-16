@@ -13,6 +13,8 @@ const ROBOTO_DIR = join(
   "..",
   "..",
   "..",
+  "..",
+  "..",
   "node_modules",
   "pdfmake",
   "fonts",

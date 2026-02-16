@@ -294,9 +294,7 @@
           "bytes": 1635109,
           "error": null,
           "extraction": {
-            "apn_candidates": [
-              "303-36-873"
-            ],
+            "apn_candidates": ["303-36-873"],
             "coordinates": [
               {
                 "lat": 33.26615,

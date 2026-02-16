@@ -51,6 +51,7 @@ coverage/
 
 # cache
 .cache/
+.kreuzberg/
 *.log
 
 # temp files
@@ -90,8 +91,9 @@ playwright-report/
 .stagehand-cache/
 
 # Agent/skill configs (managed by tools, not code)
-.agents/
-.claude/skills/
+.agents/*
+!.agents/skills/
+!.agents/skills/**
 
 # Debug artifacts
 debug/

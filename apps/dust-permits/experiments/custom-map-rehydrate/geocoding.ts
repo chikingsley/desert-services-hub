@@ -1,7 +1,6 @@
 import type { LatLng } from "./types";
 
-const GOOGLE_GEOCODE_ENDPOINT =
-  "https://maps.googleapis.com/maps/api/geocode/json";
+const GOOGLE_GEOCODE_ENDPOINT = "https://maps.googleapis.com/maps/api/geocode/json";
 
 type GeocodeResponse = {
   status?: string;
@@ -17,18 +16,10 @@ type GeocodeResponse = {
 };
 
 function getApiKey(provided?: string): string | null {
-  return (
-    provided ||
-    process.env.GOOGLE_MAPS_API_KEY ||
-    process.env.GOOGLE_MAPS_KEY ||
-    null
-  );
+  return provided || process.env.GOOGLE_MAPS_API_KEY || process.env.GOOGLE_MAPS_KEY || null;
 }
 
-export async function geocodeAddress(
-  address: string,
-  apiKey?: string
-): Promise<LatLng | null> {
+export async function geocodeAddress(address: string, apiKey?: string): Promise<LatLng | null> {
   const query = address.trim();
   if (!query) {
     return null;
@@ -65,7 +56,7 @@ export async function geocodeIntersection(
   road2: string,
   city: string,
   state: string,
-  apiKey?: string
+  apiKey?: string,
 ): Promise<LatLng | null> {
   const q1 = `${road1} & ${road2}, ${city}, ${state}`;
   const firstTry = await geocodeAddress(q1, apiKey);

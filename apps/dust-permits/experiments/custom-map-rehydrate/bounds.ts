@@ -9,11 +9,10 @@ function metersPerLngDeg(lat: number): number {
 export function calculateBoundsFromCenter(
   center: LatLng,
   sizeMeters: number,
-  aspectRatio = 1
+  aspectRatio = 1,
 ): Bounds {
   const widthMeters = aspectRatio >= 1 ? sizeMeters : sizeMeters * aspectRatio;
-  const heightMeters =
-    aspectRatio >= 1 ? sizeMeters / aspectRatio : sizeMeters;
+  const heightMeters = aspectRatio >= 1 ? sizeMeters / aspectRatio : sizeMeters;
 
   const latDelta = heightMeters / METERS_PER_LAT_DEG / 2;
   const lngDelta = widthMeters / metersPerLngDeg(center.lat) / 2;
@@ -30,11 +29,10 @@ export function calculateBoundsFromCorner(
   corner: LatLng,
   cornerPosition: CornerPosition,
   sizeMeters: number,
-  aspectRatio = 1
+  aspectRatio = 1,
 ): Bounds {
   const widthMeters = aspectRatio >= 1 ? sizeMeters : sizeMeters * aspectRatio;
-  const heightMeters =
-    aspectRatio >= 1 ? sizeMeters / aspectRatio : sizeMeters;
+  const heightMeters = aspectRatio >= 1 ? sizeMeters / aspectRatio : sizeMeters;
 
   const latDelta = heightMeters / METERS_PER_LAT_DEG;
   const lngDelta = widthMeters / metersPerLngDeg(corner.lat);
@@ -78,10 +76,7 @@ export type RefinementAdjustment = {
   scaleFactor: number;
 };
 
-export function applyAdjustment(
-  currentBounds: Bounds,
-  adjustment: RefinementAdjustment
-): Bounds {
+export function applyAdjustment(currentBounds: Bounds, adjustment: RefinementAdjustment): Bounds {
   const center = {
     lat: (currentBounds.north + currentBounds.south) / 2,
     lng: (currentBounds.east + currentBounds.west) / 2,

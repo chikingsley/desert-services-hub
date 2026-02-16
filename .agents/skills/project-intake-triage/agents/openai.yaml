@@ -1,0 +1,4 @@
+interface:
+  display_name: "Project Intake Triage"
+  short_description: "Triage estimate/project emails + attachments"
+  default_prompt: "Triage a project/estimate: run schema-safe candidate resolution first (`just triage-resolve`), identify matching emails across mailboxes, download attachments, and optionally create a temp Outlook folder in chi@."

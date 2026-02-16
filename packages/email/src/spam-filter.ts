@@ -126,6 +126,42 @@ export interface SpamCheckResult {
   reason?: string;
 }
 
+function extractSenderDomain(email: string): string {
+  const domainMatch = email.match(RE_EMAIL_DOMAIN);
+  return domainMatch?.[1] ?? "";
+}
+
+function matchesAllowedDomain(domain: string): boolean {
+  return ALLOWLIST_DOMAINS.some((allowed) => domain.includes(allowed));
+}
+
+function matchedSpamDomain(domain: string): string | null {
+  return SPAM_DOMAINS.find((spamDomain) => domain.includes(spamDomain)) ?? null;
+}
+
+function matchedSenderPattern(email: string): RegExp | null {
+  return SPAM_SENDER_PATTERNS.find((pattern) => pattern.test(email)) ?? null;
+}
+
+function matchedSpamNoReplyDomain(
+  email: string,
+  domain: string
+): string | null {
+  const isNoReply = email.includes("noreply@") || email.includes("no-reply@");
+  if (!isNoReply) {
+    return null;
+  }
+
+  return (
+    SPAM_NOREPLY_DOMAINS.find((spamNoReply) => domain.includes(spamNoReply)) ??
+    null
+  );
+}
+
+function matchedSubjectPattern(subject: string): RegExp | null {
+  return SPAM_SUBJECT_PATTERNS.find((pattern) => pattern.test(subject)) ?? null;
+}
+
 export function isSpam(
   fromEmail: string | null | undefined,
   subject: string | null | undefined
@@ -136,40 +172,30 @@ export function isSpam(
 
   const email = fromEmail.toLowerCase();
   const subj = subject?.toLowerCase() || "";
+  const domain = extractSenderDomain(email);
 
-  const domainMatch = email.match(RE_EMAIL_DOMAIN);
-  const domain = domainMatch?.[1] ? domainMatch[1] : "";
-
-  for (const allowed of ALLOWLIST_DOMAINS) {
-    if (domain.includes(allowed)) {
-      return { isSpam: false };
-    }
+  if (matchesAllowedDomain(domain)) {
+    return { isSpam: false };
   }
 
-  for (const spamDomain of SPAM_DOMAINS) {
-    if (domain.includes(spamDomain)) {
-      return { isSpam: true, reason: `spam_domain:${spamDomain}` };
-    }
+  const spamDomain = matchedSpamDomain(domain);
+  if (spamDomain) {
+    return { isSpam: true, reason: `spam_domain:${spamDomain}` };
   }
 
-  for (const pattern of SPAM_SENDER_PATTERNS) {
-    if (pattern.test(email)) {
-      return { isSpam: true, reason: `sender_pattern:${pattern.source}` };
-    }
+  const senderPattern = matchedSenderPattern(email);
+  if (senderPattern) {
+    return { isSpam: true, reason: `sender_pattern:${senderPattern.source}` };
   }
 
-  if (email.includes("noreply@") || email.includes("no-reply@")) {
-    for (const spamNoreply of SPAM_NOREPLY_DOMAINS) {
-      if (domain.includes(spamNoreply)) {
-        return { isSpam: true, reason: `spam_noreply:${spamNoreply}` };
-      }
-    }
+  const spamNoReplyDomain = matchedSpamNoReplyDomain(email, domain);
+  if (spamNoReplyDomain) {
+    return { isSpam: true, reason: `spam_noreply:${spamNoReplyDomain}` };
   }
 
-  for (const pattern of SPAM_SUBJECT_PATTERNS) {
-    if (pattern.test(subj)) {
-      return { isSpam: true, reason: `subject_pattern:${pattern.source}` };
-    }
+  const subjectPattern = matchedSubjectPattern(subj);
+  if (subjectPattern) {
+    return { isSpam: true, reason: `subject_pattern:${subjectPattern.source}` };
   }
 
   return { isSpam: false };

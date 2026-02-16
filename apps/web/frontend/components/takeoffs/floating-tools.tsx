@@ -2,6 +2,10 @@
 
 import { Circle, GripVertical, Ruler, Square, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
+import type {
+  PresetItem,
+  ScalePreset,
+} from "@/apps/web/frontend/components/takeoffs/takeoff-presets";
 import { Button } from "@/apps/web/frontend/components/ui/button";
 import {
   Select,
@@ -16,10 +20,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/apps/web/frontend/components/ui/tooltip";
-import {
-  type PresetItem,
-  SCALE_PRESETS,
-} from "@/apps/web/frontend/pages/takeoff-editor";
 
 interface FloatingToolsProps {
   items: PresetItem[];
@@ -34,6 +34,7 @@ interface FloatingToolsProps {
   }>;
   onClearAll: () => void;
   currentScaleId: string;
+  scalePresets: readonly ScalePreset[];
   onScaleChange: (scaleId: string) => void;
   currentPage: number;
   totalPages: number;
@@ -72,6 +73,7 @@ export function FloatingTools({
   counts,
   onClearAll,
   currentScaleId,
+  scalePresets,
   onScaleChange,
   currentPage,
   totalPages,
@@ -161,11 +163,17 @@ export function FloatingTools({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {SCALE_PRESETS.filter((s) => s.id !== "custom").map((scale) => (
-                <SelectItem className="text-xs" key={scale.id} value={scale.id}>
-                  {scale.label}
-                </SelectItem>
-              ))}
+              {scalePresets
+                .filter((scale) => scale.id !== "custom")
+                .map((scale) => (
+                  <SelectItem
+                    className="text-xs"
+                    key={scale.id}
+                    value={scale.id}
+                  >
+                    {scale.label}
+                  </SelectItem>
+                ))}
             </SelectContent>
           </Select>
         </div>

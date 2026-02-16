@@ -5,14 +5,18 @@ import {
   type PdfHighlighterUtils,
   PdfLoader,
   type Scaled,
-  type ScaledPosition,
-  scaledPositionToViewport,
   type TakeoffAnnotation,
   type TakeoffToolType,
   type ViewportPosition,
   viewportPositionToScaled,
 } from "@takeoff/pdf-takeoff";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  attachAnnotationListeners,
+  computeDragUpdate,
+  injectAnnotationLayers,
+} from "@/apps/web/frontend/components/takeoffs/takeoff-annotations";
+import { TakeoffDrawingPreview } from "@/apps/web/frontend/components/takeoffs/takeoff-drawing-preview";
 
 // Note: pdfjs-dist CSS is loaded via CDN in layout/head to avoid SVG reference issues
 import "@takeoff/pdf-takeoff/style/PdfHighlighter.css";
@@ -359,47 +363,9 @@ export function TakeoffViewer({
       const deltaX = e.clientX - dragging.startX;
       const deltaY = e.clientY - dragging.startY;
 
-      if (ann.type === "count") {
-        const pageView = viewer.getPageView(
-          ann.position.boundingRect.pageNumber - 1
-        );
-        if (!pageView) {
-          return;
-        }
-
-        const viewport = pageView.viewport;
-        const scaledDeltaX =
-          (deltaX / viewport.width) * ann.position.boundingRect.width;
-        const scaledDeltaY =
-          (deltaY / viewport.height) * ann.position.boundingRect.height;
-
-        const newPosition: ScaledPosition = {
-          ...ann.position,
-          boundingRect: {
-            ...ann.position.boundingRect,
-            x1: ann.position.boundingRect.x1 + scaledDeltaX,
-            y1: ann.position.boundingRect.y1 + scaledDeltaY,
-            x2: ann.position.boundingRect.x2 + scaledDeltaX,
-            y2: ann.position.boundingRect.y2 + scaledDeltaY,
-          },
-        };
-        onAnnotationUpdate?.(ann.id, { position: newPosition });
-      } else if (
-        (ann.type === "polyline" || ann.type === "polygon") &&
-        ann.points.length > 0
-      ) {
-        const pageView = viewer.getPageView(ann.points[0].pageNumber - 1);
-        if (!pageView) {
-          return;
-        }
-
-        const viewport = pageView.viewport;
-        const newPoints = ann.points.map((p) => ({
-          ...p,
-          x1: p.x1 + (deltaX / viewport.width) * p.width,
-          y1: p.y1 + (deltaY / viewport.height) * p.height,
-        }));
-        onAnnotationUpdate?.(ann.id, { points: newPoints });
+      const updates = computeDragUpdate(ann, viewer, deltaX, deltaY);
+      if (updates) {
+        onAnnotationUpdate?.(ann.id, updates);
       }
 
       setDragging({ ...dragging, startX: e.clientX, startY: e.clientY });
@@ -428,235 +394,16 @@ export function TakeoffViewer({
       return;
     }
 
-    // Clean up previous annotation elements
-    for (const el of document.querySelectorAll(".takeoff-annotation-layer")) {
-      el.remove();
-    }
+    injectAnnotationLayers(viewer, annotations, activeTool);
 
-    // Group annotations by page
-    const annotationsByPage: Record<number, TakeoffAnnotation[]> = {};
-    const safeAnnotations = Array.isArray(annotations) ? annotations : [];
-    for (const ann of safeAnnotations) {
-      const pageNum =
-        ann.type === "count"
-          ? ann.position.boundingRect.pageNumber
-          : ann.points[0]?.pageNumber;
-      if (pageNum) {
-        if (!annotationsByPage[pageNum]) {
-          annotationsByPage[pageNum] = [];
-        }
-        annotationsByPage[pageNum].push(ann);
-      }
-    }
-
-    // Create annotation layers for each page
-    for (const [pageNumStr, pageAnnotations] of Object.entries(
-      annotationsByPage
-    )) {
-      const pageNum = Number(pageNumStr);
-      const pageView = viewer.getPageView(pageNum - 1);
-      if (!pageView?.div) {
-        continue;
-      }
-
-      const viewport = pageView.viewport;
-
-      // Create or find annotation layer
-      let layer = pageView.div.querySelector(
-        ".takeoff-annotation-layer"
-      ) as HTMLDivElement;
-      if (!layer) {
-        layer = document.createElement("div");
-        layer.className = "takeoff-annotation-layer";
-        layer.style.cssText =
-          "position: absolute; inset: 0; pointer-events: none; z-index: 5;";
-        pageView.div.style.position = "relative";
-        pageView.div.appendChild(layer);
-      }
-
-      // Render annotations
-      for (const ann of pageAnnotations) {
-        if (ann.type === "count") {
-          const viewportPos = scaledPositionToViewport(ann.position, viewer);
-          const { left, top, width, height } = viewportPos.boundingRect;
-
-          const marker = document.createElement("div");
-          marker.className = "takeoff-count-marker";
-          marker.dataset.annotationId = ann.id;
-          marker.style.cssText = `
-            position: absolute;
-            left: ${left + width / 2}px;
-            top: ${top + height / 2}px;
-            transform: translate(-50%, -50%);
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            background-color: ${ann.color};
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            font-weight: bold;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-            cursor: ${activeTool ? "crosshair" : "grab"};
-            pointer-events: auto;
-            user-select: none;
-          `;
-          marker.textContent = String(ann.number);
-          layer.appendChild(marker);
-        } else if (ann.type === "polyline" && ann.points.length >= 2) {
-          const svg = document.createElementNS(
-            "http://www.w3.org/2000/svg",
-            "svg"
-          );
-          svg.setAttribute("class", "takeoff-polyline");
-          svg.dataset.annotationId = ann.id;
-          svg.style.cssText = `
-            position: absolute;
-            inset: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            cursor: ${activeTool ? "crosshair" : "grab"};
-          `;
-
-          const viewportPoints = ann.points.map((p) => ({
-            x: (viewport.width * p.x1) / p.width,
-            y: (viewport.height * p.y1) / p.height,
-          }));
-
-          const pathD = viewportPoints
-            .map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`)
-            .join(" ");
-
-          const path = document.createElementNS(
-            "http://www.w3.org/2000/svg",
-            "path"
-          );
-          path.setAttribute("d", pathD);
-          path.setAttribute("fill", "none");
-          path.setAttribute("stroke", ann.color);
-          path.setAttribute("stroke-width", String(ann.strokeWidth));
-          path.setAttribute("stroke-linecap", "round");
-          path.setAttribute("stroke-linejoin", "round");
-          path.style.pointerEvents = "stroke";
-          path.style.cursor = activeTool ? "crosshair" : "grab";
-
-          svg.appendChild(path);
-          layer.appendChild(svg);
-        } else if (ann.type === "polygon" && ann.points.length >= 3) {
-          const svg = document.createElementNS(
-            "http://www.w3.org/2000/svg",
-            "svg"
-          );
-          svg.setAttribute("class", "takeoff-polygon");
-          svg.dataset.annotationId = ann.id;
-          svg.style.cssText = `
-            position: absolute;
-            inset: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-          `;
-
-          const viewportPoints = ann.points.map((p) => ({
-            x: (viewport.width * p.x1) / p.width,
-            y: (viewport.height * p.y1) / p.height,
-          }));
-
-          const pointsStr = viewportPoints
-            .map((p) => `${p.x},${p.y}`)
-            .join(" ");
-
-          const polygon = document.createElementNS(
-            "http://www.w3.org/2000/svg",
-            "polygon"
-          );
-          polygon.setAttribute("points", pointsStr);
-          polygon.setAttribute("fill", ann.color);
-          polygon.setAttribute("fill-opacity", String(ann.fillOpacity));
-          polygon.setAttribute("stroke", ann.color);
-          polygon.setAttribute("stroke-width", String(ann.strokeWidth));
-          polygon.setAttribute("stroke-linejoin", "round");
-          polygon.style.pointerEvents = "fill";
-          polygon.style.cursor = activeTool ? "crosshair" : "grab";
-
-          svg.appendChild(polygon);
-          layer.appendChild(svg);
-        }
-      }
-    }
-
-    // Add event listeners to annotation elements
-    const handleAnnotationMouseDown = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      const annotationEl = target.closest(
-        "[data-annotation-id]"
-      ) as HTMLElement;
-      if (!annotationEl) {
-        return;
-      }
-
-      const annId = annotationEl.dataset.annotationId;
-      const ann = annId ? annotationById.get(annId) : undefined;
-      if (!ann || activeTool) {
-        return;
-      }
-
-      e.preventDefault();
-      e.stopPropagation();
-      setDragging({
-        id: ann.id,
-        startX: e.clientX,
-        startY: e.clientY,
-        type: ann.type,
-      });
-    };
-
-    const handleAnnotationContextMenu = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      const annotationEl = target.closest(
-        "[data-annotation-id]"
-      ) as HTMLElement;
-      if (!annotationEl) {
-        return;
-      }
-
-      e.preventDefault();
-      const annId = annotationEl.dataset.annotationId;
-      if (annId) {
-        onAnnotationDelete?.(annId);
-      }
-    };
-
-    for (const layer of document.querySelectorAll(
-      ".takeoff-annotation-layer"
-    )) {
-      layer.addEventListener(
-        "mousedown",
-        handleAnnotationMouseDown as EventListener
-      );
-      layer.addEventListener(
-        "contextmenu",
-        handleAnnotationContextMenu as EventListener
-      );
-    }
-
-    return () => {
-      for (const layer of document.querySelectorAll(
-        ".takeoff-annotation-layer"
-      )) {
-        layer.removeEventListener(
-          "mousedown",
-          handleAnnotationMouseDown as EventListener
-        );
-        layer.removeEventListener(
-          "contextmenu",
-          handleAnnotationContextMenu as EventListener
-        );
-      }
-    };
+    return attachAnnotationListeners(
+      annotationById,
+      activeTool,
+      (id, clientX, clientY, type) => {
+        setDragging({ id, startX: clientX, startY: clientY, type });
+      },
+      onAnnotationDelete
+    );
   }, [
     viewerReady,
     annotations,
@@ -665,170 +412,6 @@ export function TakeoffViewer({
     onAnnotationDelete,
     annotationById,
   ]);
-
-  // Render current drawing preview
-  const renderDrawingPreview = () => {
-    if (drawingPoints.length === 0) {
-      return null;
-    }
-
-    const viewer = getViewer();
-    if (!(viewer && currentPageNumber)) {
-      return null;
-    }
-
-    const pageView = viewer.getPageView(currentPageNumber - 1);
-    if (!pageView?.div) {
-      return null;
-    }
-
-    const pageRect = pageView.div.getBoundingClientRect();
-    const viewport = pageView.viewport;
-
-    const viewportPoints = drawingPoints.map((p, i) => ({
-      // Include index to guarantee uniqueness even for duplicate coordinates
-      id: `${i}-${p.x1.toFixed(4)}-${p.y1.toFixed(4)}`,
-      x: (viewport.width * p.x1) / p.width,
-      y: (viewport.height * p.y1) / p.height,
-    }));
-
-    if (activeTool === "polyline") {
-      const pathD = viewportPoints
-        .map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`)
-        .join(" ");
-
-      const lastPoint = viewportPoints.at(-1);
-
-      return (
-        <svg
-          aria-hidden="true"
-          style={{
-            position: "fixed",
-            left: pageRect.left,
-            top: pageRect.top,
-            width: pageRect.width,
-            height: pageRect.height,
-            pointerEvents: "none",
-            zIndex: 20,
-          }}
-        >
-          <title>Polyline drawing preview</title>
-          {/* Placed segments */}
-          <path
-            d={pathD}
-            fill="none"
-            stroke={activeColor}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={3}
-          />
-          {/* Live cursor line */}
-          {cursorPosition && lastPoint && (
-            <line
-              stroke={activeColor}
-              strokeDasharray="5,5"
-              strokeLinecap="round"
-              strokeWidth={3}
-              x1={lastPoint.x}
-              x2={cursorPosition.x}
-              y1={lastPoint.y}
-              y2={cursorPosition.y}
-            />
-          )}
-          {/* Points */}
-          {viewportPoints.map((p) => (
-            <circle cx={p.x} cy={p.y} fill={activeColor} key={p.id} r={4} />
-          ))}
-          {/* Cursor point */}
-          {cursorPosition && (
-            <circle
-              cx={cursorPosition.x}
-              cy={cursorPosition.y}
-              fill={activeColor}
-              fillOpacity={0.5}
-              r={4}
-            />
-          )}
-        </svg>
-      );
-    }
-
-    if (activeTool === "polygon") {
-      // Include cursor in points for live preview
-      const allPoints = cursorPosition
-        ? [...viewportPoints, cursorPosition]
-        : viewportPoints;
-      const pointsStr = allPoints.map((p) => `${p.x},${p.y}`).join(" ");
-      const lastPoint = viewportPoints.at(-1);
-      const firstPoint = viewportPoints[0];
-
-      return (
-        <svg
-          aria-hidden="true"
-          style={{
-            position: "fixed",
-            left: pageRect.left,
-            top: pageRect.top,
-            width: pageRect.width,
-            height: pageRect.height,
-            pointerEvents: "none",
-            zIndex: 20,
-          }}
-        >
-          <title>Polygon drawing preview</title>
-          {/* Filled preview including cursor */}
-          <polygon
-            fill={activeColor}
-            fillOpacity={0.1}
-            points={pointsStr}
-            stroke={activeColor}
-            strokeWidth={2}
-          />
-          {/* Dashed line from last point to cursor */}
-          {cursorPosition && lastPoint && (
-            <line
-              stroke={activeColor}
-              strokeDasharray="5,5"
-              strokeWidth={2}
-              x1={lastPoint.x}
-              x2={cursorPosition.x}
-              y1={lastPoint.y}
-              y2={cursorPosition.y}
-            />
-          )}
-          {/* Dashed line from cursor to first point (closing preview) */}
-          {cursorPosition && firstPoint && viewportPoints.length >= 2 && (
-            <line
-              stroke={activeColor}
-              strokeDasharray="5,5"
-              strokeOpacity={0.5}
-              strokeWidth={2}
-              x1={cursorPosition.x}
-              x2={firstPoint.x}
-              y1={cursorPosition.y}
-              y2={firstPoint.y}
-            />
-          )}
-          {/* Points */}
-          {viewportPoints.map((p) => (
-            <circle cx={p.x} cy={p.y} fill={activeColor} key={p.id} r={4} />
-          ))}
-          {/* Cursor point */}
-          {cursorPosition && (
-            <circle
-              cx={cursorPosition.x}
-              cy={cursorPosition.y}
-              fill={activeColor}
-              fillOpacity={0.5}
-              r={4}
-            />
-          )}
-        </svg>
-      );
-    }
-
-    return null;
-  };
 
   return (
     <div
@@ -866,7 +449,14 @@ export function TakeoffViewer({
       </PdfLoader>
 
       {/* Drawing preview */}
-      {renderDrawingPreview()}
+      <TakeoffDrawingPreview
+        activeColor={activeColor}
+        activeTool={activeTool}
+        currentPageNumber={currentPageNumber}
+        cursorPosition={cursorPosition}
+        drawingPoints={drawingPoints}
+        getViewer={getViewer}
+      />
 
       {/* Tool hint */}
       {activeTool && (

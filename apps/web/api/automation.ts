@@ -5,15 +5,12 @@
  * the main web app API so frontend can consume a single origin.
  */
 
-const DEFAULT_PERMIT_WORKER_URL =
-  process.env.PERMIT_WORKER_URL ?? "http://permit-worker:47822";
+import { PermitClient } from "@permits/client";
+
+const client = new PermitClient();
+
 const DEFAULT_VNC_QUERY =
   "autoconnect=true&resize=scale&reconnect=true&reconnect_delay=2000&view_only=false&shared=true";
-const TRAILING_SLASH_RE = /\/$/;
-
-function getPermitWorkerBaseUrl(): string {
-  return DEFAULT_PERMIT_WORKER_URL.replace(TRAILING_SLASH_RE, "");
-}
 
 function getVncUrl(req: Request): string {
   const configured = process.env.PERMIT_WORKER_VNC_URL?.trim();
@@ -22,37 +19,16 @@ function getVncUrl(req: Request): string {
   }
 
   const requestUrl = new URL(req.url);
-  const port = process.env.PERMIT_WORKER_VNC_PORT || "47821";
+  const port = process.env.PERMIT_WORKER_VNC_PORT || "6080";
   return `${requestUrl.protocol}//${requestUrl.hostname}:${port}/vnc.html?${DEFAULT_VNC_QUERY}`;
-}
-
-async function proxyJson(path: string, method: "GET" | "POST", body?: unknown) {
-  const upstreamUrl = `${getPermitWorkerBaseUrl()}${path}`;
-  const headers =
-    body === undefined ? undefined : { "content-type": "application/json" };
-  const response = await fetch(upstreamUrl, {
-    method,
-    headers,
-    body: body === undefined ? undefined : JSON.stringify(body),
-  });
-
-  const payload = await response.json().catch(async () => {
-    const body = await response.text().catch(() => "");
-    return {
-      success: false,
-      error: body || `Permit worker returned HTTP ${response.status}`,
-    };
-  });
-
-  return { response, payload };
 }
 
 function proxyError(error: unknown): Response {
   const message = error instanceof Error ? error.message : String(error);
   return Response.json(
     {
-      success: false,
       error: `Permit worker request failed: ${message}`,
+      success: false,
       timestamp: new Date().toISOString(),
     },
     { status: 502 }
@@ -64,13 +40,8 @@ function proxyError(error: unknown): Response {
  */
 export async function getAutomationStatus(req: Request): Promise<Response> {
   try {
-    const { response, payload } = await proxyJson("/api/browser/status", "GET");
-    const merged =
-      payload && typeof payload === "object"
-        ? { ...payload, vncUrl: getVncUrl(req) }
-        : { payload, vncUrl: getVncUrl(req) };
-
-    return Response.json(merged, { status: response.status });
+    const status = await client.browserStatus();
+    return Response.json({ ...status, vncUrl: getVncUrl(req) });
   } catch (error) {
     return proxyError(error);
   }
@@ -81,8 +52,8 @@ export async function getAutomationStatus(req: Request): Promise<Response> {
  */
 export async function postAutomationStart(): Promise<Response> {
   try {
-    const { response, payload } = await proxyJson("/api/browser/start", "POST");
-    return Response.json(payload, { status: response.status });
+    const result = await client.browserStart();
+    return Response.json(result);
   } catch (error) {
     return proxyError(error);
   }
@@ -93,8 +64,8 @@ export async function postAutomationStart(): Promise<Response> {
  */
 export async function postAutomationReady(): Promise<Response> {
   try {
-    const { response, payload } = await proxyJson("/api/browser/ready", "POST");
-    return Response.json(payload, { status: response.status });
+    const result = await client.browserReady();
+    return Response.json(result);
   } catch (error) {
     return proxyError(error);
   }
@@ -105,11 +76,8 @@ export async function postAutomationReady(): Promise<Response> {
  */
 export async function postAutomationKeepAlive(): Promise<Response> {
   try {
-    const { response, payload } = await proxyJson(
-      "/api/browser/keepalive",
-      "POST"
-    );
-    return Response.json(payload, { status: response.status });
+    const result = await client.browserKeepAlive();
+    return Response.json(result);
   } catch (error) {
     return proxyError(error);
   }
@@ -120,8 +88,8 @@ export async function postAutomationKeepAlive(): Promise<Response> {
  */
 export async function postAutomationStop(): Promise<Response> {
   try {
-    const { response, payload } = await proxyJson("/api/browser/stop", "POST");
-    return Response.json(payload, { status: response.status });
+    const result = await client.browserStop();
+    return Response.json(result);
   } catch (error) {
     return proxyError(error);
   }
@@ -134,13 +102,10 @@ export async function postAutomationClipboardPaste(
   req: Request
 ): Promise<Response> {
   try {
-    const body = await req.json().catch(() => ({}));
-    const { response, payload } = await proxyJson(
-      "/api/browser/clipboard/paste",
-      "POST",
-      body
-    );
-    return Response.json(payload, { status: response.status });
+    const body = (await req.json().catch(() => ({}))) as { text?: unknown };
+    const text = typeof body.text === "string" ? body.text : "";
+    const result = await client.clipboardPaste({ text });
+    return Response.json(result);
   } catch (error) {
     return proxyError(error);
   }
@@ -151,11 +116,8 @@ export async function postAutomationClipboardPaste(
  */
 export async function postAutomationClipboardCopy(): Promise<Response> {
   try {
-    const { response, payload } = await proxyJson(
-      "/api/browser/clipboard/copy",
-      "POST"
-    );
-    return Response.json(payload, { status: response.status });
+    const result = await client.clipboardCopy();
+    return Response.json(result);
   } catch (error) {
     return proxyError(error);
   }

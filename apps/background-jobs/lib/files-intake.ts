@@ -2,8 +2,8 @@
  * Files Intake — File-Type Router
  *
  * Routes files by type to the appropriate processing pipeline:
- *   - PDF → existing parse pipeline (pdfplumber + GLM OCR + Kimi K2.5)
- *   - Images → GLM OCR via pdf-analysis ocr command
+ *   - PDF → Kreuzberg extraction (optional Kreuzberg OCR if configured)
+ *   - Images → Kreuzberg extraction (optional Kreuzberg OCR if configured)
  *   - Office → Kreuzberg native extraction (docx, xlsx, xls, doc, pptx, ppt)
  *   - Text → direct read + LLM classification
  *   - Other → metadata-only storage
@@ -16,7 +16,7 @@ import type { EmailMeta } from "./files-intake-processors";
 import {
   processImage,
   processOfficeDocument,
-  processPdfFast,
+  processPdf,
   processTextFile,
   processZipFile,
 } from "./files-intake-processors";
@@ -24,7 +24,6 @@ import type {
   ContractsEmailIntakePayload as ContractsEmailIntakePayloadType,
   ParseIntakeResult as ParseIntakeResultType,
 } from "./parse-intake";
-import { processContractsEmailIntake } from "./parse-intake";
 
 // Re-export types so worker.ts can import from here
 export type {
@@ -179,28 +178,12 @@ export async function processFilesIntake(
 
   const results: ParseIntakeResultType[] = [];
 
-  // Process PDFs: try fast Kreuzberg extraction first, fall back to OCR pipeline
-  const slowPdfs: string[] = [];
+  // Process PDFs via Kreuzberg
   for (const pdfPath of pdfs) {
-    const fastResult = await processPdfFast(pdfPath, emailMeta);
-    if (fastResult) {
-      results.push(fastResult);
-    } else {
-      slowPdfs.push(pdfPath);
-    }
-  }
-  if (slowPdfs.length > 0) {
-    console.log(
-      `${LOG}   ${slowPdfs.length} scanned PDF(s) falling back to OCR pipeline`
-    );
-    const pdfResults = await processContractsEmailIntake({
-      ...payload,
-      attachmentPaths: slowPdfs,
-    });
-    results.push(...pdfResults);
+    results.push(await processPdf(pdfPath, emailMeta));
   }
 
-  // Process images via OCR
+  // Process images via Kreuzberg
   for (const imagePath of images) {
     results.push(await processImage(imagePath, emailMeta));
   }

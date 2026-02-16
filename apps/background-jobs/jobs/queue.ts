@@ -31,8 +31,7 @@ const selectNextJob = db.query<WebhookJob>(`
   ORDER BY
     CASE
       WHEN job_type = 'email_notification' THEN 0
-      WHEN job_type = 'email_resolve' THEN 1
-      ELSE 2
+      ELSE 1
     END,
     created_at ASC
   LIMIT 1
@@ -74,18 +73,6 @@ const enqueueFullSync = db.prepare(
   "INSERT INTO webhook_jobs (job_type, payload) VALUES ('sync_full', '{}')"
 );
 
-const enqueueEmailResolveIfNotQueued = db.prepare(`
-  INSERT INTO webhook_jobs (job_type, payload)
-  SELECT 'email_resolve', ?
-  WHERE NOT EXISTS (
-    SELECT 1
-    FROM webhook_jobs
-    WHERE job_type = 'email_resolve'
-      AND status IN ('pending', 'processing')
-      AND payload::jsonb->>'emailId' = ?
-  )
-`);
-
 const pendingFullSyncCount = db.query<{ count: number }>(
   "SELECT COUNT(*) as count FROM webhook_jobs WHERE job_type = 'sync_full' AND status IN ('pending', 'processing')"
 );
@@ -106,15 +93,6 @@ export async function enqueueFullSyncIfMissing(reason: string): Promise<void> {
     await enqueueFullSync.run();
     console.log(`[worker] Queued full sync (${reason})`);
   }
-}
-
-export async function enqueueEmailResolve(emailId: number): Promise<boolean> {
-  const payload = JSON.stringify({ emailId });
-  const result = await enqueueEmailResolveIfNotQueued.run(
-    payload,
-    String(emailId)
-  );
-  return (result.count ?? 0) > 0;
 }
 
 export async function dequeue(): Promise<WebhookJob | null> {

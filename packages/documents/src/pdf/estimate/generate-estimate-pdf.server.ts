@@ -1,7 +1,7 @@
 // Server-side PDF generation for Desert Services estimates
 // Uses pdfmake Node.js API with shared font/logo infrastructure
 
-import { validateAndNormalizeEditorEstimateForPdf } from "@estimates/estimating/estimate-payload-validation";
+import { validateAndNormalizeEditorEstimateForPdf } from "@estimates/estimating/estimate-payload-validation-pdf";
 import type { EditorEstimate } from "@lib/db/types";
 import { PDFDocument } from "pdf-lib";
 import pdfmake from "pdfmake";

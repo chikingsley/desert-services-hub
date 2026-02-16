@@ -12,7 +12,7 @@ import { generateBaseNumber } from "@lib/utils";
 
 interface EstimateListRow {
   id: string;
-  base_number: string;
+  base_number: string | null;
   job_name: string;
   client_name: string | null;
   job_address: string | null;
@@ -102,13 +102,13 @@ function parseStatusFilter(value: string | null): string[] {
 function getSortExpression(field: SortField): string {
   switch (field) {
     case "job_name":
-      return "LOWER(COALESCE(q.name, ''))";
+      return "LOWER(COALESCE(q.job_name, ''))";
     case "client_name":
-      return "LOWER(COALESCE(NULLIF(q.client_name, ''), q.contractor, ''))";
+      return "LOWER(COALESCE(q.client_name, ''))";
     case "total":
       return "COALESCE(cv.total, 0)";
     case "status":
-      return "LOWER(COALESCE(q.bid_status, 'draft'))";
+      return "LOWER(COALESCE(q.status, 'draft'))";
     default:
       return "q.created_at";
   }
@@ -140,9 +140,9 @@ export async function listEstimates(req: Request): Promise<Response> {
     if (query) {
       const like = `%${query}%`;
       conditions.push(
-        "(q.name ILIKE ? OR q.estimate_number ILIKE ? OR q.contractor ILIKE ? OR q.client_name ILIKE ? OR q.base_number ILIKE ? OR q.job_address ILIKE ? OR q.location ILIKE ?)"
+        "(q.job_name ILIKE ? OR q.client_name ILIKE ? OR q.base_number ILIKE ? OR q.job_address ILIKE ?)"
       );
-      params.push(like, like, like, like, like, like, like);
+      params.push(like, like, like, like);
     }
 
     if (source === "manual") {
@@ -153,12 +153,12 @@ export async function listEstimates(req: Request): Promise<Response> {
 
     if (statuses.length > 0) {
       conditions.push(
-        `COALESCE(q.bid_status, 'draft') IN (${statuses.map(() => "?").join(", ")})`
+        `COALESCE(q.status, 'draft') IN (${statuses.map(() => "?").join(", ")})`
       );
       params.push(...statuses);
     } else {
       // Default behavior for main list: hide Yet to Bid until explicitly filtered in.
-      conditions.push("COALESCE(q.bid_status, 'draft') <> ?");
+      conditions.push("COALESCE(q.status, 'draft') <> ?");
       params.push("Yet to Bid");
     }
 
@@ -172,11 +172,11 @@ export async function listEstimates(req: Request): Promise<Response> {
         .prepare(
           `SELECT
             q.id,
-            COALESCE(NULLIF(q.base_number, ''), q.estimate_number) as base_number,
-            q.name as job_name,
-            COALESCE(NULLIF(q.client_name, ''), q.contractor) as client_name,
-            COALESCE(NULLIF(q.job_address, ''), q.location) as job_address,
-            COALESCE(q.bid_status, 'draft') as status,
+            q.base_number,
+            q.job_name,
+            q.client_name,
+            q.job_address,
+            COALESCE(q.status, 'draft') as status,
             q.created_at,
             q.takeoff_id,
             cv.id as current_version_id,
@@ -202,10 +202,10 @@ export async function listEstimates(req: Request): Promise<Response> {
         .get(...params) as Promise<{ total: number } | null>,
       db
         .prepare(
-          `SELECT COALESCE(bid_status, 'draft') as status, count(*)::int as count
+          `SELECT COALESCE(status, 'draft') as status, count(*)::int as count
            FROM estimates
-           GROUP BY COALESCE(bid_status, 'draft')
-           ORDER BY COALESCE(bid_status, 'draft') ASC`
+           GROUP BY COALESCE(status, 'draft')
+           ORDER BY COALESCE(status, 'draft') ASC`
         )
         .all() as Promise<Array<{ status: string; count: number }>>,
     ]);
@@ -216,7 +216,7 @@ export async function listEstimates(req: Request): Promise<Response> {
       items: rows.map((row) => ({
         id: row.id,
         base_number: row.base_number,
-        job_name: row.job_name,
+        job_name: row.job_name || "Untitled Estimate",
         client_name: row.client_name,
         job_address: row.job_address,
         status: row.status,
@@ -265,6 +265,159 @@ export async function listEstimates(req: Request): Promise<Response> {
   }
 }
 
+type NormalizedCreatePayload = ReturnType<typeof validateCreateEstimatePayload>;
+
+async function insertEstimateHeader(params: {
+  baseNumber: string;
+  jobName: string;
+  status: string;
+  payload: NormalizedCreatePayload;
+}): Promise<number> {
+  const { baseNumber, jobName, status, payload } = params;
+
+  const insertResult = await db.run(
+    `INSERT INTO estimates (base_number, takeoff_id, name, job_name, job_address, client_name, client_address, client_email, client_phone, estimator, estimator_email, notes, status, is_locked)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+     RETURNING id`,
+    [
+      baseNumber,
+      payload.takeoff_id || null,
+      jobName,
+      jobName,
+      payload.job_address || null,
+      payload.client_name || null,
+      payload.client_address || null,
+      payload.client_email || null,
+      payload.client_phone || null,
+      payload.estimator || null,
+      payload.estimator_email || null,
+      payload.notes || null,
+      status,
+      payload.is_locked ? 1 : 0,
+    ]
+  );
+
+  return (insertResult as unknown as Array<{ id: number }>)[0].id;
+}
+
+async function insertEstimateVersion(
+  estimateId: number,
+  total: number
+): Promise<string> {
+  const versionId = crypto.randomUUID();
+  await db
+    .prepare(
+      `INSERT INTO estimate_versions (id, estimate_id, version_number, total, is_current)
+       VALUES (?, ?, 1, ?, 1)`
+    )
+    .run(versionId, estimateId, total);
+  return versionId;
+}
+
+async function insertEstimateSections(
+  versionId: string,
+  sections: NonNullable<NormalizedCreatePayload["sections"]>
+): Promise<Map<string, string>> {
+  const sectionIdMap = new Map<string, string>();
+
+  if (sections.length === 0) {
+    return sectionIdMap;
+  }
+
+  const sectionValues: unknown[] = [];
+  const sectionPlaceholders: string[] = [];
+  let sortOrder = 0;
+
+  for (const section of sections) {
+    const sectionId = crypto.randomUUID();
+    sectionIdMap.set(section.id, sectionId);
+    sectionPlaceholders.push("(?, ?, ?, ?, ?, ?)");
+    sectionValues.push(
+      sectionId,
+      versionId,
+      section.name,
+      section.title ?? null,
+      section.show_subtotal ? 1 : 0,
+      sortOrder
+    );
+    sortOrder += 1;
+  }
+
+  await db.run(
+    `INSERT INTO estimate_sections (id, version_id, name, title, show_subtotal, sort_order) VALUES ${sectionPlaceholders.join(", ")}`,
+    sectionValues
+  );
+
+  return sectionIdMap;
+}
+
+async function insertEstimateLineItems(params: {
+  versionId: string;
+  lineItems: NonNullable<NormalizedCreatePayload["line_items"]>;
+  sectionIdMap: Map<string, string>;
+}): Promise<void> {
+  const { versionId, lineItems, sectionIdMap } = params;
+
+  if (lineItems.length === 0) {
+    return;
+  }
+
+  const itemValues: unknown[] = [];
+  const itemPlaceholders: string[] = [];
+  let sortOrder = 0;
+
+  for (const item of lineItems) {
+    const lineItemId = crypto.randomUUID();
+    itemPlaceholders.push("(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    itemValues.push(
+      lineItemId,
+      versionId,
+      item.section_id ? (sectionIdMap.get(item.section_id) ?? null) : null,
+      item.item_name,
+      item.description,
+      item.quantity,
+      item.unit,
+      item.unit_price,
+      item.notes ?? null,
+      item.is_excluded ? 1 : 0,
+      sortOrder
+    );
+    sortOrder += 1;
+  }
+
+  await db.run(
+    `INSERT INTO estimate_line_items (id, version_id, section_id, item_name, description, quantity, unit, unit_price, notes, is_excluded, sort_order) VALUES ${itemPlaceholders.join(", ")}`,
+    itemValues
+  );
+}
+
+async function createEstimateRecord(params: {
+  baseNumber: string;
+  jobName: string;
+  status: string;
+  payload: NormalizedCreatePayload;
+  sections: NonNullable<NormalizedCreatePayload["sections"]>;
+  lineItems: NonNullable<NormalizedCreatePayload["line_items"]>;
+  total: number;
+}): Promise<{ id: number; version_id: string }> {
+  const estimateId = await insertEstimateHeader({
+    baseNumber: params.baseNumber,
+    jobName: params.jobName,
+    status: params.status,
+    payload: params.payload,
+  });
+
+  const versionId = await insertEstimateVersion(estimateId, params.total);
+  const sectionIdMap = await insertEstimateSections(versionId, params.sections);
+  await insertEstimateLineItems({
+    versionId,
+    lineItems: params.lineItems,
+    sectionIdMap,
+  });
+
+  return { id: estimateId, version_id: versionId };
+}
+
 // POST /api/estimates - Create a new estimate
 export async function createEstimate(req: Request): Promise<Response> {
   try {
@@ -280,100 +433,17 @@ export async function createEstimate(req: Request): Promise<Response> {
       payload.total ??
       lineItems.reduce((sum, item) => sum + item.quantity * item.unit_price, 0);
 
-    const result = await db.transaction(async () => {
-      const insertResult = await db.run(
-        `INSERT INTO estimates (base_number, takeoff_id, name, job_name, job_address, client_name, client_address, client_email, client_phone, estimator, estimator_email, notes, bid_status, status, is_locked)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-         RETURNING id`,
-        [
-          baseNumber,
-          payload.takeoff_id || null,
-          jobName,
-          jobName,
-          payload.job_address || null,
-          payload.client_name || null,
-          payload.client_address || null,
-          payload.client_email || null,
-          payload.client_phone || null,
-          payload.estimator || null,
-          payload.estimator_email || null,
-          payload.notes || null,
-          status,
-          status,
-          payload.is_locked ? 1 : 0,
-        ]
-      );
-      const id = (insertResult as unknown as Array<{ id: number }>)[0].id;
-
-      const versionId = crypto.randomUUID();
-      await db
-        .prepare(
-          `INSERT INTO estimate_versions (id, estimate_id, version_number, total, is_current)
-           VALUES (?, ?, 1, ?, 1)`
-        )
-        .run(versionId, id, computedTotal);
-
-      const sectionIdMap = new Map<string, string>();
-      if (sections.length > 0) {
-        const sectionValues: unknown[] = [];
-        const sectionPlaceholders: string[] = [];
-        let sortOrder = 0;
-
-        for (const section of sections) {
-          const sectionId = crypto.randomUUID();
-          sectionIdMap.set(section.id, sectionId);
-          sectionPlaceholders.push("(?, ?, ?, ?, ?, ?)");
-          sectionValues.push(
-            sectionId,
-            versionId,
-            section.name,
-            section.title ?? null,
-            section.show_subtotal ? 1 : 0,
-            sortOrder
-          );
-          sortOrder += 1;
-        }
-
-        await db.run(
-          `INSERT INTO estimate_sections (id, version_id, name, title, show_subtotal, sort_order) VALUES ${sectionPlaceholders.join(", ")}`,
-          sectionValues
-        );
-      }
-
-      if (lineItems.length > 0) {
-        const itemValues: unknown[] = [];
-        const itemPlaceholders: string[] = [];
-        let sortOrder = 0;
-
-        for (const item of lineItems) {
-          const lineItemId = crypto.randomUUID();
-          itemPlaceholders.push("(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-          itemValues.push(
-            lineItemId,
-            versionId,
-            item.section_id
-              ? (sectionIdMap.get(item.section_id) ?? null)
-              : null,
-            item.item_name,
-            item.description,
-            item.quantity,
-            item.unit,
-            item.unit_price,
-            item.notes ?? null,
-            item.is_excluded ? 1 : 0,
-            sortOrder
-          );
-          sortOrder += 1;
-        }
-
-        await db.run(
-          `INSERT INTO estimate_line_items (id, version_id, section_id, item_name, description, quantity, unit, unit_price, notes, is_excluded, sort_order) VALUES ${itemPlaceholders.join(", ")}`,
-          itemValues
-        );
-      }
-
-      return { id, version_id: versionId };
-    });
+    const result = await db.transaction(() =>
+      createEstimateRecord({
+        baseNumber,
+        jobName,
+        status,
+        payload,
+        sections,
+        lineItems,
+        total: computedTotal,
+      })
+    );
 
     return Response.json(result);
   } catch (error) {

@@ -16,8 +16,6 @@ import {
 } from "@lib/db/repositories";
 import type { InsertAttachmentData, InsertEmailData } from "@lib/db/types";
 
-export type DustPermitEmailTrigger = "pointandpay_payment" | "maricopa_issued";
-
 interface EmailMessageRow {
   bodyContent?: string | null;
   categories?: string[] | null;
@@ -33,24 +31,20 @@ interface EmailMessageRow {
   toRecipients: Array<{ email: string }>;
 }
 
-type DustPermitDetector = (
-  fromEmail: string,
-  subject: string,
-  bodyText: string
-) => DustPermitEmailTrigger | null;
-
-interface DustPermitPayload {
-  emailId: number;
-  messageId: string;
-  mailboxEmail: string;
-  bodyText: string;
-  subject?: string;
-}
+export type TriageAdapter = (
+  emailId: number,
+  meta: {
+    messageId: string;
+    mailboxEmail: string;
+    subject: string | null;
+    fromEmail: string | null;
+    bodyText: string | null;
+    hasAttachments: boolean;
+  }
+) => Promise<unknown>;
 
 export interface EmailNotificationAdapters {
-  enqueueEmailResolve: (emailId: number) => Promise<unknown> | undefined;
-  enqueueDustPermitJob: (jobType: string, payload: string) => Promise<unknown>;
-  detectDustPermitEmailTrigger: DustPermitDetector;
+  triageAndDispatch: TriageAdapter;
   internalDomains: ReadonlySet<string>;
   forwardSubjectRegex: RegExp;
 }
@@ -60,8 +54,8 @@ function getDomain(email: string | undefined | null): string | null {
     return null;
   }
 
-  const atIndex = email?.indexOf("@");
-  if (atIndex === -1 || atIndex === undefined || atIndex === null) {
+  const atIndex = email.indexOf("@");
+  if (atIndex === -1) {
     return null;
   }
 
@@ -69,29 +63,6 @@ function getDomain(email: string | undefined | null): string | null {
     .slice(atIndex + 1)
     .toLowerCase()
     .trim();
-}
-
-function createGraphClientForNotifications(): GraphEmailClient {
-  return createGraphClient();
-}
-
-function queueDustPermitJob(
-  adapters: Pick<
-    EmailNotificationAdapters,
-    "enqueueDustPermitJob" | "detectDustPermitEmailTrigger"
-  >,
-  trigger: DustPermitEmailTrigger,
-  payload: DustPermitPayload
-): Promise<unknown> {
-  if (trigger === "pointandpay_payment") {
-    const nextPayload: string = JSON.stringify(payload);
-    return adapters.enqueueDustPermitJob("dust_permit_payment", nextPayload);
-  }
-
-  return adapters.enqueueDustPermitJob(
-    "dust_permit_issued_email",
-    JSON.stringify(payload)
-  );
 }
 
 function createEmailData(
@@ -222,7 +193,7 @@ export async function processEmailNotification(
     return;
   }
 
-  const client = createGraphClientForNotifications();
+  const client = createGraphClient();
   const email = await loadMessage(client, messageId, mailboxEmail);
   if (!email) {
     console.log(`[worker] Email ${messageId} not found in ${mailboxEmail}`);
@@ -240,25 +211,15 @@ export async function processEmailNotification(
   await enrichSingleEmail(emailId, adapters);
   await storeAttachments(client, mailboxEmail, messageId, emailId);
   await linkConversationProjectIfPossible(emailId, email.conversationId);
-  await adapters.enqueueEmailResolve(emailId);
 
   console.log(`[worker] Webhook synced: "${email.subject}" in ${mailboxEmail}`);
 
-  const trigger = adapters.detectDustPermitEmailTrigger(
-    email.fromEmail,
-    email.subject,
-    bodyText
-  );
-
-  if (!trigger) {
-    return;
-  }
-
-  await queueDustPermitJob(adapters, trigger, {
-    bodyText,
-    emailId,
-    mailboxEmail,
+  await adapters.triageAndDispatch(emailId, {
     messageId,
+    mailboxEmail,
     subject: email.subject,
+    fromEmail: email.fromEmail,
+    bodyText,
+    hasAttachments: email.hasAttachments ?? false,
   });
 }

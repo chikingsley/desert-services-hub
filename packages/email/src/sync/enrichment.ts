@@ -71,6 +71,41 @@ interface EmailRowForEnrich {
   body_preview: string | null;
 }
 
+interface EnrichedEmailData {
+  fromDomain: string | null;
+  isInternal: boolean;
+  isForwarded: boolean;
+  originalSenderEmail: string | null;
+  originalSenderDomain: string | null;
+  hasOriginalSender: boolean;
+}
+
+function buildEnrichedEmailData(email: EmailRowForEnrich): EnrichedEmailData {
+  const fromDomain = extractDomain(email.from_email);
+  const isInternal = fromDomain ? INTERNAL_DOMAINS.has(fromDomain) : false;
+  const isForwarded = isForwardedSubject(email.subject);
+
+  let originalSenderEmail: string | null = null;
+  let originalSenderDomain: string | null = null;
+  if (isForwarded) {
+    originalSenderEmail =
+      extractOriginalSender(email.body_full) ||
+      extractOriginalSender(email.body_preview);
+    originalSenderDomain = originalSenderEmail
+      ? extractDomain(originalSenderEmail)
+      : null;
+  }
+
+  return {
+    fromDomain,
+    isInternal,
+    isForwarded,
+    originalSenderEmail,
+    originalSenderDomain,
+    hasOriginalSender: Boolean(originalSenderEmail),
+  };
+}
+
 /**
  * Enriches emails with domain info, internal flag, forward detection.
  * Runs on all emails with missing from_domain.
@@ -110,38 +145,26 @@ export async function enrichEmailDomains(): Promise<void> {
 
   await db.transaction(async () => {
     for (const email of emails) {
-      const fromDomain = extractDomain(email.from_email);
-      const isInternal = fromDomain ? INTERNAL_DOMAINS.has(fromDomain) : false;
-      const isForwarded = isForwardedSubject(email.subject);
-
-      let originalSenderEmail: string | null = null;
-      let originalSenderDomain: string | null = null;
-
-      if (isForwarded) {
-        originalSenderEmail =
-          extractOriginalSender(email.body_full) ||
-          extractOriginalSender(email.body_preview);
-        if (originalSenderEmail) {
-          originalSenderDomain = extractDomain(originalSenderEmail);
-          withOriginalSender++;
-        }
-      }
+      const enrichedData = buildEnrichedEmailData(email);
 
       await updateStmt.run(
-        fromDomain,
-        isInternal ? 1 : 0,
-        isForwarded ? 1 : 0,
-        originalSenderEmail,
-        originalSenderDomain,
+        enrichedData.fromDomain,
+        enrichedData.isInternal ? 1 : 0,
+        enrichedData.isForwarded ? 1 : 0,
+        enrichedData.originalSenderEmail,
+        enrichedData.originalSenderDomain,
         email.id
       );
 
       enriched++;
-      if (isInternal) {
+      if (enrichedData.isInternal) {
         internal++;
       }
-      if (isForwarded) {
+      if (enrichedData.isForwarded) {
         forwarded++;
+      }
+      if (enrichedData.hasOriginalSender) {
+        withOriginalSender++;
       }
     }
   });

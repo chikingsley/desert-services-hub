@@ -11,6 +11,7 @@ import { db } from "@lib/db/hub";
 import { getAttachmentsForEmail } from "@lib/db/repositories";
 import { getPermitById, upsertPermit } from "@lib/db/repositories/dust-permit";
 import type { Permit } from "@lib/db/types";
+import { PermitClient } from "@permits/client";
 import { createDraftClientFromEnv, createNotificationDraft } from "./delivery";
 import {
   computeCostBreakdown,
@@ -29,7 +30,8 @@ import { getStakeholders } from "./stakeholders";
 const FEATURE_SERVER_URL =
   "https://gis.maricopa.gov/arcgis/rest/services/AQD/DustControl/FeatureServer";
 const SQ_METERS_TO_ACRES = 0.000_247_105;
-const PERMIT_WORKER_URL = "http://permit-worker:47822";
+
+const permitClient = new PermitClient();
 
 interface FeatureServerResponse {
   features?: Array<{
@@ -87,27 +89,10 @@ async function fetchPermitApplicationPdf(
   permitId: string
 ): Promise<PdfAttachmentForDraft | null> {
   try {
-    const response = await fetch(`${PERMIT_WORKER_URL}/api/scrape/pdf`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ permitId }),
-    });
-
-    if (!response.ok) {
-      console.error(
-        `[email-trigger] Permit-worker PDF request failed: ${response.status}`
-      );
+    const result = await permitClient.scrapePdf({ permitId });
+    if (!result.pdfBase64) {
       return null;
     }
-
-    const result = (await response.json()) as {
-      success: boolean;
-      pdfBase64?: string;
-    };
-    if (!(result.success && result.pdfBase64)) {
-      return null;
-    }
-
     return {
       name: `${permitId}-Application.pdf`,
       contentType: "application/pdf",
@@ -123,27 +108,10 @@ async function fetchInvoicePdf(
   invoiceNumber: string
 ): Promise<PdfAttachmentForDraft | null> {
   try {
-    const response = await fetch(`${PERMIT_WORKER_URL}/api/invoices/pdf`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ invoiceNumber }),
-    });
-
-    if (!response.ok) {
-      console.error(
-        `[email-trigger] Permit-worker invoice PDF request failed: ${response.status}`
-      );
+    const result = await permitClient.invoicePdf({ invoiceNumber });
+    if (!result.pdfBase64) {
       return null;
     }
-
-    const result = (await response.json()) as {
-      success: boolean;
-      pdfBase64?: string;
-    };
-    if (!(result.success && result.pdfBase64)) {
-      return null;
-    }
-
     return {
       name: `${invoiceNumber}-Invoice.pdf`,
       contentType: "application/pdf",

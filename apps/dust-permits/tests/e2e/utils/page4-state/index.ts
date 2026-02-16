@@ -104,7 +104,6 @@ async function buildPage4EvaluatorScript(): Promise<string> {
     minify: true,
     sourcemap: "none",
     target: "browser",
-    write: false,
   });
 
   if (!buildResult.success) {

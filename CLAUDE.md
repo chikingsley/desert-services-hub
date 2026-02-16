@@ -27,7 +27,7 @@ apps/
     lib/notifications/    # Event detection, email triggers, draft delivery (poll timer in worker.ts)
   cf-workers/             # Cloudflare Workers (deployed to CF Edge)
     inspections-email-worker/  # ComplianceGo → SharePoint
-    docusign-file-automation/  # DocuSign contract dispatch
+    docusign-file-automation/  # DocuSign automation scripts/references (no deployed worker)
     intake-worker/        # Email ingress → background-jobs intake API
     monday-status-sync-worker/
 packages/
@@ -63,9 +63,8 @@ All services run on gmk-server. **Claude Code runs directly on gmk-server — ne
 | Service | Container | Port | Purpose |
 |---------|-----------|------|---------|
 | `web` | `desert-web` | 3000 | Frontend + API |
-| `background-jobs` | `desert-webhooks` | 4747 | Webhook receiver + job queue + sync timers + notifications |
-| `permit-worker` | `desert-permit-worker` | 47822 (API), 47821 (VNC) | Browser automation for Maricopa permits |
-| `swppp-sync` | `desert-swppp-sync` | — | SWPPP Master sync poll loop |
+| `background-jobs` | `desert-webhooks` | 4747 | Webhook receiver + job queue + sync timers + notifications + SWPPP master sync |
+| `permit-worker` | `desert-permit-worker` | 47822 (API), 6080 (VNC) | Browser automation for Maricopa permits |
 | `tunnel` | `desert-tunnel` | — | Cloudflare tunnel (exposes webhooks + web) |
 
 ### Public URLs (via Cloudflare Tunnel)
@@ -81,15 +80,14 @@ All containers share `desert-services-hub_default` Docker network. Use **service
 web → permit-worker:47822    # Scrape permits, generate PDFs
 web → host.docker.internal:54322  # Postgres (self-hosted Supabase stack DB container)
 background-jobs → host.docker.internal:54322  # Postgres
-notifications → host.docker.internal:54322  # Postgres
-swppp-sync → host.docker.internal:54322  # Postgres + Graph-backed SWPPP master reads
+background-jobs → host.docker.internal:54322  # Postgres + Graph-backed SWPPP master reads
 ```
 
 ### Commands
 
 ```bash
 # Build & deploy
-docker compose build web background-jobs permit-worker notifications swppp-sync
+docker compose build web background-jobs permit-worker
 docker compose up -d
 
 # Rebuild single service
@@ -98,8 +96,6 @@ docker compose build web && docker compose up -d web
 # Logs
 docker compose logs -f web
 docker compose logs -f background-jobs
-docker compose logs -f notifications
-docker compose logs -f swppp-sync
 docker compose logs -f permit-worker
 
 # Restart
@@ -108,18 +104,16 @@ docker compose restart web
 
 ## Permit-Worker API (port 47822)
 
-The web container calls the permit-worker for browser automation tasks. Key endpoints:
+The permit-worker runs browser automation inside a Docker container. **All callers use the typed client:**
 
-| Method | Endpoint | Purpose | Returns |
-|--------|----------|---------|---------|
-| `POST` | `/api/scrape/pdf` | Scrape permit + generate PDF | `{ data: PermitData, pdfPath, pdfBase64 }` |
-| `GET` | `/api/scrape/:id` | Scrape permit data only | `{ data: PermitData }` |
-| `POST` | `/api/permits/create` | Create new permit application | `{ applicationId }` |
-| `POST` | `/api/permits/:id/renew` | Renew a permit | `{ applicationId }` |
-| `POST` | `/api/permits/:id/close` | Close a permit | `{ success }` |
-| `POST` | `/api/invoices/pdf` | Search & download invoice PDF | `{ success, pdfBase64 }` |
-| `POST` | `/api/sync` | Sync permits from portal | `{ synced }` |
-| `GET` | `/api/browser/status` | Browser session status | `{ isRunning, isLoggedIn }` |
+```ts
+import { PermitClient } from "@permits/client";
+const client = new PermitClient(); // reads PERMIT_WORKER_URL env, defaults to http://permit-worker:47822
+```
+
+Key methods: `scrapePdf()`, `scrape()`, `createPermit()`, `renewPermit()`, `closePermit()`, `revisePermit()`, `sync()`, `syncCompany()`, `invoicePdf()`, `browserStatus()`, `browserStart()`, `browserStop()`, `health()`.
+
+All methods are typed — see `packages/permits/src/types.ts` for request/response interfaces. Errors throw `PermitWorkerError` with `.status`, `.body`, `.endpoint`.
 
 **`PermitData` key fields** (returned by scrape endpoints):
 - `applicationId`, `projectName`, `companyName`, `status`
@@ -150,7 +144,7 @@ When consuming parsed NOI data (from `pdf-analysis` / intake workers), use this 
   - `acresDisturbed` can be used as disturbed-acreage fallback when plan acres are missing.
 
 Primary references:
-- `apps/web/lib/files-intake.ts`
+- `apps/background-jobs/lib/files-intake.ts`
 - `packages/documents/pdf-analysis-cli/src/pdf_analysis/noi.py`
 - `apps/dust-permits/tests/lib/extraction-validator.ts`
 
@@ -192,7 +186,7 @@ Email arrives → Graph webhook → POST /api/webhooks/outlook
 
 ## Estimate Payload Guardrails
 
-- Create/update estimate payload validation is centralized in `lib/estimating/estimate-payload-validation.ts`.
+- Create/update estimate payload validation is centralized in `packages/estimates/src/estimating/estimate-payload-validation.ts`.
 - API enforcement points:
   - `apps/web/api/estimates/estimates.ts` (`POST /api/estimates`)
   - `apps/web/api/estimates/estimates-by-id.ts` (`PUT /api/estimates/:id`)
@@ -259,7 +253,7 @@ Connection: `@lib/db/hub` provides a Postgres client with SQLite-compatible API 
     - Ranked auto-linking only applies when score/gap thresholds pass.
     - If ranked candidates exist but are ambiguous, a `project_match_reviews` row is upserted with `status='pending'` and the folder remains unlinked.
     - If no viable candidates exist, folder watcher creates a new project.
-  - Shared normalization + token rules live in `lib/project-matching.ts`; do not re-implement local fuzzy/token logic in workers.
+  - Shared normalization + token rules live in `lib/db/repositories/project.ts`; do not re-implement local fuzzy/token logic in workers.
   - Attempts direct email lookup by `internet_message_id`, then fallback to Graph `message_id`.
   - Sets `emails.project_id` only when currently `NULL` (never overwrites another project link).
   - Expands project link across `conversation_id` thread (`UPDATE ... WHERE project_id IS NULL`).
@@ -268,7 +262,7 @@ Connection: `@lib/db/hub` provides a Postgres client with SQLite-compatible API 
   - If project has multiple estimates, calls ranked matcher (`findEstimateCandidatesForEmail`) and only auto-links when decision says `autoLink=true`.
   - Rejects ranked matches outside the project's estimate set.
 - Intake/project linking:
-  - Uses shared project matcher contract (`lib/project-matching.ts` + `lib/db/repositories/project.ts`) for consistency across webhook intake, folder watcher, and SWPPP reconciliation.
+  - Uses shared project matcher contract (`lib/db/repositories/project.ts`) for consistency across webhook intake, folder watcher, and SWPPP reconciliation.
   - Non-auto-link outcomes are persisted to `project_match_reviews` for operator triage.
 - Periodic estimate-email backfill (`apps/background-jobs/workers/estimate-email-linker/lib/poll.ts`):
   - Processes unlinked candidate emails incrementally using cursor `estimate_email_linker_last_email_id` in `estimate_poller_config`.
@@ -296,7 +290,7 @@ Use this when users request Site-Specific Safety Plans (SSSP) or Safety Data She
 
 - SSSP generator:
   - `packages/documents/pdf-generation-cli/`
-  - `lib/pdf/sssp/`
+  - `packages/documents/src/pdf/sssp/`
 - Current LGE working packet:
   - `data/triage/1400-w-3rd/`
   - SSSP input: `data/triage/1400-w-3rd/sssp-input.json`

@@ -1,10 +1,8 @@
 import { afterAll, describe, expect, test } from "bun:test";
-import { findItem } from "@estimates/catalog";
-import {
-  applyLineItemChanges,
-  createEstimate,
-  getEstimateWithDetails,
-} from "@estimates/estimating";
+import { findItem } from "@estimates/catalog/catalog";
+import { applyLineItemChanges } from "@estimates/estimating/estimate-line-item-change-service";
+import { getEstimateWithDetails } from "@estimates/estimating/estimate-read-service";
+import { createEstimate } from "@estimates/estimating/estimate-write-service";
 import { db } from "@lib/db/hub";
 
 const TEST_PREFIX = "_TEST_ESTIMATE_GUARDS_";

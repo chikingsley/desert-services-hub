@@ -1,0 +1,4 @@
+interface:
+  display_name: "Session History Continuation"
+  short_description: "Recover prior Claude/Codex conversations and return resume context"
+  default_prompt: "Use $session-history-continuation to locate a prior Claude or Codex conversation by UUID or keywords from local logs, then return exact session paths and the provider-correct continuation command (`claude --resume <id>` or `codex resume <id>`)."

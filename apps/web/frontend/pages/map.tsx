@@ -4,100 +4,66 @@
  */
 import maplibregl from "maplibre-gl";
 import { useCallback, useEffect, useRef, useState } from "react";
-
-const PARCEL_TILE_URL =
-  "https://gis.mcassessor.maricopa.gov/arcgis/rest/services/Parcels/MapServer/export?bbox={bbox-epsg-3857}&bboxSR=3857&imageSR=3857&size=512,512&format=png32&transparent=true&f=image&layers=show:0";
-
-const PARCEL_QUERY_URL =
-  "https://gis.mcassessor.maricopa.gov/arcgis/rest/services/Parcels/MapServer/0/query";
-
-interface ParcelInfo {
-  apn: string;
-  address: string | null;
-  owner: string | null;
-  acres: number | null;
-}
-
-interface ParcelResult {
-  info: ParcelInfo;
-  geojson: GeoJSON.Feature<GeoJSON.Polygon, { APN: string }>;
-}
-
-interface EsriAttributes {
-  APN?: string | number;
-  PHYSICAL_ADDRESS?: string;
-  OWNER_NAME?: string;
-  LAND_SIZE?: number;
-}
-
-interface EsriFeature {
-  attributes?: EsriAttributes;
-  geometry?: {
-    rings?: number[][][];
-  };
-}
-
-interface EsriQueryResult {
-  features: EsriFeature[];
-}
-
-function isObjectRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
-}
-
-function isFeatureCollection(
-  value: unknown
-): value is GeoJSON.FeatureCollection<
-  GeoJSON.Geometry,
-  GeoJSON.GeoJsonProperties
-> {
-  if (!isObjectRecord(value)) {
-    return false;
-  }
-  return value.type === "FeatureCollection" && Array.isArray(value.features);
-}
-
-function isEsriQueryResult(value: unknown): value is EsriQueryResult {
-  if (!isObjectRecord(value)) {
-    return false;
-  }
-  return Array.isArray(value.features);
-}
-
-function parseEsriFeature(feature: EsriFeature): ParcelResult | null {
-  const a = feature.attributes ?? {};
-  const rings: number[][][] = feature.geometry?.rings ?? [];
-  if (!rings.length) {
-    return null;
-  }
-
-  return {
-    info: {
-      apn: String(a.APN || ""),
-      address: a.PHYSICAL_ADDRESS ?? null,
-      owner: a.OWNER_NAME ?? null,
-      acres: a.LAND_SIZE ?? null,
-    },
-    geojson: {
-      type: "Feature",
-      geometry: {
-        type: "Polygon",
-        coordinates: rings.map((ring: number[][]) =>
-          ring.map((c: number[]) => [c[0], c[1]])
-        ),
-      },
-      properties: { APN: String(a.APN || "") },
-    },
-  };
-}
-
-const EMPTY_FC: GeoJSON.FeatureCollection = {
-  type: "FeatureCollection",
-  features: [],
-};
+import type { ParcelInfo } from "./map-helpers";
+import {
+  EMPTY_FC,
+  fetchApnLabels,
+  isEsriQueryResult,
+  PARCEL_QUERY_URL,
+  PARCEL_TILE_URL,
+  parseEsriFeature,
+} from "./map-helpers";
 
 // Store base layer IDs so we can toggle them without re-scanning
 let baseLayerIds: string[] = [];
+
+function applySatelliteToggle(
+  map: maplibregl.Map,
+  showSatellite: boolean
+): void {
+  if (map.getLayer("satellite")) {
+    map.setLayoutProperty(
+      "satellite",
+      "visibility",
+      showSatellite ? "visible" : "none"
+    );
+  }
+  for (const id of baseLayerIds) {
+    if (map.getLayer(id)) {
+      map.setLayoutProperty(
+        id,
+        "visibility",
+        showSatellite ? "none" : "visible"
+      );
+    }
+  }
+  if (map.getLayer("parcels")) {
+    map.setPaintProperty(
+      "parcels",
+      "raster-opacity",
+      showSatellite ? 1.0 : 0.8
+    );
+  }
+  if (map.getLayer("apn-labels")) {
+    map.setPaintProperty(
+      "apn-labels",
+      "text-color",
+      showSatellite ? "#ffffff" : "#b71c1c"
+    );
+    map.setPaintProperty(
+      "apn-labels",
+      "text-halo-color",
+      showSatellite ? "#000000" : "#ffffff"
+    );
+  }
+  console.log(
+    "[map] satellite:",
+    showSatellite,
+    "toggled",
+    baseLayerIds.length,
+    "base layers"
+  );
+}
 
 export function MapPage() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -186,24 +152,8 @@ export function MapPage() {
         }
         loadingLabels = true;
         try {
-          const b = map.getBounds();
-          const params = new URLSearchParams({
-            geometry: `${b.getWest()},${b.getSouth()},${b.getEast()},${b.getNorth()}`,
-            geometryType: "esriGeometryEnvelope",
-            spatialRel: "esriSpatialRelIntersects",
-            inSR: "4326",
-            outSR: "4326",
-            outFields: "APN",
-            returnGeometry: "true",
-            f: "geojson",
-            resultRecordCount: "1000",
-          });
-          const res = await fetch(`${PARCEL_QUERY_URL}?${params}`);
-          if (res.ok) {
-            const fc: unknown = await res.json();
-            if (!isFeatureCollection(fc)) {
-              return;
-            }
+          const fc = await fetchApnLabels(map);
+          if (fc) {
             console.log("[map] labels loaded:", fc.features.length);
             const src = map.getSource("apn-labels") as
               | maplibregl.GeoJSONSource
@@ -299,50 +249,9 @@ export function MapPage() {
     if (!map) {
       return;
     }
-
     const next = !isSatellite;
     setIsSatellite(next);
-
-    // Show/hide satellite
-    if (map.getLayer("satellite")) {
-      map.setLayoutProperty(
-        "satellite",
-        "visibility",
-        next ? "visible" : "none"
-      );
-    }
-
-    // Show/hide base street layers
-    for (const id of baseLayerIds) {
-      if (map.getLayer(id)) {
-        map.setLayoutProperty(id, "visibility", next ? "none" : "visible");
-      }
-    }
-
-    // Adjust parcel + label visibility for satellite
-    if (map.getLayer("parcels")) {
-      map.setPaintProperty("parcels", "raster-opacity", next ? 1.0 : 0.8);
-    }
-    if (map.getLayer("apn-labels")) {
-      map.setPaintProperty(
-        "apn-labels",
-        "text-color",
-        next ? "#ffffff" : "#b71c1c"
-      );
-      map.setPaintProperty(
-        "apn-labels",
-        "text-halo-color",
-        next ? "#000000" : "#ffffff"
-      );
-    }
-
-    console.log(
-      "[map] satellite:",
-      next,
-      "toggled",
-      baseLayerIds.length,
-      "base layers"
-    );
+    applySatelliteToggle(map, next);
   }, [isSatellite]);
 
   const handleSearch = useCallback(async () => {

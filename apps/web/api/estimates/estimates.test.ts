@@ -5,7 +5,7 @@
  * Each test verifies that actual values flow through the system correctly.
  */
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
-import { findItem } from "@estimates/catalog";
+import { findItem } from "@estimates/catalog/catalog";
 import { db } from "@lib/db/hub";
 import type {
   EstimateLineItemRow,
@@ -252,7 +252,7 @@ describe("createEstimate", () => {
     expect(row.client_email).toBe(input.client_email);
     expect(row.client_phone).toBe(input.client_phone);
     expect(row.notes).toBe(input.notes);
-    expect(row.bid_status).toBe(input.status);
+    expect(row.status).toBe(input.status);
   });
 
   test("canonicalizes line item name + description from catalog", async () => {
@@ -264,11 +264,11 @@ describe("createEstimate", () => {
         job_address: UNIQUE.JOB_ADDRESS,
         line_items: [
           {
-            item: UNIQUE.ITEM_NAME,
+            item_name: UNIQUE.ITEM_NAME,
             description: "not used",
-            qty: 5,
-            uom: "EA",
-            cost: 100,
+            quantity: 5,
+            unit: "EA",
+            unit_price: 100,
           },
         ],
       })
@@ -323,10 +323,10 @@ describe("createEstimate", () => {
         sections: [{ id: "sec-original", name: "Test Section" }],
         line_items: [
           {
-            item: UNIQUE.ITEM_NAME,
-            qty: 1,
-            uom: "EA",
-            cost: 50,
+            item_name: UNIQUE.ITEM_NAME,
+            quantity: 1,
+            unit: "EA",
+            unit_price: 50,
             section_id: "sec-original",
           },
         ],
@@ -372,11 +372,11 @@ describe("getEstimate", () => {
         sections: [{ id: "s1", name: UNIQUE.SECTION_NAME }],
         line_items: [
           {
-            item: UNIQUE.ITEM_NAME,
+            item_name: UNIQUE.ITEM_NAME,
             description: UNIQUE.ITEM_DESCRIPTION,
-            qty: 7,
-            uom: "LF",
-            cost: 25,
+            quantity: 7,
+            unit: "LF",
+            unit_price: 25,
             section_id: "s1",
           },
         ],
@@ -435,9 +435,9 @@ describe("getEstimate", () => {
     expect(item.unit_price).toBe(25);
   });
 
-  test("returns empty current_version for legacy estimate without versions", async () => {
+  test("returns null current_version when estimate has no versions", async () => {
     const inserted = (await db.run(
-      `INSERT INTO estimates (name, bid_status)
+      `INSERT INTO estimates (name, status)
        VALUES (?, ?)
        RETURNING id`,
       [`${TEST_PREFIX}LegacyNoVersion`, "draft"]
@@ -449,16 +449,10 @@ describe("getEstimate", () => {
     expect(response.status).toBe(200);
 
     const estimate = (await response.json()) as {
-      current_version: {
-        is_current: number;
-        sections: unknown[];
-        line_items: unknown[];
-      };
+      current_version: unknown | null;
     };
 
-    expect(estimate.current_version.is_current).toBe(1);
-    expect(estimate.current_version.sections).toHaveLength(0);
-    expect(estimate.current_version.line_items).toHaveLength(0);
+    expect(estimate.current_version).toBeNull();
   });
 });
 
@@ -501,18 +495,16 @@ describe("updateEstimate", () => {
 
     // Query database and verify values ACTUALLY changed
     const row = (await db
-      .prepare(
-        "SELECT name, client_name, bid_status FROM estimates WHERE id = ?"
-      )
+      .prepare("SELECT name, client_name, status FROM estimates WHERE id = ?")
       .get(testId)) as {
       name: string;
       client_name: string;
-      bid_status: string;
+      status: string;
     };
 
     expect(row.name).toBe(newJobName);
     expect(row.client_name).toBe(newClientName);
-    expect(row.bid_status).toBe("sent");
+    expect(row.status).toBe("sent");
   });
 
   test("replaces line items with new ones including descriptions", async () => {
@@ -526,11 +518,11 @@ describe("updateEstimate", () => {
           job_address: UNIQUE.JOB_ADDRESS,
           line_items: [
             {
-              item: UNIQUE.ALT_ITEM_NAME,
+              item_name: UNIQUE.ALT_ITEM_NAME,
               description: "incorrect payload description",
-              qty: 99,
-              uom: "SF",
-              cost: 50,
+              quantity: 99,
+              unit: "SF",
+              unit_price: 50,
             },
           ],
         },
@@ -559,7 +551,7 @@ describe("updateEstimate", () => {
 
   test("creates a version when updating a legacy estimate missing versions", async () => {
     const inserted = (await db.run(
-      `INSERT INTO estimates (name, bid_status)
+      `INSERT INTO estimates (name, status)
        VALUES (?, ?)
        RETURNING id`,
       [`${TEST_PREFIX}LegacyUpdateNoVersion`, "draft"]
@@ -575,7 +567,14 @@ describe("updateEstimate", () => {
           client_name: UNIQUE.CLIENT_NAME,
           client_address: UNIQUE.CLIENT_ADDRESS,
           job_address: UNIQUE.JOB_ADDRESS,
-          line_items: [{ item: UNIQUE.ITEM_NAME, qty: 2, uom: "EA", cost: 99 }],
+          line_items: [
+            {
+              item_name: UNIQUE.ITEM_NAME,
+              quantity: 2,
+              unit: "EA",
+              unit_price: 99,
+            },
+          ],
         },
         { id }
       )
@@ -625,7 +624,14 @@ describe("deleteEstimate", () => {
         client_address: UNIQUE.CLIENT_ADDRESS,
         job_address: UNIQUE.JOB_ADDRESS,
         sections: [{ id: "s1", name: "Delete Section" }],
-        line_items: [{ item: UNIQUE.ITEM_NAME, qty: 1, uom: "EA", cost: 50 }],
+        line_items: [
+          {
+            item_name: UNIQUE.ITEM_NAME,
+            quantity: 1,
+            unit: "EA",
+            unit_price: 50,
+          },
+        ],
       })
     );
     const { id, version_id } = (await createRes.json()) as {
@@ -687,11 +693,11 @@ describe("duplicateEstimate", () => {
         sections: [{ id: "s1", name: UNIQUE.SECTION_NAME }],
         line_items: [
           {
-            item: UNIQUE.ITEM_NAME,
+            item_name: UNIQUE.ITEM_NAME,
             description: UNIQUE.ITEM_DESCRIPTION,
-            qty: 10,
-            uom: "EA",
-            cost: 75,
+            quantity: 10,
+            unit: "EA",
+            unit_price: 75,
             section_id: "s1",
           },
         ],
@@ -922,11 +928,11 @@ describe("getEstimatePdf", () => {
         estimator: "Chi Ejimofor",
         line_items: [
           {
-            item: UNIQUE.ITEM_NAME,
+            item_name: UNIQUE.ITEM_NAME,
             description: UNIQUE.ITEM_DESCRIPTION,
-            qty: 3,
-            uom: "HR",
-            cost: 150,
+            quantity: 3,
+            unit: "HR",
+            unit_price: 150,
           },
         ],
       })
@@ -997,7 +1003,9 @@ describe("integration workflow", () => {
     const invalidCreate = await createEstimate(
       makeRequest({
         job_name: `${TEST_PREFIX}WorkflowInvalidCreate`,
-        line_items: [{ item: "Not In Catalog", qty: 1, cost: 100 }],
+        line_items: [
+          { item_name: "Not In Catalog", quantity: 1, unit_price: 100 },
+        ],
       })
     );
     expect(invalidCreate.status).toBe(400);
@@ -1010,7 +1018,9 @@ describe("integration workflow", () => {
         client_address: UNIQUE.CLIENT_ADDRESS,
         job_address: UNIQUE.JOB_ADDRESS,
         estimator: "Chi Ejimofor",
-        line_items: [{ item: UNIQUE.ITEM_NAME, qty: 3, cost: 100 }],
+        line_items: [
+          { item_name: UNIQUE.ITEM_NAME, quantity: 3, unit_price: 100 },
+        ],
       })
     );
     expect(validCreate.status).toBe(200);
@@ -1066,7 +1076,9 @@ describe("integration workflow", () => {
           client_name: UNIQUE.CLIENT_NAME,
           client_address: UNIQUE.CLIENT_ADDRESS,
           job_address: UNIQUE.JOB_ADDRESS,
-          line_items: [{ item: UNIQUE.ALT_ITEM_NAME, qty: 4, cost: 110 }],
+          line_items: [
+            { item_name: UNIQUE.ALT_ITEM_NAME, quantity: 4, unit_price: 110 },
+          ],
         },
         { id: createData.id }
       )
@@ -1120,7 +1132,9 @@ describe("edge cases", () => {
     const response = await createEstimate(
       makeRequest({
         job_name: `${TEST_PREFIX}NonCatalogItem`,
-        line_items: [{ item: "Not In Catalog", qty: 1, cost: 50 }],
+        line_items: [
+          { item_name: "Not In Catalog", quantity: 1, unit_price: 50 },
+        ],
       })
     );
 
@@ -1142,7 +1156,9 @@ describe("edge cases", () => {
       makeRequestWithParams(
         {
           job_name: `${TEST_PREFIX}MissingAddressesUpdated`,
-          line_items: [{ item: UNIQUE.ITEM_NAME, qty: 1, cost: 55 }],
+          line_items: [
+            { item_name: UNIQUE.ITEM_NAME, quantity: 1, unit_price: 55 },
+          ],
         },
         { id }
       )

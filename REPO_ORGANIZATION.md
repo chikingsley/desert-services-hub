@@ -265,7 +265,7 @@ Each Docker service maps to an entrypoint in the codebase.
 | `intake-worker` | `apps/cf-workers/intake-worker/` | Email intake from Cloudflare email routing |
 | `inspections-email-worker` | `apps/cf-workers/inspections-email-worker/` | ComplianceGo → SharePoint |
 | `monday-status-sync-worker` | `apps/cf-workers/monday-status-sync-worker/` | Monday.com status sync |
-| `docusign-file-automation` | `apps/cf-workers/docusign-file-automation/` | DocuSign contract dispatch |
+| `docusign-file-automation` | `apps/cf-workers/docusign-file-automation/` | DocuSign automation scripts/references (no deployed worker) |
 
 **In-process worker modules** (run inside the `background-jobs` container via timers/job queue):
 

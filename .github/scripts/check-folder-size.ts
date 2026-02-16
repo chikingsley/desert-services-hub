@@ -22,11 +22,15 @@ const EXCLUDED_DIRS = new Set([
   // One-per-route / one-per-component (inherently flat by design)
   "apps/web/frontend/pages",
   "apps/web/frontend/components/estimates",
-  "lib/takeoff/pdf-takeoff/components",
+  "packages/takeoff/src/pdf-takeoff/components",
   // One-per-entity DB repositories
   "lib/db/repositories",
-  // CLI command directories (one-per-command)
+  // One-per-job / one-per-command / one-per-sync-strategy
+  "apps/web/jobs",
+  "packages/email/cli",
+  "packages/email/src",
   "packages/email/src/commands",
+  "packages/email/src/sync",
   // Node modules (obviously)
   "node_modules",
 ]);

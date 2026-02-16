@@ -15,7 +15,7 @@ This runbook covers the DocuSign dispatcher worker:
 ## Health And Status Surfaces
 
 - `just status`
-  - Includes Cloudflare worker reachability/deployment checks from `ops/runtime/worker-registry.json`.
+  - Includes Cloudflare worker reachability and deployment checks.
 - Worker health endpoint:
   - `GET /health` returns:
     - `status`

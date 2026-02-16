@@ -10,7 +10,6 @@ It is intentionally present-state only: no deprecated architecture history.
 ## Runtime Sources of Truth
 
 - `docker-compose.yml`
-- `ops/runtime/worker-registry.json`
 - `apps/web/webhooks.ts`
 - `apps/web/worker.ts`
 - `Justfile`
@@ -30,7 +29,6 @@ It is intentionally present-state only: no deprecated architecture history.
 
 ### Cloudflare Worker Deployments
 
-From `ops/runtime/worker-registry.json`:
 - `intake-worker` (`apps/workers/intake-worker`)
 - `estimates-sync` (`apps/workers/estimates-sync-worker`)
 - `monday-status-sync` (`apps/workers/monday-status-sync-worker`)

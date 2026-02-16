@@ -161,18 +161,6 @@ _health strict:
     STRICT="{{strict}}"
     ROOT_DIR="{{justfile_directory()}}"
     cd "$ROOT_DIR" || exit 1
-    BUN_CMD="$(command -v bun 2>/dev/null || true)"
-    if [[ -z "$BUN_CMD" && -x "$HOME/.bun/bin/bun" ]]; then
-      BUN_CMD="$HOME/.bun/bin/bun"
-    fi
-
-    read_registry_lines() {
-      local key="$1"
-      if [[ -z "$BUN_CMD" ]]; then
-        return 1
-      fi
-      "$BUN_CMD" "$ROOT_DIR/scripts/runtime-registry.ts" "$key"
-    }
 
     PASS_COUNT=0
     WARN_COUNT=0
@@ -227,18 +215,8 @@ _health strict:
     echo "== Docker Compose =="
     if command -v docker >/dev/null 2>&1 && docker compose version >/dev/null 2>&1; then
       running_services="$(docker compose ps --status running --services 2>/dev/null || true)"
-      mapfile -t required_docker_services < <(read_registry_lines "compose.required" 2>/dev/null || true)
-      mapfile -t optional_docker_services < <(read_registry_lines "compose.optional" 2>/dev/null || true)
-
-      if [[ ${#required_docker_services[@]} -eq 0 ]]; then
-        required_docker_services=(web webhooks permit-worker notifications swppp-sync)
-        warn "runtime registry unavailable for compose.required; using fallback defaults"
-      fi
-
-      if [[ ${#optional_docker_services[@]} -eq 0 ]]; then
-        optional_docker_services=(tunnel)
-        warn "runtime registry unavailable for compose.optional; using fallback defaults"
-      fi
+      required_docker_services=(web webhooks permit-worker notifications swppp-sync)
+      optional_docker_services=(tunnel)
 
       for service in "${required_docker_services[@]}"; do
         if is_running_service "$service" "$running_services"; then
@@ -267,16 +245,12 @@ _health strict:
 
     echo
     echo "== Legacy User Systemd Overlap =="
-    mapfile -t legacy_units < <(read_registry_lines "legacySystemdOverlapUnits" 2>/dev/null || true)
-    if [[ ${#legacy_units[@]} -eq 0 ]]; then
-      legacy_units=(
-        "desert-notifications.service"
-        "desert-swppp-sync.service"
-        "desert-estimate-email-linker.service"
-        "desert-outlook-folder-watcher.service"
-      )
-      warn "runtime registry unavailable for legacySystemdOverlapUnits; using fallback defaults"
-    fi
+    legacy_units=(
+      "desert-notifications.service"
+      "desert-swppp-sync.service"
+      "desert-estimate-email-linker.service"
+      "desert-outlook-folder-watcher.service"
+    )
 
     if command -v systemctl >/dev/null 2>&1; then
       if systemctl --user show-environment >/dev/null 2>&1; then
@@ -311,18 +285,6 @@ _cf_check strict:
     STRICT="{{strict}}"
     ROOT_DIR="{{justfile_directory()}}"
     cd "$ROOT_DIR" || exit 1
-    BUN_CMD="$(command -v bun 2>/dev/null || true)"
-    if [[ -z "$BUN_CMD" && -x "$HOME/.bun/bin/bun" ]]; then
-      BUN_CMD="$HOME/.bun/bin/bun"
-    fi
-
-    read_registry_lines() {
-      local key="$1"
-      if [[ -z "$BUN_CMD" ]]; then
-        return 1
-      fi
-      "$BUN_CMD" "$ROOT_DIR/scripts/runtime-registry.ts" "$key"
-    }
 
     PASS=0
     WARN=0
@@ -379,16 +341,12 @@ _cf_check strict:
       exit 0
     fi
 
-    mapfile -t workers < <(read_registry_lines "cloudflare.deploymentWorkers" 2>/dev/null || true)
-    if [[ ${#workers[@]} -eq 0 ]]; then
-      workers=(
-        "apps/workers/intake-worker|intake-worker|https://intake-worker.cheez2012.workers.dev/health"
-        "apps/workers/estimates-sync-worker|estimates-sync|https://estimates-sync.cheez2012.workers.dev/"
-        "apps/workers/monday-status-sync-worker|monday-status-sync|https://monday-status-sync.cheez2012.workers.dev/"
-        "apps/workers/inspections-email-worker|inspection-router|https://inspection-router.cheez2012.workers.dev/"
-      )
-      warn "runtime registry unavailable for cloudflare.deploymentWorkers; using fallback defaults"
-    fi
+    workers=(
+      "apps/workers/intake-worker|intake-worker|https://intake-worker.cheez2012.workers.dev/health"
+      "apps/workers/estimates-sync-worker|estimates-sync|https://estimates-sync.cheez2012.workers.dev/"
+      "apps/workers/monday-status-sync-worker|monday-status-sync|https://monday-status-sync.cheez2012.workers.dev/"
+      "apps/workers/inspections-email-worker|inspection-router|https://inspection-router.cheez2012.workers.dev/"
+    )
 
     for worker in "${workers[@]}"; do
       IFS='|' read -r dir name url <<< "$worker"

@@ -62,13 +62,13 @@ COPY apps/workers/notifications/lib ./apps/workers/notifications/lib
 COPY packages/documents ./packages/documents
 COPY packages/monday ./packages/monday
 
-# Shared libraries + frontend dependencies
+# Shared libraries
 COPY lib ./lib
-COPY apps/web/hooks ./apps/web/hooks
-COPY apps/web/frontend/styles ./apps/web/frontend/styles
 
-# Static assets (logo, etc.)
-COPY apps/web/frontend/public ./apps/web/frontend/public
+# Domain packages (migrated from lib/)
+COPY packages/email ./packages/email
+COPY packages/estimates ./packages/estimates
+COPY packages/takeoff ./packages/takeoff
 
 # Install Python deps for pdf-analysis
 RUN cd packages/documents/pdf-analysis-cli && uv sync --frozen 2>/dev/null || uv sync

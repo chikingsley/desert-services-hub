@@ -1,5 +1,6 @@
+import { processItemFiles } from "@monday/sync/pipeline";
+import { syncItem } from "@monday/sync/sync-item";
 import { processFilesIntake } from "@/apps/web/lib/files-intake";
-import { processItemFiles } from "@/apps/web/pipeline";
 import {
   markStaleProjectSeeds,
   syncProjectSeedsFromEstimates,
@@ -21,7 +22,6 @@ import {
   ISSUED_PAYLOAD_SCHEMA,
   PAYMENT_PAYLOAD_SCHEMA,
 } from "./job-schemas";
-import { syncItem } from "./monday-sync";
 import {
   ensurePermitSyncForPayment,
   extractPointAndPayInvoiceNumber,

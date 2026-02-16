@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 
 import { db } from "@lib/db/hub";
+import { EMAIL_RESOLVER_SPARK_MODEL } from "@/apps/web/jobs/config";
 import type {
   ApplyProjectContactResolutionResult,
   ResolveProjectContactsOptions,
@@ -9,7 +10,6 @@ import {
   applyProjectContactResolution,
   resolveProjectContacts,
 } from "@/apps/web/lib/project-contact-resolver";
-import { EMAIL_RESOLVER_SPARK_MODEL } from "@/apps/workers/job-runner/lib/jobs/config";
 
 type Scope = "project" | "active" | "seed" | "all";
 

@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { db } from "@lib/db/hub";
 import { getItemAssets } from "@monday/client";
-import { processItemFiles } from "@/apps/web/pipeline";
+import { processItemFiles } from "@monday/sync/pipeline";
 
 const ESTIMATE_COLUMN_ID = "file_mksebs2e";
 let PDF_ANALYSIS_CWD = join(

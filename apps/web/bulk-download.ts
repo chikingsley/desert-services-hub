@@ -8,7 +8,7 @@
  * Run inside Docker: bun apps/web/bulk-download.ts
  */
 import { db } from "@lib/db/hub";
-import { processItemFiles } from "@/apps/web/pipeline";
+import { processItemFiles } from "@monday/sync/pipeline";
 
 const SKIP_GROUPS = new Set([
   "Shell Estimates ( Do Not Move)",

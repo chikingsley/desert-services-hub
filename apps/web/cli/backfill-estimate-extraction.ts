@@ -15,7 +15,7 @@
  */
 
 import { db } from "@lib/db/hub";
-import { processItemFiles } from "@/apps/web/pipeline";
+import { processItemFiles } from "@monday/sync/pipeline";
 
 interface EstimateRow {
   monday_item_id: string;

@@ -11,9 +11,7 @@
 # Web server + API routes
 !apps/web/
 
-# CLI tools
-!apps/cli-tools/sharepoint-cli/
-!apps/cli-tools/email-cli/
+# Document processing
 !packages/documents/
 
 # Workers
@@ -23,6 +21,9 @@
 !apps/workers/estimates-sync-worker/lib/
 !packages/sharepoint/
 !packages/monday/
+!packages/email/
+!packages/estimates/
+!packages/takeoff/
 
 
 # Notifications worker

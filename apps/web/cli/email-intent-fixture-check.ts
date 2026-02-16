@@ -1,12 +1,12 @@
 #!/usr/bin/env bun
 
+import { EMAIL_RESOLVER_SPARK_MODEL } from "@/apps/web/jobs/config";
 import type {
   PermitIntentFixtureCaseResult,
   PermitIntentFixtureFile,
   PermitIntentFixtureRunStats,
 } from "@/apps/web/lib/email-intent/permit-intent-fixture";
 import { evaluateFixtureCase } from "@/apps/web/lib/email-intent/permit-intent-fixture";
-import { EMAIL_RESOLVER_SPARK_MODEL } from "@/apps/workers/job-runner/lib/jobs/config";
 
 interface CliOptions {
   fixturePath: string;

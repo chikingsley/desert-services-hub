@@ -4,10 +4,10 @@ Contract packet intake, reconciliation, and post-contract handoff.
 
 ## Start Here
 
-- `docs/contracts/README.md` - Contracts docs index.
-- `docs/contracts/post-contract-process.md` - Canonical process after packet receipt.
-- `docs/contracts/validation-policy.md` - Fail-closed validation policy and command flow.
-- `docs/contract-packet-lifecycle-2026-02-12.md` - Canonical packet status model and queue view.
+- `packages/contracts/docs/README.md` - Contracts docs index.
+- `packages/contracts/docs/post-contract-process.md` - Canonical process after packet receipt.
+- `packages/contracts/docs/validation-policy.md` - Fail-closed validation policy and command flow.
+- `packages/contracts/docs/contract-packet-lifecycle-2026-02-12.md` - Canonical packet status model and queue view.
 
 ## Core Workflow Docs
 

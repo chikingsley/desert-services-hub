@@ -74,10 +74,8 @@ desert-services-hub/
   supabase/
     migrations/             # Postgres migration files (applied in order)
 
-  docs/                     # Documentation (no loose files at root)
+  docs/                     # Cross-domain documentation (no loose files at root)
     _archive/               # Legacy/archived materials (MinIO, old SOPs, onboarding)
-    az-stormwater-noi-ndc-toolkit/  # AZ NOI/NDC regulatory sources + strategy
-    contracts/              # Contract workflows, SLA, file naming, PM process
     reference/              # Architecture, CLI conventions, DB docs, signage, workflow maps
 
   docker-compose.yml        # All Docker service definitions
@@ -374,7 +372,7 @@ Packages that have been moved to their domain folders:
 | `packages/narratives/` | Complete | `apps/narrative/` (deleted) |
 | `packages/documents/` | Complete | PDF analysis CLI + PDF generation CLI (old paths deleted) |
 | `packages/documents/src/pdf/` | Complete | `lib/pdf/` → PDF generation (estimate, SSSP, SDS, brand sheets) |
-| `packages/documents/pdf-generation-cli/src/stormwater/` | Complete | `docs/az-stormwater-noi-ndc-toolkit/scripts/` → NOI/NDC guide generators |
+| `packages/documents/pdf-generation-cli/src/stormwater/` | Complete | NOI/NDC guide generators in package source; toolkit docs now co-located in `packages/documents/pdf-generation-cli/docs/stormwater/noi-ndc-toolkit/` |
 | `packages/estimates/` | Complete | `lib/catalog/` + `lib/estimating/` → pricing catalog + estimate validation |
 | `packages/takeoff/` | Complete | `lib/takeoff/` + `lib/pdf-takeoff/` → annotation UI + takeoff logic |
 | `packages/email/src/html-to-text.ts` | Complete | `lib/html-to-text.ts` → all importers were in email package |

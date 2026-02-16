@@ -4,12 +4,12 @@ This folder is the focused docs surface for contract work after a contract packe
 
 ## Canonical Docs
 
-- `docs/contracts/post-contract-process.md`: operational workflow after packet receipt.
-- `docs/contracts/validation-policy.md`: fail-closed blocker/warning/info policy.
-- `docs/contracts/sla.md`: SLA standards and lifecycle requirements for contracts.
-- `docs/contracts/pm-workflow.md`: PM execution workflow (contract-focused copy).
-- `docs/contracts/data-needed.md`: required data inventory for kickoff/handoff readiness.
-- `docs/contract-packet-lifecycle-2026-02-12.md`: canonical lifecycle states (`contract_packets`) and queue model (`contract_packet_queue_v`).
+- `packages/contracts/docs/post-contract-process.md`: operational workflow after packet receipt.
+- `packages/contracts/docs/validation-policy.md`: fail-closed blocker/warning/info policy.
+- `packages/contracts/docs/sla.md`: SLA standards and lifecycle requirements for contracts.
+- `packages/contracts/docs/pm-workflow.md`: PM execution workflow (contract-focused copy).
+- `packages/contracts/docs/data-needed.md`: required data inventory for kickoff/handoff readiness.
+- `packages/contracts/docs/contract-packet-lifecycle-2026-02-12.md`: canonical lifecycle states (`contract_packets`) and queue model (`contract_packet_queue_v`).
 - `packages/contracts/templates/project-record-template.md`: fillable project record for post-contract execution.
 - `packages/contracts/templates/project-record-schema.md`: full project field inventory (expanded reference).
 

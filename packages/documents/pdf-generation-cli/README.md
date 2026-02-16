@@ -53,7 +53,7 @@ bun packages/documents/pdf-generation-cli/cli/cli.ts stormwater noi-guide genera
 bun packages/documents/pdf-generation-cli/cli/cli.ts stormwater quickstart generate --out output/noi-ndc-quickstart.pdf
 ```
 
-Reference source material for these guides lives in `docs/az-stormwater-noi-ndc-toolkit/`.
+Reference source material for these guides lives in `packages/documents/pdf-generation-cli/docs/stormwater/noi-ndc-toolkit/`.
 
 ## Options
 

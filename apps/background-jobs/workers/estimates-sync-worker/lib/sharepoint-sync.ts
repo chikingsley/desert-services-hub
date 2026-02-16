@@ -8,6 +8,7 @@
  * Used by: apps/web/worker.ts (sync_full job)
  */
 
+import { SKIP_GROUPS } from "@background-jobs/jobs/config";
 import { getGraphTokenCached } from "@lib/graph/token";
 import {
   buildCustomerProjectsPath,
@@ -74,9 +75,6 @@ const FILE_COLUMN_MAP: Record<string, string> = {
 };
 
 const FILE_COLUMNS = Object.keys(FILE_COLUMN_MAP);
-
-// Groups to skip
-const SKIP_GROUPS = ["Shell Estimates ( Do Not Move)", "Sales Team Estimates"];
 
 // Regex patterns
 const SHAREPOINT_PATH_REGEX = /Shared%20Documents\/(.+)/;
@@ -302,7 +300,7 @@ async function getEstimateItems(): Promise<MondayItem[]> {
     const page = data.boards?.[0]?.items_page;
     if (page?.items) {
       for (const item of page.items) {
-        if (SKIP_GROUPS.includes(item.group.title)) {
+        if (SKIP_GROUPS.has(item.group.title)) {
           continue;
         }
 

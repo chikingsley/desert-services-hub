@@ -1,6 +1,12 @@
 import { db } from "@lib/db/hub";
 import { normalizeProjectNameKey } from "@lib/db/repositories/project";
 import { parseVariantPrefix } from "@sharepoint/paths";
+import {
+  batchFetchGroupMap,
+  batchFetchMap,
+  batchFetchRows,
+  chunk,
+} from "./sql-utils";
 
 const ACTIVE_BID_STATUSES = new Set(["won", "pending won", "add to projects"]);
 const LOST_BID_STATUSES = new Set(["lost", "duplicates", "gc not awarded"]);
@@ -85,14 +91,6 @@ export interface ProjectSeedStaleOptions {
 export interface ProjectSeedStaleStats {
   candidates: number;
   movedToLost: number;
-}
-
-function chunk<T>(items: T[], size: number): T[][] {
-  const batches: T[][] = [];
-  for (let i = 0; i < items.length; i += size) {
-    batches.push(items.slice(i, i + size));
-  }
-  return batches;
 }
 
 function normalizeBidStatus(value: string | null | undefined): string | null {
@@ -260,137 +258,53 @@ async function fetchEstimateRows(limit?: number): Promise<EstimateSeedRow[]> {
     .all();
 }
 
+const PROJECT_SEED_COLUMNS =
+  "id, lifecycle_state, seed_key, seed_source, name, normalized_name, address, account_id, contractor";
+
 async function fetchEstimateProjectLinks(
   estimateIds: number[]
 ): Promise<ExistingEstimateProjectLink[]> {
-  const rows: ExistingEstimateProjectLink[] = [];
-  if (estimateIds.length === 0) {
-    return rows;
-  }
-
-  for (const batch of chunk(estimateIds, SQL_BATCH_SIZE)) {
-    const placeholders = batch.map(() => "?").join(", ");
-    const batchRows = await db
-      .query<ExistingEstimateProjectLink>(
-        `SELECT estimate_id, project_id
-         FROM project_estimates
-         WHERE estimate_id IN (${placeholders})`
-      )
-      .all(...batch);
-    rows.push(...batchRows);
-  }
-
-  return rows;
+  return batchFetchRows<ExistingEstimateProjectLink>(
+    estimateIds,
+    SQL_BATCH_SIZE,
+    (ph) =>
+      `SELECT estimate_id, project_id FROM project_estimates WHERE estimate_id IN (${ph})`
+  );
 }
 
 async function fetchProjectsByIds(
   projectIds: number[]
 ): Promise<Map<number, ProjectSeedRow>> {
-  const out = new Map<number, ProjectSeedRow>();
-  if (projectIds.length === 0) {
-    return out;
-  }
-
-  for (const batch of chunk(projectIds, SQL_BATCH_SIZE)) {
-    const placeholders = batch.map(() => "?").join(", ");
-    const rows = await db
-      .query<ProjectSeedRow>(
-        `SELECT
-           id,
-           lifecycle_state,
-           seed_key,
-           seed_source,
-           name,
-           normalized_name,
-           address,
-           account_id,
-           contractor
-         FROM projects
-         WHERE id IN (${placeholders})`
-      )
-      .all(...batch);
-    for (const row of rows) {
-      out.set(row.id, row);
-    }
-  }
-
-  return out;
+  return batchFetchMap<number, ProjectSeedRow>(
+    projectIds,
+    SQL_BATCH_SIZE,
+    (ph) => `SELECT ${PROJECT_SEED_COLUMNS} FROM projects WHERE id IN (${ph})`,
+    (row) => row.id
+  );
 }
 
 async function fetchProjectsBySeedKey(
   seedKeys: string[]
 ): Promise<Map<string, ProjectSeedRow>> {
-  const out = new Map<string, ProjectSeedRow>();
-  if (seedKeys.length === 0) {
-    return out;
-  }
-
-  for (const batch of chunk(seedKeys, SQL_BATCH_SIZE)) {
-    const placeholders = batch.map(() => "?").join(", ");
-    const rows = await db
-      .query<ProjectSeedRow>(
-        `SELECT
-           id,
-           lifecycle_state,
-           seed_key,
-           seed_source,
-           name,
-           normalized_name,
-           address,
-           account_id,
-           contractor
-         FROM projects
-         WHERE seed_key IN (${placeholders})`
-      )
-      .all(...batch);
-    for (const row of rows) {
-      if (row.seed_key) {
-        out.set(row.seed_key, row);
-      }
-    }
-  }
-
-  return out;
+  return batchFetchMap<string, ProjectSeedRow>(
+    seedKeys,
+    SQL_BATCH_SIZE,
+    (ph) =>
+      `SELECT ${PROJECT_SEED_COLUMNS} FROM projects WHERE seed_key IN (${ph})`,
+    (row) => row.seed_key ?? null
+  );
 }
 
 async function fetchProjectsByNormalizedName(
   normalizedNames: string[]
 ): Promise<Map<string, ProjectSeedRow[]>> {
-  const out = new Map<string, ProjectSeedRow[]>();
-  if (normalizedNames.length === 0) {
-    return out;
-  }
-
-  for (const batch of chunk(normalizedNames, SQL_BATCH_SIZE)) {
-    const placeholders = batch.map(() => "?").join(", ");
-    const rows = await db
-      .query<ProjectSeedRow>(
-        `SELECT
-           id,
-           lifecycle_state,
-           seed_key,
-           seed_source,
-           name,
-           normalized_name,
-           address,
-           account_id,
-           contractor
-         FROM projects
-         WHERE normalized_name IN (${placeholders})`
-      )
-      .all(...batch);
-    for (const row of rows) {
-      const key = row.normalized_name;
-      if (!key) {
-        continue;
-      }
-      const arr = out.get(key) ?? [];
-      arr.push(row);
-      out.set(key, arr);
-    }
-  }
-
-  return out;
+  return batchFetchGroupMap<string, ProjectSeedRow>(
+    normalizedNames,
+    SQL_BATCH_SIZE,
+    (ph) =>
+      `SELECT ${PROJECT_SEED_COLUMNS} FROM projects WHERE normalized_name IN (${ph})`,
+    (row) => row.normalized_name ?? null
+  );
 }
 
 function projectStateRank(value: string | null | undefined): number {

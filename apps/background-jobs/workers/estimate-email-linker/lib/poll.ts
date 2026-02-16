@@ -234,6 +234,166 @@ export interface PollStats {
   lastEmailId: number;
 }
 
+// ── Link insertion helper ──────────────────────────────────────────────
+
+async function tryInsertLink(
+  dryRun: boolean,
+  estimateId: number,
+  emailId: number,
+  matchType: string,
+  detail: string
+): Promise<number> {
+  if (dryRun) {
+    return 1;
+  }
+  const r = await insertLink.run(estimateId, emailId, matchType, detail);
+  return r.count ?? 0;
+}
+
+// ── Per-email matching strategies ──────────────────────────────────────
+
+interface MatchContext {
+  email: EmailRow;
+  haystack: string;
+  projectEstimateIds: number[];
+  byMondayItemId: Map<string, EstimateIndexRow>;
+  byEstimateNumber: Map<string, EstimateIndexRow[]>;
+  dryRun: boolean;
+  enableProjectSingle: boolean;
+}
+
+type MatchResult =
+  | { outcome: "linked"; inserted: number }
+  | { outcome: "ambiguous" }
+  | { outcome: "no_signal" };
+
+async function tryMatchByPulseId(
+  ctx: MatchContext
+): Promise<MatchResult | null> {
+  const mondayIds = extractMondayPulseIds(ctx.haystack);
+  if (mondayIds.length === 0) {
+    return null;
+  }
+
+  let inserted = 0;
+  for (const mid of mondayIds) {
+    const est = ctx.byMondayItemId.get(mid);
+    if (!est) {
+      continue;
+    }
+    inserted += await tryInsertLink(
+      ctx.dryRun,
+      est.id,
+      ctx.email.id,
+      "monday_pulse_id",
+      `matched monday_item_id=${mid}`
+    );
+  }
+  return { outcome: "linked", inserted };
+}
+
+async function tryMatchByEstimateNumber(
+  ctx: MatchContext
+): Promise<MatchResult | null> {
+  const nums = extractEstimateNumbers(ctx.haystack);
+  if (nums.length === 0) {
+    return null;
+  }
+
+  let totalInserted = 0;
+  let ambiguousCount = 0;
+
+  for (const n of nums) {
+    const candidates = ctx.byEstimateNumber.get(n) ?? [];
+    if (candidates.length === 0) {
+      continue;
+    }
+
+    const narrowed = disambiguateEstimatesForEmail({
+      candidates,
+      emailFromDomain: ctx.email.from_domain,
+      emailProjectEstimateIds: ctx.projectEstimateIds.length
+        ? ctx.projectEstimateIds
+        : null,
+    });
+
+    if (narrowed.length !== 1 || !narrowed[0]) {
+      ambiguousCount++;
+      continue;
+    }
+
+    totalInserted += await tryInsertLink(
+      ctx.dryRun,
+      narrowed[0].id,
+      ctx.email.id,
+      "estimate_number",
+      `matched estimate_number=${n} (source=subject/body/attachments)`
+    );
+  }
+
+  if (totalInserted > 0) {
+    return { outcome: "linked", inserted: totalInserted };
+  }
+  if (ambiguousCount > 0) {
+    return { outcome: "ambiguous" };
+  }
+  return null;
+}
+
+async function tryMatchByProjectSingle(
+  ctx: MatchContext
+): Promise<MatchResult | null> {
+  if (!ctx.enableProjectSingle || ctx.projectEstimateIds.length !== 1) {
+    return null;
+  }
+
+  const estId = ctx.projectEstimateIds[0];
+  if (estId == null) {
+    return null;
+  }
+
+  const inserted = await tryInsertLink(
+    ctx.dryRun,
+    estId,
+    ctx.email.id,
+    "project_estimates_single",
+    `linked via project_id=${ctx.email.project_id}`
+  );
+  return { outcome: "linked", inserted };
+}
+
+// ── Cursor initialization ──────────────────────────────────────────────
+
+async function resolveStartFrom(
+  dryRun: boolean,
+  minEmailId: number | undefined | null
+): Promise<number> {
+  if (minEmailId != null) {
+    return minEmailId;
+  }
+
+  const cfg = await getConfig(CONFIG_KEY_LAST_EMAIL_ID);
+  if (cfg) {
+    const parsed = Number.parseInt(cfg, 10);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+
+  // First run: start near the newest emails for quick validation.
+  const row = await db
+    .query<{ max_id: number }>(
+      "SELECT COALESCE(MAX(id), 0)::int AS max_id FROM emails"
+    )
+    .get();
+  const startFrom = Math.max(0, (row?.max_id ?? 0) - 10_000);
+
+  if (!dryRun) {
+    await setConfig(CONFIG_KEY_LAST_EMAIL_ID, String(startFrom));
+  }
+  return startFrom;
+}
+
+// ── Main poll loop ─────────────────────────────────────────────────────
+
 export async function pollEstimateEmailLinker(
   opts: PollOptions = {}
 ): Promise<PollStats> {
@@ -245,33 +405,7 @@ export async function pollEstimateEmailLinker(
   const enableProjectSingle = Boolean(opts.enableProjectSingle);
 
   const { byMondayItemId, byEstimateNumber } = await buildEstimateIndex();
-
-  let startFrom: number;
-  if (opts.minEmailId != null) {
-    startFrom = opts.minEmailId;
-  } else {
-    const cfg = await getConfig(CONFIG_KEY_LAST_EMAIL_ID);
-    if (cfg) {
-      startFrom = Number.parseInt(cfg, 10);
-      if (!Number.isFinite(startFrom)) {
-        startFrom = 0;
-      }
-    } else {
-      // First run: start near the newest emails so we can validate behavior quickly.
-      // If you want a full backfill, pass --min-id=0 from the CLI.
-      const row = await db
-        .query<{ max_id: number }>(
-          "SELECT COALESCE(MAX(id), 0)::int AS max_id FROM emails"
-        )
-        .get();
-      startFrom = Math.max(0, (row?.max_id ?? 0) - 10_000);
-
-      // Persist the default starting point so subsequent runs are incremental.
-      if (!dryRun) {
-        await setConfig(CONFIG_KEY_LAST_EMAIL_ID, String(startFrom));
-      }
-    }
-  }
+  const startFrom = await resolveStartFrom(dryRun, opts.minEmailId);
 
   let lastId = startFrom;
   let processedEmails = 0;
@@ -331,103 +465,45 @@ export async function pollEstimateEmailLinker(
       const projectEstimateIds =
         email.project_id != null ? (projMap.get(email.project_id) ?? []) : [];
 
-      // -------------------------------------------------------------------
-      // Strategy 1: Monday pulse ID match (unique)
-      // -------------------------------------------------------------------
-      const mondayIds = extractMondayPulseIds(haystack);
-      for (const mid of mondayIds) {
-        const est = byMondayItemId.get(mid);
-        if (!est) {
-          continue;
-        }
-        if (dryRun) {
-          linksInserted++;
-        } else {
-          const r = await insertLink.run(
-            est.id,
-            email.id,
-            "monday_pulse_id",
-            `matched monday_item_id=${mid}`
-          );
-          linksInserted += r.count ?? 0;
-        }
-      }
-      if (mondayIds.length > 0) {
-        // Even if we didn't find a matching estimate, don't do weaker heuristics.
-        continue;
-      }
+      const ctx: MatchContext = {
+        email,
+        haystack,
+        projectEstimateIds,
+        byMondayItemId,
+        byEstimateNumber,
+        dryRun,
+        enableProjectSingle,
+      };
 
-      // -------------------------------------------------------------------
-      // Strategy 2: Estimate number match (digits-only) with disambiguation.
-      // -------------------------------------------------------------------
-      const nums = extractEstimateNumbers(haystack);
-      let linkedByNumber = false;
+      // Cascade: try each strategy in order of reliability
+      const strategies = [
+        tryMatchByPulseId,
+        tryMatchByEstimateNumber,
+        tryMatchByProjectSingle,
+      ];
 
-      for (const n of nums) {
-        const candidates = byEstimateNumber.get(n) ?? [];
-        if (candidates.length === 0) {
+      let matched = false;
+      for (const strategy of strategies) {
+        const result = await strategy(ctx);
+        if (!result) {
           continue;
         }
 
-        const narrowed = disambiguateEstimatesForEmail({
-          candidates,
-          emailFromDomain: email.from_domain,
-          emailProjectEstimateIds: projectEstimateIds.length
-            ? projectEstimateIds
-            : null,
-        });
-
-        if (narrowed.length !== 1) {
+        if (result.outcome === "linked") {
+          linksInserted += result.inserted;
+          matched = true;
+          break;
+        }
+        if (result.outcome === "ambiguous") {
           skippedAmbiguous++;
-          continue;
+          matched = true;
+          break;
         }
-
-        const est = narrowed[0];
-        if (!est) {
-          skippedAmbiguous++;
-          continue;
-        }
-        if (dryRun) {
-          linksInserted++;
-        } else {
-          const r = await insertLink.run(
-            est.id,
-            email.id,
-            "estimate_number",
-            `matched estimate_number=${n} (source=subject/body/attachments)`
-          );
-          linksInserted += r.count ?? 0;
-        }
-        linkedByNumber = true;
       }
 
-      if (linkedByNumber) {
-        continue;
+      if (!matched) {
+        skippedNoSignal++;
       }
-
-      // -------------------------------------------------------------------
-      // Strategy 3: Project→estimate (only when single estimate on project).
-      // -------------------------------------------------------------------
-      if (enableProjectSingle && projectEstimateIds.length === 1) {
-        const estId = projectEstimateIds[0];
-        if (estId == null) {
-          continue;
-        }
-        if (dryRun) {
-          linksInserted++;
-        } else {
-          const r = await insertLink.run(
-            estId,
-            email.id,
-            "project_estimates_single",
-            `linked via project_id=${email.project_id}`
-          );
-          linksInserted += r.count ?? 0;
-        }
-        continue;
-      }
-
-      skippedNoSignal++;
     }
 
     if (!dryRun) {

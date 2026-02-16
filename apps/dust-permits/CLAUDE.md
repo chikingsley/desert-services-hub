@@ -111,5 +111,5 @@ Detailed guides live in `docs/` — don't duplicate in CLAUDE.md:
 - `docs/architecture.md` — System architecture
 - `docs/workflows.md` — Portal workflow details
 - `docs/api.md` — API documentation
-- `docs/reference/playwright-patterns.md` — Playwright patterns
+- `apps/dust-permits/docs/reference/playwright-patterns.md` — Playwright patterns
 - `.planning/research/ESRI-MAP-GUIDE.md` — ESRI spike results

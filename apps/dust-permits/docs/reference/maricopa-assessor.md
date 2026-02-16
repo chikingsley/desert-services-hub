@@ -4,7 +4,7 @@
 
 ### Headers
 
-- **AUTHORIZATION**: ca11d522-cb79-4cd8-9476-79f7ff698f29
+- **AUTHORIZATION**: `MARICOPA_COUNTY_API_TOKEN` (store in `.env`)
 - **user-agent**: null
 
 To request a token, use the contact form on the website and select "API Question/Token".

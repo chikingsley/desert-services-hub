@@ -1,11 +1,15 @@
 # Desert Services Hub — System Map
 
-Last updated: 2026-02-13
+Last updated: 2026-02-16
 
 ## Purpose
 
 This file is the current runtime map and active execution backlog.
 It is intentionally present-state only: no deprecated architecture history.
+
+Scope boundary:
+- Runtime topology, runtime flows, active gap/backlog tracking live here.
+- Repository structure, package ownership, and coding standards live in `REPO_ORGANIZATION.md`.
 
 ## Runtime Sources of Truth
 

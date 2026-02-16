@@ -3,6 +3,10 @@
 This is the definitive reference for how the desert-services-hub monorepo is organized.
 Every agent, contributor, and future session should read this before making structural changes.
 
+Scope boundary:
+- This file defines long-lived repository structure, ownership, and engineering standards.
+- Runtime topology, active operational gaps, and execution backlog are tracked in `SYSTEM-MAP.md`.
+
 ## System Overview
 
 Desert Services Hub is an operations platform for a dust control and site services company.
@@ -33,7 +37,6 @@ desert-services-hub/
       pdf-analysis-cli/     # PDF extraction with Gemini
       pdf-generation-cli/   # CLI for PDF generation commands (safety, quoting, stormwater)
       reference/safety/     # Safety reference PDFs, SDS analysis, manuals
-    dust-permits/           # Dust permit browser automation (Playwright, VNC, Maricopa portal)
     email/                  # Outlook sync, classification, automation, templates, notifications
       attachments/          # Default company docs (W-9, ROC license, subcontractor registration)
     estimates/              # Estimating domain: catalog, pricing, validation
@@ -48,6 +51,7 @@ desert-services-hub/
       src/takeoff-to-estimate.ts  # Annotation → estimate line item conversion
 
   apps/
+    dust-permits/           # Dust permit browser automation (Playwright, VNC, Maricopa portal)
     web/                    # Frontend SPA + API routes (Bun + React)
       api/                  # Domain-grouped API routes (thin data layer)
       frontend/             # React components and pages
@@ -76,7 +80,7 @@ desert-services-hub/
 
   docs/                     # Cross-domain documentation (no loose files at root)
     _archive/               # Legacy/archived materials (MinIO, old SOPs, onboarding)
-    reference/              # Architecture, CLI conventions, DB docs, signage, workflow maps
+    reference/              # Cross-domain standards and shared runbooks (domain docs are co-located)
 
   docker-compose.yml        # All Docker service definitions
   tsconfig.json             # TypeScript config with path aliases
@@ -377,6 +381,19 @@ Packages that have been moved to their domain folders:
 | `packages/takeoff/` | Complete | `lib/takeoff/` + `lib/pdf-takeoff/` → annotation UI + takeoff logic |
 | `packages/email/src/html-to-text.ts` | Complete | `lib/html-to-text.ts` → all importers were in email package |
 | `packages/email/src/project-subject-guard.ts` | Complete | `lib/project-subject-guard.ts` → all importers were email intake |
+
+Documentation consolidation completed:
+
+| Docs Location | Status | Moved From |
+|---------------|--------|------------|
+| `packages/documents/pdf-generation-cli/docs/stormwater/noi-ndc-toolkit/` | Complete | `docs/az-stormwater-noi-ndc-toolkit/` |
+| `packages/contracts/docs/` | Complete | `docs/contracts/` |
+| `packages/monday/docs/reference/monday-webhooks.md` | Complete | `docs/reference/monday-webhooks.md` |
+| `packages/monday/docs/reference/monday-board-migration-sheet-2026-02-07.md` | Complete | `docs/reference/monday-board-migration-sheet-2026-02-07.md` |
+| `packages/contracts/docs/runbooks/docusign-intake-runbook.md` | Complete | `docs/reference/processes/docusign-intake-runbook.md` |
+| `packages/estimates/data/reference/desert-services-2026-pricing.csv` | Complete | `docs/reference/desert-services-2026-pricing.csv` |
+| `apps/dust-permits/docs/reference/maricopa-assessor.md` | Complete | `docs/reference/maricopa-county-assessor-api.md` |
+| `apps/dust-permits/docs/reference/gila-river-indian-community/` | Complete | `docs/reference/grig/` (legacy typo name) |
 
 In-process worker modules now live in `apps/background-jobs/workers/`. Future migration into packages:
 

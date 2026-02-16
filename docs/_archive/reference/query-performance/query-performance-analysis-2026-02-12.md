@@ -85,7 +85,7 @@ Result (see benchmark matrix doc):
 - Mat-view count query: ~11.2 ms (cached in API layer)
 
 Reference:
-- `docs/query-benchmark-matrix-2026-02-12.md`
+- `docs/_archive/reference/query-performance/query-benchmark-matrix-2026-02-12.md`
 
 ## Priority Matrix
 

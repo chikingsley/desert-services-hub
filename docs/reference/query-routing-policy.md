@@ -2,6 +2,8 @@
 
 Purpose: prevent new agents from bypassing optimized query paths and re-introducing slow ad-hoc scans.
 
+Historical benchmark snapshots live in `docs/_archive/reference/query-performance/`.
+
 ## Required Routing Rules
 
 1. Email list UI/API (`/api/emails`):

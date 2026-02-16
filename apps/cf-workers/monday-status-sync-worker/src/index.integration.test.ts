@@ -22,6 +22,8 @@ const ESTIMATE_LINK_COL = "board_relation_mktg3z60";
 const TEST_PREFIX = "_TEST_DELETE_ME_";
 const mondayApiKey = process.env.MONDAY_API_KEY ?? "";
 const hasCredentials = Boolean(mondayApiKey);
+const runLiveMondayTests = process.env.RUN_MONDAY_LIVE_TESTS === "true";
+const shouldRunLiveMondayTests = hasCredentials && runLiveMondayTests;
 
 // Helper: Monday API query
 async function mondayQuery<T>(queryStr: string): Promise<T> {
@@ -163,145 +165,156 @@ async function syncLeadFromEstimate(
   return newStatus;
 }
 
-describe.skipIf(!hasCredentials)("Monday Status Sync Integration", () => {
-  const createdItems: Array<{ boardId: string; itemId: string }> = [];
+describe.skipIf(!shouldRunLiveMondayTests)(
+  "Monday Status Sync Integration",
+  () => {
+    const createdItems: Array<{ boardId: string; itemId: string }> = [];
 
-  afterAll(async () => {
-    // Cleanup all test items
-    for (const { itemId } of createdItems) {
-      try {
-        await deleteItem(itemId);
-      } catch {
-        // Ignore cleanup errors
+    afterAll(async () => {
+      // Cleanup all test items
+      for (const { itemId } of createdItems) {
+        try {
+          await deleteItem(itemId);
+        } catch {
+          // Ignore cleanup errors
+        }
       }
-    }
-  });
-
-  describe("Leads Sync", () => {
-    it("syncs Lead Overall Status to Won when Estimate is Won", async () => {
-      // Arrange: Create test estimate
-      const estimateName = `${TEST_PREFIX}ESTIMATE_${Date.now()}`;
-      const estimateId = await createItem(ESTIMATING_BOARD_ID, estimateName);
-      createdItems.push({ boardId: ESTIMATING_BOARD_ID, itemId: estimateId });
-
-      // Set estimate to Won
-      await updateColumn(
-        ESTIMATING_BOARD_ID,
-        estimateId,
-        BID_STATUS_COL,
-        "Won"
-      );
-
-      // Create test lead
-      const leadName = `${TEST_PREFIX}LEAD_${Date.now()}`;
-      const leadId = await createItem(LEADS_BOARD_ID, leadName);
-      createdItems.push({ boardId: LEADS_BOARD_ID, itemId: leadId });
-
-      // Link lead to estimate
-      await linkItems(LEADS_BOARD_ID, leadId, ESTIMATE_LINK_COL, [estimateId]);
-
-      // Act: Run sync
-      const result = await syncLeadFromEstimate(leadId, estimateId);
-
-      // Assert
-      expect(result).toBe("Won");
-
-      // Verify the lead's status was actually updated
-      const leadStatus = await getItemStatus(
-        LEADS_BOARD_ID,
-        leadId,
-        OVERALL_STATUS_COL
-      );
-      expect(leadStatus).toBe("Won");
     });
 
-    it("syncs Lead Overall Status to Lost when Estimate is Lost", async () => {
-      // Arrange: Create test estimate
-      const estimateName = `${TEST_PREFIX}ESTIMATE_LOST_${Date.now()}`;
-      const estimateId = await createItem(ESTIMATING_BOARD_ID, estimateName);
-      createdItems.push({ boardId: ESTIMATING_BOARD_ID, itemId: estimateId });
+    describe("Leads Sync", () => {
+      it("syncs Lead Overall Status to Won when Estimate is Won", async () => {
+        // Arrange: Create test estimate
+        const estimateName = `${TEST_PREFIX}ESTIMATE_${Date.now()}`;
+        const estimateId = await createItem(ESTIMATING_BOARD_ID, estimateName);
+        createdItems.push({ boardId: ESTIMATING_BOARD_ID, itemId: estimateId });
 
-      // Set estimate to Lost
-      await updateColumn(
-        ESTIMATING_BOARD_ID,
-        estimateId,
-        BID_STATUS_COL,
-        "Lost"
-      );
+        // Set estimate to Won
+        await updateColumn(
+          ESTIMATING_BOARD_ID,
+          estimateId,
+          BID_STATUS_COL,
+          "Won"
+        );
 
-      // Create test lead
-      const leadName = `${TEST_PREFIX}LEAD_LOST_${Date.now()}`;
-      const leadId = await createItem(LEADS_BOARD_ID, leadName);
-      createdItems.push({ boardId: LEADS_BOARD_ID, itemId: leadId });
+        // Create test lead
+        const leadName = `${TEST_PREFIX}LEAD_${Date.now()}`;
+        const leadId = await createItem(LEADS_BOARD_ID, leadName);
+        createdItems.push({ boardId: LEADS_BOARD_ID, itemId: leadId });
 
-      // Link lead to estimate
-      await linkItems(LEADS_BOARD_ID, leadId, ESTIMATE_LINK_COL, [estimateId]);
+        // Link lead to estimate
+        await linkItems(LEADS_BOARD_ID, leadId, ESTIMATE_LINK_COL, [
+          estimateId,
+        ]);
 
-      // Act: Run sync
-      const result = await syncLeadFromEstimate(leadId, estimateId);
+        // Act: Run sync
+        const result = await syncLeadFromEstimate(leadId, estimateId);
 
-      // Assert
-      expect(result).toBe("Lost");
+        // Assert
+        expect(result).toBe("Won");
 
-      // Verify
-      const leadStatus = await getItemStatus(
-        LEADS_BOARD_ID,
-        leadId,
-        OVERALL_STATUS_COL
-      );
-      expect(leadStatus).toBe("Lost");
+        // Verify the lead's status was actually updated
+        const leadStatus = await getItemStatus(
+          LEADS_BOARD_ID,
+          leadId,
+          OVERALL_STATUS_COL
+        );
+        expect(leadStatus).toBe("Won");
+      });
+
+      it("syncs Lead Overall Status to Lost when Estimate is Lost", async () => {
+        // Arrange: Create test estimate
+        const estimateName = `${TEST_PREFIX}ESTIMATE_LOST_${Date.now()}`;
+        const estimateId = await createItem(ESTIMATING_BOARD_ID, estimateName);
+        createdItems.push({ boardId: ESTIMATING_BOARD_ID, itemId: estimateId });
+
+        // Set estimate to Lost
+        await updateColumn(
+          ESTIMATING_BOARD_ID,
+          estimateId,
+          BID_STATUS_COL,
+          "Lost"
+        );
+
+        // Create test lead
+        const leadName = `${TEST_PREFIX}LEAD_LOST_${Date.now()}`;
+        const leadId = await createItem(LEADS_BOARD_ID, leadName);
+        createdItems.push({ boardId: LEADS_BOARD_ID, itemId: leadId });
+
+        // Link lead to estimate
+        await linkItems(LEADS_BOARD_ID, leadId, ESTIMATE_LINK_COL, [
+          estimateId,
+        ]);
+
+        // Act: Run sync
+        const result = await syncLeadFromEstimate(leadId, estimateId);
+
+        // Assert
+        expect(result).toBe("Lost");
+
+        // Verify
+        const leadStatus = await getItemStatus(
+          LEADS_BOARD_ID,
+          leadId,
+          OVERALL_STATUS_COL
+        );
+        expect(leadStatus).toBe("Lost");
+      });
+
+      it("syncs Lead to Lost when Estimate is GC Not Awarded", async () => {
+        // Arrange
+        const estimateName = `${TEST_PREFIX}ESTIMATE_GC_${Date.now()}`;
+        const estimateId = await createItem(ESTIMATING_BOARD_ID, estimateName);
+        createdItems.push({ boardId: ESTIMATING_BOARD_ID, itemId: estimateId });
+
+        await updateColumn(
+          ESTIMATING_BOARD_ID,
+          estimateId,
+          BID_STATUS_COL,
+          "GC Not Awarded"
+        );
+
+        const leadName = `${TEST_PREFIX}LEAD_GC_${Date.now()}`;
+        const leadId = await createItem(LEADS_BOARD_ID, leadName);
+        createdItems.push({ boardId: LEADS_BOARD_ID, itemId: leadId });
+
+        await linkItems(LEADS_BOARD_ID, leadId, ESTIMATE_LINK_COL, [
+          estimateId,
+        ]);
+
+        // Act
+        const result = await syncLeadFromEstimate(leadId, estimateId);
+
+        // Assert
+        expect(result).toBe("Lost");
+      });
+
+      it("returns null for Estimate with Bid Sent (no mapping)", async () => {
+        // Arrange
+        const estimateName = `${TEST_PREFIX}ESTIMATE_SENT_${Date.now()}`;
+        const estimateId = await createItem(ESTIMATING_BOARD_ID, estimateName);
+        createdItems.push({ boardId: ESTIMATING_BOARD_ID, itemId: estimateId });
+
+        await updateColumn(
+          ESTIMATING_BOARD_ID,
+          estimateId,
+          BID_STATUS_COL,
+          "Bid Sent"
+        );
+
+        const leadName = `${TEST_PREFIX}LEAD_SENT_${Date.now()}`;
+        const leadId = await createItem(LEADS_BOARD_ID, leadName);
+        createdItems.push({ boardId: LEADS_BOARD_ID, itemId: leadId });
+
+        await linkItems(LEADS_BOARD_ID, leadId, ESTIMATE_LINK_COL, [
+          estimateId,
+        ]);
+
+        // Act
+        const result = await syncLeadFromEstimate(leadId, estimateId);
+
+        // Assert: No mapping for "Bid Sent", should return null
+        expect(result).toBeNull();
+      });
     });
-
-    it("syncs Lead to Lost when Estimate is GC Not Awarded", async () => {
-      // Arrange
-      const estimateName = `${TEST_PREFIX}ESTIMATE_GC_${Date.now()}`;
-      const estimateId = await createItem(ESTIMATING_BOARD_ID, estimateName);
-      createdItems.push({ boardId: ESTIMATING_BOARD_ID, itemId: estimateId });
-
-      await updateColumn(
-        ESTIMATING_BOARD_ID,
-        estimateId,
-        BID_STATUS_COL,
-        "GC Not Awarded"
-      );
-
-      const leadName = `${TEST_PREFIX}LEAD_GC_${Date.now()}`;
-      const leadId = await createItem(LEADS_BOARD_ID, leadName);
-      createdItems.push({ boardId: LEADS_BOARD_ID, itemId: leadId });
-
-      await linkItems(LEADS_BOARD_ID, leadId, ESTIMATE_LINK_COL, [estimateId]);
-
-      // Act
-      const result = await syncLeadFromEstimate(leadId, estimateId);
-
-      // Assert
-      expect(result).toBe("Lost");
-    });
-
-    it("returns null for Estimate with Bid Sent (no mapping)", async () => {
-      // Arrange
-      const estimateName = `${TEST_PREFIX}ESTIMATE_SENT_${Date.now()}`;
-      const estimateId = await createItem(ESTIMATING_BOARD_ID, estimateName);
-      createdItems.push({ boardId: ESTIMATING_BOARD_ID, itemId: estimateId });
-
-      await updateColumn(
-        ESTIMATING_BOARD_ID,
-        estimateId,
-        BID_STATUS_COL,
-        "Bid Sent"
-      );
-
-      const leadName = `${TEST_PREFIX}LEAD_SENT_${Date.now()}`;
-      const leadId = await createItem(LEADS_BOARD_ID, leadName);
-      createdItems.push({ boardId: LEADS_BOARD_ID, itemId: leadId });
-
-      await linkItems(LEADS_BOARD_ID, leadId, ESTIMATE_LINK_COL, [estimateId]);
-
-      // Act
-      const result = await syncLeadFromEstimate(leadId, estimateId);
-
-      // Assert: No mapping for "Bid Sent", should return null
-      expect(result).toBeNull();
-    });
-  });
-});
+  }
+);

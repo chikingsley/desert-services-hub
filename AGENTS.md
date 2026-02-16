@@ -35,7 +35,7 @@ Note: repo tests include **integration coverage** that can trigger Microsoft dev
 ## Estimate Guardrails (Required)
 
 - Do not rely on free-form estimate line-item text; route estimate create/update through API validation.
-- Validation source of truth: `lib/estimating/estimate-payload-validation.ts`.
+- Validation source of truth: `packages/estimates/src/estimating/estimate-payload-validation.ts`.
 - Line items must resolve to catalog code/exact name; persisted values must be canonical `item_name` + catalog `description`.
 - When `line_items` are provided, required fields are `job_name`, `client_name`, `job_address`, and `client_address`.
 - `job_address` and `client_address` must be a normalized two-line address (`street` on line 1, `city/state/zip` on line 2).
@@ -72,7 +72,7 @@ Estimate-email linking runtime:
 
 Project-linking runtime (shared matcher):
 - Canonical matcher lives in `lib/db/repositories/project.ts` (`findProjectCandidates`, `findBestProjectMatch`).
-- Shared text normalization/token helpers live in `lib/project-matching.ts`.
+- Shared text normalization/token helpers live in `lib/db/repositories/project.ts`.
 - Folder watcher flow: project linking + thread expansion + deterministic single-estimate linking + ranked multi-estimate linking + periodic estimate-email backfill.
 - Ambiguous project matches are persisted to `project_match_reviews` (`status='pending'`) for manual triage instead of silent fallback.
 
@@ -81,7 +81,7 @@ Project-linking runtime (shared matcher):
 - Never trust folder membership alone for project linking; require subject/name evidence or an existing same-project thread anchor.
 - Never auto-overwrite a non-null `emails.project_id` with a different project ID; create review/triage evidence instead.
 - For attachment/document backfills, do not copy `emails.project_id` into `documents.project_id` when the email subject does not match project hints.
-- Before generating contract/safety deliverables from linked records, run `just triage-audit <project_id>` and resolve cross-project evidence first.
+- Before generating contract/safety deliverables from linked records, verify project linkage and resolve cross-project evidence first.
 
 ## Debugging Shortcuts
 
@@ -154,11 +154,7 @@ Project-linking runtime (shared matcher):
 
 ## Project Triage DoD
 
-For "find this project / build a packet / what is linked?" work, run a deterministic audit first:
-
-- `just triage-audit <project_id>`
-- `just triage-resolve "<search-term>"` (schema-safe candidate lookup)
-- `just triage-followup-story "<query>" "<exact_subject>" "<since-YYYY-MM-DD>" "<counterparty-domain>"` (deduped timeline)
+For "find this project / build a packet / what is linked?" work, verify these conditions:
 
 Definition of done (triage-ready baseline):
 
@@ -174,9 +170,7 @@ Notes:
 
 - `data/triage/...` is a working packet area; not a standalone system-of-record.
 - When needed for durability, ensure important files are represented in `documents` and/or moved to SharePoint.
-- For duplicate mailbox-copy analysis, prefer `public.project_email_dedup_mv` and:
-  - `just email-dedup-refresh`
-  - `just email-dedup-report <project_id>`
+- For duplicate mailbox-copy analysis, prefer `public.project_email_dedup_mv` and `just email-dedup-refresh`.
 
 ## Schema Source of Truth
 
@@ -185,10 +179,6 @@ To avoid schema drift mistakes during agent runs, prefer this order:
 1. Live DB introspection (`\\d+ <table>`, targeted SQL) against the self-hosted Postgres container (`supabase_db_desert-services-hub`).
 2. Current migrations under `supabase/migrations/`.
 3. Runtime usage in repo (`lib/db/repositories/*`, `apps/web/api/*`).
-
-For triage lookups, run the schema-safe helper before ad-hoc SQL:
-
-- `just triage-resolve "<search-term>"`
 
 Legacy drift traps to avoid:
 
@@ -246,9 +236,6 @@ Guardrail:
 - For pending checks, use the index-friendly predicate shape:
   - `contract_status = 'Pending' OR contract_status IS NULL`
   - Avoid `COALESCE(...)` in the `WHERE` clause.
-- SQL source files for these commands are:
-  - `scripts/sql/contracts_status_summary.sql`
-  - `scripts/sql/contracts_pending.sql`
 
 Note:
 

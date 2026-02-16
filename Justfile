@@ -72,43 +72,6 @@ folder-size-check:
 jobs *args:
     @{{BUN}} apps/web/cli/webhook-jobs.ts {{args}}
 
-# Deterministic project triage audit (linkage/completeness/DOD).
-triage-audit project_id:
-    @scripts/triage-audit.sh --project-id {{project_id}}
-
-# Resolve project/estimate candidates using schema-safe SQL.
-triage-resolve query:
-    @cat scripts/sql/triage_resolve_candidates.sql | docker exec -i supabase_db_desert-services-hub psql -U postgres -d postgres -v q='{{query}}'
-
-# Build a deduplicated post-date follow-up story for a project/account search query.
-triage-followup-story query exact_subject since="2025-12-01" counterparty_domain="tofeldent.com":
-    @cat scripts/sql/triage_followup_story.sql | docker exec -i supabase_db_desert-services-hub psql -U postgres -d postgres \
-      -v query='{{query}}' \
-      -v since='{{since}}' \
-      -v exact_subject='{{exact_subject}}' \
-      -v counterparty_domain='{{counterparty_domain}}'
-
-# Single-shot project story JSON from sparse input.
-# Examples:
-#   PROJECT_ID=103 just project-story
-#   SUBJECT="FW: DPX8 - Site Surrender Project" SINCE=2026-02-01 TIMELINE_LIMIT=12 just project-story
-project-story:
-    @scripts/project-story.sh
-
-# Smoke test for project-story resolution + latency sanity.
-project-story-smoke:
-    @scripts/project-story-smoke.sh
-
-# Replay benchmark for project-story deterministic resolver quality.
-# Example:
-#   LINKED_LIMIT=25 UNLINKED_LIMIT=25 SINCE=2026-01-01 QUERY_SCOPE=subject_meta THREAD_EVIDENCE_SCOPE=strict MAX_QUERY_CHARS=1200 just project-story-replay
-project-story-replay:
-    @scripts/project-story-replay.sh
-
-# Run a 3-config replay matrix and print one comparison table.
-project-story-optimize:
-    @scripts/project-story-optimize.sh
-
 # Estimate-driven project seed lifecycle sync (create/update/promote/link/canonicalize).
 # Examples:
 #   just project-seed-sync
@@ -127,31 +90,17 @@ email-dedup-refresh:
 email-list-dedup-refresh:
     @docker exec supabase_db_desert-services-hub psql -U postgres -d postgres -c "REFRESH MATERIALIZED VIEW CONCURRENTLY public.email_list_dedup_mv;"
 
-# Show deduplicated project-email summary and top duplicates.
-email-dedup-report project_id limit="30" refresh="":
-    @scripts/project-email-dedup-report.sh --project-id {{project_id}} --limit {{limit}} {{refresh}}
-
 # Contract reporting fast paths (coarse project-level status).
 contracts-status-summary:
-	@cat scripts/sql/contracts_status_summary.sql | docker exec -i supabase_db_desert-services-hub psql -U postgres -d postgres
+	@docker exec supabase_db_desert-services-hub psql -U postgres -d postgres -c "SELECT COUNT(*) FILTER (WHERE contract_status = 'Pending' OR contract_status IS NULL) AS pending, COUNT(*) FILTER (WHERE contract_status = 'Received') AS received, COUNT(*) FILTER (WHERE contract_status = 'Sent Back') AS sent_back, COUNT(*) FILTER (WHERE contract_status = 'Executed') AS executed, COUNT(*) AS total FROM projects;"
 
 contracts-pending:
-	@cat scripts/sql/contracts_pending.sql | docker exec -i supabase_db_desert-services-hub psql -U postgres -d postgres
+	@docker exec supabase_db_desert-services-hub psql -U postgres -d postgres -c "SELECT id, name, contractor, COALESCE(contract_status, 'Pending') AS contract_status FROM projects WHERE contract_status = 'Pending' OR contract_status IS NULL ORDER BY name;"
 
 contracts-pending-csv out="data/reports/contracts-pending.csv":
 	@mkdir -p $(dirname {{out}})
 	@docker exec -i supabase_db_desert-services-hub psql -U postgres -d postgres -c "\copy (SELECT id, name, contractor, COALESCE(contract_status, 'Pending') AS contract_status FROM projects WHERE contract_status = 'Pending' OR contract_status IS NULL ORDER BY name) TO STDOUT WITH CSV HEADER" > {{out}}
 	@echo "Wrote {{out}}"
-
-# Unified runtime/project ops snapshot (resolver + contracts + DocuSign/pay app signals).
-ops-status:
-    @scripts/ops-status.sh
-
-# Controlled resolver backfill for historical coverage.
-# Example:
-#   just email-resolver-backfill --scope project-estimate-gap --limit 20000 --apply
-email-resolver-backfill *args:
-    @scripts/email-resolver-backfill.sh {{args}}
 
 [private]
 _health strict:

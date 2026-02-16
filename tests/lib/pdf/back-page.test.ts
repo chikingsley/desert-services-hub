@@ -6,7 +6,7 @@ import {
   generateEstimateBackPagePDF,
   generateEstimatePDF,
   saveEstimatePDF,
-} from "@/lib/pdf/estimate/generate-estimate-pdf.server";
+} from "@documents/pdf/estimate/generate-estimate-pdf.server";
 import { getPdfTestOutputPath } from "./output-path";
 import { maxCatalogQuote } from "./test-data";
 

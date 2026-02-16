@@ -1,42 +1,25 @@
 # AZ Stormwater NOI/NDC Toolkit
 
-Working folder for Arizona NOI/NDC source material, packet generation, and intake strategy.
+Reference material for Arizona NOI/NDC source documents and strategy.
 
 ## Folder Structure
 
 - `sources/markdown/` — normalized source notes and extracted docs
 - `sources/original-documents/` — original PDF source documents (kept intact)
-- `scripts/` — PDF generator and related tooling
-- `outputs/` — generated deliverables (client-facing packet PDFs)
 - `strategy/` — roadmap and growth/marketing planning docs
 
-## Generate Packet
+## Generate Packets
+
+Generators live in `packages/documents/pdf-generation-cli/src/stormwater/`.
 
 ```bash
-bun /Users/chiejimofor/Documents/Github/desert-services-hub/docs/az-stormwater-noi-ndc-toolkit/scripts/generate-noi-ndc-quickstart-guide.ts
+# NOI Simple Guide (one-page for supers/PMs)
+bun packages/documents/pdf-generation-cli/cli/cli.ts stormwater noi-guide generate --out output.pdf
+
+# NOI/NDC Quickstart Guide (multi-page decision + filing guide)
+bun packages/documents/pdf-generation-cli/cli/cli.ts stormwater quickstart generate --out output.pdf
 ```
-
-Default output:
-
-- `/Users/chiejimofor/Documents/Github/desert-services-hub/docs/az-stormwater-noi-ndc-toolkit/outputs/noi-ndc-quickstart-guide-v2.pdf`
-
-Optional custom output:
-
-```bash
-bun /Users/chiejimofor/Documents/Github/desert-services-hub/docs/az-stormwater-noi-ndc-toolkit/scripts/generate-noi-ndc-quickstart-guide.ts /absolute/path/output.pdf
-```
-
-## Generate Simple Guide
-
-```bash
-bun /Users/chiejimofor/Documents/Github/desert-services-hub/docs/az-stormwater-noi-ndc-toolkit/scripts/generate-noi-simple-guide.ts
-```
-
-Default output:
-
-- `/Users/chiejimofor/Documents/Github/desert-services-hub/docs/az-stormwater-noi-ndc-toolkit/outputs/noi-simple-guide-v1.pdf`
 
 ## Checker Logic
 
-- Decision tree and checker rules live in:
-  `/Users/chiejimofor/Documents/Github/desert-services-hub/docs/az-stormwater-noi-ndc-toolkit/strategy/permit-path-checker-logic.md`
+- Decision tree and checker rules: `strategy/permit-path-checker-logic.md`

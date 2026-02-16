@@ -1,10 +1,10 @@
 import { describe, expect, test } from "bun:test";
 import { writeFileSync } from "node:fs";
-import { createLineItems } from "@/lib/catalog";
 import {
   generateEstimatePDF,
   getEstimatePDFFilename,
-} from "@/lib/pdf/estimate/generate-estimate-pdf.server";
+} from "@documents/pdf/estimate/generate-estimate-pdf.server";
+import { createLineItems } from "@estimates/catalog";
 import { getPdfTestOutputPath } from "./output-path";
 
 const CATALOG_NAME_ERROR_RE = /catalog code or exact catalog name/i;

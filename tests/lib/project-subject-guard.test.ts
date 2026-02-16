@@ -2,7 +2,7 @@ import { describe, expect, it } from "bun:test";
 import {
   buildHintTokenSets,
   subjectMatchesHintTokenSets,
-} from "@lib/project-subject-guard";
+} from "@email/project-subject-guard";
 
 describe("project subject guard", () => {
   it("matches a subject when it overlaps a project hint", () => {

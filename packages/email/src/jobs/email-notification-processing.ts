@@ -3,6 +3,7 @@
  */
 
 import type { GraphEmailClient } from "@email/client";
+import { htmlToText } from "@email/html-to-text";
 import { isSpam } from "@email/spam-filter";
 import { createGraphClient } from "@email/sync/config";
 import { db } from "@lib/db/hub";
@@ -14,7 +15,6 @@ import {
   linkEmailToProject,
 } from "@lib/db/repositories";
 import type { InsertAttachmentData, InsertEmailData } from "@lib/db/types";
-import { htmlToText } from "@lib/html-to-text";
 
 export type DustPermitEmailTrigger = "pointandpay_payment" | "maricopa_issued";
 

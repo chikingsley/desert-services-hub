@@ -151,7 +151,7 @@ bun run db:supabase:status
 bun run db:supabase:stop
 ```
 
-Runtime notes: `docs/POSTGRES_MIGRATION.md`
+Runtime notes: `docs/reference/POSTGRES_MIGRATION.md`
 
 ## Documentation
 

@@ -10,8 +10,9 @@
  *   bun cli/manual-upload.ts "https://cdn3.compliancego.com/..." "ARCO" "KTEC PHX"
  *   bun cli/manual-upload.ts "https://cdn3.compliancego.com/..." "ARCO" "KTEC PHX" "01.29.26"
  */
-import { getProjectsFolder } from "@sharepoint/paths";
+
 import { SharePointClient } from "@sharepoint/client";
+import { getProjectsFolder } from "@sharepoint/paths";
 import puppeteer from "puppeteer";
 
 // --- Inspection path utilities ---

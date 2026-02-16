@@ -31,7 +31,8 @@ function main(): void {
     options: {
       from: {
         type: "string",
-        default: "packages/narratives/data/intake/eva-to-jayson/variable-inventory",
+        default:
+          "packages/narratives/data/intake/eva-to-jayson/variable-inventory",
       },
       to: {
         type: "string",

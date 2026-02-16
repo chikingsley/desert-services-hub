@@ -1,6 +1,12 @@
 /**
  * Takeoff Editor Page
  */
+
+import type { TakeoffAnnotation, TakeoffToolType } from "@takeoff/pdf-takeoff";
+import {
+  aggregateTakeoffAnnotations,
+  type TakeoffCatalogItem,
+} from "@takeoff/takeoff-to-estimate";
 import { FileText } from "lucide-react";
 import {
   lazy,
@@ -23,14 +29,6 @@ import { FloatingTools } from "@/apps/web/frontend/components/takeoffs/floating-
 import { Button } from "@/apps/web/frontend/components/ui/button";
 import { Spinner } from "@/apps/web/frontend/components/ui/spinner";
 import { fetcher } from "@/apps/web/frontend/lib/fetcher";
-import type {
-  TakeoffAnnotation,
-  TakeoffToolType,
-} from "@/lib/takeoff/pdf-takeoff";
-import {
-  aggregateTakeoffAnnotations,
-  type TakeoffCatalogItem,
-} from "@/lib/takeoff/takeoff-to-estimate";
 
 type SaveStatus = "saved" | "saving" | "unsaved";
 

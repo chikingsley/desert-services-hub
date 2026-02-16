@@ -1,8 +1,8 @@
 import { spawn } from "node:child_process";
-import { linkEmailToEstimate } from "@lib/db/repositories/estimate-email";
 import { resolveEmailToEstimate } from "@email/resolution/resolve-estimate";
 import { resolveEmailToProject } from "@email/resolution/resolve-project";
 import type { EstimateResolutionResult } from "@email/resolution/types";
+import { linkEmailToEstimate } from "@lib/db/repositories/estimate-email";
 import {
   EMAIL_RESOLVER_ENABLED,
   EMAIL_RESOLVER_SPARK_CONFIDENCE_MIN,

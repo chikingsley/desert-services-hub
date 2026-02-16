@@ -1,3 +1,6 @@
+import type { EstimatePDFOptions } from "@documents/pdf/estimate/build-estimate-doc-definition";
+import { generateEstimatePDFBlob } from "@documents/pdf/estimate/generate-estimate-pdf.client";
+import { catalog } from "@estimates/catalog";
 import type { EditorEstimate } from "@lib/db/types";
 import {
   ChevronDown,
@@ -24,9 +27,6 @@ import {
 import { useSidebar } from "@/apps/web/frontend/components/ui/sidebar";
 import { Spinner } from "@/apps/web/frontend/components/ui/spinner";
 import { useSettings } from "@/apps/web/frontend/hooks/use-settings";
-import { catalog } from "@/lib/catalog";
-import type { EstimatePDFOptions } from "@/lib/pdf/estimate/build-estimate-doc-definition";
-import { generateEstimatePDFBlob } from "@/lib/pdf/estimate/generate-estimate-pdf.client";
 
 type SaveStatus = "saved" | "saving" | "unsaved";
 

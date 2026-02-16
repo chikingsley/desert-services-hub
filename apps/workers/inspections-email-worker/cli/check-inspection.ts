@@ -8,8 +8,9 @@
  *   bun cli/check-inspection.ts "ARCO" "KTEC PHX"
  *   bun cli/check-inspection.ts "BPR COMPANIES" "PV LOT C3" "01.26.26"
  */
-import { getProjectsFolder } from "@sharepoint/paths";
+
 import { SharePointClient } from "@sharepoint/client";
+import { getProjectsFolder } from "@sharepoint/paths";
 
 // --- Inspection path utilities ---
 

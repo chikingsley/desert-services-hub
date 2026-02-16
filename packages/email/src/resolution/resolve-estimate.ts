@@ -1,9 +1,9 @@
+import type { EstimateResolutionResult } from "@email/resolution/types";
 import { db } from "@lib/db/hub";
 import {
   findEstimateCandidatesForEmail,
   linkEmailToEstimate,
 } from "@lib/db/repositories/estimate-email";
-import type { EstimateResolutionResult } from "@email/resolution/types";
 
 interface EmailEstimateRow {
   id: number;
@@ -119,7 +119,9 @@ export async function resolveEmailToEstimate(
   let addressHints: string[] = [];
 
   if (email.project_id !== null) {
-    const projectEstimateRows = await getProjectEstimateIds.all(email.project_id);
+    const projectEstimateRows = await getProjectEstimateIds.all(
+      email.project_id
+    );
     restrictEstimateIds = [
       ...new Set(projectEstimateRows.map((row) => row.estimate_id)),
     ];

@@ -3,8 +3,8 @@
  * contract packet backfill, and SharePoint upload.
  */
 
+import { isSubjectCompatibleWithProject } from "@email/project-subject-guard";
 import { db } from "@lib/db/hub";
-import { isSubjectCompatibleWithProject } from "@lib/project-subject-guard";
 import {
   createSharePointClientFromEnv,
   uploadLocalFileToProjectSubfolder,

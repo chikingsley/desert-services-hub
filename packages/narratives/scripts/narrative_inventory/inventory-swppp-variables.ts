@@ -604,7 +604,8 @@ function main(): void {
       },
       out: {
         type: "string",
-        default: "packages/narratives/data/intake/eva-to-jayson/variable-inventory",
+        default:
+          "packages/narratives/data/intake/eva-to-jayson/variable-inventory",
       },
       minLen: { type: "string", default: String(STRINGS_MIN_LEN_DEFAULT) },
       limit: { type: "string" },

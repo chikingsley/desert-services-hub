@@ -5,7 +5,7 @@
  * Each test verifies that actual values flow through the system correctly.
  */
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
-import { findItem } from "@lib/catalog";
+import { findItem } from "@estimates/catalog";
 import { db } from "@lib/db/hub";
 import type {
   EstimateLineItemRow,

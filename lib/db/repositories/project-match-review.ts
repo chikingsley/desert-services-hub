@@ -1,14 +1,14 @@
 import { db } from "@lib/db/hub";
-import type {
-  ProjectMatchCandidate,
-  ProjectMatchDecision,
-  ProjectMatchResult,
+import {
+  normalizeProjectAlias,
+  type ProjectMatchCandidate,
+  type ProjectMatchDecision,
+  type ProjectMatchResult,
 } from "@lib/db/repositories/project";
 import type {
   ProjectMatchReview,
   ProjectMatchReviewStatus,
 } from "@lib/db/types";
-import { normalizeProjectAlias } from "@lib/project-matching";
 
 export type ProjectMatchReviewSource =
   | "folder_watcher"

@@ -1,6 +1,5 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   PdfHighlighter,
   type PdfHighlighterUtils,
@@ -12,11 +11,12 @@ import {
   type TakeoffToolType,
   type ViewportPosition,
   viewportPositionToScaled,
-} from "@/lib/takeoff/pdf-takeoff";
+} from "@takeoff/pdf-takeoff";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 // Note: pdfjs-dist CSS is loaded via CDN in layout/head to avoid SVG reference issues
-import "@/lib/pdf-takeoff/style/PdfHighlighter.css";
-import "@/lib/pdf-takeoff/style/pdf_viewer.css";
+import "@takeoff/pdf-takeoff/style/PdfHighlighter.css";
+import "@takeoff/pdf-takeoff/style/pdf_viewer.css";
 
 interface TakeoffViewerProps {
   pdfUrl: string;

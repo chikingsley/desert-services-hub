@@ -2,7 +2,7 @@
  * Constants and column maps for Procurement extraction.
  */
 
-export const DB_PATH = "./scripts/procurement.db";
+export const DB_PATH = "lib/db/procurement.db";
 
 // Board IDs for Procurement workspace
 export const BOARDS = {

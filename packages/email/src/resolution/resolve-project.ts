@@ -1,3 +1,5 @@
+import { isSubjectCompatibleWithProject } from "@email/project-subject-guard";
+import type { ProjectResolutionResult } from "@email/resolution/types";
 import { db } from "@lib/db/hub";
 import {
   findProjectCandidates,
@@ -7,8 +9,6 @@ import {
   type ProjectMatchReviewSource,
   upsertProjectMatchReview,
 } from "@lib/db/repositories/project-match-review";
-import type { ProjectResolutionResult } from "@email/resolution/types";
-import { isSubjectCompatibleWithProject } from "@lib/project-subject-guard";
 
 interface EmailProjectRow {
   id: number;

@@ -1,5 +1,5 @@
-import { saveSsspPDF } from "@lib/pdf/sssp/generate-sssp-pdf.server";
-import type { SsspDocument, SsspSection } from "@lib/pdf/sssp/types";
+import { saveSsspPDF } from "@documents/pdf/sssp/generate-sssp-pdf.server";
+import type { SsspDocument, SsspSection } from "@documents/pdf/sssp/types";
 import { z } from "zod";
 import { formatZodError } from "../../common";
 

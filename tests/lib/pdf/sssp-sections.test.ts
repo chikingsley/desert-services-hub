@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
-import { buildSsspDocDefinition } from "@lib/pdf/sssp/build-sssp-doc-definition";
-import type { SsspDocument } from "@lib/pdf/sssp/types";
+import { buildSsspDocDefinition } from "@documents/pdf/sssp/build-sssp-doc-definition";
+import type { SsspDocument } from "@documents/pdf/sssp/types";
 
 const TEST_LOGO = "data:image/png;base64,AA==";
 

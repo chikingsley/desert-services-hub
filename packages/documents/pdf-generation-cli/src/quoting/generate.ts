@@ -1,10 +1,13 @@
 import { join } from "node:path";
-import type { EditorEstimate } from "@lib/db/types";
-import { getEstimateNumber, getEstimateWithDetails } from "@lib/estimating";
 import {
   generateEstimatePDF,
   getEstimatePDFFilename,
-} from "@lib/pdf/estimate/generate-estimate-pdf.server";
+} from "@documents/pdf/estimate/generate-estimate-pdf.server";
+import {
+  getEstimateNumber,
+  getEstimateWithDetails,
+} from "@estimates/estimating";
+import type { EditorEstimate } from "@lib/db/types";
 
 export interface GenerateEstimatePdfOptions {
   includeBackPage?: boolean;

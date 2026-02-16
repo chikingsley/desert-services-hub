@@ -3,8 +3,8 @@ import { existsSync } from "node:fs";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { generateSsspPDF } from "@lib/pdf/sssp/generate-sssp-pdf.server";
-import type { SsspDocument } from "@lib/pdf/sssp/types";
+import { generateSsspPDF } from "@documents/pdf/sssp/generate-sssp-pdf.server";
+import type { SsspDocument } from "@documents/pdf/sssp/types";
 
 const PDFTOTEXT_BIN = Bun.which?.("pdftotext") ?? null;
 const INPUT_PATH = "data/triage/1400-w-3rd/sssp-input.json";

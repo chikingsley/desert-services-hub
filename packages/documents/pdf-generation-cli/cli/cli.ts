@@ -14,11 +14,14 @@ import {
   parseSsspSectionsOverride,
 } from "../src/safety/sssp/generate";
 import { templateDoc as ssspTemplateDoc } from "../src/safety/sssp/template";
+import { generatePdf as generateNoiNdcQuickstart } from "../src/stormwater/noi-ndc-quickstart";
+import { generatePdf as generateNoiSimpleGuide } from "../src/stormwater/noi-simple-guide";
 
 type SafetyDocKind = "sds" | "sssp";
 type SafetyAction = "init" | "generate";
 type QuotingKind = "estimate";
 type QuotingAction = "generate" | "pdf";
+type StormwaterKind = "noi-guide" | "quickstart";
 
 function isSafetyDocKind(value: string): value is SafetyDocKind {
   return value === "sds" || value === "sssp";
@@ -36,6 +39,10 @@ function isQuotingAction(value: string): value is QuotingAction {
   return value === "generate" || value === "pdf";
 }
 
+function isStormwaterKind(value: string): value is StormwaterKind {
+  return value === "noi-guide" || value === "quickstart";
+}
+
 function help(): void {
   console.log(`
 Desert PDF Generation CLI
@@ -48,6 +55,9 @@ Usage:
   bun packages/documents/pdf-generation-cli/cli/cli.ts safety sds generate --in <input.json> --out <output.pdf> [--include-sheets] [--download-sheets-from-url] [--fail-on-missing-sheets]
 
   bun packages/documents/pdf-generation-cli/cli/cli.ts quoting estimate generate --id <estimate-id> [--output <output.pdf>] [--include-back-page]
+
+  bun packages/documents/pdf-generation-cli/cli/cli.ts stormwater noi-guide generate --out <output.pdf>
+  bun packages/documents/pdf-generation-cli/cli/cli.ts stormwater quickstart generate --out <output.pdf>
 `);
 }
 
@@ -197,6 +207,33 @@ async function handleQuotingEstimateGenerate(argv: string[]): Promise<void> {
   console.log(`Wrote PDF: ${result.outputPath}`);
 }
 
+async function handleStormwaterGenerate(
+  kind: StormwaterKind,
+  argv: string[]
+): Promise<void> {
+  const { values } = parseArgs({
+    args: argv,
+    options: {
+      out: { type: "string" },
+    },
+  });
+
+  const outPath = values.out ? resolvePath(values.out) : null;
+  if (!outPath) {
+    die(`stormwater ${kind} generate requires --out <output.pdf>`);
+  }
+
+  ensureDir(outPath);
+
+  if (kind === "noi-guide") {
+    await generateNoiSimpleGuide(outPath);
+  } else {
+    await generateNoiNdcQuickstart(outPath);
+  }
+
+  console.log(`Wrote PDF: ${outPath}`);
+}
+
 async function main(): Promise<void> {
   const [domain, kindArg, actionArg, ...rest] = Bun.argv.slice(2);
 
@@ -236,7 +273,24 @@ async function main(): Promise<void> {
     process.exit(0);
   }
 
-  die(`Unknown namespace: ${domain}. Expected one of: safety, quoting`);
+  if (domain === "stormwater") {
+    if (!(kindArg && isStormwaterKind(kindArg))) {
+      die(
+        "Missing or invalid stormwater type. Expected one of: noi-guide, quickstart"
+      );
+    }
+
+    if (actionArg !== "generate") {
+      die("Missing or invalid stormwater action. Expected: generate");
+    }
+
+    await handleStormwaterGenerate(kindArg, rest);
+    process.exit(0);
+  }
+
+  die(
+    `Unknown namespace: ${domain}. Expected one of: safety, quoting, stormwater`
+  );
 }
 
 main().catch((error) => {

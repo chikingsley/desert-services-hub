@@ -28,12 +28,24 @@ desert-services-hub/
   packages/                 # Domain packages (the core of the system)
     aqdata/                 # Air quality data scraping and marketing intelligence
     contracts/              # Contract parsing, review pipeline, document analysis
-    documents/              # Document factory: PDF analysis, generation, SSSP, SDS, takeoffs
+    documents/              # Document factory: PDF analysis, generation, SSSP, SDS, stormwater
+      src/pdf/              # PDF generation (estimate, SSSP, SDS, brand sheets)
+      pdf-analysis-cli/     # PDF extraction with Gemini
+      pdf-generation-cli/   # CLI for PDF generation commands (safety, quoting, stormwater)
+      reference/safety/     # Safety reference PDFs, SDS analysis, manuals
     dust-permits/           # Dust permit browser automation (Playwright, VNC, Maricopa portal)
     email/                  # Outlook sync, classification, automation, templates, notifications
+      attachments/          # Default company docs (W-9, ROC license, subcontractor registration)
+    estimates/              # Estimating domain: catalog, pricing, validation
+      src/catalog/          # Service catalog + dust permit fee tiers
+      src/estimating/       # Estimate CRUD, payload validation, types
     monday/                 # Monday.com API, sync, webhooks, CLI
     narratives/             # Environmental narrative generation (Python/UV)
     sharepoint/             # SharePoint file operations, sync, SWPPP integration
+    takeoff/                # PDF quantity takeoff + annotation components
+      src/pdf-takeoff/      # React annotation UI (PdfHighlighter, tools, measurements)
+      src/takeoffs.ts       # Takeoff API client
+      src/takeoff-to-estimate.ts  # Annotation → estimate line item conversion
 
   apps/
     web/                    # Frontend SPA + API routes (Bun + React)
@@ -54,20 +66,19 @@ desert-services-hub/
       outlook-folder-watcher/        # Outlook folder polling + project linking
       swppp-sync/                    # (moved to packages/sharepoint/workers/swppp-master-poller/)
 
-  db/                       # Database schema, repositories, types, migrations
-    (currently at lib/db/)   # Will move to db/ as migration completes
-
-  lib/                      # Shared libraries (legacy location, migrating into packages/)
-    catalog/                # Service catalog + dust permit fee tiers
-    db/                     # Postgres client, repositories, types
-    estimating/             # Estimate payload validation
-    graph/                  # Microsoft Graph API client
-    pdf/                    # PDF generation utilities
-    pdf-takeoff/            # PDF quantity takeoff
-    takeoff/                # Takeoff calculations
+  lib/                      # Cross-cutting shared infrastructure (not domain-specific)
+    db/                     # Postgres client, repositories, types (136 importers)
+    graph/                  # Microsoft Graph API auth tokens (used by email, sharepoint, workers)
+    utils.ts                # Frontend utilities (cn, formatCurrency, formatDate)
 
   supabase/
     migrations/             # Postgres migration files (applied in order)
+
+  docs/                     # Documentation (no loose files at root)
+    _archive/               # Legacy/archived materials (MinIO, old SOPs, onboarding)
+    az-stormwater-noi-ndc-toolkit/  # AZ NOI/NDC regulatory sources + strategy
+    contracts/              # Contract workflows, SLA, file naming, PM process
+    reference/              # Architecture, CLI conventions, DB docs, signage, workflow maps
 
   docker-compose.yml        # All Docker service definitions
   tsconfig.json             # TypeScript config with path aliases
@@ -299,17 +310,20 @@ Each Docker service maps to an entrypoint in the codebase.
 
 Defined in `tsconfig.json`. These must be updated as packages migrate.
 
-| Alias | Current Path | Target Path |
-|-------|-------------|-------------|
-| `@lib/*` | `lib/*` | `lib/*` (stays) |
-| `@sharepoint/*` | `packages/sharepoint/src/*` | `packages/sharepoint/src/*` |
-| `@email/*` | `packages/email/src/*` | `packages/email/src/*` |
-| `@monday/*` | `packages/monday/src/*` | `packages/monday/src/*` |
-| `@aqdata/*` | `packages/aqdata/src/*` | `packages/aqdata/src/*` |
-| `@contract/*` | `packages/contracts/*` | `packages/contracts/*` |
-| `@/components/*` | `apps/web/frontend/components/*` | `apps/web/frontend/components/*` |
-| `@/pages/*` | `apps/web/frontend/pages/*` | `apps/web/frontend/pages/*` |
-| `@/api/*` | `apps/web/api/*` | `apps/web/api/*` |
+| Alias | Path |
+|-------|------|
+| `@lib/*` | `lib/*` |
+| `@sharepoint/*` | `packages/sharepoint/src/*` |
+| `@email/*` | `packages/email/src/*` |
+| `@monday/*` | `packages/monday/src/*` |
+| `@aqdata/*` | `packages/aqdata/src/*` |
+| `@contract/*` | `packages/contracts/*` |
+| `@documents/*` | `packages/documents/src/*` |
+| `@estimates/*` | `packages/estimates/src/*` |
+| `@takeoff/*` | `packages/takeoff/src/*` |
+| `@/components/*` | `apps/web/frontend/components/*` |
+| `@/pages/*` | `apps/web/frontend/pages/*` |
+| `@/api/*` | `apps/web/api/*` |
 
 ---
 
@@ -358,6 +372,12 @@ Packages that have been moved to their domain folders:
 | `packages/contracts/` | Complete | `apps/contract/` (deleted) |
 | `packages/narratives/` | Complete | `apps/narrative/` (deleted) |
 | `packages/documents/` | Complete | PDF analysis CLI + PDF generation CLI (old paths deleted) |
+| `packages/documents/src/pdf/` | Complete | `lib/pdf/` → PDF generation (estimate, SSSP, SDS, brand sheets) |
+| `packages/documents/pdf-generation-cli/src/stormwater/` | Complete | `docs/az-stormwater-noi-ndc-toolkit/scripts/` → NOI/NDC guide generators |
+| `packages/estimates/` | Complete | `lib/catalog/` + `lib/estimating/` → pricing catalog + estimate validation |
+| `packages/takeoff/` | Complete | `lib/takeoff/` + `lib/pdf-takeoff/` → annotation UI + takeoff logic |
+| `packages/email/src/html-to-text.ts` | Complete | `lib/html-to-text.ts` → all importers were in email package |
+| `packages/email/src/project-subject-guard.ts` | Complete | `lib/project-subject-guard.ts` → all importers were email intake |
 
 Workers still in `apps/workers/` (to be evaluated for migration into packages):
 
@@ -366,24 +386,19 @@ Workers still in `apps/workers/` (to be evaluated for migration into packages):
 | `notifications/` | `packages/email/` | Rename: "email automation", not just notifications |
 | `outlook-folder-watcher/` | `packages/email/` | Email domain owns folder watching |
 | `estimate-email-linker/` | `packages/email/` or `packages/estimates/` | TBD |
-| `estimate-poller/` | `packages/estimates/` (future) | Monday.com estimate sync |
+| `estimate-poller/` | `packages/estimates/` | Monday.com estimate sync |
 | `estimates-sync-worker/` | `packages/sharepoint/` or `packages/estimates/` | SharePoint folder sync |
 | `swppp-sync/` | `packages/sharepoint/` | Moved → `packages/sharepoint/workers/swppp-master-poller/` |
 | `buildingconnected-file-sync/` | `packages/buildingconnected/` (future) | Needs own package |
 | `job-runner/` | `apps/workers/job-runner/` | Stays -- orchestrator, not domain logic |
 
-Shared libraries still in `lib/` (to be evaluated):
+Remaining in `lib/` (genuinely cross-cutting, used by multiple domains):
 
-| Library | Target | Notes |
-|---------|--------|-------|
-| `lib/db/` | `db/` (root level) | Central DB layer, shared by all packages |
-| `lib/catalog/` | `lib/catalog/` or `packages/estimates/` | Fee schedule + pricing |
-| `lib/estimating/` | `packages/estimates/` (future) | Estimate validation |
-| `lib/graph/` | `lib/graph/` | Microsoft Graph auth -- used by email, sharepoint |
-| `lib/pdf/` | `packages/documents/` | PDF generation utilities |
-| `lib/pdf-takeoff/` | `packages/documents/` | PDF quantity takeoff |
-| `lib/takeoff/` | `packages/documents/` | Takeoff calculations |
-| `lib/project-matching.ts` | `lib/` or `packages/projects/` (future) | Shared matching logic |
+| Library | Importers | Notes |
+|---------|-----------|-------|
+| `lib/db/` | 136 | Central DB layer -- every domain depends on it |
+| `lib/graph/` | 7 | Microsoft Graph auth -- used by email, sharepoint, workers |
+| `lib/utils.ts` | 55+ | Frontend infrastructure (`cn()`, formatters) |
 
 ---
 

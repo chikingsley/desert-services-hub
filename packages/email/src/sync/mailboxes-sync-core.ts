@@ -2,6 +2,7 @@
  * Email mailbox sync core routines.
  */
 
+import { htmlToText } from "@email/html-to-text";
 import type { GraphEmailClient } from "@email/index";
 import { isSpam } from "@email/spam-filter";
 import type { SyncProgress, SyncResult } from "@email/sync/config";
@@ -14,7 +15,6 @@ import {
   updateMailboxSyncState,
 } from "@lib/db/repositories";
 import type { InsertAttachmentData, InsertEmailData } from "@lib/db/types";
-import { htmlToText } from "@lib/html-to-text";
 
 type EmailForSync = Awaited<
   ReturnType<GraphEmailClient["getAllEmailsPaginated"]>

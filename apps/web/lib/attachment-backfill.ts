@@ -12,10 +12,10 @@
 import { mkdir, unlink } from "node:fs/promises";
 import { join } from "node:path";
 import type { GraphEmailClient } from "@email/client";
+import { isSubjectCompatibleWithProject } from "@email/project-subject-guard";
 import { createGraphClient } from "@email/sync/config";
 import { db } from "@lib/db/hub";
 import { updateAttachmentExtraction } from "@lib/db/repositories/attachment";
-import { isSubjectCompatibleWithProject } from "@lib/project-subject-guard";
 import { processFilesIntake } from "@/apps/web/lib/files-intake";
 
 const LOG = "[attachment-backfill]";

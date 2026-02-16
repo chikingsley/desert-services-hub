@@ -1,5 +1,5 @@
 import { db } from "@lib/db/hub";
-import { normalizeProjectNameKey } from "@lib/project-matching";
+import { normalizeProjectNameKey } from "@lib/db/repositories/project";
 import { parseVariantPrefix } from "@sharepoint/paths";
 
 const ACTIVE_BID_STATUSES = new Set(["won", "pending won", "add to projects"]);

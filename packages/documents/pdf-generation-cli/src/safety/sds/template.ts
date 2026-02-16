@@ -1,4 +1,4 @@
-import type { SdsListDocument } from "@lib/pdf/sds/types";
+import type { SdsListDocument } from "@documents/pdf/sds/types";
 import { DEFAULT_SDS_ENTRIES } from "./default-entries";
 
 export function templateDoc(): SdsListDocument {

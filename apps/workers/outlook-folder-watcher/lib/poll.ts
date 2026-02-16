@@ -11,7 +11,7 @@
  */
 
 import { db as hubDb } from "@lib/db/hub";
-import { normalizeProjectNameKey } from "@lib/project-matching";
+import { normalizeProjectNameKey } from "@lib/db/repositories/project";
 import {
   DeltaExpiredError,
   type FolderChange,

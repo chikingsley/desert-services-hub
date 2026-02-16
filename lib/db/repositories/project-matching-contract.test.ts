@@ -3,8 +3,8 @@ import { db } from "@lib/db/hub";
 import {
   addProjectAlias,
   findProjectCandidates,
+  normalizeProjectNameKey,
 } from "@lib/db/repositories/project";
-import { normalizeProjectNameKey } from "@lib/project-matching";
 
 const RUN_TAG = crypto.randomUUID().slice(0, 8).toLowerCase();
 const TEST_PREFIX = `_TEST_DELETE_ME_PROJECT_MATCH_${RUN_TAG}_`;

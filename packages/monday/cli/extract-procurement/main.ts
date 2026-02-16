@@ -63,11 +63,9 @@ export async function runExtractProcurement(dryRun: boolean): Promise<void> {
   console.log(`Database saved to: ${DB_PATH}`);
   console.log();
   console.log("Query examples:");
+  console.log(`  sqlite3 ${DB_PATH} "SELECT COUNT(*) FROM bids_sent"`);
   console.log(
-    '  sqlite3 scripts/procurement.db "SELECT COUNT(*) FROM bids_sent"'
-  );
-  console.log(
-    '  sqlite3 scripts/procurement.db "SELECT name, email, phone FROM open_bids WHERE email IS NOT NULL LIMIT 10"'
+    `  sqlite3 ${DB_PATH} "SELECT name, email, phone FROM open_bids WHERE email IS NOT NULL LIMIT 10"`
   );
 }
 

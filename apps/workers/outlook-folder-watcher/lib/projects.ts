@@ -8,15 +8,13 @@ import {
   findProjectByText,
   findProjectCandidates,
   getProjectById,
+  normalizeProjectAlias,
+  normalizeProjectNameKey,
 } from "@lib/db/repositories/project";
 import {
   resolveProjectMatchReview,
   upsertProjectMatchReview,
 } from "@lib/db/repositories/project-match-review";
-import {
-  normalizeProjectAlias,
-  normalizeProjectNameKey,
-} from "@lib/project-matching";
 
 /**
  * Parse folder name into project name and contractor.

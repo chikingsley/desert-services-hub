@@ -1,6 +1,8 @@
 /**
  * Email Repository
  */
+
+import { isSpam } from "@email/spam-filter";
 import { db } from "@lib/db/hub";
 import type {
   ClassificationMethod,
@@ -8,7 +10,6 @@ import type {
   EmailClassification,
   InsertEmailData,
 } from "@lib/db/types";
-import { isSpam } from "@email/spam-filter";
 
 // ============================================
 // Row Parser

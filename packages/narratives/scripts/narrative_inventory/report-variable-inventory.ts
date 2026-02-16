@@ -532,7 +532,8 @@ function main(): void {
     options: {
       dir: {
         type: "string",
-        default: "packages/narratives/data/intake/eva-to-jayson/variable-inventory",
+        default:
+          "packages/narratives/data/intake/eva-to-jayson/variable-inventory",
       },
     },
   });

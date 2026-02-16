@@ -3,12 +3,13 @@
  * Links emails to projects when they appear in tracked Outlook folders.
  * Uses the shared Supabase Postgres connection — no separate DB handles.
  */
+
+import { isSubjectCompatibleWithProject } from "@email/project-subject-guard";
 import { db } from "@lib/db/hub";
 import {
   findEstimateCandidatesForEmail,
   linkEmailToEstimate,
 } from "@lib/db/repositories/estimate-email";
-import { isSubjectCompatibleWithProject } from "@lib/project-subject-guard";
 
 interface MessageForLinking {
   id?: string;

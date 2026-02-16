@@ -1,6 +1,7 @@
 import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import type { GraphGroupsClient } from "@email/groups";
+import { htmlToText } from "@email/html-to-text";
 import type { GroupPost, GroupThread } from "@email/types";
 import { db } from "@lib/db/hub";
 import {
@@ -12,7 +13,6 @@ import {
   updateMailboxSyncState,
 } from "@lib/db/repositories";
 import type { InsertAttachmentData, InsertEmailData } from "@lib/db/types";
-import { htmlToText } from "@lib/html-to-text";
 
 const ATTACHMENTS_DIR = join(
   import.meta.dir,

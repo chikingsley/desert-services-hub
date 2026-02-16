@@ -2,8 +2,8 @@ import { dirname, resolve } from "node:path";
 import {
   generateSdsPDF,
   saveSdsPDF,
-} from "@lib/pdf/sds/generate-sds-pdf.server";
-import type { SdsEntry, SdsListDocument } from "@lib/pdf/sds/types";
+} from "@documents/pdf/sds/generate-sds-pdf.server";
+import type { SdsEntry, SdsListDocument } from "@documents/pdf/sds/types";
 import { PDFDocument } from "pdf-lib";
 
 const PDF_HEADER = "%PDF";

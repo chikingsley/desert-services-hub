@@ -1,15 +1,15 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { db } from "@lib/db/hub";
-import type { ProjectMatchResult } from "@lib/db/repositories/project";
+import {
+  normalizeProjectAlias,
+  normalizeProjectNameKey,
+  type ProjectMatchResult,
+} from "@lib/db/repositories/project";
 import {
   getProjectMatchReview,
   resolveProjectMatchReview,
   upsertProjectMatchReview,
 } from "@lib/db/repositories/project-match-review";
-import {
-  normalizeProjectAlias,
-  normalizeProjectNameKey,
-} from "@lib/project-matching";
 
 const RUN_TAG = crypto.randomUUID().slice(0, 8).toLowerCase();
 const TEST_PREFIX = `_TEST_DELETE_ME_PROJECT_REVIEW_${RUN_TAG}_`;

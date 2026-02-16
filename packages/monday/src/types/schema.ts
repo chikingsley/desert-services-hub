@@ -7,7 +7,7 @@
  *
  * Note: There are two workspaces both named "Desert Services":
  * - 8970676: Main/Active CRM workspace (use this)
- * - 8240372: Old Procurement workspace (archived, data extracted to scripts/procurement.db)
+ * - 8240372: Old Procurement workspace (archived, data extracted to lib/db/procurement.db)
  */
 export const WORKSPACE_IDS = {
   /** Main active CRM workspace */

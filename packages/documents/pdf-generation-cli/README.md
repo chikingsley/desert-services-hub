@@ -6,6 +6,8 @@ Current namespaces:
 - `safety sssp` - Site Specific Safety Plan (SSSP)
 - `safety sds` - Safety Data Sheets (SDS) inventory/binder
 - `quoting estimate` - estimate PDF generation from canonical estimate records
+- `stormwater noi-guide` - MyDEQ NOI one-page simple guide
+- `stormwater quickstart` - NOI vs NDC decision & filing guide (multi-page)
 
 ## Usage
 
@@ -40,6 +42,18 @@ bun packages/documents/pdf-generation-cli/cli/cli.ts safety sds generate \
   --out data/sds/SDS_Binder.pdf \
   --include-sheets
 ```
+
+## Stormwater
+
+```bash
+# NOI Simple Guide (one-page for supers/PMs)
+bun packages/documents/pdf-generation-cli/cli/cli.ts stormwater noi-guide generate --out output/noi-simple-guide.pdf
+
+# NOI/NDC Quickstart Guide (multi-page decision + filing guide)
+bun packages/documents/pdf-generation-cli/cli/cli.ts stormwater quickstart generate --out output/noi-ndc-quickstart.pdf
+```
+
+Reference source material for these guides lives in `docs/az-stormwater-noi-ndc-toolkit/`.
 
 ## Options
 

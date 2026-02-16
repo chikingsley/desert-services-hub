@@ -1,4 +1,4 @@
-import type { SdsEntry } from "@lib/pdf/sds/types";
+import type { SdsEntry } from "@documents/pdf/sds/types";
 
 /** Default chemical inventory entries used by `sds init` template. */
 export const DEFAULT_SDS_ENTRIES: SdsEntry[] = [

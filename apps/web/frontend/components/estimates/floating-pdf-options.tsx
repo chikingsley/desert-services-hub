@@ -1,3 +1,4 @@
+import type { EstimatePDFOptions } from "@documents/pdf/estimate/build-estimate-doc-definition";
 import { FileText, GripVertical, Layers } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/apps/web/frontend/components/ui/button";
@@ -7,7 +8,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/apps/web/frontend/components/ui/tooltip";
-import type { EstimatePDFOptions } from "@/lib/pdf/estimate/build-estimate-doc-definition";
 
 interface FloatingPdfOptionsProps {
   options: EstimatePDFOptions;

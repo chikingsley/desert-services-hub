@@ -2,6 +2,15 @@
  * Estimate by ID API handlers
  * Routes: /api/estimates/:id, /api/estimates/:id/pdf, /api/estimates/:id/duplicate, /api/estimates/:id/finalize, /api/estimates/:id/takeoff
  */
+
+import {
+  generateEstimatePDF,
+  getEstimatePDFFilename,
+} from "@documents/pdf/estimate/generate-estimate-pdf.server";
+import {
+  EstimatePayloadValidationError,
+  validateUpdateEstimatePayload,
+} from "@estimates/estimating/estimate-payload-validation";
 import { db } from "@lib/db/hub";
 import {
   getCanonicalEstimateForProject,
@@ -17,14 +26,6 @@ import type {
   EstimateSectionRow,
   EstimateVersionRow,
 } from "@lib/db/types";
-import {
-  EstimatePayloadValidationError,
-  validateUpdateEstimatePayload,
-} from "@lib/estimating/estimate-payload-validation";
-import {
-  generateEstimatePDF,
-  getEstimatePDFFilename,
-} from "@lib/pdf/estimate/generate-estimate-pdf.server";
 import { generateBaseNumber } from "@lib/utils";
 
 // Bun extends Request with params from route matching

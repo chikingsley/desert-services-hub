@@ -1,4 +1,4 @@
-import type { SsspDocument } from "@lib/pdf/sssp/types";
+import type { SsspDocument } from "@documents/pdf/sssp/types";
 
 export function templateDoc(): SsspDocument {
   return {

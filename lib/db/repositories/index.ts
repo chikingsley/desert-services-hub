@@ -118,6 +118,11 @@ export {
   getProjectById,
   getProjectsForAccount,
   linkEmailToProject,
+  normalizeProjectAlias,
+  normalizeProjectNameKey,
+  tokenizeProjectText,
+  tokenOverlap,
+  uniqueStrings,
 } from "@lib/db/repositories/project";
 // Project ↔ Estimate
 export {

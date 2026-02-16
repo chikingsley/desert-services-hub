@@ -2,8 +2,8 @@ import { describe, expect, test } from "bun:test";
 import {
   generateSdsPDF,
   saveSdsPDF,
-} from "@lib/pdf/sds/generate-sds-pdf.server";
-import type { SdsListDocument } from "@lib/pdf/sds/types";
+} from "@documents/pdf/sds/generate-sds-pdf.server";
+import type { SdsListDocument } from "@documents/pdf/sds/types";
 import { getPdfTestOutputPath } from "./output-path";
 
 const sdsDoc: SdsListDocument = {

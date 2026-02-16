@@ -8,6 +8,10 @@ const PHONE_RE =
   /(?:\+?1[\s().-]*)?(?:\(?\d{3}\)?[\s().-]*)\d{3}[\s().-]*\d{4}/g;
 const INTERNAL_DOMAIN_SUFFIXES = ["desertservices.net"];
 const DEFAULT_CREATE_THRESHOLD = 0.72;
+const LOCAL_PART_SPLIT_RE = /[._-]+/;
+const ANGLE_BRACKETS_RE = /[<>]/g;
+const LIST_DELIM_RE = /[;,]/;
+const TIMED_OUT_RE = /timed out/i;
 
 interface ProjectRow {
   id: number;
@@ -197,7 +201,7 @@ function normalizePhone(value: string | null | undefined): string | null {
 
 function titleCaseFromLocalPart(localPart: string): string {
   return localPart
-    .split(/[._-]+/)
+    .split(LOCAL_PART_SPLIT_RE)
     .map((part) => part.trim())
     .filter(Boolean)
     .map((part) => `${part.slice(0, 1).toUpperCase()}${part.slice(1)}`)
@@ -211,8 +215,8 @@ export function normalizeEmailAddress(
   if (!value) {
     return null;
   }
-  const trimmed = value.trim().replaceAll(/[<>]/g, "").toLowerCase();
-  if (!(trimmed && trimmed.includes("@"))) {
+  const trimmed = value.trim().replaceAll(ANGLE_BRACKETS_RE, "").toLowerCase();
+  if (!trimmed?.includes("@")) {
     return null;
   }
   return trimmed;
@@ -251,7 +255,7 @@ export function parseEmailAddressList(raw: string | null): string[] {
   }
 
   return trim
-    .split(/[;,]/)
+    .split(LIST_DELIM_RE)
     .map((value) => normalizeEmailAddress(value))
     .filter((value): value is string => Boolean(value));
 }
@@ -1047,7 +1051,7 @@ async function runSparkExtraction(
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     const retryableTimeout =
-      /timed out/i.test(message) && retryTimeoutMs > baseTimeoutMs;
+      TIMED_OUT_RE.test(message) && retryTimeoutMs > baseTimeoutMs;
 
     if (!retryableTimeout) {
       return { error: message, records: [] };

@@ -29,6 +29,10 @@ import {
   FULL_SYNC_INTERVAL_MS,
   GROUP_SYNC_INTERVAL_MS,
   MAX_CONCURRENT_JOBS,
+  NOTIFICATIONS_DELIVERY_MODE,
+  NOTIFICATIONS_INTERVAL_MS,
+  NOTIFICATIONS_MAILBOX,
+  NOTIFICATIONS_MAX_EVENTS,
   POLL_INTERVAL_MS,
   RENEWAL_INTERVAL_MS,
 } from "./jobs/config";
@@ -37,6 +41,18 @@ import { backfillContractPacketDocuments } from "./jobs/intake-processing";
 import { enqueueFullSyncIfMissing, requeueStale } from "./jobs/queue";
 import { processUnprocessedAttachments } from "./lib/attachment-backfill";
 import { runEstimateExtractionTriage } from "./lib/estimate-extraction-triage";
+import {
+  createDraftClientFromEnv,
+  createNotificationDraft,
+  type NotificationDeliveryMode,
+} from "./lib/notifications/delivery";
+import {
+  detectAllEvents,
+  loadQueuedNotifications,
+  recordNotification,
+  updateNotificationStatus,
+} from "./lib/notifications/events";
+import { getStakeholders } from "./lib/notifications/stakeholders";
 
 // ============================================================================
 // Timer Registry
@@ -252,6 +268,130 @@ export async function startWorker(): Promise<void> {
       if (r.postsStored > 0) {
         console.log(
           `[worker] Group sync ${r.group}: ${r.postsStored} new posts`
+        );
+      }
+    }
+  });
+
+  // Notification event detection — polls Postgres for permit expirations,
+  // estimate wins, contracts received, etc. Creates notification records
+  // and optionally Outlook drafts via Graph API.
+  initNotificationTimer();
+}
+
+// ============================================================================
+// Notification Poll Timer
+// ============================================================================
+
+function initNotificationTimer(): void {
+  let deliveryMode: NotificationDeliveryMode = NOTIFICATIONS_DELIVERY_MODE;
+  let draftClient: ReturnType<typeof createDraftClientFromEnv> | null = null;
+
+  if (deliveryMode === "draft") {
+    try {
+      draftClient = createDraftClientFromEnv();
+    } catch (err) {
+      console.warn(
+        `[worker] Notifications draft mode disabled: ${(err as Error).message}. Falling back to log mode.`
+      );
+      deliveryMode = "log";
+    }
+  }
+
+  console.log(
+    `[worker] Notifications: ${NOTIFICATIONS_INTERVAL_MS / 1000}s interval, mode=${deliveryMode}, mailbox=${NOTIFICATIONS_MAILBOX}, max=${NOTIFICATIONS_MAX_EVENTS}`
+  );
+
+  registerTimer("Notifications", NOTIFICATIONS_INTERVAL_MS, async () => {
+    let processedCount = 0;
+    const cappedMax = Math.max(0, NOTIFICATIONS_MAX_EVENTS);
+
+    // Process queued pending notifications first (draft mode only)
+    if (deliveryMode === "draft" && draftClient) {
+      const queued = await loadQueuedNotifications(cappedMax);
+      for (const queuedNotification of queued) {
+        const event = queuedNotification.event;
+        const stakeholders = await getStakeholders(event.eventType);
+
+        if (stakeholders.length === 0) {
+          await updateNotificationStatus(queuedNotification.id, "failed", {
+            error: "No active stakeholders configured for event type",
+          });
+          processedCount++;
+          continue;
+        }
+
+        try {
+          const draft = await createNotificationDraft({
+            client: draftClient,
+            event,
+            stakeholders,
+            mailbox: NOTIFICATIONS_MAILBOX,
+          });
+          await updateNotificationStatus(queuedNotification.id, "drafted", {
+            draftId: draft.id,
+          });
+        } catch (err) {
+          await updateNotificationStatus(queuedNotification.id, "failed", {
+            error: (err as Error).message,
+          });
+        }
+        processedCount++;
+      }
+    }
+
+    // Detect new events
+    const remainingBudget = Math.max(0, cappedMax - processedCount);
+    const events = remainingBudget > 0 ? await detectAllEvents() : [];
+    const pendingEvents = events.slice(0, remainingBudget);
+
+    if (pendingEvents.length === 0 && processedCount === 0) {
+      return; // Nothing to do
+    }
+
+    if (pendingEvents.length > 0) {
+      console.log(
+        `[worker] Notifications: ${pendingEvents.length} new event(s)${events.length > pendingEvents.length ? ` (${events.length} total, capped)` : ""}`
+      );
+    }
+
+    for (const event of pendingEvents) {
+      const stakeholders = await getStakeholders(event.eventType);
+      const recipientList = stakeholders.map((s) => s.email).join(", ");
+
+      console.log(
+        `[worker]   [${event.eventType}] ${event.subject} → ${recipientList || "(no stakeholders)"}`
+      );
+
+      if (stakeholders.length === 0) {
+        await recordNotification(
+          event,
+          "failed",
+          undefined,
+          "No active stakeholders configured for event type"
+        );
+        continue;
+      }
+
+      if (deliveryMode === "log" || !draftClient) {
+        await recordNotification(event, "pending");
+        continue;
+      }
+
+      try {
+        const draft = await createNotificationDraft({
+          client: draftClient,
+          event,
+          stakeholders,
+          mailbox: NOTIFICATIONS_MAILBOX,
+        });
+        await recordNotification(event, "drafted", draft.id);
+      } catch (err) {
+        await recordNotification(
+          event,
+          "failed",
+          undefined,
+          (err as Error).message
         );
       }
     }

@@ -1,6 +1,5 @@
 #!/usr/bin/env bun
 
-import { db } from "@lib/db/hub";
 import { EMAIL_RESOLVER_SPARK_MODEL } from "@background-jobs/jobs/config";
 import type {
   ApplyProjectContactResolutionResult,
@@ -10,6 +9,7 @@ import {
   applyProjectContactResolution,
   resolveProjectContacts,
 } from "@background-jobs/lib/project-contact-resolver";
+import { db } from "@lib/db/hub";
 
 type Scope = "project" | "active" | "seed" | "all";
 
@@ -175,6 +175,7 @@ function parseArgs(argv: string[]): CliOptions {
       case "-h": {
         usage();
         process.exit(0);
+        break; // unreachable but satisfies noFallthroughSwitchClause
       }
       default: {
         throw new Error(`Unknown argument: ${arg}`);

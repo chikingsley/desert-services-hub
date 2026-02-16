@@ -38,8 +38,8 @@
     "includes": [
       "**/*",
       "!docs/_archive",
-      "!apps/workers/docusign-file-automation/_reference",
-      "!packages/dust-permits/tests/e2e/screenshots",
+      "!apps/cf-workers/docusign-file-automation/_reference",
+      "!apps/dust-permits/tests/e2e/screenshots",
       "!tests/e2e/screenshots",
       "!**/.wrangler",
       "!**/.cursor",
@@ -50,8 +50,8 @@
     {
       "includes": [
         "docs/_archive/**",
-        "apps/workers/docusign-file-automation/_reference/**",
-        "packages/dust-permits/experiments/**",
+        "apps/cf-workers/docusign-file-automation/_reference/**",
+        "apps/dust-permits/experiments/**",
         "tests/e2e/screenshots/**"
       ],
       "linter": {
@@ -65,7 +65,7 @@
       }
     },
     {
-      "includes": ["packages/dust-permits/src/form-data.ts"],
+      "includes": ["apps/dust-permits/src/form-data.ts"],
       "linter": {
         "rules": {
           "nursery": {
@@ -75,7 +75,7 @@
       }
     },
     {
-      "includes": ["packages/dust-permits/src/portal/create/fill/**"],
+      "includes": ["apps/dust-permits/src/portal/create/fill/**"],
       "linter": {
         "rules": {
           "complexity": {
@@ -85,7 +85,7 @@
       }
     },
     {
-      "includes": ["lib/takeoff/pdf-takeoff/components/**/*"],
+      "includes": ["packages/takeoff/src/pdf-takeoff/components/**/*"],
       "linter": {
         "rules": {
           "a11y": {

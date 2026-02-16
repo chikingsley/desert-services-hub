@@ -400,7 +400,7 @@ describe("ops health metrics", () => {
     });
 
     test("all values are numeric and non-negative", () => {
-      for (const [key, value] of metrics) {
+      for (const [_key, value] of metrics) {
         expect(typeof value).toBe("number");
         expect(value).toBeGreaterThanOrEqual(0);
       }
@@ -621,8 +621,11 @@ describe("project audit", () => {
       )
       .get(projectId);
     expect(row).not.toBeNull();
-    expect(row!.id).toBe(projectId);
-    expect(typeof row!.name).toBe("string");
+    if (!row) {
+      return;
+    }
+    expect(row.id).toBe(projectId);
+    expect(typeof row.name).toBe("string");
   });
 
   test("tracked folder query returns expected shape", async () => {
@@ -669,11 +672,12 @@ describe("project audit", () => {
       )
       .get(projectId);
     expect(row).not.toBeNull();
-    expect(row!.unique_message_keys).toBeLessThanOrEqual(
-      row!.linked_email_rows
-    );
-    expect(row!.emails_with_attachments).toBeLessThanOrEqual(
-      row!.linked_email_rows
+    if (!row) {
+      return;
+    }
+    expect(row.unique_message_keys).toBeLessThanOrEqual(row.linked_email_rows);
+    expect(row.emails_with_attachments).toBeLessThanOrEqual(
+      row.linked_email_rows
     );
   });
 
@@ -753,9 +757,12 @@ describe("project audit", () => {
       )
       .get(projectId);
     expect(row).not.toBeNull();
+    if (!row) {
+      return;
+    }
     expect(
-      row!.att_success + row!.att_failed + row!.att_pending
-    ).toBeLessThanOrEqual(row!.attachment_rows);
+      row.att_success + row.att_failed + row.att_pending
+    ).toBeLessThanOrEqual(row.attachment_rows);
   });
 
   test("document extraction counts are non-negative", async () => {
@@ -776,8 +783,11 @@ describe("project audit", () => {
       )
       .get(projectId);
     expect(row).not.toBeNull();
-    expect(row!.doc_success + row!.doc_failed).toBeLessThanOrEqual(
-      row!.document_rows
+    if (!row) {
+      return;
+    }
+    expect(row.doc_success + row.doc_failed).toBeLessThanOrEqual(
+      row.document_rows
     );
   });
 
@@ -811,13 +821,16 @@ describe("project audit", () => {
       )
       .get(projectId);
     expect(row).not.toBeNull();
+    if (!row) {
+      return;
+    }
     const validStates = ["PASS", "WARN", "FAIL"];
-    expect(validStates).toContain(row!.project_exists);
-    expect(validStates).toContain(row!.folder_linked);
-    expect(validStates).toContain(row!.emails_linked);
-    expect(validStates).toContain(row!.estimates_linked);
-    expect(validStates).toContain(row!.permit_state_present);
-    expect(validStates).toContain(row!.documents_present);
+    expect(validStates).toContain(row.project_exists);
+    expect(validStates).toContain(row.folder_linked);
+    expect(validStates).toContain(row.emails_linked);
+    expect(validStates).toContain(row.estimates_linked);
+    expect(validStates).toContain(row.permit_state_present);
+    expect(validStates).toContain(row.documents_present);
   });
 });
 
@@ -854,16 +867,22 @@ describe("resolver backfill scopes", () => {
     test(`scope "${scope}" returns valid stats`, () => {
       const row = scopeResults.get(scope);
       expect(row).toBeDefined();
-      expect(row!.target_rows).toBeGreaterThanOrEqual(0);
-      expect(row!.already_queued_rows).toBeGreaterThanOrEqual(0);
-      expect(row!.enqueueable_rows).toBeGreaterThanOrEqual(0);
+      if (!row) {
+        return;
+      }
+      expect(row.target_rows).toBeGreaterThanOrEqual(0);
+      expect(row.already_queued_rows).toBeGreaterThanOrEqual(0);
+      expect(row.enqueueable_rows).toBeGreaterThanOrEqual(0);
     });
 
     test(`scope "${scope}" stats sum correctly`, () => {
       const row = scopeResults.get(scope);
       expect(row).toBeDefined();
-      expect(row!.already_queued_rows + row!.enqueueable_rows).toBe(
-        row!.target_rows
+      if (!row) {
+        return;
+      }
+      expect(row.already_queued_rows + row.enqueueable_rows).toBe(
+        row.target_rows
       );
     });
   }
@@ -922,10 +941,13 @@ describe("contract status", () => {
       )
       .get();
     expect(row).not.toBeNull();
-    expect(row!.total).toBeGreaterThanOrEqual(0);
+    if (!row) {
+      return;
+    }
+    expect(row.total).toBeGreaterThanOrEqual(0);
     expect(
-      row!.pending + row!.received + row!.sent_back + row!.executed
-    ).toBeLessThanOrEqual(row!.total);
+      row.pending + row.received + row.sent_back + row.executed
+    ).toBeLessThanOrEqual(row.total);
   });
 });
 

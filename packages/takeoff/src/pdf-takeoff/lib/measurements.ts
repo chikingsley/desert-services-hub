@@ -146,6 +146,43 @@ export interface MeasurementSummary {
   formatted: string;
 }
 
+/** Accumulate total measurement value for annotations of a given config type. */
+function accumulateValue(
+  itemAnnotations: TakeoffAnnotation[],
+  configType: "count" | "linear" | "area",
+  scale: ScalePresetConfig
+): { totalValue: number; unit: string } {
+  switch (configType) {
+    case "count":
+      return { totalValue: itemAnnotations.length, unit: "EA" };
+    case "linear": {
+      let total = 0;
+      for (const ann of itemAnnotations) {
+        if (ann.type === "polyline") {
+          total += pdfPointsToFeet(calculatePolylineLength(ann.points), scale);
+        }
+      }
+      return { totalValue: total, unit: "LF" };
+    }
+    case "area": {
+      let total = 0;
+      for (const ann of itemAnnotations) {
+        if (ann.type === "polygon") {
+          total += pdfPointsSquaredToSquareFeet(
+            calculatePolygonArea(ann.points),
+            scale
+          );
+        }
+      }
+      return { totalValue: total, unit: "SF" };
+    }
+    default: {
+      const _exhaustive: never = configType;
+      throw new Error(`Unknown config type: ${_exhaustive}`);
+    }
+  }
+}
+
 export function summarizeByItem(
   annotations: TakeoffAnnotation[],
   scale: ScalePresetConfig,
@@ -164,29 +201,11 @@ export function summarizeByItem(
       continue;
     }
 
-    let totalValue = 0;
-    let unit = "EA";
-
-    if (config.type === "count") {
-      totalValue = itemAnnotations.length;
-      unit = "EA";
-    } else if (config.type === "linear") {
-      for (const ann of itemAnnotations) {
-        if (ann.type === "polyline") {
-          const length = calculatePolylineLength(ann.points);
-          totalValue += pdfPointsToFeet(length, scale);
-        }
-      }
-      unit = "LF";
-    } else if (config.type === "area") {
-      for (const ann of itemAnnotations) {
-        if (ann.type === "polygon") {
-          const area = calculatePolygonArea(ann.points);
-          totalValue += pdfPointsSquaredToSquareFeet(area, scale);
-        }
-      }
-      unit = "SF";
-    }
+    const { totalValue, unit } = accumulateValue(
+      itemAnnotations,
+      config.type,
+      scale
+    );
 
     summaries.push({
       itemId: config.id,

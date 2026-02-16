@@ -301,6 +301,44 @@ function VncStatusOverlay({ portalReady }: { portalReady: boolean }) {
   );
 }
 
+/** Derive all display labels from automation status to reduce component complexity. */
+function deriveDisplayState(
+  data: AutomationStatus | undefined,
+  visible: boolean
+) {
+  const busyLabel = data?.busy ? data.currentOperation || "Running" : "Idle";
+  const viewportWidth = data?.viewportWidth || 1280;
+  const viewportHeight = data?.viewportHeight || 1024;
+  const vncAspectRatio = `${viewportWidth} / ${viewportHeight}`;
+
+  const homePinTelemetryAvailable =
+    (data?.lastPortalPinAt ?? null) !== null ||
+    typeof data?.portalHomePinEnabled === "boolean";
+
+  const lastPinnedHomeLabel = homePinTelemetryAvailable
+    ? formatTimestamp(data?.lastPortalPinAt ?? null)
+    : "N/A";
+
+  let homePinLabel = "N/A";
+  if (homePinTelemetryAvailable && data?.portalHomePinEnabled) {
+    homePinLabel = `On (${Math.round((data.portalHomePinIntervalMs || 0) / 1000)}s)`;
+  } else if (homePinTelemetryAvailable) {
+    homePinLabel = "Off";
+  }
+
+  const rootClassName = visible
+    ? "flex flex-col"
+    : "pointer-events-none fixed inset-0 -z-10 opacity-0";
+
+  return {
+    busyLabel,
+    vncAspectRatio,
+    lastPinnedHomeLabel,
+    homePinLabel,
+    rootClassName,
+  };
+}
+
 interface AutomationPageProps {
   visible?: boolean;
 }
@@ -364,31 +402,13 @@ export function AutomationPage({ visible = true }: AutomationPageProps) {
     }).catch(() => undefined);
   }, [runAction, visible]);
 
+  const displayState = deriveDisplayState(data, visible);
   const { label: sessionState, dotClass: sessionDotClass } =
     getSessionDisplay(data);
   const actionPending = action !== null;
-  const busyLabel = data?.busy ? data.currentOperation || "Running" : "Idle";
-  const viewportWidth = data?.viewportWidth || 1280;
-  const viewportHeight = data?.viewportHeight || 1024;
-  const vncAspectRatio = `${viewportWidth} / ${viewportHeight}`;
-  const homePinTelemetryAvailable =
-    (data?.lastPortalPinAt ?? null) !== null ||
-    typeof data?.portalHomePinEnabled === "boolean";
-  const lastPinnedHomeLabel = homePinTelemetryAvailable
-    ? formatTimestamp(data?.lastPortalPinAt ?? null)
-    : "N/A";
-  let homePinLabel = "N/A";
-  if (homePinTelemetryAvailable) {
-    homePinLabel = data?.portalHomePinEnabled
-      ? `On (${Math.round((data.portalHomePinIntervalMs || 0) / 1000)}s)`
-      : "Off";
-  }
-  const rootClassName = visible
-    ? "flex flex-col"
-    : "pointer-events-none fixed inset-0 -z-10 opacity-0";
 
   return (
-    <div aria-hidden={!visible} className={rootClassName}>
+    <div aria-hidden={!visible} className={displayState.rootClassName}>
       <PageHeader
         breadcrumbs={[{ label: "Maricopa Portal" }]}
         title="Maricopa County Dust Portal"
@@ -409,19 +429,19 @@ export function AutomationPage({ visible = true }: AutomationPageProps) {
           </div>
 
           <div className="grid grid-cols-2 gap-2 text-muted-foreground text-sm lg:grid-cols-6">
-            <div>Busy: {busyLabel}</div>
+            <div>Busy: {displayState.busyLabel}</div>
             <div>Last login: {formatTimestamp(data?.lastLoginAt ?? null)}</div>
             <div>
               Last keepalive: {formatTimestamp(data?.lastKeepAliveAt ?? null)}
             </div>
-            <div>Last pinned home: {lastPinnedHomeLabel}</div>
+            <div>Last pinned home: {displayState.lastPinnedHomeLabel}</div>
             <div>
               Keepalive:{" "}
               {data?.keepAliveEnabled
                 ? `On (${Math.round((data.keepAliveIntervalMs || 0) / 1000)}s)`
                 : "Off"}
             </div>
-            <div>Home pin: {homePinLabel}</div>
+            <div>Home pin: {displayState.homePinLabel}</div>
           </div>
 
           <div className="mt-3 text-muted-foreground text-xs">
@@ -443,7 +463,7 @@ export function AutomationPage({ visible = true }: AutomationPageProps) {
 
         <div
           className="relative w-full overflow-hidden rounded-2xl border border-border bg-black"
-          style={{ aspectRatio: vncAspectRatio }}
+          style={{ aspectRatio: displayState.vncAspectRatio }}
         >
           <iframe
             allow="clipboard-read; clipboard-write; fullscreen"

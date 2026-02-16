@@ -178,6 +178,71 @@ const PLAN_REQUIRED_FIELDS = ["projectName", "dustControlMeasures"] as const;
 /**
  * Validate a plan extraction against expected output
  */
+/** Compare a single field between actual and expected, categorizing the result. */
+function compareField(
+  field: string,
+  actualValue: unknown,
+  expectedValue: unknown
+): {
+  matched?: string;
+  mismatched?: { field: string; actual: unknown; expected: unknown };
+  missing?: string;
+  extra?: string;
+} {
+  if (expectedValue === undefined || expectedValue === null) {
+    if (actualValue !== undefined && actualValue !== null) {
+      return { extra: field };
+    }
+    return {};
+  }
+
+  if (actualValue === undefined || actualValue === null) {
+    return { missing: field };
+  }
+
+  if (valuesMatch(actualValue, expectedValue, field)) {
+    return { matched: field };
+  }
+
+  return {
+    mismatched: { field, actual: actualValue, expected: expectedValue },
+  };
+}
+
+/** Compare dust control measures categories. */
+function compareDustControlMeasures(
+  actual: PlanExtraction["dustControlMeasures"],
+  expected: PlanExtraction["dustControlMeasures"]
+): {
+  matched?: string;
+  mismatched?: { field: string; actual: unknown; expected: unknown };
+  missing?: string;
+} {
+  if (!expected) {
+    return {};
+  }
+  if (!actual) {
+    return { missing: "dustControlMeasures" };
+  }
+
+  const expectedCategories = Object.keys(expected);
+  const actualCategories = Object.keys(actual);
+  const allMatch = expectedCategories.every((c) =>
+    actualCategories.includes(c)
+  );
+
+  if (allMatch) {
+    return { matched: "dustControlMeasures" };
+  }
+  return {
+    mismatched: {
+      field: "dustControlMeasures",
+      actual: actualCategories,
+      expected: expectedCategories,
+    },
+  };
+}
+
 export function validatePlanExtraction(
   actual: Partial<PlanExtraction>,
   expected: PlanExtraction
@@ -187,7 +252,6 @@ export function validatePlanExtraction(
   const missingFields: string[] = [];
   const extraFields: string[] = [];
 
-  // Simple fields
   const simpleFields = [
     "projectName",
     "projectLocation",
@@ -197,64 +261,44 @@ export function validatePlanExtraction(
     "contractor",
   ] as const;
 
+  // Compare simple fields
   for (const field of simpleFields) {
-    const expectedValue = expected[field];
-    const actualValue = actual[field];
-
-    if (expectedValue === undefined || expectedValue === null) {
-      if (actualValue !== undefined && actualValue !== null) {
-        extraFields.push(field);
-      }
-      continue;
+    const result = compareField(field, actual[field], expected[field]);
+    if (result.matched) {
+      matchedFields.push(result.matched);
     }
-
-    if (actualValue === undefined || actualValue === null) {
-      missingFields.push(field);
-      continue;
+    if (result.mismatched) {
+      mismatchedFields.push(result.mismatched);
     }
-
-    if (valuesMatch(actualValue, expectedValue, field)) {
-      matchedFields.push(field);
-    } else {
-      mismatchedFields.push({
-        actual: actualValue,
-        expected: expectedValue,
-        field,
-      });
+    if (result.missing) {
+      missingFields.push(result.missing);
+    }
+    if (result.extra) {
+      extraFields.push(result.extra);
     }
   }
 
-  // Dust control measures - check if categories exist
-  if (expected.dustControlMeasures && actual.dustControlMeasures) {
-    const expectedCategories = Object.keys(expected.dustControlMeasures);
-    const actualCategories = Object.keys(actual.dustControlMeasures);
-
-    const matchingCategories = expectedCategories.filter((c) =>
-      actualCategories.includes(c)
-    );
-
-    if (matchingCategories.length === expectedCategories.length) {
-      matchedFields.push("dustControlMeasures");
-    } else {
-      mismatchedFields.push({
-        actual: actualCategories,
-        expected: expectedCategories,
-        field: "dustControlMeasures",
-      });
-    }
-  } else if (expected.dustControlMeasures && !actual.dustControlMeasures) {
-    missingFields.push("dustControlMeasures");
+  // Compare dust control measures
+  const dcResult = compareDustControlMeasures(
+    actual.dustControlMeasures,
+    expected.dustControlMeasures
+  );
+  if (dcResult.matched) {
+    matchedFields.push(dcResult.matched);
+  }
+  if (dcResult.mismatched) {
+    mismatchedFields.push(dcResult.mismatched);
+  }
+  if (dcResult.missing) {
+    missingFields.push(dcResult.missing);
   }
 
   // Calculate score
   const totalFields = simpleFields.length + 1; // +1 for dustControlMeasures
   const score = Math.round((matchedFields.length / totalFields) * 100);
-
-  // Valid if required fields match and score >= 70
   const requiredFieldsMatch = PLAN_REQUIRED_FIELDS.every((f) =>
     matchedFields.includes(f)
   );
-  const valid = requiredFieldsMatch && score >= 70;
 
   return {
     extraFields,
@@ -262,7 +306,7 @@ export function validatePlanExtraction(
     mismatchedFields,
     missingFields,
     score,
-    valid,
+    valid: requiredFieldsMatch && score >= 70,
   };
 }
 

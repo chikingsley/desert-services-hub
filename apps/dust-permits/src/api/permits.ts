@@ -5,17 +5,8 @@
  * Uses shared browser session for performance.
  */
 
-import {
-  getActivePermits,
-  getPermitById,
-} from "@lib/db/repositories/dust-permit";
-import type { Permit as DbPermit } from "@lib/db/types";
-import { z } from "zod";
 import type { DeepPartial, FormData } from "@/form-data";
 import { buildFormData } from "@/form-data";
-import { closeSchema } from "@/handlers/close";
-import { createSchema } from "@/handlers/create";
-import { renewSchema } from "@/handlers/renew";
 import {
   validateBuiltFormData,
   validateFormDataOverrides,
@@ -26,150 +17,24 @@ import {
   markPermitClosedRecord,
   persistDraftPermitRecord,
 } from "@/lib/permit-records";
-import type { Permit as DashboardPermit } from "@/lib/types";
 import { closePermit } from "@/portal/close";
 import { createApplicationFull, renewPermitFull } from "@/portal/create";
 import { deleteAllDrafts, deleteByApplicationId } from "@/portal/delete";
-import {
-  ensureBrowserSessionReady,
-  getSessionPageAndContext,
-  withBrowserSessionOperation,
-} from "@/portal/utils/browser";
+import { withBrowserSessionOperation } from "@/portal/utils/browser";
 import { captureError } from "@/portal/utils/sentry";
-
-const log = (msg: string) => process.stderr.write(`${msg}\n`);
-
-// ============================================
-// API-specific schemas (extend handler schemas for HTTP)
-// ============================================
-
-/**
- * Create permit request - extends handler schema with API-specific fields
- */
-const apiCreateSchema = createSchema
-  .omit({ headless: true, keepOpen: true })
-  .extend({
-    copyFromApp: z
-      .string()
-      .optional()
-      .describe("Permit ID to copy from (for renew flow)"),
-  });
-
-/**
- * Revise request schema
- */
-const apiReviseSchema = z.object({
-  notes: z.string().optional().describe("Additional notes"),
-  revisionType: z.string().describe("Type of revision"),
-});
-
-// ============================================
-// Helpers
-// ============================================
-
-function transformPermitForDashboard(dbPermit: DbPermit): DashboardPermit {
-  const permitNumber = dbPermit.id;
-  const company = dbPermit.companyName || "Unknown";
-  const projectName = dbPermit.projectName || "Unnamed Project";
-  const address = dbPermit.address
-    ? `${dbPermit.address}${dbPermit.city ? `, ${dbPermit.city}` : ""}`
-    : undefined;
-
-  return {
-    address,
-    company,
-    current: {
-      id: dbPermit.id,
-      applicationNumber: dbPermit.id,
-      permitNumber: dbPermit.id,
-      version: 1,
-      versionType: "new",
-      projectName,
-      company,
-      address,
-      requestStatus: "complete",
-      permitStatus:
-        (dbPermit.status as DashboardPermit["current"]["permitStatus"]) ||
-        "Draft",
-      submittedAt: dbPermit.submittedDate || undefined,
-      effectiveAt: dbPermit.effectiveDate || undefined,
-      expiresAt: dbPermit.expirationDate || undefined,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-    history: [],
-    permitNumber,
-    projectName,
-  };
-}
-
-async function ensureBrowserSession(): Promise<
-  | {
-      success: true;
-      page: NonNullable<ReturnType<typeof getSessionPageAndContext>>;
-    }
-  | { success: false; error: string }
-> {
-  const session = await ensureBrowserSessionReady();
-  const ctx = getSessionPageAndContext();
-
-  if (!ctx) {
-    return { error: "No browser session available", success: false };
-  }
-
-  if (!(session.isLoggedIn && session.portalReady)) {
-    return { error: "Failed to login to portal", success: false };
-  }
-
-  return { page: ctx, success: true };
-}
-
-function jsonError(error: string, status = 400): Response {
-  return Response.json(
-    { error, success: false, timestamp: new Date().toISOString() },
-    { status }
-  );
-}
-
-function jsonSuccess(data: Record<string, unknown>): Response {
-  return Response.json({
-    success: true,
-    ...data,
-    timestamp: new Date().toISOString(),
-  });
-}
-
-async function validateCreateMapPreflight(
-  formData: FormData
-): Promise<{ valid: true } | { valid: false; error: string }> {
-  const { latitude, longitude, acresDisturbed } = formData.site;
-  if (typeof latitude !== "number" || typeof longitude !== "number") {
-    return { valid: true };
-  }
-
-  try {
-    const { buildPermitMapDataFromSiteCoordinates } = await import(
-      "@/lib/site-drawing"
-    );
-    await buildPermitMapDataFromSiteCoordinates(
-      {
-        acresDisturbed,
-        latitude,
-        longitude,
-      },
-      { includeAccessPoint: false }
-    );
-  } catch (error) {
-    return {
-      error: `Map preflight failed for site ${latitude.toFixed(6)},${longitude.toFixed(6)}: ${
-        error instanceof Error ? error.message : String(error)
-      }`,
-      valid: false,
-    };
-  }
-
-  return { valid: true };
-}
+import {
+  apiCreateSchema,
+  apiReviseSchema,
+  closeBodySchema,
+  ensureBrowserSession,
+  getPermitForDashboard,
+  jsonError,
+  jsonSuccess,
+  listPermitsForDashboard,
+  log,
+  renewBodySchema,
+  validateCreateMapPreflight,
+} from "./permits-helpers";
 
 // ============================================
 // Handlers
@@ -179,28 +44,24 @@ async function validateCreateMapPreflight(
  * GET /api/permits - List all permits
  */
 export async function handleListPermits(): Promise<Response> {
-  const dbPermits = await getActivePermits();
-  return Response.json(dbPermits.map(transformPermitForDashboard));
+  return Response.json(await listPermitsForDashboard());
 }
 
 /**
  * GET /api/permits/:id - Get single permit
  */
 export async function handleGetPermit(id: string): Promise<Response> {
-  const permit = await getPermitById(id);
-
+  const permit = await getPermitForDashboard(id);
   if (!permit) {
     return jsonError(`Permit ${id} not found`, 404);
   }
-
-  return Response.json(transformPermitForDashboard(permit));
+  return Response.json(permit);
 }
 
 /**
  * POST /api/permits/create - Create new permit
  */
 export async function handleCreatePermit(body: unknown): Promise<Response> {
-  // Validate input using schema
   const parsed = apiCreateSchema.safeParse(body);
   if (!parsed.success) {
     return jsonError(parsed.error.issues[0]?.message || "Invalid input");
@@ -208,7 +69,6 @@ export async function handleCreatePermit(body: unknown): Promise<Response> {
 
   const { flow, companyName, copyFromApp, formDataPath } = parsed.data;
 
-  // Load form data from file if path provided
   let overrides: DeepPartial<FormData> | undefined;
   if (formDataPath) {
     let overridesInput: unknown;
@@ -307,9 +167,7 @@ export async function handleRenewPermit(
 ): Promise<Response> {
   log(`\n🔄 RENEW permit request: ${id}`);
 
-  // Validate input - only need companyName from body
-  const bodySchema = renewSchema.pick({ companyName: true });
-  const parsed = bodySchema.safeParse(body);
+  const parsed = renewBodySchema.safeParse(body);
   if (!parsed.success) {
     return jsonError(parsed.error.issues[0]?.message || "Invalid input");
   }
@@ -362,9 +220,7 @@ export async function handleClosePermit(
 ): Promise<Response> {
   log(`\n🔒 CLOSE permit request: ${id}`);
 
-  // Validate input - only need reason from body (optional)
-  const bodySchema = closeSchema.pick({ reason: true });
-  const parsed = bodySchema.safeParse(body);
+  const parsed = closeBodySchema.safeParse(body);
   if (!parsed.success) {
     return jsonError(parsed.error.issues[0]?.message || "Invalid input");
   }
@@ -387,7 +243,6 @@ export async function handleClosePermit(
     }
 
     await markPermitClosedRecord(id);
-
     return jsonSuccess(result);
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : String(error);
@@ -405,7 +260,6 @@ export async function handleRevisePermit(
 ): Promise<Response> {
   log(`\n📝 REVISE permit request: ${id}`);
 
-  // Validate input
   const parsed = apiReviseSchema.safeParse(body);
   if (!parsed.success) {
     return jsonError(parsed.error.issues[0]?.message || "Invalid input");
@@ -425,7 +279,6 @@ export async function handleRevisePermit(
 
     const { page, context } = sessionResult.page;
 
-    // Map revision type to purpose string
     const typeDescriptions: Record<string, string> = {
       acreage: "Acreage Change - Modify total acreage amount",
       bmp: "BMP Modifications - Update best management practices",
@@ -440,7 +293,6 @@ export async function handleRevisePermit(
       ? `${baseDescription}. ${notes}`
       : baseDescription;
 
-    // Navigate to My Dust Apps
     const { navigateToMyDustApps, waitForElement } = await import(
       "@/portal/utils/helpers"
     );
@@ -452,7 +304,6 @@ export async function handleRevisePermit(
     }
     await waitForElement(page, portal.dustApps.newApplicationBtn, 15_000);
 
-    // Create revision
     const { createReviseApplication } = await import("@/portal/create");
     const result = await withBrowserSessionOperation(
       `revise:${id}`,
@@ -498,7 +349,6 @@ export async function handleDeletePermit(id: string): Promise<Response> {
     }
 
     const { page, context } = sessionResult.page;
-
     const deleted = await withBrowserSessionOperation(
       `delete:${id}`,
       async () => await deleteByApplicationId(page, context, id)

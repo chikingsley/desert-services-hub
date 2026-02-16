@@ -126,85 +126,98 @@ function getArraySchemaForPath(path: Path): z.ZodTypeAny | null {
   return null;
 }
 
+/** Build a Zod schema for an array template value. */
+function buildArraySchema(
+  template: unknown[],
+  options: { partial: boolean; path: Path }
+): z.ZodTypeAny {
+  const pathSchema = getArraySchemaForPath(options.path);
+  if (pathSchema) {
+    return pathSchema;
+  }
+  if (template.length === 0) {
+    return z.array(z.unknown());
+  }
+
+  const first = template[0];
+  if (isPlainObject(first)) {
+    return z.array(
+      buildSchemaFromTemplate(first, {
+        partial: options.partial,
+        path: [...options.path, 0],
+      })
+    );
+  }
+  return z.array(primitiveSchema(first));
+}
+
+/** Map a scalar value to its Zod primitive schema. */
+function primitiveSchema(value: unknown): z.ZodTypeAny {
+  switch (typeof value) {
+    case "string":
+      return z.string();
+    case "number":
+      return z.number();
+    case "boolean":
+      return z.boolean();
+    default:
+      return z.unknown();
+  }
+}
+
+/** Build a Zod schema for a string template, applying path-specific enum overrides. */
+function buildStringSchema(path: Path): z.ZodTypeAny {
+  const pathKey = pathToString(path);
+  if (pathKey.endsWith(".paveWhen")) {
+    return z.enum(PAVE_WHEN_VALUES);
+  }
+  if (pathKey.startsWith("postK.") && pathKey.endsWith(".waterTier")) {
+    return z.enum(WATER_TIER_VALUES);
+  }
+  return z.string();
+}
+
+/** Build a Zod object schema from a template record, applying optional fields. */
+function buildObjectSchema(
+  template: Record<string, unknown>,
+  options: { partial: boolean; path: Path }
+): z.ZodTypeAny {
+  const shape: Record<string, z.ZodTypeAny> = {};
+  for (const [key, value] of Object.entries(template)) {
+    const childSchema = buildSchemaFromTemplate(value, {
+      partial: options.partial,
+      path: [...options.path, key],
+    });
+    shape[key] = options.partial ? childSchema.optional() : childSchema;
+  }
+  const optionalFields = OPTIONAL_OBJECT_FIELDS[pathToString(options.path)];
+  if (optionalFields) {
+    for (const [key, schema] of Object.entries(optionalFields)) {
+      if (!shape[key]) {
+        shape[key] = schema.optional();
+      }
+    }
+  }
+  return z.strictObject(shape);
+}
+
 function buildSchemaFromTemplate(
   template: unknown,
   options: { partial: boolean; path: Path }
 ): z.ZodTypeAny {
   if (Array.isArray(template)) {
-    const pathSchema = getArraySchemaForPath(options.path);
-    if (pathSchema) {
-      return pathSchema;
-    }
-
-    if (template.length === 0) {
-      return z.array(z.unknown());
-    }
-
-    const first = template[0];
-    if (isPlainObject(first)) {
-      return z.array(
-        buildSchemaFromTemplate(first, {
-          partial: options.partial,
-          path: [...options.path, 0],
-        })
-      );
-    }
-    if (typeof first === "string") {
-      return z.array(z.string());
-    }
-    if (typeof first === "number") {
-      return z.array(z.number());
-    }
-    if (typeof first === "boolean") {
-      return z.array(z.boolean());
-    }
-    return z.array(z.unknown());
+    return buildArraySchema(template, options);
   }
-
   if (template === null) {
     return getNullableSchema(options.path);
   }
-
   if (isPlainObject(template)) {
-    const shape: Record<string, z.ZodTypeAny> = {};
-    for (const [key, value] of Object.entries(template)) {
-      const childSchema = buildSchemaFromTemplate(value, {
-        partial: options.partial,
-        path: [...options.path, key],
-      });
-      shape[key] = options.partial ? childSchema.optional() : childSchema;
-    }
-    const optionalFields = OPTIONAL_OBJECT_FIELDS[pathToString(options.path)];
-    if (optionalFields) {
-      for (const [key, schema] of Object.entries(optionalFields)) {
-        if (!shape[key]) {
-          shape[key] = schema.optional();
-        }
-      }
-    }
-    return z.strictObject(shape);
+    return buildObjectSchema(template, options);
   }
-
   if (typeof template === "string") {
-    const pathKey = pathToString(options.path);
-    if (pathKey.endsWith(".paveWhen")) {
-      return z.enum(PAVE_WHEN_VALUES);
-    }
-    if (pathKey.startsWith("postK.") && pathKey.endsWith(".waterTier")) {
-      return z.enum(WATER_TIER_VALUES);
-    }
-    return z.string();
+    return buildStringSchema(options.path);
   }
-
-  if (typeof template === "number") {
-    return z.number();
-  }
-
-  if (typeof template === "boolean") {
-    return z.boolean();
-  }
-
-  return z.unknown();
+  return primitiveSchema(template);
 }
 
 function addIssue(ctx: IssueCtx, path: Path, message: string): void {

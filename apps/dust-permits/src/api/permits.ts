@@ -58,6 +58,57 @@ export async function handleGetPermit(id: string): Promise<Response> {
   return Response.json(permit);
 }
 
+/** Load and validate form data overrides from a JSON file path. */
+async function loadOverridesFromFile(
+  formDataPath: string
+): Promise<{ data: DeepPartial<FormData> } | { error: Response }> {
+  let overridesInput: unknown;
+  try {
+    const file = Bun.file(formDataPath);
+    const text = await file.text();
+    overridesInput = JSON.parse(text) as unknown;
+  } catch (error) {
+    return {
+      error: jsonError(
+        `Failed to load form data from ${formDataPath}: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      ),
+    };
+  }
+
+  const validation = validateFormDataOverrides(overridesInput);
+  if (!validation.success) {
+    return { error: jsonError(validation.error) };
+  }
+  return { data: validation.data };
+}
+
+/** Persist draft record after successful create, logging on failure. */
+async function tryPersistDraftRecord(
+  applicationId: string,
+  companyName: string,
+  flow: string,
+  formData: FormData,
+  copyFromApp?: string
+): Promise<void> {
+  try {
+    await persistDraftPermitRecord({
+      applicationId,
+      companyName,
+      flow,
+      formData,
+      sourcePermitId: copyFromApp ?? null,
+    });
+  } catch (error) {
+    log(
+      `   ⚠ Failed to persist draft permit record: ${
+        error instanceof Error ? error.message : String(error)
+      }`
+    );
+  }
+}
+
 /**
  * POST /api/permits/create - Create new permit
  */
@@ -71,24 +122,11 @@ export async function handleCreatePermit(body: unknown): Promise<Response> {
 
   let overrides: DeepPartial<FormData> | undefined;
   if (formDataPath) {
-    let overridesInput: unknown;
-    try {
-      const file = Bun.file(formDataPath);
-      const text = await file.text();
-      overridesInput = JSON.parse(text) as unknown;
-    } catch (error) {
-      return jsonError(
-        `Failed to load form data from ${formDataPath}: ${
-          error instanceof Error ? error.message : String(error)
-        }`
-      );
+    const loaded = await loadOverridesFromFile(formDataPath);
+    if ("error" in loaded) {
+      return loaded.error;
     }
-
-    const overridesValidation = validateFormDataOverrides(overridesInput);
-    if (!overridesValidation.success) {
-      return jsonError(overridesValidation.error);
-    }
-    overrides = overridesValidation.data;
+    overrides = loaded.data;
   }
 
   const formData = buildFormData({ overrides });
@@ -123,21 +161,13 @@ export async function handleCreatePermit(body: unknown): Promise<Response> {
     }
 
     if (result.applicationId) {
-      try {
-        await persistDraftPermitRecord({
-          applicationId: result.applicationId,
-          companyName,
-          flow,
-          formData,
-          sourcePermitId: copyFromApp ?? null,
-        });
-      } catch (error) {
-        log(
-          `   ⚠ Failed to persist draft permit record: ${
-            error instanceof Error ? error.message : String(error)
-          }`
-        );
-      }
+      await tryPersistDraftRecord(
+        result.applicationId,
+        companyName,
+        flow,
+        formData,
+        copyFromApp
+      );
     }
 
     return jsonSuccess({

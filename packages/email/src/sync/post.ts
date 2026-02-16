@@ -4,9 +4,10 @@
  * Runs the post-sync pipeline (domain enrichment → platform sender extraction
  * → account linking) without fetching any new mail from Graph.
  */
-import { linkEmailsToAccounts } from "@contract/db/lib/link-accounts";
-import { processPlatformEmails } from "@contract/db/lib/platform-extraction";
+
 import { enrichEmailDomains } from "@email/sync/enrichment";
+import { linkEmailsToAccounts } from "@email/sync/link-accounts";
+import { processPlatformEmails } from "@email/sync/platform-extraction";
 import { db } from "@lib/db/hub";
 
 export async function runEmailPostProcessing(): Promise<void> {

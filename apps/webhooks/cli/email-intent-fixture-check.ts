@@ -1,12 +1,12 @@
 #!/usr/bin/env bun
 
-import { EMAIL_RESOLVER_SPARK_MODEL } from "@/apps/web/jobs/config";
+import { EMAIL_RESOLVER_SPARK_MODEL } from "@/apps/webhooks/jobs/config";
 import type {
   PermitIntentFixtureCaseResult,
   PermitIntentFixtureFile,
   PermitIntentFixtureRunStats,
-} from "@/apps/web/lib/email-intent/permit-intent-fixture";
-import { evaluateFixtureCase } from "@/apps/web/lib/email-intent/permit-intent-fixture";
+} from "@/apps/webhooks/lib/email-intent/permit-intent-fixture";
+import { evaluateFixtureCase } from "@/apps/webhooks/lib/email-intent/permit-intent-fixture";
 
 interface CliOptions {
   fixturePath: string;
@@ -20,7 +20,7 @@ interface CliOptions {
 
 function usage(): void {
   console.log(
-    "Usage: bun apps/web/cli/email-intent-fixture-check.ts [--fixture PATH] [--skip-llm] [--llm-limit N] [--timeout-ms N] [--model NAME] [--min-model-pass-rate R] [--output PATH]"
+    "Usage: bun apps/webhooks/cli/email-intent-fixture-check.ts [--fixture PATH] [--skip-llm] [--llm-limit N] [--timeout-ms N] [--model NAME] [--min-model-pass-rate R] [--output PATH]"
   );
 }
 

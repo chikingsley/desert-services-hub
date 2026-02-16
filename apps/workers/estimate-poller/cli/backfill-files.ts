@@ -8,7 +8,7 @@
  * extractions are retried by the pipeline.
  *
  * Usage:
- *   bun apps/web/cli/backfill-estimate-extraction.ts
+ *   bun apps/workers/estimate-poller/cli/backfill-files.ts
  *
  * Env:
  *   BACKFILL_CONCURRENCY (default 2)

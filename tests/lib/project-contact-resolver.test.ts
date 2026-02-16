@@ -4,7 +4,7 @@ import {
   extractPhoneNumbers,
   normalizeEmailAddress,
   parseEmailAddressList,
-} from "@/apps/web/lib/project-contact-resolver";
+} from "@/apps/webhooks/lib/project-contact-resolver";
 
 describe("project-contact-resolver helpers", () => {
   test("normalizeEmailAddress lowercases and strips angle brackets", () => {

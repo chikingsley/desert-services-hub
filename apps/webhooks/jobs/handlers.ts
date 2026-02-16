@@ -1,6 +1,5 @@
 import { processItemFiles } from "@monday/sync/pipeline";
 import { syncItem } from "@monday/sync/sync-item";
-import { processFilesIntake } from "@/apps/web/lib/files-intake";
 import {
   markStaleProjectSeeds,
   syncProjectSeedsFromEstimates,
@@ -11,6 +10,7 @@ import {
   handleIssuedEmail,
   handlePaymentEmail,
 } from "@/apps/workers/notifications/lib/email-triggers";
+import { processFilesIntake } from "../lib/files-intake";
 import { PROJECT_SEED_STALE_DAYS } from "./config";
 import { processEmailNotification } from "./email-processing";
 import { processEmailResolveJob } from "./email-resolver";

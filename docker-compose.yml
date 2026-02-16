@@ -65,7 +65,7 @@ services:
       retries: 3
       start_period: 5s
     restart: unless-stopped
-    command: ["bun", "run", "apps/web/webhooks.ts"]
+    command: ["bun", "run", "apps/webhooks/webhooks.ts"]
 
   # ==========================================================================
   # Notifications Poller — event detection + draft queueing

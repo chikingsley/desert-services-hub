@@ -16,7 +16,7 @@ import { isSubjectCompatibleWithProject } from "@email/project-subject-guard";
 import { createGraphClient } from "@email/sync/config";
 import { db } from "@lib/db/hub";
 import { updateAttachmentExtraction } from "@lib/db/repositories/attachment";
-import { processFilesIntake } from "@/apps/web/lib/files-intake";
+import { processFilesIntake } from "./files-intake";
 
 const LOG = "[attachment-backfill]";
 const BACKFILL_DIR = "/app/data/backfill";

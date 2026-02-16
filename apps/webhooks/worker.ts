@@ -2,7 +2,7 @@
  * Background Job Worker — Scheduler
  *
  * Thin orchestrator that registers timers and polls the job queue.
- * All logic lives in apps/web/jobs/ modules:
+ * All logic lives in apps/webhooks/jobs/ modules:
  *   - config.ts       — env parsing, constants
  *   - queue.ts        — dequeue, claim, complete, fail, enqueue
  *   - dispatch.ts     — job type routing (processNextJob)
@@ -12,8 +12,6 @@
  *   - permit-sync.ts  — permit-worker coordination for payment flows
  */
 
-import { processUnprocessedAttachments } from "@/apps/web/lib/attachment-backfill";
-import { runEstimateExtractionTriage } from "@/apps/web/lib/estimate-extraction-triage";
 import { pollEstimateEmailLinker } from "@/apps/workers/estimate-email-linker/lib/poll";
 import { pollFolderWatcher } from "@/apps/workers/outlook-folder-watcher/lib/poll";
 import {
@@ -37,6 +35,8 @@ import {
 import { getActiveJobCount, processNextJob } from "./jobs/dispatch";
 import { backfillContractPacketDocuments } from "./jobs/intake-processing";
 import { enqueueFullSyncIfMissing, requeueStale } from "./jobs/queue";
+import { processUnprocessedAttachments } from "./lib/attachment-backfill";
+import { runEstimateExtractionTriage } from "./lib/estimate-extraction-triage";
 
 // ============================================================================
 // Worker Lifecycle

@@ -4,15 +4,15 @@
  * Separate entrypoint for webhook ingestion (Monday, Outlook) and
  * the background job queue processor. Runs behind Cloudflare Tunnel.
  *
- * Run with: bun run apps/web/webhooks.ts
+ * Run with: bun run apps/webhooks/webhooks.ts
  */
 
 import { serve } from "bun";
-import { healthCheck } from "@/api/health";
-import { handleIntakeWebhook } from "@/api/webhooks/intake";
-import { handleMondayWebhook } from "@/api/webhooks/monday";
-import { handleOutlookWebhook } from "@/api/webhooks/outlook";
-import { startWorker } from "@/apps/web/worker";
+import { healthCheck } from "./api/health";
+import { handleIntakeWebhook } from "./api/webhooks/intake";
+import { handleMondayWebhook } from "./api/webhooks/monday";
+import { handleOutlookWebhook } from "./api/webhooks/outlook";
+import { startWorker } from "./worker";
 
 const h = (handler: unknown) => handler as never;
 

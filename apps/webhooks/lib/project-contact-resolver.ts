@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { db } from "@lib/db/hub";
-import { EMAIL_RESOLVER_SPARK_MODEL } from "@/apps/web/jobs/config";
-import { runOpencodeJsonPrompt } from "@/apps/web/lib/email-intent/opencode";
+import { EMAIL_RESOLVER_SPARK_MODEL } from "../jobs/config";
+import { runOpencodeJsonPrompt } from "./email-intent/opencode";
 
 const EMAIL_RE = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi;
 const PHONE_RE =

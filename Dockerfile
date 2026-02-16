@@ -44,6 +44,9 @@ COPY package.json tsconfig.json tsconfig.base.json bunfig.toml ./
 # Web server + API routes
 COPY apps/web ./apps/web
 
+# Webhook receiver + background worker
+COPY apps/webhooks ./apps/webhooks
+
 # CLI tools
 COPY packages/sharepoint ./packages/sharepoint
 COPY packages/email ./packages/email

@@ -18,7 +18,7 @@ import {
   uploadLocalFileToProjectSubfolder,
 } from "@sharepoint/intake-upload";
 import { buildSharePointUrl, sanitizeName } from "@sharepoint/paths";
-import { processFilesIntake } from "@/apps/web/lib/files-intake";
+import { processFilesIntake } from "@/apps/webhooks/lib/files-intake";
 import type { BuildingConnectedSignalFields } from "./signal";
 import { hasBuildingConnectedSignal } from "./signal";
 

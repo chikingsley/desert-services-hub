@@ -1,15 +1,15 @@
 #!/usr/bin/env bun
 
 import { db } from "@lib/db/hub";
-import { EMAIL_RESOLVER_SPARK_MODEL } from "@/apps/web/jobs/config";
+import { EMAIL_RESOLVER_SPARK_MODEL } from "@/apps/webhooks/jobs/config";
 import type {
   ApplyProjectContactResolutionResult,
   ResolveProjectContactsOptions,
-} from "@/apps/web/lib/project-contact-resolver";
+} from "@/apps/webhooks/lib/project-contact-resolver";
 import {
   applyProjectContactResolution,
   resolveProjectContacts,
-} from "@/apps/web/lib/project-contact-resolver";
+} from "@/apps/webhooks/lib/project-contact-resolver";
 
 type Scope = "project" | "active" | "seed" | "all";
 
@@ -37,7 +37,7 @@ function usage(): void {
   console.log(
     [
       "Usage:",
-      "  bun apps/web/cli/project-contact-resolver.ts [options]",
+      "  bun apps/webhooks/cli/project-contact-resolver.ts [options]",
       "",
       "Options:",
       "  --project-id <id>         Single project run (scope=project)",
@@ -54,9 +54,9 @@ function usage(): void {
       "  --help                    Show this help",
       "",
       "Examples:",
-      "  bun apps/web/cli/project-contact-resolver.ts --project-id 23",
-      "  bun apps/web/cli/project-contact-resolver.ts --project-id 23 --apply",
-      "  bun apps/web/cli/project-contact-resolver.ts --scope active --limit-projects 50 --apply",
+      "  bun apps/webhooks/cli/project-contact-resolver.ts --project-id 23",
+      "  bun apps/webhooks/cli/project-contact-resolver.ts --project-id 23 --apply",
+      "  bun apps/webhooks/cli/project-contact-resolver.ts --scope active --limit-projects 50 --apply",
     ].join("\n")
   );
 }

@@ -12,7 +12,7 @@ import {
 import type {
   ContractsEmailIntakePayload,
   processFilesIntake,
-} from "@/apps/web/lib/files-intake";
+} from "../lib/files-intake";
 import { CONTRACT_PACKET_AUTOLINK_BATCH_SIZE } from "./config";
 
 // -- Lazy SharePoint client --

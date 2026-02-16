@@ -1,10 +1,10 @@
 #!/usr/bin/env bun
 
-import { EMAIL_RESOLVER_SPARK_MODEL } from "@/apps/web/jobs/config";
-import type { PermitIntentDryRunOptions } from "@/apps/web/lib/email-intent/permit-intent-dry-run";
-import { runPermitIntentDryRun } from "@/apps/web/lib/email-intent/permit-intent-dry-run";
-import type { PermitIntentRunResult } from "@/apps/web/lib/email-intent/permit-intent-report";
-import { printSummary } from "@/apps/web/lib/email-intent/permit-intent-report";
+import { EMAIL_RESOLVER_SPARK_MODEL } from "@/apps/webhooks/jobs/config";
+import type { PermitIntentDryRunOptions } from "@/apps/webhooks/lib/email-intent/permit-intent-dry-run";
+import { runPermitIntentDryRun } from "@/apps/webhooks/lib/email-intent/permit-intent-dry-run";
+import type { PermitIntentRunResult } from "@/apps/webhooks/lib/email-intent/permit-intent-report";
+import { printSummary } from "@/apps/webhooks/lib/email-intent/permit-intent-report";
 
 interface CliOptions extends PermitIntentDryRunOptions {
   outputPath: string | null;
@@ -12,7 +12,7 @@ interface CliOptions extends PermitIntentDryRunOptions {
 
 function usage(): void {
   console.log(
-    "Usage: bun apps/web/cli/email-intent-dry-run.ts [--limit N] [--since-days N] [--llm-limit N] [--llm-concurrency N] [--llm-retries N] [--timeout-ms N] [--model NAME] [--include-noise-domains] [--skip-llm] [--output PATH] [--help]"
+    "Usage: bun apps/webhooks/cli/email-intent-dry-run.ts [--limit N] [--since-days N] [--llm-limit N] [--llm-concurrency N] [--llm-retries N] [--timeout-ms N] [--model NAME] [--include-noise-domains] [--skip-llm] [--output PATH] [--help]"
   );
 }
 

@@ -11,6 +11,9 @@
 # Web server + API routes
 !apps/web/
 
+# Webhook receiver + background worker
+!apps/webhooks/
+
 # Document processing
 !packages/documents/
 

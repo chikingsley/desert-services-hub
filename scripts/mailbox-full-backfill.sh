@@ -100,7 +100,7 @@ for mailbox in "${MAILBOXES[@]}"; do
     iterations=$((iterations + 1))
     echo "  - iter $iterations: backfill since $FLOOR_DATE before $current_oldest"
 
-    if ! timeout "${SYNC_TIMEOUT_SEC}s" "$BUN_BIN" apps/cli-tools/email-cli/src/sync/mailboxes.ts \
+    if ! timeout "${SYNC_TIMEOUT_SEC}s" "$BUN_BIN" packages/email/cli/sync-mailboxes.ts \
       --full --no-post --no-bodies --no-attachments \
       --mailbox="$mailbox" \
       --since="$FLOOR_DATE" --before="$current_oldest" \

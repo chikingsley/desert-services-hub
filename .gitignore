@@ -108,10 +108,10 @@ debug/
 # Archive / experiments
 archive/
 experiments/
-!apps/workers/permit-workers/experiments/
-!apps/workers/permit-workers/experiments/custom-map-rehydrate/
-!apps/workers/permit-workers/experiments/custom-map-rehydrate/**
+!packages/dust-permits/experiments/
+!packages/dust-permits/experiments/custom-map-rehydrate/
+!packages/dust-permits/experiments/custom-map-rehydrate/**
 
 # Ground truth project data (large PDFs, local only)
-apps/contract/projects/ground-truth/
-apps/contract/ground-truth/
+packages/contracts/projects/ground-truth/
+packages/contracts/ground-truth/

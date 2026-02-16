@@ -10,18 +10,17 @@ What everything does, how it fits together, and what's redundant.
 - emails (237K+), attachments (125K+), estimates (4,800+), projects, accounts (3,600+), contacts (4,600+), swppp_work_orders (2,973), mailboxes, estimate_emails
 
 **Local SQLite files (non-operational for hub data):**
-- `apps/cli-tools/sharepoint-cli/swppp/swppp-master.db` — legacy SWPPP cache used by specific CLI tooling.
 - `apps/workers/inspections-email-worker/inspections-app-idea/inspections.db` — prototype/demo app data.
 
 ---
 
-## CLI Tools (`apps/cli-tools/`)
+## CLI Tools (`packages/`)
 
-**email-cli** — Email operations via Microsoft Graph. Search, read, draft, send, reply, folder management, M365 group access. 12 mailboxes synced.
+**email** (`packages/email/`) — Email operations via Microsoft Graph. Search, read, draft, send, reply, folder management, M365 group access. 12 mailboxes synced.
 
-**monday-cli** — Monday.com GraphQL client. Board queries, item CRUD, cursor-based pagination. PAGE_SIZE=100, MAX_RETRIES=5.
+**monday package** — Monday.com GraphQL client and helpers in `packages/monday/`.
 
-**sharepoint-cli** — SharePoint file operations via Graph SDK. Upload (auto-chunking at 5MB), download, list, search. Also houses the SWPPP master Excel reader (`swppp/client.ts`).
+**sharepoint** (`packages/sharepoint/`) — SharePoint file operations via Graph SDK. Upload (auto-chunking at 5MB), download, list, search. Includes SWPPP tooling and folder sync worker.
 
 **pdf-analysis-cli** — Python. OCR with three providers: Gemini (best), local Ollama, Mistral. Commands: ocr, extract, identify, analyze.
 
@@ -81,10 +80,10 @@ What everything does, how it fits together, and what's redundant.
 These are a pipeline, not redundancy: Monday→DB (#1), DB+emails→joins (#3), Monday→SharePoint (#2).
 
 **Email sync is handled by the web worker timers:**
-`outlook-folder-watcher` polls Graph deltas every 30s. The `estimate-email-linker` backfills estimate↔email links every 60s. M365 group sync runs every 15min. The manual `email-cli/sync/mailboxes.ts` still works for one-off syncs with custom options (date ranges, specific mailboxes).
+`outlook-folder-watcher` polls Graph deltas every 30s. The `estimate-email-linker` backfills estimate↔email links every 60s. M365 group sync runs every 15min via `@email/sync/groups`. One-off mailbox sync remains available at `packages/email/cli/sync-mailboxes.ts` with custom options (date ranges, mailbox filters).
 
 **SWPPP data in two places:**
-`sharepoint-cli/swppp/db.ts` has the old standalone swppp-master.db. `swppp-sync` worker now syncs directly into Supabase Postgres. The old db.ts and swppp-master.db are vestigial — Supabase Postgres is the canonical source.
+`packages/sharepoint/swppp/` and `swppp-sync` worker keep SWPPP data synchronized into Supabase Postgres. Supabase remains the canonical source.
 
 ---
 

@@ -1,6 +1,6 @@
 import { db } from "@lib/db/hub";
 import { normalizeProjectNameKey } from "@lib/project-matching";
-import { parseVariantPrefix } from "@lib/sharepoint/paths";
+import { parseVariantPrefix } from "@sharepoint/paths";
 
 const ACTIVE_BID_STATUSES = new Set(["won", "pending won", "add to projects"]);
 const LOST_BID_STATUSES = new Set(["lost", "duplicates", "gc not awarded"]);

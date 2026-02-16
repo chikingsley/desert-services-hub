@@ -3,7 +3,7 @@
  * Routes: /api/takeoffs/:id, /api/takeoffs/:id/pdf, /api/takeoffs/:id/estimate
  */
 import { db } from "@lib/db/hub";
-import { createSharePointClientFromEnv } from "@lib/sharepoint/intake-upload";
+import { createSharePointClientFromEnv } from "@sharepoint/intake-upload";
 import {
   decodeSharePointPdfPath,
   isExternalPdfUrl,

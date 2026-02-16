@@ -1,0 +1,68 @@
+# dependencies (bun install)
+node_modules
+
+# output
+out
+dist
+*.tgz
+
+# code coverage
+coverage
+*.lcov
+
+# logs
+logs
+_.log
+report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
+src/testing/failures.jsonl
+
+# dotenv environment variable files
+.env
+.env.development.local
+.env.test.local
+.env.production.local
+.env.local
+
+# database WAL files (not the main DB)
+*.sqlite-shm
+*.sqlite-wal
+
+# caches
+.eslintcache
+.cache
+*.tsbuildinfo
+.stagehand-cache/
+
+# archive folder (experimental code)
+archive/
+
+# IntelliJ based IDEs
+.idea
+
+# Finder (MacOS) folder config
+.DS_Store
+
+
+# Test artifacts
+test-results/
+playwright-report/
+debug/
+.husky/
+emails/
+
+# Internal tool configs
+.claude/
+.gemini/
+.cursor/
+
+# Local data and experiments
+data/overrides/
+experiments/*
+!experiments/custom-map-rehydrate/
+!experiments/custom-map-rehydrate/**
+ca-permit/
+
+# Debug snapshots, large fixtures, and test output
+docs/page-snapshots/
+tests/fixtures/pdfs/
+tests/output/

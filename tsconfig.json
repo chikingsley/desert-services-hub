@@ -9,11 +9,12 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./*"],
-      "@contract/*": ["apps/contract/*"],
-      "@monday/*": ["apps/cli-tools/monday-cli/src/*"],
-      "@sharepoint/*": ["apps/cli-tools/sharepoint-cli/src/*"],
-      "@email/*": ["apps/cli-tools/email-cli/src/*"],
-      "@aqdata/*": ["apps/cli-tools/aqdata-cli/src/*"],
+      "@/hooks/*": ["apps/web/frontend/hooks/*"],
+      "@contract/*": ["packages/contracts/*"],
+      "@monday/*": ["packages/monday/src/*"],
+      "@sharepoint/*": ["packages/sharepoint/src/*"],
+      "@email/*": ["packages/email/src/*"],
+      "@aqdata/*": ["packages/aqdata/src/*"],
       "@lib/*": ["lib/*"],
       "@/components/*": ["apps/web/frontend/components/*"],
       "@/pages/*": ["apps/web/frontend/pages/*"],
@@ -25,6 +26,6 @@
     "node_modules",
     "**/build.ts",
     "apps/workers/docusign-file-automation/_reference",
-    "apps/workers/permit-workers"
+    "packages/dust-permits"
   ]
 }

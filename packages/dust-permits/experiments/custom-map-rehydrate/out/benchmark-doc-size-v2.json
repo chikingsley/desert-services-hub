@@ -1,0 +1,1660 @@
+{
+  "generatedAt": "2026-02-13T16:38:23.017Z",
+  "durationMs": 20971,
+  "options": {
+    "inputPath": "experiments/custom-map-rehydrate/out/dataset-run.json",
+    "limit": null,
+    "parallel": 3,
+    "maxApns": 4,
+    "iouGrid": 90,
+    "withDocClues": true,
+    "docContainer": "supabase_db_desert-services-hub",
+    "docLimit": 8,
+    "docMinConfidence": 0.55,
+    "docMaxCoordDeltaM": 1200,
+    "docClipMinAreaShare": 0.6,
+    "docSizeNormalize": true,
+    "docSizeOverageRatio": 2.5,
+    "docSizeMinScale": 0.3,
+    "thresholds": {
+      "minIou": 0.25,
+      "minAreaRatio": 0.5,
+      "maxAreaRatio": 2,
+      "maxCentroidErrorM": 120
+    }
+  },
+  "summary": {
+    "totalInput": 30,
+    "scored": 26,
+    "skipped": 4,
+    "errors": 0,
+    "averageIou": 0.045943105275573146,
+    "averageCentroidErrorM": 139.931297131545,
+    "averageAreaRatio": 3.4577698294646817,
+    "passRates": {
+      "all": 0.038461538461538464,
+      "iou": 0.07692307692307693,
+      "area": 0.15384615384615385,
+      "centroid": 0.3076923076923077
+    }
+  },
+  "iouBins": {
+    "gte_0_75": 0,
+    "gte_0_50": 1,
+    "gte_0_25": 1,
+    "lt_0_25": 24
+  },
+  "results": [
+    {
+      "permitId": "D0062038",
+      "status": "scored",
+      "reason": null,
+      "hints": {
+        "projectName": "Diamond View at Ballpark Village",
+        "address": "1650 S BULLARD AVE",
+        "city": "GOODYEAR",
+        "parcelRaw": "500-08-996",
+        "apnCandidates": [
+          "500-08-996"
+        ]
+      },
+      "prediction": {
+        "source": "apn_size_normalized_by_doc",
+        "apnsUsed": [
+          "500-08-996"
+        ],
+        "polygonCount": 1
+      },
+      "documentClues": {
+        "enabled": true,
+        "docsUsed": 8,
+        "roads": 14,
+        "intersections": 2,
+        "hasCoordinates": true,
+        "hasEstimatedSize": true,
+        "consensusConfidence": 0.982,
+        "boundsMode": "rehydrate-bounds",
+        "boundsApplied": false
+      },
+      "groundTruth": {
+        "polygonVertices": 27,
+        "centroid": {
+          "lat": 33.43422385419445,
+          "lng": -112.37733711884025
+        }
+      },
+      "metrics": {
+        "centroidErrorM": 274.62450438864283,
+        "areaRatio": 0.12350722815839094,
+        "iou": 0,
+        "passCentroid": false,
+        "passArea": false,
+        "passIou": false
+      },
+      "debug": [
+        "prediction from APN (1 polygons)",
+        "doc-clues: documents queried: 40",
+        "doc-clues: documents selected: 8",
+        "doc-clues: top relevance: 2385:72, 2380:72, 2377:72",
+        "doc-clues: disturbed acreage extracted: 0.1",
+        "doc-clues: size-normalized parcel (overage=44.97x, scale=0.300)"
+      ]
+    },
+    {
+      "permitId": "D0064908",
+      "status": "scored",
+      "reason": null,
+      "hints": {
+        "projectName": "VEG Building",
+        "address": null,
+        "city": "GOODYEAR",
+        "parcelRaw": "501-72-958J",
+        "apnCandidates": [
+          "501-72-958J"
+        ]
+      },
+      "prediction": {
+        "source": "apn_size_normalized_by_doc",
+        "apnsUsed": [
+          "501-72-958J"
+        ],
+        "polygonCount": 1
+      },
+      "documentClues": {
+        "enabled": true,
+        "docsUsed": 8,
+        "roads": 14,
+        "intersections": 1,
+        "hasCoordinates": true,
+        "hasEstimatedSize": true,
+        "consensusConfidence": 0.982,
+        "boundsMode": "rehydrate-bounds",
+        "boundsApplied": false
+      },
+      "groundTruth": {
+        "polygonVertices": 13,
+        "centroid": {
+          "lat": 33.464930709852695,
+          "lng": -112.3788085468389
+        }
+      },
+      "metrics": {
+        "centroidErrorM": 27.737372071901007,
+        "areaRatio": 1.9171974522292992,
+        "iou": 0.11623547056617922,
+        "passCentroid": true,
+        "passArea": true,
+        "passIou": false
+      },
+      "debug": [
+        "prediction from APN (1 polygons)",
+        "doc-clues: documents queried: 40",
+        "doc-clues: documents selected: 8",
+        "doc-clues: top relevance: 1671:62, 198:13, 197:13",
+        "doc-clues: address extracted from docs: 104 W WIGWAM BLVD",
+        "doc-clues: disturbed acreage extracted: 0.1",
+        "doc-clues: size-normalized parcel (overage=2.68x, scale=0.610)"
+      ]
+    },
+    {
+      "permitId": "D0063189",
+      "status": "scored",
+      "reason": null,
+      "hints": {
+        "projectName": "Modera PV",
+        "address": null,
+        "city": "PHOENIX",
+        "parcelRaw": "167-25-163",
+        "apnCandidates": [
+          "167-25-163"
+        ]
+      },
+      "prediction": {
+        "source": "apn_size_normalized_by_doc",
+        "apnsUsed": [
+          "167-25-163"
+        ],
+        "polygonCount": 1
+      },
+      "documentClues": {
+        "enabled": true,
+        "docsUsed": 8,
+        "roads": 14,
+        "intersections": 0,
+        "hasCoordinates": true,
+        "hasEstimatedSize": true,
+        "consensusConfidence": 0.982,
+        "boundsMode": "rehydrate-bounds",
+        "boundsApplied": false
+      },
+      "groundTruth": {
+        "polygonVertices": 7,
+        "centroid": {
+          "lat": 33.60114845411386,
+          "lng": -111.98313546302813
+        }
+      },
+      "metrics": {
+        "centroidErrorM": 138.11113422602762,
+        "areaRatio": 0.16369664318276006,
+        "iou": 0.004291845493562232,
+        "passCentroid": false,
+        "passArea": false,
+        "passIou": false
+      },
+      "debug": [
+        "prediction from APN (1 polygons)",
+        "doc-clues: documents queried: 40",
+        "doc-clues: documents selected: 8",
+        "doc-clues: top relevance: 2698:30, 1002:30, 989:30",
+        "doc-clues: address extracted from docs: 15210 N SCOTTSDALE RD",
+        "doc-clues: disturbed acreage extracted: 0.1",
+        "doc-clues: size-normalized parcel (overage=24.69x, scale=0.300)"
+      ]
+    },
+    {
+      "permitId": "D0061951",
+      "status": "scored",
+      "reason": null,
+      "hints": {
+        "projectName": "GSQ Building 1",
+        "address": "1775 N GLOBE DR",
+        "city": "GOODYEAR",
+        "parcelRaw": "501-73-985",
+        "apnCandidates": [
+          "501-73-985"
+        ]
+      },
+      "prediction": {
+        "source": "apn",
+        "apnsUsed": [
+          "501-73-985"
+        ],
+        "polygonCount": 1
+      },
+      "documentClues": {
+        "enabled": true,
+        "docsUsed": 8,
+        "roads": 14,
+        "intersections": 0,
+        "hasCoordinates": true,
+        "hasEstimatedSize": true,
+        "consensusConfidence": 0.982,
+        "boundsMode": "rehydrate-bounds",
+        "boundsApplied": false
+      },
+      "groundTruth": {
+        "polygonVertices": 17,
+        "centroid": {
+          "lat": 33.46670405858998,
+          "lng": -112.38299303855256
+        }
+      },
+      "metrics": {
+        "centroidErrorM": 20.96261907640716,
+        "areaRatio": 1.9478203434610306,
+        "iou": 0.5123686885801423,
+        "passCentroid": true,
+        "passArea": true,
+        "passIou": true
+      },
+      "debug": [
+        "prediction from APN (1 polygons)",
+        "doc-clues: documents queried: 40",
+        "doc-clues: documents selected: 8",
+        "doc-clues: top relevance: 1321:66, 2751:14, 1238:14",
+        "doc-clues: disturbed acreage extracted: 0.1",
+        "doc-clues: skipped clipping due to small area share (0.492 < 0.600)"
+      ]
+    },
+    {
+      "permitId": "D0062291",
+      "status": "scored",
+      "reason": null,
+      "hints": {
+        "projectName": "Bethany Bay",
+        "address": null,
+        "city": "GLENDALE",
+        "parcelRaw": "501-03-009M",
+        "apnCandidates": [
+          "501-03-009M"
+        ]
+      },
+      "prediction": {
+        "source": "apn_size_normalized_by_doc",
+        "apnsUsed": [
+          "501-03-009M"
+        ],
+        "polygonCount": 1
+      },
+      "documentClues": {
+        "enabled": true,
+        "docsUsed": 8,
+        "roads": 14,
+        "intersections": 0,
+        "hasCoordinates": true,
+        "hasEstimatedSize": true,
+        "consensusConfidence": 0.982,
+        "boundsMode": "rehydrate-bounds",
+        "boundsApplied": false
+      },
+      "groundTruth": {
+        "polygonVertices": 9,
+        "centroid": {
+          "lat": 33.52454411803586,
+          "lng": -112.4211092360623
+        }
+      },
+      "metrics": {
+        "centroidErrorM": 142.8239819214717,
+        "areaRatio": 0.04293714996888612,
+        "iou": 0,
+        "passCentroid": false,
+        "passArea": false,
+        "passIou": false
+      },
+      "debug": [
+        "prediction from APN (1 polygons)",
+        "doc-clues: documents queried: 39",
+        "doc-clues: documents selected: 8",
+        "doc-clues: top relevance: 1262:62, 1261:62, 1274:42",
+        "doc-clues: address extracted from docs: 19712 MACARTHUR BLVD",
+        "doc-clues: disturbed acreage extracted: 0.1",
+        "doc-clues: size-normalized parcel (overage=8.76x, scale=0.338)"
+      ]
+    },
+    {
+      "permitId": "D0056644",
+      "status": "skipped",
+      "reason": "no prediction polygon from APN/address hints",
+      "hints": {
+        "projectName": "GSQ Block A1",
+        "address": null,
+        "city": "GOODYEAR",
+        "parcelRaw": "501-71-980",
+        "apnCandidates": [
+          "501-71-980"
+        ]
+      },
+      "prediction": {
+        "source": "none",
+        "apnsUsed": [],
+        "polygonCount": 0
+      },
+      "documentClues": {
+        "enabled": true,
+        "docsUsed": 8,
+        "roads": 14,
+        "intersections": 0,
+        "hasCoordinates": true,
+        "hasEstimatedSize": true,
+        "consensusConfidence": 0.982,
+        "boundsMode": "rehydrate-bounds",
+        "boundsApplied": false
+      },
+      "groundTruth": {
+        "polygonVertices": 8,
+        "centroid": {
+          "lat": 33.46509774240533,
+          "lng": -112.37638450224631
+        }
+      },
+      "metrics": null,
+      "debug": [
+        "address fallback unavailable",
+        "doc-clues: documents from cache: 8",
+        "doc-clues: address extracted from docs: 104 W WIGWAM BLVD",
+        "doc-clues: disturbed acreage extracted: 0.1",
+        "doc-clues: bounds available but skipped because no base APN/address polygon"
+      ]
+    },
+    {
+      "permitId": "D0064524",
+      "status": "scored",
+      "reason": null,
+      "hints": {
+        "projectName": "Crash Champions",
+        "address": null,
+        "city": "SURPRISE",
+        "parcelRaw": "501-44-991A",
+        "apnCandidates": [
+          "501-44-991A"
+        ]
+      },
+      "prediction": {
+        "source": "apn_size_normalized_by_doc",
+        "apnsUsed": [
+          "501-44-991A"
+        ],
+        "polygonCount": 1
+      },
+      "documentClues": {
+        "enabled": true,
+        "docsUsed": 8,
+        "roads": 14,
+        "intersections": 0,
+        "hasCoordinates": true,
+        "hasEstimatedSize": true,
+        "consensusConfidence": 0.982,
+        "boundsMode": "rehydrate-bounds",
+        "boundsApplied": false
+      },
+      "groundTruth": {
+        "polygonVertices": 5,
+        "centroid": {
+          "lat": 33.597722407762504,
+          "lng": -112.42408781572067
+        }
+      },
+      "metrics": {
+        "centroidErrorM": 172.4456273236726,
+        "areaRatio": 0.4051542036332911,
+        "iou": 0,
+        "passCentroid": false,
+        "passArea": false,
+        "passIou": false
+      },
+      "debug": [
+        "prediction from APN (1 polygons)",
+        "doc-clues: documents queried: 40",
+        "doc-clues: documents selected: 8",
+        "doc-clues: top relevance: 5324:12, 5322:12, 5321:12",
+        "doc-clues: address extracted from docs: 16965 N AUTOSHOW DR",
+        "doc-clues: disturbed acreage extracted: 0.1",
+        "doc-clues: size-normalized parcel (overage=40.66x, scale=0.300)"
+      ]
+    },
+    {
+      "permitId": "D0064511",
+      "status": "scored",
+      "reason": null,
+      "hints": {
+        "projectName": "Crash Champions",
+        "address": null,
+        "city": "SURPRISE",
+        "parcelRaw": "501-44-991A",
+        "apnCandidates": [
+          "501-44-991A"
+        ]
+      },
+      "prediction": {
+        "source": "apn_size_normalized_by_doc",
+        "apnsUsed": [
+          "501-44-991A"
+        ],
+        "polygonCount": 1
+      },
+      "documentClues": {
+        "enabled": true,
+        "docsUsed": 8,
+        "roads": 14,
+        "intersections": 0,
+        "hasCoordinates": true,
+        "hasEstimatedSize": true,
+        "consensusConfidence": 0.982,
+        "boundsMode": "rehydrate-bounds",
+        "boundsApplied": false
+      },
+      "groundTruth": {
+        "polygonVertices": 10,
+        "centroid": {
+          "lat": 33.59738745691882,
+          "lng": -112.42369637243706
+        }
+      },
+      "metrics": {
+        "centroidErrorM": 153.56738010860954,
+        "areaRatio": 0.40689941812136327,
+        "iou": 0,
+        "passCentroid": false,
+        "passArea": false,
+        "passIou": false
+      },
+      "debug": [
+        "prediction from APN (1 polygons)",
+        "doc-clues: documents from cache: 8",
+        "doc-clues: address extracted from docs: 16965 N AUTOSHOW DR",
+        "doc-clues: disturbed acreage extracted: 0.1",
+        "doc-clues: size-normalized parcel (overage=40.66x, scale=0.300)"
+      ]
+    },
+    {
+      "permitId": "D0063651",
+      "status": "scored",
+      "reason": null,
+      "hints": {
+        "projectName": "Innovative Commercial Building",
+        "address": "4210 W OPPORTUNITY WAY",
+        "city": "PHOENIX",
+        "parcelRaw": "203-03-019",
+        "apnCandidates": [
+          "203-03-019"
+        ]
+      },
+      "prediction": {
+        "source": "apn",
+        "apnsUsed": [
+          "203-03-019"
+        ],
+        "polygonCount": 1
+      },
+      "documentClues": {
+        "enabled": true,
+        "docsUsed": 8,
+        "roads": 14,
+        "intersections": 0,
+        "hasCoordinates": false,
+        "hasEstimatedSize": true,
+        "consensusConfidence": null,
+        "boundsMode": null,
+        "boundsApplied": false
+      },
+      "groundTruth": {
+        "polygonVertices": 4,
+        "centroid": {
+          "lat": 33.8665476022037,
+          "lng": -112.14866767563275
+        }
+      },
+      "metrics": {
+        "centroidErrorM": 97.81190455660925,
+        "areaRatio": 1.4025676295277398,
+        "iou": 0,
+        "passCentroid": true,
+        "passArea": true,
+        "passIou": false
+      },
+      "debug": [
+        "prediction from APN (1 polygons)",
+        "doc-clues: documents queried: 32",
+        "doc-clues: documents selected: 8",
+        "doc-clues: top relevance: 1194:14, 1193:14, 1181:14",
+        "doc-clues: disturbed acreage extracted: 112.148648"
+      ]
+    },
+    {
+      "permitId": "D0063234",
+      "status": "scored",
+      "reason": null,
+      "hints": {
+        "projectName": "Sun Health La Loma Campus � Resident Gathering Space",
+        "address": "14100 S DENNY WAY",
+        "city": "LITCHFIELD PARK",
+        "parcelRaw": "501-62-022K",
+        "apnCandidates": [
+          "501-62-022K"
+        ]
+      },
+      "prediction": {
+        "source": "apn_size_normalized_by_doc",
+        "apnsUsed": [
+          "501-62-022K"
+        ],
+        "polygonCount": 1
+      },
+      "documentClues": {
+        "enabled": true,
+        "docsUsed": 8,
+        "roads": 14,
+        "intersections": 1,
+        "hasCoordinates": true,
+        "hasEstimatedSize": true,
+        "consensusConfidence": 0.982,
+        "boundsMode": "rehydrate-bounds",
+        "boundsApplied": false
+      },
+      "groundTruth": {
+        "polygonVertices": 4,
+        "centroid": {
+          "lat": 33.51248057877932,
+          "lng": -112.36396768163432
+        }
+      },
+      "metrics": {
+        "centroidErrorM": 158.03294049302377,
+        "areaRatio": 0.2957157784743991,
+        "iou": 0,
+        "passCentroid": false,
+        "passArea": false,
+        "passIou": false
+      },
+      "debug": [
+        "prediction from APN (1 polygons)",
+        "doc-clues: documents queried: 30",
+        "doc-clues: documents selected: 8",
+        "doc-clues: top relevance: 693:54, 727:40, 2431:20",
+        "doc-clues: disturbed acreage extracted: 0.1",
+        "doc-clues: size-normalized parcel (overage=35.84x, scale=0.300)"
+      ]
+    },
+    {
+      "permitId": "D0064026",
+      "status": "scored",
+      "reason": null,
+      "hints": {
+        "projectName": "Sun Health La Roma Campus: Resident Gathering Space",
+        "address": "14100 S DENNY WAY",
+        "city": "LITCHFIELD PARK",
+        "parcelRaw": "501-62-022K",
+        "apnCandidates": [
+          "501-62-022K"
+        ]
+      },
+      "prediction": {
+        "source": "apn_size_normalized_by_doc",
+        "apnsUsed": [
+          "501-62-022K"
+        ],
+        "polygonCount": 1
+      },
+      "documentClues": {
+        "enabled": true,
+        "docsUsed": 8,
+        "roads": 14,
+        "intersections": 1,
+        "hasCoordinates": true,
+        "hasEstimatedSize": true,
+        "consensusConfidence": 0.982,
+        "boundsMode": "rehydrate-bounds",
+        "boundsApplied": false
+      },
+      "groundTruth": {
+        "polygonVertices": 4,
+        "centroid": {
+          "lat": 33.51248057877932,
+          "lng": -112.36396768163432
+        }
+      },
+      "metrics": {
+        "centroidErrorM": 158.03294049302377,
+        "areaRatio": 0.2957157784743991,
+        "iou": 0,
+        "passCentroid": false,
+        "passArea": false,
+        "passIou": false
+      },
+      "debug": [
+        "prediction from APN (1 polygons)",
+        "doc-clues: documents from cache: 8",
+        "doc-clues: disturbed acreage extracted: 0.1",
+        "doc-clues: size-normalized parcel (overage=35.84x, scale=0.300)"
+      ]
+    },
+    {
+      "permitId": "D0062850",
+      "status": "scored",
+      "reason": null,
+      "hints": {
+        "projectName": "PV Block C3",
+        "address": null,
+        "city": "PHOENIX",
+        "parcelRaw": "167-25-165",
+        "apnCandidates": [
+          "167-25-165"
+        ]
+      },
+      "prediction": {
+        "source": "apn_clipped_by_doc",
+        "apnsUsed": [
+          "167-25-165"
+        ],
+        "polygonCount": 1
+      },
+      "documentClues": {
+        "enabled": true,
+        "docsUsed": 8,
+        "roads": 14,
+        "intersections": 0,
+        "hasCoordinates": true,
+        "hasEstimatedSize": true,
+        "consensusConfidence": 0.982,
+        "boundsMode": "rehydrate-bounds",
+        "boundsApplied": true
+      },
+      "groundTruth": {
+        "polygonVertices": 4,
+        "centroid": {
+          "lat": 33.60275623236555,
+          "lng": -111.9831290252342
+        }
+      },
+      "metrics": {
+        "centroidErrorM": 200.52452698976415,
+        "areaRatio": 0.1293614219881501,
+        "iou": 0,
+        "passCentroid": false,
+        "passArea": false,
+        "passIou": false
+      },
+      "debug": [
+        "prediction from APN (1 polygons)",
+        "doc-clues: documents queried: 30",
+        "doc-clues: documents selected: 8",
+        "doc-clues: top relevance: 2720:62, 1049:30, 1048:30",
+        "doc-clues: address extracted from docs: 104 W WIGWAM BLVD",
+        "doc-clues: disturbed acreage extracted: 0.1",
+        "doc-clues: size-normalized parcel (overage=13.81x, scale=0.300)",
+        "doc-clues: applied bounds clipping (rehydrate-bounds, share=0.786)"
+      ]
+    },
+    {
+      "permitId": "D0049047",
+      "status": "scored",
+      "reason": null,
+      "hints": {
+        "projectName": "Desert Sky Family Apartments",
+        "address": "7800 W Encanto Blvd",
+        "city": "Phoenix",
+        "parcelRaw": "102-39-929",
+        "apnCandidates": [
+          "102-39-929"
+        ]
+      },
+      "prediction": {
+        "source": "apn_size_normalized_by_doc",
+        "apnsUsed": [
+          "102-39-929"
+        ],
+        "polygonCount": 1
+      },
+      "documentClues": {
+        "enabled": true,
+        "docsUsed": 8,
+        "roads": 14,
+        "intersections": 0,
+        "hasCoordinates": false,
+        "hasEstimatedSize": true,
+        "consensusConfidence": null,
+        "boundsMode": null,
+        "boundsApplied": false
+      },
+      "groundTruth": {
+        "polygonVertices": 9,
+        "centroid": {
+          "lat": 33.4759902121177,
+          "lng": -112.2283778489692
+        }
+      },
+      "metrics": {
+        "centroidErrorM": 139.2333002846405,
+        "areaRatio": 0.23707009713835653,
+        "iou": 0.04571682201509099,
+        "passCentroid": false,
+        "passArea": false,
+        "passIou": false
+      },
+      "debug": [
+        "prediction from APN (1 polygons)",
+        "doc-clues: documents queried: 40",
+        "doc-clues: documents selected: 8",
+        "doc-clues: top relevance: 2526:14, 2524:14, 2488:14",
+        "doc-clues: disturbed acreage extracted: 0.1",
+        "doc-clues: dropped outlier coordinates (1974.0m from parcel center)",
+        "doc-clues: size-normalized parcel (overage=43.04x, scale=0.300)"
+      ]
+    },
+    {
+      "permitId": "D0041761",
+      "status": "scored",
+      "reason": null,
+      "hints": {
+        "projectName": "Desert Sky Family Apartments",
+        "address": null,
+        "city": "Phoenix",
+        "parcelRaw": "102-39-929",
+        "apnCandidates": [
+          "102-39-929"
+        ]
+      },
+      "prediction": {
+        "source": "apn_size_normalized_by_doc",
+        "apnsUsed": [
+          "102-39-929"
+        ],
+        "polygonCount": 1
+      },
+      "documentClues": {
+        "enabled": true,
+        "docsUsed": 8,
+        "roads": 14,
+        "intersections": 0,
+        "hasCoordinates": false,
+        "hasEstimatedSize": true,
+        "consensusConfidence": null,
+        "boundsMode": null,
+        "boundsApplied": false
+      },
+      "groundTruth": {
+        "polygonVertices": 7,
+        "centroid": {
+          "lat": 33.47496357955932,
+          "lng": -112.22839351619719
+        }
+      },
+      "metrics": {
+        "centroidErrorM": 29.423312297145397,
+        "areaRatio": 0.08251814452508678,
+        "iou": 0.08251814452508678,
+        "passCentroid": true,
+        "passArea": false,
+        "passIou": false
+      },
+      "debug": [
+        "prediction from APN (1 polygons)",
+        "doc-clues: documents from cache: 8",
+        "doc-clues: address extracted from docs: 1228 EUCLID AVE",
+        "doc-clues: disturbed acreage extracted: 0.1",
+        "doc-clues: dropped outlier coordinates (1974.0m from parcel center)",
+        "doc-clues: size-normalized parcel (overage=43.04x, scale=0.300)"
+      ]
+    },
+    {
+      "permitId": "D0043300",
+      "status": "scored",
+      "reason": null,
+      "hints": {
+        "projectName": "Desert Sky Mall Senior",
+        "address": "7750 W Encanto Blvd",
+        "city": "Phoenix",
+        "parcelRaw": "102-39-930",
+        "apnCandidates": [
+          "102-39-930"
+        ]
+      },
+      "prediction": {
+        "source": "apn_size_normalized_by_doc",
+        "apnsUsed": [
+          "102-39-930"
+        ],
+        "polygonCount": 1
+      },
+      "documentClues": {
+        "enabled": true,
+        "docsUsed": 8,
+        "roads": 14,
+        "intersections": 0,
+        "hasCoordinates": false,
+        "hasEstimatedSize": true,
+        "consensusConfidence": null,
+        "boundsMode": null,
+        "boundsApplied": false
+      },
+      "groundTruth": {
+        "polygonVertices": 4,
+        "centroid": {
+          "lat": 33.47405991072141,
+          "lng": -112.22615274814721
+        }
+      },
+      "metrics": {
+        "centroidErrorM": 50.62158875334177,
+        "areaRatio": 0.06341941811049363,
+        "iou": 0.06341941811049362,
+        "passCentroid": true,
+        "passArea": false,
+        "passIou": false
+      },
+      "debug": [
+        "prediction from APN (1 polygons)",
+        "doc-clues: documents from cache: 8",
+        "doc-clues: disturbed acreage extracted: 0.1",
+        "doc-clues: dropped outlier coordinates (1825.0m from parcel center)",
+        "doc-clues: size-normalized parcel (overage=18.70x, scale=0.300)"
+      ]
+    },
+    {
+      "permitId": "D0063191",
+      "status": "scored",
+      "reason": null,
+      "hints": {
+        "projectName": "Sidney Village",
+        "address": null,
+        "city": "BUCKEYE",
+        "parcelRaw": "504-28-990",
+        "apnCandidates": [
+          "504-28-990"
+        ]
+      },
+      "prediction": {
+        "source": "apn_size_normalized_by_doc",
+        "apnsUsed": [
+          "504-28-990"
+        ],
+        "polygonCount": 1
+      },
+      "documentClues": {
+        "enabled": true,
+        "docsUsed": 8,
+        "roads": 14,
+        "intersections": 1,
+        "hasCoordinates": true,
+        "hasEstimatedSize": true,
+        "consensusConfidence": 0.982,
+        "boundsMode": "rehydrate-bounds",
+        "boundsApplied": false
+      },
+      "groundTruth": {
+        "polygonVertices": 4,
+        "centroid": {
+          "lat": 33.43357369168435,
+          "lng": -112.57240003608726
+        }
+      },
+      "metrics": {
+        "centroidErrorM": 289.00258297114505,
+        "areaRatio": 0.022648631645171436,
+        "iou": 0,
+        "passCentroid": false,
+        "passArea": false,
+        "passIou": false
+      },
+      "debug": [
+        "prediction from APN (1 polygons)",
+        "doc-clues: documents queried: 34",
+        "doc-clues: documents selected: 8",
+        "doc-clues: top relevance: 2651:32, 2652:12, 2469:12",
+        "doc-clues: address extracted from docs: 3033 N 44TH ST",
+        "doc-clues: disturbed acreage extracted: 0.1",
+        "doc-clues: size-normalized parcel (overage=4.42x, scale=0.475)"
+      ]
+    },
+    {
+      "permitId": "D0062844",
+      "status": "scored",
+      "reason": null,
+      "hints": {
+        "projectName": "Sidney Village",
+        "address": null,
+        "city": "BUCKEYE",
+        "parcelRaw": "504-28-990",
+        "apnCandidates": [
+          "504-28-990"
+        ]
+      },
+      "prediction": {
+        "source": "apn_size_normalized_by_doc",
+        "apnsUsed": [
+          "504-28-990"
+        ],
+        "polygonCount": 1
+      },
+      "documentClues": {
+        "enabled": true,
+        "docsUsed": 8,
+        "roads": 14,
+        "intersections": 1,
+        "hasCoordinates": true,
+        "hasEstimatedSize": true,
+        "consensusConfidence": 0.982,
+        "boundsMode": "rehydrate-bounds",
+        "boundsApplied": false
+      },
+      "groundTruth": {
+        "polygonVertices": 4,
+        "centroid": {
+          "lat": 33.43357369168435,
+          "lng": -112.57240003608726
+        }
+      },
+      "metrics": {
+        "centroidErrorM": 289.00258297114505,
+        "areaRatio": 0.022648631645171436,
+        "iou": 0,
+        "passCentroid": false,
+        "passArea": false,
+        "passIou": false
+      },
+      "debug": [
+        "prediction from APN (1 polygons)",
+        "doc-clues: documents from cache: 8",
+        "doc-clues: address extracted from docs: 3033 N 44TH ST",
+        "doc-clues: disturbed acreage extracted: 0.1",
+        "doc-clues: size-normalized parcel (overage=4.42x, scale=0.475)"
+      ]
+    },
+    {
+      "permitId": "D0062231",
+      "status": "scored",
+      "reason": null,
+      "hints": {
+        "projectName": "NTT Data Center PH4 & PH5",
+        "address": "10256 E ELLIOT RD",
+        "city": "MESA",
+        "parcelRaw": "304-01-006N",
+        "apnCandidates": [
+          "304-01-006N"
+        ]
+      },
+      "prediction": {
+        "source": "apn_size_normalized_by_doc",
+        "apnsUsed": [
+          "304-01-006N"
+        ],
+        "polygonCount": 1
+      },
+      "documentClues": {
+        "enabled": true,
+        "docsUsed": 8,
+        "roads": 14,
+        "intersections": 0,
+        "hasCoordinates": true,
+        "hasEstimatedSize": true,
+        "consensusConfidence": 0.982,
+        "boundsMode": "rehydrate-bounds",
+        "boundsApplied": false
+      },
+      "groundTruth": {
+        "polygonVertices": 11,
+        "centroid": {
+          "lat": 33.3534907249111,
+          "lng": -111.61118982442548
+        }
+      },
+      "metrics": {
+        "centroidErrorM": 153.69869960913707,
+        "areaRatio": 0.30534531693472095,
+        "iou": 0.2684440358538267,
+        "passCentroid": false,
+        "passArea": false,
+        "passIou": true
+      },
+      "debug": [
+        "prediction from APN (1 polygons)",
+        "doc-clues: documents queried: 23",
+        "doc-clues: documents selected: 8",
+        "doc-clues: top relevance: 1396:68, 2766:16, 2763:16",
+        "doc-clues: disturbed acreage extracted: 0.1",
+        "doc-clues: size-normalized parcel (overage=257.32x, scale=0.300)"
+      ]
+    },
+    {
+      "permitId": "D0062057",
+      "status": "scored",
+      "reason": null,
+      "hints": {
+        "projectName": "Honor Health 3T MRI Addition",
+        "address": "7400 E OSBORN RD",
+        "city": "SCOTTSDALE",
+        "parcelRaw": "130-22-128",
+        "apnCandidates": [
+          "130-22-128"
+        ]
+      },
+      "prediction": {
+        "source": "apn",
+        "apnsUsed": [
+          "130-22-128"
+        ],
+        "polygonCount": 1
+      },
+      "documentClues": {
+        "enabled": true,
+        "docsUsed": 8,
+        "roads": 14,
+        "intersections": 0,
+        "hasCoordinates": false,
+        "hasEstimatedSize": false,
+        "consensusConfidence": null,
+        "boundsMode": null,
+        "boundsApplied": false
+      },
+      "groundTruth": {
+        "polygonVertices": 4,
+        "centroid": {
+          "lat": 33.48892827416177,
+          "lng": -111.92224090357114
+        }
+      },
+      "metrics": {
+        "centroidErrorM": 74.9677869370629,
+        "areaRatio": 80.57,
+        "iou": 0.012411567580985479,
+        "passCentroid": true,
+        "passArea": false,
+        "passIou": false
+      },
+      "debug": [
+        "prediction from APN (1 polygons)",
+        "doc-clues: documents queried: 18",
+        "doc-clues: documents selected: 8",
+        "doc-clues: top relevance: 1259:48, 1251:48, 2735:30"
+      ]
+    },
+    {
+      "permitId": "D0062461",
+      "status": "scored",
+      "reason": null,
+      "hints": {
+        "projectName": "KTEC Phoenix",
+        "address": null,
+        "city": "GLENDALE",
+        "parcelRaw": "501-04-009Z",
+        "apnCandidates": [
+          "501-04-009Z"
+        ]
+      },
+      "prediction": {
+        "source": "apn_size_normalized_by_doc",
+        "apnsUsed": [
+          "501-04-009Z"
+        ],
+        "polygonCount": 1
+      },
+      "documentClues": {
+        "enabled": true,
+        "docsUsed": 8,
+        "roads": 14,
+        "intersections": 0,
+        "hasCoordinates": true,
+        "hasEstimatedSize": true,
+        "consensusConfidence": 0.982,
+        "boundsMode": "rehydrate-bounds",
+        "boundsApplied": false
+      },
+      "groundTruth": {
+        "polygonVertices": 7,
+        "centroid": {
+          "lat": 33.550430858847456,
+          "lng": -112.42159282066345
+        }
+      },
+      "metrics": {
+        "centroidErrorM": 1.313641063449659,
+        "areaRatio": 0.08911474443953454,
+        "iou": 0.08911474443953454,
+        "passCentroid": true,
+        "passArea": false,
+        "passIou": false
+      },
+      "debug": [
+        "prediction from APN (1 polygons)",
+        "doc-clues: documents queried: 26",
+        "doc-clues: documents selected: 8",
+        "doc-clues: top relevance: 2739:64, 2538:64, 1112:64",
+        "doc-clues: address extracted from docs: 900 N ROCK HILL RD",
+        "doc-clues: disturbed acreage extracted: 0.1",
+        "doc-clues: size-normalized parcel (overage=55.56x, scale=0.300)",
+        "doc-clues: skipped clipping due to small area share (0.201 < 0.600)"
+      ]
+    },
+    {
+      "permitId": "D0056943",
+      "status": "skipped",
+      "reason": "no prediction polygon from APN/address hints",
+      "hints": {
+        "projectName": "Medina Station",
+        "address": null,
+        "city": "MESA",
+        "parcelRaw": "220-82-018F",
+        "apnCandidates": [
+          "220-82-018F"
+        ]
+      },
+      "prediction": {
+        "source": "none",
+        "apnsUsed": [],
+        "polygonCount": 0
+      },
+      "documentClues": {
+        "enabled": true,
+        "docsUsed": 8,
+        "roads": 11,
+        "intersections": 2,
+        "hasCoordinates": false,
+        "hasEstimatedSize": false,
+        "consensusConfidence": null,
+        "boundsMode": null,
+        "boundsApplied": false
+      },
+      "groundTruth": {
+        "polygonVertices": 26,
+        "centroid": {
+          "lat": 33.39040046715336,
+          "lng": -111.59660287536987
+        }
+      },
+      "metrics": null,
+      "debug": [
+        "address fallback unavailable",
+        "doc-clues: documents queried: 15",
+        "doc-clues: documents selected: 8",
+        "doc-clues: top relevance: 1717:12, 1712:12, 1709:12",
+        "doc-clues: address extracted from docs: 1228 EUCLID AVE"
+      ]
+    },
+    {
+      "permitId": "D0062824",
+      "status": "scored",
+      "reason": null,
+      "hints": {
+        "projectName": "Allasso Ranch BTR Community",
+        "address": null,
+        "city": "SURPRISE",
+        "parcelRaw": "503-69-003H",
+        "apnCandidates": [
+          "503-69-003H"
+        ]
+      },
+      "prediction": {
+        "source": "apn_size_normalized_by_doc",
+        "apnsUsed": [
+          "503-69-003H"
+        ],
+        "polygonCount": 1
+      },
+      "documentClues": {
+        "enabled": true,
+        "docsUsed": 8,
+        "roads": 14,
+        "intersections": 0,
+        "hasCoordinates": true,
+        "hasEstimatedSize": true,
+        "consensusConfidence": 0.982,
+        "boundsMode": "rehydrate-bounds",
+        "boundsApplied": false
+      },
+      "groundTruth": {
+        "polygonVertices": 4,
+        "centroid": {
+          "lat": 33.707134785371835,
+          "lng": -112.3795042060051
+        }
+      },
+      "metrics": {
+        "centroidErrorM": 196.1350161157218,
+        "areaRatio": 0.03609447771124418,
+        "iou": 0,
+        "passCentroid": false,
+        "passArea": false,
+        "passIou": false
+      },
+      "debug": [
+        "prediction from APN (1 polygons)",
+        "doc-clues: documents queried: 22",
+        "doc-clues: documents selected: 8",
+        "doc-clues: top relevance: 2706:34, 2315:34, 2307:34",
+        "doc-clues: address extracted from docs: 3033 N 44TH ST",
+        "doc-clues: disturbed acreage extracted: 0.1",
+        "doc-clues: size-normalized parcel (overage=26.27x, scale=0.300)"
+      ]
+    },
+    {
+      "permitId": "D0060431",
+      "status": "skipped",
+      "reason": "no prediction polygon from APN/address hints",
+      "hints": {
+        "projectName": "The Verge at Ballpark Village",
+        "address": "15235 W LOWER BUCKEYE PKWY",
+        "city": "GOODYEAR",
+        "parcelRaw": "500-07-015P",
+        "apnCandidates": [
+          "500-07-015P"
+        ]
+      },
+      "prediction": {
+        "source": "none",
+        "apnsUsed": [],
+        "polygonCount": 0
+      },
+      "documentClues": {
+        "enabled": true,
+        "docsUsed": 8,
+        "roads": 14,
+        "intersections": 0,
+        "hasCoordinates": false,
+        "hasEstimatedSize": false,
+        "consensusConfidence": null,
+        "boundsMode": null,
+        "boundsApplied": false
+      },
+      "groundTruth": {
+        "polygonVertices": 30,
+        "centroid": {
+          "lat": 33.42541494087688,
+          "lng": -112.38618050531494
+        }
+      },
+      "metrics": null,
+      "debug": [
+        "address fallback returned no parcels",
+        "doc-clues: documents queried: 17",
+        "doc-clues: documents selected: 8",
+        "doc-clues: top relevance: 536:14, 528:14, 524:14"
+      ]
+    },
+    {
+      "permitId": "D0064518",
+      "status": "scored",
+      "reason": null,
+      "hints": {
+        "projectName": "Ken Garff Hyundai",
+        "address": null,
+        "city": "SURPRISE",
+        "parcelRaw": "501-40-995",
+        "apnCandidates": [
+          "501-40-995"
+        ]
+      },
+      "prediction": {
+        "source": "apn_size_normalized_by_doc",
+        "apnsUsed": [
+          "501-40-995"
+        ],
+        "polygonCount": 1
+      },
+      "documentClues": {
+        "enabled": true,
+        "docsUsed": 8,
+        "roads": 14,
+        "intersections": 0,
+        "hasCoordinates": true,
+        "hasEstimatedSize": true,
+        "consensusConfidence": 0.982,
+        "boundsMode": "rehydrate-bounds",
+        "boundsApplied": false
+      },
+      "groundTruth": {
+        "polygonVertices": 6,
+        "centroid": {
+          "lat": 33.601428809907,
+          "lng": -112.4196310213349
+        }
+      },
+      "metrics": {
+        "centroidErrorM": 88.03609577430011,
+        "areaRatio": 0.36601307189542487,
+        "iou": 0,
+        "passCentroid": true,
+        "passArea": false,
+        "passIou": false
+      },
+      "debug": [
+        "prediction from APN (1 polygons)",
+        "doc-clues: documents queried: 16",
+        "doc-clues: documents selected: 8",
+        "doc-clues: top relevance: 2364:32, 2297:32, 241:28",
+        "doc-clues: address extracted from docs: 26072 MERIT CIR",
+        "doc-clues: disturbed acreage extracted: 0.1",
+        "doc-clues: size-normalized parcel (overage=15.06x, scale=0.300)"
+      ]
+    },
+    {
+      "permitId": "D0049127",
+      "status": "scored",
+      "reason": null,
+      "hints": {
+        "projectName": "67 Flats - Phase 1",
+        "address": "6504 N 67th Ave",
+        "city": "Glendale",
+        "parcelRaw": "144-05-010C",
+        "apnCandidates": [
+          "144-05-010C"
+        ]
+      },
+      "prediction": {
+        "source": "apn_size_normalized_by_doc",
+        "apnsUsed": [
+          "14405184"
+        ],
+        "polygonCount": 1
+      },
+      "documentClues": {
+        "enabled": true,
+        "docsUsed": 8,
+        "roads": 14,
+        "intersections": 0,
+        "hasCoordinates": true,
+        "hasEstimatedSize": true,
+        "consensusConfidence": 0.982,
+        "boundsMode": "rehydrate-bounds",
+        "boundsApplied": false
+      },
+      "groundTruth": {
+        "polygonVertices": 6,
+        "centroid": {
+          "lat": 33.53265991488123,
+          "lng": -112.20585179688086
+        }
+      },
+      "metrics": {
+        "centroidErrorM": 164.61292327672794,
+        "areaRatio": 0.03940605368360937,
+        "iou": 0,
+        "passCentroid": false,
+        "passArea": false,
+        "passIou": false
+      },
+      "debug": [
+        "prediction from address fallback",
+        "doc-clues: documents queried: 13",
+        "doc-clues: documents selected: 8",
+        "doc-clues: top relevance: 757:14, 756:14, 737:14",
+        "doc-clues: disturbed acreage extracted: 0.1",
+        "doc-clues: size-normalized parcel (overage=21.18x, scale=0.300)"
+      ]
+    },
+    {
+      "permitId": "D0049844",
+      "status": "scored",
+      "reason": null,
+      "hints": {
+        "projectName": "67 Flats - Phase 1",
+        "address": null,
+        "city": "Glendale",
+        "parcelRaw": "144-05-184",
+        "apnCandidates": [
+          "144-05-184"
+        ]
+      },
+      "prediction": {
+        "source": "apn_size_normalized_by_doc",
+        "apnsUsed": [
+          "144-05-184"
+        ],
+        "polygonCount": 1
+      },
+      "documentClues": {
+        "enabled": true,
+        "docsUsed": 8,
+        "roads": 14,
+        "intersections": 0,
+        "hasCoordinates": true,
+        "hasEstimatedSize": true,
+        "consensusConfidence": 0.982,
+        "boundsMode": "rehydrate-bounds",
+        "boundsApplied": false
+      },
+      "groundTruth": {
+        "polygonVertices": 6,
+        "centroid": {
+          "lat": 33.53265991488123,
+          "lng": -112.20585179688086
+        }
+      },
+      "metrics": {
+        "centroidErrorM": 164.61292327672794,
+        "areaRatio": 0.03940605368360937,
+        "iou": 0,
+        "passCentroid": false,
+        "passArea": false,
+        "passIou": false
+      },
+      "debug": [
+        "prediction from APN (1 polygons)",
+        "doc-clues: documents queried: 13",
+        "doc-clues: documents selected: 8",
+        "doc-clues: top relevance: 1091:12, 757:12, 756:12",
+        "doc-clues: address extracted from docs: 3033 N 44TH ST",
+        "doc-clues: disturbed acreage extracted: 0.1",
+        "doc-clues: size-normalized parcel (overage=21.18x, scale=0.300)"
+      ]
+    },
+    {
+      "permitId": "D0055861",
+      "status": "scored",
+      "reason": null,
+      "hints": {
+        "projectName": "67 Flats - Phase 1",
+        "address": "6504 N 67TH AVE",
+        "city": "GLENDALE",
+        "parcelRaw": "144-05-184",
+        "apnCandidates": [
+          "144-05-184"
+        ]
+      },
+      "prediction": {
+        "source": "apn_size_normalized_by_doc",
+        "apnsUsed": [
+          "144-05-184"
+        ],
+        "polygonCount": 1
+      },
+      "documentClues": {
+        "enabled": true,
+        "docsUsed": 8,
+        "roads": 14,
+        "intersections": 0,
+        "hasCoordinates": true,
+        "hasEstimatedSize": true,
+        "consensusConfidence": 0.982,
+        "boundsMode": "rehydrate-bounds",
+        "boundsApplied": false
+      },
+      "groundTruth": {
+        "polygonVertices": 9,
+        "centroid": {
+          "lat": 33.53264577473459,
+          "lng": -112.20575216486233
+        }
+      },
+      "metrics": {
+        "centroidErrorM": 155.6704758187324,
+        "areaRatio": 0.03925581395348837,
+        "iou": 0,
+        "passCentroid": false,
+        "passArea": false,
+        "passIou": false
+      },
+      "debug": [
+        "prediction from APN (1 polygons)",
+        "doc-clues: documents from cache: 8",
+        "doc-clues: disturbed acreage extracted: 0.1",
+        "doc-clues: size-normalized parcel (overage=21.18x, scale=0.300)"
+      ]
+    },
+    {
+      "permitId": "D0058823",
+      "status": "scored",
+      "reason": null,
+      "hints": {
+        "projectName": "67 Flats - Phase 1",
+        "address": "6504 N 67TH AVE",
+        "city": "GLENDALE",
+        "parcelRaw": "144-05-184",
+        "apnCandidates": [
+          "144-05-184"
+        ]
+      },
+      "prediction": {
+        "source": "apn_size_normalized_by_doc",
+        "apnsUsed": [
+          "144-05-184"
+        ],
+        "polygonCount": 1
+      },
+      "documentClues": {
+        "enabled": true,
+        "docsUsed": 8,
+        "roads": 14,
+        "intersections": 0,
+        "hasCoordinates": true,
+        "hasEstimatedSize": true,
+        "consensusConfidence": 0.982,
+        "boundsMode": "rehydrate-bounds",
+        "boundsApplied": false
+      },
+      "groundTruth": {
+        "polygonVertices": 9,
+        "centroid": {
+          "lat": 33.53264577473459,
+          "lng": -112.20575216486233
+        }
+      },
+      "metrics": {
+        "centroidErrorM": 155.6704758187324,
+        "areaRatio": 0.03925581395348837,
+        "iou": 0,
+        "passCentroid": false,
+        "passArea": false,
+        "passIou": false
+      },
+      "debug": [
+        "prediction from APN (1 polygons)",
+        "doc-clues: documents from cache: 8",
+        "doc-clues: disturbed acreage extracted: 0.1",
+        "doc-clues: size-normalized parcel (overage=21.18x, scale=0.300)"
+      ]
+    },
+    {
+      "permitId": "D0059617",
+      "status": "skipped",
+      "reason": "no prediction polygon from APN/address hints",
+      "hints": {
+        "projectName": "PHX065",
+        "address": null,
+        "city": "MESA",
+        "parcelRaw": "304-34-015D",
+        "apnCandidates": [
+          "304-34-015D"
+        ]
+      },
+      "prediction": {
+        "source": "none",
+        "apnsUsed": [],
+        "polygonCount": 0
+      },
+      "documentClues": {
+        "enabled": true,
+        "docsUsed": 8,
+        "roads": 14,
+        "intersections": 0,
+        "hasCoordinates": true,
+        "hasEstimatedSize": true,
+        "consensusConfidence": 0.982,
+        "boundsMode": "rehydrate-bounds",
+        "boundsApplied": false
+      },
+      "groundTruth": {
+        "polygonVertices": 9,
+        "centroid": {
+          "lat": 33.295912886994586,
+          "lng": -111.60275975184214
+        }
+      },
+      "metrics": null,
+      "debug": [
+        "address fallback unavailable",
+        "doc-clues: documents queried: 13",
+        "doc-clues: documents selected: 8",
+        "doc-clues: top relevance: 1203:8, 1188:8, 1187:8",
+        "doc-clues: address extracted from docs: 2325 E CAMELBACK RD",
+        "doc-clues: disturbed acreage extracted: 0.1",
+        "doc-clues: bounds available but skipped because no base APN/address polygon"
+      ]
+    },
+    {
+      "permitId": "D0062478",
+      "status": "scored",
+      "reason": null,
+      "hints": {
+        "projectName": "AE PHX06",
+        "address": "2955 W INOVATION ST",
+        "city": "CHANDLER",
+        "parcelRaw": "303-36-873",
+        "apnCandidates": [
+          "303-36-873"
+        ]
+      },
+      "prediction": {
+        "source": "apn_size_normalized_by_doc",
+        "apnsUsed": [
+          "303-36-873"
+        ],
+        "polygonCount": 1
+      },
+      "documentClues": {
+        "enabled": true,
+        "docsUsed": 8,
+        "roads": 14,
+        "intersections": 0,
+        "hasCoordinates": true,
+        "hasEstimatedSize": true,
+        "consensusConfidence": 0.982,
+        "boundsMode": "rehydrate-bounds",
+        "boundsApplied": false
+      },
+      "groundTruth": {
+        "polygonVertices": 5,
+        "centroid": {
+          "lat": 33.266117411739586,
+          "lng": -111.88527329763241
+        }
+      },
+      "metrics": {
+        "centroidErrorM": 141.53738880300597,
+        "areaRatio": 0.8192462495426273,
+        "iou": 0,
+        "passCentroid": false,
+        "passArea": true,
+        "passIou": false
+      },
+      "debug": [
+        "prediction from APN (1 polygons)",
+        "doc-clues: documents from cache: 8",
+        "doc-clues: disturbed acreage extracted: 0.1",
+        "doc-clues: size-normalized parcel (overage=43.75x, scale=0.300)",
+        "doc-clues: skipped clipping due to small area share (0.255 < 0.600)"
+      ]
+    }
+  ]
+}

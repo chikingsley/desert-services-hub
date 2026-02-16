@@ -1,0 +1,17 @@
+To: [GC Contact Email]
+Subject: [Project Name] - Contract Insurance Requirements
+
+Hi [Name],
+
+Reviewing the subcontract for [Project Name] - Attachment C (Insurance Requirements) requires $5M umbrella coverage.
+
+Our current policy:
+- GL: $1M per occurrence / $2M aggregate
+- Auto: $1M
+- Umbrella: $3M
+- Workers Comp: Statutory + $500K
+- Professional Liability: $2M
+
+We can't sign as-is since we don't carry $5M umbrella. Is it possible to amend Attachment C to $3M umbrella, or issue an exception letter alongside?
+
+Thanks,

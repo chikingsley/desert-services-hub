@@ -91,7 +91,7 @@ for mailbox in "${MAILBOXES[@]}"; do
 
     echo "  - attempt $attempts: since=$since before=$current_oldest"
 
-    if ! timeout "${SYNC_TIMEOUT_SEC}s" "$BUN_BIN" apps/cli-tools/email-cli/src/sync/mailboxes.ts \
+    if ! timeout "${SYNC_TIMEOUT_SEC}s" "$BUN_BIN" packages/email/cli/sync-mailboxes.ts \
       --full --no-post --no-bodies --no-attachments \
       --mailbox="$mailbox" --since="$since" --before="$current_oldest" \
       --concurrency=1 --limit=250000; then

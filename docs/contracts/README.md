@@ -10,8 +10,8 @@ This folder is the focused docs surface for contract work after a contract packe
 - `docs/contracts/pm-workflow.md`: PM execution workflow (contract-focused copy).
 - `docs/contracts/data-needed.md`: required data inventory for kickoff/handoff readiness.
 - `docs/contract-packet-lifecycle-2026-02-12.md`: canonical lifecycle states (`contract_packets`) and queue model (`contract_packet_queue_v`).
-- `apps/contract/templates/project-record-template.md`: fillable project record for post-contract execution.
-- `apps/contract/templates/project-record-schema.md`: full project field inventory (expanded reference).
+- `packages/contracts/templates/project-record-template.md`: fillable project record for post-contract execution.
+- `packages/contracts/templates/project-record-schema.md`: full project field inventory (expanded reference).
 
 ## Scope Boundary
 

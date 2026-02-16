@@ -1,0 +1,139 @@
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  </head>
+  <body>
+    <div>{{contactName}},</div>
+    <div><br></div>
+
+    <!-- Acknowledgment -->
+    <div>
+      Thank you for sending over the {{contractType}} for <strong>{{projectName}}</strong>.
+      {{#if poNumber}}(PO# {{poNumber}}){{/if}}
+    </div>
+    <div><br></div>
+
+    <!-- Status Section -->
+    {{#if isReady}}
+    <div>
+      We have reviewed the contract and are ready to proceed. Our team will execute and return 
+      the signed documents.
+    </div>
+    {{else}}
+    <div>
+      We have reviewed the contract and have a few items to clarify before we can proceed:
+    </div>
+    <div><br></div>
+
+    <!-- Clarifications Needed -->
+    {{#if clarifications.length}}
+    <div><strong>Items Needing Clarification:</strong></div>
+    <ul>
+      {{#each clarifications}}
+      <li>{{this}}</li>
+      {{/each}}
+    </ul>
+    {{/if}}
+
+    <!-- Scope Questions -->
+    {{#if scopeQuestions.length}}
+    <div><strong>Scope Questions:</strong></div>
+    <ul>
+      {{#each scopeQuestions}}
+      <li>{{this}}</li>
+      {{/each}}
+    </ul>
+    {{/if}}
+
+    <!-- Variance Note -->
+    {{#if hasVariance}}
+    <div><strong>Variance:</strong></div>
+    <ul>
+      <li>Our estimate: ${{formatMoney estimateTotal}}</li>
+      <li>Contract value: ${{formatMoney contractTotal}}</li>
+      <li>Difference: ${{formatMoney difference}}</li>
+    </ul>
+    {{#if varianceExplanation}}
+    <div>{{varianceExplanation}}</div>
+    {{else}}
+    <div>Please confirm this difference is correct before we proceed.</div>
+    {{/if}}
+    {{/if}}
+
+    <!-- Redlines -->
+    {{#if redlines.length}}
+    <div><strong>Redlines Required:</strong></div>
+    <ul>
+      {{#each redlines}}
+      <li>{{this}}</li>
+      {{/each}}
+    </ul>
+    <div>Please see the attached marked-up copy.</div>
+    {{/if}}
+    {{/if}}
+
+    <div><br></div>
+
+    <!-- COI Section -->
+    {{#if coiRequired}}
+    <div>
+      {{#if coiStatus.ready}}
+      We will send the Certificate of Insurance to the appropriate contact.
+      {{else if coiStatus.pending}}
+      We are requesting an updated Certificate of Insurance from our broker and will send it 
+      to {{#if coiRecipient}}{{coiRecipient}}{{else}}the appropriate contact{{/if}} once received.
+      {{else}}
+      We will provide the required Certificate of Insurance.
+      {{/if}}
+    </div>
+    <div><br></div>
+    {{/if}}
+
+    <!-- W9 Section -->
+    {{#if w9Requested}}
+    <div>
+      Our W-9 is attached for your records.
+    </div>
+    <div><br></div>
+    {{/if}}
+
+    <!-- SOV Section -->
+    {{#if sovRequested}}
+    <div>
+      {{#if sovAttached}}
+      The Schedule of Values is attached.
+      {{else}}
+      We will provide the Schedule of Values as requested.
+      {{/if}}
+    </div>
+    <div><br></div>
+    {{/if}}
+
+    <!-- Closing -->
+    {{#if closingNote}}
+    <div>{{closingNote}}</div>
+    {{else}}
+    <div>Please let me know if you have any questions or need anything else from us.</div>
+    {{/if}}
+    <div><br></div>
+
+    <div>Best regards,</div>
+    <div><br></div>
+
+    <!-- Signature -->
+    <div>--</div>
+    <div><br></div>
+    <div>{{senderName}}</div>
+    <div>{{senderTitle}}</div>
+    {{#if senderEmail}}<div>E: <a href="mailto:{{senderEmail}}">{{senderEmail}}</a></div>{{/if}}
+    {{#if senderPhone}}<div>M: {{senderPhone}}</div>{{/if}}
+    <div>
+      <img
+        src="cid:logo"
+        alt="Desert Services LLC"
+        width="264"
+        style="max-width:100%"
+      >
+    </div>
+  </body>
+</html>

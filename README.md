@@ -157,4 +157,4 @@ Runtime notes: `docs/POSTGRES_MIGRATION.md`
 
 - **Engineering Standards**: See [CLAUDE.md](CLAUDE.md) for detailed coding conventions, service usage patterns, and testing requirements.
 - **System Design**: See `docs/` for specific SOPs and integration diagrams.
-- **Contract Workflow**: See `apps/contract/PROJECT.md` and `STATE.md`
+- **Contract Workflow**: See `packages/contracts/PROJECT.md` and `STATE.md`

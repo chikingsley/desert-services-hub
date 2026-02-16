@@ -4,7 +4,7 @@
  */
 
 import { db } from "@lib/db/hub";
-import { createSharePointClientFromEnv } from "@lib/sharepoint/intake-upload";
+import { createSharePointClientFromEnv } from "@sharepoint/intake-upload";
 import {
   buildTakeoffSharePointPath,
   decodeSharePointPdfPath,

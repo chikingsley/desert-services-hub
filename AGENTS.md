@@ -64,7 +64,7 @@ Active worker/runtime components:
 - Docker services: `notifications`, `swppp-sync`, `permit-worker`, plus `web`/`webhooks`.
 
 Notes:
-- Intake runtime lives in `apps/web/lib/*` and `apps/web/worker.ts`; avoid reintroducing legacy standalone intake worker folders.
+- Intake runtime lives in `apps/web/lib/*` and `apps/workers/job-runner/lib/worker.ts`; avoid reintroducing legacy standalone intake worker folders.
 
 Estimate-email linking runtime:
 - Runs inside `apps/web/worker.ts` as a periodic backfill timer (every 60s).
@@ -102,7 +102,7 @@ Project-linking runtime (shared matcher):
 - Primary SSSP input for current LGE packet:
   - `data/triage/1400-w-3rd/sssp-input.json`
 - Generate SSSP PDF:
-  - `bun apps/cli-tools/pdf-generation-cli/bin/cli.ts safety sssp generate --in <input.json> --out <output.pdf>`
+  - `bun packages/documents/pdf-generation-cli/cli/cli.ts safety sssp generate --in <input.json> --out <output.pdf>`
 - SSSP section selection (CLI override):
   - `--sections water-truck,street-sweeping,portable-sanitation`
   - `--sections all`
@@ -126,15 +126,15 @@ Project-linking runtime (shared matcher):
 ## SDS CLI (Inventory vs Binder)
 
 - Tool location:
-  - `apps/cli-tools/pdf-generation-cli/bin/cli.ts`
-  - `apps/cli-tools/pdf-generation-cli/README.md`
+  - `packages/documents/pdf-generation-cli/cli/cli.ts`
+  - `packages/documents/pdf-generation-cli/README.md`
 - Input file (current working set):
   - `data/sds/sds-input.json`
 - Two output modes:
   - Inventory only:
-    - `bun apps/cli-tools/pdf-generation-cli/bin/cli.ts safety sds generate --in data/sds/sds-input.json --out data/sds/SDS_Chemical_Inventory.pdf`
+    - `bun packages/documents/pdf-generation-cli/cli/cli.ts safety sds generate --in data/sds/sds-input.json --out data/sds/SDS_Chemical_Inventory.pdf`
   - Full binder (inventory + appended SDS sheets):
-    - `bun apps/cli-tools/pdf-generation-cli/bin/cli.ts safety sds generate --in data/sds/sds-input.json --out data/sds/SDS_Binder.pdf --include-sheets`
+    - `bun packages/documents/pdf-generation-cli/cli/cli.ts safety sds generate --in data/sds/sds-input.json --out data/sds/SDS_Binder.pdf --include-sheets`
 - Optional flags:
   - `--download-sheets-from-url`: fetch entry `url` when local `pdfPath` is not present.
   - `--fail-on-missing-sheets`: exit non-zero if any sheet could not be appended.

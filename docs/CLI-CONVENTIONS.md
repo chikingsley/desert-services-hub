@@ -7,8 +7,8 @@ This repo currently has three CLI shapes. Use these as the canonical patterns wh
 Use this when the CLI has many domains/actions and you want clean per-command modules.
 
 Reference:
-- `apps/workers/permit-workers/src/cli.ts`
-- `apps/workers/permit-workers/src/commands/**`
+- `packages/dust-permits/src/cli.ts`
+- `packages/dust-permits/src/commands/**`
 
 Pattern:
 - `src/cli.ts` owns command registry only.
@@ -21,11 +21,11 @@ Pattern:
 Use this when commands are already grouped by feature and exported as handler maps.
 
 Reference:
-- `apps/cli-tools/email-cli/bin/cli.ts`
-- `apps/cli-tools/email-cli/src/commands/*.ts`
+- `packages/email/cli/cli.ts`
+- `packages/email/src/commands/*.ts`
 
 Pattern:
-- `bin/cli.ts` merges handler maps and dispatches by command name.
+- `cli/cli.ts` merges handler maps and dispatches by command name.
 - Each command module exports typed handlers.
 - Keep `showHelp()` in entrypoint; business logic stays in command modules.
 
@@ -34,7 +34,7 @@ Pattern:
 Use this for focused tools with a small command surface.
 
 Reference:
-- `apps/cli-tools/pdf-generation-cli/bin/cli.ts`
+- `packages/documents/pdf-generation-cli/cli/cli.ts`
 
 Pattern:
 - Parse flags with `parseArgs`.
@@ -44,8 +44,8 @@ Pattern:
 
 ## Standard Layout for New CLIs
 
-```
-apps/<tool>/bin/cli.ts
+```text
+apps/<tool>/cli/cli.ts
 apps/<tool>/src/commands/<domain>/<action>.ts
 apps/<tool>/src/commands/_shared/*.ts
 apps/<tool>/src/lib/*.ts

@@ -39,7 +39,7 @@
       "**/*",
       "!docs/_archive",
       "!apps/workers/docusign-file-automation/_reference",
-      "!apps/workers/permit-workers/tests/e2e/screenshots",
+      "!packages/dust-permits/tests/e2e/screenshots",
       "!tests/e2e/screenshots",
       "!**/.wrangler",
       "!**/.cursor",
@@ -51,7 +51,7 @@
       "includes": [
         "docs/_archive/**",
         "apps/workers/docusign-file-automation/_reference/**",
-        "apps/workers/permit-workers/experiments/**",
+        "packages/dust-permits/experiments/**",
         "tests/e2e/screenshots/**"
       ],
       "linter": {
@@ -65,7 +65,7 @@
       }
     },
     {
-      "includes": ["apps/workers/permit-workers/src/form-data.ts"],
+      "includes": ["packages/dust-permits/src/form-data.ts"],
       "linter": {
         "rules": {
           "nursery": {
@@ -75,7 +75,7 @@
       }
     },
     {
-      "includes": ["apps/workers/permit-workers/src/portal/create/fill/**"],
+      "includes": ["packages/dust-permits/src/portal/create/fill/**"],
       "linter": {
         "rules": {
           "complexity": {

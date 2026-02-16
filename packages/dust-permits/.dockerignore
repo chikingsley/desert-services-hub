@@ -1,0 +1,48 @@
+# Dependencies (will be installed in container)
+node_modules
+
+# Docker files (don't need to copy into image)
+Dockerfile*
+docker-compose*
+.dockerignore
+
+# Git
+.git
+.gitignore
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Documentation (not needed at runtime)
+README.md
+CHANGELOG.md
+CLAUDE.md
+AGENTS.md
+TODO.md
+docs/
+
+# Development artifacts
+coverage/
+*.log
+*.tmp
+
+# Environment (secrets should be passed via docker-compose)
+.env
+.env.*
+!.env.example
+
+# Test artifacts
+test-results/
+playwright-report/
+
+# Build artifacts
+dist/
+build/
+*.tsbuildinfo

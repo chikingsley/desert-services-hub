@@ -81,6 +81,18 @@ const h = (handler: unknown) => handler as never;
 // Frontend - HTML entry point (Bun bundles automatically)
 import homepage from "@/apps/web/frontend/index.html";
 
+const STATIC_DIRS = ["./apps/web/frontend/public"];
+
+async function findStaticFile(pathname: string) {
+  for (const dir of STATIC_DIRS) {
+    const staticFile = file(`${dir}${pathname}`);
+    if (await staticFile.exists()) {
+      return staticFile;
+    }
+  }
+  return null;
+}
+
 const server = serve({
   port: process.env.PORT || 3000,
 
@@ -263,14 +275,14 @@ const server = serve({
   },
 
   // Fallback handler for unmatched routes
-  // Serves static files from public/ or falls back to SPA
+  // Serves static files from package public dirs or falls back to SPA
   async fetch(req) {
     const url = new URL(req.url);
     const pathname = url.pathname;
 
-    // Try to serve static file from public directory
-    const staticFile = file(`./public${pathname}`);
-    if (await staticFile.exists()) {
+    // Try to serve static file from web package public directory
+    const staticFile = await findStaticFile(pathname);
+    if (staticFile) {
       return new Response(staticFile);
     }
 

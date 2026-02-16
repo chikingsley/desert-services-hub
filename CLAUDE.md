@@ -17,7 +17,6 @@ apps/
     api/                  # Domain-grouped API routes (estimates/, emails/, projects/, takeoffs/, webhooks/, contracts/)
     jobs/                 # Background job modules (config, queue, dispatch, monday-sync, email-processing, etc.)
   workers/
-    permit-workers/       # Maricopa County dust permit browser automation (Playwright)
     notifications/        # Email notification triggers, delivery, stakeholder routing
     inspections-email-worker/  # ComplianceGo → SharePoint (Cloudflare Worker)
     docusign-file-automation/  # DocuSign contract dispatch (Cloudflare Worker)
@@ -27,15 +26,15 @@ apps/
     monday-status-sync-worker/
     estimate-email-linker/    # In-process linker logic used by web worker timer
     outlook-folder-watcher/
-    swppp-sync/
-  cli-tools/
-    email-cli/            # Email templates (Handlebars), subscription management
-    aqdata-cli/           # Air quality data scraping
-    monday-cli/           # Monday.com API operations
-    sharepoint-cli/       # SharePoint file operations
-    pdf-analysis-cli/     # PDF extraction with Gemini
-    quoting-cli/          # Estimate quoting tools
-  contract/               # Contract parsing and management
+packages/
+  monday/               # Monday.com API operations
+  email/                # Email templates, sync scripts, Graph CLI tooling
+  aqdata/               # Air quality data scraping and parser tooling
+  sharepoint/           # SharePoint Graph operations + workers/tests
+  dust-permits/         # Maricopa permit automation (Playwright, VNC)
+  documents/            # PDF analysis and generation pipelines
+  contracts/            # Contract parsing and document utilities
+  narratives/           # Environmental narrative generation
 
 lib/                      # Shared libraries (imported by all apps)
   catalog/                # Service catalog with pricing (dust permit fee schedule, etc.)
@@ -50,8 +49,8 @@ lib/                      # Shared libraries (imported by all apps)
 ```
 
 Runtime note:
-- Intake processing/backfill logic now lives under `apps/web/lib/` (`files-intake.ts`, `attachment-backfill.ts`).
-- Old worker folders `contract-intake`, `files-email-intake`, and `dust-permit-intake` are removed from tracked runtime code.
+- Intake processing/backfill logic lives under `apps/web/lib/` (`files-intake.ts`).
+- Old worker folders `contract-intake`, `files-email-intake`, `dust-permit-intake`, `swppp-sync` are removed from tracked runtime code.
 
 ## Docker Services
 
@@ -149,8 +148,8 @@ When consuming parsed NOI data (from `pdf-analysis` / intake workers), use this 
 
 Primary references:
 - `apps/web/lib/files-intake.ts`
-- `apps/cli-tools/pdf-analysis-cli/src/pdf_analysis/noi.py`
-- `apps/workers/permit-workers/tests/lib/extraction-validator.ts`
+- `packages/documents/pdf-analysis-cli/src/pdf_analysis/noi.py`
+- `packages/dust-permits/tests/lib/extraction-validator.ts`
 
 ## Dust Permit Tier Scale
 
@@ -175,7 +174,7 @@ Email arrives → Graph webhook → POST /api/webhooks/outlook
 - `pointandpay_payment` — PointAndPay payment confirmation → billing + submitted notifications
 - `maricopa_issued` — "Dust Permit Issued" from Maricopa → issued notification
 
-**Email templates:** `apps/cli-tools/email-cli/src/email-templates/*.hbs`
+**Email templates:** `packages/email/src/email-templates/*.hbs`
 
 ## Shared Libraries (`lib/`)
 
@@ -241,8 +240,8 @@ Connection: `@lib/db/hub` provides a Postgres client with SQLite-compatible API 
 ### Email Linking Runtime Notes
 
 - Canonical runtime:
-  - Folder watcher polling runs in `apps/web/worker.ts` via `pollFolderWatcher()` every 30s.
-  - Estimate-email backfill runs in `apps/web/worker.ts` via `pollEstimateEmailLinker()` every 60s.
+  - Folder watcher polling runs in `apps/workers/job-runner/lib/worker.ts` via `pollFolderWatcher()` every 30s.
+  - Estimate-email backfill runs in `apps/workers/job-runner/lib/worker.ts` via `pollEstimateEmailLinker()` every 60s.
   - Do not run parallel `systemd` services for folder watcher or estimate-email-linker.
 - Folder watcher project linking (`apps/workers/outlook-folder-watcher/lib/projects.ts`):
   - Folder-to-project matching is centralized in `findProjectByFolder()` and the shared matcher contract:
@@ -293,7 +292,7 @@ Use this when users request Site-Specific Safety Plans (SSSP) or Safety Data She
 ### Source of Truth
 
 - SSSP generator:
-  - `apps/cli-tools/pdf-generation-cli/`
+  - `packages/documents/pdf-generation-cli/`
   - `lib/pdf/sssp/`
 - Current LGE working packet:
   - `data/triage/1400-w-3rd/`
@@ -344,12 +343,12 @@ Commands:
 
 ```bash
 # Inventory only
-bun apps/cli-tools/pdf-generation-cli/bin/cli.ts safety sds generate \
+bun packages/documents/pdf-generation-cli/cli/cli.ts safety sds generate \
   --in data/sds/sds-input.json \
   --out data/sds/SDS_Chemical_Inventory.pdf
 
 # Binder (append sheets)
-bun apps/cli-tools/pdf-generation-cli/bin/cli.ts safety sds generate \
+bun packages/documents/pdf-generation-cli/cli/cli.ts safety sds generate \
   --in data/sds/sds-input.json \
   --out data/sds/SDS_Binder.pdf \
   --include-sheets

@@ -18,7 +18,7 @@ const EXCLUDED_DIRS = new Set([
   // Vendored UI component library (shadcn)
   "apps/web/frontend/components/ui",
   // Self-contained monolith with its own structure
-  "apps/workers/permit-workers",
+  "packages/dust-permits",
   // One-per-route / one-per-component (inherently flat by design)
   "apps/web/frontend/pages",
   "apps/web/frontend/components/estimates",
@@ -26,7 +26,7 @@ const EXCLUDED_DIRS = new Set([
   // One-per-entity DB repositories
   "lib/db/repositories",
   // CLI command directories (one-per-command)
-  "apps/cli-tools/email-cli/src/commands",
+  "packages/email/src/commands",
   // Node modules (obviously)
   "node_modules",
 ]);
@@ -119,7 +119,7 @@ function walk(dir: string, violations: Violation[]): void {
 const violations: Violation[] = [];
 
 // Walk the source trees
-for (const root of ["apps", "lib", "scripts", "tests"]) {
+for (const root of ["apps", "lib", "packages", "scripts", "tests"]) {
   try {
     statSync(join(repoRoot, root));
     walk(join(repoRoot, root), violations);

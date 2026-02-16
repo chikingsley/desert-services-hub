@@ -5,7 +5,7 @@
     "baseUrl": "../../..",
     "paths": {
       "@lib/*": ["lib/*"],
-      "@sharepoint/*": ["apps/cli-tools/sharepoint-cli/src/*"]
+      "@sharepoint/*": ["packages/sharepoint/src/*"]
     }
   },
   "include": ["src/**/*.ts", "cli/**/*.ts", "tests/**/*.ts"],

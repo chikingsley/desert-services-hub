@@ -34,7 +34,7 @@ export type {
 
 const PDF_ANALYSIS_CWD = join(
   import.meta.dir,
-  "../../../../apps/cli-tools/pdf-analysis-cli"
+  "../../../packages/documents/pdf-analysis-cli"
 );
 
 const LOG = "[files-intake]";

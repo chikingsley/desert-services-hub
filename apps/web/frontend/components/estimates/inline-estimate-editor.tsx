@@ -16,7 +16,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/apps/web/frontend/components/ui/popover";
-import { useEstimateEditor } from "@/hooks/use-estimate-editor";
+import { useEstimateEditor } from "@/apps/web/frontend/hooks/use-estimate-editor";
 import { formatCurrency } from "@/lib/utils";
 
 interface InlineEstimateEditorProps {
@@ -56,6 +56,10 @@ export function InlineEstimateEditor({
     updateSectionTitle,
     duplicateSection,
     loadEstimate,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
   } = useEstimateEditor({ initialEstimate, catalog });
 
   // Track which section to scroll to after it renders
@@ -71,6 +75,63 @@ export function InlineEstimateEditor({
     },
     [duplicateSection]
   );
+
+  const handleEditorShortcut = useCallback(
+    (event: KeyboardEvent) => {
+      if (event.code !== "KeyZ" || event.isComposing) {
+        return;
+      }
+
+      if (!(event.metaKey || event.ctrlKey)) {
+        return;
+      }
+
+      if (event.shiftKey) {
+        if (!canRedo) {
+          return;
+        }
+
+        event.preventDefault();
+        redo();
+        return;
+      }
+
+      if (!canUndo) {
+        return;
+      }
+
+      event.preventDefault();
+      undo();
+    },
+    [canRedo, canUndo, redo, undo]
+  );
+
+  const isTextInputTarget = useCallback((target: EventTarget | null) => {
+    return (
+      target instanceof HTMLInputElement ||
+      target instanceof HTMLTextAreaElement ||
+      target instanceof HTMLSelectElement ||
+      (target instanceof HTMLElement &&
+        target.isContentEditable &&
+        target.contentEditable === "true")
+    );
+  }, []);
+
+  useEffect(() => {
+    const handleEditorShortcutWithGuard = (event: KeyboardEvent) => {
+      if (isTextInputTarget(event.target)) {
+        return;
+      }
+
+      handleEditorShortcut(event);
+    };
+
+    window.addEventListener("keydown", handleEditorShortcutWithGuard);
+
+    return () => {
+      window.removeEventListener("keydown", handleEditorShortcutWithGuard);
+    };
+  }, [handleEditorShortcut, isTextInputTarget]);
 
   // Effect to scroll to new section after it renders
   useEffect(() => {

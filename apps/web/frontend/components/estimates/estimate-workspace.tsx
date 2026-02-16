@@ -23,7 +23,7 @@ import {
 } from "@/apps/web/frontend/components/ui/dropdown-menu";
 import { useSidebar } from "@/apps/web/frontend/components/ui/sidebar";
 import { Spinner } from "@/apps/web/frontend/components/ui/spinner";
-import { useSettings } from "@/hooks/use-settings";
+import { useSettings } from "@/apps/web/frontend/hooks/use-settings";
 import { catalog } from "@/lib/catalog";
 import type { EstimatePDFOptions } from "@/lib/pdf/estimate/build-estimate-doc-definition";
 import { generateEstimatePDFBlob } from "@/lib/pdf/estimate/generate-estimate-pdf.client";

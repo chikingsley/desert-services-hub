@@ -53,11 +53,11 @@ Source data snapshot:
   - `/Users/chiejimofor/Documents/Github/desert-services-hub/apps/workers/monday-status-sync-worker/src/index.ts:95`
   - `/Users/chiejimofor/Documents/Github/desert-services-hub/apps/workers/monday-status-sync-worker/src/index.ts:797`
 - Estimating sync docs/types still acknowledge mirror contractor fallback:
-  - `/Users/chiejimofor/Documents/Github/desert-services-hub/apps/cli-tools/monday-cli/SYNC-KNOWLEDGE.md:41`
-  - `/Users/chiejimofor/Documents/Github/desert-services-hub/apps/cli-tools/monday-cli/src/types.ts:97`
+  - `/Users/chiejimofor/Documents/Github/desert-services-hub/packages/monday/SYNC-KNOWLEDGE.md:41`
+  - `/Users/chiejimofor/Documents/Github/desert-services-hub/packages/monday/src/types.ts:97`
 - Monday CLI board map is stale for Contacts/Contractors IDs:
-  - `/Users/chiejimofor/Documents/Github/desert-services-hub/apps/cli-tools/monday-cli/bin/cli.ts:24`
-  - Active IDs are in `/Users/chiejimofor/Documents/Github/desert-services-hub/apps/cli-tools/monday-cli/src/types.ts:37`
+  - `/Users/chiejimofor/Documents/Github/desert-services-hub/packages/monday/cli/cli.ts:24`
+  - Active IDs are in `/Users/chiejimofor/Documents/Github/desert-services-hub/packages/monday/src/types.ts:37`
 
 ## Board-by-Board Migration Plan
 

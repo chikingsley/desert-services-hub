@@ -196,7 +196,7 @@ export const EMAIL_RESOLVER_SPARK_TIMEOUT_MS = parsePositiveInt(
 );
 export const EMAIL_RESOLVER_SPARK_RETRY_TIMEOUT_MS = parsePositiveInt(
   process.env.EMAIL_RESOLVER_SPARK_RETRY_TIMEOUT_MS,
-  12000,
+  12_000,
   250
 );
 export const EMAIL_RESOLVER_SPARK_MAX_CANDIDATES = parsePositiveInt(

@@ -410,7 +410,7 @@ async function generate(outputPath: string): Promise<void> {
             ],
             [
               { text: "logo.ts", bold: true },
-              "Logo loader (lib/assets/logo.png as base64)",
+              "Logo loader (apps/web/frontend/public/logo.png as base64)",
             ],
             [
               { text: "layouts.ts", bold: true },

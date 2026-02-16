@@ -1,0 +1,89 @@
+[project]
+name = "pdf-analysis"
+version = "0.1.0"
+description = "Unified PDF analysis CLI with Gemini, local OCR, and Mistral providers"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "google-genai>=1.0.0",
+    "httpx>=0.28.0",
+    "mistralai>=1.6.0",
+    "pdfplumber>=0.11.0",
+    "pydantic>=2.10.0",
+    "pydantic-settings>=2.0.0",
+    "pymupdf>=1.25.0",
+    "python-dotenv>=1.0.0",
+    "typer>=0.12.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.24.0",
+    "ruff>=0.9.0",
+]
+
+[project.scripts]
+pdf-analysis = "pdf_analysis.cli:main"
+plan-ocr = "pdf_analysis.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/pdf_analysis"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+src = ["src"]
+
+[tool.ruff.lint]
+select = [
+    "E",
+    "F",
+    "I",
+    "W",
+    "UP",
+    "B",
+    "SIM",
+    "C4",
+]
+ignore = [
+    "E501",
+    "B008",
+    "SIM108",
+    "UP042",
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["pdf_analysis"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.mypy]
+python_version = "3.11"
+
+[[tool.mypy.overrides]]
+module = ["pymupdf", "pymupdf.*", "fitz", "fitz.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["pdf_analysis.estimates"]
+disable_error_code = ["prop-decorator"]
+
+[tool.ty.environment]
+python-version = "3.11"
+root = ["src"]
+
+[tool.ty.src]
+include = ["src", "tests"]
+
+[tool.ty.rules]
+all = "error"
+
+[tool.ty.terminal]
+error-on-warning = true

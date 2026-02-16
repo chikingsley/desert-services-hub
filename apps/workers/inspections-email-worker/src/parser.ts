@@ -2,7 +2,7 @@
  * Email parsing utilities for ComplianceGo inspection emails
  */
 
-import { getProjectsFolder } from "@lib/sharepoint/paths";
+import { getProjectsFolder } from "@sharepoint/paths";
 import PostalMime from "postal-mime";
 
 // =============================================================================

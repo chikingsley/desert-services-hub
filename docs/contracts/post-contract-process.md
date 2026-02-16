@@ -68,7 +68,7 @@ Guardrails:
 
 Target SLA: same business day as reconciliation outcome.
 
-Use `apps/contract/templates/project-record-template.md` and fill all required fields.
+Use `packages/contracts/templates/project-record-template.md` and fill all required fields.
 
 Minimum required sections before handoff:
 

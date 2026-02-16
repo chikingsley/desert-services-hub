@@ -1,0 +1,172 @@
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <style>
+      body { font-family: Arial, sans-serif; font-size: 14px; color: #333; }
+      h2 { color: #1a5276; border-bottom: 1px solid #1a5276; padding-bottom: 5px; }
+      h3 { color: #2874a6; margin-top: 20px; }
+      table { border-collapse: collapse; margin: 10px 0; }
+      th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+      th { background-color: #f2f2f2; }
+      .reconciled { color: #27ae60; font-weight: bold; }
+      .mismatch { color: #e74c3c; font-weight: bold; }
+      .warning { color: #f39c12; }
+      .kept { color: #27ae60; }
+      .removed { color: #e74c3c; }
+      .added { color: #3498db; }
+      ul { margin: 5px 0; padding-left: 20px; }
+      .section { margin-bottom: 20px; }
+    </style>
+  </head>
+  <body>
+    <h2>{{projectName}} — Contract Intake</h2>
+    
+    <div class="section">
+      <strong>Status:</strong> 
+      {{#if reconciliation.mathCheck.matches}}
+        <span class="reconciled">RECONCILED</span>
+      {{else}}
+        <span class="mismatch">{{reconciliation.outcome}}</span>
+      {{/if}}
+    </div>
+
+    <!-- Project Info -->
+    <h3>Project Info</h3>
+    <table>
+      <tr><th>Project Name</th><td>{{projectName}}</td></tr>
+      {{#if projectNumber}}<tr><th>Project Number</th><td>{{projectNumber}}</td></tr>{{/if}}
+      {{#if poNumber}}<tr><th>PO #</th><td>{{poNumber}}</td></tr>{{/if}}
+      {{#if location}}<tr><th>Location</th><td>{{location}}</td></tr>{{/if}}
+      <tr><th>GC</th><td>{{generalContractor.name}}</td></tr>
+      {{#if owner}}<tr><th>Owner</th><td>{{owner.name}}</td></tr>{{/if}}
+    </table>
+
+    <!-- Contract Details -->
+    <h3>Contract Details</h3>
+    <table>
+      <tr><th>Contract Type</th><td>{{contractType}}</td></tr>
+      <tr><th>Contract Value</th><td>${{formatMoney contractValue}}</td></tr>
+      {{#if originalEstimateValue}}<tr><th>Original Estimate</th><td>${{formatMoney originalEstimateValue}}</td></tr>{{/if}}
+      <tr><th>Variance</th><td>${{formatMoney reconciliation.difference}}</td></tr>
+      {{#if retention}}<tr><th>Retention</th><td>{{retention}}%</td></tr>
+      {{else}}<tr><th>Retention</th><td><em>Not specified</em></td></tr>{{/if}}
+      {{#if certifiedPayroll.required}}<tr><th>Certified Payroll</th><td>Yes — {{certifiedPayroll.type}}</td></tr>{{/if}}
+      {{#if billing.platform}}<tr><th>Billing Platform</th><td>{{billing.platform}}</td></tr>{{/if}}
+    </table>
+
+    <!-- Contacts -->
+    {{#if contacts.length}}
+    <h3>Contacts</h3>
+    <table>
+      <tr><th>Role</th><th>Name</th><th>Email</th><th>Phone</th></tr>
+      {{#each contacts}}
+      <tr>
+        <td>{{contact.role}}</td>
+        <td>{{contact.name}}</td>
+        <td>{{#if contact.email}}<a href="mailto:{{contact.email}}">{{contact.email}}</a>{{/if}}</td>
+        <td>{{contact.phone}}</td>
+      </tr>
+      {{/each}}
+    </table>
+    {{/if}}
+
+    <!-- Reconciliation Summary -->
+    <h3>Reconciliation</h3>
+    <table>
+      <tr><th>Estimate Total</th><td>${{formatMoney reconciliation.estimateTotal}}</td></tr>
+      <tr><th>Contract Total</th><td>${{formatMoney reconciliation.contractTotal}}</td></tr>
+      <tr><th>Difference</th><td>${{formatMoney reconciliation.difference}}</td></tr>
+    </table>
+
+    <h4>Line Items</h4>
+    <table>
+      <tr><th>Status</th><th>Item</th><th>Amount</th><th>Note</th></tr>
+      {{#each reconciliation.lineItems}}
+      <tr>
+        <td class="{{toLowerCase status}}">{{status}}</td>
+        <td>{{description}}</td>
+        <td>
+          {{#if contractAmount}}${{formatMoney contractAmount}}
+          {{else if estimateAmount}}<s>${{formatMoney estimateAmount}}</s>
+          {{/if}}
+        </td>
+        <td>{{note}}</td>
+      </tr>
+      {{/each}}
+    </table>
+
+    <div>
+      <strong>Math Check:</strong>
+      ${{formatMoney reconciliation.estimateTotal}} - ${{formatMoney reconciliation.mathCheck.removedTotal}} + ${{formatMoney reconciliation.mathCheck.addedTotal}} = ${{formatMoney reconciliation.mathCheck.calculated}}
+      {{#if reconciliation.mathCheck.matches}}
+        <span class="reconciled">✓ RECONCILES</span>
+      {{else}}
+        <span class="mismatch">✗ MISMATCH (off by ${{formatMoney reconciliation.mathCheck.variance}})</span>
+      {{/if}}
+    </div>
+
+    <!-- Red Flags / Issues -->
+    {{#if validationIssues.length}}
+    <h3>Issues Requiring Attention</h3>
+    <ul>
+      {{#each validationIssues}}
+      <li class="{{severity}}">
+        <strong>[{{ruleId}}]</strong> {{message}}<br>
+        <em>→ {{suggestion}}</em>
+      </li>
+      {{/each}}
+    </ul>
+    {{/if}}
+
+    <!-- Notable Terms -->
+    {{#if notableTerms.length}}
+    <h3>Notable Terms</h3>
+    <ul>
+      {{#each notableTerms}}
+      <li>
+        {{#if redFlag}}<span class="warning">⚠️ </span>{{/if}}
+        {{term}}
+        <br><small>Source: Page {{source.page}}</small>
+      </li>
+      {{/each}}
+    </ul>
+    {{/if}}
+
+    <!-- Missing Info -->
+    {{#if missingFields.length}}
+    <h3>Missing Information</h3>
+    <ul>
+      {{#each missingFields}}
+      <li>[{{importance}}] {{field}}{{#if note}}: {{note}}{{/if}}</li>
+      {{/each}}
+    </ul>
+    {{/if}}
+
+    <!-- Follow-up Actions -->
+    <h3>Follow-up Actions</h3>
+    <ul>
+      {{#each followUpActions}}
+      <li>{{this}}</li>
+      {{/each}}
+      {{#unless followUpActions.length}}
+      <li>Execute contract/PO</li>
+      <li>Send COI per insurance requirements</li>
+      <li>Mark Won in Monday, set awarded value to ${{formatMoney contractValue}}</li>
+      <li>Set up SharePoint folder</li>
+      {{/unless}}
+    </ul>
+
+    <!-- Links -->
+    {{#if links}}
+    <h3>Links</h3>
+    <ul>
+      {{#if links.notion}}<li>Notion: <a href="{{links.notion}}">{{links.notion}}</a></li>{{/if}}
+      {{#if links.monday}}<li>Monday: <a href="{{links.monday}}">{{links.monday}}</a></li>{{/if}}
+      {{#if links.sharepoint}}<li>SharePoint: <a href="{{links.sharepoint}}">{{links.sharepoint}}</a></li>{{/if}}
+    </ul>
+    {{/if}}
+
+    <hr>
+    <p><small>Generated by Contract Intake Workflow</small></p>
+  </body>
+</html>

@@ -45,35 +45,33 @@ COPY package.json tsconfig.json tsconfig.base.json bunfig.toml ./
 COPY apps/web ./apps/web
 
 # CLI tools
-COPY apps/cli-tools/monday-cli ./apps/cli-tools/monday-cli
-COPY apps/cli-tools/sharepoint-cli ./apps/cli-tools/sharepoint-cli
-COPY apps/cli-tools/email-cli ./apps/cli-tools/email-cli
+COPY packages/sharepoint ./packages/sharepoint
+COPY packages/email ./packages/email
 
 # Workers
 COPY apps/workers/estimate-poller/lib ./apps/workers/estimate-poller/lib
 COPY apps/workers/estimate-email-linker/lib ./apps/workers/estimate-email-linker/lib
 COPY apps/workers/outlook-folder-watcher/lib ./apps/workers/outlook-folder-watcher/lib
 COPY apps/workers/estimates-sync-worker/lib ./apps/workers/estimates-sync-worker/lib
-COPY apps/workers/swppp-sync/cli ./apps/workers/swppp-sync/cli
-COPY apps/workers/swppp-sync/lib ./apps/workers/swppp-sync/lib
 
 # Notifications worker
 COPY apps/workers/notifications/cli ./apps/workers/notifications/cli
 COPY apps/workers/notifications/lib ./apps/workers/notifications/lib
 
-# PDF analysis pipeline (Python)
-COPY apps/cli-tools/pdf-analysis-cli ./apps/cli-tools/pdf-analysis-cli
+# PDF analysis pipeline (Python) + PDF generation CLI
+COPY packages/documents ./packages/documents
+COPY packages/monday ./packages/monday
 
 # Shared libraries + frontend dependencies
 COPY lib ./lib
-COPY hooks ./hooks
-COPY styles ./styles
+COPY apps/web/hooks ./apps/web/hooks
+COPY apps/web/frontend/styles ./apps/web/frontend/styles
 
 # Static assets (logo, etc.)
-COPY public ./public
+COPY apps/web/frontend/public ./apps/web/frontend/public
 
 # Install Python deps for pdf-analysis
-RUN cd apps/cli-tools/pdf-analysis-cli && uv sync --frozen 2>/dev/null || uv sync
+RUN cd packages/documents/pdf-analysis-cli && uv sync --frozen 2>/dev/null || uv sync
 
 # Install opencode CLI (used for Kimi K2.5 reconciliation in parse pipeline)
 RUN bun add -g opencode-ai

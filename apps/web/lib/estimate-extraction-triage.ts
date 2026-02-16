@@ -8,10 +8,10 @@ import { processItemFiles } from "@/apps/web/pipeline";
 const ESTIMATE_COLUMN_ID = "file_mksebs2e";
 let PDF_ANALYSIS_CWD = join(
   import.meta.dir,
-  "../../../cli-tools/pdf-analysis-cli"
+  "../../../packages/documents/pdf-analysis-cli"
 );
-if (existsSync("/app/apps/cli-tools/pdf-analysis-cli")) {
-  PDF_ANALYSIS_CWD = "/app/apps/cli-tools/pdf-analysis-cli";
+if (existsSync("/app/packages/documents/pdf-analysis-cli")) {
+  PDF_ANALYSIS_CWD = "/app/packages/documents/pdf-analysis-cli";
 }
 if (process.env.PDF_ANALYSIS_CLI_CWD?.trim()) {
   PDF_ANALYSIS_CWD = process.env.PDF_ANALYSIS_CLI_CWD.trim();

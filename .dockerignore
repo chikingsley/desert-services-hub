@@ -12,18 +12,17 @@
 !apps/web/
 
 # CLI tools
-!apps/cli-tools/monday-cli/
 !apps/cli-tools/sharepoint-cli/
 !apps/cli-tools/email-cli/
-!apps/cli-tools/pdf-analysis-cli/
+!packages/documents/
 
 # Workers
 !apps/workers/estimate-poller/lib/
 !apps/workers/estimate-email-linker/lib/
 !apps/workers/outlook-folder-watcher/lib/
 !apps/workers/estimates-sync-worker/lib/
-!apps/workers/swppp-sync/cli/
-!apps/workers/swppp-sync/lib/
+!packages/sharepoint/
+!packages/monday/
 
 
 # Notifications worker
@@ -31,21 +30,12 @@
 !apps/workers/notifications/lib/
 
 # Permit worker (browser automation)
-!apps/workers/permit-workers/package.json
-!apps/workers/permit-workers/tsconfig.json
-!apps/workers/permit-workers/bunfig.toml
-!apps/workers/permit-workers/src/
-!apps/workers/permit-workers/start-stack.sh
+!packages/dust-permits/
 
 # Shared libraries
 !lib/
 
-# Frontend dependencies (hooks, styles)
-!hooks/
-!styles/
-
-# Static assets (logo, etc.)
-!public/
+# Frontend dependencies in their package locations are included via apps/web/
 
 # Exclude heavy data from lib/ (databases, downloaded files, logs)
 lib/**/*.db

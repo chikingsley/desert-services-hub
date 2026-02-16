@@ -85,7 +85,7 @@ services:
     command: ["bun", "run", "apps/workers/notifications/cli/watch.ts", "--delivery=log"]
 
   # ==========================================================================
-  # SWPPP Sync Poller — SharePoint SWPPP Master → Postgres sync
+  # SWPPP Master Poller — SharePoint SWPPP Master Excel → Postgres sync
   # ==========================================================================
   swppp-sync:
     build:
@@ -99,7 +99,7 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     restart: unless-stopped
-    command: ["bun", "run", "apps/workers/swppp-sync/cli/sync.ts"]
+    command: ["bun", "run", "packages/sharepoint/workers/swppp-master-poller/cli/sync.ts"]
 
   # ==========================================================================
   # Permit Worker — Browser automation for Maricopa County dust permits
@@ -114,7 +114,7 @@ services:
       - "47821:6080"  # noVNC web interface
     env_file:
       - .env
-      - apps/workers/permit-workers/.env
+      - packages/dust-permits/.env
     environment:
       NODE_ENV: production
       HEADLESS: "false"

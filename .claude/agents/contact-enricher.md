@@ -175,7 +175,7 @@ WHERE id = CONTACT_ID;
 Then sync to Monday via the CLI:
 
 ```bash
-bun apps/cli-tools/monday-cli/bin/cli.ts update-contact MONDAY_ITEM_ID \
+bun packages/monday/bin/cli.ts update-contact MONDAY_ITEM_ID \
   --email=found@email.com \
   --mobile=5551234 \
   --office=5555678 \

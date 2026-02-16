@@ -1,0 +1,253 @@
+/**
+ * Monday File Download + Extraction Pipeline
+ *
+ * Downloads files from Monday.com items and triggers OCR extraction for
+ * estimate PDFs.
+ */
+import { existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+import { getItemAssets, getItemRich } from "@monday/client";
+import {
+  EXTRACTION_COLUMN,
+  FILE_COLUMNS,
+  FILES_DIR,
+} from "@monday/sync/pipeline-config";
+import {
+  getExistingAssets,
+  insertAsset,
+  updateEstimatePath,
+} from "@monday/sync/pipeline-db";
+import {
+  retryExistingEstimateExtraction,
+  runExtraction,
+} from "@monday/sync/pipeline-extraction";
+
+interface FileColumnAsset {
+  assetId: number;
+  name: string;
+}
+
+interface FileColumnValue {
+  id: string;
+  value: string | null;
+}
+
+interface NewAssetDownload {
+  columnId: string;
+  assetId: number;
+  fileName: string;
+}
+
+/**
+ * Parse a Monday file column value JSON to get asset references.
+ * File columns store: {"files":[{"assetId":123,"name":"file.pdf",...}]}
+ */
+function parseFileColumnValue(rawValue: string | null): FileColumnAsset[] {
+  if (!rawValue) {
+    return [];
+  }
+
+  try {
+    const parsed = JSON.parse(rawValue) as {
+      files?: Array<{ assetId: number; name: string }>;
+    };
+    return (
+      parsed.files?.map((file) => ({
+        assetId: file.assetId,
+        name: file.name,
+      })) ?? []
+    );
+  } catch {
+    return [];
+  }
+}
+
+function ensureDir(dir: string): void {
+  if (!existsSync(dir)) {
+    mkdirSync(dir, { recursive: true });
+  }
+}
+
+function collectColumnAssets(
+  columnValues: FileColumnValue[]
+): Map<string, FileColumnAsset[]> {
+  const columnAssets = new Map<string, FileColumnAsset[]>();
+  for (const columnValue of columnValues) {
+    if (!(columnValue.id in FILE_COLUMNS && columnValue.value)) {
+      continue;
+    }
+
+    const assets = parseFileColumnValue(columnValue.value);
+    if (assets.length > 0) {
+      columnAssets.set(columnValue.id, assets);
+    }
+  }
+  return columnAssets;
+}
+
+function collectNewAssetsToDownload(
+  existingIds: Set<string>,
+  columnAssets: Map<string, FileColumnAsset[]>
+): NewAssetDownload[] {
+  const newAssets: NewAssetDownload[] = [];
+
+  for (const [columnId, assets] of columnAssets) {
+    for (const asset of assets) {
+      if (!existingIds.has(String(asset.assetId))) {
+        newAssets.push({
+          columnId,
+          assetId: asset.assetId,
+          fileName: asset.name,
+        });
+      }
+    }
+  }
+  return newAssets;
+}
+
+function buildAssetUrlMap(
+  assets: Awaited<ReturnType<typeof getItemAssets>>
+): Map<string, { public_url?: string | null }> {
+  return new Map(assets.map((asset) => [asset.id, asset]));
+}
+
+async function downloadSingleAsset(
+  mondayItemId: string,
+  itemDir: string,
+  toDownload: NewAssetDownload,
+  assetUrlMap: Map<string, { public_url?: string | null }>
+): Promise<boolean> {
+  const assetData = assetUrlMap.get(String(toDownload.assetId));
+  if (!assetData?.public_url) {
+    console.log(
+      `[pipeline]   Skip ${toDownload.fileName}: no public_url (asset ${toDownload.assetId})`
+    );
+    return false;
+  }
+
+  const response = await fetch(assetData.public_url);
+  if (!response.ok) {
+    console.log(
+      `[pipeline]   Failed ${toDownload.fileName}: HTTP ${response.status}`
+    );
+    return false;
+  }
+
+  const buffer = new Uint8Array(await response.arrayBuffer());
+  const ext = toDownload.fileName.includes(".")
+    ? toDownload.fileName.slice(toDownload.fileName.lastIndexOf("."))
+    : "";
+
+  const localPath = join(
+    itemDir,
+    `${toDownload.assetId}_${toDownload.fileName}`
+  );
+  writeFileSync(localPath, buffer);
+
+  await insertAsset.run(
+    String(toDownload.assetId),
+    mondayItemId,
+    toDownload.columnId,
+    toDownload.fileName,
+    ext,
+    buffer.length,
+    localPath
+  );
+  await updateEstimatePath.run(localPath, toDownload.fileName, mondayItemId);
+
+  console.log(
+    `[pipeline]   Downloaded ${toDownload.fileName} (${(
+      buffer.length / 1024
+    ).toFixed(0)}KB)`
+  );
+
+  if (
+    toDownload.columnId === EXTRACTION_COLUMN &&
+    ext.toLowerCase() === ".pdf"
+  ) {
+    await runExtraction(mondayItemId, localPath, toDownload.fileName);
+  }
+
+  return true;
+}
+
+async function downloadAssets(
+  mondayItemId: string,
+  itemDir: string,
+  assetsToDownload: NewAssetDownload[],
+  assetUrlMap: Map<string, { public_url?: string | null }>
+): Promise<number> {
+  let downloaded = 0;
+  for (const toDownload of assetsToDownload) {
+    try {
+      const didDownload = await downloadSingleAsset(
+        mondayItemId,
+        itemDir,
+        toDownload,
+        assetUrlMap
+      );
+      if (didDownload) {
+        downloaded += 1;
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.log(
+        `[pipeline]   Error downloading ${toDownload.fileName}: ${message}`
+      );
+    }
+  }
+  return downloaded;
+}
+
+/**
+ * Download new files from a Monday item and run extraction if needed.
+ * Returns the number of files downloaded.
+ */
+export async function processItemFiles(mondayItemId: string): Promise<number> {
+  const item = await getItemRich(mondayItemId);
+  if (!item) {
+    console.log(`[pipeline] Item ${mondayItemId} not found`);
+    return 0;
+  }
+
+  const columnAssets = collectColumnAssets(item.columnValues);
+  if (columnAssets.size === 0) {
+    return 0;
+  }
+
+  const existingRows = await getExistingAssets.all(mondayItemId);
+  const existingIds = new Set(existingRows.map((row) => row.monday_asset_id));
+  const newAssets = collectNewAssetsToDownload(existingIds, columnAssets);
+
+  if (newAssets.length === 0) {
+    await retryExistingEstimateExtraction(mondayItemId);
+    return 0;
+  }
+
+  console.log(
+    `[pipeline] ${item.name}: ${newAssets.length} new file(s) to download`
+  );
+
+  const allAssets = await getItemAssets(mondayItemId);
+  const assetUrlMap = buildAssetUrlMap(allAssets);
+  const itemDir = join(FILES_DIR, mondayItemId);
+  ensureDir(itemDir);
+
+  return downloadAssets(mondayItemId, itemDir, newAssets, assetUrlMap);
+}
+
+/**
+ * Check if an item has any file columns with content.
+ * Used by the worker to decide whether to enqueue a download_files job.
+ */
+export function itemHasFiles(columnValues: FileColumnValue[]): boolean {
+  for (const columnValue of columnValues) {
+    if (!(columnValue.id in FILE_COLUMNS && columnValue.value)) {
+      continue;
+    }
+    if (parseFileColumnValue(columnValue.value).length > 0) {
+      return true;
+    }
+  }
+  return false;
+}

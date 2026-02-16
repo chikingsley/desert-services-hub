@@ -1,4 +1,4 @@
-import { sanitizeName } from "@lib/sharepoint/paths";
+import { sanitizeName } from "@sharepoint/paths";
 
 export const TAKEOFFS_ROOT_FOLDER = "Takeoffs";
 export const SHAREPOINT_PDF_URL_PREFIX = "sharepoint://";

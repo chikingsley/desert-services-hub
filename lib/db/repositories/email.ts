@@ -8,7 +8,7 @@ import type {
   EmailClassification,
   InsertEmailData,
 } from "@lib/db/types";
-import { isSpam } from "@lib/spam-filter";
+import { isSpam } from "@email/spam-filter";
 
 // ============================================
 // Row Parser

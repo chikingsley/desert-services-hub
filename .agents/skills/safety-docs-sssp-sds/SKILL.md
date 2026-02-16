@@ -34,7 +34,7 @@ Use this skill for requests like:
 5. Generate PDF
 - Command:
 ```bash
-bun apps/cli-tools/pdf-generation-cli/bin/cli.ts safety sssp generate --in <input.json> --out <output.pdf>
+bun packages/documents/pdf-generation-cli/bin/cli.ts safety sssp generate --in <input.json> --out <output.pdf>
 ```
 - Use revisioned output while iterating (`..._rNN.pdf`).
 

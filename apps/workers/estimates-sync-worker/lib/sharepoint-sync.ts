@@ -10,18 +10,16 @@
 
 import { getGraphTokenCached } from "@lib/graph/token";
 import {
+  buildCustomerProjectsPath,
   buildSharePointUrl,
-  CUSTOMER_PROJECTS_PATH,
   DEFAULT_STATUS,
   extractUrl,
-  getLetterFolder,
   parseStatusFromUrl,
   parseVariantPrefix,
   SHAREPOINT_HOST,
   SHAREPOINT_SITE_PATH,
   STATUS_MAP,
-  sanitizeName,
-} from "@lib/sharepoint/paths";
+} from "@sharepoint/paths";
 
 // =============================================================================
 // Types
@@ -116,11 +114,11 @@ export async function syncSharePointFolders(): Promise<SharePointSyncResult> {
         const targetFolder = STATUS_MAP[item.bidStatus] ?? DEFAULT_STATUS;
         const currentFolder = parseStatusFromUrl(item.sharepointUrl);
 
-        // Build folder path using BASE name (without variant prefix)
-        const projectName = sanitizeName(item.baseName);
-        const accountName = sanitizeName(item.accountName);
-        const letter = getLetterFolder(accountName);
-        const folderPath = `${CUSTOMER_PROJECTS_PATH}/${targetFolder}/${letter}/${accountName}/${projectName}`;
+        const folderPath = buildCustomerProjectsPath({
+          accountName: item.accountName,
+          projectName: item.baseName,
+          statusFolder: targetFolder,
+        });
 
         if (!item.sharepointUrl && item.files.length > 0) {
           // No URL but has files — create folder and upload
@@ -138,7 +136,7 @@ export async function syncSharePointFolders(): Promise<SharePointSyncResult> {
             await updateMondayUrl(item.id, url, item.name);
             result.created++;
             console.log(
-              `[SharePoint] Created: ${item.name} → ${projectName}/ (${uploaded} files)`
+              `[SharePoint] Created: ${item.name} → ${item.baseName}/ (${uploaded} files)`
             );
           }
         } else if (

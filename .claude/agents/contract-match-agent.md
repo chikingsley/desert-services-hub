@@ -90,7 +90,7 @@ LIMIT 10;
 ### 6. Monday CLI Search (if Supabase insufficient)
 
 ```bash
-bun apps/cli-tools/monday-cli/bin/cli.ts search "SEARCH_TERM"
+bun packages/monday/bin/cli.ts search "SEARCH_TERM"
 ```
 
 ## Evaluation

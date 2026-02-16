@@ -61,14 +61,14 @@ At minimum, the scanner must catch:
 Run scanner tests:
 
 ```bash
-cd apps/contract/review
+cd packages/contracts/review
 uv run pytest -q
 ```
 
 Run batch report on fixtures:
 
 ```bash
-cd apps/contract/review
+cd packages/contracts/review
 uv run python -m contract_review.cli fixtures \
   --fixtures-dir ../ground-truth/test-fixtures \
   --out /home/simon/github/desert-services-hub/data/reports/contract-validation-ground-truth.md
@@ -77,7 +77,7 @@ uv run python -m contract_review.cli fixtures \
 Scan a single reconciled contract:
 
 ```bash
-cd apps/contract/review
+cd packages/contracts/review
 uv run python -m contract_review.cli scan \
   --file ../ground-truth/test-fixtures/modera-paradise-valley/reconciled.md
 ```

@@ -8,7 +8,7 @@ Active work areas and known tasks for the Desert Services Hub platform.
 
 ## Contract Processing Pipeline (Active)
 
-See `apps/contract/PROJECT.md` for full 15-step workflow and `STATE.md` for current status.
+See `packages/contracts/PROJECT.md` for full 15-step workflow and `STATE.md` for current status.
 
 ### Immediate Work
 
@@ -108,7 +108,7 @@ See `apps/contract/PROJECT.md` for full 15-step workflow and `STATE.md` for curr
 
 - **Main App**: `apps/web/` — Bun full-stack (quotes, takeoffs, contracts, catalog)
 - **Quoting MCP**: `apps/quoting/` — Quote generation and catalog
-- **Contract Workflow**: `apps/contract/` — Processing pipeline
+- **Contract Workflow**: `packages/contracts/` — Processing pipeline
 - **Primary Database**: Supabase Postgres (local: `54322`) — Primary data store
 - **Monday Sync CLI**: `workers/ds-estimates-sync-worker/cli/hub.ts`
 
@@ -122,6 +122,6 @@ See `apps/contract/PROJECT.md` for full 15-step workflow and `STATE.md` for curr
 ### Documentation
 
 - `CLAUDE.md` — Engineering standards and patterns
-- `apps/contract/PROJECT.md` — Contract workflow
-- `apps/contract/STATE.md` — Current processing state
+- `packages/contracts/PROJECT.md` — Contract workflow
+- `packages/contracts/STATE.md` — Current processing state
 - `workers/ds-estimates-sync-worker/SYNC-KNOWLEDGE.md` — Monday sync patterns

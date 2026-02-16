@@ -1,0 +1,16 @@
+{
+  "queue": {
+    "source": "chi@desertservices.net",
+    "folder": "Inbox",
+    "filter": "unread"
+  },
+  "processed": [],
+  "skipped": [],
+  "currentEmail": null,
+  "stats": {
+    "total": 0,
+    "processed": 0,
+    "skipped": 0,
+    "sessionStart": null
+  }
+}

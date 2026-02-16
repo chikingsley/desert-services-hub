@@ -15,7 +15,7 @@ WORKDIR /app
 
 # Copy root package files + workspace member
 COPY package.json bun.lock ./
-COPY apps/workers/permit-workers/package.json ./apps/workers/permit-workers/
+COPY packages/dust-permits/package.json ./packages/dust-permits/
 
 # Some platform-specific packages may fail on Linux (e.g. darwin-only binaries)
 RUN bun install || true
@@ -50,22 +50,22 @@ WORKDIR /app
 
 # Copy JS deps from stage 1
 COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/apps/workers/permit-workers/node_modules ./apps/workers/permit-workers/node_modules
+COPY --from=deps /app/packages/dust-permits/node_modules ./packages/dust-permits/node_modules
 
 # Config files
 COPY package.json tsconfig.json tsconfig.base.json ./
-COPY apps/workers/permit-workers/package.json ./apps/workers/permit-workers/
-COPY apps/workers/permit-workers/tsconfig.json ./apps/workers/permit-workers/
-COPY apps/workers/permit-workers/bunfig.toml ./apps/workers/permit-workers/
+COPY packages/dust-permits/package.json ./packages/dust-permits/
+COPY packages/dust-permits/tsconfig.json ./packages/dust-permits/
+COPY packages/dust-permits/bunfig.toml ./packages/dust-permits/
 
 # Permit worker source
-COPY apps/workers/permit-workers/src ./apps/workers/permit-workers/src
+COPY packages/dust-permits/src ./packages/dust-permits/src
 
 # Shared libraries (needed for @lib/* imports)
 COPY lib ./lib
 
 # Startup script
-COPY apps/workers/permit-workers/start-stack.sh /start-stack.sh
+COPY packages/dust-permits/start-stack.sh /start-stack.sh
 RUN chmod +x /start-stack.sh
 
 # Data + temp directories

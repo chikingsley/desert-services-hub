@@ -9,6 +9,7 @@ dependencies = [
     "httpx>=0.28.0",
     "kreuzberg",
     "mistralai>=1.6.0",
+    "pdfplumber>=0.11.0",
     "pydantic>=2.10.0",
     "pydantic-settings>=2.0.0",
     "pymupdf>=1.25.0",

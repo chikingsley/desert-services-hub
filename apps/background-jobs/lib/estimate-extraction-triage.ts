@@ -437,6 +437,8 @@ function tallyTriageOutcome(
     case "retry_failed":
       result.retryStillFailed++;
       break;
+    default:
+      break;
   }
 }
 

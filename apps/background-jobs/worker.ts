@@ -12,8 +12,8 @@
  *   - permit-sync.ts  -- permit-worker coordination for payment flows
  */
 
-import { pollEstimateEmailLinker } from "@/apps/background-jobs/workers/estimate-email-linker/lib/poll";
-import { pollFolderWatcher } from "@/apps/background-jobs/workers/outlook-folder-watcher/lib/poll";
+import { pollEstimateEmailLinker } from "@background-jobs/workers/estimate-email-linker/lib/poll";
+import { pollFolderWatcher } from "@background-jobs/workers/outlook-folder-watcher/lib/poll";
 import {
   ATTACHMENT_BACKFILL_BATCH_SIZE,
   ATTACHMENT_BACKFILL_INCLUDE_NON_PROJECT_ALLOWLIST,

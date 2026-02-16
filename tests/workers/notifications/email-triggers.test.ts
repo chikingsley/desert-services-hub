@@ -6,7 +6,7 @@ import {
   handlePaymentEmail,
   parseMaricopaIssuedEmail,
   parsePointAndPayEmail,
-} from "@/apps/notifications/lib/email-triggers";
+} from "@notifications/lib/email-triggers";
 
 // ============================================================================
 // Real email fixtures (verbatim from production emails)

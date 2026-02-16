@@ -3,7 +3,7 @@
 import {
   markStaleProjectSeeds,
   syncProjectSeedsFromEstimates,
-} from "@/apps/background-jobs/workers/estimate-poller/lib/project-seed-sync";
+} from "@background-jobs/workers/estimate-poller/lib/project-seed-sync";
 
 interface Args {
   dryRun: boolean;

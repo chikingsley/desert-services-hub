@@ -11,7 +11,7 @@
  *   bun apps/background-jobs/workers/estimate-email-linker/cli/run.ts --min-id=0 --batches=0 --enable-project-single
  */
 
-import { pollEstimateEmailLinker } from "@/apps/background-jobs/workers/estimate-email-linker/lib/poll";
+import { pollEstimateEmailLinker } from "@background-jobs/workers/estimate-email-linker/lib/poll";
 
 const args = process.argv.slice(2);
 const once = args.includes("--once");

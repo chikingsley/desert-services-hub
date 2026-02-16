@@ -25,7 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/apps/web/frontend/components/ui/select";
-import { useDebouncedValue } from "@/apps/web/frontend/hooks/use-debounced-value";
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { fetcher } from "@/apps/web/frontend/lib/fetcher";
 
 interface Pagination {

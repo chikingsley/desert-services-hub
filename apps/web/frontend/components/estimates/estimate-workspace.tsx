@@ -26,7 +26,7 @@ import {
 } from "@/apps/web/frontend/components/ui/dropdown-menu";
 import { useSidebar } from "@/apps/web/frontend/components/ui/sidebar";
 import { Spinner } from "@/apps/web/frontend/components/ui/spinner";
-import { useSettings } from "@/apps/web/frontend/hooks/use-settings";
+import { useSettings } from "@/hooks/use-settings";
 
 type SaveStatus = "saved" | "saving" | "unsaved";
 

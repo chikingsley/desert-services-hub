@@ -1,10 +1,10 @@
 #!/usr/bin/env bun
 
-import { EMAIL_RESOLVER_SPARK_MODEL } from "@/apps/background-jobs/jobs/config";
-import type { PermitIntentDryRunOptions } from "@/apps/background-jobs/lib/email-intent/permit-intent-dry-run";
-import { runPermitIntentDryRun } from "@/apps/background-jobs/lib/email-intent/permit-intent-dry-run";
-import type { PermitIntentRunResult } from "@/apps/background-jobs/lib/email-intent/permit-intent-report";
-import { printSummary } from "@/apps/background-jobs/lib/email-intent/permit-intent-report";
+import { EMAIL_RESOLVER_SPARK_MODEL } from "@background-jobs/jobs/config";
+import type { PermitIntentDryRunOptions } from "@background-jobs/lib/email-intent/permit-intent-dry-run";
+import { runPermitIntentDryRun } from "@background-jobs/lib/email-intent/permit-intent-dry-run";
+import type { PermitIntentRunResult } from "@background-jobs/lib/email-intent/permit-intent-report";
+import { printSummary } from "@background-jobs/lib/email-intent/permit-intent-report";
 
 interface CliOptions extends PermitIntentDryRunOptions {
   outputPath: string | null;

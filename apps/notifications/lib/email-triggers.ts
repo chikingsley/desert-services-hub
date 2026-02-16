@@ -14,12 +14,12 @@ import { DUST_PERMIT_TIERS, type Permit } from "@lib/db/types";
 import {
   createDraftClientFromEnv,
   createNotificationDraft,
-} from "@/apps/notifications/lib/delivery";
+} from "@notifications/lib/delivery";
 import {
   type PendingEvent,
   recordNotification,
-} from "@/apps/notifications/lib/events";
-import { getStakeholders } from "@/apps/notifications/lib/stakeholders";
+} from "@notifications/lib/events";
+import { getStakeholders } from "@notifications/lib/stakeholders";
 
 // ============================================================================
 // Detection

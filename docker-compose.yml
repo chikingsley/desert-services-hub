@@ -112,9 +112,7 @@ services:
     ports:
       - "47822:47822" # API server
       - "47821:6080"  # noVNC web interface
-    env_file:
-      - .env
-      - packages/dust-permits/.env
+    env_file: .env
     environment:
       NODE_ENV: production
       HEADLESS: "false"

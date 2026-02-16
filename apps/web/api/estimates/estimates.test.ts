@@ -15,7 +15,7 @@ import type {
 import {
   createEstimate,
   listEstimates,
-} from "@/apps/web/api/estimates/estimates";
+} from "@/api/estimates/estimates";
 import {
   deleteEstimate,
   duplicateEstimate,
@@ -23,7 +23,7 @@ import {
   getEstimate,
   getEstimatePdf,
   updateEstimate,
-} from "@/apps/web/api/estimates/estimates-by-id";
+} from "@/api/estimates/estimates-by-id";
 
 // ============================================================================
 // Test Constants - Unique values we can search for in outputs

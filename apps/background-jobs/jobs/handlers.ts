@@ -3,13 +3,13 @@ import { syncItem } from "@monday/sync/sync-item";
 import {
   markStaleProjectSeeds,
   syncProjectSeedsFromEstimates,
-} from "@/apps/background-jobs/workers/estimate-poller/lib/project-seed-sync";
-import { syncEstimates } from "@/apps/background-jobs/workers/estimate-poller/lib/sync";
-import { syncSharePointFolders } from "@/apps/background-jobs/workers/estimates-sync-worker/lib/sharepoint-sync";
+} from "@background-jobs/workers/estimate-poller/lib/project-seed-sync";
+import { syncEstimates } from "@background-jobs/workers/estimate-poller/lib/sync";
+import { syncSharePointFolders } from "@background-jobs/workers/estimates-sync-worker/lib/sharepoint-sync";
 import {
   handleIssuedEmail,
   handlePaymentEmail,
-} from "@/apps/notifications/lib/email-triggers";
+} from "@notifications/lib/email-triggers";
 import { processFilesIntake } from "../lib/files-intake";
 import { PROJECT_SEED_STALE_DAYS } from "./config";
 import { processEmailNotification } from "./email-processing";

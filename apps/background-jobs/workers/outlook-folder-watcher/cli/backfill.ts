@@ -14,18 +14,18 @@
  *   bun cli/backfill.ts --folder="Allasso Ranch - Weis"      # Single folder (substring match)
  */
 
-import { messagesDelta } from "@/apps/background-jobs/workers/outlook-folder-watcher/lib/graph";
+import { messagesDelta } from "@background-jobs/workers/outlook-folder-watcher/lib/graph";
 import {
   checkDustPermitIssued,
   linkMessages,
-} from "@/apps/background-jobs/workers/outlook-folder-watcher/lib/linker";
-import { findProjectByFolder } from "@/apps/background-jobs/workers/outlook-folder-watcher/lib/projects";
+} from "@background-jobs/workers/outlook-folder-watcher/lib/linker";
+import { findProjectByFolder } from "@background-jobs/workers/outlook-folder-watcher/lib/projects";
 import {
   getConfig,
   getTrackedFolders,
   logEvent,
   updateTrackedFolder,
-} from "@/apps/background-jobs/workers/outlook-folder-watcher/lib/state";
+} from "@background-jobs/workers/outlook-folder-watcher/lib/state";
 
 const args = process.argv.slice(2);
 const dryRun = args.includes("--dry-run");

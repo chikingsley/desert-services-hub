@@ -13,7 +13,7 @@ import {
   getConfig,
   getRecentEvents,
   getTrackedFolders,
-} from "@/apps/background-jobs/workers/outlook-folder-watcher/lib/state";
+} from "@background-jobs/workers/outlook-folder-watcher/lib/state";
 
 const subcommand = process.argv[2];
 

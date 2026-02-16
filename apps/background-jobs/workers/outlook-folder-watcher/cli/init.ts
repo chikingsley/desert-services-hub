@@ -15,13 +15,13 @@
 import {
   listChildFolders,
   listTopLevelFolders,
-} from "@/apps/background-jobs/workers/outlook-folder-watcher/lib/graph";
-import { findProjectByFolder } from "@/apps/background-jobs/workers/outlook-folder-watcher/lib/projects";
+} from "@background-jobs/workers/outlook-folder-watcher/lib/graph";
+import { findProjectByFolder } from "@background-jobs/workers/outlook-folder-watcher/lib/projects";
 import {
   addTrackedFolder,
   getTrackedFolders,
   setConfig,
-} from "@/apps/background-jobs/workers/outlook-folder-watcher/lib/state";
+} from "@background-jobs/workers/outlook-folder-watcher/lib/state";
 
 const args = process.argv.slice(2);
 function getArg(name: string, defaultValue: string): string {

@@ -10,7 +10,7 @@
  */
 
 import { db } from "@lib/db/hub";
-import { listAllStakeholders } from "@/apps/notifications/lib/stakeholders";
+import { listAllStakeholders } from "@notifications/lib/stakeholders";
 
 console.log("Notification Stakeholders");
 console.log("=========================\n");

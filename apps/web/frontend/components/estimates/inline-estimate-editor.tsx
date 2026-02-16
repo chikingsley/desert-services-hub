@@ -16,7 +16,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/apps/web/frontend/components/ui/popover";
-import { useEstimateEditor } from "@/apps/web/frontend/hooks/use-estimate-editor";
+import { useEstimateEditor } from "@/hooks/use-estimate-editor";
 import { formatCurrency } from "@/lib/utils";
 
 interface InlineEstimateEditorProps {

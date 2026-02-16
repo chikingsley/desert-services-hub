@@ -10,6 +10,11 @@
     "paths": {
       "@/*": ["./*"],
       "@/hooks/*": ["apps/web/frontend/hooks/*"],
+      "@/components/*": ["apps/web/frontend/components/*"],
+      "@/pages/*": ["apps/web/frontend/pages/*"],
+      "@/api/*": ["apps/web/api/*"],
+      "@background-jobs/*": ["apps/background-jobs/*"],
+      "@notifications/*": ["apps/notifications/*"],
       "@contract/*": ["packages/contracts/*"],
       "@monday/*": ["packages/monday/src/*"],
       "@sharepoint/*": ["packages/sharepoint/src/*"],
@@ -18,17 +23,14 @@
       "@documents/*": ["packages/documents/src/*"],
       "@takeoff/*": ["packages/takeoff/src/*"],
       "@estimates/*": ["packages/estimates/src/*"],
-      "@lib/*": ["lib/*"],
-      "@/components/*": ["apps/web/frontend/components/*"],
-      "@/pages/*": ["apps/web/frontend/pages/*"],
-      "@/api/*": ["apps/web/api/*"]
+      "@lib/*": ["lib/*"]
     }
   },
   "include": ["**/*.ts", "**/*.tsx"],
   "exclude": [
     "node_modules",
     "**/build.ts",
-    "apps/workers/docusign-file-automation/_reference",
+    "apps/cf-workers/docusign-file-automation/_reference",
     "packages/dust-permits"
   ]
 }

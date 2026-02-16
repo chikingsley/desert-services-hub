@@ -13,8 +13,8 @@
  *   bun cli/watch.ts --batch=100           # Max attachments per run
  */
 
-import type { BuildingConnectedSyncResult } from "@/apps/background-jobs/workers/buildingconnected-file-sync/lib/processing";
-import { syncBuildingConnectedFiles } from "@/apps/background-jobs/workers/buildingconnected-file-sync/lib/processing";
+import type { BuildingConnectedSyncResult } from "@background-jobs/workers/buildingconnected-file-sync/lib/processing";
+import { syncBuildingConnectedFiles } from "@background-jobs/workers/buildingconnected-file-sync/lib/processing";
 
 const DEFAULT_INTERVAL_MS = Number.parseInt(
   process.env.BUILDINGCONNECTED_SYNC_INTERVAL_MS ??

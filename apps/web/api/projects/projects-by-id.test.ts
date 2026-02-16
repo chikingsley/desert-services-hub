@@ -5,8 +5,8 @@ import {
   linkEstimateToProject,
   setCanonicalEstimateForProject,
 } from "@lib/db/repositories/project-estimate";
-import { createEstimate } from "@/apps/web/api/estimates/estimates";
-import { getProjectFinalSov } from "@/apps/web/api/projects/projects-by-id";
+import { createEstimate } from "@/api/estimates/estimates";
+import { getProjectFinalSov } from "@/api/projects/projects-by-id";
 
 const TEST_PREFIX = "_TEST_DELETE_ME_PROJECT_FINAL_SOV_";
 const projectIds: number[] = [];

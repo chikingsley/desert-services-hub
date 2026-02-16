@@ -6,8 +6,8 @@
 
 import { GraphEmailClient } from "@email/client";
 import { getLogoAttachment, getTemplate } from "@email/email-templates/index";
-import type { PendingEvent } from "@/apps/notifications/lib/events";
-import type { StakeholderRecipient } from "@/apps/notifications/lib/stakeholders";
+import type { PendingEvent } from "@notifications/lib/events";
+import type { StakeholderRecipient } from "@notifications/lib/stakeholders";
 
 export type NotificationDeliveryMode = "log" | "draft";
 

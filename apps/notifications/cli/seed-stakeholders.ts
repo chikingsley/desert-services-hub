@@ -10,7 +10,7 @@
  */
 
 import type { NotificationEventType } from "@lib/db/types";
-import { addStakeholder } from "@/apps/notifications/lib/stakeholders";
+import { addStakeholder } from "@notifications/lib/stakeholders";
 
 const SEEDS: Array<{
   event: NotificationEventType;

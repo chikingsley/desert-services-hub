@@ -12,8 +12,8 @@
  *   bun cli/watch.ts --interval=30000   # Custom interval (ms)
  */
 
-import { pollFolderWatcher } from "@/apps/background-jobs/workers/outlook-folder-watcher/lib/poll";
-import { getConfig } from "@/apps/background-jobs/workers/outlook-folder-watcher/lib/state";
+import { pollFolderWatcher } from "@background-jobs/workers/outlook-folder-watcher/lib/poll";
+import { getConfig } from "@background-jobs/workers/outlook-folder-watcher/lib/state";
 
 // Parse CLI args
 const args = process.argv.slice(2);

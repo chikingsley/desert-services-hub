@@ -19,14 +19,14 @@ import {
   createDraftClientFromEnv,
   createNotificationDraft,
   type NotificationDeliveryMode,
-} from "@/apps/notifications/lib/delivery";
+} from "@notifications/lib/delivery";
 import {
   detectAllEvents,
   loadQueuedNotifications,
   recordNotification,
   updateNotificationStatus,
-} from "@/apps/notifications/lib/events";
-import { getStakeholders } from "@/apps/notifications/lib/stakeholders";
+} from "@notifications/lib/events";
+import { getStakeholders } from "@notifications/lib/stakeholders";
 
 const DEFAULT_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
 const DEFAULT_MAX_EVENTS = 100;

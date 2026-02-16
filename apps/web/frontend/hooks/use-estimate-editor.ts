@@ -11,7 +11,7 @@ import type {
   EditorSection,
 } from "@lib/db/types";
 import { useCallback } from "react";
-import { useUndoRedo } from "@/apps/web/frontend/hooks/use-undo-redo";
+import { useUndoRedo } from "@/hooks/use-undo-redo";
 
 export interface UseEstimateEditorOptions {
   initialEstimate?: EditorEstimate;

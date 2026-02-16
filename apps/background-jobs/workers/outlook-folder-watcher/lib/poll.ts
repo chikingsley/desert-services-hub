@@ -19,16 +19,16 @@ import {
   foldersDelta,
   type MessageChange,
   messagesDelta,
-} from "@/apps/background-jobs/workers/outlook-folder-watcher/lib/graph";
+} from "@background-jobs/workers/outlook-folder-watcher/lib/graph";
 import {
   checkDustPermitIssued,
   linkMessages,
   linkMessagesToProjectEstimates,
-} from "@/apps/background-jobs/workers/outlook-folder-watcher/lib/linker";
+} from "@background-jobs/workers/outlook-folder-watcher/lib/linker";
 import {
   findProjectByFolder,
   parseFolderName,
-} from "@/apps/background-jobs/workers/outlook-folder-watcher/lib/projects";
+} from "@background-jobs/workers/outlook-folder-watcher/lib/projects";
 import {
   addTrackedFolder,
   getConfig,
@@ -37,7 +37,7 @@ import {
   removeTrackedFolder,
   setConfig,
   updateTrackedFolder,
-} from "@/apps/background-jobs/workers/outlook-folder-watcher/lib/state";
+} from "@background-jobs/workers/outlook-folder-watcher/lib/state";
 
 // -- Handlers --
 

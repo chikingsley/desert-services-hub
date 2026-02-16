@@ -1,15 +1,15 @@
 #!/usr/bin/env bun
 
 import { db } from "@lib/db/hub";
-import { EMAIL_RESOLVER_SPARK_MODEL } from "@/apps/background-jobs/jobs/config";
+import { EMAIL_RESOLVER_SPARK_MODEL } from "@background-jobs/jobs/config";
 import type {
   ApplyProjectContactResolutionResult,
   ResolveProjectContactsOptions,
-} from "@/apps/background-jobs/lib/project-contact-resolver";
+} from "@background-jobs/lib/project-contact-resolver";
 import {
   applyProjectContactResolution,
   resolveProjectContacts,
-} from "@/apps/background-jobs/lib/project-contact-resolver";
+} from "@background-jobs/lib/project-contact-resolver";
 
 type Scope = "project" | "active" | "seed" | "all";
 

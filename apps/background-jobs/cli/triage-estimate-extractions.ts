@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 
-import { runEstimateExtractionTriage } from "@/apps/background-jobs/lib/estimate-extraction-triage";
+import { runEstimateExtractionTriage } from "@background-jobs/lib/estimate-extraction-triage";
 
 function parsePositiveInt(raw: string | undefined, fallback: number): number {
   const parsed = Number.parseInt(raw ?? "", 10);

@@ -37,7 +37,7 @@ import {
   TableRow,
 } from "@/apps/web/frontend/components/ui/table";
 import { VirtualizedTable } from "@/apps/web/frontend/components/ui/virtualized-table";
-import { useDebouncedValue } from "@/apps/web/frontend/hooks/use-debounced-value";
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { fetcher } from "@/apps/web/frontend/lib/fetcher";
 
 interface ProjectsApiResponse {

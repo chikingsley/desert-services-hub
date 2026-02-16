@@ -12,7 +12,7 @@ import {
   processIntakeJob,
   processSyncFullJob,
   processSyncItemJob,
-} from "./dispatch-handlers";
+} from "./handlers";
 import { completeJob, dequeue, failJob, type WebhookJob } from "./queue";
 
 // -- State --

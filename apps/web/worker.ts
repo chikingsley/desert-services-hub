@@ -6,7 +6,7 @@
  *   - config.ts       — env parsing, constants
  *   - queue.ts        — dequeue, claim, complete, fail, enqueue
  *   - dispatch.ts     — job type routing (processNextJob)
- *   - monday-sync.ts  — single item sync from Monday
+ *   - handlers.ts     — job handler implementations
  *   - email-processing.ts — Outlook webhook email handling
  *   - intake-processing.ts — document linking, contract packets, SharePoint
  *   - permit-sync.ts  — permit-worker coordination for payment flows

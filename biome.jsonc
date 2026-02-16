@@ -85,11 +85,27 @@
       }
     },
     {
-      "includes": ["apps/dust-permits/src/portal/create/fill/**"],
+      "includes": ["apps/dust-permits/src/portal/**"],
       "linter": {
         "rules": {
           "complexity": {
             "noExcessiveCognitiveComplexity": "off"
+          },
+          "nursery": {
+            "noExcessiveLinesPerFile": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["apps/dust-permits/tests/e2e/**"],
+      "linter": {
+        "rules": {
+          "complexity": {
+            "noExcessiveCognitiveComplexity": "off"
+          },
+          "nursery": {
+            "noExcessiveLinesPerFile": "off"
           }
         }
       }

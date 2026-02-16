@@ -31,8 +31,6 @@ import {
 // Types
 // =============================================================================
 
-export type { FileAsset, MondayItem } from "./sharepoint-file-ops";
-
 export interface SharePointSyncResult {
   processed: number;
   moved: number;

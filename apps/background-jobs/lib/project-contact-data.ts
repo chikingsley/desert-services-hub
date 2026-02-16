@@ -26,8 +26,6 @@ import {
   normalizeWhitespace,
 } from "./project-contact-types";
 
-export { EMAIL_RESOLVER_SPARK_MODEL } from "../jobs/config";
-
 const TIMED_OUT_RE = /timed out/i;
 
 // ============================================================================

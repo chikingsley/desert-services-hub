@@ -6,8 +6,8 @@
  */
 import { createHash } from "node:crypto";
 import { db } from "@lib/db/hub";
+import { EMAIL_RESOLVER_SPARK_MODEL } from "../jobs/config";
 import {
-  EMAIL_RESOLVER_SPARK_MODEL,
   fetchAttachments,
   fetchCoverage,
   fetchDocuments,
@@ -41,21 +41,6 @@ import {
   normalizeName,
   normalizePhone,
   titleCaseFromLocalPart,
-} from "./project-contact-types";
-
-// Re-export public API so callers don't need to update imports
-export type {
-  ApplyProjectContactResolutionResult,
-  ProjectContactCandidate,
-  ProjectContactProposal,
-  ProjectContactResolutionResult,
-  ResolveProjectContactsOptions,
-} from "./project-contact-types";
-export {
-  extractEmailAddresses,
-  extractPhoneNumbers,
-  normalizeEmailAddress,
-  parseEmailAddressList,
 } from "./project-contact-types";
 
 // ============================================================================

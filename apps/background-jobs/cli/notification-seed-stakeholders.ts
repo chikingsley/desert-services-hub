@@ -9,8 +9,8 @@
  *   bun cli/seed-stakeholders.ts
  */
 
+import { addStakeholder } from "@background-jobs/lib/notifications/stakeholders";
 import type { NotificationEventType } from "@lib/db/types";
-import { addStakeholder } from "@notifications/lib/stakeholders";
 
 const SEEDS: Array<{
   event: NotificationEventType;

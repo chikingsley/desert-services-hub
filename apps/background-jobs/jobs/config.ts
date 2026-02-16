@@ -62,6 +62,21 @@ export const ATTACHMENT_BACKFILL_INTERVAL_MS = 2 * 60 * 1000; // 2 minutes
 export const CONTRACT_PACKET_AUTOLINK_INTERVAL_MS = 60 * 1000; // 60 seconds
 export const RENEWAL_INTERVAL_MS = 60 * 60 * 1000; // 1 hour
 export const GROUP_SYNC_INTERVAL_MS = 15 * 60 * 1000; // 15 minutes
+export const NOTIFICATIONS_INTERVAL_MS = parsePositiveInt(
+  process.env.NOTIFICATIONS_INTERVAL_MS,
+  5 * 60 * 1000, // 5 minutes
+  30_000
+);
+export const NOTIFICATIONS_MAX_EVENTS = parsePositiveInt(
+  process.env.NOTIFICATIONS_MAX_EVENTS,
+  100
+);
+export const NOTIFICATIONS_DELIVERY_MODE = (
+  process.env.NOTIFICATIONS_DELIVERY_MODE ?? "log"
+).trim() as "log" | "draft";
+export const NOTIFICATIONS_MAILBOX = (
+  process.env.NOTIFICATIONS_MAILBOX ?? "chi@desertservices.net"
+).trim();
 export const STALE_JOB_MINUTES = 5;
 
 // -- Project seed lifecycle --

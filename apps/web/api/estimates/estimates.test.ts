@@ -12,10 +12,7 @@ import type {
   EstimateRow,
   EstimateSectionRow,
 } from "@lib/db/types";
-import {
-  createEstimate,
-  listEstimates,
-} from "@/api/estimates/estimates";
+import { createEstimate, listEstimates } from "@/api/estimates/estimates";
 import {
   deleteEstimate,
   duplicateEstimate,

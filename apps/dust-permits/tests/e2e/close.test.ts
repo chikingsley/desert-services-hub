@@ -31,7 +31,9 @@ describe("Close Permit Flow (Dry Run)", () => {
   afterAll(async () => {
     if (popupPage && !popupPage.isClosed()) {
       // Ignore close errors - popup may already be closed
-      await popupPage.close().catch(() => {});
+      await popupPage.close().catch(() => {
+        /* may already be closed */
+      });
     }
     await harness.teardown();
   });

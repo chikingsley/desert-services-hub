@@ -9,8 +9,8 @@
  *   bun cli/status.ts
  */
 
+import { listAllStakeholders } from "@background-jobs/lib/notifications/stakeholders";
 import { db } from "@lib/db/hub";
-import { listAllStakeholders } from "@notifications/lib/stakeholders";
 
 console.log("Notification Stakeholders");
 console.log("=========================\n");

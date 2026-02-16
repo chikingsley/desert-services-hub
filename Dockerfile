@@ -44,34 +44,19 @@ COPY package.json tsconfig.json tsconfig.base.json bunfig.toml ./
 # Web server + API routes
 COPY apps/web ./apps/web
 
-# Webhook receiver + background worker
-COPY apps/webhooks ./apps/webhooks
+# Background jobs — webhook receiver + job queue + sync timers + notifications
+COPY apps/background-jobs ./apps/background-jobs
 
-# CLI tools
+# Packages
 COPY packages/sharepoint ./packages/sharepoint
 COPY packages/email ./packages/email
-
-# Workers
-COPY apps/workers/estimate-poller/lib ./apps/workers/estimate-poller/lib
-COPY apps/workers/estimate-email-linker/lib ./apps/workers/estimate-email-linker/lib
-COPY apps/workers/outlook-folder-watcher/lib ./apps/workers/outlook-folder-watcher/lib
-COPY apps/workers/estimates-sync-worker/lib ./apps/workers/estimates-sync-worker/lib
-
-# Notifications worker
-COPY apps/workers/notifications/cli ./apps/workers/notifications/cli
-COPY apps/workers/notifications/lib ./apps/workers/notifications/lib
-
-# PDF analysis pipeline (Python) + PDF generation CLI
 COPY packages/documents ./packages/documents
 COPY packages/monday ./packages/monday
+COPY packages/estimates ./packages/estimates
+COPY packages/takeoff ./packages/takeoff
 
 # Shared libraries
 COPY lib ./lib
-
-# Domain packages (migrated from lib/)
-COPY packages/email ./packages/email
-COPY packages/estimates ./packages/estimates
-COPY packages/takeoff ./packages/takeoff
 
 # Install Python deps for pdf-analysis
 RUN cd packages/documents/pdf-analysis-cli && uv sync --frozen 2>/dev/null || uv sync

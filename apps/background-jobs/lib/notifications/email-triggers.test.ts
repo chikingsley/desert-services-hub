@@ -1,7 +1,7 @@
 /**
  * Email Trigger Tests — Detection, parsing, and cost breakdown for dust permit notifications.
  *
- * Run: bun test apps/notifications/lib/email-triggers.test.ts
+ * Run: bun test apps/background-jobs/lib/notifications/email-triggers.test.ts
  */
 
 import { describe, expect, test } from "bun:test";

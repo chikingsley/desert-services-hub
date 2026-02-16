@@ -1,12 +1,12 @@
 import { afterAll, describe, expect, it } from "bun:test";
-import { db } from "@lib/db/hub";
 import {
   detectDustPermitEmailTrigger,
   handleIssuedEmail,
   handlePaymentEmail,
   parseMaricopaIssuedEmail,
   parsePointAndPayEmail,
-} from "@notifications/lib/email-triggers";
+} from "@background-jobs/lib/notifications/email-triggers";
+import { db } from "@lib/db/hub";
 
 // ============================================================================
 // Real email fixtures (verbatim from production emails)

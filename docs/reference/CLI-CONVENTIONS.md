@@ -7,8 +7,8 @@ This repo currently has three CLI shapes. Use these as the canonical patterns wh
 Use this when the CLI has many domains/actions and you want clean per-command modules.
 
 Reference:
-- `packages/dust-permits/src/cli.ts`
-- `packages/dust-permits/src/commands/**`
+- `apps/dust-permits/src/cli.ts`
+- `apps/dust-permits/src/commands/**`
 
 Pattern:
 - `src/cli.ts` owns command registry only.

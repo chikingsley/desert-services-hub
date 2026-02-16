@@ -108,9 +108,9 @@ debug/
 # Archive / experiments
 archive/
 experiments/
-!packages/dust-permits/experiments/
-!packages/dust-permits/experiments/custom-map-rehydrate/
-!packages/dust-permits/experiments/custom-map-rehydrate/**
+!apps/dust-permits/experiments/
+!apps/dust-permits/experiments/custom-map-rehydrate/
+!apps/dust-permits/experiments/custom-map-rehydrate/**
 
 # Ground truth project data (large PDFs, local only)
 packages/contracts/projects/ground-truth/

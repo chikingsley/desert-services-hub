@@ -22,9 +22,9 @@ It is intentionally present-state only: no deprecated architecture history.
 |---|---|---|
 | `web` | `apps/web/server.ts` | Frontend + API server on `:3000` |
 | `background-jobs` | `apps/background-jobs/webhooks.ts` | Webhook ingress + job queue + sync timers on `:4747` |
-| `notifications` | `apps/notifications/cli/watch.ts` | Notification polling and draft generation |
+| ~~`notifications`~~ | *(absorbed into background-jobs)* | Notification polling runs as timer in worker.ts |
 | `swppp-sync` | `packages/sharepoint/workers/swppp-master-poller/cli/sync.ts` | SWPPP Master Excel → Postgres poller |
-| `permit-worker` | `packages/dust-permits` | Permit automation API + VNC |
+| `permit-worker` | `apps/dust-permits` | Permit automation API + VNC |
 | `tunnel` (optional) | Cloudflared | Public ingress |
 
 ### Cloudflare Worker Deployments

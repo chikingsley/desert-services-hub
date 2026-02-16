@@ -1108,7 +1108,11 @@ export async function navigateToPage5(
   page: Page,
   log?: (message: string) => void
 ): Promise<{ currentPage: number | null; atPage5: boolean }> {
-  const logFn = log ?? (() => {});
+  const logFn =
+    log ??
+    ((_msg: string) => {
+      /* noop */
+    });
 
   await sleep(SETTLE_MS);
   let currentPage = await getCurrentPage(page);

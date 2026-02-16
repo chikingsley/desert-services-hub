@@ -1,16 +1,16 @@
-import { processItemFiles } from "@monday/sync/pipeline";
-import { syncItem } from "@monday/sync/sync-item";
 import {
   markStaleProjectSeeds,
   syncProjectSeedsFromEstimates,
 } from "@background-jobs/workers/estimate-poller/lib/project-seed-sync";
 import { syncEstimates } from "@background-jobs/workers/estimate-poller/lib/sync";
 import { syncSharePointFolders } from "@background-jobs/workers/estimates-sync-worker/lib/sharepoint-sync";
+import { processItemFiles } from "@monday/sync/pipeline";
+import { syncItem } from "@monday/sync/sync-item";
+import { processFilesIntake } from "../lib/files-intake";
 import {
   handleIssuedEmail,
   handlePaymentEmail,
-} from "@notifications/lib/email-triggers";
-import { processFilesIntake } from "../lib/files-intake";
+} from "../lib/notifications/email-triggers";
 import { PROJECT_SEED_STALE_DAYS } from "./config";
 import { processEmailNotification } from "./email-processing";
 import { processEmailResolveJob } from "./email-resolver";

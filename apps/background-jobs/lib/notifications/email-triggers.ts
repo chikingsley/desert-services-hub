@@ -11,15 +11,9 @@ import { db } from "@lib/db/hub";
 import { getAttachmentsForEmail } from "@lib/db/repositories";
 import { getPermitById, upsertPermit } from "@lib/db/repositories/dust-permit";
 import { DUST_PERMIT_TIERS, type Permit } from "@lib/db/types";
-import {
-  createDraftClientFromEnv,
-  createNotificationDraft,
-} from "@notifications/lib/delivery";
-import {
-  type PendingEvent,
-  recordNotification,
-} from "@notifications/lib/events";
-import { getStakeholders } from "@notifications/lib/stakeholders";
+import { createDraftClientFromEnv, createNotificationDraft } from "./delivery";
+import { type PendingEvent, recordNotification } from "./events";
+import { getStakeholders } from "./stakeholders";
 
 // ============================================================================
 // Detection

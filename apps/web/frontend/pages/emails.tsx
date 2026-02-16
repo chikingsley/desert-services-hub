@@ -67,8 +67,8 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/apps/web/frontend/components/ui/tabs";
-import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { fetcher } from "@/apps/web/frontend/lib/fetcher";
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { formatDate } from "@/lib/utils";
 
 interface EmailStats {

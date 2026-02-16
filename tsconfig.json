@@ -14,7 +14,6 @@
       "@/pages/*": ["apps/web/frontend/pages/*"],
       "@/api/*": ["apps/web/api/*"],
       "@background-jobs/*": ["apps/background-jobs/*"],
-      "@notifications/*": ["apps/notifications/*"],
       "@contract/*": ["packages/contracts/*"],
       "@monday/*": ["packages/monday/src/*"],
       "@sharepoint/*": ["packages/sharepoint/src/*"],
@@ -31,6 +30,6 @@
     "node_modules",
     "**/build.ts",
     "apps/cf-workers/docusign-file-automation/_reference",
-    "packages/dust-permits"
+    "apps/dust-permits"
   ]
 }

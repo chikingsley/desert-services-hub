@@ -11,30 +11,21 @@
 # Web server + API routes
 !apps/web/
 
-# Webhook receiver + background worker
-!apps/webhooks/
+# Background jobs — webhook receiver + job queue + sync timers + notifications
+!apps/background-jobs/
 
 # Document processing
 !packages/documents/
 
-# Workers
-!apps/workers/estimate-poller/lib/
-!apps/workers/estimate-email-linker/lib/
-!apps/workers/outlook-folder-watcher/lib/
-!apps/workers/estimates-sync-worker/lib/
+# Packages
 !packages/sharepoint/
 !packages/monday/
 !packages/email/
 !packages/estimates/
 !packages/takeoff/
 
-
-# Notifications worker
-!apps/workers/notifications/cli/
-!apps/workers/notifications/lib/
-
 # Permit worker (browser automation)
-!packages/dust-permits/
+!apps/dust-permits/
 
 # Shared libraries
 !lib/

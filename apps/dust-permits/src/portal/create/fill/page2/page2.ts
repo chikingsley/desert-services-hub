@@ -650,7 +650,9 @@ export async function fillPage2WithMapData(
           .screenshot({
             path: "tests/e2e/screenshots/DEBUG-page2-parcel-mismatch.png",
           })
-          .catch(() => {});
+          .catch(() => {
+            /* screenshot best-effort */
+          });
         return false;
       }
 
@@ -673,7 +675,9 @@ export async function fillPage2WithMapData(
         .screenshot({
           path: "tests/e2e/screenshots/DEBUG-page2-no-location.png",
         })
-        .catch(() => {});
+        .catch(() => {
+          /* screenshot best-effort */
+        });
       return false;
     }
   }

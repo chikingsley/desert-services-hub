@@ -18,7 +18,7 @@ const EXCLUDED_DIRS = new Set([
   // Vendored UI component library (shadcn)
   "apps/web/frontend/components/ui",
   // Self-contained monolith with its own structure
-  "packages/dust-permits",
+  "apps/dust-permits",
   // One-per-route / one-per-component (inherently flat by design)
   "apps/web/frontend/pages",
   "apps/web/frontend/components/estimates",

@@ -35,7 +35,7 @@ websockify --web /usr/share/novnc 6080 "localhost:${VNC_TCP_PORT}" > /dev/null 2
 echo "Starting Server..."
 mkdir -p /app/data
 cd /app
-bun run apps/workers/permit-workers/src/index.ts &
+bun run apps/dust-permits/src/index.ts &
 SERVER_PID=$!
 
 echo "All services started."

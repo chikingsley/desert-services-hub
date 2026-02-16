@@ -53,6 +53,8 @@ services:
       EMAIL_RESOLVER_SPARK_RETRY_TIMEOUT_MS: ${EMAIL_RESOLVER_SPARK_RETRY_TIMEOUT_MS:-12000}
       EMAIL_RESOLVER_SPARK_MAX_CANDIDATES: ${EMAIL_RESOLVER_SPARK_MAX_CANDIDATES:-5}
       EMAIL_RESOLVER_SPARK_CONFIDENCE_MIN: ${EMAIL_RESOLVER_SPARK_CONFIDENCE_MIN:-0.80}
+      NOTIFICATIONS_DELIVERY_MODE: ${NOTIFICATIONS_DELIVERY_MODE:-log}
+      NOTIFICATIONS_MAILBOX: ${NOTIFICATIONS_MAILBOX:-chi@desertservices.net}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:
@@ -66,23 +68,6 @@ services:
       start_period: 5s
     restart: unless-stopped
     command: ["bun", "run", "apps/background-jobs/webhooks.ts"]
-
-  # ==========================================================================
-  # Notifications Poller — event detection + draft queueing
-  # ==========================================================================
-  notifications:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: desert-notifications
-    env_file: .env
-    environment:
-      NODE_ENV: production
-      DATABASE_URL: postgresql://postgres:postgres@host.docker.internal:54322/postgres
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    restart: unless-stopped
-    command: ["bun", "run", "apps/notifications/cli/watch.ts", "--delivery=log"]
 
   # ==========================================================================
   # SWPPP Master Poller — SharePoint SWPPP Master Excel → Postgres sync
@@ -156,7 +141,6 @@ volumes:
 #
 # Logs:           docker compose logs -f web
 #                 docker compose logs -f background-jobs
-#                 docker compose logs -f notifications
 #                 docker compose logs -f swppp-sync
 #                 docker compose logs -f permit-worker
 # Rebuild:        docker compose build && docker compose up -d

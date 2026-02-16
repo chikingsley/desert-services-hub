@@ -7,7 +7,7 @@ import {
   enrichSingleEmail as processEmail,
   processEmailNotification as processEmailNotificationWithAdapters,
 } from "@email/jobs/email-notification-processing";
-import { detectDustPermitEmailTrigger } from "@notifications/lib/email-triggers";
+import { detectDustPermitEmailTrigger } from "../lib/notifications/email-triggers";
 import { FWD_RE, INTERNAL_DOMAINS } from "./config";
 import { enqueueEmailResolve, enqueueJob } from "./queue";
 

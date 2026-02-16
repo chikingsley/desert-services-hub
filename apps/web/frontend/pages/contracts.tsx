@@ -28,8 +28,8 @@ import {
   TableRow,
 } from "@/apps/web/frontend/components/ui/table";
 import { VirtualizedTable } from "@/apps/web/frontend/components/ui/virtualized-table";
-import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { fetcher } from "@/apps/web/frontend/lib/fetcher";
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { formatCompactCurrency, formatCurrency } from "@/lib/utils";
 
 interface ContractFromApi {

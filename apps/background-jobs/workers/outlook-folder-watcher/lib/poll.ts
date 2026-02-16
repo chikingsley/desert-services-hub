@@ -10,8 +10,6 @@
  *   - apps/web/worker.ts (background job in web container)
  */
 
-import { db as hubDb } from "@lib/db/hub";
-import { normalizeProjectNameKey } from "@lib/db/repositories/project";
 import {
   DeltaExpiredError,
   type FolderChange,
@@ -38,6 +36,8 @@ import {
   setConfig,
   updateTrackedFolder,
 } from "@background-jobs/workers/outlook-folder-watcher/lib/state";
+import { db as hubDb } from "@lib/db/hub";
+import { normalizeProjectNameKey } from "@lib/db/repositories/project";
 
 // -- Handlers --
 

@@ -8,6 +8,7 @@
 // biome-ignore lint/nursery/noExcessiveLinesPerFile: Single-file operational flow keeps triage/debug context in one place.
 import { mkdir, unlink } from "node:fs/promises";
 import { join } from "node:path";
+import { processFilesIntake } from "@background-jobs/lib/files-intake";
 import type { GraphEmailClient } from "@email/client";
 import { isSubjectCompatibleWithProject } from "@email/project-subject-guard";
 import { createGraphClient } from "@email/sync/config";
@@ -18,7 +19,6 @@ import {
   uploadLocalFileToProjectSubfolder,
 } from "@sharepoint/intake-upload";
 import { buildSharePointUrl, sanitizeName } from "@sharepoint/paths";
-import { processFilesIntake } from "@background-jobs/lib/files-intake";
 import type { BuildingConnectedSignalFields } from "./signal";
 import { hasBuildingConnectedSignal } from "./signal";
 

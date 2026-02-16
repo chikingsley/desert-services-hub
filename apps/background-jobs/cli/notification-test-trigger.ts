@@ -15,7 +15,7 @@ import {
   handlePaymentEmail,
   parseMaricopaIssuedEmail,
   parsePointAndPayEmail,
-} from "@notifications/lib/email-triggers";
+} from "@background-jobs/lib/notifications/email-triggers";
 
 const SAMPLE_POINTANDPAY_BODY = `Your Maricopa County Air Quality Department payment has been authorized and will be processed soon.
 

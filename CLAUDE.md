@@ -24,7 +24,7 @@ apps/
       estimates-sync-worker/
       buildingconnected-file-sync/
       outlook-folder-watcher/
-  notifications/          # Email notification triggers, delivery, stakeholder routing (Docker: desert-notifications)
+    lib/notifications/    # Event detection, email triggers, draft delivery (poll timer in worker.ts)
   cf-workers/             # Cloudflare Workers (deployed to CF Edge)
     inspections-email-worker/  # ComplianceGo → SharePoint
     docusign-file-automation/  # DocuSign contract dispatch
@@ -63,9 +63,8 @@ All services run on gmk-server. **Claude Code runs directly on gmk-server — ne
 | Service | Container | Port | Purpose |
 |---------|-----------|------|---------|
 | `web` | `desert-web` | 3000 | Frontend + API |
-| `background-jobs` | `desert-webhooks` | 4747 | Webhook receiver + job queue + sync timers |
+| `background-jobs` | `desert-webhooks` | 4747 | Webhook receiver + job queue + sync timers + notifications |
 | `permit-worker` | `desert-permit-worker` | 47822 (API), 47821 (VNC) | Browser automation for Maricopa permits |
-| `notifications` | `desert-notifications` | — | Notifications poll loop (event detection + draft queueing) |
 | `swppp-sync` | `desert-swppp-sync` | — | SWPPP Master sync poll loop |
 | `tunnel` | `desert-tunnel` | — | Cloudflare tunnel (exposes webhooks + web) |
 
@@ -153,7 +152,7 @@ When consuming parsed NOI data (from `pdf-analysis` / intake workers), use this 
 Primary references:
 - `apps/web/lib/files-intake.ts`
 - `packages/documents/pdf-analysis-cli/src/pdf_analysis/noi.py`
-- `packages/dust-permits/tests/lib/extraction-validator.ts`
+- `apps/dust-permits/tests/lib/extraction-validator.ts`
 
 ## Dust Permit Tier Scale
 
@@ -161,7 +160,7 @@ Source of truth for Maricopa tier pricing and fee split:
 - `lib/db/types.ts` → `DUST_PERMIT_TIERS`
   - Includes acreage bands, total price, ADEQ fee, and filing/admin fee.
 - Billing computation uses the same table:
-  - `apps/notifications/lib/email-triggers.ts` (`computeCostBreakdown`).
+  - `apps/background-jobs/lib/notifications/email-triggers.ts` (`computeCostBreakdown`).
 
 ## Notification Pipeline
 

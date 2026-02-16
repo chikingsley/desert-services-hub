@@ -18,8 +18,8 @@
 import { readFileSync } from "node:fs";
 import { mkdir } from "node:fs/promises";
 import { basename, extname, join } from "node:path";
-import { db } from "@lib/db/hub";
 import { processContractsEmailIntake } from "@background-jobs/lib/parse-intake";
+import { db } from "@lib/db/hub";
 
 const LOG = "[test-trigger]";
 

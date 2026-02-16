@@ -249,8 +249,8 @@ Each Docker service maps to an entrypoint in the codebase.
 |---------|-----------|------|-----------|---------|
 | `web` | `desert-web` | 3000 | `apps/web/server.ts` | `apps/web/` |
 | `background-jobs` | `desert-webhooks` | 4747 | `apps/background-jobs/webhooks.ts` | `apps/background-jobs/` |
-| `permit-worker` | `desert-permit-worker` | 47822 | `packages/dust-permits/src/index.ts` | `packages/dust-permits/` |
-| `notifications` | `desert-notifications` | -- | `apps/notifications/cli/watch.ts` | `apps/notifications/` |
+| `permit-worker` | `desert-permit-worker` | 47822 | `apps/dust-permits/src/index.ts` | `apps/dust-permits/` |
+| ~~`notifications`~~ | *(removed)* | -- | *(absorbed into background-jobs worker.ts timer)* | `apps/background-jobs/lib/notifications/` |
 | `swppp-sync` | `desert-swppp-sync` | -- | `packages/sharepoint/workers/swppp-master-poller/cli/sync.ts` | `packages/sharepoint/` |
 | `tunnel` | `desert-tunnel` | -- | Cloudflare tunnel config | -- |
 
@@ -363,7 +363,7 @@ Packages that have been moved to their domain folders:
 
 | Package | Status | Moved From |
 |---------|--------|------------|
-| `packages/dust-permits/` | Complete | `apps/workers/permit-workers/` (deleted) |
+| `apps/dust-permits/` | Complete | `apps/workers/permit-workers/` (deleted) |
 | `packages/email/` | Complete | `apps/cli-tools/email-cli/` (deleted) |
 | `packages/monday/` | Complete | `apps/cli-tools/monday-cli/` (deleted) |
 | `packages/sharepoint/` | Complete | `apps/cli-tools/sharepoint-cli/` (deleted) |
@@ -382,7 +382,7 @@ In-process worker modules now live in `apps/background-jobs/workers/`. Future mi
 
 | Worker | Current Location | Target Package | Notes |
 |--------|-----------------|---------------|-------|
-| `notifications` | `apps/notifications/` | `packages/email/` | Rename: "email automation", not just notifications |
+| ~~`notifications`~~ | `apps/background-jobs/lib/notifications/` | *(absorbed)* | Now a timer in background-jobs worker.ts |
 | `outlook-folder-watcher` | `apps/background-jobs/workers/` | `packages/email/` | Email domain owns folder watching |
 | `estimate-email-linker` | `apps/background-jobs/workers/` | `packages/email/` or `packages/estimates/` | TBD |
 | `estimate-poller` | `apps/background-jobs/workers/` | `packages/estimates/` | Monday.com estimate sync |

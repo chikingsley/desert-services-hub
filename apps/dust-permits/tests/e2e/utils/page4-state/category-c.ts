@@ -59,6 +59,241 @@ export interface CategoryC4State {
   hasOtherDescription: boolean;
 }
 
+function getCategoryC1State(
+  sel: SelectorMap["categoryC1"],
+  h: ValidationHelpers
+): CategoryC1State {
+  const otherChecked = h.hasAnyRadioChecked(
+    sel.other.Primary,
+    sel.other.Contingency,
+    sel.other.None
+  );
+  return {
+    hasOther: otherChecked,
+    hasOtherDescription: otherChecked && h.hasValue(sel.otherDescription),
+    hasPhaseWork: h.hasAnyRadioChecked(
+      sel.phaseWork.Primary,
+      sel.phaseWork.Contingency,
+      sel.phaseWork.None
+    ),
+    hasPreWater: h.hasAnyRadioChecked(
+      sel.preWater.Primary,
+      sel.preWater.Contingency,
+      sel.preWater.None
+    ),
+  };
+}
+
+function getCategoryC2State(
+  sel: SelectorMap["categoryC2"],
+  h: ValidationHelpers
+): CategoryC2State {
+  const suppSelected = h.isMeasureSelected(
+    sel.suppressants.Primary,
+    sel.suppressants.Contingency
+  );
+  const otherSelected = h.isMeasureSelected(
+    sel.other.Primary,
+    sel.other.Contingency
+  );
+  return {
+    hasAstm: h.hasAnyRadioChecked(
+      sel.astm.Primary,
+      sel.astm.Contingency,
+      sel.astm.None
+    ),
+    hasOther: h.hasAnyRadioChecked(
+      sel.other.Primary,
+      sel.other.Contingency,
+      sel.other.None
+    ),
+    hasOtherDescription: otherSelected && h.hasValue(sel.otherDescription),
+    hasSuppressantAmount: suppSelected && h.hasValue(sel.suppressantAmount),
+    hasSuppressantFrequency:
+      suppSelected && h.hasValue(sel.suppressantFrequency),
+    hasSuppressants: h.hasAnyRadioChecked(
+      sel.suppressants.Primary,
+      sel.suppressants.Contingency,
+      sel.suppressants.None
+    ),
+    hasVisiblyMoist: h.hasAnyRadioChecked(
+      sel.visiblyMoist.Primary,
+      sel.visiblyMoist.Contingency,
+      sel.visiblyMoist.None
+    ),
+    hasWindBarriers: h.hasAnyRadioChecked(
+      sel.windBarriers.Primary,
+      sel.windBarriers.Contingency,
+      sel.windBarriers.None
+    ),
+  };
+}
+
+function getCategoryC3State(
+  sel: SelectorMap["categoryC3"],
+  h: ValidationHelpers
+): CategoryC3State {
+  const suppSelected = h.isMeasureSelected(
+    sel.suppressants.Primary,
+    sel.suppressants.Contingency
+  );
+  const otherSelected = h.isMeasureSelected(
+    sel.other.Primary,
+    sel.other.Contingency
+  );
+  return {
+    hasApplyWater: h.hasAnyRadioChecked(
+      sel.applyWater.Primary,
+      sel.applyWater.Contingency,
+      sel.applyWater.None
+    ),
+    hasCoverTarps: h.hasAnyRadioChecked(
+      sel.coverTarps.Primary,
+      sel.coverTarps.Contingency,
+      sel.coverTarps.None
+    ),
+    hasOther: h.hasAnyRadioChecked(
+      sel.other.Primary,
+      sel.other.Contingency,
+      sel.other.None
+    ),
+    hasOtherDescription: otherSelected && h.hasValue(sel.otherDescription),
+    hasSuppressantAmount: suppSelected && h.hasValue(sel.suppressantAmount),
+    hasSuppressantFrequency:
+      suppSelected && h.hasValue(sel.suppressantFrequency),
+    hasSuppressants: h.hasAnyRadioChecked(
+      sel.suppressants.Primary,
+      sel.suppressants.Contingency,
+      sel.suppressants.None
+    ),
+    hasSurfaceGravel: h.hasAnyRadioChecked(
+      sel.surfaceGravel.Primary,
+      sel.surfaceGravel.Contingency,
+      sel.surfaceGravel.None
+    ),
+    hasVegetative: h.hasAnyRadioChecked(
+      sel.vegetative.Primary,
+      sel.vegetative.Contingency,
+      sel.vegetative.None
+    ),
+  };
+}
+
+function getCategoryC4State(
+  sel: SelectorMap["categoryC4"],
+  h: ValidationHelpers
+): CategoryC4State {
+  const paveSelected = h.isMeasureSelected(
+    sel.pave.Primary,
+    sel.pave.Contingency
+  );
+  const suppSelected = h.isMeasureSelected(
+    sel.suppressants.Primary,
+    sel.suppressants.Contingency
+  );
+  const waterPreventSelected = h.isMeasureSelected(
+    sel.applyWaterPrevent.Primary,
+    sel.applyWaterPrevent.Contingency
+  );
+  const preventAccessSelected = h.isMeasureSelected(
+    sel.preventAccess.Primary,
+    sel.preventAccess.Contingency
+  );
+  const otherSelected = h.isMeasureSelected(
+    sel.other.Primary,
+    sel.other.Contingency
+  );
+  const waterPreventMethodsOther = h.isCheckboxChecked(
+    sel.applyWaterPreventMethods.other
+  );
+  const preventAccessMethodsOther = h.isCheckboxChecked(
+    sel.preventAccessMethods.other
+  );
+
+  return {
+    hasApplyWaterPrevent: h.hasAnyRadioChecked(
+      sel.applyWaterPrevent.Primary,
+      sel.applyWaterPrevent.Contingency,
+      sel.applyWaterPrevent.None
+    ),
+    hasApplyWaterPreventMethods:
+      waterPreventSelected &&
+      (h.isCheckboxChecked(sel.applyWaterPreventMethods.ditches) ||
+        h.isCheckboxChecked(sel.applyWaterPreventMethods.fences)),
+    hasApplyWaterPreventOtherText:
+      waterPreventMethodsOther && h.hasValue(sel.applyWaterPreventOtherText),
+    hasGravel: h.hasAnyRadioChecked(
+      sel.gravel.Primary,
+      sel.gravel.Contingency,
+      sel.gravel.None
+    ),
+    hasOther: h.hasAnyRadioChecked(
+      sel.other.Primary,
+      sel.other.Contingency,
+      sel.other.None
+    ),
+    hasOtherDescription:
+      otherSelected &&
+      h.hasValue([
+        sel.otherDescription,
+        ...(sel.otherDescriptionFallbacks ?? []),
+      ]),
+    hasPave: h.hasAnyRadioChecked(
+      sel.pave.Primary,
+      sel.pave.Contingency,
+      sel.pave.None
+    ),
+    hasPaveWhen:
+      paveSelected &&
+      (h.isRadioChecked(sel.paveWhen.prior) ||
+        h.isRadioChecked(sel.paveWhen.during) ||
+        h.isRadioChecked(sel.paveWhen.end)),
+    hasPreventAccess: h.hasAnyRadioChecked(
+      sel.preventAccess.Primary,
+      sel.preventAccess.Contingency,
+      sel.preventAccess.None
+    ),
+    hasPreventAccessMethods:
+      preventAccessSelected &&
+      (h.isCheckboxChecked(sel.preventAccessMethods.ditches) ||
+        h.isCheckboxChecked(sel.preventAccessMethods.fences)),
+    hasPreventAccessOtherText:
+      preventAccessMethodsOther && h.hasValue(sel.preventAccessOtherText),
+    hasRestoreVegetation: h.hasAnyRadioChecked(
+      sel.restoreVegetation.Primary,
+      sel.restoreVegetation.Contingency,
+      sel.restoreVegetation.None
+    ),
+    hasRestrictAccess: h.hasAnyRadioChecked(
+      sel.restrictAccess.Primary,
+      sel.restrictAccess.Contingency,
+      sel.restrictAccess.None
+    ),
+    hasSuppressantAmount:
+      suppSelected &&
+      h.hasValue([
+        sel.suppressantAmount,
+        ...(sel.suppressantAmountFallbacks ?? []),
+      ]),
+    hasSuppressantFrequency:
+      suppSelected &&
+      h.hasValue([
+        sel.suppressantFrequency,
+        ...(sel.suppressantFrequencyFallbacks ?? []),
+      ]),
+    hasSuppressants: h.hasAnyRadioChecked(
+      sel.suppressants.Primary,
+      sel.suppressants.Contingency,
+      sel.suppressants.None
+    ),
+    hasVegetative: h.hasAnyRadioChecked(
+      sel.vegetative.Primary,
+      sel.vegetative.Contingency,
+      sel.vegetative.None
+    ),
+  };
+}
+
 export function getCategoryCState(
   selectors: SelectorMap,
   helpers: ValidationHelpers
@@ -68,238 +303,10 @@ export function getCategoryCState(
   categoryC3: CategoryC3State;
   categoryC4: CategoryC4State;
 } {
-  const {
-    hasValue,
-    isCheckboxChecked,
-    isMeasureSelected,
-    hasAnyRadioChecked,
-    isRadioChecked,
-  } = helpers;
-  const { categoryC1, categoryC2, categoryC3, categoryC4 } = selectors;
-
-  const c2SuppressantsSelected = isMeasureSelected(
-    categoryC2.suppressants.Primary,
-    categoryC2.suppressants.Contingency
-  );
-  const c2OtherSelected = isMeasureSelected(
-    categoryC2.other.Primary,
-    categoryC2.other.Contingency
-  );
-
-  const c3SuppressantsSelected = isMeasureSelected(
-    categoryC3.suppressants.Primary,
-    categoryC3.suppressants.Contingency
-  );
-  const c3OtherSelected = isMeasureSelected(
-    categoryC3.other.Primary,
-    categoryC3.other.Contingency
-  );
-
-  const c4PaveSelected = isMeasureSelected(
-    categoryC4.pave.Primary,
-    categoryC4.pave.Contingency
-  );
-  const c4SuppressantsSelected = isMeasureSelected(
-    categoryC4.suppressants.Primary,
-    categoryC4.suppressants.Contingency
-  );
-  const c4ApplyWaterPreventSelected = isMeasureSelected(
-    categoryC4.applyWaterPrevent.Primary,
-    categoryC4.applyWaterPrevent.Contingency
-  );
-  const c4PreventAccessSelected = isMeasureSelected(
-    categoryC4.preventAccess.Primary,
-    categoryC4.preventAccess.Contingency
-  );
-  const c4OtherSelected = isMeasureSelected(
-    categoryC4.other.Primary,
-    categoryC4.other.Contingency
-  );
-  const c4ApplyWaterPreventMethodsOther = isCheckboxChecked(
-    categoryC4.applyWaterPreventMethods.other
-  );
-  const c4PreventAccessMethodsOther = isCheckboxChecked(
-    categoryC4.preventAccessMethods.other
-  );
-
   return {
-    categoryC1: {
-      hasOther: hasAnyRadioChecked(
-        categoryC1.other.Primary,
-        categoryC1.other.Contingency,
-        categoryC1.other.None
-      ),
-      hasOtherDescription:
-        hasAnyRadioChecked(
-          categoryC1.other.Primary,
-          categoryC1.other.Contingency,
-          categoryC1.other.None
-        ) && hasValue(categoryC1.otherDescription),
-      hasPhaseWork: hasAnyRadioChecked(
-        categoryC1.phaseWork.Primary,
-        categoryC1.phaseWork.Contingency,
-        categoryC1.phaseWork.None
-      ),
-      hasPreWater: hasAnyRadioChecked(
-        categoryC1.preWater.Primary,
-        categoryC1.preWater.Contingency,
-        categoryC1.preWater.None
-      ),
-    },
-    categoryC2: {
-      hasAstm: hasAnyRadioChecked(
-        categoryC2.astm.Primary,
-        categoryC2.astm.Contingency,
-        categoryC2.astm.None
-      ),
-      hasOther: hasAnyRadioChecked(
-        categoryC2.other.Primary,
-        categoryC2.other.Contingency,
-        categoryC2.other.None
-      ),
-      hasOtherDescription:
-        c2OtherSelected && hasValue(categoryC2.otherDescription),
-      hasSuppressantAmount:
-        c2SuppressantsSelected && hasValue(categoryC2.suppressantAmount),
-      hasSuppressantFrequency:
-        c2SuppressantsSelected && hasValue(categoryC2.suppressantFrequency),
-      hasSuppressants: hasAnyRadioChecked(
-        categoryC2.suppressants.Primary,
-        categoryC2.suppressants.Contingency,
-        categoryC2.suppressants.None
-      ),
-      hasVisiblyMoist: hasAnyRadioChecked(
-        categoryC2.visiblyMoist.Primary,
-        categoryC2.visiblyMoist.Contingency,
-        categoryC2.visiblyMoist.None
-      ),
-      hasWindBarriers: hasAnyRadioChecked(
-        categoryC2.windBarriers.Primary,
-        categoryC2.windBarriers.Contingency,
-        categoryC2.windBarriers.None
-      ),
-    },
-    categoryC3: {
-      hasApplyWater: hasAnyRadioChecked(
-        categoryC3.applyWater.Primary,
-        categoryC3.applyWater.Contingency,
-        categoryC3.applyWater.None
-      ),
-      hasCoverTarps: hasAnyRadioChecked(
-        categoryC3.coverTarps.Primary,
-        categoryC3.coverTarps.Contingency,
-        categoryC3.coverTarps.None
-      ),
-      hasOther: hasAnyRadioChecked(
-        categoryC3.other.Primary,
-        categoryC3.other.Contingency,
-        categoryC3.other.None
-      ),
-      hasOtherDescription:
-        c3OtherSelected && hasValue(categoryC3.otherDescription),
-      hasSuppressantAmount:
-        c3SuppressantsSelected && hasValue(categoryC3.suppressantAmount),
-      hasSuppressantFrequency:
-        c3SuppressantsSelected && hasValue(categoryC3.suppressantFrequency),
-      hasSuppressants: hasAnyRadioChecked(
-        categoryC3.suppressants.Primary,
-        categoryC3.suppressants.Contingency,
-        categoryC3.suppressants.None
-      ),
-      hasSurfaceGravel: hasAnyRadioChecked(
-        categoryC3.surfaceGravel.Primary,
-        categoryC3.surfaceGravel.Contingency,
-        categoryC3.surfaceGravel.None
-      ),
-      hasVegetative: hasAnyRadioChecked(
-        categoryC3.vegetative.Primary,
-        categoryC3.vegetative.Contingency,
-        categoryC3.vegetative.None
-      ),
-    },
-    categoryC4: {
-      hasApplyWaterPrevent: hasAnyRadioChecked(
-        categoryC4.applyWaterPrevent.Primary,
-        categoryC4.applyWaterPrevent.Contingency,
-        categoryC4.applyWaterPrevent.None
-      ),
-      hasApplyWaterPreventMethods:
-        c4ApplyWaterPreventSelected &&
-        (isCheckboxChecked(categoryC4.applyWaterPreventMethods.ditches) ||
-          isCheckboxChecked(categoryC4.applyWaterPreventMethods.fences)),
-      hasApplyWaterPreventOtherText:
-        c4ApplyWaterPreventMethodsOther &&
-        hasValue(categoryC4.applyWaterPreventOtherText),
-      hasGravel: hasAnyRadioChecked(
-        categoryC4.gravel.Primary,
-        categoryC4.gravel.Contingency,
-        categoryC4.gravel.None
-      ),
-      hasOther: hasAnyRadioChecked(
-        categoryC4.other.Primary,
-        categoryC4.other.Contingency,
-        categoryC4.other.None
-      ),
-      hasOtherDescription:
-        c4OtherSelected &&
-        hasValue([
-          categoryC4.otherDescription,
-          ...(categoryC4.otherDescriptionFallbacks ?? []),
-        ]),
-      hasPave: hasAnyRadioChecked(
-        categoryC4.pave.Primary,
-        categoryC4.pave.Contingency,
-        categoryC4.pave.None
-      ),
-      hasPaveWhen:
-        c4PaveSelected &&
-        (isRadioChecked(categoryC4.paveWhen.prior) ||
-          isRadioChecked(categoryC4.paveWhen.during) ||
-          isRadioChecked(categoryC4.paveWhen.end)),
-      hasPreventAccess: hasAnyRadioChecked(
-        categoryC4.preventAccess.Primary,
-        categoryC4.preventAccess.Contingency,
-        categoryC4.preventAccess.None
-      ),
-      hasPreventAccessMethods:
-        c4PreventAccessSelected &&
-        (isCheckboxChecked(categoryC4.preventAccessMethods.ditches) ||
-          isCheckboxChecked(categoryC4.preventAccessMethods.fences)),
-      hasPreventAccessOtherText:
-        c4PreventAccessMethodsOther &&
-        hasValue(categoryC4.preventAccessOtherText),
-      hasRestoreVegetation: hasAnyRadioChecked(
-        categoryC4.restoreVegetation.Primary,
-        categoryC4.restoreVegetation.Contingency,
-        categoryC4.restoreVegetation.None
-      ),
-      hasRestrictAccess: hasAnyRadioChecked(
-        categoryC4.restrictAccess.Primary,
-        categoryC4.restrictAccess.Contingency,
-        categoryC4.restrictAccess.None
-      ),
-      hasSuppressantAmount:
-        c4SuppressantsSelected &&
-        hasValue([
-          categoryC4.suppressantAmount,
-          ...(categoryC4.suppressantAmountFallbacks ?? []),
-        ]),
-      hasSuppressantFrequency:
-        c4SuppressantsSelected &&
-        hasValue([
-          categoryC4.suppressantFrequency,
-          ...(categoryC4.suppressantFrequencyFallbacks ?? []),
-        ]),
-      hasSuppressants: hasAnyRadioChecked(
-        categoryC4.suppressants.Primary,
-        categoryC4.suppressants.Contingency,
-        categoryC4.suppressants.None
-      ),
-      hasVegetative: hasAnyRadioChecked(
-        categoryC4.vegetative.Primary,
-        categoryC4.vegetative.Contingency,
-        categoryC4.vegetative.None
-      ),
-    },
+    categoryC1: getCategoryC1State(selectors.categoryC1, helpers),
+    categoryC2: getCategoryC2State(selectors.categoryC2, helpers),
+    categoryC3: getCategoryC3State(selectors.categoryC3, helpers),
+    categoryC4: getCategoryC4State(selectors.categoryC4, helpers),
   };
 }

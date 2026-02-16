@@ -8,95 +8,101 @@
  * Returns helper functions for use within page.evaluate()
  * These functions operate in the browser context
  */
+/** Check a radio input via :has-text() Playwright selector in browser context. */
+function checkRadioByHasText(sel: string): boolean | null {
+  if (!sel.includes(":has-text(")) {
+    return null; // not a :has-text selector
+  }
+  const marker = ':has-text("';
+  const markerIndex = sel.indexOf(marker);
+  const textEnd = sel.indexOf('")', markerIndex + marker.length);
+  if (markerIndex === -1 || textEnd === -1) {
+    return null;
+  }
+
+  const textToFind = sel.slice(markerIndex + marker.length, textEnd);
+  const baseSelector = sel.slice(0, markerIndex);
+  if (!baseSelector) {
+    return false;
+  }
+
+  for (const el of document.querySelectorAll(baseSelector)) {
+    if (el.textContent?.includes(textToFind)) {
+      const input = el.querySelector(
+        'input[type="radio"]'
+      ) as HTMLInputElement | null;
+      if (input?.checked) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+/** Resolve a ">> nth=" Playwright selector to a single element. */
+function resolveNthSelector(selector: string): HTMLInputElement | null {
+  const parts = selector.split(">> nth=");
+  const baseSelector = parts[0]?.trim();
+  if (!baseSelector) {
+    return null;
+  }
+
+  let elements = [...document.querySelectorAll(baseSelector)];
+  for (const part of parts.slice(1)) {
+    const index = Number.parseInt(part.trim(), 10);
+    const element = elements[index];
+    if (element === undefined) {
+      return null;
+    }
+    elements = [element];
+  }
+  return (elements[0] as HTMLInputElement) ?? null;
+}
+
+/** Normalize a selector input (string or string[]) into a non-empty array, or null if empty. */
+function normalizeSelectors(sel: string | string[]): string[] | null {
+  if (!sel) {
+    return null;
+  }
+  const arr = Array.isArray(sel) ? sel : [sel];
+  return arr.length > 0 ? arr : null;
+}
+
+/** Resolve a single selector to an HTMLInputElement, handling >> nth= syntax. */
+function resolveInputElement(selector: string): HTMLInputElement | null {
+  if (selector.includes(">> nth=")) {
+    return resolveNthSelector(selector);
+  }
+  return document.querySelector(selector) as HTMLInputElement | null;
+}
+
 export function createValidationHelpers() {
   const isRadioChecked = (sel: string) => {
     if (!sel) {
       return false;
     }
-    // Handle Playwright selectors with :has-text() syntax
-    if (sel.includes(":has-text(")) {
-      const marker = ':has-text("';
-      const markerIndex = sel.indexOf(marker);
-      const textEnd = sel.indexOf('")', markerIndex + marker.length);
-      if (markerIndex !== -1 && textEnd !== -1) {
-        const textToFind = sel.slice(markerIndex + marker.length, textEnd);
-        const baseSelector = sel.slice(0, markerIndex);
-        if (!baseSelector) {
-          return false;
-        }
-
-        // Find all matching elements and check if any contains the text
-        const elements = [...document.querySelectorAll(baseSelector)];
-        for (const el of elements) {
-          if (el.textContent?.includes(textToFind)) {
-            const input = el.querySelector(
-              'input[type="radio"]'
-            ) as HTMLInputElement | null;
-            if (input?.checked) {
-              return true;
-            }
-          }
-        }
-        return false;
-      }
+    const hasTextResult = checkRadioByHasText(sel);
+    if (hasTextResult !== null) {
+      return hasTextResult;
     }
-
     try {
       const el = document.querySelector(sel) as HTMLInputElement | null;
       return el?.checked === true;
     } catch {
-      // Invalid selector - return false
       return false;
     }
   };
 
   const isCheckboxChecked = (sel: string | string[]) => {
-    if (!sel || (Array.isArray(sel) && sel.length === 0)) {
+    const selectors = normalizeSelectors(sel);
+    if (!selectors) {
       return false;
     }
-    // Support both single selector and array of fallback selectors
-    const selectors = Array.isArray(sel) ? sel : [sel];
-
     for (const selector of selectors) {
       if (!selector) {
         continue;
       }
-      // Handle Playwright selectors with >> nth syntax
-      if (selector.includes(">> nth=")) {
-        const parts = selector.split(">> nth=");
-        const baseSelector = parts[0]?.trim();
-        if (!baseSelector) {
-          continue;
-        }
-
-        const indices = parts
-          .slice(1)
-          .map((p) => Number.parseInt(p.trim(), 10));
-
-        let elements = [...document.querySelectorAll(baseSelector)];
-
-        // Apply nth filters in order
-        let found = true;
-        for (const index of indices) {
-          const element = elements[index];
-          if (element !== undefined) {
-            elements = [element];
-          } else {
-            found = false;
-            break;
-          }
-        }
-
-        if (found) {
-          const el = elements[0] as HTMLInputElement | undefined;
-          if (el?.checked === true) {
-            return true;
-          }
-        }
-        continue;
-      }
-
-      const el = document.querySelector(selector) as HTMLInputElement | null;
+      const el = resolveInputElement(selector);
       if (el?.checked === true) {
         return true;
       }
@@ -105,11 +111,10 @@ export function createValidationHelpers() {
   };
 
   const hasValue = (sel: string | string[]) => {
-    if (!sel || (Array.isArray(sel) && sel.length === 0)) {
+    const selectors = normalizeSelectors(sel);
+    if (!selectors) {
       return false;
     }
-    // Support both single selector and array of fallback selectors
-    const selectors = Array.isArray(sel) ? sel : [sel];
     for (const selector of selectors) {
       if (!selector) {
         continue;

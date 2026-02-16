@@ -79,60 +79,56 @@ const FIRST_DIV_PATTERN = /<div>([^<]+)<\/div>/;
 const GREETING_NEXT_PATTERN = /<div>[^<]+,<\/div>\s*(<[^>]+>)/;
 const DEAR_OPENING_PATTERN = /^<div>\s*dear\s/i;
 
-export function validateDraft(html: string): Issue[] {
+// --- Individual validators (each checks one concern) ---
+
+function checkForbiddenPhrases(textContent: string): Issue[] {
+  return FORBIDDEN_PHRASES.filter((phrase) => textContent.includes(phrase)).map(
+    (phrase) => ({
+      severity: "error" as const,
+      rule: "forbidden-phrase",
+      message: `Contains forbidden phrase: "${phrase}"`,
+      match: phrase,
+    })
+  );
+}
+
+function checkClosingStyle(html: string): Issue[] {
+  return CLOSING_PATTERNS.filter((pattern) => pattern.test(html)).map(
+    (pattern) => ({
+      severity: "error" as const,
+      rule: "wrong-closing",
+      message:
+        'Wrong closing detected. Chi always uses "Best," — never "Thanks," or "Regards,"',
+      match: html.match(pattern)?.[0],
+    })
+  );
+}
+
+function checkForbiddenHtml(html: string): Issue[] {
+  return FORBIDDEN_HTML.filter(({ pattern }) => pattern.test(html)).map(
+    ({ name, fix }) => ({
+      severity: "error" as const,
+      rule: "forbidden-html",
+      message: `${name} found. ${fix}`,
+      match: name,
+    })
+  );
+}
+
+function checkSignatureLeaked(textContent: string): Issue[] {
+  return SIGNATURE_FRAGMENTS.filter((fragment) =>
+    textContent.includes(fragment)
+  ).map((fragment) => ({
+    severity: "warning" as const,
+    rule: "signature-in-body",
+    message: `Signature fragment found in body: "${fragment}". The signature is appended by wrapWithSignature() — don't include it in the draft.`,
+    match: fragment,
+  }));
+}
+
+function checkListFormatting(html: string): Issue[] {
   const issues: Issue[] = [];
-  const textContent = html.replace(/<[^>]+>/g, " ").toLowerCase();
 
-  // Check forbidden phrases
-  for (const phrase of FORBIDDEN_PHRASES) {
-    if (textContent.includes(phrase)) {
-      issues.push({
-        severity: "error",
-        rule: "forbidden-phrase",
-        message: `Contains forbidden phrase: "${phrase}"`,
-        match: phrase,
-      });
-    }
-  }
-
-  // Check wrong closing
-  for (const pattern of CLOSING_PATTERNS) {
-    if (pattern.test(html)) {
-      issues.push({
-        severity: "error",
-        rule: "wrong-closing",
-        message:
-          'Wrong closing detected. Chi always uses "Best," — never "Thanks," or "Regards,"',
-        match: html.match(pattern)?.[0],
-      });
-    }
-  }
-
-  // Check forbidden HTML elements
-  for (const { pattern, name, fix } of FORBIDDEN_HTML) {
-    if (pattern.test(html)) {
-      issues.push({
-        severity: "error",
-        rule: "forbidden-html",
-        message: `${name} found. ${fix}`,
-        match: name,
-      });
-    }
-  }
-
-  // Check signature leaked into body
-  for (const fragment of SIGNATURE_FRAGMENTS) {
-    if (textContent.includes(fragment)) {
-      issues.push({
-        severity: "warning",
-        rule: "signature-in-body",
-        message: `Signature fragment found in body: "${fragment}". The signature is appended by wrapWithSignature() — don't include it in the draft.`,
-        match: fragment,
-      });
-    }
-  }
-
-  // Check <ul> has margin reset
   if (UL_NO_MARGIN_PATTERN.test(html) && UL_PATTERN.test(html)) {
     const ulMatch = html.match(UL_EXTRACT_PATTERN)?.[0] ?? "";
     if (!ulMatch.includes("margin-top:0")) {
@@ -145,7 +141,6 @@ export function validateDraft(html: string): Issue[] {
     }
   }
 
-  // Check list items wrapped in div
   if (LI_PATTERN.test(html) && !LI_DIV_PATTERN.test(html)) {
     issues.push({
       severity: "warning",
@@ -155,7 +150,10 @@ export function validateDraft(html: string): Issue[] {
     });
   }
 
-  // Check line count (content lines, not HTML wrapper lines)
+  return issues;
+}
+
+function checkBodyLength(html: string): Issue[] {
   const contentDivs = html.match(/<div>[^<]+<\/div>/g) ?? [];
   const nonEmptyLines = contentDivs.filter((line) => {
     const text = line.replace(/<[^>]+>/g, "").trim();
@@ -163,20 +161,37 @@ export function validateDraft(html: string): Issue[] {
   });
 
   if (nonEmptyLines.length > MAX_BODY_LINES) {
+    return [
+      {
+        severity: "error",
+        rule: "too-long",
+        message: `Body has ${nonEmptyLines.length} content lines (max ${MAX_BODY_LINES}). Chi's emails are typically 3-8 lines.`,
+      },
+    ];
+  }
+  if (nonEmptyLines.length > WARN_BODY_LINES) {
+    return [
+      {
+        severity: "warning",
+        rule: "long-email",
+        message: `Body has ${nonEmptyLines.length} content lines (warn at ${WARN_BODY_LINES}). Consider trimming.`,
+      },
+    ];
+  }
+  return [];
+}
+
+function checkGreeting(html: string): Issue[] {
+  const issues: Issue[] = [];
+
+  if (DEAR_OPENING_PATTERN.test(html)) {
     issues.push({
       severity: "error",
-      rule: "too-long",
-      message: `Body has ${nonEmptyLines.length} content lines (max ${MAX_BODY_LINES}). Chi's emails are typically 3-8 lines.`,
-    });
-  } else if (nonEmptyLines.length > WARN_BODY_LINES) {
-    issues.push({
-      severity: "warning",
-      rule: "long-email",
-      message: `Body has ${nonEmptyLines.length} content lines (warn at ${WARN_BODY_LINES}). Consider trimming.`,
+      rule: "no-dear",
+      message: 'Never open with "Dear". Use first name + comma.',
     });
   }
 
-  // Check greeting format
   const firstDiv = html.match(FIRST_DIV_PATTERN)?.[1]?.trim() ?? "";
   if (firstDiv && !firstDiv.endsWith(",")) {
     issues.push({
@@ -186,7 +201,6 @@ export function validateDraft(html: string): Issue[] {
     });
   }
 
-  // Check blank line after greeting
   const greetingAndNext = html.match(GREETING_NEXT_PATTERN)?.[1];
   if (greetingAndNext && !greetingAndNext.includes("<br>")) {
     issues.push({
@@ -197,16 +211,23 @@ export function validateDraft(html: string): Issue[] {
     });
   }
 
-  // Check "Dear" opening
-  if (DEAR_OPENING_PATTERN.test(html)) {
-    issues.push({
-      severity: "error",
-      rule: "no-dear",
-      message: 'Never open with "Dear". Use first name + comma.',
-    });
-  }
-
   return issues;
+}
+
+// --- Main validator: compose all checks ---
+
+export function validateDraft(html: string): Issue[] {
+  const textContent = html.replace(/<[^>]+>/g, " ").toLowerCase();
+
+  return [
+    ...checkForbiddenPhrases(textContent),
+    ...checkClosingStyle(html),
+    ...checkForbiddenHtml(html),
+    ...checkSignatureLeaked(textContent),
+    ...checkListFormatting(html),
+    ...checkBodyLength(html),
+    ...checkGreeting(html),
+  ];
 }
 
 function formatIssues(issues: Issue[]): string {

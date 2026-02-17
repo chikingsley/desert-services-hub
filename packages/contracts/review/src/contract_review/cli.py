@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any
 
 from contract_review.document_map import build_document_map
+from contract_review.embeddings import auto_embedding_provider
 from contract_review.evals import LabelsFile, build_labels_template
 from contract_review.policies import default_policy_catalog
 from contract_review.scanner import ScanResult, scan, scan_non_included_scope_mentions
@@ -240,7 +241,7 @@ def _cmd_review(args: argparse.Namespace) -> int:
     else:
         text = file_path.read_text()
 
-    workflow = ContractReviewWorkflow()
+    workflow = ContractReviewWorkflow(embedding_provider=auto_embedding_provider())
     result = workflow.run(
         source_text=text,
         source_name=args.source_name or source_path.name,
@@ -382,7 +383,7 @@ def _cmd_eval(args: argparse.Namespace) -> int:
     labels = LabelsFile.model_validate(json.loads(labels_path.read_text()))
     labels_by_fixture = {item.fixture: item for item in labels.fixtures}
     policy_catalog = default_policy_catalog()
-    workflow = ContractReviewWorkflow()
+    workflow = ContractReviewWorkflow(embedding_provider=auto_embedding_provider())
 
     fixture_rows: list[dict[str, Any]] = []
     totals = {
@@ -487,6 +488,25 @@ def _cmd_eval(args: argparse.Namespace) -> int:
         "fixtures": fixture_rows,
     }
     _emit_json(payload, args.out)
+    return 0
+
+
+def _cmd_extract(args: argparse.Namespace) -> int:
+    from dataclasses import asdict
+
+    from contract_review.llm_extract import extract_contract
+
+    file_path = Path(args.file)
+    if not file_path.exists():
+        raise FileNotFoundError(f"File not found: {file_path}")
+
+    text = file_path.read_text()
+    result = extract_contract(
+        text,
+        source_name=file_path.name,
+        model_id=args.model,
+    )
+    _emit_json(asdict(result), args.out)
     return 0
 
 
@@ -645,6 +665,17 @@ def build_parser() -> argparse.ArgumentParser:
         help="Optional output JSON path",
     )
     eval_parser.set_defaults(func=_cmd_eval)
+
+    extract_parser = sub.add_parser(
+        "extract",
+        help="LLM extraction with source grounding (Gemini via LangExtract)",
+    )
+    extract_parser.add_argument("--file", required=True, help="Path to contract text")
+    extract_parser.add_argument(
+        "--model", default="gemini-3-flash-preview", help="Gemini model ID"
+    )
+    extract_parser.add_argument("--out", required=False, help="Optional output JSON file")
+    extract_parser.set_defaults(func=_cmd_extract)
 
     return parser
 

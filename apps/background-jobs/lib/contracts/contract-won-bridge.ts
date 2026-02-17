@@ -383,27 +383,38 @@ async function matchViaLlm(fields: ContractFields): Promise<number | null> {
     return null;
   }
 
-  // Gather candidate projects from the contractor's account(s)
-  const candidates: ProjectMatch[] = [];
+  // Gather candidates from two sources:
+  // 1. Contractor's account projects (via estimates)
+  // 2. Broad keyword search across ALL projects (catches no-account cases)
+  const uniqueMap = new Map<number, string>();
+
   if (fields.contractor_name && fields.contractor_name.length >= 4) {
     const accountMatches = await matchAccountByName.all(fields.contractor_name);
     for (const account of accountMatches) {
       const acctProjects = await getProjectsForAccount.all(account.account_id);
       for (const p of acctProjects) {
-        candidates.push(p);
+        uniqueMap.set(p.project_id, p.project_name);
       }
     }
   }
 
-  if (candidates.length === 0) {
+  // Also search projects by significant words from the extracted name
+  const words = fields.project_name
+    .split(/[\s\-/,.:;()]+/)
+    .filter((w) => w.length >= 4)
+    .filter((w) => !/^\d+$/.test(w))
+    .slice(0, 3);
+  for (const word of words) {
+    const hits = await matchProjectByName.all(word);
+    for (const h of hits) {
+      uniqueMap.set(h.project_id, h.project_name);
+    }
+  }
+
+  if (uniqueMap.size === 0) {
     return null;
   }
 
-  // Deduplicate by project_id
-  const uniqueMap = new Map<number, string>();
-  for (const c of candidates) {
-    uniqueMap.set(c.project_id, c.project_name);
-  }
   const candidateList = [...uniqueMap.entries()]
     .map(([id, name]) => `  ${id}: ${name}`)
     .join("\n");
@@ -416,12 +427,12 @@ The document references:
   Contractor: "${fields.contractor_name ?? "unknown"}"
   Address: "${fields.project_address ?? "unknown"}"
 
-Here are the contractor's known projects (id: name):
+Candidate projects (id: name):
 ${candidateList}
 
-Which project ID is this document for? Consider abbreviations, naming variations, and partial matches.
+Which project ID is this document for? Consider abbreviations, naming variations, partial matches, and word reordering.
 Return JSON: {"project_id": <number or null>, "confidence": "high"|"medium"|"low", "reason": "<brief explanation>"}
-Return null for project_id if none of the projects match.`;
+Return null for project_id if none of the candidates are a match.`;
 
   const result = await runGeminiJsonPrompt(prompt, { model: GEMINI_MODEL });
   if (

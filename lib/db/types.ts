@@ -48,7 +48,12 @@ export type ClassificationMethod = "pattern" | "llm";
 
 export type AccountType = "contractor" | "platform" | "internal";
 
-export type ExtractionStatus = "pending" | "success" | "failed" | "skipped";
+export type ExtractionStatus =
+  | "pending"
+  | "success"
+  | "failed"
+  | "skipped"
+  | "deduped";
 
 // ============================================
 // Entity Interfaces

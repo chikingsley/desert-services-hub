@@ -105,7 +105,9 @@ export async function updateAttachmentExtraction(
      SET extraction_status = ?,
          extracted_text = ?,
          extraction_error = ?,
-         extracted_at = now()
+         extracted_at = now(),
+         extraction_attempts = extraction_attempts + 1,
+         last_attempted_at = now()
      WHERE id = ?`,
     [status, extractedText ?? null, error ?? null, attachmentId]
   );
@@ -126,7 +128,14 @@ export async function getAttachmentStats(): Promise<{
     )
     .all();
 
-  const stats = { total: 0, pending: 0, success: 0, failed: 0, skipped: 0 };
+  const stats = {
+    total: 0,
+    pending: 0,
+    success: 0,
+    failed: 0,
+    skipped: 0,
+    deduped: 0,
+  };
   for (const row of rows) {
     const count = row.count;
     stats.total += count;
@@ -142,6 +151,9 @@ export async function getAttachmentStats(): Promise<{
         break;
       case "skipped":
         stats.skipped = count;
+        break;
+      case "deduped":
+        stats.deduped = count;
         break;
       default:
         break;

@@ -156,18 +156,6 @@ await query(`
 `);
 ```
 
-**Quick one-off queries with `bun -e`:**
-
-For ad-hoc searches/updates, inline scripts are acceptable:
-
-```bash
-bun -e '
-import { query } from "./monday/client";
-const result = await query(`query { boards(ids: 7943937851) { items_page(limit: 100, query_params: { rules: [{column_id: "name", compare_value: ["TF"], operator: contains_text}] }) { items { id name } } } }`);
-console.log(result.boards[0].items_page.items);
-'
-```
-
 ## SharePoint Path Rules
 
 ### Letter Folders

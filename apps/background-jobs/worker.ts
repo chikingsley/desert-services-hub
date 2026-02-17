@@ -13,6 +13,7 @@
  */
 
 import { pollEstimateEmailLinker } from "@background-jobs/workers/estimate-email-linker/lib/poll";
+import { pollMondayStatusSync } from "@background-jobs/workers/monday-status-sync/lib/poll";
 import { pollFolderWatcher } from "@background-jobs/workers/outlook-folder-watcher/lib/poll";
 import { syncAll as syncSwpppMaster } from "../../packages/sharepoint/workers/swppp-master-poller/lib/sync";
 import {
@@ -20,6 +21,8 @@ import {
   ATTACHMENT_BACKFILL_CONCURRENCY,
   ATTACHMENT_BACKFILL_INTERVAL_MS,
   CONTRACT_PACKET_AUTOLINK_INTERVAL_MS,
+  CONTRACT_WON_BRIDGE_ENABLED,
+  CONTRACT_WON_BRIDGE_INTERVAL_MS,
   EMAIL_TRIAGE_BACKFILL_BATCH_SIZE,
   EMAIL_TRIAGE_BACKFILL_CONCURRENCY,
   EMAIL_TRIAGE_BACKFILL_ENABLED,
@@ -33,6 +36,8 @@ import {
   FULL_SYNC_INTERVAL_MS,
   GROUP_SYNC_INTERVAL_MS,
   MAX_CONCURRENT_JOBS,
+  MONDAY_STATUS_SYNC_ENABLED,
+  MONDAY_STATUS_SYNC_INTERVAL_MS,
   NOTIFICATIONS_DELIVERY_MODE,
   NOTIFICATIONS_INTERVAL_MS,
   NOTIFICATIONS_MAILBOX,
@@ -45,6 +50,7 @@ import { getActiveJobCount, processNextJob } from "./jobs/dispatch";
 import { backfillContractPacketDocuments } from "./jobs/intake-processing";
 import { enqueueFullSyncIfMissing, requeueStale } from "./jobs/queue";
 import { processUnprocessedAttachments } from "./lib/attachment-backfill";
+import { runContractWonBridge } from "./lib/contracts/contract-won-bridge";
 import { processTriageBackfillBatch } from "./lib/email-triage/triage-backfill";
 import { runEstimateExtractionTriage } from "./lib/estimate-extraction-triage";
 import {
@@ -117,7 +123,7 @@ function clearAllTimers(): void {
 export async function startWorker(): Promise<void> {
   console.log("[worker] Starting background job processor");
   console.log(
-    `[worker] Poll interval: ${POLL_INTERVAL_MS}ms, max concurrency: ${MAX_CONCURRENT_JOBS}, Full sync: ${FULL_SYNC_INTERVAL_MS / 60_000}min, Folder watcher: ${FOLDER_WATCHER_INTERVAL_MS / 1000}s, Estimate linker backfill: ${ESTIMATE_LINKER_INTERVAL_MS / 1000}s, SWPPP master sync: ${SWPPP_MASTER_SYNC_INTERVAL_MS / 1000}s, Estimate triage: ${ESTIMATE_TRIAGE_ENABLED ? `${ESTIMATE_TRIAGE_INTERVAL_MS / 1000}s (${ESTIMATE_TRIAGE_MAX_ROWS}/run via ${ESTIMATE_TRIAGE_PROVIDER || "mistral"})` : "disabled"}, Attachment backfill: ${ATTACHMENT_BACKFILL_INTERVAL_MS / 60_000}min (batch=${ATTACHMENT_BACKFILL_BATCH_SIZE}, concurrency=${ATTACHMENT_BACKFILL_CONCURRENCY}, scope=all), Contract packet autolink: ${CONTRACT_PACKET_AUTOLINK_INTERVAL_MS / 1000}s, Email triage backfill: ${EMAIL_TRIAGE_BACKFILL_ENABLED ? `${EMAIL_TRIAGE_BACKFILL_INTERVAL_MS / 1000}s (batch=${EMAIL_TRIAGE_BACKFILL_BATCH_SIZE}, concurrency=${EMAIL_TRIAGE_BACKFILL_CONCURRENCY})` : "disabled"}`
+    `[worker] Poll interval: ${POLL_INTERVAL_MS}ms, max concurrency: ${MAX_CONCURRENT_JOBS}, Full sync: ${FULL_SYNC_INTERVAL_MS / 60_000}min, Folder watcher: ${FOLDER_WATCHER_INTERVAL_MS / 1000}s, Estimate linker backfill: ${ESTIMATE_LINKER_INTERVAL_MS / 1000}s, SWPPP master sync: ${SWPPP_MASTER_SYNC_INTERVAL_MS / 1000}s, Monday status sync: ${MONDAY_STATUS_SYNC_ENABLED ? `${MONDAY_STATUS_SYNC_INTERVAL_MS / 60_000}min` : "disabled"}, Estimate triage: ${ESTIMATE_TRIAGE_ENABLED ? `${ESTIMATE_TRIAGE_INTERVAL_MS / 1000}s (${ESTIMATE_TRIAGE_MAX_ROWS}/run via ${ESTIMATE_TRIAGE_PROVIDER || "mistral"})` : "disabled"}, Attachment backfill: ${ATTACHMENT_BACKFILL_INTERVAL_MS / 60_000}min (batch=${ATTACHMENT_BACKFILL_BATCH_SIZE}, concurrency=${ATTACHMENT_BACKFILL_CONCURRENCY}, scope=all), Contract packet autolink: ${CONTRACT_PACKET_AUTOLINK_INTERVAL_MS / 1000}s, Email triage backfill: ${EMAIL_TRIAGE_BACKFILL_ENABLED ? `${EMAIL_TRIAGE_BACKFILL_INTERVAL_MS / 1000}s (batch=${EMAIL_TRIAGE_BACKFILL_BATCH_SIZE}, concurrency=${EMAIL_TRIAGE_BACKFILL_CONCURRENCY})` : "disabled"}, Contract won bridge: ${CONTRACT_WON_BRIDGE_ENABLED ? `${CONTRACT_WON_BRIDGE_INTERVAL_MS / 1000}s` : "disabled"}`
   );
 
   // Recover stale jobs from previous crashes
@@ -179,16 +185,10 @@ export async function startWorker(): Promise<void> {
     "Estimate linker",
     ESTIMATE_LINKER_INTERVAL_MS,
     async () => {
-      const stats = await pollEstimateEmailLinker({
-        enableProjectSingle: false,
-      });
-      if (
-        stats.processedEmails > 0 ||
-        stats.linksInserted > 0 ||
-        stats.skippedAmbiguous > 0
-      ) {
+      const stats = await pollEstimateEmailLinker();
+      if (stats.processedEmails > 0 || stats.linksInserted > 0) {
         console.log(
-          `[worker] Estimate linker: ${stats.linksInserted} linked, ${stats.processedEmails} processed, ${stats.skippedAmbiguous} ambiguous, ${stats.skippedNoSignal} no-signal`
+          `[worker] Estimate linker: ${stats.linksInserted} linked, ${stats.projectsLinked} projects, ${stats.processedEmails} processed, ${stats.skippedNoSignal} no-signal`
         );
       }
     },
@@ -249,16 +249,17 @@ export async function startWorker(): Promise<void> {
     }
   );
 
-  // Email triage backfill -- classify unclassified emails via LLM
+  // Email triage backfill -- classify unclassified emails via local Ollama LLM
   if (EMAIL_TRIAGE_BACKFILL_ENABLED) {
     registerTimer(
       "Email triage backfill",
       EMAIL_TRIAGE_BACKFILL_INTERVAL_MS,
       async () => {
-        const result = await processTriageBackfillBatch(
-          EMAIL_TRIAGE_BACKFILL_BATCH_SIZE,
-          EMAIL_TRIAGE_BACKFILL_CONCURRENCY
-        );
+        const result = await processTriageBackfillBatch({
+          batchSize: EMAIL_TRIAGE_BACKFILL_BATCH_SIZE,
+          concurrency: EMAIL_TRIAGE_BACKFILL_CONCURRENCY,
+          provider: "local",
+        });
         if (result.fetched > 0) {
           console.log(
             `[worker] Email triage backfill: ${result.processed} ok, ${result.errors} errors, ${result.elapsedMs}ms`
@@ -282,6 +283,29 @@ export async function startWorker(): Promise<void> {
     },
     { runImmediately: true }
   );
+
+  // Contract won bridge -- classify contracts@ emails, link to projects,
+  // mark estimates as Won in Postgres + Monday when real contracts arrive.
+  if (CONTRACT_WON_BRIDGE_ENABLED) {
+    registerTimer(
+      "Contract won bridge",
+      CONTRACT_WON_BRIDGE_INTERVAL_MS,
+      async () => {
+        const stats = await runContractWonBridge();
+        const activity =
+          stats.contractsClassified +
+          stats.contractsLinked +
+          stats.documentsBackfilled +
+          stats.estimatesMarkedWon +
+          stats.estimatesMarkedLost;
+        if (activity > 0) {
+          console.log(
+            `[worker] Contract won bridge: classified=${stats.contractsClassified}, linked=${stats.contractsLinked}, docs=${stats.documentsBackfilled}, won=${stats.estimatesMarkedWon}, lost=${stats.estimatesMarkedLost}, monday=${stats.mondayUpdates}${stats.errors.length > 0 ? ` (${stats.errors.length} errors)` : ""}`
+          );
+        }
+      }
+    );
+  }
 
   // Renew expiring Outlook subscriptions (every hour)
   registerTimer("Subscription renewal", RENEWAL_INTERVAL_MS, async () => {
@@ -308,6 +332,41 @@ export async function startWorker(): Promise<void> {
       }
     }
   });
+
+  // Monday status sync -- migrated from CF Worker cron.
+  if (MONDAY_STATUS_SYNC_ENABLED) {
+    registerTimer(
+      "Monday status sync",
+      MONDAY_STATUS_SYNC_INTERVAL_MS,
+      async () => {
+        const result = await pollMondayStatusSync();
+        if (result.skipped) {
+          console.warn(
+            `[worker] Monday status sync skipped: ${result.reason ?? "unknown"}`
+          );
+          return;
+        }
+
+        const gcUpdated = result.gc?.updatedCount ?? 0;
+        const gcErrors = result.gc?.errors.length ?? 0;
+        const leadsUpdated = result.leads?.updatedCount ?? 0;
+        const leadsErrors = result.leads?.errors.length ?? 0;
+        const projectLinksEnabled = result.projectLinks?.enabled ?? false;
+        const projectLinkUpdates = result.projectLinks
+          ? result.projectLinks.linkedLeads +
+            result.projectLinks.linkedEstimates +
+            result.projectLinks.linkedProjects
+          : 0;
+        const projectNumberUpdates =
+          result.projectLinks?.projectNumbersUpdated ?? 0;
+        const projectLinkErrors = result.projectLinks?.errors.length ?? 0;
+
+        console.log(
+          `[worker] Monday status sync: gc=${gcUpdated} updated (${gcErrors} errors), leads=${leadsUpdated} updated (${leadsErrors} errors), project_links=${projectLinksEnabled ? `${projectLinkUpdates} links + ${projectNumberUpdates} numbers` : "disabled"} (${projectLinkErrors} errors)`
+        );
+      }
+    );
+  }
 
   // Notification event detection — polls Postgres for permit expirations,
   // estimate wins, contracts received, etc. Creates notification records

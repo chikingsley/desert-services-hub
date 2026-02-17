@@ -153,10 +153,40 @@ export const CONTRACTORS_COLUMNS = {
   STATUS: { id: "color_mkzdgq5j", type: "status" },
 } as const satisfies Record<string, ColumnDef>;
 
+/**
+ * LEADS board columns.
+ */
+export const LEADS_COLUMNS = {
+  NAME: { id: "name", type: "name" },
+  OVERALL_STATUS: { id: "color_mm068kjz", type: "status" },
+  ESTIMATE_LINK: { id: "board_relation_mktg3z60", type: "board_relation" },
+  MIRRORED_BID_STATUS: { id: "lookup_mktg8b1z", type: "mirror" },
+} as const satisfies Record<string, ColumnDef>;
+
+/**
+ * PROJECTS board columns.
+ */
+export const PROJECTS_COLUMNS = {
+  NAME: { id: "name", type: "name" },
+  ESTIMATE_LINK: { id: "board_relation_mktgn7cb", type: "board_relation" },
+} as const satisfies Record<string, ColumnDef>;
+
+/**
+ * Estimating board group IDs.
+ */
+export const ESTIMATING_GROUPS = {
+  WON: "group_mkthxpv3",
+  LOST: "group_mkp05n0d",
+  OPEN: "group_mkt5hjqh",
+  SENT: "group_mkt5fv3a",
+} as const;
+
 export const BOARD_COLUMNS = {
   CONTACTS: CONTACTS_COLUMNS,
   CONTRACTORS: CONTRACTORS_COLUMNS,
   ESTIMATING: ESTIMATING_COLUMNS,
+  LEADS: LEADS_COLUMNS,
+  PROJECTS: PROJECTS_COLUMNS,
 } as const;
 
 /**

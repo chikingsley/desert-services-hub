@@ -79,6 +79,7 @@ services:
       context: .
       dockerfile: apps/dust-permits/Dockerfile
     container_name: desert-permit-worker
+    init: true  # Prevent zombie Chromium renderer processes (PID 1 reaping)
     ports:
       - "47822:47822" # API server
       - "6080:6080"   # noVNC web interface (maricopa-vnc.desertservices.app)
@@ -86,6 +87,7 @@ services:
     environment:
       NODE_ENV: production
       HEADLESS: "false"
+      DOCKER_CONTAINER: "true"
       VNC_RESOLUTION: 1920x1080
       DISPLAY: ":1"
       DATABASE_URL: postgresql://postgres:postgres@host.docker.internal:54322/postgres

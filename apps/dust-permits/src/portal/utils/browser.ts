@@ -225,8 +225,14 @@ export interface BrowserSession {
 }
 
 let globalSession: BrowserSession | null = null;
-let keepAliveTimer: ReturnType<typeof setInterval> | null = null;
+let keepAliveTimer: ReturnType<typeof setTimeout> | null = null;
 let keepAliveInFlight: Promise<BrowserKeepAliveResult> | null = null;
+// biome-ignore lint: these are reassigned in async flows
+let sessionCreationInFlight: Promise<BrowserSession> | null = null;
+// biome-ignore lint: this is reassigned in async flows
+let consecutiveReloginFailures = 0;
+const MAX_CONSECUTIVE_RELOGIN_FAILURES = 3;
+const RELOGIN_CIRCUIT_BREAKER_COOLDOWN_MS = 5 * 60 * 1000;
 
 export interface BrowserSessionStatus {
   active: boolean;
@@ -280,26 +286,42 @@ function clearKeepAliveLoop(): void {
   if (!keepAliveTimer) {
     return;
   }
-  clearInterval(keepAliveTimer);
+  clearTimeout(keepAliveTimer);
   keepAliveTimer = null;
+}
+
+/** Compute next keepalive delay with jitter to avoid perfectly periodic requests. */
+function nextKeepAliveDelayMs(): number {
+  // Add 0-30s jitter to avoid bot-like fixed-interval patterns
+  const jitter = Math.random() * 30_000;
+  return KEEP_ALIVE_INTERVAL_MS + jitter;
+}
+
+function scheduleNextKeepAlive(): void {
+  if (!(KEEP_ALIVE_ENABLED && globalSession)) {
+    return;
+  }
+  keepAliveTimer = setTimeout(() => {
+    keepBrowserSessionAlive({ allowRelogin: true })
+      .catch((error) => {
+        const message = error instanceof Error ? error.message : String(error);
+        if (globalSession) {
+          globalSession.lastError = `Keepalive failed: ${message}`;
+        }
+        console.error(`[Session] Keepalive failed: ${message}`);
+      })
+      .finally(() => {
+        scheduleNextKeepAlive();
+      });
+  }, nextKeepAliveDelayMs());
+  keepAliveTimer.unref?.();
 }
 
 function startKeepAliveLoop(): void {
   if (!KEEP_ALIVE_ENABLED || keepAliveTimer) {
     return;
   }
-
-  keepAliveTimer = setInterval(() => {
-    keepBrowserSessionAlive({ allowRelogin: true }).catch((error) => {
-      const message = error instanceof Error ? error.message : String(error);
-      if (globalSession) {
-        globalSession.lastError = `Keepalive failed: ${message}`;
-      }
-      console.error(`[Session] Keepalive failed: ${message}`);
-    });
-  }, KEEP_ALIVE_INTERVAL_MS);
-
-  keepAliveTimer.unref?.();
+  scheduleNextKeepAlive();
 }
 
 function setSessionLoginState(isLoggedIn: boolean, error?: string): void {
@@ -336,6 +358,15 @@ async function reloginSession(session: BrowserSession): Promise<boolean> {
     return false;
   }
 
+  // Circuit breaker: stop hammering the portal after repeated failures
+  if (consecutiveReloginFailures >= MAX_CONSECUTIVE_RELOGIN_FAILURES) {
+    console.error(
+      `[Session] Circuit breaker open: ${consecutiveReloginFailures} consecutive relogin failures, cooling down`
+    );
+    session.lastError = `Relogin circuit breaker open (${consecutiveReloginFailures} failures)`;
+    return false;
+  }
+
   session.currentOperation = "relogin";
   session.operationDepth += 1;
   try {
@@ -345,6 +376,21 @@ async function reloginSession(session: BrowserSession): Promise<boolean> {
     session.lastLoginAtMs = loggedIn ? Date.now() : session.lastLoginAtMs;
     session.lastError = loggedIn ? null : "Re-login failed";
     touchSessionActivity();
+
+    if (loggedIn) {
+      consecutiveReloginFailures = 0;
+    } else {
+      consecutiveReloginFailures += 1;
+      if (consecutiveReloginFailures >= MAX_CONSECUTIVE_RELOGIN_FAILURES) {
+        console.error(
+          `[Session] Circuit breaker tripped after ${consecutiveReloginFailures} failures. Will reset after ${RELOGIN_CIRCUIT_BREAKER_COOLDOWN_MS / 1000}s.`
+        );
+        setTimeout(() => {
+          consecutiveReloginFailures = 0;
+          console.log("[Session] Relogin circuit breaker reset");
+        }, RELOGIN_CIRCUIT_BREAKER_COOLDOWN_MS).unref?.();
+      }
+    }
     return loggedIn;
   } finally {
     session.operationDepth = Math.max(0, session.operationDepth - 1);
@@ -511,23 +557,19 @@ async function runKeepAlive(options?: {
 }
 
 /**
- * Get existing browser session or create a new one.
- * Used by API routes to share a single browser instance.
+ * Internal session creation — called only via the deduplication wrapper.
  */
-export async function getOrCreateBrowserSession(): Promise<BrowserSession> {
-  if (globalSession) {
-    const alive = await ensureSessionStillAlive(globalSession);
-    if (alive) {
-      touchSessionActivity();
-      return globalSession;
-    }
-    await closeBrowserSession().catch(() => {
-      // Best effort cleanup before re-creating session.
-    });
-  }
-
+async function createSession(): Promise<BrowserSession> {
   console.log("[Session] Creating new browser session...");
   const instance = await createBrowser({ headless: config.headless });
+
+  // Register disconnect listener to detect crashes between keepalive intervals
+  instance.browser.on("disconnected", () => {
+    console.error("[Session] Browser disconnected unexpectedly");
+    clearKeepAliveLoop();
+    globalSession = null;
+    keepAliveInFlight = null;
+  });
 
   // Attempt login
   const loggedIn = await login(instance.page);
@@ -545,12 +587,38 @@ export async function getOrCreateBrowserSession(): Promise<BrowserSession> {
     portalReady: loggedIn,
     startedAtMs: now,
   };
+  consecutiveReloginFailures = 0;
   startKeepAliveLoop();
 
   console.log(
     `[Session] Browser ready, logged in: ${globalSession.isLoggedIn}`
   );
   return globalSession;
+}
+
+/**
+ * Get existing browser session or create a new one.
+ * Uses deduplication to prevent concurrent creation from orphaning Chromium processes.
+ */
+export async function getOrCreateBrowserSession(): Promise<BrowserSession> {
+  if (globalSession) {
+    const alive = await ensureSessionStillAlive(globalSession);
+    if (alive) {
+      touchSessionActivity();
+      return globalSession;
+    }
+    await closeBrowserSession().catch(() => {
+      // Best effort cleanup before re-creating session.
+    });
+  }
+
+  // Deduplicate concurrent creation requests — same pattern as keepAliveInFlight
+  if (!sessionCreationInFlight) {
+    sessionCreationInFlight = createSession().finally(() => {
+      sessionCreationInFlight = null;
+    });
+  }
+  return sessionCreationInFlight;
 }
 
 /**
@@ -767,13 +835,17 @@ export function getSessionStatus(): BrowserSessionStatus {
 // Low-Level Browser Creation
 // ============================================================================
 
+const IS_DOCKER = Boolean(
+  process.env.CONTAINER || process.env.DOCKER_CONTAINER
+);
+
 /**
  * Create a Playwright browser instance.
  *
  * Launches Chromium with settings optimized for the ADF portal:
  * - Popup blocking disabled (required for ADF popups)
  * - Automation detection disabled
- * - Docker-safe flags when headless
+ * - Docker-safe flags in container environments (both headed and headless)
  */
 export async function createBrowser(options?: {
   headless?: boolean;
@@ -785,7 +857,9 @@ export async function createBrowser(options?: {
     "--disable-blink-features=AutomationControlled",
   ];
 
-  if (headless) {
+  // Docker-safe flags apply in ANY container mode (headed or headless).
+  // The container always has ipc:host but these flags add defense-in-depth.
+  if (headless || IS_DOCKER) {
     launchArgs.push("--no-sandbox", "--disable-dev-shm-usage", "--disable-gpu");
   }
 

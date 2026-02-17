@@ -185,10 +185,18 @@ export async function login(page: Page): Promise<boolean> {
 
   console.log("  Waiting for login...");
 
-  const ok =
-    (await waitForElement(page, portal.loggedIn.myDustApps, 25_000)) ||
-    (await waitForElement(page, portal.loggedIn.welcomeTextAlt, 25_000)) ||
-    (await waitForElement(page, portal.loggedIn.logoutLink, 25_000));
+  // Race all success indicators in parallel — whichever appears first wins.
+  // Sequential || would take up to 75s worst case; racing caps at 25s.
+  const raceForTrue = (p: Promise<boolean>) =>
+    p.then((v) => {
+      if (v) return v;
+      throw new Error("not found");
+    });
+  const ok = await Promise.any([
+    raceForTrue(waitForElement(page, portal.loggedIn.myDustApps, 25_000)),
+    raceForTrue(waitForElement(page, portal.loggedIn.welcomeTextAlt, 25_000)),
+    raceForTrue(waitForElement(page, portal.loggedIn.logoutLink, 25_000)),
+  ]).catch(() => false);
 
   if (ok) {
     console.log("  Login successful!");

@@ -6,8 +6,8 @@
  * unclassified email ID each tick, so it's safe to stop/restart at any point.
  */
 
+import type { LlmProvider } from "@background-jobs/lib/llm";
 import { db } from "@lib/db/hub";
-import type { LlmProvider } from "../llm";
 import { triageEmail } from "./triage";
 
 interface UnclassifiedRow {

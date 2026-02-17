@@ -164,6 +164,11 @@ export interface RenewRequest {
   companyName?: string;
 }
 
+export interface RenewAndPayRequest {
+  companyName: string;
+  expedited?: boolean;
+}
+
 export interface ReviseRequest {
   revisionType: string;
   notes?: string;
@@ -213,6 +218,25 @@ export interface CreateResponse extends BaseResponse {
 
 export interface RenewResponse extends BaseResponse {
   applicationId?: string | null;
+}
+
+export type RenewAndPayStage =
+  | "renew-failed"
+  | "page5-ready"
+  | "submit-failed"
+  | "submitted-no-payment"
+  | "payment-page1"
+  | "payment-continue-failed"
+  | "payment-review"
+  | "paid";
+
+export interface RenewAndPayResponse extends BaseResponse {
+  applicationId?: string;
+  stage?: RenewAndPayStage;
+  amount?: string;
+  convenienceFee?: string;
+  totalPaid?: string;
+  cardLastFour?: string;
 }
 
 export interface CloseResponse extends BaseResponse {

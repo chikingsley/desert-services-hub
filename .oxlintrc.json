@@ -5,6 +5,7 @@
     "./node_modules/ultracite/config/oxlint/react/.oxlintrc.json"
   ],
   "rules": {
-    "sort-keys": "off"
+    "sort-keys": "off",
+    "import/no-relative-parent-imports": "error"
   }
 }

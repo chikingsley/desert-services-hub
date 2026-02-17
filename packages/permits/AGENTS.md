@@ -1,47 +1,54 @@
-# Permits Client Package
+# Permits Client Package (`packages/permits`)
 
-Typed HTTP client for permit-worker (`@permits/client`).
+Typed HTTP client package for permit-worker (`@permits/client`).
 
 ## Scope
 
-- `src/client.ts`: `PermitClient` transport + error handling.
-- `src/types.ts`: request/response contracts for permit-worker API.
+- `src/client.ts`: `PermitClient` transport + `PermitWorkerError`.
+- `src/types.ts`: request/response contracts.
 - `src/index.ts`: package exports.
-- `tests/client.test.ts`: client behavior tests.
+- `tests/client.test.ts`: live integration tests against permit-worker container API.
 
 ## Non-Goals
 
-- No Playwright portal automation here.
-- No permit-worker runtime orchestration here.
-- No direct UI/VNC debugging logic here.
+- No Playwright/browser automation runtime.
+- No portal selector logic.
+- No VNC/debug orchestration.
 
-Runtime automation lives in `apps/dust-permits/`.
+Runtime automation belongs to `apps/dust-permits/`.
+
+## Endpoint Method Matrix
+
+- `createPermit()` → `POST /api/permits/create`
+- `renewPermit()` → `POST /api/permits/:id/renew`
+- `renewAndPay()` → `POST /api/permits/:id/renew-and-pay`
+- `closePermit()` → `POST /api/permits/:id/close`
+- `revisePermit()` → `POST /api/permits/:id/revise`
+- `scrapePdf()` / `scrape()` / `sync()` / `syncCompany()` / `invoicePdf()`
+- browser endpoints (`browserStatus/start/ready/keepalive/stop`, clipboard)
 
 ## Integration Rules
 
-- App/worker code should call permit-worker through `PermitClient`.
-- Prefer default internal URL (`http://permit-worker:47822`) for container-to-container calls.
-- Throw and handle `PermitWorkerError` for non-2xx responses/timeouts.
-- Keep endpoint paths aligned with runtime server routes in `apps/dust-permits/src/index.ts`.
+- App/worker code should use `PermitClient` over direct permit-worker `fetch()`.
+- Default internal base URL is `http://permit-worker:47822`.
+- Non-2xx responses must propagate as `PermitWorkerError`.
+- Keep method paths aligned with runtime routes in `apps/dust-permits/src/index.ts`.
 
 ## Change Rules
 
-- If you add or change an endpoint:
-  1. Update `src/types.ts`.
-  2. Update `src/client.ts`.
-  3. Add/update tests in `tests/client.test.ts`.
-- Keep request/response names explicit (`CreateRequest`, `CreateResponse`, etc.).
-- Do not introduce runtime-only dependencies into this package.
+If you add or change a permit-worker endpoint:
+1. Update `src/types.ts`.
+2. Update `src/client.ts`.
+3. Add/adjust tests in `tests/client.test.ts`.
+4. Update this file’s method matrix if the public contract changed.
 
 ## Validation
 
 ```bash
-# From repo root
-bun test packages/permits/tests/client.test.ts
-```
+# from repo root
+bun run permits:guard:no-mock
+bun run permits:test:client
 
-For live permit renewal/payment flow validation with visible browser, run in permit-worker runtime context (not this package):
-
-```bash
-docker exec -it desert-permit-worker sh -lc 'cd /app/apps/dust-permits && bun test tests/e2e/renew-and-pay.test.ts'
+# live runtime flow validation (not in this package)
+bun run permits:test:renew-and-pay
 ```

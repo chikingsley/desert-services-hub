@@ -49,10 +49,10 @@ import {
 import { getActiveJobCount, processNextJob } from "./jobs/dispatch";
 import { backfillContractPacketDocuments } from "./jobs/intake-processing";
 import { enqueueFullSyncIfMissing, requeueStale } from "./jobs/queue";
-import { processUnprocessedAttachments } from "./lib/attachment-backfill";
 import { runContractWonBridge } from "./lib/contracts/contract-won-bridge";
 import { processTriageBackfillBatch } from "./lib/email-triage/triage-backfill";
-import { runEstimateExtractionTriage } from "./lib/estimate-extraction-triage";
+import { runEstimateExtractionTriage } from "./lib/estimates/estimate-extraction-triage";
+import { processUnprocessedAttachments } from "./lib/intake/attachment-backfill";
 import {
   createDraftClientFromEnv,
   createNotificationDraft,

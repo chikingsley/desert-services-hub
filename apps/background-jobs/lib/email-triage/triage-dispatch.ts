@@ -7,11 +7,11 @@
  * - Enqueue the appropriate job handler for action-triggering categories
  */
 
+import { enqueueJob } from "@background-jobs/jobs/queue";
 import { db } from "@lib/db/hub";
 import { updateEmailClassification } from "@lib/db/repositories/email";
 import { linkEmailToEstimate } from "@lib/db/repositories/estimate-email";
 import { linkEmailToProject } from "@lib/db/repositories/project";
-import { enqueueJob } from "../../jobs/queue";
 import type {
   TriageEmailMeta,
   TriageJobType,

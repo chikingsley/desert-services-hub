@@ -2,7 +2,7 @@
  * Permit Worker Client
  *
  * Typed HTTP client for the permit-worker API.
- * Wraps all 21 endpoints with type-safe request/response handling.
+ * Wraps permit-worker endpoints with type-safe request/response handling.
  */
 
 import type {
@@ -19,6 +19,8 @@ import type {
   HealthResponse,
   InvoicePdfRequest,
   InvoicePdfResponse,
+  RenewAndPayRequest,
+  RenewAndPayResponse,
   RenewRequest,
   RenewResponse,
   ReviseRequest,
@@ -194,6 +196,13 @@ export class PermitClient {
 
   async renewPermit(id: string, req?: RenewRequest): Promise<RenewResponse> {
     return await this.request("POST", `/api/permits/${id}/renew`, req ?? {});
+  }
+
+  async renewAndPay(
+    id: string,
+    req: RenewAndPayRequest
+  ): Promise<RenewAndPayResponse> {
+    return await this.request("POST", `/api/permits/${id}/renew-and-pay`, req);
   }
 
   async closePermit(id: string, req?: CloseRequest): Promise<CloseResponse> {

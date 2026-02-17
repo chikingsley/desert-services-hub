@@ -2,12 +2,12 @@
  * Email notification processing — wires unified triage into the webhook handler.
  */
 
+import { triageEmail } from "@background-jobs/lib/email-triage/triage";
 import type { EmailNotificationAdapters } from "@email/handlers/webhook-notification-handler";
 import {
   enrichSingleEmail as processEmail,
   processEmailNotification as processEmailNotificationWithAdapters,
 } from "@email/handlers/webhook-notification-handler";
-import { triageEmail } from "../lib/email-triage/triage";
 import { FWD_RE, INTERNAL_DOMAINS } from "./config";
 
 const adapters: EmailNotificationAdapters = {

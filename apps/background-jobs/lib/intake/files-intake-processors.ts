@@ -9,6 +9,7 @@
  *   - ZIP archives (extract + recursive processing)
  *   - Unsupported files (metadata-only storage)
  */
+import { existsSync } from "node:fs";
 import { mkdir, readdir, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { extractFile } from "@kreuzberg/node";
@@ -27,6 +28,85 @@ const MIN_KREUZBERG_TEXT_LENGTH = 100;
 const KREUZBERG_OCR_BACKEND = process.env.KREUZBERG_OCR_BACKEND?.trim() || null;
 const KREUZBERG_OCR_LANGUAGE =
   process.env.KREUZBERG_OCR_LANGUAGE?.trim() || undefined;
+
+// ============================================================================
+// pdf-analysis-cli OCR Fallback
+// ============================================================================
+
+function resolvePdfAnalysisCwd(): string | null {
+  const candidates = [
+    process.env.PDF_ANALYSIS_CLI_CWD?.trim(),
+    "/app/packages/documents/pdf-analysis-cli",
+    join(import.meta.dir, "../../../../packages/documents/pdf-analysis-cli"),
+  ].filter((x): x is string => Boolean(x));
+
+  for (const candidate of candidates) {
+    if (existsSync(join(candidate, "pyproject.toml"))) {
+      return candidate;
+    }
+  }
+  return null;
+}
+
+function resolveUvBin(): string {
+  if (process.env.UV_BIN?.trim()) {
+    return process.env.UV_BIN.trim();
+  }
+  if (existsSync("/root/.local/bin/uv")) {
+    return "/root/.local/bin/uv";
+  }
+  return "uv";
+}
+
+/**
+ * OCR a PDF via pdf-analysis-cli when Kreuzberg returns sparse text.
+ * Returns the OCR'd text, or empty string on failure.
+ */
+async function ocrWithPdfAnalysisCli(pdfPath: string): Promise<string> {
+  const cwd = resolvePdfAnalysisCwd();
+  if (!cwd) {
+    return "";
+  }
+
+  try {
+    const proc = Bun.spawn(
+      [
+        resolveUvBin(),
+        "run",
+        "pdf-analysis",
+        "ocr",
+        pdfPath,
+        "--format",
+        "text",
+      ],
+      {
+        cwd,
+        stdout: "pipe",
+        stderr: "pipe",
+        env: { ...process.env, PATH: process.env.PATH ?? "" },
+      }
+    );
+
+    const timeout = setTimeout(() => proc.kill(), 120_000);
+    const textPromise = new Response(proc.stdout).text();
+    const stderrPromise = new Response(proc.stderr).text();
+    const exitCode = await proc.exited;
+    const [text, stderr] = await Promise.all([textPromise, stderrPromise]);
+    clearTimeout(timeout);
+
+    if (exitCode !== 0) {
+      console.warn(
+        `${LOG}   pdf-analysis-cli ocr failed (exit ${exitCode}): ${stderr.trim().slice(0, 200)}`
+      );
+      return "";
+    }
+    return text.trim();
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.warn(`${LOG}   pdf-analysis-cli ocr error: ${msg}`);
+    return "";
+  }
+}
 
 // ============================================================================
 // Types
@@ -147,13 +227,32 @@ export async function processPdf(
     const extracted = await extractWithKreuzberg(pdfPath, {
       minTextLength: MIN_KREUZBERG_TEXT_LENGTH,
     });
+
+    // OCR fallback: when Kreuzberg gets sparse text and no Kreuzberg OCR backend
+    // is configured, try pdf-analysis-cli (local rapidocr or Gemini).
+    let finalContent = extracted.content;
+    let finalExtractor = extracted.extractor;
+    if (
+      finalContent.length < MIN_KREUZBERG_TEXT_LENGTH &&
+      !KREUZBERG_OCR_BACKEND
+    ) {
+      const ocrText = await ocrWithPdfAnalysisCli(pdfPath);
+      if (ocrText.length > finalContent.length) {
+        finalContent = ocrText;
+        finalExtractor = "pdf-analysis-cli:ocr";
+        console.log(
+          `${LOG}   OCR fallback improved: ${ocrText.length} chars from ${pdfPath.split("/").pop()}`
+        );
+      }
+    }
+
     const elapsed = Math.round(performance.now() - started);
 
     // Classify from extracted text (pure regex, no file I/O)
     let documentType = "pdf_document";
     try {
       const { classifyText } = await import("@lib/pdf-analysis");
-      const classified = await classifyText(extracted.content, fileName);
+      const classified = await classifyText(finalContent, fileName);
       if (classified.document_type !== "unknown") {
         documentType = classified.document_type;
       }
@@ -162,13 +261,14 @@ export async function processPdf(
     }
 
     const rawExtraction = {
-      text_content: extracted.content,
+      text_content: finalContent,
       table_count: extracted.tables.length,
       tables: extracted.tables,
       metadata: extracted.metadata,
-      extractor: extracted.extractor,
-      char_count: extracted.content.length,
-      ocr_attempted: extracted.ocrAttempted,
+      extractor: finalExtractor,
+      char_count: finalContent.length,
+      ocr_attempted:
+        extracted.ocrAttempted || finalExtractor === "pdf-analysis-cli:ocr",
       ocr_error: extracted.ocrError ?? null,
     };
 
@@ -176,9 +276,9 @@ export async function processPdf(
       documentType,
       pdfPath,
       fileName,
-      extracted.content.slice(0, 10_000),
+      finalContent.slice(0, 10_000),
       JSON.stringify(rawExtraction),
-      extracted.extractor,
+      finalExtractor,
       elapsed,
       emailMeta.originalFrom || null,
       emailMeta.originalSubject || null,
@@ -186,7 +286,7 @@ export async function processPdf(
     )) as { id: number } | null;
 
     console.log(
-      `${LOG}   Stored PDF #${row?.id} [${documentType}]: ${extracted.content.length} chars in ${elapsed}ms (${extracted.extractor})`
+      `${LOG}   Stored PDF #${row?.id} [${documentType}]: ${finalContent.length} chars in ${elapsed}ms (${finalExtractor})`
     );
 
     return {

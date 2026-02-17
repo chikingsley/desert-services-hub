@@ -4,11 +4,11 @@ import { GEMINI_FAST_MODEL } from "@background-jobs/jobs/config";
 import {
   applyProjectContactResolution,
   resolveProjectContacts,
-} from "@background-jobs/lib/project-contact-resolver";
+} from "@background-jobs/lib/contacts/project-contact-resolver";
 import type {
   ApplyProjectContactResolutionResult,
   ResolveProjectContactsOptions,
-} from "@background-jobs/lib/project-contact-types";
+} from "@background-jobs/lib/contacts/project-contact-types";
 import { db } from "@lib/db/hub";
 
 type Scope = "project" | "active" | "seed" | "all";

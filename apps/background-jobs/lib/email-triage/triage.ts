@@ -11,9 +11,9 @@
  *   5. Dispatch (persist classification, link, enqueue job)
  */
 
+import type { LlmProvider } from "@background-jobs/lib/llm";
+import { runJsonPrompt } from "@background-jobs/lib/llm";
 import { getEmailById } from "@lib/db/repositories/email";
-import type { LlmProvider } from "../llm";
-import { runJsonPrompt } from "../llm";
 import { gatherTriageContext } from "./triage-context";
 import type { DispatchResult } from "./triage-dispatch";
 import { dispatchTriageResult } from "./triage-dispatch";

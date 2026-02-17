@@ -3,16 +3,16 @@
  * contract packet backfill, and SharePoint upload.
  */
 
+import type {
+  ContractsEmailIntakePayload,
+  processFilesIntake,
+} from "@background-jobs/lib/intake/files-intake";
 import { isSubjectCompatibleWithProject } from "@email/project-subject-guard";
 import { db } from "@lib/db/hub";
 import {
   createSharePointClientFromEnv,
   uploadLocalFileToProjectSubfolder,
 } from "@sharepoint/intake-upload";
-import type {
-  ContractsEmailIntakePayload,
-  processFilesIntake,
-} from "../lib/files-intake";
 import { CONTRACT_PACKET_AUTOLINK_BATCH_SIZE } from "./config";
 
 // -- Lazy SharePoint client --

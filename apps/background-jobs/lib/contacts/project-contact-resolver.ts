@@ -5,8 +5,8 @@
  * Delegates to split modules for types, data fetching, and matching.
  */
 import { createHash } from "node:crypto";
+import { GEMINI_FAST_MODEL } from "@background-jobs/jobs/config";
 import { db } from "@lib/db/hub";
-import { GEMINI_FAST_MODEL } from "../jobs/config";
 import {
   fetchAttachments,
   fetchCoverage,

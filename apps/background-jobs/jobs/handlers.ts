@@ -1,3 +1,9 @@
+import { propagateDocumentProjectIds } from "@background-jobs/lib/documents/propagate-project-ids";
+import { processFilesIntake } from "@background-jobs/lib/intake/files-intake";
+import {
+  handleIssuedEmail,
+  handlePaymentEmail,
+} from "@background-jobs/lib/notifications/email-triggers";
 import {
   markStaleProjectSeeds,
   syncProjectSeedsFromEstimates,
@@ -6,11 +12,6 @@ import { syncEstimates } from "@background-jobs/workers/estimate-poller/lib/sync
 import { syncSharePointFolders } from "@background-jobs/workers/estimates-sync-worker/lib/sharepoint-sync";
 import { processItemFiles } from "@monday/sync/pipeline";
 import { syncItem } from "@monday/sync/sync-item";
-import { processFilesIntake } from "../lib/files-intake";
-import {
-  handleIssuedEmail,
-  handlePaymentEmail,
-} from "../lib/notifications/email-triggers";
 import { PROJECT_SEED_STALE_DAYS } from "./config";
 import { processEmailNotification } from "./email-processing";
 import { startIntakePostProcessing } from "./intake-processing";
@@ -67,6 +68,15 @@ export async function processSyncFullJob(): Promise<void> {
   await runEstimateSeedSync(syncResult);
   await enqueueEstimateFileSweepIfReady(syncResult);
   await runSharePointSync();
+  await runDocumentProjectPropagation();
+}
+
+async function runDocumentProjectPropagation(): Promise<void> {
+  try {
+    await propagateDocumentProjectIds();
+  } catch (err) {
+    console.error("[worker] Document project propagation failed:", err);
+  }
 }
 
 async function runFullSyncPipeline(): Promise<EstimateSyncResult> {

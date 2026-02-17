@@ -47,6 +47,11 @@ export const ATTACHMENT_BACKFILL_INTERVAL_MS = parsePositiveInt(
 export const CONTRACT_PACKET_AUTOLINK_INTERVAL_MS = 60 * 1000; // 60 seconds
 export const RENEWAL_INTERVAL_MS = 60 * 60 * 1000; // 1 hour
 export const GROUP_SYNC_INTERVAL_MS = 15 * 60 * 1000; // 15 minutes
+export const ACCOUNT_LINKING_INTERVAL_MS = parsePositiveInt(
+  process.env.ACCOUNT_LINKING_INTERVAL_MS,
+  5 * 60 * 1000, // 5 minutes
+  60_000
+);
 export const MONDAY_STATUS_SYNC_ENABLED = parseBooleanFlag(
   process.env.MONDAY_STATUS_SYNC_ENABLED,
   true

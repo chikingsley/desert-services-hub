@@ -10,13 +10,14 @@
 
 import { mkdir, unlink } from "node:fs/promises";
 import { join } from "node:path";
+import { enrichContractDocumentsWithLangExtract } from "@background-jobs/lib/contracts/langextract";
+import { propagateDocumentProjectIds } from "@background-jobs/lib/documents/propagate-project-ids";
+import { processFilesIntake } from "@background-jobs/lib/intake/files-intake";
+import type { ContractEmailJobPayload } from "@background-jobs/lib/notifications/email-triggers";
 import type { GraphEmailClient } from "@email/client";
 import { createGraphClient } from "@email/sync/config";
 import { db } from "@lib/db/hub";
 import { updateAttachmentExtraction } from "@lib/db/repositories/attachment";
-import { enrichContractDocumentsWithLangExtract } from "../lib/contracts/langextract";
-import { processFilesIntake } from "../lib/files-intake";
-import type { ContractEmailJobPayload } from "../lib/notifications/email-triggers";
 
 const LOG = "[contract-email]";
 const WORK_DIR = "/app/data/contract-intake";
@@ -272,5 +273,6 @@ export async function processContractEmailJob(
 
   if (createdDocumentIds.length > 0) {
     await enrichContractDocumentsWithLangExtract(createdDocumentIds);
+    await propagateDocumentProjectIds();
   }
 }

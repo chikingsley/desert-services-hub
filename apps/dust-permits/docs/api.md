@@ -2,6 +2,14 @@
 
 Base URL: `http://localhost:47822`
 
+> [!IMPORTANT]
+> Source-of-truth routes live in `apps/dust-permits/src/index.ts`, and the
+> source-of-truth typed client contract lives in `packages/permits/src/client.ts`
+> + `packages/permits/src/types.ts`.
+>
+> This document includes legacy sections below that may reference removed
+> endpoints. For runtime callers, use `@permits/client` methods as canonical.
+
 ## Endpoints Overview
 
 | Method | Endpoint | Description |
@@ -12,16 +20,22 @@ Base URL: `http://localhost:47822`
 | `DELETE` | `/api/permits/:id` | Delete draft permit |
 | `DELETE` | `/api/permits/drafts` | Delete all draft permits |
 | `POST` | `/api/permits/create` | Create permit from FormData |
-| `POST` | `/api/permits/extract` | Extract FormData from PDFs |
 | `POST` | `/api/permits/:id/renew` | Renew existing permit |
+| `POST` | `/api/permits/:id/renew-and-pay` | Renew, submit, and pay |
 | `POST` | `/api/permits/:id/close` | Close active permit |
 | `POST` | `/api/permits/:id/revise` | Revise permit |
+| `POST` | `/api/scrape/pdf` | Scrape permit and generate PDF |
+| `GET` | `/api/scrape/:id` | Scrape permit data |
+| `POST` | `/api/invoices/pdf` | Download invoice PDF |
+| `POST` | `/api/sync` | Full permit sync |
+| `POST` | `/api/sync/company` | Company-only permit sync |
 | `GET` | `/api/browser/status` | Check browser session status |
 | `POST` | `/api/browser/start` | Start browser session |
+| `POST` | `/api/browser/ready` | Ensure portal session is ready |
+| `POST` | `/api/browser/keepalive` | Trigger keepalive |
 | `POST` | `/api/browser/stop` | Stop browser session |
-| `GET` | `/api/email/templates` | List email templates |
-| `POST` | `/api/email/send` | Send email |
-| `POST` | `/swppp-plan-notifications` | Send SWPPP notification email |
+| `POST` | `/api/browser/clipboard/paste` | Paste text from host clipboard |
+| `POST` | `/api/browser/clipboard/copy` | Copy text from page to host clipboard |
 
 ---
 

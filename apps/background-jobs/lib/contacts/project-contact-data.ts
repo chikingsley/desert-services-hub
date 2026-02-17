@@ -4,9 +4,10 @@
  * LLM parsing/prompt building, database fetch functions,
  * and deterministic candidate collection from emails/documents/attachments.
  */
+
+import { GEMINI_FAST_MODEL } from "@background-jobs/jobs/config";
+import { runGeminiJsonPrompt } from "@background-jobs/lib/llm";
 import { db } from "@lib/db/hub";
-import { GEMINI_FAST_MODEL } from "../jobs/config";
-import { runGeminiJsonPrompt } from "./llm";
 import type {
   AttachmentRow,
   CoverageRow,

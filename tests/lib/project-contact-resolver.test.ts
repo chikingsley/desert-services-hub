@@ -4,7 +4,7 @@ import {
   extractPhoneNumbers,
   normalizeEmailAddress,
   parseEmailAddressList,
-} from "@background-jobs/lib/project-contact-types";
+} from "@background-jobs/lib/contacts/project-contact-types";
 
 describe("project-contact-resolver helpers", () => {
   test("normalizeEmailAddress lowercases and strips angle brackets", () => {

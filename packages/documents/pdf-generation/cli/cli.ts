@@ -60,16 +60,16 @@ function help(): void {
 Desert PDF Generation CLI
 
 Usage:
-  bun packages/documents/pdf-generation-cli/cli/cli.ts safety sssp init <output.json>
-  bun packages/documents/pdf-generation-cli/cli/cli.ts safety sssp generate --in <input.json> --out <output.pdf> [--sections <all|comma-list>]
+  bun packages/documents/pdf-generation/cli/cli.ts safety sssp init <output.json>
+  bun packages/documents/pdf-generation/cli/cli.ts safety sssp generate --in <input.json> --out <output.pdf> [--sections <all|comma-list>]
 
-  bun packages/documents/pdf-generation-cli/cli/cli.ts safety sds init <output.json>
-  bun packages/documents/pdf-generation-cli/cli/cli.ts safety sds generate --in <input.json> --out <output.pdf> [--include-sheets] [--download-sheets-from-url] [--fail-on-missing-sheets]
+  bun packages/documents/pdf-generation/cli/cli.ts safety sds init <output.json>
+  bun packages/documents/pdf-generation/cli/cli.ts safety sds generate --in <input.json> --out <output.pdf> [--include-sheets] [--download-sheets-from-url] [--fail-on-missing-sheets]
 
-  bun packages/documents/pdf-generation-cli/cli/cli.ts quoting estimate generate --id <estimate-id> [--output <output.pdf>] [--include-back-page]
+  bun packages/documents/pdf-generation/cli/cli.ts quoting estimate generate --id <estimate-id> [--output <output.pdf>] [--include-back-page]
 
-  bun packages/documents/pdf-generation-cli/cli/cli.ts stormwater noi-guide generate --out <output.pdf>
-  bun packages/documents/pdf-generation-cli/cli/cli.ts stormwater quickstart generate --out <output.pdf>
+  bun packages/documents/pdf-generation/cli/cli.ts stormwater noi-guide generate --out <output.pdf>
+  bun packages/documents/pdf-generation/cli/cli.ts stormwater quickstart generate --out <output.pdf>
 `);
 }
 

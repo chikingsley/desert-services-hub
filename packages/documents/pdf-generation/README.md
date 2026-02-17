@@ -13,31 +13,31 @@ Current namespaces:
 
 ```bash
 # SSSP: create template JSON
-bun packages/documents/pdf-generation-cli/cli/cli.ts safety sssp init data/sssp/sssp.input.json
+bun packages/documents/pdf-generation/cli/cli.ts safety sssp init data/sssp/sssp.input.json
 
 # SSSP: generate PDF (uses sections from JSON)
-bun packages/documents/pdf-generation-cli/cli/cli.ts safety sssp generate --in data/sssp/sssp.input.json --out data/sssp/SSSP.pdf
+bun packages/documents/pdf-generation/cli/cli.ts safety sssp generate --in data/sssp/sssp.input.json --out data/sssp/SSSP.pdf
 
 # SSSP: override sections from CLI
-bun packages/documents/pdf-generation-cli/cli/cli.ts safety sssp generate \
+bun packages/documents/pdf-generation/cli/cli.ts safety sssp generate \
   --in data/sssp/sssp.input.json \
   --out data/sssp/SSSP.pdf \
   --sections water-truck,street-sweeping
 
 # SSSP: include all service sections
-bun packages/documents/pdf-generation-cli/cli/cli.ts safety sssp generate \
+bun packages/documents/pdf-generation/cli/cli.ts safety sssp generate \
   --in data/sssp/sssp.input.json \
   --out data/sssp/SSSP.pdf \
   --sections all
 
 # SDS: create template JSON
-bun packages/documents/pdf-generation-cli/cli/cli.ts safety sds init data/sds/sds-input.json
+bun packages/documents/pdf-generation/cli/cli.ts safety sds init data/sds/sds-input.json
 
 # SDS: inventory only
-bun packages/documents/pdf-generation-cli/cli/cli.ts safety sds generate --in data/sds/sds-input.json --out data/sds/SDS_Chemical_Inventory.pdf
+bun packages/documents/pdf-generation/cli/cli.ts safety sds generate --in data/sds/sds-input.json --out data/sds/SDS_Chemical_Inventory.pdf
 
 # SDS: full binder (inventory + appended sheets)
-bun packages/documents/pdf-generation-cli/cli/cli.ts safety sds generate \
+bun packages/documents/pdf-generation/cli/cli.ts safety sds generate \
   --in data/sds/sds-input.json \
   --out data/sds/SDS_Binder.pdf \
   --include-sheets
@@ -47,13 +47,13 @@ bun packages/documents/pdf-generation-cli/cli/cli.ts safety sds generate \
 
 ```bash
 # NOI Simple Guide (one-page for supers/PMs)
-bun packages/documents/pdf-generation-cli/cli/cli.ts stormwater noi-guide generate --out output/noi-simple-guide.pdf
+bun packages/documents/pdf-generation/cli/cli.ts stormwater noi-guide generate --out output/noi-simple-guide.pdf
 
 # NOI/NDC Quickstart Guide (multi-page decision + filing guide)
-bun packages/documents/pdf-generation-cli/cli/cli.ts stormwater quickstart generate --out output/noi-ndc-quickstart.pdf
+bun packages/documents/pdf-generation/cli/cli.ts stormwater quickstart generate --out output/noi-ndc-quickstart.pdf
 ```
 
-Reference source material for these guides lives in `packages/documents/pdf-generation-cli/docs/stormwater/noi-ndc-toolkit/`.
+Reference source material for these guides lives in `packages/documents/pdf-generation/src/stormwater/docs/`.
 
 ## Options
 

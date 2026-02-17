@@ -10,6 +10,7 @@ const LOGO_PATH = join(
   "..",
   "..",
   "..",
+  "..",
   "apps",
   "web",
   "frontend",

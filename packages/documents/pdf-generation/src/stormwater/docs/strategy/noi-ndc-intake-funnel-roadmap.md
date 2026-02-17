@@ -75,7 +75,7 @@ Rule: Every public page needs a "last reviewed" date and source references.
 
 ## Immediate Build Outputs
 
-1. Keep the branded PDF quickstart guide as the standard guide (v2 generator in `packages/documents/pdf-generation-cli/src/stormwater/noi-ndc-quickstart.ts`).
+1. Keep the branded PDF quickstart guide as the standard guide (v2 generator in `packages/documents/pdf-generation/src/stormwater/noi-ndc-quickstart.ts`).
 2. Create a second "Simple Guide" output template modeled after the original one-page instruction style.
 3. Create website version of the same content (single-source content blocks).
 4. Add intake form schema for NOI/NDC triage so ops can process leads consistently.

@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { listEstimates } from "@estimates/estimating/estimate-read-service";
 
 const BUN_BIN = Bun.which("bun") ?? `${process.env.HOME}/.bun/bin/bun`;
-const CLI_PATH = "packages/documents/pdf-generation-cli/cli/cli.ts";
+const CLI_PATH = "packages/documents/pdf-generation/cli/cli.ts";
 
 interface CliResult {
   code: number;

@@ -19,7 +19,7 @@
       "@sharepoint/*": ["packages/sharepoint/src/*"],
       "@email/*": ["packages/email/src/*"],
       "@aqdata/*": ["packages/aqdata/src/*"],
-      "@documents/*": ["packages/documents/src/*"],
+      "@documents/*": ["packages/documents/pdf-generation/src/*"],
       "@takeoff/*": ["packages/takeoff/src/*"],
       "@estimates/*": ["packages/estimates/src/*"],
       "@permits/*": ["packages/permits/src/*"],

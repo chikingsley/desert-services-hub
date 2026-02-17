@@ -41,6 +41,8 @@ interface EstimateRow {
   awarded: boolean;
   dueDate: string | null;
   location: string | null;
+  lat: number | null;
+  lng: number | null;
   sharepointUrl: string | null;
 }
 
@@ -71,6 +73,35 @@ function parseNumber(value: string | null | undefined): number | null {
   return Number.isNaN(num) ? null : num;
 }
 
+function parseLocationCoords(
+  item: MondayItemRich
+): { lat: number; lng: number } | null {
+  const col = item.columnValues.find(
+    (cv) => cv.id === ESTIMATING_COLUMNS.LOCATION.id
+  );
+  if (!col?.value) {
+    return null;
+  }
+  try {
+    const parsed = JSON.parse(col.value) as {
+      lat?: string | number;
+      lng?: string | number;
+    };
+    const lat = Number(parsed.lat);
+    const lng = Number(parsed.lng);
+    if (
+      Number.isFinite(lat) &&
+      Number.isFinite(lng) &&
+      (lat !== 0 || lng !== 0)
+    ) {
+      return { lat, lng };
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 function hasEstimateFiles(item: MondayItemRich): boolean {
   const estimateCol = item.columnValues.find(
     (cv) => cv.id === ESTIMATING_COLUMNS.ESTIMATE.id
@@ -83,11 +114,7 @@ function hasEstimateFiles(item: MondayItemRich): boolean {
     const parsed = JSON.parse(estimateCol.value) as {
       files?: Array<{ assetId?: number }>;
     };
-    return (
-      parsed.files?.some((file) =>
-        Number.isFinite(file.assetId ?? Number.NaN)
-      ) ?? false
-    );
+    return parsed.files?.some((file) => file.assetId != null) ?? false;
   } catch {
     return false;
   }
@@ -109,6 +136,7 @@ function extractEstimateRow(
   const accountDomain = accountMondayId
     ? (accountSnapshots.get(accountMondayId)?.domain ?? null)
     : null;
+  const coords = parseLocationCoords(item);
 
   return {
     mondayItemId: item.id,
@@ -127,6 +155,8 @@ function extractEstimateRow(
     awarded: cols[ESTIMATING_COLUMNS.AWARDED.id] === "Yes",
     dueDate: cols[ESTIMATING_COLUMNS.DUE_DATE.id] ?? null,
     location: cols[ESTIMATING_COLUMNS.LOCATION.id] ?? null,
+    lat: coords?.lat ?? null,
+    lng: coords?.lng ?? null,
     sharepointUrl: cols[ESTIMATING_COLUMNS.SHAREPOINT_URL.id] ?? null,
   };
 }
@@ -204,9 +234,9 @@ export async function syncEstimates(): Promise<SyncResult> {
           group_id, group_title, monday_url,
           account_id, account_monday_id, account_domain,
           bid_status, bid_value, awarded_value, bid_source,
-          awarded, due_date, location, sharepoint_url,
+          awarded, due_date, location, lat, lng, sharepoint_url,
           synced_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, now(), now())
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, now(), now())
         ON CONFLICT(monday_item_id) DO UPDATE SET
           name = excluded.name,
           estimate_number = COALESCE(excluded.estimate_number, estimates.estimate_number),
@@ -224,6 +254,8 @@ export async function syncEstimates(): Promise<SyncResult> {
           awarded = excluded.awarded,
           due_date = excluded.due_date,
           location = excluded.location,
+          lat = COALESCE(excluded.lat, estimates.lat),
+          lng = COALESCE(excluded.lng, estimates.lng),
           sharepoint_url = COALESCE(excluded.sharepoint_url, estimates.sharepoint_url),
           synced_at = now(),
           updated_at = now()
@@ -246,6 +278,8 @@ export async function syncEstimates(): Promise<SyncResult> {
           row.awarded ? 1 : 0,
           row.dueDate,
           row.location,
+          row.lat,
+          row.lng,
           row.sharepointUrl,
         ]
       )) as Array<{ id: number }>;

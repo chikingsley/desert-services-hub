@@ -54,7 +54,7 @@ export const getNextVersionNumber = db.query<{ next_num: number }>(
 
 export const insertVersion = db.prepare(`
   INSERT INTO estimate_versions (id, estimate_id, version_number, source, total, is_current)
-  VALUES (?, ?, ?, 'ocr', ?, 1)
+  VALUES (?, ?, ?, ?, ?, 1)
 `);
 
 export const insertLineItem = db.prepare(`

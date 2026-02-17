@@ -8,7 +8,7 @@
 /**
  * POST /api/sync - Sync permits from portal
  */
-export async function handleSync(): Promise<Response> {
+export function handleSync(): Response {
   return Response.json(
     {
       error: "Sync handler not available (removed)",
@@ -22,7 +22,7 @@ export async function handleSync(): Promise<Response> {
 /**
  * POST /api/sync/company - Sync company permits from portal
  */
-export async function handleCompanySync(): Promise<Response> {
+export function handleCompanySync(): Response {
   return Response.json(
     {
       error: "Company sync handler not available (removed)",

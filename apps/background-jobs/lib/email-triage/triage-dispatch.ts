@@ -7,6 +7,7 @@
  * - Enqueue the appropriate job handler for action-triggering categories
  */
 
+import { db } from "@lib/db/hub";
 import { updateEmailClassification } from "@lib/db/repositories/email";
 import { linkEmailToEstimate } from "@lib/db/repositories/estimate-email";
 import { linkEmailToProject } from "@lib/db/repositories/project";
@@ -16,6 +17,8 @@ import type {
   TriageJobType,
   TriageResult,
 } from "./triage-types";
+
+const SPAM_AUTO_EXCLUDE_CONFIDENCE = 0.9;
 
 // ── Action mapping ──────────────────────────────────────────
 
@@ -113,6 +116,41 @@ export async function dispatchTriageResult(
     "llm"
   );
   outcome.classified = true;
+
+  // 1b. SPAM with high confidence → auto-exclude email + block domain
+  if (
+    result.category === "SPAM" &&
+    result.confidence >= SPAM_AUTO_EXCLUDE_CONFIDENCE &&
+    meta.fromEmail
+  ) {
+    const domain = meta.fromEmail.split("@")[1]?.toLowerCase();
+    if (domain) {
+      // Exclude this email
+      await db.run("UPDATE emails SET is_excluded = 1 WHERE id = ?", [
+        meta.emailId,
+      ]);
+
+      // Add domain rule so future emails skip the LLM entirely
+      await db.run(
+        `INSERT INTO domain_rules (domain, classification, is_excluded)
+         VALUES (?, 'SPAM', true)
+         ON CONFLICT (domain) DO NOTHING`,
+        [domain]
+      );
+
+      // Bulk-exclude all existing emails from this domain
+      const updated = await db.run(
+        `UPDATE emails SET is_excluded = 1, classification = 'SPAM', classification_method = 'domain_rule'
+         WHERE is_excluded = 0 AND lower(from_email) LIKE ?`,
+        [`%@${domain}`]
+      );
+
+      const count = (updated as unknown as { count?: number })?.count ?? 0;
+      console.log(
+        `[triage:spam] auto-blocked domain=${domain} (${count} emails excluded)`
+      );
+    }
+  }
 
   // 2. Link to project if LLM picked one
   if (result.projectId) {

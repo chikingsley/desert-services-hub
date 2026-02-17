@@ -42,7 +42,7 @@ const IDLE_TIMEOUT_SECONDS = Number.isFinite(parsedIdleTimeoutSeconds)
   ? Math.max(10, parsedIdleTimeoutSeconds)
   : 180;
 
-const server = serve({
+serve({
   hostname: "0.0.0.0",
   idleTimeout: IDLE_TIMEOUT_SECONDS,
   port: PORT,

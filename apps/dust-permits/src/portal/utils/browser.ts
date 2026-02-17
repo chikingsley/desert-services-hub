@@ -227,9 +227,7 @@ export interface BrowserSession {
 let globalSession: BrowserSession | null = null;
 let keepAliveTimer: ReturnType<typeof setTimeout> | null = null;
 let keepAliveInFlight: Promise<BrowserKeepAliveResult> | null = null;
-// biome-ignore lint: these are reassigned in async flows
 let sessionCreationInFlight: Promise<BrowserSession> | null = null;
-// biome-ignore lint: this is reassigned in async flows
 let consecutiveReloginFailures = 0;
 const MAX_CONSECUTIVE_RELOGIN_FAILURES = 3;
 const RELOGIN_CIRCUIT_BREAKER_COOLDOWN_MS = 5 * 60 * 1000;

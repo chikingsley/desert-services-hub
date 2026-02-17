@@ -189,7 +189,9 @@ export async function login(page: Page): Promise<boolean> {
   // Sequential || would take up to 75s worst case; racing caps at 25s.
   const raceForTrue = (p: Promise<boolean>) =>
     p.then((v) => {
-      if (v) return v;
+      if (v) {
+        return v;
+      }
       throw new Error("not found");
     });
   const ok = await Promise.any([

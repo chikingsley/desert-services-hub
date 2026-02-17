@@ -27,6 +27,10 @@ const DEFAULT_KEEP_OPEN_TIMEOUT_MS = 15 * 60 * 1000;
 const MIN_KEEP_OPEN_TIMEOUT_MS = 30_000;
 const DEFAULT_KEEP_ALIVE_INTERVAL_MS = 5 * 60 * 1000;
 const MIN_KEEP_ALIVE_INTERVAL_MS = 60_000;
+const KEEPALIVE_REQUEST_TIMEOUT_MS = 20_000;
+const KEEPALIVE_RETRY_TIMEOUT_MS = 30_000;
+const KEEPALIVE_MAX_RETRIES = 1;
+const KEEPALIVE_RETRY_DELAY_MS = 3000;
 const DEFAULT_VIEWPORT_WIDTH = 1280;
 const DEFAULT_VIEWPORT_HEIGHT = 1024;
 const VIEWPORT_PATTERN_RE = /^(\d+)\s*[xX]\s*(\d+)$/;
@@ -380,86 +384,130 @@ async function runKeepAlive(options?: {
     };
   }
 
-  try {
-    const response = await session.instance.context.request.get(
-      config.dustPermitUrl,
-      {
-        failOnStatusCode: false,
-        timeout: 20_000,
+  // Try the keepalive request with retries for transient failures (timeouts, network blips).
+  // A timeout does NOT mean the session expired — it means the portal was slow.
+  let lastError: string | undefined;
+  for (let attempt = 0; attempt <= KEEPALIVE_MAX_RETRIES; attempt++) {
+    try {
+      const timeoutMs =
+        attempt === 0
+          ? KEEPALIVE_REQUEST_TIMEOUT_MS
+          : KEEPALIVE_RETRY_TIMEOUT_MS;
+      const response = await session.instance.context.request.get(
+        config.dustPermitUrl,
+        {
+          failOnStatusCode: false,
+          timeout: timeoutMs,
+        }
+      );
+      const body = await response.text().catch(() => "");
+      const lowerBody = body.toLowerCase();
+      const hasLoginMarkers =
+        lowerBody.includes("login") &&
+        (lowerBody.includes("username") ||
+          lowerBody.includes("password") ||
+          lowerBody.includes("userid"));
+
+      session.lastKeepAliveAtMs = Date.now();
+      touchSessionActivity();
+
+      // Portal pages vary (dashboard/detail/about), but the login page consistently
+      // includes credential fields. Treat "no login form + HTTP 200" as logged in
+      // to avoid false negatives on pages like "Last Pinned Home" or detail screens.
+      if (response.ok() && !hasLoginMarkers) {
+        session.isLoggedIn = true;
+        session.portalReady = true;
+        session.lastError = null;
+        return {
+          active: true,
+          isLoggedIn: true,
+          portalReady: true,
+          skipped: false,
+          success: true,
+        };
       }
+
+      // Definitive signal: portal responded but session expired or HTTP error.
+      // No need to retry — go straight to relogin.
+      session.isLoggedIn = false;
+      session.portalReady = false;
+      session.lastError = hasLoginMarkers
+        ? "Portal session expired"
+        : `Portal keepalive HTTP ${response.status()}`;
+
+      if (!allowRelogin) {
+        return {
+          active: true,
+          isLoggedIn: false,
+          portalReady: false,
+          reason: session.lastError,
+          skipped: false,
+          success: false,
+        };
+      }
+
+      const reloginSucceeded = await reloginSession(session);
+      return {
+        active: true,
+        isLoggedIn: session.isLoggedIn,
+        portalReady: session.portalReady,
+        reason: reloginSucceeded ? undefined : "Re-login failed",
+        reloginAttempted: true,
+        reloginSucceeded,
+        skipped: false,
+        success: reloginSucceeded,
+      };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      lastError = message;
+
+      if (attempt < KEEPALIVE_MAX_RETRIES) {
+        console.warn(
+          `[Session] Keepalive attempt ${attempt + 1} failed (${message}), retrying in ${KEEPALIVE_RETRY_DELAY_MS}ms...`
+        );
+        await new Promise((resolve) =>
+          setTimeout(resolve, KEEPALIVE_RETRY_DELAY_MS)
+        );
+      }
+    }
+  }
+
+  // All retries exhausted — transient failure (timeout/network).
+  // Attempt relogin if allowed, since the page-level session might need a fresh navigation.
+  session.lastError = `Keepalive request failed: ${lastError}`;
+  touchSessionActivity();
+
+  if (allowRelogin) {
+    console.warn(
+      "[Session] Keepalive timed out after retries, attempting relogin..."
     );
-    const body = await response.text().catch(() => "");
-    const lowerBody = body.toLowerCase();
-    const hasLoginMarkers =
-      lowerBody.includes("login") &&
-      (lowerBody.includes("username") ||
-        lowerBody.includes("password") ||
-        lowerBody.includes("userid"));
-
-    session.lastKeepAliveAtMs = Date.now();
-    touchSessionActivity();
-
-    // Portal pages vary (dashboard/detail/about), but the login page consistently
-    // includes credential fields. Treat "no login form + HTTP 200" as logged in
-    // to avoid false negatives on pages like "Last Pinned Home" or detail screens.
-    if (response.ok() && !hasLoginMarkers) {
-      session.isLoggedIn = true;
-      session.portalReady = true;
-      session.lastError = null;
+    const reloginSucceeded = await reloginSession(session);
+    if (reloginSucceeded) {
       return {
         active: true,
         isLoggedIn: true,
         portalReady: true,
+        reloginAttempted: true,
+        reloginSucceeded: true,
         skipped: false,
         success: true,
       };
     }
-
-    session.isLoggedIn = false;
-    session.portalReady = false;
-    session.lastError = hasLoginMarkers
-      ? "Portal session expired"
-      : `Portal keepalive HTTP ${response.status}`;
-
-    if (!allowRelogin) {
-      return {
-        active: true,
-        isLoggedIn: false,
-        portalReady: false,
-        reason: session.lastError,
-        skipped: false,
-        success: false,
-      };
-    }
-
-    const reloginSucceeded = await reloginSession(session);
-    return {
-      active: true,
-      isLoggedIn: session.isLoggedIn,
-      portalReady: session.portalReady,
-      reason: reloginSucceeded ? undefined : "Re-login failed",
-      reloginAttempted: true,
-      reloginSucceeded,
-      skipped: false,
-      success: reloginSucceeded,
-    };
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    session.lastError = `Keepalive request failed: ${message}`;
-    session.isLoggedIn = false;
-    session.portalReady = false;
-    touchSessionActivity();
-    return {
-      active: true,
-      isLoggedIn: false,
-      portalReady: false,
-      reason: session.lastError,
-      reloginAttempted: false,
-      reloginSucceeded: false,
-      skipped: false,
-      success: false,
-    };
   }
+
+  // Everything failed — now mark session as not logged in
+  session.isLoggedIn = false;
+  session.portalReady = false;
+  return {
+    active: true,
+    isLoggedIn: false,
+    portalReady: false,
+    reason: session.lastError,
+    reloginAttempted: allowRelogin,
+    reloginSucceeded: false,
+    skipped: false,
+    success: false,
+  };
 }
 
 /**

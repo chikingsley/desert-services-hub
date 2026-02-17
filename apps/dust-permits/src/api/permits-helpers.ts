@@ -11,9 +11,6 @@ import {
 import type { Permit as DbPermit } from "@lib/db/types";
 import { z } from "zod";
 import type { FormData } from "@/form-data";
-import { closeSchema } from "@/handlers/close";
-import { createSchema } from "@/handlers/create";
-import { renewSchema } from "@/handlers/renew";
 import type { Permit as DashboardPermit } from "@/lib/types";
 import {
   ensureBrowserSessionReady,
@@ -23,25 +20,35 @@ import {
 export const log = (msg: string) => process.stderr.write(`${msg}\n`);
 
 // ============================================
-// API-specific schemas (extend handler schemas for HTTP)
+// API schemas (inlined from removed handler modules)
 // ============================================
 
-export const apiCreateSchema = createSchema
-  .omit({ headless: true, keepOpen: true })
-  .extend({
-    copyFromApp: z
-      .string()
-      .optional()
-      .describe("Permit ID to copy from (for renew flow)"),
-  });
+export const apiCreateSchema = z.object({
+  companyName: z.string().optional().describe("Company name for the permit"),
+  copyFromApp: z
+    .string()
+    .optional()
+    .describe("Permit ID to copy from (for renew flow)"),
+  flow: z
+    .enum(["new-company", "existing-company", "renew"])
+    .describe("Creation flow type"),
+  formDataPath: z
+    .string()
+    .optional()
+    .describe("Path to form data JSON overrides"),
+});
 
 export const apiReviseSchema = z.object({
   notes: z.string().optional().describe("Additional notes"),
   revisionType: z.string().describe("Type of revision"),
 });
 
-export const renewBodySchema = renewSchema.pick({ companyName: true });
-export const closeBodySchema = closeSchema.pick({ reason: true });
+export const renewBodySchema = z.object({
+  companyName: z.string().describe("Company name for renewal"),
+});
+export const closeBodySchema = z.object({
+  reason: z.string().optional().describe("Reason for closing"),
+});
 
 // ============================================
 // Transforms

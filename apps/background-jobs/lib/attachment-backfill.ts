@@ -1,13 +1,17 @@
 /**
  * Attachment Backfill — Process Unprocessed Email Attachments
  *
- * Finds attachments on project-linked emails that haven't been processed yet,
- * downloads them from Graph API, and runs them through the file analysis pipeline.
+ * Downloads attachments from Graph API, deduplicates them, and runs them
+ * through the Kreuzberg extraction pipeline.
  *
- * Handles both initial backfill AND ongoing processing of new attachments.
+ * Dedup strategy (two layers):
+ *   1. Internet Message ID — same email across mailboxes shares an
+ *      internet_message_id; skip if same (internet_message_id, name, size)
+ *      already processed. Zero network cost.
+ *   2. Content Hash — SHA-256 of file bytes catches forwarded copies and
+ *      renames. Computed after download but before extraction.
  *
- * Processes 3 files concurrently per batch for faster throughput.
- * PDFs try fast Kreuzberg extraction first — only scanned PDFs fall back to OCR.
+ * Processes ALL mailboxes — no allowlist/blocklist scoping.
  */
 import { mkdir, unlink } from "node:fs/promises";
 import { join } from "node:path";
@@ -20,11 +24,9 @@ import { processFilesIntake } from "./files-intake";
 
 const LOG = "[attachment-backfill]";
 const BACKFILL_DIR = "/app/data/backfill";
-const CONCURRENCY = 3;
-
-// ============================================================================
-// Types
-// ============================================================================
+const MAX_RETRY_ATTEMPTS = 3;
+const RETRY_COOLDOWN_HOURS = 6;
+const DOWNLOAD_TIMEOUT_MS = 10_000; // 10s max per Graph API download
 
 interface UnprocessedAttachment {
   attachment_id_pk: number;
@@ -34,6 +36,7 @@ interface UnprocessedAttachment {
   size: number | null;
   email_id: number;
   message_id: string;
+  internet_message_id: string | null;
   project_id: number | null;
   subject: string | null;
   from_email: string | null;
@@ -43,6 +46,7 @@ interface UnprocessedAttachment {
 export interface BackfillResult {
   processed: number;
   skipped: number;
+  deduped: number;
   succeeded: number;
   failed: number;
   elapsedMs: number;
@@ -52,14 +56,10 @@ export interface BackfillResult {
 
 export interface ProcessUnprocessedAttachmentsOptions {
   batchSize?: number;
-  mailboxAllowlist?: string[];
-  includeNonProjectForAllowlistedMailboxes?: boolean;
+  concurrency?: number;
 }
 
-// ============================================================================
-// Skip Rules — inline images, calendar invites, signatures
-// ============================================================================
-
+/** Inline images, calendar invites, signatures — skip patterns */
 const INLINE_IMAGE_PATTERNS = [
   /^image\d{3}\./i, // image001.png, image002.jpg
   /^Outlook-/i, // Outlook-abc123.png
@@ -90,24 +90,22 @@ function shouldSkip(att: UnprocessedAttachment): boolean {
     if ((att.size ?? 0) < 50_000) {
       return true;
     }
-    for (const pattern of INLINE_IMAGE_PATTERNS) {
-      if (pattern.test(att.name)) {
-        return true;
-      }
+    if (INLINE_IMAGE_PATTERNS.some((p) => p.test(att.name))) {
+      return true;
     }
   }
 
   return false;
 }
 
-// ============================================================================
-// Queries
-// ============================================================================
+// Microsoft 365 Groups use /groups/{id}/messages — not /users/{email}/messages.
+// The Graph client only supports /users/ paths, so group mailboxes must be excluded.
+const GROUP_MAILBOXES = new Set(["internalcontracts@desertservices.net"]);
 
-const getUnprocessedAttachments = db.query<
-  UnprocessedAttachment,
-  [number, number, string, number]
->(`
+/**
+ * Fetch unprocessed attachments — excludes M365 group mailboxes (unsupported Graph path).
+ */
+const getUnprocessedAttachments = db.query<UnprocessedAttachment, [number]>(`
   SELECT
     a.id as attachment_id_pk,
     a.attachment_id as graph_attachment_id,
@@ -116,6 +114,7 @@ const getUnprocessedAttachments = db.query<
     a.size,
     e.id as email_id,
     e.message_id,
+    e.internet_message_id,
     e.project_id,
     e.subject,
     e.from_email,
@@ -123,26 +122,19 @@ const getUnprocessedAttachments = db.query<
   FROM attachments a
   JOIN emails e ON e.id = a.email_id
   JOIN mailboxes m ON m.id = e.mailbox_id
-  LEFT JOIN documents d ON d.attachment_id = a.id
-  WHERE (a.extraction_status IS NULL OR a.extraction_status = 'pending')
-    AND d.id IS NULL
-    AND (
-      (
-        e.project_id IS NOT NULL
-        AND (
-          $2 = 0
-          OR (
-            $3 <> ''
-            AND lower(m.email) = ANY(string_to_array(lower($3), ','))
-          )
-        )
-      )
+  LEFT JOIN documents d ON d.attachment_id = a.id AND d.extraction_status <> 'failed'
+  WHERE (
+      a.extraction_status IS NULL
+      OR a.extraction_status = 'pending'
       OR (
-        $4 = 1
-        AND $3 <> ''
-        AND lower(m.email) = ANY(string_to_array(lower($3), ','))
+        a.extraction_status = 'failed'
+        AND a.extraction_attempts < ${MAX_RETRY_ATTEMPTS}
+        AND (a.last_attempted_at IS NULL OR a.last_attempted_at < now() - interval '${RETRY_COOLDOWN_HOURS} hours')
       )
     )
+    AND d.id IS NULL
+    AND (e.classification IS NULL OR e.classification NOT IN ('SPAM', 'HR', 'IT'))
+    AND m.email NOT IN (${[...GROUP_MAILBOXES].map((e) => `'${e}'`).join(", ")})
   ORDER BY e.received_at DESC
   LIMIT $1
 `);
@@ -155,12 +147,71 @@ const updateDocumentBackfillLinks = db.prepare(`
   WHERE id = $1
 `);
 
-// ============================================================================
-// Single Attachment Processing
-// ============================================================================
+const deleteFailedDocumentsForAttachment = db.prepare(`
+  DELETE FROM documents WHERE attachment_id = $1 AND extraction_status = 'failed'
+`);
+
+/**
+ * Layer 1: Internet Message ID dedup.
+ * Check if the same file (by name + size) on the same original email
+ * (by internet_message_id) has already been processed in another mailbox.
+ */
+const checkInternetMessageIdDupe = db.query<
+  { id: number },
+  [string, string, number | null, number]
+>(`
+  SELECT a2.id
+  FROM attachments a2
+  JOIN emails e2 ON e2.id = a2.email_id
+  WHERE e2.internet_message_id = $1
+    AND a2.name = $2
+    AND ($3 IS NULL OR a2.size = $3)
+    AND a2.extraction_status IN ('success', 'deduped')
+    AND a2.id <> $4
+  LIMIT 1
+`);
+
+/**
+ * Layer 2: Content hash dedup.
+ * Check if any previously processed attachment has the same SHA-256 hash.
+ */
+const checkContentHashDupe = db.query<{ id: number }, [string, number]>(`
+  SELECT a2.id
+  FROM attachments a2
+  WHERE a2.content_hash = $1
+    AND a2.extraction_status IN ('success', 'deduped')
+    AND a2.id <> $2
+  LIMIT 1
+`);
+
+/**
+ * Store content hash after download.
+ */
+const setContentHash = db.prepare(`
+  UPDATE attachments SET content_hash = $2 WHERE id = $1
+`);
+
+async function markDeduped(attachmentPk: number): Promise<void> {
+  await db.run(
+    `UPDATE attachments
+     SET extraction_status = 'deduped',
+         extracted_at = now(),
+         extraction_attempts = extraction_attempts + 1,
+         last_attempted_at = now()
+     WHERE id = ?`,
+    [attachmentPk]
+  );
+}
+
+function computeHash(buffer: Buffer): string {
+  const hasher = new Bun.CryptoHasher("sha256");
+  hasher.update(buffer);
+  return hasher.digest("hex");
+}
 
 type AttachmentOutcome =
   | { type: "skipped" }
+  | { type: "deduped" }
   | { type: "succeeded" }
   | { type: "failed"; error: string };
 
@@ -204,11 +255,27 @@ async function processOneAttachment(
   att: UnprocessedAttachment,
   client: GraphEmailClient
 ): Promise<AttachmentOutcome> {
+  // ---- Skip rules (inline images, calendars, etc.) ----
   if (shouldSkip(att)) {
     await updateAttachmentExtraction(att.attachment_id_pk, "skipped");
     return { type: "skipped" };
   }
 
+  // ---- Layer 1: Internet Message ID dedup (before download) ----
+  if (att.internet_message_id) {
+    const dupe = await checkInternetMessageIdDupe.get(
+      att.internet_message_id,
+      att.name,
+      att.size ?? null,
+      att.attachment_id_pk
+    );
+    if (dupe) {
+      await markDeduped(att.attachment_id_pk);
+      return { type: "deduped" };
+    }
+  }
+
+  // ---- Download from Graph API ----
   const ext = att.name.includes(".")
     ? att.name.split(".").pop()?.toLowerCase()
     : "bin";
@@ -217,16 +284,41 @@ async function processOneAttachment(
     `${att.email_id}-${att.attachment_id_pk}.${ext}`
   );
 
+  // Clean up stale failed document records from previous attempts
+  await deleteFailedDocumentsForAttachment.run(att.attachment_id_pk);
+
   console.log(
     `${LOG}   Downloading: "${att.name}" (${att.content_type}, ${att.size ?? "?"} bytes) from ${att.mailbox_email}`
   );
 
-  const buffer = await client.downloadAttachment(
-    att.message_id,
-    att.graph_attachment_id,
-    att.mailbox_email
-  );
+  const buffer = await Promise.race([
+    client.downloadAttachment(
+      att.message_id,
+      att.graph_attachment_id,
+      att.mailbox_email
+    ),
+    new Promise<never>((_, reject) =>
+      setTimeout(
+        () => reject(new Error("Download timed out")),
+        DOWNLOAD_TIMEOUT_MS
+      )
+    ),
+  ]);
 
+  // ---- Layer 2: Content hash dedup (after download, before processing) ----
+  const hash = computeHash(buffer);
+  await setContentHash.run(att.attachment_id_pk, hash);
+
+  const hashDupe = await checkContentHashDupe.get(hash, att.attachment_id_pk);
+  if (hashDupe) {
+    console.log(
+      `${LOG}   Deduped (content hash): "${att.name}" matches attachment #${hashDupe.id}`
+    );
+    await markDeduped(att.attachment_id_pk);
+    return { type: "deduped" };
+  }
+
+  // ---- Process through Kreuzberg pipeline ----
   await Bun.write(localPath, buffer);
 
   try {
@@ -272,45 +364,6 @@ async function processOneAttachment(
   }
 }
 
-// ============================================================================
-// Main — Concurrent Processing
-// ============================================================================
-
-function resolveBackfillOptions(
-  options: ProcessUnprocessedAttachmentsOptions
-): {
-  batchSize: number;
-  mailboxAllowlist: string[];
-  includeNonProject: boolean;
-  restrictToAllowlist: boolean;
-} {
-  const mailboxAllowlist = [
-    ...new Set(
-      (options.mailboxAllowlist ?? [])
-        .map((value) => value.trim().toLowerCase())
-        .filter(Boolean)
-    ),
-  ];
-
-  if (
-    options.includeNonProjectForAllowlistedMailboxes &&
-    mailboxAllowlist.length === 0
-  ) {
-    console.warn(
-      `${LOG} includeNonProjectForAllowlistedMailboxes=true ignored (allowlist empty)`
-    );
-  }
-
-  return {
-    batchSize: Math.max(1, options.batchSize ?? 50),
-    mailboxAllowlist,
-    includeNonProject:
-      options.includeNonProjectForAllowlistedMailboxes === true &&
-      mailboxAllowlist.length > 0,
-    restrictToAllowlist: mailboxAllowlist.length > 0,
-  };
-}
-
 function tallyOutcome(
   outcome: PromiseSettledResult<AttachmentOutcome>,
   result: BackfillResult
@@ -323,6 +376,9 @@ function tallyOutcome(
   switch (o.type) {
     case "skipped":
       result.skipped++;
+      break;
+    case "deduped":
+      result.deduped++;
       break;
     case "succeeded":
       result.processed++;
@@ -345,11 +401,13 @@ export async function processUnprocessedAttachments(
   options: ProcessUnprocessedAttachmentsOptions = {}
 ): Promise<BackfillResult> {
   const startedAt = Date.now();
-  const opts = resolveBackfillOptions(options);
+  const batchSize = Math.max(1, options.batchSize ?? 100);
+  const concurrency = Math.max(1, options.concurrency ?? 10);
 
   const result: BackfillResult = {
     processed: 0,
     skipped: 0,
+    deduped: 0,
     succeeded: 0,
     failed: 0,
     elapsedMs: 0,
@@ -357,12 +415,7 @@ export async function processUnprocessedAttachments(
     errors: [],
   };
 
-  const attachments = await getUnprocessedAttachments.all(
-    opts.batchSize,
-    opts.restrictToAllowlist ? 1 : 0,
-    opts.mailboxAllowlist.join(","),
-    opts.includeNonProject ? 1 : 0
-  );
+  const attachments = await getUnprocessedAttachments.all(batchSize);
 
   if (attachments.length === 0) {
     result.elapsedMs = Date.now() - startedAt;
@@ -370,14 +423,14 @@ export async function processUnprocessedAttachments(
   }
 
   console.log(
-    `${LOG} Processing batch of ${attachments.length} attachments (concurrency: ${CONCURRENCY}, scope: ${opts.restrictToAllowlist ? `allowlisted project-linked (${opts.mailboxAllowlist.join(", ")})${opts.includeNonProject ? " + allowlisted non-project" : ""}` : "project-linked only"})`
+    `${LOG} Processing batch of ${attachments.length} attachments (concurrency: ${concurrency})`
   );
 
   await mkdir(BACKFILL_DIR, { recursive: true });
   const client = createGraphClient();
 
-  for (let i = 0; i < attachments.length; i += CONCURRENCY) {
-    const chunk = attachments.slice(i, i + CONCURRENCY);
+  for (let i = 0; i < attachments.length; i += concurrency) {
+    const chunk = attachments.slice(i, i + concurrency);
 
     const outcomes = await Promise.allSettled(
       chunk.map(async (att) => {
@@ -402,16 +455,14 @@ export async function processUnprocessedAttachments(
     }
   }
 
+  const total = result.processed + result.skipped + result.deduped;
   console.log(
-    `${LOG} Batch complete: ${result.processed} processed (${result.succeeded} ok, ${result.failed} failed), ${result.skipped} skipped`
+    `${LOG} Batch complete: ${result.succeeded} ok, ${result.failed} failed, ${result.deduped} deduped, ${result.skipped} skipped (${total} total)`
   );
 
   result.elapsedMs = Date.now() - startedAt;
-  const processedOrSkipped = result.processed + result.skipped;
   result.attachmentsPerMinute =
-    result.elapsedMs > 0
-      ? (processedOrSkipped / result.elapsedMs) * 60_000
-      : processedOrSkipped;
+    result.elapsedMs > 0 ? (total / result.elapsedMs) * 60_000 : total;
 
   return result;
 }

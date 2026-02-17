@@ -168,11 +168,6 @@ const getExtractedButUnlinked = db.query<DocToEnqueue>(
      AND d.raw_extraction IS NOT NULL
      AND jsonb_typeof(d.raw_extraction::jsonb) = 'object'
      AND jsonb_exists(d.raw_extraction::jsonb, 'contract_fields')
-     -- Skip lien_waivers and closeouts (never promote to Won)
-     AND coalesce(
-       d.raw_extraction::jsonb->'contract_fields'->>'document_type',
-       ''
-     ) NOT IN ('lien_waiver', 'closeout')
      -- Must have a project name to match against
      AND length(coalesce(
        d.raw_extraction::jsonb->'contract_fields'->>'project_name',
@@ -227,7 +222,8 @@ interface ProjectMatch {
   project_name: string;
 }
 
-/** Match extracted project name against projects that have estimates.
+/** Match extracted project name against all projects (not just those with estimates).
+ *  Project linking is valuable regardless — Won detection is handled separately in Pass 3.
  *  Bidirectional: project contains extracted OR extracted contains project. */
 const matchProjectByName = db.query<ProjectMatch>(
   `SELECT p.id AS project_id, p.name AS project_name
@@ -235,7 +231,6 @@ const matchProjectByName = db.query<ProjectMatch>(
    WHERE (p.name ILIKE '%' || $1 || '%' OR $1 ILIKE '%' || p.name || '%')
      AND length($1) >= 5
      AND length(p.name) >= 5
-     AND EXISTS (SELECT 1 FROM project_estimates pe WHERE pe.project_id = p.id)
    ORDER BY length(p.name) ASC, p.id DESC
    LIMIT 10`
 );
@@ -332,175 +327,120 @@ async function extractContractFields(
 }
 
 /**
- * Normalize a name for fuzzy matching:
- *  - Strip hyphens (AK-CHIN → AKCHIN matches AkChin)
- *  - Normalize & ↔ AND
- *  - Collapse whitespace
- */
-function normalizeName(name: string): string {
-  return name
-    .replace(/-/g, "")
-    .replace(/&/g, " AND ")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-/**
- * Extract meaningful tokens from an LLM-extracted project name.
- * Strips project numbers, parenthesized portions become separate tokens.
- * E.g. "25-1-025 Estrella (Elliot Crossing)" → ["Estrella", "Elliot Crossing"]
- */
-function extractNameTokens(name: string): string[] {
-  const tokens: string[] = [];
-  const parenRe = /\(([^)]+)\)/g;
-  let m: RegExpExecArray | null;
-  while ((m = parenRe.exec(name)) !== null) {
-    const inner = m[1].trim();
-    if (inner.length >= 5) {
-      tokens.push(inner);
-    }
-  }
-  const cleaned = name
-    .replace(/\([^)]*\)/g, "")
-    .replace(/\b\d[\d-]+\b/g, "")
-    .trim();
-  if (cleaned.length >= 5) {
-    tokens.push(cleaned);
-  }
-  return tokens;
-}
-
-/**
  * Attempt to match extracted fields to a project.
- * Uses two strategies:
- *   1. Project-first: ILIKE match project name, disambiguate with account
- *   2. Account-first: Match account, scan their projects for name overlap
+ *
+ * Simple deterministic pass: bidirectional ILIKE on project name.
+ * If single match → return immediately.
+ * If multi-match → disambiguate via contractor account.
+ * If no match → return null (caller falls through to LLM matching).
  */
 async function matchFieldsToProject(
   fields: ContractFields
 ): Promise<number | null> {
-  if (
-    fields.document_type &&
-    /closeout|lien_waiver/.test(fields.document_type)
-  ) {
-    return null;
-  }
-
   if (!fields.project_name || fields.project_name.length < 5) {
     return null;
   }
 
-  // Generate name variants: original, normalized, and token-extracted
-  const rawVariants = [
-    fields.project_name,
-    ...extractNameTokens(fields.project_name),
-  ];
-  const nameVariants: string[] = [];
-  for (const v of rawVariants) {
-    nameVariants.push(v);
-    const normalized = normalizeName(v);
-    if (normalized !== v) {
-      nameVariants.push(normalized);
-    }
-  }
-  const seen = new Set<string>();
+  const projectMatches = await matchProjectByName.all(fields.project_name);
 
-  for (const variant of nameVariants) {
-    if (variant.length < 5 || seen.has(variant.toUpperCase())) {
-      continue;
-    }
-    seen.add(variant.toUpperCase());
-
-    const projectMatches = await matchProjectByName.all(variant);
-
-    if (projectMatches.length === 1) {
-      return projectMatches[0].project_id;
-    }
-
-    if (
-      projectMatches.length > 1 &&
-      fields.contractor_name &&
-      fields.contractor_name.length >= 4
-    ) {
-      // Try both raw and normalized contractor name for disambiguation
-      const disambigVariants = [fields.contractor_name];
-      const disambigNorm = normalizeName(fields.contractor_name);
-      if (disambigNorm !== fields.contractor_name) {
-        disambigVariants.push(disambigNorm);
-      }
-
-      const disambigAccounts = new Map<
-        number,
-        { account_id: number; account_name: string }
-      >();
-      for (const dv of disambigVariants) {
-        const dMatches = await matchAccountByName.all(dv);
-        for (const dm of dMatches) {
-          disambigAccounts.set(dm.account_id, dm);
-        }
-      }
-
-      for (const project of projectMatches) {
-        for (const account of disambigAccounts.values()) {
-          const check = await projectHasAccountEstimate.get(
-            project.project_id,
-            account.account_id
-          );
-          if (check?.match) {
-            return project.project_id;
-          }
-        }
-      }
-    }
+  if (projectMatches.length === 1) {
+    return projectMatches[0].project_id;
   }
 
-  if (fields.contractor_name && fields.contractor_name.length >= 4) {
-    // Try both raw and normalized contractor name for account lookup
-    const contractorVariants = [fields.contractor_name];
-    const normalizedContractor = normalizeName(fields.contractor_name);
-    if (normalizedContractor !== fields.contractor_name) {
-      contractorVariants.push(normalizedContractor);
-    }
-
-    const accountSet = new Map<
-      number,
-      { account_id: number; account_name: string }
-    >();
-    for (const variant of contractorVariants) {
-      const matches = await matchAccountByName.all(variant);
-      for (const m of matches) {
-        accountSet.set(m.account_id, m);
-      }
-    }
-
-    for (const account of accountSet.values()) {
-      const accountProjects = await getProjectsForAccount.all(
-        account.account_id
-      );
-      if (accountProjects.length === 0) {
-        continue;
-      }
-
-      const nameNorm = normalizeName(fields.project_name).toUpperCase();
-      const tokenVariants = nameVariants.map((v) =>
-        normalizeName(v).toUpperCase()
-      );
-
-      for (const project of accountProjects) {
-        const projNorm = normalizeName(project.project_name).toUpperCase();
-        for (const token of tokenVariants) {
-          if (
-            token.length >= 5 &&
-            (projNorm.includes(token) || nameNorm.includes(projNorm))
-          ) {
-            return project.project_id;
-          }
+  // Multi-match: try to disambiguate via contractor account
+  if (
+    projectMatches.length > 1 &&
+    fields.contractor_name &&
+    fields.contractor_name.length >= 4
+  ) {
+    const accountMatches = await matchAccountByName.all(fields.contractor_name);
+    for (const project of projectMatches) {
+      for (const account of accountMatches) {
+        const check = await projectHasAccountEstimate.get(
+          project.project_id,
+          account.account_id
+        );
+        if (check?.match) {
+          return project.project_id;
         }
       }
     }
   }
 
   return null;
+}
+
+/**
+ * LLM-based project matching fallback.
+ *
+ * When deterministic ILIKE matching fails, gather candidate projects
+ * from the contractor's account and ask Gemini to pick the best match.
+ * Handles abbreviations, naming variations, and fuzzy mismatches that
+ * no amount of regex can solve.
+ */
+async function matchViaLlm(fields: ContractFields): Promise<number | null> {
+  if (!fields.project_name || fields.project_name.length < 3) {
+    return null;
+  }
+
+  // Gather candidate projects from the contractor's account(s)
+  const candidates: ProjectMatch[] = [];
+  if (fields.contractor_name && fields.contractor_name.length >= 4) {
+    const accountMatches = await matchAccountByName.all(fields.contractor_name);
+    for (const account of accountMatches) {
+      const acctProjects = await getProjectsForAccount.all(account.account_id);
+      for (const p of acctProjects) {
+        candidates.push(p);
+      }
+    }
+  }
+
+  if (candidates.length === 0) {
+    return null;
+  }
+
+  // Deduplicate by project_id
+  const uniqueMap = new Map<number, string>();
+  for (const c of candidates) {
+    uniqueMap.set(c.project_id, c.project_name);
+  }
+  const candidateList = [...uniqueMap.entries()]
+    .map(([id, name]) => `  ${id}: ${name}`)
+    .join("\n");
+
+  const { runGeminiJsonPrompt } = await import("../llm");
+  const prompt = `You are matching a contract document to a project in our database.
+
+The document references:
+  Project: "${fields.project_name}"
+  Contractor: "${fields.contractor_name ?? "unknown"}"
+  Address: "${fields.project_address ?? "unknown"}"
+
+Here are the contractor's known projects (id: name):
+${candidateList}
+
+Which project ID is this document for? Consider abbreviations, naming variations, and partial matches.
+Return JSON: {"project_id": <number or null>, "confidence": "high"|"medium"|"low", "reason": "<brief explanation>"}
+Return null for project_id if none of the projects match.`;
+
+  const result = await runGeminiJsonPrompt(prompt, { model: GEMINI_MODEL });
+  if (
+    !result ||
+    typeof result.project_id !== "number" ||
+    result.confidence === "low"
+  ) {
+    return null;
+  }
+
+  // Verify the returned ID is actually in our candidate set
+  if (!uniqueMap.has(result.project_id)) {
+    return null;
+  }
+
+  console.log(
+    `${LOG} LLM match: "${fields.project_name}" → #${result.project_id} "${uniqueMap.get(result.project_id)}" (${result.confidence}: ${result.reason})`
+  );
+  return result.project_id;
 }
 
 /**
@@ -556,12 +496,13 @@ export async function processContractDocExtractJob(payload: {
     return;
   }
 
-  // Match to project
-  const projectId = await matchFieldsToProject(fields);
+  // Match to project: deterministic first, then LLM fallback
+  const projectId =
+    (await matchFieldsToProject(fields)) ?? (await matchViaLlm(fields));
   if (projectId) {
     await linkEmailToProject.run(projectId, email_id);
     console.log(
-      `${LOG} Linked email #${email_id} → project #${projectId} via LLM (project: "${fields.project_name}", contractor: "${fields.contractor_name}")`
+      `${LOG} Linked email #${email_id} → project #${projectId} (project: "${fields.project_name}", contractor: "${fields.contractor_name}")`
     );
   }
 }

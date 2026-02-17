@@ -11,8 +11,6 @@
     "playwright": "^1.50.0"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.3.10",
-    "@types/bun": "latest",
-    "ultracite": "6.4.2"
+    "@types/bun": "latest"
   }
 }

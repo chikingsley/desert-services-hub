@@ -295,12 +295,13 @@ export async function startWorker(): Promise<void> {
         const activity =
           stats.contractsClassified +
           stats.contractsLinked +
+          stats.contractDocExtractsEnqueued +
           stats.documentsBackfilled +
           stats.estimatesMarkedWon +
           stats.estimatesMarkedLost;
         if (activity > 0) {
           console.log(
-            `[worker] Contract won bridge: classified=${stats.contractsClassified}, linked=${stats.contractsLinked}, docs=${stats.documentsBackfilled}, won=${stats.estimatesMarkedWon}, lost=${stats.estimatesMarkedLost}, monday=${stats.mondayUpdates}${stats.errors.length > 0 ? ` (${stats.errors.length} errors)` : ""}`
+            `[worker] Contract won bridge: classified=${stats.contractsClassified}, linked=${stats.contractsLinked}, extract_jobs=${stats.contractDocExtractsEnqueued}, docs=${stats.documentsBackfilled}, won=${stats.estimatesMarkedWon}, lost=${stats.estimatesMarkedLost}, monday=${stats.mondayUpdates}${stats.errors.length > 0 ? ` (${stats.errors.length} errors)` : ""}`
           );
         }
       }

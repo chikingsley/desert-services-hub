@@ -77,6 +77,18 @@ export async function processNextJob(): Promise<void> {
         await processContractEmailReceivedJob(job);
         break;
 
+      case "contract_doc_extract": {
+        const { processContractDocExtractJob } = await import(
+          "../lib/contracts/contract-won-bridge"
+        );
+        const extractPayload = JSON.parse(job.payload) as {
+          email_id: number;
+          doc_id: number;
+        };
+        await processContractDocExtractJob(extractPayload);
+        break;
+      }
+
       default:
         console.log(`[worker] Unknown job type: ${job.job_type}`);
     }

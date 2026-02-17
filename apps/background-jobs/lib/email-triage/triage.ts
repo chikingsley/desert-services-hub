@@ -32,7 +32,7 @@ function parseTriageMode(value: string | undefined): TriageMode {
 
 const EMAIL_TRIAGE_MODE = parseTriageMode(process.env.EMAIL_TRIAGE_MODE);
 const EMAIL_TRIAGE_MODEL = (
-  process.env.EMAIL_TRIAGE_MODEL ?? "openai/gpt-5.3-codex-spark"
+  process.env.EMAIL_TRIAGE_MODEL ?? "zai-coding-plan/glm-4.7-flash"
 ).trim();
 const EMAIL_TRIAGE_TIMEOUT_MS = Math.max(
   1000,

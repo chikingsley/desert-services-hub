@@ -2,17 +2,6 @@
  * Worker configuration -- all env parsing and constants.
  */
 
-function parseCsvAllowlist(value: string | undefined): string[] {
-  return [
-    ...new Set(
-      (value ?? "")
-        .split(",")
-        .map((item) => item.trim().toLowerCase())
-        .filter(Boolean)
-    ),
-  ];
-}
-
 function parseBooleanFlag(
   value: string | undefined,
   fallback = false
@@ -50,7 +39,11 @@ export const MAX_CONCURRENT_JOBS = parsePositiveInt(
 export const FULL_SYNC_INTERVAL_MS = 10 * 60 * 1000; // 10 minutes
 export const FOLDER_WATCHER_INTERVAL_MS = 30 * 1000; // 30 seconds
 export const ESTIMATE_LINKER_INTERVAL_MS = 60 * 1000; // 60 seconds
-export const ATTACHMENT_BACKFILL_INTERVAL_MS = 2 * 60 * 1000; // 2 minutes
+export const ATTACHMENT_BACKFILL_INTERVAL_MS = parsePositiveInt(
+  process.env.ATTACHMENT_BACKFILL_INTERVAL_MS,
+  30_000, // 30 seconds default (was 2min — faster for backlog)
+  10_000
+);
 export const CONTRACT_PACKET_AUTOLINK_INTERVAL_MS = 60 * 1000; // 60 seconds
 export const RENEWAL_INTERVAL_MS = 60 * 60 * 1000; // 1 hour
 export const GROUP_SYNC_INTERVAL_MS = 15 * 60 * 1000; // 15 minutes
@@ -85,17 +78,33 @@ export const PROJECT_SEED_STALE_DAYS = parsePositiveInt(
 
 // -- Attachment backfill --
 
-export const ATTACHMENT_BACKFILL_MAILBOX_ALLOWLIST = parseCsvAllowlist(
-  process.env.ATTACHMENT_BACKFILL_MAILBOX_ALLOWLIST
-);
-export const ATTACHMENT_BACKFILL_INCLUDE_NON_PROJECT_ALLOWLIST =
-  parseBooleanFlag(
-    process.env.ATTACHMENT_BACKFILL_INCLUDE_NON_PROJECT_ALLOWLIST,
-    false
-  );
 export const ATTACHMENT_BACKFILL_BATCH_SIZE = parsePositiveInt(
   process.env.ATTACHMENT_BACKFILL_BATCH_SIZE,
-  50
+  200
+);
+export const ATTACHMENT_BACKFILL_CONCURRENCY = parsePositiveInt(
+  process.env.ATTACHMENT_BACKFILL_CONCURRENCY,
+  15
+);
+
+// -- Email triage backfill --
+
+export const EMAIL_TRIAGE_BACKFILL_ENABLED = parseBooleanFlag(
+  process.env.EMAIL_TRIAGE_BACKFILL_ENABLED,
+  true
+);
+export const EMAIL_TRIAGE_BACKFILL_INTERVAL_MS = parsePositiveInt(
+  process.env.EMAIL_TRIAGE_BACKFILL_INTERVAL_MS,
+  30_000, // 30 seconds between batches
+  5000
+);
+export const EMAIL_TRIAGE_BACKFILL_BATCH_SIZE = parsePositiveInt(
+  process.env.EMAIL_TRIAGE_BACKFILL_BATCH_SIZE,
+  20
+);
+export const EMAIL_TRIAGE_BACKFILL_CONCURRENCY = parsePositiveInt(
+  process.env.EMAIL_TRIAGE_BACKFILL_CONCURRENCY,
+  3
 );
 
 // -- Estimate triage --
@@ -120,7 +129,7 @@ export const ESTIMATE_TRIAGE_PROVIDER = (
 export const EMAIL_RESOLVER_SPARK_MODEL = (
   process.env.EMAIL_RESOLVER_SPARK_MODEL ??
   process.env.EMAIL_TRIAGE_MODEL ??
-  "openai/gpt-5.3-codex-spark"
+  "zai-coding-plan/glm-4.7-flash"
 ).trim();
 
 // -- Permit sync --

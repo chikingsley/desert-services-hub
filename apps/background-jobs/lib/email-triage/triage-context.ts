@@ -22,11 +22,13 @@ import type {
 
 // ── Limits ──────────────────────────────────────────────────
 
-const MAX_BODY_CHARS = 4000;
-const MAX_THREAD_EMAILS = 10;
-const MAX_THREAD_PREVIEW_CHARS = 500;
-const MAX_DOCUMENTS = 5;
-const MAX_ATTACHMENTS = 5;
+const MAX_BODY_CHARS = 8000;
+const MAX_THREAD_EMAILS = 5;
+const MAX_THREAD_PREVIEW_CHARS = 1000;
+const MAX_DOCUMENTS = 3;
+const MAX_DOCUMENT_SUMMARY_CHARS = 1000;
+const MAX_DOCUMENT_FIELD_CHARS = 500;
+const MAX_ATTACHMENTS = 3;
 const MAX_ATTACHMENT_TEXT_CHARS = 2000;
 const MAX_PROJECT_CANDIDATES = 5;
 const MAX_ESTIMATE_CANDIDATES = 5;
@@ -181,7 +183,7 @@ async function fetchDocuments(
 
   return rows.map((row) => ({
     documentType: row.document_type,
-    summary: row.summary,
+    summary: truncate(row.summary, MAX_DOCUMENT_SUMMARY_CHARS),
     fileName: row.file_name,
     keyFields: extractKeyFields(row.raw_extraction),
   }));
@@ -201,7 +203,9 @@ function extractKeyFields(
     // Include top-level string/number fields only (skip nested objects to save tokens)
     const result: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(parsed)) {
-      if (typeof value === "string" || typeof value === "number") {
+      if (typeof value === "string") {
+        result[key] = truncate(value, MAX_DOCUMENT_FIELD_CHARS);
+      } else if (typeof value === "number") {
         result[key] = value;
       }
     }
@@ -238,7 +242,7 @@ async function fetchAttachments(
     name: row.name,
     contentType: row.content_type,
     extractedText:
-      truncate(row.extracted_text ?? "", MAX_ATTACHMENT_TEXT_CHARS) ?? "",
+      truncate(row.extracted_text, MAX_ATTACHMENT_TEXT_CHARS) ?? "",
   }));
 }
 

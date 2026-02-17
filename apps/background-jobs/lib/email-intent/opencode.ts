@@ -10,12 +10,8 @@ export interface OpencodeOptions {
   timeoutMs: number;
 }
 
-const MARKDOWN_JSON_FENCE_START_RE = /^```(?:json)?/i;
-const MARKDOWN_JSON_FENCE_END_RE = /```$/;
-const HEADER_LINE_RE = /^>\s+/;
+const MARKDOWN_JSON_FENCE_RE = /```(?:json)?\s*([\s\S]*?)```/;
 const LINES_RE = /\r?\n/;
-const ANSI_CSI_PREFIX_RE = /^\[[0-9;]*[A-Za-z]/;
-const ESC = String.fromCodePoint(27);
 
 const OPENCODE_BIN_ENV = process.env.OPENCODE_BIN?.trim();
 
@@ -24,30 +20,17 @@ function buildAttempts(model: string): OpencodeAttempt[] {
 
   if (OPENCODE_BIN_ENV) {
     attempts.push({
-      args: ["run", "--print-logs", "-m", model],
+      args: ["run", "--format", "json", "-m", model],
       command: OPENCODE_BIN_ENV,
     });
   }
 
   attempts.push({
-    args: ["run", "--print-logs", "-m", model],
+    args: ["run", "--format", "json", "-m", model],
     command: "opencode",
   });
 
   return attempts;
-}
-
-function stripAnsi(text: string): string {
-  const parts = text.split(ESC);
-  if (parts.length === 1) {
-    return text;
-  }
-
-  let output = parts[0] ?? "";
-  for (let i = 1; i < parts.length; i++) {
-    output += (parts[i] ?? "").replace(ANSI_CSI_PREFIX_RE, "");
-  }
-  return output;
 }
 
 function parseJsonObject(text: string): Record<string, unknown> | null {
@@ -55,11 +38,9 @@ function parseJsonObject(text: string): Record<string, unknown> | null {
     return null;
   }
 
-  const cleaned = text
-    .trim()
-    .replace(MARKDOWN_JSON_FENCE_START_RE, "")
-    .replace(MARKDOWN_JSON_FENCE_END_RE, "")
-    .trim();
+  // Strip markdown fences if present
+  const fenceMatch = MARKDOWN_JSON_FENCE_RE.exec(text);
+  const cleaned = (fenceMatch ? fenceMatch[1] : text).trim();
 
   try {
     const parsed = JSON.parse(cleaned);
@@ -67,47 +48,68 @@ function parseJsonObject(text: string): Record<string, unknown> | null {
       return parsed as Record<string, unknown>;
     }
   } catch {
-    return null;
+    // Not valid JSON
   }
 
   return null;
 }
 
-function parseOpencodeOutput(output: string): Record<string, unknown> | null {
-  const clean = stripAnsi(output).trim();
-  if (!clean) {
-    return null;
-  }
+/**
+ * Extract text content from opencode JSON event stream.
+ *
+ * With --format json, stdout is newline-delimited JSON events like:
+ *   {"type":"text","part":{"text":"..."}}
+ *   {"type":"step_start",...}
+ *   {"type":"step_finish",...}
+ *
+ * We collect all "text" type events and concatenate their text content.
+ */
+function extractTextFromJsonEvents(output: string): string {
+  const textParts: string[] = [];
 
-  const lines = clean
-    .split(LINES_RE)
-    .map((line) => line.trim())
-    .filter(Boolean);
-
-  for (let i = lines.length - 1; i >= 0; i--) {
-    const line = lines[i];
-    if (!line || HEADER_LINE_RE.test(line)) {
+  for (const line of output.split(LINES_RE)) {
+    const trimmed = line.trim();
+    if (!trimmed) {
       continue;
     }
-    const parsed = parseJsonObject(line);
+
+    try {
+      const event = JSON.parse(trimmed);
+      if (event?.type === "text" && event?.part?.text) {
+        textParts.push(event.part.text);
+      }
+    } catch {
+      // Not a JSON event line, skip
+    }
+  }
+
+  return textParts.join("");
+}
+
+function parseOpencodeOutput(output: string): Record<string, unknown> | null {
+  // First try extracting from JSON event stream (--format json)
+  const extractedText = extractTextFromJsonEvents(output);
+  if (extractedText) {
+    const parsed = parseJsonObject(extractedText);
     if (parsed) {
       return parsed;
     }
   }
 
-  const body = lines.filter((line) => !HEADER_LINE_RE.test(line)).join("\n");
-  return parseJsonObject(body);
+  // Fallback: try parsing the raw output directly (handles non-event formats)
+  return parseJsonObject(output.trim());
 }
 
-async function runOpencodePromptOnce(
+function runOpencodePromptOnce(
   prompt: string,
   attempt: OpencodeAttempt,
   timeoutMs: number
 ): Promise<string> {
-  return await new Promise<string>((resolve, reject) => {
+  return new Promise<string>((resolve, reject) => {
     const sanitizedPrompt = prompt.split("\u0000").join("");
-    const proc = spawn(attempt.command, [...attempt.args, sanitizedPrompt], {
-      stdio: ["ignore", "pipe", "pipe"],
+    // Pipe prompt via stdin to avoid E2BIG on large contexts
+    const proc = spawn(attempt.command, attempt.args, {
+      stdio: ["pipe", "pipe", "pipe"],
     });
 
     let stdout = "";
@@ -144,15 +146,17 @@ async function runOpencodePromptOnce(
     proc.on("close", (code) => {
       finish(() => {
         if (code === 0) {
-          resolve([stdout, stderr].filter(Boolean).join("\n"));
+          resolve(stdout);
           return;
         }
-        const errText = stripAnsi(stderr).trim().slice(0, 360);
+        const errText = stderr.trim().slice(0, 360);
         reject(new Error(`opencode exit ${code ?? "unknown"}: ${errText}`));
       });
     });
 
-    // no stdin write: prompt is passed as a positional message argument
+    // Write prompt to stdin — avoids OS ARG_MAX limit
+    proc.stdin.write(sanitizedPrompt);
+    proc.stdin.end();
   });
 }
 
@@ -175,7 +179,7 @@ export async function runOpencodeJsonPrompt(
         return parsed;
       }
 
-      const lower = stripAnsi(output).toLowerCase();
+      const lower = output.toLowerCase();
       if (lower.includes("usage limit has been reached")) {
         throw new Error("opencode usage limit reached");
       }

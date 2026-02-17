@@ -27,6 +27,16 @@ interface DispatchAction {
   buildPayload: (meta: TriageEmailMeta) => Record<string, unknown>;
 }
 
+const buildContractPayload = (meta: TriageEmailMeta) => ({
+  emailId: meta.emailId,
+  messageId: meta.messageId,
+  mailboxEmail: meta.mailboxEmail,
+  subject: meta.subject ?? "",
+  fromEmail: meta.fromEmail ?? "",
+  bodyText: meta.bodyText ?? "",
+  hasAttachments: meta.hasAttachments,
+});
+
 const ACTION_MAP: Record<string, DispatchAction> = {
   "PAYMENT:payment_confirmation": {
     jobType: "dust_permit_payment",
@@ -49,44 +59,17 @@ const ACTION_MAP: Record<string, DispatchAction> = {
   },
   "CONTRACT:new_contract": {
     jobType: "contract_email_received",
-    buildPayload: (meta) => ({
-      emailId: meta.emailId,
-      messageId: meta.messageId,
-      mailboxEmail: meta.mailboxEmail,
-      subject: meta.subject ?? "",
-      fromEmail: meta.fromEmail ?? "",
-      bodyText: meta.bodyText ?? "",
-      hasAttachments: meta.hasAttachments,
-    }),
+    buildPayload: buildContractPayload,
   },
   "CONTRACT:contract_revision": {
     jobType: "contract_email_received",
-    buildPayload: (meta) => ({
-      emailId: meta.emailId,
-      messageId: meta.messageId,
-      mailboxEmail: meta.mailboxEmail,
-      subject: meta.subject ?? "",
-      fromEmail: meta.fromEmail ?? "",
-      bodyText: meta.bodyText ?? "",
-      hasAttachments: meta.hasAttachments,
-    }),
+    buildPayload: buildContractPayload,
   },
   "CHANGE_ORDER:contract_revision": {
     jobType: "contract_email_received",
-    buildPayload: (meta) => ({
-      emailId: meta.emailId,
-      messageId: meta.messageId,
-      mailboxEmail: meta.mailboxEmail,
-      subject: meta.subject ?? "",
-      fromEmail: meta.fromEmail ?? "",
-      bodyText: meta.bodyText ?? "",
-      hasAttachments: meta.hasAttachments,
-    }),
+    buildPayload: buildContractPayload,
   },
 };
-
-// Also dispatch CONTRACT without subcategory if it has attachments
-const CONTRACT_FALLBACK_KEY = "CONTRACT:general";
 
 // ── Main dispatch ───────────────────────────────────────────
 
@@ -189,17 +172,9 @@ export async function dispatchTriageResult(
 
   // Special case: CONTRACT with any subcategory + attachments → intake
   if (!action && result.category === "CONTRACT" && meta.hasAttachments) {
-    action = ACTION_MAP[CONTRACT_FALLBACK_KEY] ?? {
+    action = {
       jobType: "contract_email_received",
-      buildPayload: (m) => ({
-        emailId: m.emailId,
-        messageId: m.messageId,
-        mailboxEmail: m.mailboxEmail,
-        subject: m.subject ?? "",
-        fromEmail: m.fromEmail ?? "",
-        bodyText: m.bodyText ?? "",
-        hasAttachments: m.hasAttachments,
-      }),
+      buildPayload: buildContractPayload,
     };
   }
 

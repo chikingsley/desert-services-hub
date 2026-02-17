@@ -37,7 +37,7 @@ interface EmailRow {
 }
 
 const MODEL = (
-  process.env.EMAIL_TRIAGE_MODEL ?? "openai/gpt-5.3-codex-spark"
+  process.env.EMAIL_TRIAGE_MODEL ?? "zai-coding-plan/glm-4.7-flash"
 ).trim();
 const TIMEOUT_MS = Math.max(
   1000,

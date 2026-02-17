@@ -89,30 +89,24 @@ async function fetchBatch(
   batchSize: number,
   sinceDate: string | null
 ): Promise<BackfillRow[]> {
-  const query = sinceDate
-    ? `SELECT e.id, e.subject, e.from_email, m.email as mailbox_email,
-              e.message_id, e.has_attachments, e.body_preview
-       FROM emails e
-       JOIN mailboxes m ON e.mailbox_id = m.id
-       WHERE e.classification IS NULL
-         AND e.is_excluded = 0
-         AND e.id > $1
-         AND e.received_at >= $3
-       ORDER BY e.id ASC
-       LIMIT $2`
-    : `SELECT e.id, e.subject, e.from_email, m.email as mailbox_email,
-              e.message_id, e.has_attachments, e.body_preview
-       FROM emails e
-       JOIN mailboxes m ON e.mailbox_id = m.id
-       WHERE e.classification IS NULL
-         AND e.is_excluded = 0
-         AND e.id > $1
-       ORDER BY e.id ASC
-       LIMIT $2`;
+  const sinceClause = sinceDate ? "AND e.received_at >= $3" : "";
+  const query = `SELECT e.id, e.subject, e.from_email, m.email as mailbox_email,
+            e.message_id, e.has_attachments, e.body_preview
+     FROM emails e
+     JOIN mailboxes m ON e.mailbox_id = m.id
+     WHERE e.classification IS NULL
+       AND e.is_excluded = 0
+       AND e.id > $1
+       ${sinceClause}
+     ORDER BY e.id ASC
+     LIMIT $2`;
 
-  return sinceDate
-    ? await db.query<BackfillRow>(query).all(afterId, batchSize, sinceDate)
-    : await db.query<BackfillRow>(query).all(afterId, batchSize);
+  const params: unknown[] = [afterId, batchSize];
+  if (sinceDate) {
+    params.push(sinceDate);
+  }
+
+  return await db.query<BackfillRow>(query).all(...params);
 }
 
 async function processOne(
@@ -130,9 +124,9 @@ async function processOne(
     emailId: row.id,
     messageId: row.message_id ?? "",
     mailboxEmail: row.mailbox_email,
-    subject: row.subject ?? undefined,
-    fromEmail: row.from_email ?? undefined,
-    bodyText: row.body_preview ?? undefined,
+    subject: row.subject ?? null,
+    fromEmail: row.from_email ?? null,
+    bodyText: row.body_preview ?? null,
     hasAttachments: Boolean(row.has_attachments),
   });
 
@@ -152,7 +146,7 @@ async function runBatchConcurrent(
   let errors = 0;
   let idx = 0;
 
-  async function worker() {
+  const worker = async () => {
     while (idx < rows.length) {
       const row = rows[idx++];
       if (!row) {
@@ -169,7 +163,7 @@ async function runBatchConcurrent(
         errors++;
       }
     }
-  }
+  };
 
   const workers = Array.from(
     { length: Math.min(concurrency, rows.length) },
@@ -226,14 +220,10 @@ async function main() {
     }
 
     batchNum++;
-    const firstRow = rows.at(0);
-    const lastRow = rows.at(-1);
-    if (!(firstRow && lastRow)) {
-      break;
-    }
-    const lastId = lastRow.id;
+    const firstId = rows[0]?.id;
+    const lastId = rows.at(-1)?.id;
     console.log(
-      `  batch #${batchNum}: ${rows.length} emails (id ${firstRow.id}..${lastId})`
+      `  batch #${batchNum}: ${rows.length} emails (id ${firstId}..${lastId})`
     );
 
     const { processed, errors } = await runBatchConcurrent(
@@ -243,7 +233,7 @@ async function main() {
     );
     totalProcessed += processed;
     totalErrors += errors;
-    afterId = lastId;
+    afterId = lastId ?? afterId;
 
     console.log(
       `  batch #${batchNum} done: ${processed} ok, ${errors} errors | total: ${totalProcessed} processed, ${totalErrors} errors`

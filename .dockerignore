@@ -24,6 +24,7 @@
 !packages/estimates/
 !packages/permits/
 !packages/takeoff/
+!packages/contracts/
 
 # Permit worker (browser automation)
 !apps/dust-permits/

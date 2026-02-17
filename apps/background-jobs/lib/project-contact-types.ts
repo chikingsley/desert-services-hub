@@ -93,7 +93,7 @@ export interface CandidateAccumulator {
   evidenceAttachmentIds: Set<number>;
 }
 
-export interface SparkContactRecord {
+export interface LlmContactRecord {
   name: string | null;
   email: string | null;
   phone: string | null;

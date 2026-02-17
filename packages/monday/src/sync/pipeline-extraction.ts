@@ -68,17 +68,13 @@ const DUAL_EXTRACTION_ENABLED =
 const OPENCODE_RECONCILE_ENABLED =
   (process.env.ESTIMATE_OPENCODE_RECONCILE ?? "true") === "true";
 
-const OPENCODE_MODEL =
-  process.env.ESTIMATE_OPENCODE_MODEL ?? "zai-coding-plan/glm-4.7-flash";
+const GEMINI_SMART_MODEL = (
+  process.env.GEMINI_SMART_MODEL ?? "gemini-2.5-flash-lite"
+).trim();
 
-const OPENCODE_TIMEOUT_MS =
-  Number(process.env.ESTIMATE_OPENCODE_TIMEOUT_MS) || 120_000;
-
-const KREUZBERG_TIMEOUT_MS =
-  Number(process.env.ESTIMATE_KREUZBERG_TIMEOUT_MS) || 120_000;
-
-const INGEST_TIMEOUT_MS =
-  Number(process.env.ESTIMATE_INGEST_TIMEOUT_MS) || 180_000;
+const OPENCODE_TIMEOUT_MS = 120_000;
+const KREUZBERG_TIMEOUT_MS = 120_000;
+const INGEST_TIMEOUT_MS = 180_000;
 
 const UV_BIN =
   process.env.UV_BIN?.trim() ||
@@ -302,7 +298,7 @@ function itemsMatch(a: LineItem, b: LineItem): boolean {
 
 /**
  * Deterministic merge: kreuzberg items are ground truth, LLM fills gaps.
- * Used as fallback when OpenCode reconciliation is unavailable.
+ * Used as fallback when LLM reconciliation is unavailable.
  */
 function deterministicMerge(
   kreuz: FileExtractionResult | null,
@@ -392,7 +388,7 @@ function emptyResult(pdfPath: string): FileExtractionResult {
   };
 }
 
-// -- OpenCode Reconciliation --
+// -- LLM Reconciliation --
 
 const RECONCILE_PROMPT = `You are reconciling two extractions of a construction estimate PDF.
 
@@ -429,8 +425,8 @@ Return ONLY valid JSON with this exact structure:
 }`;
 
 /**
- * Send both extractions to OpenCode for intelligent reconciliation.
- * Returns merged result or null if OpenCode fails.
+ * Send both extractions to the LLM for intelligent reconciliation.
+ * Returns merged result or null on failure.
  */
 async function reconcileWithOpencode(
   kreuz: FileExtractionResult | null,
@@ -447,7 +443,7 @@ async function reconcileWithOpencode(
     ).replace("{ingest}", JSON.stringify(ingest, null, 2));
 
     const result = await runOpencodeJsonPrompt(prompt, {
-      model: OPENCODE_MODEL,
+      model: GEMINI_SMART_MODEL,
       timeoutMs: OPENCODE_TIMEOUT_MS,
     });
 
@@ -500,14 +496,14 @@ async function reconcileWithOpencode(
     };
   } catch (err) {
     console.log(
-      `[pipeline]   OpenCode reconciliation failed: ${err instanceof Error ? err.message : String(err)}`
+      `[pipeline]   LLM reconciliation failed: ${err instanceof Error ? err.message : String(err)}`
     );
     return null;
   }
 }
 
 /**
- * Orchestrate reconciliation: try OpenCode first, fall back to deterministic merge.
+ * Orchestrate reconciliation: try LLM first, fall back to deterministic merge.
  */
 async function reconcileExtractions(
   kreuz: FileExtractionResult | null,
@@ -522,16 +518,16 @@ async function reconcileExtractions(
       `[pipeline]   Both extractions returned items (kreuz=${kreuz?.line_items.length ?? 0}, llm=${ingest?.line_items.length ?? 0}) — reconciling`
     );
 
-    const openCodeResult = await reconcileWithOpencode(kreuz, ingest);
-    if (openCodeResult) {
+    const llmResult = await reconcileWithOpencode(kreuz, ingest);
+    if (llmResult) {
       console.log(
-        `[pipeline]   OpenCode reconciled: ${openCodeResult.line_items.length} items, $${openCodeResult.grand_total.toLocaleString()}`
+        `[pipeline]   LLM reconciled: ${llmResult.line_items.length} items, $${llmResult.grand_total.toLocaleString()}`
       );
-      return { result: openCodeResult, source: "reconciled" };
+      return { result: llmResult, source: "reconciled" };
     }
 
     console.log(
-      "[pipeline]   OpenCode unavailable — falling back to deterministic merge"
+      "[pipeline]   LLM reconciliation unavailable — falling back to deterministic merge"
     );
   }
 

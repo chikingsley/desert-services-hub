@@ -36,13 +36,8 @@ interface EmailRow {
   mailbox_email: string;
 }
 
-const MODEL = (
-  process.env.EMAIL_TRIAGE_MODEL ?? "zai-coding-plan/glm-4.7-flash"
-).trim();
-const TIMEOUT_MS = Math.max(
-  1000,
-  Number.parseInt(process.env.EMAIL_TRIAGE_TIMEOUT_MS ?? "15000", 10) || 15_000
-);
+const MODEL = (process.env.GEMINI_FAST_MODEL ?? "gemini-2.5-flash-lite").trim();
+const TIMEOUT_MS = 30_000;
 
 const ACTION_JOBS: Record<string, string> = {
   "PAYMENT:payment_confirmation": "dust_permit_payment",

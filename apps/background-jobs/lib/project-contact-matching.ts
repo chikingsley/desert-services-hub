@@ -3,7 +3,7 @@
  *
  * Contact lookup by email/name, match map building, deterministic candidate
  * collection from emails/documents/attachments, candidate sorting,
- * Spark record merging, and candidate classification into proposals.
+ * LLM record merging, and candidate classification into proposals.
  */
 import { db } from "@lib/db/hub";
 import type {
@@ -13,9 +13,9 @@ import type {
   ContactRow,
   DocumentRow,
   EmailRow,
+  LlmContactRecord,
   ProjectContactCandidate,
   ProjectContactProposal,
-  SparkContactRecord,
 } from "./project-contact-types";
 import {
   addCandidateEvidence,
@@ -180,12 +180,12 @@ export function sortCandidates(
 }
 
 // ============================================================================
-// Spark Record Merging
+// LLM Record Merging
 // ============================================================================
 
-export function mergeSparkRecords(
+export function mergeLlmRecords(
   candidateMap: Map<string, CandidateAccumulator>,
-  records: SparkContactRecord[]
+  records: LlmContactRecord[]
 ): void {
   for (const record of records) {
     addCandidateEvidence(candidateMap, {
@@ -195,7 +195,7 @@ export function mergeSparkRecords(
       name: record.name,
       note: record.reason,
       phone: record.phone,
-      source: "spark",
+      source: "llm",
       title: record.title,
     });
 
@@ -248,8 +248,8 @@ export function classifyCandidate(
     reason,
   });
 
-  if (ctx.requireLlm && !candidate.sources.includes("spark")) {
-    return skipProposal("no_spark_evidence");
+  if (ctx.requireLlm && !candidate.sources.includes("llm")) {
+    return skipProposal("no_llm_evidence");
   }
 
   const hasLinkTarget =

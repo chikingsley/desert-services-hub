@@ -126,10 +126,12 @@ export const ESTIMATE_TRIAGE_PROVIDER = (
   process.env.ESTIMATE_TRIAGE_PROVIDER ?? "mistral"
 ).trim();
 
-export const EMAIL_RESOLVER_SPARK_MODEL = (
-  process.env.EMAIL_RESOLVER_SPARK_MODEL ??
-  process.env.EMAIL_TRIAGE_MODEL ??
-  "zai-coding-plan/glm-4.7-flash"
+export const GEMINI_FAST_MODEL = (
+  process.env.GEMINI_FAST_MODEL ?? "gemini-2.5-flash-lite"
+).trim();
+
+export const GEMINI_SMART_MODEL = (
+  process.env.GEMINI_SMART_MODEL ?? "gemini-2.5-flash-lite"
 ).trim();
 
 // -- Permit sync --

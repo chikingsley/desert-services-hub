@@ -42,30 +42,24 @@ services:
       WEBHOOK_PORT: 4747
       DATABASE_URL: postgresql://postgres:postgres@host.docker.internal:54322/postgres
       MONDAY_FILES_DIR: /app/data/monday-files
-      OLLAMA_ENDPOINT: ${OLLAMA_ENDPOINT:-http://host.docker.internal:11434/v1}
-      OLLAMA_MODEL: ${OLLAMA_MODEL:-glm-ocr:latest}
-      OLLAMA_MANAGER_ENDPOINT: ${OLLAMA_MANAGER_ENDPOINT:-https://mm.peacockery.studio}
-      PDF_ANALYSIS_PROVIDER_ORDER: ${PDF_ANALYSIS_PROVIDER_ORDER:-local,mistral,gemini}
-      EMAIL_RESOLVER_ENABLED: ${EMAIL_RESOLVER_ENABLED:-1}
-      EMAIL_RESOLVER_SPARK_ENABLED: ${EMAIL_RESOLVER_SPARK_ENABLED:-1}
-      EMAIL_RESOLVER_SPARK_MODEL: ${EMAIL_RESOLVER_SPARK_MODEL:-zai-coding-plan/glm-4.7-flash}
-      EMAIL_RESOLVER_SPARK_TIMEOUT_MS: ${EMAIL_RESOLVER_SPARK_TIMEOUT_MS:-30000}
-      EMAIL_RESOLVER_SPARK_RETRY_TIMEOUT_MS: ${EMAIL_RESOLVER_SPARK_RETRY_TIMEOUT_MS:-45000}
-      EMAIL_TRIAGE_MODEL: ${EMAIL_TRIAGE_MODEL:-zai-coding-plan/glm-4.7-flash}
-      EMAIL_TRIAGE_TIMEOUT_MS: ${EMAIL_TRIAGE_TIMEOUT_MS:-30000}
-      EMAIL_TRIAGE_RETRY_TIMEOUT_MS: ${EMAIL_TRIAGE_RETRY_TIMEOUT_MS:-45000}
+      # LLM — two tiers: fast for classification, smart for routing/extraction
+      GEMINI_FAST_MODEL: ${GEMINI_FAST_MODEL:-gemini-2.5-flash-lite}
+      GEMINI_SMART_MODEL: ${GEMINI_SMART_MODEL:-gemini-2.5-flash-lite}
+      # PDF OCR via Gemini + Python provider
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-3-flash-preview}
+      PDF_ANALYSIS_PROVIDER_ORDER: ${PDF_ANALYSIS_PROVIDER_ORDER:-gemini,local}
+      # Email triage
       EMAIL_TRIAGE_MODE: ${EMAIL_TRIAGE_MODE:-active}
-      EMAIL_RESOLVER_SPARK_MAX_CANDIDATES: ${EMAIL_RESOLVER_SPARK_MAX_CANDIDATES:-5}
-      EMAIL_RESOLVER_SPARK_CONFIDENCE_MIN: ${EMAIL_RESOLVER_SPARK_CONFIDENCE_MIN:-0.80}
+      # Notifications
       NOTIFICATIONS_DELIVERY_MODE: ${NOTIFICATIONS_DELIVERY_MODE:-log}
       NOTIFICATIONS_MAILBOX: ${NOTIFICATIONS_MAILBOX:-chi@desertservices.net}
+      # Attachment backfill
       ATTACHMENT_BACKFILL_BATCH_SIZE: ${ATTACHMENT_BACKFILL_BATCH_SIZE:-200}
       ATTACHMENT_BACKFILL_CONCURRENCY: ${ATTACHMENT_BACKFILL_CONCURRENCY:-15}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:
       - webhooks-data:/app/data
-      - /home/simon/.local/share/opencode/auth.json:/root/.local/share/opencode/auth.json:ro
     healthcheck:
       test: ["CMD", "bun", "-e", "const r = await fetch('http://localhost:4747/api/health'); if (!r.ok) process.exit(1);"]
       interval: 10s

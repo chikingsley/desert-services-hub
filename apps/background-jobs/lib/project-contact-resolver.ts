@@ -6,7 +6,7 @@
  */
 import { createHash } from "node:crypto";
 import { db } from "@lib/db/hub";
-import { EMAIL_RESOLVER_SPARK_MODEL } from "../jobs/config";
+import { GEMINI_FAST_MODEL } from "../jobs/config";
 import {
   fetchAttachments,
   fetchCoverage,
@@ -15,7 +15,7 @@ import {
   fetchLinkedEstimateContactIds,
   fetchProject,
   fetchProjectEstimates,
-  runSparkExtraction,
+  runLlmExtraction,
 } from "./project-contact-data";
 import {
   buildContactMatchMaps,
@@ -23,7 +23,7 @@ import {
   collectDeterministicCandidates,
   fetchContactsByEmails,
   fetchContactsByNames,
-  mergeSparkRecords,
+  mergeLlmRecords,
   sortCandidates,
 } from "./project-contact-matching";
 import type {
@@ -101,7 +101,7 @@ export async function resolveProjectContacts(
 
   if (requireLlm && options.skipLlm) {
     throw new Error(
-      "project-contact-resolver requires Spark/LLM; skipLlm is disabled"
+      "project-contact-resolver requires LLM extraction; skipLlm is disabled"
     );
   }
 
@@ -130,7 +130,7 @@ export async function resolveProjectContacts(
     [...candidateMap.values()].map(finalizeCandidate)
   );
 
-  const spark = await runSparkExtraction(
+  const llm = await runLlmExtraction(
     project,
     deterministicCandidates,
     emails,
@@ -139,13 +139,13 @@ export async function resolveProjectContacts(
     options
   );
 
-  if (requireLlm && spark.error) {
+  if (requireLlm && llm.error) {
     throw new Error(
-      `project-contact-resolver Spark extraction failed: ${spark.error}`
+      `project-contact-resolver LLM extraction failed: ${llm.error}`
     );
   }
 
-  mergeSparkRecords(candidateMap, spark.records);
+  mergeLlmRecords(candidateMap, llm.records);
 
   const candidates = sortCandidates(
     [...candidateMap.values()].map(finalizeCandidate)
@@ -195,10 +195,10 @@ export async function resolveProjectContacts(
     },
     llm: {
       attempted: !options.skipLlm,
-      succeeded: !options.skipLlm && spark.error === null,
-      error: spark.error,
-      contactsReturned: spark.records.length,
-      model: options.model ?? EMAIL_RESOLVER_SPARK_MODEL,
+      succeeded: !options.skipLlm && llm.error === null,
+      error: llm.error,
+      contactsReturned: llm.records.length,
+      model: options.model ?? GEMINI_FAST_MODEL,
     },
     project: {
       id: project.id,

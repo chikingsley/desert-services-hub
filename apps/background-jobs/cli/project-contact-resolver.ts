@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 
-import { EMAIL_RESOLVER_SPARK_MODEL } from "@background-jobs/jobs/config";
+import { GEMINI_FAST_MODEL } from "@background-jobs/jobs/config";
 import {
   applyProjectContactResolution,
   resolveProjectContacts,
@@ -46,8 +46,8 @@ function usage(): void {
       "  --limit-emails <n>        Emails to scan per project (default: 250)",
       "  --limit-documents <n>     Documents to scan per project (default: 140)",
       "  --limit-attachments <n>   Attachments to scan per project (default: 180)",
-      `  --model <name>            Spark model for opencode (default: ${EMAIL_RESOLVER_SPARK_MODEL})`,
-      "  --timeout-ms <n>          opencode timeout in ms (default: 180000)",
+      `  --model <name>            LLM model for extraction (default: ${GEMINI_FAST_MODEL})`,
+      "  --timeout-ms <n>          LLM timeout in ms (default: 180000)",
       "  --create-threshold <0..1> Confidence threshold for create_contact (default: 0.72)",
       "  --apply                   Write links/contacts to DB",
       "  --output <path>           Write JSON report",
@@ -106,7 +106,7 @@ function parseArgs(argv: string[]): CliOptions {
   let limitEmails = 250;
   let limitDocuments = 140;
   let limitAttachments = 180;
-  let model = EMAIL_RESOLVER_SPARK_MODEL;
+  let model = GEMINI_FAST_MODEL;
   let timeoutMs = 180_000;
   let apply = false;
   let outputPath: string | null = null;
@@ -282,7 +282,7 @@ function printProjectSummary(
     const llmState = run.resolution.llm.succeeded
       ? `ok contacts=${run.resolution.llm.contactsReturned}`
       : `error=${run.resolution.llm.error ?? "unknown"}`;
-    console.log(`  spark ${llmState}`);
+    console.log(`  llm ${llmState}`);
   }
 
   if (run.applySummary) {

@@ -32,17 +32,9 @@ function parseTriageMode(value: string | undefined): TriageMode {
 
 const EMAIL_TRIAGE_MODE = parseTriageMode(process.env.EMAIL_TRIAGE_MODE);
 const EMAIL_TRIAGE_MODEL = (
-  process.env.EMAIL_TRIAGE_MODEL ?? "zai-coding-plan/glm-4.7-flash"
+  process.env.GEMINI_FAST_MODEL ?? "gemini-2.5-flash-lite"
 ).trim();
-const EMAIL_TRIAGE_TIMEOUT_MS = Math.max(
-  1000,
-  Number.parseInt(process.env.EMAIL_TRIAGE_TIMEOUT_MS ?? "15000", 10) || 15_000
-);
-const EMAIL_TRIAGE_RETRY_TIMEOUT_MS = Math.max(
-  EMAIL_TRIAGE_TIMEOUT_MS,
-  Number.parseInt(process.env.EMAIL_TRIAGE_RETRY_TIMEOUT_MS ?? "25000", 10) ||
-    25_000
-);
+const EMAIL_TRIAGE_TIMEOUT_MS = 30_000;
 
 // ── Internal domains (fast-path) ────────────────────────────
 
@@ -83,13 +75,11 @@ export async function triageEmail(
     };
   }
 
-  // Fast-path: check if we can skip the LLM
   const fastResult = await checkFastPath(emailId);
   if (fastResult) {
     return fastResult;
   }
 
-  // Gather full context
   const context = await gatherTriageContext(emailId, meta.mailboxEmail);
   if (!context) {
     return {
@@ -101,7 +91,6 @@ export async function triageEmail(
     };
   }
 
-  // Build prompt and call LLM
   const prompt = buildTriagePrompt(context);
   let raw: Record<string, unknown> | null = null;
 
@@ -117,7 +106,7 @@ export async function triageEmail(
       try {
         raw = await runOpencodeJsonPrompt(prompt, {
           model: EMAIL_TRIAGE_MODEL,
-          timeoutMs: EMAIL_TRIAGE_RETRY_TIMEOUT_MS,
+          timeoutMs: 60_000,
         });
       } catch (retryError) {
         const retryMsg =
@@ -145,7 +134,6 @@ export async function triageEmail(
     }
   }
 
-  // Parse and validate
   const validProjectIds = new Set(context.candidates.projects.map((p) => p.id));
   const validEstimateIds = new Set(
     context.candidates.estimates.map((e) => e.id)
@@ -166,7 +154,6 @@ export async function triageEmail(
     };
   }
 
-  // Dispatch (or log in shadow mode)
   if (EMAIL_TRIAGE_MODE === "shadow") {
     console.log(
       `[triage:shadow] email=${emailId} category=${result.category} sub=${result.subcategory} ` +

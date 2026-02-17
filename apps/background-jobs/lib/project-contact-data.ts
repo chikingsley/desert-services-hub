@@ -1,22 +1,22 @@
 /**
  * Project Contact Resolver — Data Layer
  *
- * Spark LLM parsing/prompt building, database fetch functions,
+ * LLM parsing/prompt building, database fetch functions,
  * and deterministic candidate collection from emails/documents/attachments.
  */
 import { db } from "@lib/db/hub";
-import { EMAIL_RESOLVER_SPARK_MODEL as SPARK_MODEL } from "../jobs/config";
+import { GEMINI_FAST_MODEL } from "../jobs/config";
 import { runOpencodeJsonPrompt } from "./email-intent/opencode";
 import type {
   AttachmentRow,
   CoverageRow,
   DocumentRow,
   EmailRow,
+  LlmContactRecord,
   ProjectContactCandidate,
   ProjectEstimateRow,
   ProjectRow,
   ResolveProjectContactsOptions,
-  SparkContactRecord,
 } from "./project-contact-types";
 import {
   clampConfidence,
@@ -29,7 +29,7 @@ import {
 const TIMED_OUT_RE = /timed out/i;
 
 // ============================================================================
-// Spark Parsing
+// LLM Contact Parsing
 // ============================================================================
 
 function parsePositiveIntIds(raw: unknown): number[] {
@@ -41,7 +41,7 @@ function parsePositiveIntIds(raw: unknown): number[] {
     .filter((value) => Number.isInteger(value) && value > 0);
 }
 
-function parseOneSparkRecord(entry: unknown): SparkContactRecord | null {
+function parseOneLlmRecord(entry: unknown): LlmContactRecord | null {
   if (!entry || typeof entry !== "object") {
     return null;
   }
@@ -83,14 +83,14 @@ function parseOneSparkRecord(entry: unknown): SparkContactRecord | null {
   };
 }
 
-export function parseSparkContactRecords(raw: unknown): SparkContactRecord[] {
+export function parseLlmContactRecords(raw: unknown): LlmContactRecord[] {
   if (!Array.isArray(raw)) {
     return [];
   }
 
-  const out: SparkContactRecord[] = [];
+  const out: LlmContactRecord[] = [];
   for (const entry of raw) {
-    const parsed = parseOneSparkRecord(entry);
+    const parsed = parseOneLlmRecord(entry);
     if (parsed) {
       out.push(parsed);
     }
@@ -100,10 +100,10 @@ export function parseSparkContactRecords(raw: unknown): SparkContactRecord[] {
 }
 
 // ============================================================================
-// Spark Prompt Builder
+// LLM Contact Prompt Builder
 // ============================================================================
 
-export function buildSparkPrompt(payload: {
+export function buildContactPrompt(payload: {
   project: ProjectRow;
   deterministicCandidates: ProjectContactCandidate[];
   emails: EmailRow[];
@@ -306,10 +306,10 @@ export async function fetchAttachments(
 }
 
 // ============================================================================
-// Spark Extraction Runner
+// LLM Contact Extraction Runner
 // ============================================================================
 
-export async function runSparkExtraction(
+export async function runLlmExtraction(
   project: ProjectRow,
   deterministicCandidates: ProjectContactCandidate[],
   emails: EmailRow[],
@@ -317,17 +317,17 @@ export async function runSparkExtraction(
   attachments: AttachmentRow[],
   options: ResolveProjectContactsOptions
 ): Promise<{
-  records: SparkContactRecord[];
+  records: LlmContactRecord[];
   error: string | null;
 }> {
   if (options.skipLlm) {
     return { error: null, records: [] };
   }
 
-  const model = (options.model ?? SPARK_MODEL).trim();
+  const model = (options.model ?? GEMINI_FAST_MODEL).trim();
   const baseTimeoutMs = options.timeoutMs ?? 180_000;
   const retryTimeoutMs = Math.max(baseTimeoutMs, 300_000);
-  const prompt = buildSparkPrompt({
+  const prompt = buildContactPrompt({
     attachments,
     deterministicCandidates,
     documents,
@@ -344,7 +344,7 @@ export async function runSparkExtraction(
     const contactsRaw = parsed?.contacts;
     return {
       error: null,
-      records: parseSparkContactRecords(contactsRaw),
+      records: parseLlmContactRecords(contactsRaw),
     };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
@@ -363,7 +363,7 @@ export async function runSparkExtraction(
       const contactsRaw = parsed?.contacts;
       return {
         error: null,
-        records: parseSparkContactRecords(contactsRaw),
+        records: parseLlmContactRecords(contactsRaw),
       };
     } catch (retryError) {
       const retryMessage =

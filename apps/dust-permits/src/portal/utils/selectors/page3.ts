@@ -28,9 +28,21 @@ export const primaryContact = {
  */
 export const coordinator = {
   no: '[id="ThePage:siTable:10:sioTable:3:siForm:radioTable:1:radio"]',
-  noFallbacks: ['[id="ThePage:siTable:8:sioTable:1:siForm:radio"]'],
+  noFallbacks: [
+    '[id="ThePage:siTable:8:sioTable:1:siForm:radio"]',
+    '[id="ThePage:siTable:9:sioTable:3:siForm:radioTable:1:radio"]',
+    '[id="ThePage:siTable:9:sioTable:1:siForm:radio"]',
+    '[id="ThePage:siTable:11:sioTable:3:siForm:radioTable:1:radio"]',
+    '[id="ThePage:siTable:11:sioTable:1:siForm:radio"]',
+  ],
   yes: '[id="ThePage:siTable:10:sioTable:3:siForm:radioTable:0:radio"]',
-  yesFallbacks: ['[id="ThePage:siTable:8:sioTable:0:siForm:radio"]'],
+  yesFallbacks: [
+    '[id="ThePage:siTable:8:sioTable:0:siForm:radio"]',
+    '[id="ThePage:siTable:9:sioTable:3:siForm:radioTable:0:radio"]',
+    '[id="ThePage:siTable:9:sioTable:0:siForm:radio"]',
+    '[id="ThePage:siTable:11:sioTable:3:siForm:radioTable:0:radio"]',
+    '[id="ThePage:siTable:11:sioTable:0:siForm:radio"]',
+  ],
 } as const;
 
 /** siTable:11 - Project Info */

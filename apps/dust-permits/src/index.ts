@@ -27,6 +27,7 @@ import {
   handleRenewPermit,
   handleRevisePermit,
 } from "@/api/permits";
+import { handleRenewAndPay } from "@/api/permits-payment";
 import { handleScrapePdf, handleScrapePermit } from "@/api/scrape";
 import { handleCompanySync, handleSync } from "@/api/sync";
 import { initSentry } from "@/portal/utils/sentry";
@@ -83,6 +84,8 @@ serve({
         switch (action) {
           case "renew":
             return handleRenewPermit(id, body);
+          case "renew-and-pay":
+            return handleRenewAndPay(id, body);
           case "close":
             return handleClosePermit(id, body);
           case "revise":

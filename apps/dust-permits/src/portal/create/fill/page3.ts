@@ -12,6 +12,7 @@ import type { Page } from "playwright";
 import type { DeepPartial, FormData } from "@/form-data";
 import {
   clickRadio,
+  clickRadioByLabelText,
   clickRadioWithSelectors,
   fillText,
 } from "@/portal/utils/helpers";
@@ -77,9 +78,18 @@ export async function fillPage3(
       "Coordinator same as primary contact (forced Yes)"
     );
     if (!coordinatorResult.success) {
-      throw new Error(
-        "Could not set coordinator question to Yes on Page 3 (all selectors failed)"
+      // Last resort: find by label text and click the first radio (Yes)
+      console.log("    Trying text-based radio discovery for coordinator...");
+      const found = await clickRadioByLabelText(
+        page,
+        "coordinator",
+        0 // first radio = Yes
       );
+      if (!found) {
+        throw new Error(
+          "Could not set coordinator question to Yes on Page 3 (all selectors + text fallback failed)"
+        );
+      }
     }
 
     // Project Info - only fill if fields are provided

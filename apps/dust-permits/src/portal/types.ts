@@ -312,6 +312,84 @@ export interface FullCreateResult extends CreateResult {
   reachedPage5: boolean;
 }
 
+// ============================================================================
+// Payment Types (Point & Pay)
+// ============================================================================
+
+/**
+ * Credit card data for Point & Pay payment.
+ * All fields loaded from environment variables - never hardcoded.
+ */
+export interface PaymentCardData {
+  nameOnCard: string;
+  cardNumber: string;
+  expiryMonth: string; // "01"-"12"
+  expiryYear: string; // "2026" etc.
+  cvv: string;
+}
+
+/**
+ * Billing address for Point & Pay payment.
+ */
+export interface PaymentBillingData {
+  firstName: string;
+  lastName: string;
+  addressLine1: string;
+  addressLine2?: string;
+  country: string; // default "United States"
+  city: string;
+  state: string;
+  postalCode: string;
+  email: string;
+  phone: string;
+}
+
+/**
+ * Combined payment data for Point & Pay.
+ */
+export interface PaymentData {
+  card: PaymentCardData;
+  billing: PaymentBillingData;
+}
+
+/**
+ * Result of clicking "Submit Application" on Page 5.
+ */
+export interface SubmitResult {
+  success: boolean;
+  applicationId: string | null;
+  /** Whether we were redirected to Point & Pay */
+  redirectedToPayment: boolean;
+  /** Current URL after submit */
+  finalUrl?: string;
+  error?: string;
+}
+
+/**
+ * Result of completing payment on Point & Pay.
+ */
+export interface PaymentResult {
+  success: boolean;
+  /** Total amount displayed (e.g. "$4,120.00") */
+  amount?: string;
+  convenienceFee?: string;
+  totalPaid?: string;
+  /** Last 4 digits of card used */
+  cardLastFour?: string;
+  /** Whether this was a dry run (stopped before clicking Pay) */
+  dryRun: boolean;
+  error?: string;
+}
+
+/**
+ * Detailed report of which payment fields were filled successfully.
+ */
+export interface PaymentFillReport {
+  success: boolean;
+  filledFields: string[];
+  failedFields: string[];
+}
+
 // Re-export page state types from form-filling/types.ts (canonical location)
 export type {
   Page1State,

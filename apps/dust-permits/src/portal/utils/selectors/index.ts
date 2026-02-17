@@ -41,6 +41,8 @@ import { page5 } from "./page5";
 import { postK } from "./post-k";
 
 export { esriMap, mapPopup } from "./page2";
+// Point & Pay (payment portal) - NOT part of SelectorMap
+export { pointandpay } from "./pointandpay";
 // Portal (navigation/workflow) - NOT part of SelectorMap
 export { portal } from "./portal";
 

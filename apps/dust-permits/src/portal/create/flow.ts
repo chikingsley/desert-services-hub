@@ -581,3 +581,186 @@ export async function revisePermitFull(
     success: false,
   };
 }
+
+// ============================================================================
+// Renew + Submit + Pay (Full gated flow with operator checkpoints)
+// ============================================================================
+
+/** Result of the full renew-and-pay flow. */
+export interface RenewAndPayResult {
+  success: boolean;
+  applicationId?: string;
+  /** What stage the flow reached before stopping or completing */
+  stage:
+    | "renew-failed"
+    | "page5-ready"
+    | "submit-failed"
+    | "submitted-no-payment"
+    | "payment-page1"
+    | "payment-continue-failed"
+    | "payment-review"
+    | "paid";
+  amount?: string;
+  convenienceFee?: string;
+  totalPaid?: string;
+  cardLastFour?: string;
+  error?: string;
+}
+
+/**
+ * Renew a permit, submit it, and pay — with operator checkpoints at critical steps.
+ *
+ * Flow: renewPermitFull (pages 1-5) → set expedited → checkpoint → submit
+ *       → fill payment page 1 → checkpoint → continue to review
+ *       → dry run to read amount → checkpoint → pay
+ *
+ * Each checkpoint pauses until the operator clicks Yes/No in the web UI.
+ * If the operator declines at any checkpoint, the flow stops gracefully.
+ */
+export async function renewAndPayFull(
+  page: Page,
+  context: BrowserContext,
+  permitId: string,
+  companyName: string,
+  paymentData: import("@/portal/types").PaymentData,
+  options?: { expedited?: boolean }
+): Promise<RenewAndPayResult> {
+  const expedited = options?.expedited ?? true;
+
+  const {
+    checkExpedited,
+    checkpoint,
+    clickPaymentContinue,
+    confirmPayment,
+    fillPaymentPage1,
+    submitApplication,
+  } = await import("@/portal/payment");
+
+  // Phase 1: Renew to Page 5
+  const renewResult = await renewPermitFull(
+    page,
+    context,
+    permitId,
+    companyName
+  );
+  if (!renewResult.success) {
+    return {
+      applicationId: renewResult.applicationId,
+      error: renewResult.error,
+      stage: "renew-failed",
+      success: false,
+    };
+  }
+
+  const appId = renewResult.applicationId;
+  console.log(`  Renewal created: ${appId}`);
+
+  // Set expedited checkbox
+  if (expedited) {
+    await checkExpedited(page, true);
+  }
+
+  // Checkpoint: before submit
+  const goSubmit = await checkpoint(
+    `Submit ${appId}? This submits to Maricopa County.`,
+    { appId, permit: permitId, step: "before-submit", expedited }
+  );
+  if (!goSubmit) {
+    console.log("  Operator declined submit. Draft on Page 5.");
+    return { applicationId: appId, stage: "page5-ready", success: true };
+  }
+
+  // Phase 2: Submit
+  console.log("  Submitting...");
+  const submitResult = await submitApplication(page);
+  console.log(
+    `  Submit: success=${submitResult.success}, redirect=${submitResult.redirectedToPayment}`
+  );
+
+  if (!submitResult.success) {
+    return {
+      applicationId: appId,
+      error: `Submit failed: ${submitResult.error}`,
+      stage: "submit-failed",
+      success: false,
+    };
+  }
+
+  if (!submitResult.redirectedToPayment) {
+    return {
+      applicationId: appId,
+      stage: "submitted-no-payment",
+      success: true,
+    };
+  }
+
+  // Phase 3: Fill payment page 1
+  const fillReport = await fillPaymentPage1(page, paymentData);
+  console.log(`  Filled: ${fillReport.filledFields.join(", ")}`);
+
+  // Checkpoint: payment page 1 filled
+  const goPay1 = await checkpoint(
+    "Payment Page 1 filled. Continue to review?",
+    {
+      appId,
+      step: "payment-page1-filled",
+      filled: fillReport.filledFields.length,
+    }
+  );
+  if (!goPay1) {
+    return { applicationId: appId, stage: "payment-page1", success: true };
+  }
+
+  // Advance to review page
+  const continued = await clickPaymentContinue(page);
+  if (!continued) {
+    return {
+      applicationId: appId,
+      error: "Failed to advance to payment review page",
+      stage: "payment-continue-failed",
+      success: false,
+    };
+  }
+
+  // Dry run to read amounts
+  const dryRun = await confirmPayment(page, { dryRun: true });
+
+  // Checkpoint: before charging card
+  const goCharge = await checkpoint(
+    `Pay ${dryRun.totalPaid ?? "unknown"} for ${appId}? THIS CHARGES THE CARD.`,
+    {
+      appId,
+      permit: permitId,
+      step: "before-pay",
+      amount: dryRun.amount,
+      fee: dryRun.convenienceFee,
+      total: dryRun.totalPaid,
+    }
+  );
+  if (!goCharge) {
+    return {
+      amount: dryRun.amount,
+      applicationId: appId,
+      stage: "payment-review",
+      success: true,
+      totalPaid: dryRun.totalPaid,
+    };
+  }
+
+  // Phase 4: Pay
+  console.log("  Processing payment...");
+  const payResult = await confirmPayment(page, { dryRun: false });
+  console.log(
+    `  Payment: success=${payResult.success}, total=${payResult.totalPaid}`
+  );
+
+  return {
+    amount: payResult.amount,
+    applicationId: appId,
+    cardLastFour: payResult.cardLastFour,
+    convenienceFee: payResult.convenienceFee,
+    stage: "paid",
+    success: payResult.success,
+    totalPaid: payResult.totalPaid,
+  };
+}

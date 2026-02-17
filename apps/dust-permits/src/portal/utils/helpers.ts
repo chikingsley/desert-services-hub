@@ -503,6 +503,79 @@ export async function clickRadioWithSelectors(
   };
 }
 
+/**
+ * Last-resort radio click: find a table row containing labelText, then click
+ * the Nth radio input inside that row's siForm container.
+ *
+ * Works regardless of siTable/sioTable indices because it searches by visible
+ * text content rather than ADF-generated IDs.
+ *
+ * @param radioIndex 0 = first radio (typically Yes), 1 = second (No)
+ */
+export async function clickRadioByLabelText(
+  page: Page | Frame,
+  labelText: string,
+  radioIndex: number
+): Promise<boolean> {
+  try {
+    // Find a table cell whose text contains the label (case-insensitive)
+    const cells = page.locator("td");
+    const count = await cells.count();
+
+    for (let i = 0; i < count; i++) {
+      const cell = cells.nth(i);
+      const text = await cell.innerText().catch(() => "");
+      if (!text.toLowerCase().includes(labelText.toLowerCase())) {
+        continue;
+      }
+
+      // Found label cell - look for radio inputs in the parent row
+      const row = cell.locator("xpath=ancestor::tr[1]");
+      const radios = row.locator('input[type="radio"]');
+      const radioCount = await radios.count();
+
+      if (radioCount > radioIndex) {
+        await radios.nth(radioIndex).click({ timeout: 2000 });
+        await sleep(SETTLE_MS);
+        console.log(
+          `    ✓ ${labelText}: text-based discovery (radio ${radioIndex} in row with "${text.slice(0, 40).trim()}")`
+        );
+        return true;
+      }
+    }
+
+    // Broader fallback: search all text containing the label anywhere on page
+    const labelLoc = page.locator(`text=${labelText}`).first();
+    const labelVisible = await labelLoc
+      .isVisible({ timeout: 1000 })
+      .catch(() => false);
+
+    if (labelVisible) {
+      // Walk up to find the nearest container with radios
+      const container = labelLoc.locator("xpath=ancestor::table[1]");
+      const radios = container.locator('input[type="radio"]');
+      const radioCount = await radios.count();
+
+      if (radioCount > radioIndex) {
+        await radios.nth(radioIndex).click({ timeout: 2000 });
+        await sleep(SETTLE_MS);
+        console.log(
+          `    ✓ ${labelText}: broad text-based discovery (radio ${radioIndex})`
+        );
+        return true;
+      }
+    }
+
+    console.log(
+      `    ✗ ${labelText}: text-based discovery found no matching radios`
+    );
+    return false;
+  } catch (error) {
+    console.log(`    ✗ ${labelText}: text-based discovery error: ${error}`);
+    return false;
+  }
+}
+
 // ============================================================================
 // Navigation Helpers
 // ============================================================================
@@ -1228,6 +1301,77 @@ export async function listApplicationIds(
       regexStr: DUST_APPLICATION_ID_REGEX.source,
     }
   );
+}
+
+// ============================================================================
+// Polling / Operator Wait
+// ============================================================================
+
+/** How long to wait for operator to signal "go" (5 minutes) */
+const OPERATOR_TIMEOUT_MS = 300_000;
+/** How often to poll for operator signal */
+const OPERATOR_POLL_MS = 3000;
+
+/**
+ * Wait for an external condition by polling.
+ *
+ * Generalizes the polling pattern used across the codebase (e.g., waiting
+ * for page navigation, operator "go" signal, invoice readiness).
+ *
+ * Handles navigation context destruction gracefully (ADF page transitions).
+ *
+ * @param page - Playwright Page instance
+ * @param message - Message to display while waiting
+ * @param checkFn - Function that returns true when the condition is met
+ * @param options - Optional timeout/interval overrides
+ * @returns true if the condition was met within the timeout
+ */
+export async function waitForCondition(
+  page: Page,
+  message: string,
+  checkFn: () => Promise<boolean>,
+  options?: { timeoutMs?: number; pollMs?: number }
+): Promise<boolean> {
+  const timeoutMs = options?.timeoutMs ?? OPERATOR_TIMEOUT_MS;
+  const pollMs = options?.pollMs ?? OPERATOR_POLL_MS;
+  const maxAttempts = Math.floor(timeoutMs / pollMs);
+
+  console.log("\n========================================");
+  console.log(`[WAITING] ${message}`);
+  console.log("========================================\n");
+
+  for (let i = 0; i < maxAttempts; i++) {
+    try {
+      const ready = await checkFn();
+      if (ready) {
+        console.log("[WAITING] Condition met, continuing...\n");
+        return true;
+      }
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      if (
+        msg.includes("Execution context was destroyed") ||
+        msg.includes("navigation")
+      ) {
+        console.log(
+          "[WAITING] Navigation detected, waiting for page to settle..."
+        );
+        await page.waitForLoadState("domcontentloaded").catch(() => null);
+        await sleep(SETTLE_MS);
+        continue;
+      }
+    }
+
+    if (i > 0 && i % 10 === 0) {
+      const elapsed = (i * pollMs) / 1000;
+      console.log(`[WAITING] Still waiting... (${elapsed}s elapsed)`);
+    }
+
+    await sleep(pollMs);
+  }
+
+  console.error("[WAITING] Timed out");
+  return false;
 }
 
 // ============================================================================

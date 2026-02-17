@@ -46,6 +46,12 @@ export const apiReviseSchema = z.object({
 export const renewBodySchema = z.object({
   companyName: z.string().describe("Company name for renewal"),
 });
+
+export const renewAndPayBodySchema = z.object({
+  companyName: z.string().describe("Company name for renewal"),
+  expedited: z.boolean().optional().default(true),
+});
+
 export const closeBodySchema = z.object({
   reason: z.string().optional().describe("Reason for closing"),
 });

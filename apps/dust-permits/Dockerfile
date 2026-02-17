@@ -13,15 +13,11 @@
 FROM oven/bun:1 AS deps
 WORKDIR /app
 
-# Copy root package files + workspace member
+# Copy root package files
 COPY package.json bun.lock ./
-COPY apps/dust-permits/package.json ./apps/dust-permits/
 
 # Install root deps (some platform-specific packages may fail on Linux)
 RUN bun install || true
-
-# Install dust-permits deps separately (not a workspace member)
-RUN cd apps/dust-permits && bun install || true
 
 # -----------------------------------------------------------------------------
 # Stage 2: Production image (Playwright + VNC + Bun)
@@ -53,13 +49,11 @@ WORKDIR /app
 
 # Copy JS deps from stage 1
 COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/apps/dust-permits/node_modules ./apps/dust-permits/node_modules
 
 # Config files
 COPY package.json tsconfig.json tsconfig.base.json ./
 COPY apps/dust-permits/package.json ./apps/dust-permits/
 COPY apps/dust-permits/tsconfig.json ./apps/dust-permits/
-COPY apps/dust-permits/bunfig.toml ./apps/dust-permits/
 
 # Permit worker source
 COPY apps/dust-permits/src ./apps/dust-permits/src

@@ -15,10 +15,12 @@
  */
 
 import { afterAll, describe, expect, test } from "bun:test";
+import { DEFAULTS, oneYearFromNow, today } from "@/form-data";
 import type { PermitMapData } from "@/lib/dust-features";
 import { queryPermitMapFeatures } from "@/lib/dust-features";
 import {
   createRenewApplication,
+  fillPage3,
   getCurrentPage,
   goToPage,
   isOnDustAppsPage,
@@ -583,8 +585,24 @@ describe("Renewal Flow - Copy Map Data from Original", () => {
     async () => {
       const { page } = harness;
 
-      // Page 3 - Project Details (data copied from renewal source)
-      console.log("  On Page 3, clicking Next...");
+      // Page 3 - Fill coordinator/demolition radios + contact/project fields
+      // Same overrides as renewPermitFull in flow.ts
+      const renewalOverrides = {
+        permitContact: {
+          email: DEFAULTS.permitContact.email,
+          name: DEFAULTS.permitContact.name,
+          phone: DEFAULTS.permitContact.phone,
+        },
+        project: {
+          endDate: oneYearFromNow(),
+          startDate: today(),
+        },
+      };
+
+      console.log("  Filling Page 3...");
+      const page3Filled = await fillPage3(page, renewalOverrides);
+      expect(page3Filled).toBe(true);
+
       let nextClicked = await clickNext(page);
       expect(nextClicked).toBe(true);
       await sleep(3000);

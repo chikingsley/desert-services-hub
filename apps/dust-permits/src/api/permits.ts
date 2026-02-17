@@ -36,9 +36,15 @@ import {
   validateCreateMapPreflight,
 } from "./permits-helpers";
 
-// ============================================
-// Handlers
-// ============================================
+/** Human-readable descriptions for each revision type */
+const REVISION_TYPE_DESCRIPTIONS: Record<string, string> = {
+  acreage: "Acreage Change - Modify total acreage amount",
+  bmp: "BMP Modifications - Update best management practices",
+  boundary: "Boundary/Map Change - Update the disturbed area boundary",
+  contact: "Contact Information - Update owner/operator contacts",
+  other: "General revision",
+  schedule: "Project Schedule - Change start/end dates",
+};
 
 /**
  * GET /api/permits - List all permits
@@ -309,16 +315,8 @@ export async function handleRevisePermit(
 
     const { page, context } = sessionResult.page;
 
-    const typeDescriptions: Record<string, string> = {
-      acreage: "Acreage Change - Modify total acreage amount",
-      bmp: "BMP Modifications - Update best management practices",
-      boundary: "Boundary/Map Change - Update the disturbed area boundary",
-      contact: "Contact Information - Update owner/operator contacts",
-      other: "General revision",
-      schedule: "Project Schedule - Change start/end dates",
-    };
     const baseDescription =
-      typeDescriptions[revisionType] || "General revision";
+      REVISION_TYPE_DESCRIPTIONS[revisionType] || "General revision";
     const revisionPurpose = notes
       ? `${baseDescription}. ${notes}`
       : baseDescription;

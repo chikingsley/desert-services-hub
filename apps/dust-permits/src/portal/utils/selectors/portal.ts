@@ -132,6 +132,14 @@ export const pageMarkers = {
   page5Submit: 'text="Submit Application"',
 } as const;
 
+/** Page 5 submit actions */
+export const submit = {
+  submitApplicationBtn: 'img[alt="Submit Application"]',
+  submitApplicationLink: 'a:has(img[alt="Submit Application"])',
+  /** Fallback: the text link itself */
+  submitApplicationText: 'a:has-text("Submit Application")',
+} as const;
+
 /** Page 2 - Project Location */
 export const page2 = {
   accessPointsTable: '[id="ThePage:siTable:12:accessPoints"]',
@@ -326,4 +334,5 @@ export const portal = {
   scraper,
   siteDrawingPopup,
   stepNav,
+  submit,
 } as const;

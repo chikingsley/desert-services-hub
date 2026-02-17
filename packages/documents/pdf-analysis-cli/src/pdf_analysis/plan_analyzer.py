@@ -315,27 +315,15 @@ Return results in this JSON structure:
 
     def _pdf_to_image(self, pdf_path: str, page: int = 0) -> str:
         """Convert PDF page to image for analysis"""
-        try:
-            import pymupdf
+        from kreuzberg import render_page_to_image
 
-            doc = pymupdf.open(pdf_path)
-            page_obj = doc[page]
+        pdf_bytes = Path(pdf_path).read_bytes()
+        # dpi=144 matches the old pymupdf Matrix(2, 2) (2x zoom from 72 DPI base)
+        png_data = render_page_to_image(pdf_bytes, page, dpi=144)
 
-            # Render at high resolution for detail inspection
-            mat = pymupdf.Matrix(2, 2)  # 2x zoom
-            pix = page_obj.get_pixmap(matrix=mat)
-
-            # Save to temp file
-            with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp:
-                temp_path = tmp.name
-            pix.save(temp_path)
-            doc.close()
-
-            return temp_path
-        except ImportError as err:
-            raise ImportError(
-                "PyMuPDF (pymupdf) required for PDF conversion. Install: pip install pymupdf"
-            ) from err
+        with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp:
+            tmp.write(png_data)
+            return tmp.name
 
     def export_report(self, result: AnalysisResult, output_path: str):
         """Export analysis result to JSON file"""

@@ -5,7 +5,7 @@ import time
 from pathlib import Path
 from typing import Any
 
-import pymupdf
+from kreuzberg import split_pdf as kreuzberg_split_pdf
 
 from pdf_analysis.config import Settings
 from pdf_analysis.mistral_client import MistralClient, get_api_key
@@ -261,24 +261,18 @@ class MistralProvider(BaseProvider):
         )
 
     def _build_subset_pdf(self, pdf_path: Path, pages: list[int]) -> Path:
-        source_doc = pymupdf.open(pdf_path)
-        subset_doc = pymupdf.open()
-        try:
-            total_pages = len(source_doc)
-            for page_num in sorted(set(pages)):
-                if page_num < 1 or page_num > total_pages:
-                    raise ValueError(
-                        f"Requested page {page_num} outside document bounds 1-{total_pages}"
-                    )
-                subset_doc.insert_pdf(source_doc, from_page=page_num - 1, to_page=page_num - 1)
+        pdf_bytes = pdf_path.read_bytes()
+        sorted_pages = sorted(set(pages))
 
-            with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
-                subset_path = Path(tmp.name)
-            subset_doc.save(str(subset_path), garbage=3, deflate=True)
-            return subset_path
-        finally:
-            subset_doc.close()
-            source_doc.close()
+        # Use the spanning range (min to max) — includes any gaps, which is
+        # acceptable since Mistral processes the whole chunk contextually.
+        span = (sorted_pages[0], sorted_pages[-1])
+        parts = kreuzberg_split_pdf(pdf_bytes, [span])
+
+        with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
+            subset_path = Path(tmp.name)
+        subset_path.write_bytes(parts[0])
+        return subset_path
 
     @staticmethod
     def _to_float_map(value: Any) -> dict[str, float]:

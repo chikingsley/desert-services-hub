@@ -9,7 +9,7 @@ from tempfile import TemporaryDirectory
 from typing import Any
 
 import httpx
-import pymupdf
+from kreuzberg import render_page_to_image
 
 from pdf_analysis.config import Settings
 from pdf_analysis.types import (
@@ -323,25 +323,25 @@ class LocalProvider(BaseProvider):
         temp_dir: Path,
         pages: list[int] | None,
     ) -> list[tuple[int, Path]]:
-        doc = pymupdf.open(pdf_path)
-        try:
-            total_pages = len(doc)
-            selected_pages = pages or list(range(1, total_pages + 1))
+        from kreuzberg import extract_file_sync
 
-            rendered: list[tuple[int, Path]] = []
-            for page_num in selected_pages:
-                if page_num < 1 or page_num > total_pages:
-                    raise ValueError(
-                        f"Requested page {page_num} outside document bounds 1-{total_pages}"
-                    )
-                page = doc.load_page(page_num - 1)
-                pix = page.get_pixmap(matrix=pymupdf.Matrix(2, 2))
-                path = temp_dir / f"page_{page_num:04d}.png"
-                pix.save(str(path))
-                rendered.append((page_num, path))
-            return rendered
-        finally:
-            doc.close()
+        pdf_bytes = pdf_path.read_bytes()
+        result = extract_file_sync(str(pdf_path))
+        total_pages = result.metadata.get("page_count", 0)
+        selected_pages = pages or list(range(1, total_pages + 1))
+
+        rendered: list[tuple[int, Path]] = []
+        for page_num in selected_pages:
+            if page_num < 1 or page_num > total_pages:
+                raise ValueError(
+                    f"Requested page {page_num} outside document bounds 1-{total_pages}"
+                )
+            # dpi=144 matches the old pymupdf Matrix(2, 2) (2x zoom from 72 DPI base)
+            png_data = render_page_to_image(pdf_bytes, page_num - 1, dpi=144)
+            path = temp_dir / f"page_{page_num:04d}.png"
+            path.write_bytes(png_data)
+            rendered.append((page_num, path))
+        return rendered
 
     async def _chat_completion(
         self, prompt: str, image_base64: str | None = None, model_override: str | None = None

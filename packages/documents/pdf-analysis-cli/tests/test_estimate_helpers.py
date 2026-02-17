@@ -16,25 +16,25 @@ def test_parse_qty_with_cid_digits() -> None:
 from pdf_analysis.estimates import _extract_header
 
 
-class _FakePage:
-    def __init__(self, tables: list[list[list[str | None]]]) -> None:
-        self._tables = tables
+class _FakeTable:
+    """Mimics kreuzberg's ExtractedTable with a .cells attribute."""
 
-    def extract_tables(self) -> list[list[list[str | None]]]:
-        return self._tables
+    def __init__(self, cells: list[list[str | None]]) -> None:
+        self.cells = cells
+        self.page_number = 1
 
 
 def test_extract_header_sales_rep_alias() -> None:
     tables = [
-        [["Date", "Estimate #"], ["12/15/2023", "12152304"]],
-        [
+        _FakeTable([["Date", "Estimate #"], ["12/15/2023", "12152304"]]),
+        _FakeTable([
             ["", "", "", "", "", "", "Sales Rep", ""],
             ["", "", "", "", "", "", "Jeff Gardner", ""],
-        ],
-        [["To:"], ["Rohm Building & Development\nPhoenix, AZ"]],
+        ]),
+        _FakeTable([["To:"], ["Rohm Building & Development\nPhoenix, AZ"]]),
     ]
 
-    header = _extract_header([_FakePage(tables)])
+    header = _extract_header(tables)
 
     assert header.date == "12/15/2023"
     assert header.estimate_number == "12152304"

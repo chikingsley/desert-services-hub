@@ -1,17 +1,19 @@
 """
-PDF utilities using PyMuPDF and Kreuzberg.
+PDF utilities using Kreuzberg.
 
 Provides PDF splitting, page extraction, and file info operations.
 Handles large documents that exceed Mistral's limits (50MB, 1000 pages).
-Uses kreuzberg for metadata extraction, pymupdf for PDF manipulation.
 """
 
 import logging
 import math
 from pathlib import Path
 
-import pymupdf
-from kreuzberg import extract_file_sync
+from kreuzberg import (
+    extract_file_sync,
+    render_page_to_image,
+    split_pdf as kreuzberg_split_pdf,
+)
 
 from pdf_analysis.mistral_types import (
     DEFAULT_CHUNK_SIZE,
@@ -113,64 +115,55 @@ def split_pdf(
     out_path = Path(output_dir)
     out_path.mkdir(parents=True, exist_ok=True)
 
-    doc = pymupdf.open(file_path)
-    try:
-        if doc.is_encrypted:
-            raise ValueError(f"Cannot split encrypted PDF: {file_path}")
+    pdf_bytes = path.read_bytes()
 
-        total_pages = len(doc)
-        if total_pages == 0:
-            raise ValueError(f"PDF has no pages: {file_path}")
+    # Get page count from metadata
+    result = extract_file_sync(file_path)
+    total_pages = result.metadata.get("page_count", 0)
 
-        chunks: list[PDFChunk] = []
-        chunk_num = 1
+    if total_pages == 0:
+        raise ValueError(f"PDF has no pages: {file_path}")
 
-        for start_page in range(0, total_pages, pages_per_chunk):
-            end_page = min(start_page + pages_per_chunk - 1, total_pages - 1)
+    # Build page ranges (1-indexed, inclusive)
+    ranges: list[tuple[int, int]] = []
+    for start_page in range(1, total_pages + 1, pages_per_chunk):
+        end_page = min(start_page + pages_per_chunk - 1, total_pages)
+        ranges.append((start_page, end_page))
 
-            # Create chunk PDF
-            chunk_doc = pymupdf.open()
-            chunk_doc.insert_pdf(doc, from_page=start_page, to_page=end_page)
+    chunk_pdfs = kreuzberg_split_pdf(pdf_bytes, ranges)
 
-            # Save chunk
-            chunk_filename = f"{output_prefix}_chunk_{chunk_num:03d}.pdf"
-            chunk_path = out_path / chunk_filename
-            chunk_doc.save(
-                str(chunk_path),
-                garbage=3,  # Remove unused objects
-                deflate=True,  # Compress streams
+    chunks: list[PDFChunk] = []
+    for chunk_num, (chunk_data, (start_page, end_page)) in enumerate(
+        zip(chunk_pdfs, ranges), start=1
+    ):
+        chunk_filename = f"{output_prefix}_chunk_{chunk_num:03d}.pdf"
+        chunk_path = out_path / chunk_filename
+        chunk_path.write_bytes(chunk_data)
+
+        page_count = end_page - start_page + 1
+
+        chunks.append(
+            PDFChunk(
+                chunk_number=chunk_num,
+                start_page=start_page,
+                end_page=end_page,
+                page_count=page_count,
+                file_path=str(chunk_path.absolute()),
+                file_size_bytes=len(chunk_data),
             )
-
-            chunk_size = chunk_path.stat().st_size
-            page_count = end_page - start_page + 1
-
-            chunks.append(
-                PDFChunk(
-                    chunk_number=chunk_num,
-                    start_page=start_page + 1,  # 1-indexed
-                    end_page=end_page + 1,  # 1-indexed
-                    page_count=page_count,
-                    file_path=str(chunk_path.absolute()),
-                    file_size_bytes=chunk_size,
-                )
-            )
-
-            chunk_doc.close()
-            chunk_num += 1
-
-            logger.info(
-                f"Created chunk {chunk_num - 1}: "
-                f"pages {start_page + 1}-{end_page + 1} ({page_count} pages)"
-            )
-
-        return SplitResult(
-            original_path=str(path.absolute()),
-            original_page_count=total_pages,
-            chunks=chunks,
-            output_directory=str(out_path.absolute()),
         )
-    finally:
-        doc.close()
+
+        logger.info(
+            f"Created chunk {chunk_num}: "
+            f"pages {start_page}-{end_page} ({page_count} pages)"
+        )
+
+    return SplitResult(
+        original_path=str(path.absolute()),
+        original_page_count=total_pages,
+        chunks=chunks,
+        output_directory=str(out_path.absolute()),
+    )
 
 
 def extract_pages(
@@ -200,35 +193,28 @@ def extract_pages(
     if not path.exists():
         raise FileNotFoundError(f"File not found: {file_path}")
 
-    doc = pymupdf.open(file_path)
-    try:
-        total_pages = len(doc)
+    pdf_bytes = path.read_bytes()
 
-        # Validate page range (1-indexed)
-        if start_page < 1:
-            raise ValueError(f"start_page must be >= 1, got {start_page}")
-        if end_page > total_pages:
-            raise ValueError(f"end_page {end_page} exceeds total pages {total_pages}")
-        if start_page > end_page:
-            raise ValueError(f"start_page {start_page} > end_page {end_page}")
+    # Validate page range (1-indexed)
+    result = extract_file_sync(file_path)
+    total_pages = result.metadata.get("page_count", 0)
 
-        # Convert to 0-indexed
-        start_idx = start_page - 1
-        end_idx = end_page - 1
+    if start_page < 1:
+        raise ValueError(f"start_page must be >= 1, got {start_page}")
+    if end_page > total_pages:
+        raise ValueError(f"end_page {end_page} exceeds total pages {total_pages}")
+    if start_page > end_page:
+        raise ValueError(f"start_page {start_page} > end_page {end_page}")
 
-        # Generate output path if not provided
-        if output_path is None:
-            output_path = str(path.parent / f"{path.stem}_pages_{start_page}-{end_page}.pdf")
+    # Generate output path if not provided
+    if output_path is None:
+        output_path = str(path.parent / f"{path.stem}_pages_{start_page}-{end_page}.pdf")
 
-        # Create extracted PDF
-        new_doc = pymupdf.open()
-        new_doc.insert_pdf(doc, from_page=start_idx, to_page=end_idx)
-        new_doc.save(output_path, garbage=3, deflate=True)
-        new_doc.close()
+    # kreuzberg split_pdf uses 1-indexed inclusive ranges
+    parts = kreuzberg_split_pdf(pdf_bytes, [(start_page, end_page)])
+    Path(output_path).write_bytes(parts[0])
 
-        return output_path
-    finally:
-        doc.close()
+    return output_path
 
 
 def pdf_to_images(
@@ -262,33 +248,30 @@ def pdf_to_images(
     out_path = Path(output_dir)
     out_path.mkdir(parents=True, exist_ok=True)
 
-    doc = pymupdf.open(file_path)
-    try:
-        total_pages = len(doc)
+    pdf_bytes = path.read_bytes()
 
-        # Determine page range
-        if page_range:
-            start_idx = page_range[0] - 1
-            end_idx = page_range[1]
-        else:
-            start_idx = 0
-            end_idx = total_pages
+    # Get total page count
+    result = extract_file_sync(file_path)
+    total_pages = result.metadata.get("page_count", 0)
 
-        output_files = []
+    # Determine page range (convert to 0-indexed for render_page_to_image)
+    if page_range:
+        start_idx = page_range[0] - 1
+        end_idx = page_range[1]
+    else:
+        start_idx = 0
+        end_idx = total_pages
 
-        for page_num in range(start_idx, end_idx):
-            page = doc.load_page(page_num)
-            pix = page.get_pixmap(dpi=dpi)
+    output_files = []
 
-            output_file = out_path / f"page_{page_num + 1:03d}.{image_format}"
-            pix.save(str(output_file))
-            output_files.append(str(output_file))
+    for page_idx in range(start_idx, end_idx):
+        png_data = render_page_to_image(pdf_bytes, page_idx, dpi=dpi)
 
-            del pix
+        output_file = out_path / f"page_{page_idx + 1:03d}.{image_format}"
+        output_file.write_bytes(png_data)
+        output_files.append(str(output_file))
 
-        return output_files
-    finally:
-        doc.close()
+    return output_files
 
 
 def get_page_count(file_path: str) -> int:

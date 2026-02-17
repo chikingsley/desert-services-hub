@@ -1,4 +1,4 @@
-"""Extract structured data from Desert Services estimate PDFs using pdfplumber.
+"""Extract structured data from Desert Services estimate PDFs using kreuzberg.
 
 Handles all known template variations:
 - With/without U/M column (6 vs 5 data columns)
@@ -14,11 +14,11 @@ Handles all known template variations:
 from __future__ import annotations
 
 import re
+from collections import defaultdict
 from enum import Enum
 from pathlib import Path
 
-import pdfplumber
-import pdfplumber.page
+from kreuzberg import ExtractedTable, extract_file_sync
 from pydantic import BaseModel, Field, computed_field
 
 # ---------------------------------------------------------------------------
@@ -144,7 +144,7 @@ def _cell(value: str | None) -> str:
     """Normalize a table cell: decode cid glyphs, strip whitespace, treat None as ''."""
     if value is None:
         return ""
-    return _decode_cid_glyphs(value).strip()
+    return _decode_cid_glyphs(value).replace("\r\n", "\n").strip()
 
 
 def _parse_qty(value: str | None) -> float | None:
@@ -266,11 +266,8 @@ def _find_header_index(header_cells: list[str], labels: set[str]) -> int | None:
     return None
 
 
-def _extract_header(pages: list[pdfplumber.page.Page]) -> EstimateHeader:
+def _extract_header(page1_tables: list[ExtractedTable]) -> EstimateHeader:
     """Extract header values from page 1 tables across known layout variants."""
-    page = pages[0]
-    tables = page.extract_tables()
-
     estimate_number = ""
     revision = None
     date = ""
@@ -286,7 +283,8 @@ def _extract_header(pages: list[pdfplumber.page.Page]) -> EstimateHeader:
         _normalize_header_label(label) for label in estimator_labels
     }
 
-    for table in tables:
+    for kt in page1_tables:
+        table = kt.cells
         if not table or len(table) < 2:
             continue
 
@@ -362,20 +360,19 @@ def _extract_header(pages: list[pdfplumber.page.Page]) -> EstimateHeader:
     )
 
 
-def _extract_grand_total(pages: list[pdfplumber.page.Page]) -> float:
+def _extract_grand_total(all_tables: list[ExtractedTable]) -> float:
     """Extract grand total from Total box, including cid-encoded currency strings."""
-    for page in reversed(pages):
-        tables = page.extract_tables()
-        for table in tables:
-            for row in table:
-                for cell in row:
-                    if not cell:
-                        continue
-                    normalized = _decode_cid_glyphs(cell).strip()
-                    if normalized.startswith("Total"):
-                        m = _EMBEDDED_MONEY_RE.search(normalized)
-                        if m:
-                            return float(m.group(1).replace(",", ""))
+    # Search from last page backward
+    for kt in reversed(all_tables):
+        for row in kt.cells:
+            for cell in row:
+                if not cell:
+                    continue
+                normalized = _decode_cid_glyphs(cell).replace("\r\n", "\n").strip()
+                if normalized.startswith("Total") or normalized.startswith("$"):
+                    m = _EMBEDDED_MONEY_RE.search(normalized)
+                    if m:
+                        return float(m.group(1).replace(",", ""))
     return 0.0
 
 
@@ -383,238 +380,246 @@ def extract_estimate(pdf_path: str | Path) -> Estimate:
     """Extract structured estimate data from a Desert Services estimate PDF."""
     pdf_path = Path(pdf_path)
 
-    with pdfplumber.open(pdf_path) as pdf:
-        pages = pdf.pages
-        header = _extract_header(pages)
+    result = extract_file_sync(str(pdf_path))
+    all_tables = result.tables
+    page_count = result.metadata.get("page_count", 0) or len({t.page_number for t in all_tables})
 
-        # Collect all main table rows across pages
-        all_rows: list[list[str | None]] = []
-        col_map: dict[str, int] = {}
+    # Group tables by page number
+    tables_by_page: dict[int, list[ExtractedTable]] = defaultdict(list)
+    for t in all_tables:
+        tables_by_page[t.page_number].append(t)
 
-        for page in pages:
-            tables = page.extract_tables()
-            main_table = _find_main_table(tables)
-            if not main_table:
+    # Extract header from page 1 tables
+    header = _extract_header(tables_by_page.get(1, []))
+
+    # Collect all main table rows across pages
+    all_rows: list[list[str | None]] = []
+    col_map: dict[str, int] = {}
+
+    for page_num in sorted(tables_by_page.keys()):
+        page_tables = [t.cells for t in tables_by_page[page_num]]
+        main_table = _find_main_table(page_tables)
+        if not main_table:
+            continue
+
+        for row in main_table:
+            cells = [_cell(c) for c in row]
+
+            # Detect column layout from header row (first occurrence)
+            if "Item" in cells and "Description" in cells and "Total" in cells:
+                if not col_map:
+                    col_map = _detect_columns(row)
                 continue
 
-            for row in main_table:
-                cells = [_cell(c) for c in row]
+            # Skip Job Name rows
+            if "Job Name" in cells:
+                continue
+            # Skip the job name value row (appears before the header on each page)
+            if not col_map:
+                continue
 
-                # Detect column layout from header row (first occurrence)
-                if "Item" in cells and "Description" in cells and "Total" in cells:
-                    if not col_map:
-                        col_map = _detect_columns(row)
-                    continue
+            # Skip footer disclaimer rows
+            joined = " ".join(cells)
+            if "Pricing based on specified quantities" in joined:
+                continue
 
-                # Skip Job Name rows
-                if "Job Name" in cells:
-                    continue
-                # Skip the job name value row (appears before the header on each page)
-                if not col_map:
-                    continue
+            all_rows.append(row)
 
-                # Skip footer disclaimer rows
-                joined = " ".join(cells)
-                if "Pricing based on specified quantities" in joined:
-                    continue
+    # Parse rows into items
+    line_items: list[EstimateLineItem] = []
+    additional_services: list[AdditionalService] = []
+    section_subtotals: list[SectionSubtotal] = []
+    tax: EstimateTax | None = None
+    parse_warnings: list[str] = []
+    current_section = SectionType.REQUIRED
+    in_additional_services = False
 
-                all_rows.append(row)
+    item_idx = col_map.get("Item", 0)
+    desc_idx = col_map.get("Description", 1)
+    qty_idx = col_map.get("Qty", 3)
+    cost_idx = col_map.get("Cost", -2)
+    total_idx = col_map.get("Total", -1)
+    parsed_row_indices: set[int] = set()
 
-        # Parse rows into items
-        line_items: list[EstimateLineItem] = []
-        additional_services: list[AdditionalService] = []
-        section_subtotals: list[SectionSubtotal] = []
-        tax: EstimateTax | None = None
-        parse_warnings: list[str] = []
-        current_section = SectionType.REQUIRED
-        in_additional_services = False
+    for row_idx, row in enumerate(all_rows):
+        item_cell = _cell(row[item_idx]) if item_idx < len(row) else ""
+        desc_cell = _cell(row[desc_idx]) if desc_idx < len(row) else ""
+        qty_cell = _cell(row[qty_idx]) if qty_idx < len(row) else ""
+        cost_cell = _cell(row[cost_idx]) if cost_idx < len(row) else ""
+        total_cell = _cell(row[total_idx]) if total_idx < len(row) else ""
 
-        item_idx = col_map.get("Item", 0)
-        desc_idx = col_map.get("Description", 1)
-        qty_idx = col_map.get("Qty", 3)
-        cost_idx = col_map.get("Cost", -2)
-        total_idx = col_map.get("Total", -1)
-        parsed_row_indices: set[int] = set()
+        # Combine item and description for marker detection
+        row_text = f"{item_cell} {desc_cell}".strip()
 
+        # Skip completely empty rows
+        if not row_text and not qty_cell and not total_cell:
+            continue
+
+        # Check for section markers
+        marker = _detect_section_marker(row_text)
+        if marker:
+            marker_type, section, _ = marker
+            if marker_type == "subtotal":
+                # Record the subtotal amount
+                subtotal_amount = _parse_money(total_cell)
+                if subtotal_amount is not None and section is not None:
+                    section_subtotals.append(
+                        SectionSubtotal(section=section, amount=subtotal_amount)
+                    )
+                continue
+            if marker_type == "phase_start" and section is not None:
+                current_section = section
+                continue
+            if marker_type == "additional_services":
+                in_additional_services = True
+                continue
+
+        # Check for Rental Tax
+        if "Rental Tax" in row_text:
+            tax_amount = _parse_money(total_cell)
+            if tax_amount is not None:
+                taxable_sub = sum(li.total for li in line_items if li.taxable)
+                rate = tax_amount / taxable_sub if taxable_sub > 0 else 0.0
+                tax = EstimateTax(
+                    taxable_subtotal=taxable_sub,
+                    tax_amount=tax_amount,
+                    tax_rate=round(rate, 4),
+                )
+            continue
+
+        # Check for SWPPP ESTIMATE FOR: block (project info, not a line item)
+        if "ESTIMATE FOR:" in row_text.upper():
+            continue
+
+        # Check for AS ALTERNATE block (informational, not a line item)
+        if "AS ALTERNATE" in row_text.upper():
+            continue
+
+        # Try to parse as a priced line item
+        qty = _parse_qty(qty_cell)
+        unit_price = _parse_money(cost_cell)
+        total = _parse_money(total_cell)
+        taxable = _is_taxable(total_cell)
+
+        if qty is None:
+            qty = _derive_qty_from_total(total, unit_price)
+        if unit_price is None and qty is not None and qty != 0 and total is not None:
+            unit_price = round(total / qty, 2)
+
+        # Row has numeric data -> line item
+        if total is not None and qty is not None:
+            section = SectionType.MISC if in_additional_services else current_section
+
+            line_items.append(
+                EstimateLineItem(
+                    item=item_cell or "Misc",
+                    description=desc_cell.split("\n")[0] if desc_cell else "",
+                    qty=qty,
+                    unit=None,
+                    unit_price=unit_price or 0.0,
+                    total=total,
+                    taxable=taxable,
+                    section=section,
+                )
+            )
+            parsed_row_indices.add(row_idx)
+            continue
+
+        # Row has no numeric data but has item name -> could be additional service or description-only item
+        if in_additional_services and item_cell and desc_cell and not qty_cell:
+            additional_services.append(
+                AdditionalService(
+                    item=item_cell,
+                    description=desc_cell.split("\n")[0],
+                )
+            )
+            continue
+
+        # Skip Permit Filing rows with embedded prices (informational only)
+        if item_cell.lower().startswith("permit") and not qty_cell and not total_cell:
+            continue
+
+        # Skip empty/informational rows
+        # (description-only rows like silt fence alternate, rumble grate notes, etc.)
+
+    grand_total = _extract_grand_total(all_tables)
+
+    # Invariant + fallback: if totals do not reconcile, rescan remaining rows using relaxed parsing.
+    initial_subtotal = sum(li.total for li in line_items)
+    if grand_total > 0 and abs(grand_total - initial_subtotal) > 0.01:
+        parse_warnings.append(
+            f"Grand total mismatch before fallback: grand_total={grand_total:.2f}, subtotal={initial_subtotal:.2f}."
+        )
+
+        fallback_added = 0
         for row_idx, row in enumerate(all_rows):
+            if row_idx in parsed_row_indices:
+                continue
+
             item_cell = _cell(row[item_idx]) if item_idx < len(row) else ""
             desc_cell = _cell(row[desc_idx]) if desc_idx < len(row) else ""
             qty_cell = _cell(row[qty_idx]) if qty_idx < len(row) else ""
             cost_cell = _cell(row[cost_idx]) if cost_idx < len(row) else ""
             total_cell = _cell(row[total_idx]) if total_idx < len(row) else ""
-
-            # Combine item and description for marker detection
             row_text = f"{item_cell} {desc_cell}".strip()
 
-            # Skip completely empty rows
-            if not row_text and not qty_cell and not total_cell:
+            if not _looks_like_candidate_item(item_cell, row_text):
                 continue
 
-            # Check for section markers
-            marker = _detect_section_marker(row_text)
-            if marker:
-                marker_type, section, _ = marker
-                if marker_type == "subtotal":
-                    # Record the subtotal amount
-                    subtotal_amount = _parse_money(total_cell)
-                    if subtotal_amount is not None and section is not None:
-                        section_subtotals.append(
-                            SectionSubtotal(section=section, amount=subtotal_amount)
-                        )
-                    continue
-                if marker_type == "phase_start" and section is not None:
-                    current_section = section
-                    continue
-                if marker_type == "additional_services":
-                    in_additional_services = True
-                    continue
-
-            # Check for Rental Tax
-            if "Rental Tax" in row_text:
-                tax_amount = _parse_money(total_cell)
-                if tax_amount is not None:
-                    taxable_sub = sum(li.total for li in line_items if li.taxable)
-                    rate = tax_amount / taxable_sub if taxable_sub > 0 else 0.0
-                    tax = EstimateTax(
-                        taxable_subtotal=taxable_sub,
-                        tax_amount=tax_amount,
-                        tax_rate=round(rate, 4),
-                    )
-                continue
-
-            # Check for SWPPP ESTIMATE FOR: block (project info, not a line item)
-            if "ESTIMATE FOR:" in row_text.upper():
-                continue
-
-            # Check for AS ALTERNATE block (informational, not a line item)
-            if "AS ALTERNATE" in row_text.upper():
-                continue
-
-            # Try to parse as a priced line item
             qty = _parse_qty(qty_cell)
             unit_price = _parse_money(cost_cell)
             total = _parse_money(total_cell)
-            taxable = _is_taxable(total_cell)
 
+            if total is None:
+                total = _parse_money_relaxed(total_cell)
+            if unit_price is None:
+                unit_price = _parse_money_relaxed(cost_cell)
             if qty is None:
                 qty = _derive_qty_from_total(total, unit_price)
             if unit_price is None and qty is not None and qty != 0 and total is not None:
                 unit_price = round(total / qty, 2)
+            if total is None and qty is not None and unit_price is not None:
+                total = round(qty * unit_price, 2)
 
-            # Row has numeric data -> line item
-            if total is not None and qty is not None:
-                section = SectionType.MISC if in_additional_services else current_section
-
-                line_items.append(
-                    EstimateLineItem(
-                        item=item_cell or "Misc",
-                        description=desc_cell.split("\n")[0] if desc_cell else "",
-                        qty=qty,
-                        unit=None,
-                        unit_price=unit_price or 0.0,
-                        total=total,
-                        taxable=taxable,
-                        section=section,
-                    )
-                )
-                parsed_row_indices.add(row_idx)
+            if total is None or qty is None or unit_price is None:
                 continue
 
-            # Row has no numeric data but has item name -> could be additional service or description-only item
-            if in_additional_services and item_cell and desc_cell and not qty_cell:
-                additional_services.append(
-                    AdditionalService(
-                        item=item_cell,
-                        description=desc_cell.split("\n")[0],
-                    )
+            line_items.append(
+                EstimateLineItem(
+                    item=item_cell or "Misc",
+                    description=desc_cell.split("\n")[0] if desc_cell else "",
+                    qty=qty,
+                    unit=None,
+                    unit_price=unit_price,
+                    total=total,
+                    taxable=_is_taxable(total_cell),
+                    section=SectionType.REQUIRED,
                 )
-                continue
-
-            # Skip Permit Filing rows with embedded prices (informational only)
-            if item_cell.lower().startswith("permit") and not qty_cell and not total_cell:
-                continue
-
-            # Skip empty/informational rows
-            # (description-only rows like silt fence alternate, rumble grate notes, etc.)
-
-        grand_total = _extract_grand_total(pages)
-
-        # Invariant + fallback: if totals do not reconcile, rescan remaining rows using relaxed parsing.
-        initial_subtotal = sum(li.total for li in line_items)
-        if grand_total > 0 and abs(grand_total - initial_subtotal) > 0.01:
-            parse_warnings.append(
-                f"Grand total mismatch before fallback: grand_total={grand_total:.2f}, subtotal={initial_subtotal:.2f}."
             )
+            parsed_row_indices.add(row_idx)
+            fallback_added += 1
 
-            fallback_added = 0
-            for row_idx, row in enumerate(all_rows):
-                if row_idx in parsed_row_indices:
-                    continue
+        if fallback_added > 0:
+            parse_warnings.append(f"Fallback parser recovered {fallback_added} line item(s).")
 
-                item_cell = _cell(row[item_idx]) if item_idx < len(row) else ""
-                desc_cell = _cell(row[desc_idx]) if desc_idx < len(row) else ""
-                qty_cell = _cell(row[qty_idx]) if qty_idx < len(row) else ""
-                cost_cell = _cell(row[cost_idx]) if cost_idx < len(row) else ""
-                total_cell = _cell(row[total_idx]) if total_idx < len(row) else ""
-                row_text = f"{item_cell} {desc_cell}".strip()
-
-                if not _looks_like_candidate_item(item_cell, row_text):
-                    continue
-
-                qty = _parse_qty(qty_cell)
-                unit_price = _parse_money(cost_cell)
-                total = _parse_money(total_cell)
-
-                if total is None:
-                    total = _parse_money_relaxed(total_cell)
-                if unit_price is None:
-                    unit_price = _parse_money_relaxed(cost_cell)
-                if qty is None:
-                    qty = _derive_qty_from_total(total, unit_price)
-                if unit_price is None and qty is not None and qty != 0 and total is not None:
-                    unit_price = round(total / qty, 2)
-                if total is None and qty is not None and unit_price is not None:
-                    total = round(qty * unit_price, 2)
-
-                if total is None or qty is None or unit_price is None:
-                    continue
-
-                line_items.append(
-                    EstimateLineItem(
-                        item=item_cell or "Misc",
-                        description=desc_cell.split("\n")[0] if desc_cell else "",
-                        qty=qty,
-                        unit=None,
-                        unit_price=unit_price,
-                        total=total,
-                        taxable=_is_taxable(total_cell),
-                        section=SectionType.REQUIRED,
-                    )
-                )
-                parsed_row_indices.add(row_idx)
-                fallback_added += 1
-
-            if fallback_added > 0:
-                parse_warnings.append(f"Fallback parser recovered {fallback_added} line item(s).")
-
-        final_subtotal = sum(li.total for li in line_items)
-        if grand_total == 0 and final_subtotal > 0:
-            parse_warnings.append(
-                f"Grand total not found; using subtotal only ({final_subtotal:.2f}) for reconciliation checks."
-            )
-        elif grand_total > 0 and abs(grand_total - final_subtotal) > 0.01:
-            parse_warnings.append(
-                f"Unresolved total mismatch: grand_total={grand_total:.2f}, subtotal={final_subtotal:.2f}."
-            )
-
-        return Estimate(
-            header=header,
-            line_items=line_items,
-            additional_services=additional_services,
-            section_subtotals=section_subtotals,
-            tax=tax,
-            grand_total=grand_total,
-            page_count=len(pages),
-            source_file=str(pdf_path),
-            parse_warnings=parse_warnings,
+    final_subtotal = sum(li.total for li in line_items)
+    if grand_total == 0 and final_subtotal > 0:
+        parse_warnings.append(
+            f"Grand total not found; using subtotal only ({final_subtotal:.2f}) for reconciliation checks."
         )
+    elif grand_total > 0 and abs(grand_total - final_subtotal) > 0.01:
+        parse_warnings.append(
+            f"Unresolved total mismatch: grand_total={grand_total:.2f}, subtotal={final_subtotal:.2f}."
+        )
+
+    return Estimate(
+        header=header,
+        line_items=line_items,
+        additional_services=additional_services,
+        section_subtotals=section_subtotals,
+        tax=tax,
+        grand_total=grand_total,
+        page_count=page_count,
+        source_file=str(pdf_path),
+        parse_warnings=parse_warnings,
+    )

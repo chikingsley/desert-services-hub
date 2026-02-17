@@ -45,11 +45,13 @@ services:
       # LLM — two tiers: fast for classification, smart for routing/extraction
       GEMINI_FAST_MODEL: ${GEMINI_FAST_MODEL:-gemini-2.5-flash-lite}
       GEMINI_SMART_MODEL: ${GEMINI_SMART_MODEL:-gemini-2.5-flash-lite}
-      # PDF OCR via Gemini + Python provider
-      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-3-flash-preview}
-      PDF_ANALYSIS_PROVIDER_ORDER: ${PDF_ANALYSIS_PROVIDER_ORDER:-gemini,local}
+      # PDF analysis service
+      PDF_ANALYSIS_URL: http://pdf-analysis:4848
       # Email triage
       EMAIL_TRIAGE_MODE: ${EMAIL_TRIAGE_MODE:-active}
+      # Local LLM (Ollama) for triage backfill
+      LOCAL_LLM_BASE_URL: http://host.docker.internal:11434/v1
+      LOCAL_LLM_MODEL: ${LOCAL_LLM_MODEL:-granite4:latest}
       # Notifications
       NOTIFICATIONS_DELIVERY_MODE: ${NOTIFICATIONS_DELIVERY_MODE:-log}
       NOTIFICATIONS_MAILBOX: ${NOTIFICATIONS_MAILBOX:-chi@desertservices.net}
@@ -68,6 +70,36 @@ services:
       start_period: 5s
     restart: unless-stopped
     command: ["bun", "run", "apps/background-jobs/webhooks.ts"]
+
+  # ==========================================================================
+  # PDF Analysis — FastAPI service for PDF extraction, classification, OCR
+  # ==========================================================================
+  pdf-analysis:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: desert-pdf-analysis
+    ports:
+      - "4848:4848"
+    env_file: .env
+    environment:
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-3-flash-preview}
+      PDF_ANALYSIS_PROVIDER_ORDER: ${PDF_ANALYSIS_PROVIDER_ORDER:-gemini,local}
+      OLLAMA_ENDPOINT: http://host.docker.internal:11434/v1
+      OLLAMA_MODEL: glm-ocr:latest
+      OLLAMA_CHAT_MODEL: granite4:latest
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - webhooks-data:/app/data
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:4848/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+    command: ["uv", "run", "--project", "packages/documents/pdf-analysis-cli", "uvicorn", "pdf_analysis.server:app", "--host", "0.0.0.0", "--port", "4848"]
 
   # ==========================================================================
   # Permit Worker — Browser automation for Maricopa County dust permits

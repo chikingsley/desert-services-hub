@@ -29,13 +29,13 @@ apps/
     inspections-email-worker/  # ComplianceGo → SharePoint
     docusign-file-automation/  # DocuSign automation scripts/references (no deployed worker)
     intake-worker/        # Email ingress → background-jobs intake API
-    monday-status-sync-worker/
+  dust-permits/          # Permit-worker runtime (Playwright + API, Docker: desert-permit-worker)
 packages/
+  permits/              # Typed permit-worker HTTP client (`@permits/client`)
   monday/               # Monday.com API operations
   email/                # Email templates, sync scripts, Graph CLI tooling
   aqdata/               # Air quality data scraping and parser tooling
   sharepoint/           # SharePoint Graph operations + workers/tests
-  dust-permits/         # Maricopa permit automation (Playwright, VNC)
   documents/            # PDF analysis and generation pipelines
   contracts/            # Contract parsing and document utilities
   narratives/           # Environmental narrative generation
@@ -114,6 +114,32 @@ const client = new PermitClient(); // reads PERMIT_WORKER_URL env, defaults to h
 Key methods: `scrapePdf()`, `scrape()`, `createPermit()`, `renewPermit()`, `closePermit()`, `revisePermit()`, `sync()`, `syncCompany()`, `invoicePdf()`, `browserStatus()`, `browserStart()`, `browserStop()`, `health()`.
 
 All methods are typed — see `packages/permits/src/types.ts` for request/response interfaces. Errors throw `PermitWorkerError` with `.status`, `.body`, `.endpoint`.
+
+Runtime/source-of-truth split:
+- `apps/dust-permits/` is the runtime worker (Playwright, portal flows, VNC-visible browser).
+- `packages/permits/` is the typed client package only (no browser automation runtime).
+
+### Permits Client Package (`packages/permits`)
+
+- Package exports:
+  - `PermitClient` and `PermitWorkerError` from `packages/permits/src/client.ts`
+  - API request/response types from `packages/permits/src/types.ts`
+- Use cases:
+  - Web/background jobs call permit-worker via typed client.
+  - Keep endpoint and payload contracts centralized.
+- Do not:
+  - Add Playwright/portal runtime logic to `packages/permits`.
+  - Run E2E portal automation from `packages/permits`.
+  - Bypass `PermitClient` with ad-hoc `fetch()` in app code unless explicitly required.
+
+Validation commands:
+```bash
+# Package tests
+bun test packages/permits/tests/client.test.ts
+
+# Runtime/E2E (must run in permit-worker context for VNC parity)
+docker exec -it desert-permit-worker sh -lc 'cd /app/apps/dust-permits && bun test tests/e2e/renew-and-pay.test.ts'
+```
 
 **`PermitData` key fields** (returned by scrape endpoints):
 - `applicationId`, `projectName`, `companyName`, `status`
@@ -257,19 +283,14 @@ Connection: `@lib/db/hub` provides a Postgres client with SQLite-compatible API 
   - Attempts direct email lookup by `internet_message_id`, then fallback to Graph `message_id`.
   - Sets `emails.project_id` only when currently `NULL` (never overwrites another project link).
   - Expands project link across `conversation_id` thread (`UPDATE ... WHERE project_id IS NULL`).
-- Folder watcher estimate linking (`linkMessagesToProjectEstimates`):
-  - If project has exactly one linked estimate in `project_estimates`, links deterministically.
-  - If project has multiple estimates, calls ranked matcher (`findEstimateCandidatesForEmail`) and only auto-links when decision says `autoLink=true`.
-  - Rejects ranked matches outside the project's estimate set.
+- Folder watcher estimate linking: after `linkMessages` sets project_id, calls the unified `linkEmail()` on each linked email to run all deterministic signals (pulse ID, estimate number, project→single estimate).
 - Intake/project linking:
   - Uses shared project matcher contract (`lib/db/repositories/project.ts`) for consistency across webhook intake, folder watcher, and SWPPP reconciliation.
   - Non-auto-link outcomes are persisted to `project_match_reviews` for operator triage.
 - Periodic estimate-email backfill (`apps/background-jobs/workers/estimate-email-linker/lib/poll.ts`):
   - Processes unlinked candidate emails incrementally using cursor `estimate_email_linker_last_email_id` in `estimate_poller_config`.
-  - Matching priority:
-    1. Monday pulse/item ID exact match (`monday_pulse_id`).
-    2. Estimate number exact match (`estimate_number`) with disambiguation using project-estimate intersection, then sender domain.
-    3. Optional project-single fallback (`project_estimates_single`), currently disabled in worker runtime (`enableProjectSingle: false`).
+  - Calls the unified `linkEmail()` per candidate email (all signals: conversation→project, pulse ID, estimate number, estimate→project, project→single estimate).
+  - Post-processing SQL passes: conversation backfill (propagate estimate links across threads) and project_id backfill (propagate from estimate→project chain).
   - Writes are idempotent via `ON CONFLICT DO NOTHING` on `estimate_emails`.
 
 ```bash

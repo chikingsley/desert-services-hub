@@ -47,10 +47,14 @@ COPY apps/web ./apps/web
 # Background jobs — webhook receiver + job queue + sync timers + notifications
 COPY apps/background-jobs ./apps/background-jobs
 
+# CF Workers — shared modules referenced by background-jobs workers
+COPY apps/cf-workers ./apps/cf-workers
+
 # Packages
 COPY packages/sharepoint ./packages/sharepoint
 COPY packages/email ./packages/email
 COPY packages/documents ./packages/documents
+COPY packages/contracts ./packages/contracts
 COPY packages/monday ./packages/monday
 COPY packages/estimates ./packages/estimates
 COPY packages/permits ./packages/permits
@@ -61,6 +65,9 @@ COPY lib ./lib
 
 # Install Python deps for pdf-analysis
 RUN cd packages/documents/pdf-analysis-cli && uv sync --frozen 2>/dev/null || uv sync
+
+# Install Python deps for contract extraction (LangExtract fork)
+RUN cd packages/contracts/langextract && uv sync --frozen 2>/dev/null || uv sync
 
 # Install opencode CLI (used for Kimi K2.5 reconciliation in parse pipeline)
 RUN bun add -g opencode-ai

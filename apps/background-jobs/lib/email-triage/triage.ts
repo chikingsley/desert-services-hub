@@ -6,13 +6,14 @@
  * Flow:
  *   1. Fast-path check (skip LLM for obvious cases)
  *   2. Gather full context (thread, documents, attachments, candidates)
- *   3. Build prompt and call LLM via opencode
+ *   3. Build prompt and call LLM
  *   4. Parse + validate LLM output
  *   5. Dispatch (persist classification, link, enqueue job)
  */
 
 import { getEmailById } from "@lib/db/repositories/email";
-import { runOpencodeJsonPrompt } from "../email-intent/opencode";
+import type { LlmProvider } from "../llm";
+import { runJsonPrompt } from "../llm";
 import { gatherTriageContext } from "./triage-context";
 import type { DispatchResult } from "./triage-dispatch";
 import { dispatchTriageResult } from "./triage-dispatch";
@@ -34,7 +35,7 @@ const EMAIL_TRIAGE_MODE = parseTriageMode(process.env.EMAIL_TRIAGE_MODE);
 const EMAIL_TRIAGE_MODEL = (
   process.env.GEMINI_FAST_MODEL ?? "gemini-2.5-flash-lite"
 ).trim();
-const EMAIL_TRIAGE_TIMEOUT_MS = 30_000;
+const LOCAL_LLM_MODEL = process.env.LOCAL_LLM_MODEL ?? "granite4:latest";
 
 // ── Internal domains (fast-path) ────────────────────────────
 
@@ -54,6 +55,11 @@ export interface TriageOutcome {
   error: string | null;
 }
 
+export interface TriageOptions {
+  /** Override LLM provider (default: gemini) */
+  provider?: LlmProvider;
+}
+
 /**
  * Triage a single email: classify, link, and dispatch.
  *
@@ -63,7 +69,8 @@ export interface TriageOutcome {
  */
 export async function triageEmail(
   emailId: number,
-  meta: TriageEmailMeta
+  meta: TriageEmailMeta,
+  options?: TriageOptions
 ): Promise<TriageOutcome> {
   if (EMAIL_TRIAGE_MODE === "disabled") {
     return {
@@ -91,47 +98,24 @@ export async function triageEmail(
     };
   }
 
+  const provider: LlmProvider = options?.provider ?? "gemini";
+  const model = provider === "local" ? LOCAL_LLM_MODEL : EMAIL_TRIAGE_MODEL;
+
   const prompt = buildTriagePrompt(context);
   let raw: Record<string, unknown> | null = null;
 
   try {
-    raw = await runOpencodeJsonPrompt(prompt, {
-      model: EMAIL_TRIAGE_MODEL,
-      timeoutMs: EMAIL_TRIAGE_TIMEOUT_MS,
-    });
+    raw = await runJsonPrompt(prompt, { model, provider });
   } catch (error) {
-    // Retry once with longer timeout on timeout errors
     const msg = error instanceof Error ? error.message : String(error);
-    if (msg.includes("timed out")) {
-      try {
-        raw = await runOpencodeJsonPrompt(prompt, {
-          model: EMAIL_TRIAGE_MODEL,
-          timeoutMs: 60_000,
-        });
-      } catch (retryError) {
-        const retryMsg =
-          retryError instanceof Error ? retryError.message : String(retryError);
-        console.error(
-          `[triage] LLM retry failed for email ${emailId}: ${retryMsg}`
-        );
-        return {
-          result: null,
-          dispatch: null,
-          skipped: false,
-          skipReason: null,
-          error: `llm_retry_failed: ${retryMsg}`,
-        };
-      }
-    } else {
-      console.error(`[triage] LLM failed for email ${emailId}: ${msg}`);
-      return {
-        result: null,
-        dispatch: null,
-        skipped: false,
-        skipReason: null,
-        error: `llm_failed: ${msg}`,
-      };
-    }
+    console.error(`[triage] LLM failed for email ${emailId}: ${msg}`);
+    return {
+      result: null,
+      dispatch: null,
+      skipped: false,
+      skipReason: null,
+      error: `llm_failed: ${msg}`,
+    };
   }
 
   const validProjectIds = new Set(context.candidates.projects.map((p) => p.id));

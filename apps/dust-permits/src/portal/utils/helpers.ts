@@ -1408,3 +1408,116 @@ export async function selectControlMeasure(
     await clickRadio(page, selector);
   }
 }
+
+// ============================================================================
+// Vaadin-Compatible Helpers (Point & Pay payment portal)
+// ============================================================================
+//
+// Point & Pay uses Vaadin web components. Text fields and checkboxes work
+// with the standard helpers above (selectors target the inner native element).
+// Combo-boxes need special handling (type-to-filter + overlay click).
+
+/**
+ * Select a value from a Vaadin combo-box.
+ *
+ * Unlike native <select> (use selectByLabel for those), Vaadin combo-boxes
+ * require: click → type to filter → click overlay item or press Enter.
+ *
+ * @param page - Playwright Page
+ * @param comboSelector - Selector for the <vaadin-combo-box> element (not the inner input)
+ * @param value - Value to select
+ * @param fieldName - Human-readable name for logging
+ * @returns true if selection succeeded
+ */
+export async function selectCombo(
+  page: Page,
+  comboSelector: string,
+  value: string,
+  fieldName?: string
+): Promise<boolean> {
+  try {
+    const combo = page.locator(comboSelector).first();
+    await combo.waitFor({ state: "visible", timeout: 10_000 });
+
+    const input = combo.locator('input[slot="input"]').first();
+    await input.click();
+    await sleep(SETTLE_MS);
+
+    await input.fill("");
+    await input.fill(value);
+    await sleep(SETTLE_MS);
+
+    // Click the matching overlay item if visible, otherwise press Enter
+    const overlayItem = page
+      .locator(`vaadin-combo-box-item:has-text("${value}")`)
+      .first();
+    const itemVisible = await overlayItem.isVisible().catch(() => false);
+
+    if (itemVisible) {
+      await overlayItem.click();
+    } else {
+      await input.press("Enter");
+    }
+
+    await sleep(SETTLE_MS);
+    if (fieldName) {
+      console.log(`    ✓ ${fieldName}: ${value}`);
+    }
+    return true;
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error);
+    console.log(`    ✗ ${fieldName ?? comboSelector}: ${msg}`);
+    return false;
+  }
+}
+
+/**
+ * Click a button and return success/failure.
+ *
+ * Works with any clickable element (Vaadin buttons, standard buttons, links).
+ */
+export async function clickButton(
+  page: Page,
+  selector: string,
+  fieldName?: string
+): Promise<boolean> {
+  try {
+    const button = page.locator(selector).first();
+    await button.waitFor({ state: "visible", timeout: 10_000 });
+    await button.click();
+    await sleep(SETTLE_MS);
+    if (fieldName) {
+      console.log(`    ✓ Clicked: ${fieldName}`);
+    }
+    return true;
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error);
+    console.log(`    ✗ Click ${fieldName ?? selector}: ${msg}`);
+    return false;
+  }
+}
+
+/**
+ * Read text content or input value from an element. Returns null if not visible.
+ */
+export async function readText(
+  page: Page,
+  selector: string
+): Promise<string | null> {
+  try {
+    const locator = page.locator(selector).first();
+    const visible = await locator.isVisible().catch(() => false);
+    if (!visible) {
+      return null;
+    }
+
+    const tagName = await locator.evaluate((el) => el.tagName.toLowerCase());
+    if (tagName === "input" || tagName === "textarea") {
+      return await locator.inputValue();
+    }
+
+    return await locator.textContent();
+  } catch {
+    return null;
+  }
+}

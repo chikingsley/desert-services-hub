@@ -2,20 +2,11 @@ import { existsSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { db } from "@lib/db/hub";
+import { ocrPdf } from "@lib/pdf-analysis";
 import { getItemAssets } from "@monday/client";
 import { processItemFiles } from "@monday/sync/pipeline";
 
 const ESTIMATE_COLUMN_ID = "file_mksebs2e";
-let PDF_ANALYSIS_CWD = join(
-  import.meta.dir,
-  "../../../packages/documents/pdf-analysis-cli"
-);
-if (existsSync("/app/packages/documents/pdf-analysis-cli")) {
-  PDF_ANALYSIS_CWD = "/app/packages/documents/pdf-analysis-cli";
-}
-if (process.env.PDF_ANALYSIS_CLI_CWD?.trim()) {
-  PDF_ANALYSIS_CWD = process.env.PDF_ANALYSIS_CLI_CWD.trim();
-}
 
 type Classification = "estimate_like" | "non_estimate" | "unknown";
 
@@ -208,52 +199,16 @@ async function runOcrPreview(
   text: string;
   error?: string;
 }> {
-  let uvBin = "uv";
-  if (existsSync("/root/.local/bin/uv")) {
-    uvBin = "/root/.local/bin/uv";
-  }
-  if (process.env.UV_BIN?.trim()) {
-    uvBin = process.env.UV_BIN.trim();
-  }
-
-  const proc = Bun.spawn(
-    [
-      uvBin,
-      "run",
-      "-m",
-      "pdf_analysis.cli",
-      "ocr",
-      pdfPath,
-      "--provider",
-      provider,
-      "--pages",
-      "1-2",
-      "--format",
-      "text",
-    ],
-    {
-      cwd: PDF_ANALYSIS_CWD,
-      stdout: "pipe",
-      stderr: "pipe",
-      env: { ...process.env, PATH: process.env.PATH ?? "" },
-    }
-  );
-
-  const timeout = setTimeout(() => proc.kill(), 180_000);
-  const stdout = await new Response(proc.stdout).text();
-  const stderr = await new Response(proc.stderr).text();
-  const exitCode = await proc.exited;
-  clearTimeout(timeout);
-
-  if (exitCode !== 0) {
+  try {
+    const result = await ocrPdf(pdfPath, { provider, pages: "1-2" });
+    return { ok: true, text: result.text };
+  } catch (err) {
     return {
       ok: false,
       text: "",
-      error: `ocr exit ${exitCode}: ${stderr.trim().slice(0, 280)}`,
+      error: err instanceof Error ? err.message : String(err),
     };
   }
-
-  return { ok: true, text: stdout };
 }
 
 async function downloadAssetToTemp(

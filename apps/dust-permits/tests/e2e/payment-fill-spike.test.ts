@@ -21,18 +21,14 @@
  */
 
 import { afterAll, describe, expect, test } from "bun:test";
+import { DEFAULTS } from "@/form-data";
 import { getCurrentPage } from "@/portal/create";
+import { checkExpedited, submitApplication } from "@/portal/create/fill/page5";
 import {
   clickPaymentContinue,
   confirmPayment,
   fillPaymentPage1,
-} from "@/portal/payment";
-import { checkExpedited } from "@/portal/payment/page5";
-import {
-  buildPaymentData,
-  validatePaymentEnv,
-} from "@/portal/payment/payment-data";
-import { submitApplication } from "@/portal/payment/submit";
+} from "@/portal/create/fill/payment";
 import { navigateToPage } from "@/portal/resume";
 import { waitForElement } from "@/portal/utils/helpers";
 import { portal } from "@/portal/utils/selectors";
@@ -43,18 +39,16 @@ const SPIKE_APP_ID = process.env.SPIKE_APP_ID ?? "";
 const SPIKE_PAY = process.env.SPIKE_PAY === "1";
 
 // Skip if no app ID or payment env vars aren't set
-const paymentEnv = validatePaymentEnv();
-const canRun = SPIKE_APP_ID && paymentEnv.valid;
+const hasPaymentData = !!DEFAULTS.payment.card.cardNumber;
+const canRun = SPIKE_APP_ID && hasPaymentData;
 const describeSuite = canRun ? describe : describe.skip;
 
 if (!canRun) {
   if (!SPIKE_APP_ID) {
     console.log("Skipping payment-fill-spike: SPIKE_APP_ID not set");
   }
-  if (!paymentEnv.valid) {
-    console.log(
-      `Skipping payment-fill-spike: missing env vars: ${paymentEnv.missing.join(", ")}`
-    );
+  if (!hasPaymentData) {
+    console.log("Skipping payment-fill-spike: PAYMENT_* env vars not set");
   }
 }
 
@@ -129,9 +123,8 @@ describeSuite("Spike: Payment Fill + Review", () => {
     "3. fill credit card and billing info",
     async () => {
       const { page } = harness;
-      const paymentData = buildPaymentData();
 
-      const report = await fillPaymentPage1(page, paymentData);
+      const report = await fillPaymentPage1(page, DEFAULTS.payment);
 
       console.log(`  Filled: ${report.filledFields.join(", ")}`);
       if (report.failedFields.length > 0) {

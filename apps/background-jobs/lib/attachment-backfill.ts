@@ -16,8 +16,10 @@
 import { mkdir, unlink } from "node:fs/promises";
 import { join } from "node:path";
 import type { GraphEmailClient } from "@email/client";
+import type { GraphGroupsClient } from "@email/groups";
 import { isSubjectCompatibleWithProject } from "@email/project-subject-guard";
 import { createGraphClient } from "@email/sync/config";
+import { createGroupsClient } from "@email/sync/groups-core/sync-group";
 import { db } from "@lib/db/hub";
 import { updateAttachmentExtraction } from "@lib/db/repositories/attachment";
 import { processFilesIntake } from "./files-intake";
@@ -37,6 +39,8 @@ interface UnprocessedAttachment {
   email_id: number;
   message_id: string;
   internet_message_id: string | null;
+  thread_id: string | null;
+  conversation_id: string | null;
   project_id: number | null;
   subject: string | null;
   from_email: string | null;
@@ -98,12 +102,11 @@ function shouldSkip(att: UnprocessedAttachment): boolean {
   return false;
 }
 
-// Microsoft 365 Groups use /groups/{id}/messages — not /users/{email}/messages.
-// The Graph client only supports /users/ paths, so group mailboxes must be excluded.
-const GROUP_MAILBOXES = new Set(["internalcontracts@desertservices.net"]);
+const IC_GROUP_EMAIL = "internalcontracts@desertservices.net";
+const IC_GROUP_ID = "962f9440-9bde-4178-b538-edc7f8d3ecce";
 
 /**
- * Fetch unprocessed attachments — excludes M365 group mailboxes (unsupported Graph path).
+ * Fetch unprocessed attachments from all mailboxes including M365 groups.
  */
 const getUnprocessedAttachments = db.query<UnprocessedAttachment, [number]>(`
   SELECT
@@ -118,6 +121,8 @@ const getUnprocessedAttachments = db.query<UnprocessedAttachment, [number]>(`
     e.project_id,
     e.subject,
     e.from_email,
+    e.thread_id,
+    e.conversation_id,
     m.email as mailbox_email
   FROM attachments a
   JOIN emails e ON e.id = a.email_id
@@ -134,7 +139,6 @@ const getUnprocessedAttachments = db.query<UnprocessedAttachment, [number]>(`
     )
     AND d.id IS NULL
     AND (e.classification IS NULL OR e.classification NOT IN ('SPAM', 'HR', 'IT'))
-    AND m.email NOT IN (${[...GROUP_MAILBOXES].map((e) => `'${e}'`).join(", ")})
   ORDER BY e.received_at DESC
   LIMIT $1
 `);
@@ -251,9 +255,61 @@ async function linkResultsToDocuments(
   return { anySuccess, projectLinkSkipped };
 }
 
+/**
+ * Download an attachment from an M365 Group post.
+ *
+ * The stored `emails.thread_id` is in the wrong Exchange-style format and
+ * cannot be used directly with the Graph groups API. We always resolve the
+ * real thread ID via getConversationThreads, then fetch post attachments
+ * inline (same approach the sync code uses) to avoid a separate
+ * /attachments/{id} endpoint that returns 403.
+ */
+async function downloadGroupAttachment(
+  att: UnprocessedAttachment,
+  groupClient: GraphGroupsClient
+): Promise<Buffer> {
+  if (!att.conversation_id) {
+    throw new Error("No conversation_id for group attachment");
+  }
+
+  // Always resolve the real Graph API thread ID from the conversation
+  const threads = await groupClient.getConversationThreads(
+    IC_GROUP_ID,
+    att.conversation_id
+  );
+  if (threads.length === 0) {
+    throw new Error("No threads found for group conversation");
+  }
+
+  // Search all threads for the post matching att.message_id
+  for (const thread of threads) {
+    const posts = await groupClient.getThreadPosts(
+      IC_GROUP_ID,
+      thread.id,
+      true
+    );
+    const post = posts.find((p) => p.id === att.message_id);
+    if (!post) {
+      continue;
+    }
+    const attachment = post.attachments?.find(
+      (a) => a.id === att.graph_attachment_id
+    );
+    if (!attachment?.contentBytes) {
+      throw new Error("Group attachment has no content bytes");
+    }
+    return Buffer.from(attachment.contentBytes, "base64");
+  }
+
+  throw new Error(
+    `Post ${att.message_id} not found in any thread of conversation ${att.conversation_id}`
+  );
+}
+
 async function processOneAttachment(
   att: UnprocessedAttachment,
-  client: GraphEmailClient
+  client: GraphEmailClient,
+  groupClient: GraphGroupsClient
 ): Promise<AttachmentOutcome> {
   // ---- Skip rules (inline images, calendars, etc.) ----
   if (shouldSkip(att)) {
@@ -291,12 +347,17 @@ async function processOneAttachment(
     `${LOG}   Downloading: "${att.name}" (${att.content_type}, ${att.size ?? "?"} bytes) from ${att.mailbox_email}`
   );
 
+  const downloadFn =
+    att.mailbox_email === IC_GROUP_EMAIL
+      ? downloadGroupAttachment(att, groupClient)
+      : client.downloadAttachment(
+          att.message_id,
+          att.graph_attachment_id,
+          att.mailbox_email
+        );
+
   const buffer = await Promise.race([
-    client.downloadAttachment(
-      att.message_id,
-      att.graph_attachment_id,
-      att.mailbox_email
-    ),
+    downloadFn,
     new Promise<never>((_, reject) =>
       setTimeout(
         () => reject(new Error("Download timed out")),
@@ -428,6 +489,7 @@ export async function processUnprocessedAttachments(
 
   await mkdir(BACKFILL_DIR, { recursive: true });
   const client = createGraphClient();
+  const groupClient = createGroupsClient();
 
   for (let i = 0; i < attachments.length; i += concurrency) {
     const chunk = attachments.slice(i, i + concurrency);
@@ -435,7 +497,7 @@ export async function processUnprocessedAttachments(
     const outcomes = await Promise.allSettled(
       chunk.map(async (att) => {
         try {
-          return await processOneAttachment(att, client);
+          return await processOneAttachment(att, client, groupClient);
         } catch (err) {
           const msg = err instanceof Error ? err.message : String(err);
           console.error(`${LOG}   FAIL: ${att.name}: ${msg}`);

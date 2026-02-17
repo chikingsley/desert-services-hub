@@ -21,7 +21,6 @@ import {
 import {
   checkDustPermitIssued,
   linkMessages,
-  linkMessagesToProjectEstimates,
 } from "@background-jobs/workers/outlook-folder-watcher/lib/linker";
 import {
   findProjectByFolder,
@@ -38,6 +37,7 @@ import {
 } from "@background-jobs/workers/outlook-folder-watcher/lib/state";
 import { db as hubDb } from "@lib/db/hub";
 import { normalizeProjectNameKey } from "@lib/db/repositories/project";
+import { linkEmail } from "@lib/linking/link-email";
 
 // -- Handlers --
 
@@ -150,17 +150,20 @@ async function handleNewMessages(
     });
   }
 
-  const estimateStats = await linkMessagesToProjectEstimates(
-    hubProjectId,
-    folderName,
-    toLink
-  );
-  if (estimateStats.linked > 0) {
+  // Run unified deterministic linker on all emails that were just project-linked
+  let estimateLinked = 0;
+  for (const emailId of stats.linkedEmailIds) {
+    const result = await linkEmail(emailId);
+    if (result.estimateLinked) {
+      estimateLinked++;
+    }
+  }
+  if (estimateLinked > 0) {
     console.log(
-      `[EstimateLink] "${folderName}": linked=${estimateStats.linked}, candidates=${estimateStats.candidateEmails}, projectEstimates=${estimateStats.projectEstimateCount}`
+      `[EstimateLink] "${folderName}": ${estimateLinked} emails linked to estimates via linkEmail`
     );
     await logEvent("estimate_emails_linked", folderId, folderName, {
-      ...estimateStats,
+      estimateLinked,
       hubProjectId,
     });
   }

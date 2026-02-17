@@ -19,14 +19,19 @@ import {
 } from "./application";
 import { DEFAULT_COPY_FROM_APP } from "./constants";
 import {
+  checkExpedited,
+  clickPaymentContinue,
+  confirmPayment,
   fillPage1,
   fillPage2,
   fillPage2Renew,
   fillPage2WithMapData,
   fillPage3,
   fillPage4,
+  fillPage5,
+  fillPaymentPage1,
+  submitApplication,
 } from "./fill";
-import { getCurrentPage } from "./navigation";
 
 export async function fullCreateFlow(
   page: Page,
@@ -73,7 +78,8 @@ export async function fullCreateFlow(
   await clickNext(page);
   await fillPage4(page, data);
 
-  const reachedPage5 = await page.isVisible(portal.pageMarkers.page5Submit);
+  const page5Result = await fillPage5(page);
+  const reachedPage5 = page5Result.reachedPage5;
   console.log(`\n=== FLOW COMPLETE - Page 5 Reached: ${reachedPage5} ===`);
   return { ...res, reachedPage5 };
 }
@@ -260,31 +266,10 @@ export async function createApplicationFull(
   // Page 4
   await fillPage4(page, formData);
 
-  // Navigate to Page 5
-  const nextToPage5Clicked = await clickNext(page);
-  if (!nextToPage5Clicked) {
-    console.log("  ⚠ Could not click Next after Page 4");
-  }
-
-  // 4. Verify we reached Page 5
-  await sleep(SETTLE_MS);
-  let reachedPage5 = await page
-    .isVisible(portal.pageMarkers.page5Submit)
-    .catch(() => false);
-
-  // ADF can be slow to swap page panels; give it one more settle window.
-  if (!reachedPage5) {
-    await sleep(SETTLE_MS);
-    reachedPage5 = await page
-      .isVisible(portal.pageMarkers.page5Submit)
-      .catch(() => false);
-  }
-
-  // Fallback: step marker can indicate page 5 even when the submit text is delayed/changed.
-  const currentPage = await getCurrentPage(page).catch(() => null);
-  if (!reachedPage5 && currentPage === 5) {
-    reachedPage5 = true;
-  }
+  // Page 5
+  const page5Result = await fillPage5(page);
+  const reachedPage5 = page5Result.reachedPage5;
+  const currentPage = page5Result.currentPage;
 
   const { applicationId } = createResult;
 
@@ -452,11 +437,8 @@ export async function renewPermitFull(
     console.log("  Filling Page 4...");
     await fillPage4(page, formData);
   }
-  await clickNext(page);
-  await sleep(SETTLE_MS);
-
-  // Verify we reached page 5
-  const atPage5 = await page.isVisible(portal.pageMarkers.page5Submit);
+  const page5Result = await fillPage5(page);
+  const atPage5 = page5Result.reachedPage5;
 
   if (atPage5) {
     console.log(`\n=== ✓ RENEWAL READY: ${appId} ===`);
@@ -465,10 +447,9 @@ export async function renewPermitFull(
     return { applicationId: appId, success: true };
   }
 
-  const currentPage = await getCurrentPage(page);
   return {
     applicationId: appId,
-    error: `Did not reach Page 5 (currently on page ${currentPage})`,
+    error: `Did not reach Page 5 (currently on page ${page5Result.currentPage})`,
     success: false,
   };
 }
@@ -561,11 +542,8 @@ export async function revisePermitFull(
     console.log("  Filling Page 4...");
     await fillPage4(page, formData);
   }
-  await clickNext(page);
-  await sleep(SETTLE_MS);
-
-  // Verify we reached page 5
-  const atPage5 = await page.isVisible(portal.pageMarkers.page5Submit);
+  const page5Result = await fillPage5(page);
+  const atPage5 = page5Result.reachedPage5;
 
   if (atPage5) {
     console.log(`\n=== ✓ REVISION READY: ${appId} ===`);
@@ -574,10 +552,9 @@ export async function revisePermitFull(
     return { applicationId: appId, success: true };
   }
 
-  const currentPage = await getCurrentPage(page);
   return {
     applicationId: appId,
-    error: `Did not reach Page 5 (currently on page ${currentPage})`,
+    error: `Did not reach Page 5 (currently on page ${page5Result.currentPage})`,
     success: false,
   };
 }
@@ -608,33 +585,24 @@ export interface RenewAndPayResult {
 }
 
 /**
- * Renew a permit, submit it, and pay — with operator checkpoints at critical steps.
+ * Renew a permit, submit it, and pay — pure automation, no checkpoints.
  *
- * Flow: renewPermitFull (pages 1-5) → set expedited → checkpoint → submit
- *       → fill payment page 1 → checkpoint → continue to review
- *       → dry run to read amount → checkpoint → pay
+ * Flow: renewPermitFull (pages 1-5) → set expedited → submit
+ *       → fill payment page 1 → continue to review → confirm payment
  *
- * Each checkpoint pauses until the operator clicks Yes/No in the web UI.
- * If the operator declines at any checkpoint, the flow stops gracefully.
+ * Payment data comes from DEFAULTS.payment (populated from PAYMENT_* env vars).
+ * Checkpoints are an orchestration concern — add them at the call site
+ * (test or API handler) between individual steps.
  */
 export async function renewAndPayFull(
   page: Page,
   context: BrowserContext,
   permitId: string,
   companyName: string,
-  paymentData: import("@/portal/types").PaymentData,
-  options?: { expedited?: boolean }
+  options?: { expedited?: boolean; dryRun?: boolean }
 ): Promise<RenewAndPayResult> {
   const expedited = options?.expedited ?? true;
-
-  const {
-    checkExpedited,
-    checkpoint,
-    clickPaymentContinue,
-    confirmPayment,
-    fillPaymentPage1,
-    submitApplication,
-  } = await import("@/portal/payment");
+  const dryRun = options?.dryRun ?? false;
 
   // Phase 1: Renew to Page 5
   const renewResult = await renewPermitFull(
@@ -658,16 +626,6 @@ export async function renewAndPayFull(
   // Set expedited checkbox
   if (expedited) {
     await checkExpedited(page, true);
-  }
-
-  // Checkpoint: before submit
-  const goSubmit = await checkpoint(
-    `Submit ${appId}? This submits to Maricopa County.`,
-    { appId, permit: permitId, step: "before-submit", expedited }
-  );
-  if (!goSubmit) {
-    console.log("  Operator declined submit. Draft on Page 5.");
-    return { applicationId: appId, stage: "page5-ready", success: true };
   }
 
   // Phase 2: Submit
@@ -695,20 +653,16 @@ export async function renewAndPayFull(
   }
 
   // Phase 3: Fill payment page 1
-  const fillReport = await fillPaymentPage1(page, paymentData);
+  const fillReport = await fillPaymentPage1(page, DEFAULTS.payment);
   console.log(`  Filled: ${fillReport.filledFields.join(", ")}`);
 
-  // Checkpoint: payment page 1 filled
-  const goPay1 = await checkpoint(
-    "Payment Page 1 filled. Continue to review?",
-    {
-      appId,
-      step: "payment-page1-filled",
-      filled: fillReport.filledFields.length,
-    }
-  );
-  if (!goPay1) {
-    return { applicationId: appId, stage: "payment-page1", success: true };
+  if (!fillReport.success) {
+    return {
+      applicationId: appId,
+      error: `Payment fill failed: ${fillReport.failedFields.join(", ")}`,
+      stage: "payment-page1",
+      success: false,
+    };
   }
 
   // Advance to review page
@@ -722,28 +676,17 @@ export async function renewAndPayFull(
     };
   }
 
-  // Dry run to read amounts
-  const dryRun = await confirmPayment(page, { dryRun: true });
+  // Read amounts via dry run
+  const review = await confirmPayment(page, { dryRun: true });
 
-  // Checkpoint: before charging card
-  const goCharge = await checkpoint(
-    `Pay ${dryRun.totalPaid ?? "unknown"} for ${appId}? THIS CHARGES THE CARD.`,
-    {
-      appId,
-      permit: permitId,
-      step: "before-pay",
-      amount: dryRun.amount,
-      fee: dryRun.convenienceFee,
-      total: dryRun.totalPaid,
-    }
-  );
-  if (!goCharge) {
+  if (dryRun) {
     return {
-      amount: dryRun.amount,
+      amount: review.amount,
       applicationId: appId,
+      convenienceFee: review.convenienceFee,
       stage: "payment-review",
       success: true,
-      totalPaid: dryRun.totalPaid,
+      totalPaid: review.totalPaid,
     };
   }
 

@@ -34,7 +34,6 @@ Scope boundary:
 
 - `intake-worker` (`apps/cf-workers/intake-worker`)
 - `estimates-sync` (`apps/cf-workers/estimates-sync-worker`)
-- `monday-status-sync` (`apps/cf-workers/monday-status-sync-worker`)
 - `inspection-router` (`apps/cf-workers/inspections-email-worker`)
 
 ### In-Process Worker Modules

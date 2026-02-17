@@ -5,14 +5,15 @@ description = "Unified PDF analysis CLI with Gemini, local OCR, and Mistral prov
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+    "fastapi>=0.115.0",
     "google-genai>=1.0.0",
     "httpx>=0.28.0",
     "kreuzberg",
     "pydantic>=2.10.0",
     "pydantic-settings>=2.0.0",
-
     "python-dotenv>=1.0.0",
     "typer>=0.12.0",
+    "uvicorn>=0.34.0",
 ]
 
 [project.optional-dependencies]

@@ -14,6 +14,7 @@ import type { GraphEmailClient } from "@email/client";
 import { createGraphClient } from "@email/sync/config";
 import { db } from "@lib/db/hub";
 import { updateAttachmentExtraction } from "@lib/db/repositories/attachment";
+import { enrichContractDocumentsWithLangExtract } from "../lib/contracts/langextract";
 import { processFilesIntake } from "../lib/files-intake";
 import type { ContractEmailJobPayload } from "../lib/notifications/email-triggers";
 
@@ -97,6 +98,13 @@ const updateDocumentLinks = db.prepare(`
   WHERE id = $1
 `);
 
+const listDocumentIdsByAttachment = db.query<{ id: number }, [number]>(
+  `SELECT id
+   FROM documents
+   WHERE attachment_id = $1
+   ORDER BY id DESC`
+);
+
 // ============================================================================
 // Single Attachment Processing
 // ============================================================================
@@ -113,7 +121,7 @@ async function processOneContractAttachment(
   att: AttachmentRow,
   client: GraphEmailClient,
   ctx: AttachmentContext
-): Promise<"succeeded" | "failed"> {
+): Promise<{ status: "succeeded" | "failed"; documentIds: number[] }> {
   const ext = att.name.includes(".")
     ? att.name.split(".").pop()?.toLowerCase()
     : "bin";
@@ -149,14 +157,18 @@ async function processOneContractAttachment(
 
     if (anySuccess) {
       await updateAttachmentExtraction(att.id, "success");
+      const docs = await listDocumentIdsByAttachment.all(att.id);
       console.log(`${LOG}   OK: ${att.name}`);
-      return "succeeded";
+      return {
+        status: "succeeded",
+        documentIds: docs.map((doc) => doc.id),
+      };
     }
 
     const errMsg = results[0]?.error ?? "No document created";
     await updateAttachmentExtraction(att.id, "failed", null, errMsg);
     console.error(`${LOG}   FAIL: ${att.name}: ${errMsg}`);
-    return "failed";
+    return { status: "failed", documentIds: [] };
   } finally {
     try {
       await unlink(localPath);
@@ -225,6 +237,7 @@ export async function processContractEmailJob(
 
   let succeeded = 0;
   let failed = 0;
+  const createdDocumentIds: number[] = [];
 
   for (const att of attachments) {
     if (shouldSkip(att)) {
@@ -234,8 +247,9 @@ export async function processContractEmailJob(
 
     try {
       const outcome = await processOneContractAttachment(att, client, ctx);
-      if (outcome === "succeeded") {
+      if (outcome.status === "succeeded") {
         succeeded++;
+        createdDocumentIds.push(...outcome.documentIds);
       } else {
         failed++;
       }
@@ -255,4 +269,8 @@ export async function processContractEmailJob(
   console.log(
     `${LOG}   Done: ${succeeded} succeeded, ${failed} failed out of ${processable.length} processable`
   );
+
+  if (createdDocumentIds.length > 0) {
+    await enrichContractDocumentsWithLangExtract(createdDocumentIds);
+  }
 }

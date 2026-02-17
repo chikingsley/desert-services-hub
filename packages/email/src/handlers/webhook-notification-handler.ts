@@ -12,9 +12,9 @@ import {
   getOrCreateMailbox,
   insertAttachment,
   insertEmail,
-  linkEmailToProject,
 } from "@lib/db/repositories";
 import type { InsertAttachmentData, InsertEmailData } from "@lib/db/types";
+import { linkEmail } from "@lib/linking/link-email";
 
 interface EmailMessageRow {
   bodyContent?: string | null;
@@ -128,26 +128,7 @@ async function storeAttachments(
   return inserted;
 }
 
-async function linkConversationProjectIfPossible(
-  emailId: number,
-  conversationId: string | null | undefined
-) {
-  if (!conversationId) {
-    return;
-  }
-
-  const siblingProject = await db
-    .query<{ project_id: number }>(
-      `SELECT project_id FROM emails
-       WHERE conversation_id = ? AND project_id IS NOT NULL AND id != ?
-       LIMIT 1`
-    )
-    .get(conversationId, emailId);
-
-  if (siblingProject?.project_id) {
-    await linkEmailToProject(emailId, siblingProject.project_id);
-  }
-}
+// Conversation→project linking is now handled by linkEmail() from @lib/linking/link-email
 
 export async function enrichSingleEmail(
   emailId: number,
@@ -210,7 +191,7 @@ export async function processEmailNotification(
 
   await enrichSingleEmail(emailId, adapters);
   await storeAttachments(client, mailboxEmail, messageId, emailId);
-  await linkConversationProjectIfPossible(emailId, email.conversationId);
+  await linkEmail(emailId);
 
   console.log(`[worker] Webhook synced: "${email.subject}" in ${mailboxEmail}`);
 

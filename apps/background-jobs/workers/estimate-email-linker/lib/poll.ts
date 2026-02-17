@@ -1,41 +1,30 @@
 /**
  * Estimate Email Linker
  *
- * Goal: continuously populate `estimate_emails` (canonical join table) using
- * deterministic signals.
+ * Goal: continuously populate `estimate_emails` and `emails.project_id` using
+ * deterministic signals via the unified `linkEmail()` function.
  *
  * Design principles:
  * - Conservative: only auto-link when the match is unambiguous.
- * - Idempotent: inserts use ON CONFLICT DO NOTHING.
+ * - Idempotent: all writes use ON CONFLICT DO NOTHING / WHERE ... IS NULL.
  * - Incremental: stores a "last processed email id" in estimate_poller_config.
  *
- * Signals (ordered by reliability):
- * 1) Monday pulse ID present in subject/body_preview/attachment_names → estimates.monday_item_id
- * 2) Estimate number present (e.g. Est_03192502) → estimates.estimate_number (digits-only)
- *    - If estimate_number is not unique, only link when disambiguated by:
- *      a) existing project_estimates for email.project_id
- *      b) estimate.account_domain matches email.from_domain
- * 3) Project link (emails.project_id) where project has exactly 1 estimate in project_estimates
+ * Per-email signals (delegated to linkEmail):
+ *   1) Conversation → project (sibling in same thread already has project_id)
+ *   2) Pulse ID → estimate (Monday item ID in subject/body/attachments)
+ *   3) Estimate number → estimate (Est_XXXXXXXX pattern matching)
+ *   4) Estimate → project (linked estimate maps to exactly 1 project)
+ *   5) Project → single estimate (project has exactly 1 estimate)
  *
  * Post-processing passes (run after each poll batch):
- * 4) Conversation backfill: emails in a conversation where exactly one estimate is already
- *    linked get the same estimate_emails row inserted (match_type = 'conversation').
- * 5) Project ID backfill: emails.project_id is set from the estimate→project_estimates chain
- *    when a conversation has exactly one distinct project, propagating across the full thread.
+ *   6) Conversation backfill: emails in a conversation where exactly one estimate
+ *      is already linked get the same estimate_emails row inserted.
+ *   7) Project ID backfill: emails.project_id is set from the estimate→project_estimates
+ *      chain when a conversation has exactly one distinct project.
  */
 
 import { db } from "@lib/db/hub";
-import {
-  buildEstimateIndex,
-  disambiguateEstimatesForEmail,
-  type EmailRow,
-  type EstimateIndexRow,
-  extractEstimateNumbers,
-  extractMondayPulseIds,
-  fetchProjectEstimates,
-  safeJsonArray,
-  uniq,
-} from "./poll-data";
+import { linkEmail } from "@lib/linking/link-email";
 
 // Reuse estimate-poller config table for lightweight worker state.
 const CONFIG_KEY_LAST_EMAIL_ID = "estimate_email_linker_last_email_id";
@@ -56,156 +45,36 @@ async function setConfig(key: string, value: string): Promise<void> {
   );
 }
 
-const insertLink = db.prepare(`
-  INSERT INTO estimate_emails (estimate_id, email_id, match_type, match_detail)
-  VALUES ($1, $2, $3, $4)
-  ON CONFLICT DO NOTHING
-`);
-
 export interface PollOptions {
   dryRun?: boolean;
   batchSize?: number;
   maxBatches?: number;
   minEmailId?: number;
-  enableProjectSingle?: boolean;
 }
 
 export interface PollStats {
   processedEmails: number;
   linksInserted: number;
-  skippedAmbiguous: number;
+  projectsLinked: number;
   skippedNoSignal: number;
   lastEmailId: number;
   conversationLinksInserted: number;
   projectIdsBackfilled: number;
 }
 
-// ── Link insertion helper ──────────────────────────────────────────────
-
-async function tryInsertLink(
-  dryRun: boolean,
-  estimateId: number,
-  emailId: number,
-  matchType: string,
-  detail: string
-): Promise<number> {
-  if (dryRun) {
-    return 1;
-  }
-  const r = await insertLink.run(estimateId, emailId, matchType, detail);
-  return r.count ?? 0;
-}
-
-// ── Per-email matching strategies ──────────────────────────────────────
-
-interface MatchContext {
-  email: EmailRow;
-  haystack: string;
-  projectEstimateIds: number[];
-  byMondayItemId: Map<string, EstimateIndexRow>;
-  byEstimateNumber: Map<string, EstimateIndexRow[]>;
+interface PollSettings {
   dryRun: boolean;
-  enableProjectSingle: boolean;
+  batchSize: number;
+  maxBatches: number;
 }
 
-type MatchResult =
-  | { outcome: "linked"; inserted: number }
-  | { outcome: "ambiguous" }
-  | { outcome: "no_signal" };
-
-async function tryMatchByPulseId(
-  ctx: MatchContext
-): Promise<MatchResult | null> {
-  const mondayIds = extractMondayPulseIds(ctx.haystack);
-  if (mondayIds.length === 0) {
-    return null;
-  }
-
-  let inserted = 0;
-  for (const mid of mondayIds) {
-    const est = ctx.byMondayItemId.get(mid);
-    if (!est) {
-      continue;
-    }
-    inserted += await tryInsertLink(
-      ctx.dryRun,
-      est.id,
-      ctx.email.id,
-      "monday_pulse_id",
-      `matched monday_item_id=${mid}`
-    );
-  }
-  return { outcome: "linked", inserted };
-}
-
-async function tryMatchByEstimateNumber(
-  ctx: MatchContext
-): Promise<MatchResult | null> {
-  const nums = extractEstimateNumbers(ctx.haystack);
-  if (nums.length === 0) {
-    return null;
-  }
-
-  let totalInserted = 0;
-  let ambiguousCount = 0;
-
-  for (const n of nums) {
-    const candidates = ctx.byEstimateNumber.get(n) ?? [];
-    if (candidates.length === 0) {
-      continue;
-    }
-
-    const narrowed = disambiguateEstimatesForEmail({
-      candidates,
-      emailFromDomain: ctx.email.from_domain,
-      emailProjectEstimateIds: ctx.projectEstimateIds.length
-        ? ctx.projectEstimateIds
-        : null,
-    });
-
-    if (narrowed.length !== 1 || !narrowed[0]) {
-      ambiguousCount++;
-      continue;
-    }
-
-    totalInserted += await tryInsertLink(
-      ctx.dryRun,
-      narrowed[0].id,
-      ctx.email.id,
-      "estimate_number",
-      `matched estimate_number=${n} (source=subject/body/attachments)`
-    );
-  }
-
-  if (totalInserted > 0) {
-    return { outcome: "linked", inserted: totalInserted };
-  }
-  if (ambiguousCount > 0) {
-    return { outcome: "ambiguous" };
-  }
-  return null;
-}
-
-async function tryMatchByProjectSingle(
-  ctx: MatchContext
-): Promise<MatchResult | null> {
-  if (!ctx.enableProjectSingle || ctx.projectEstimateIds.length !== 1) {
-    return null;
-  }
-
-  const estId = ctx.projectEstimateIds[0];
-  if (estId == null) {
-    return null;
-  }
-
-  const inserted = await tryInsertLink(
-    ctx.dryRun,
-    estId,
-    ctx.email.id,
-    "project_estimates_single",
-    `linked via project_id=${ctx.email.project_id}`
-  );
-  return { outcome: "linked", inserted };
+function resolvePollSettings(opts: PollOptions): PollSettings {
+  const dryRun = Boolean(opts.dryRun);
+  const batchSize = Math.max(50, Math.min(5000, opts.batchSize ?? 500));
+  const maxBatchesRaw = opts.maxBatches ?? 10;
+  const maxBatches =
+    maxBatchesRaw <= 0 ? Number.POSITIVE_INFINITY : Math.max(1, maxBatchesRaw);
+  return { dryRun, batchSize, maxBatches };
 }
 
 // ── Cursor initialization ──────────────────────────────────────────────
@@ -236,71 +105,6 @@ async function resolveStartFrom(
     await setConfig(CONFIG_KEY_LAST_EMAIL_ID, String(startFrom));
   }
   return startFrom;
-}
-
-// ── Per-email orchestration ───────────────────────────────────────────
-
-function buildMatchContext(
-  email: EmailRow,
-  projMap: Map<number, number[]>,
-  byMondayItemId: Map<string, EstimateIndexRow>,
-  byEstimateNumber: Map<string, EstimateIndexRow[]>,
-  dryRun: boolean,
-  enableProjectSingle: boolean
-): MatchContext {
-  const attachmentNames = safeJsonArray(email.attachment_names);
-  const haystack = [
-    email.subject ?? "",
-    email.normalized_subject ?? "",
-    email.body_preview ?? "",
-    ...attachmentNames,
-  ]
-    .filter(Boolean)
-    .join("\n");
-
-  const projectEstimateIds =
-    email.project_id != null ? (projMap.get(email.project_id) ?? []) : [];
-
-  return {
-    email,
-    haystack,
-    projectEstimateIds,
-    byMondayItemId,
-    byEstimateNumber,
-    dryRun,
-    enableProjectSingle,
-  };
-}
-
-type EmailMatchOutcome = "linked" | "ambiguous" | "no_signal";
-
-interface EmailMatchResult {
-  outcome: EmailMatchOutcome;
-  linksInserted: number;
-}
-
-const MATCH_STRATEGIES = [
-  tryMatchByPulseId,
-  tryMatchByEstimateNumber,
-  tryMatchByProjectSingle,
-];
-
-async function processSingleEmail(
-  ctx: MatchContext
-): Promise<EmailMatchResult> {
-  for (const strategy of MATCH_STRATEGIES) {
-    const result = await strategy(ctx);
-    if (!result) {
-      continue;
-    }
-    if (result.outcome === "linked") {
-      return { outcome: "linked", linksInserted: result.inserted };
-    }
-    if (result.outcome === "ambiguous") {
-      return { outcome: "ambiguous", linksInserted: 0 };
-    }
-  }
-  return { outcome: "no_signal", linksInserted: 0 };
 }
 
 // ── Post-pass: conversation backfill ──────────────────────────────────
@@ -414,81 +218,90 @@ async function runProjectIdBackfill(dryRun: boolean): Promise<number> {
   return r.count ?? 0;
 }
 
+function fetchCandidateEmailRows(
+  lastId: number,
+  batchSize: number
+): Promise<Array<{ id: number }>> {
+  return db
+    .query<{ id: number }, [number, number]>(
+      `
+      SELECT e.id
+      FROM emails e
+      WHERE e.id > ?
+        AND e.is_excluded = 0
+        AND NOT EXISTS (SELECT 1 FROM estimate_emails ee WHERE ee.email_id = e.id)
+        AND (
+          e.classification = 'ESTIMATE'
+          OR e.has_attachments = 1
+          OR e.subject ILIKE '%Est_%'
+          OR e.attachment_names ILIKE '%Est_%'
+          OR e.body_preview ILIKE '%Est_%'
+          OR e.subject ILIKE '%estimate%'
+          OR e.body_preview ILIKE '%estimate%'
+        )
+      ORDER BY e.id ASC
+      LIMIT ?
+    `
+    )
+    .all(lastId, batchSize);
+}
+
+async function processBatchRows(
+  rows: Array<{ id: number }>,
+  dryRun: boolean,
+  stats: Pick<
+    PollStats,
+    "processedEmails" | "linksInserted" | "projectsLinked" | "skippedNoSignal"
+  >,
+  lastId: number
+): Promise<number> {
+  let nextLastId = lastId;
+  for (const row of rows) {
+    stats.processedEmails++;
+    nextLastId = Math.max(nextLastId, row.id);
+
+    if (dryRun) {
+      continue;
+    }
+
+    const result = await linkEmail(row.id);
+    if (result.estimateLinked) {
+      stats.linksInserted++;
+    }
+    if (result.projectLinked) {
+      stats.projectsLinked++;
+    }
+    if (result.signals.length === 0) {
+      stats.skippedNoSignal++;
+    }
+  }
+  return nextLastId;
+}
+
 // ── Main poll loop ─────────────────────────────────────────────────────
 
 export async function pollEstimateEmailLinker(
   opts: PollOptions = {}
 ): Promise<PollStats> {
-  const dryRun = Boolean(opts.dryRun);
-  const batchSize = Math.max(50, Math.min(5000, opts.batchSize ?? 500));
-  const maxBatchesRaw = opts.maxBatches ?? 10;
-  const maxBatches =
-    maxBatchesRaw <= 0 ? Number.POSITIVE_INFINITY : Math.max(1, maxBatchesRaw);
-  const enableProjectSingle = Boolean(opts.enableProjectSingle);
-
-  const { byMondayItemId, byEstimateNumber } = await buildEstimateIndex();
+  const { dryRun, batchSize, maxBatches } = resolvePollSettings(opts);
   const startFrom = await resolveStartFrom(dryRun, opts.minEmailId);
 
   let lastId = startFrom;
-  let processedEmails = 0;
-  let linksInserted = 0;
-  let skippedAmbiguous = 0;
-  let skippedNoSignal = 0;
+  const counters = {
+    processedEmails: 0,
+    linksInserted: 0,
+    projectsLinked: 0,
+    skippedNoSignal: 0,
+  };
+
   for (let batch = 0; batch < maxBatches; batch++) {
-    const rows = await db
-      .query<EmailRow, [number, number]>(
-        `
-        SELECT
-          id, subject, normalized_subject, attachment_names, body_preview,
-          from_domain, project_id, received_at
-        FROM emails e
-        WHERE e.id > ?
-          AND e.is_excluded = 0
-          AND NOT EXISTS (SELECT 1 FROM estimate_emails ee WHERE ee.email_id = e.id)
-          AND (
-            e.classification = 'ESTIMATE'
-            OR e.has_attachments = 1
-            OR e.subject ILIKE '%Est_%'
-            OR e.attachment_names ILIKE '%Est_%'
-            OR e.body_preview ILIKE '%Est_%'
-            OR e.subject ILIKE '%estimate%'
-            OR e.body_preview ILIKE '%estimate%'
-          )
-        ORDER BY e.id ASC
-        LIMIT ?
-      `
-      )
-      .all(lastId, batchSize);
+    const rows = await fetchCandidateEmailRows(lastId, batchSize);
 
     if (rows.length === 0) {
       break;
     }
 
-    const projectIds = uniq(
-      rows.map((r) => r.project_id).filter((v): v is number => v != null)
-    );
-    const projMap = await fetchProjectEstimates(projectIds);
-
-    for (const email of rows) {
-      processedEmails++;
-      lastId = Math.max(lastId, email.id);
-
-      const ctx = buildMatchContext(
-        email,
-        projMap,
-        byMondayItemId,
-        byEstimateNumber,
-        dryRun,
-        enableProjectSingle
-      );
-      const result = await processSingleEmail(ctx);
-      linksInserted += result.linksInserted;
-      if (result.outcome === "ambiguous") {
-        skippedAmbiguous++;
-      } else if (result.outcome === "no_signal") {
-        skippedNoSignal++;
-      }
-    }
+    lastId = await processBatchRows(rows, dryRun, counters, lastId);
 
     if (!dryRun) {
       await setConfig(CONFIG_KEY_LAST_EMAIL_ID, String(lastId));
@@ -500,10 +313,10 @@ export async function pollEstimateEmailLinker(
   const projectIdsBackfilled = await runProjectIdBackfill(dryRun);
 
   return {
-    processedEmails,
-    linksInserted,
-    skippedAmbiguous,
-    skippedNoSignal,
+    processedEmails: counters.processedEmails,
+    linksInserted: counters.linksInserted,
+    projectsLinked: counters.projectsLinked,
+    skippedNoSignal: counters.skippedNoSignal,
     lastEmailId: lastId,
     conversationLinksInserted,
     projectIdsBackfilled,

@@ -14,6 +14,9 @@
 # Background jobs — webhook receiver + job queue + sync timers + notifications
 !apps/background-jobs/
 
+# CF Workers — shared modules referenced by background-jobs
+!apps/cf-workers/
+
 # Document processing
 !packages/documents/
 

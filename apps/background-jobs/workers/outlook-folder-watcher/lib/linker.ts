@@ -6,28 +6,12 @@
 
 import { isSubjectCompatibleWithProject } from "@email/project-subject-guard";
 import { db } from "@lib/db/hub";
-import {
-  findEstimateCandidatesForEmail,
-  linkEmailToEstimate,
-} from "@lib/db/repositories/estimate-email";
 
 interface MessageForLinking {
   id?: string;
   internetMessageId?: string;
   conversationId?: string;
   subject?: string;
-}
-
-function uniqueNonEmpty(values: Array<string | null | undefined>): string[] {
-  const dedup = new Set<string>();
-  for (const value of values) {
-    const normalized = (value ?? "").trim();
-    if (normalized.length === 0) {
-      continue;
-    }
-    dedup.add(normalized);
-  }
-  return [...dedup];
 }
 
 const findConversationProjectAnchor = db.query<
@@ -113,11 +97,13 @@ export async function linkMessages(
   threadExpanded: number;
   notFound: number;
   skippedSubjectMismatch: number;
+  linkedEmailIds: number[];
 }> {
   let directLinks = 0;
   let notFound = 0;
   let skippedSubjectMismatch = 0;
   const conversationIds = new Set<string>();
+  const linkedEmailIds: number[] = [];
 
   for (const msg of messages) {
     const email = await findEmailByMessage(msg);
@@ -128,6 +114,7 @@ export async function linkMessages(
     }
 
     if (email.project_id === hubProjectId) {
+      linkedEmailIds.push(email.id);
       continue;
     }
 
@@ -144,6 +131,7 @@ export async function linkMessages(
       email.id,
     ]);
     directLinks++;
+    linkedEmailIds.push(email.id);
 
     if (email.conversation_id) {
       conversationIds.add(email.conversation_id);
@@ -171,215 +159,12 @@ export async function linkMessages(
     [hubProjectId, hubProjectId, hubProjectId, hubProjectId]
   );
 
-  return { directLinks, threadExpanded, notFound, skippedSubjectMismatch };
-}
-
-export async function linkMessagesToProjectEstimates(
-  hubProjectId: number,
-  folderName: string,
-  messages: MessageForLinking[]
-): Promise<{
-  candidateEmails: number;
-  projectEstimateCount: number;
-  linked: number;
-  skippedAlreadyLinked: number;
-  skippedManualReview: number;
-  skippedOutOfProject: number;
-  skippedNoProjectEstimates: number;
-}> {
-  const projectEstimateRows = await db
-    .query<{ estimate_id: number }, [number]>(
-      "SELECT estimate_id FROM project_estimates WHERE project_id = ?"
-    )
-    .all(hubProjectId);
-
-  const projectEstimateIds = [
-    ...new Set(projectEstimateRows.map((row) => row.estimate_id)),
-  ];
-  const projectEstimateSet = new Set(projectEstimateIds);
-
-  const messageIds = uniqueNonEmpty(messages.map((m) => m.id));
-  const internetMessageIds = uniqueNonEmpty(
-    messages.map((m) => m.internetMessageId)
-  );
-  const conversationIds = uniqueNonEmpty(messages.map((m) => m.conversationId));
-
-  const whereClauses: string[] = [];
-  const params: unknown[] = [hubProjectId];
-
-  if (messageIds.length > 0) {
-    whereClauses.push(
-      `message_id IN (${messageIds.map(() => "?").join(", ")})`
-    );
-    params.push(...messageIds);
-  }
-  if (internetMessageIds.length > 0) {
-    whereClauses.push(
-      `internet_message_id IN (${internetMessageIds.map(() => "?").join(", ")})`
-    );
-    params.push(...internetMessageIds);
-  }
-  if (conversationIds.length > 0) {
-    whereClauses.push(
-      `conversation_id IN (${conversationIds.map(() => "?").join(", ")})`
-    );
-    params.push(...conversationIds);
-  }
-
-  if (whereClauses.length === 0) {
-    return {
-      candidateEmails: 0,
-      projectEstimateCount: projectEstimateIds.length,
-      linked: 0,
-      skippedAlreadyLinked: 0,
-      skippedManualReview: 0,
-      skippedOutOfProject: 0,
-      skippedNoProjectEstimates: 0,
-    };
-  }
-
-  const impactedRows = await db
-    .query<{ id: number }>(
-      `SELECT DISTINCT id
-       FROM emails
-       WHERE project_id = ?
-         AND (${whereClauses.join(" OR ")})`
-    )
-    .all(...params);
-  const impactedEmailIds = impactedRows.map((row) => row.id);
-
-  if (impactedEmailIds.length === 0) {
-    return {
-      candidateEmails: 0,
-      projectEstimateCount: projectEstimateIds.length,
-      linked: 0,
-      skippedAlreadyLinked: 0,
-      skippedManualReview: 0,
-      skippedOutOfProject: 0,
-      skippedNoProjectEstimates: 0,
-    };
-  }
-
-  if (projectEstimateIds.length === 0) {
-    return {
-      candidateEmails: impactedEmailIds.length,
-      projectEstimateCount: 0,
-      linked: 0,
-      skippedAlreadyLinked: 0,
-      skippedManualReview: 0,
-      skippedOutOfProject: 0,
-      skippedNoProjectEstimates: impactedEmailIds.length,
-    };
-  }
-
-  const project = await db
-    .query<
-      {
-        name: string | null;
-        outlook_folder: string | null;
-        contractor: string | null;
-        address: string | null;
-      },
-      [number]
-    >(
-      `SELECT name, outlook_folder, contractor, address
-       FROM projects
-       WHERE id = ?`
-    )
-    .get(hubProjectId);
-  const aliasRows = await db
-    .query<{ alias: string }, [number]>(
-      `SELECT alias
-       FROM project_aliases
-       WHERE project_id = ?
-       ORDER BY created_at DESC, id DESC
-       LIMIT 20`
-    )
-    .all(hubProjectId);
-  const projectHints = uniqueNonEmpty([
-    folderName,
-    project?.name,
-    project?.outlook_folder,
-    ...aliasRows.map((row) => row.alias),
-  ]);
-  const contractorHints = uniqueNonEmpty([project?.contractor]);
-  const addressHints = uniqueNonEmpty([project?.address]);
-
-  const existingRows = await db
-    .query<{ email_id: number; estimate_id: number }>(
-      `SELECT email_id, estimate_id
-       FROM estimate_emails
-       WHERE email_id IN (${impactedEmailIds.map(() => "?").join(", ")})`
-    )
-    .all(...impactedEmailIds);
-  const existingByEmail = new Map<number, Set<number>>();
-  for (const row of existingRows) {
-    const set = existingByEmail.get(row.email_id) ?? new Set<number>();
-    set.add(row.estimate_id);
-    existingByEmail.set(row.email_id, set);
-  }
-
-  let linked = 0;
-  let skippedAlreadyLinked = 0;
-  let skippedManualReview = 0;
-  let skippedOutOfProject = 0;
-
-  for (const emailId of impactedEmailIds) {
-    const existing = existingByEmail.get(emailId) ?? new Set<number>();
-    const alreadyLinkedToProjectEstimate = [...existing].some((estimateId) =>
-      projectEstimateSet.has(estimateId)
-    );
-    if (alreadyLinkedToProjectEstimate) {
-      skippedAlreadyLinked++;
-      continue;
-    }
-
-    if (projectEstimateIds.length === 1) {
-      const estimateId = projectEstimateIds[0];
-      await linkEmailToEstimate(
-        estimateId,
-        emailId,
-        "script",
-        `folder_watcher project_single project_id=${hubProjectId}`
-      );
-      linked++;
-      continue;
-    }
-
-    const match = await findEstimateCandidatesForEmail(emailId, {
-      projectHints,
-      contractorHints,
-      addressHints,
-      restrictEstimateIds: projectEstimateIds,
-      limit: 5,
-    });
-    const best = match?.decision.best;
-    if (!(best && match.decision.autoLink)) {
-      skippedManualReview++;
-      continue;
-    }
-    if (!projectEstimateSet.has(best.estimateId)) {
-      skippedOutOfProject++;
-      continue;
-    }
-
-    await linkEmailToEstimate(
-      best.estimateId,
-      emailId,
-      "script",
-      `folder_watcher ranked_match score=${best.score} confidence=${best.confidence} project_id=${hubProjectId}`
-    );
-    linked++;
-  }
-
   return {
-    candidateEmails: impactedEmailIds.length,
-    projectEstimateCount: projectEstimateIds.length,
-    linked,
-    skippedAlreadyLinked,
-    skippedManualReview,
-    skippedOutOfProject,
-    skippedNoProjectEstimates: 0,
+    directLinks,
+    threadExpanded,
+    notFound,
+    skippedSubjectMismatch,
+    linkedEmailIds,
   };
 }
 

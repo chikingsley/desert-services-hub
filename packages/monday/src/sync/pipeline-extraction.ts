@@ -2,14 +2,14 @@
 import { randomUUID } from "node:crypto";
 import { existsSync, mkdirSync, unlinkSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { runOpencodeJsonPrompt } from "@background-jobs/lib/email-intent/opencode";
+import { runGeminiJsonPrompt } from "@background-jobs/lib/llm";
 import { db } from "@lib/db/hub";
-import { getItemAssets } from "@monday/client";
 import {
-  EXTRACTION_COLUMN,
-  FILES_DIR,
-  PDF_ANALYSIS_CWD,
-} from "@monday/sync/pipeline-config";
+  ingestPdf,
+  extractEstimate as pdfExtractEstimate,
+} from "@lib/pdf-analysis";
+import { getItemAssets } from "@monday/client";
+import { EXTRACTION_COLUMN, FILES_DIR } from "@monday/sync/pipeline-config";
 import {
   getEstimateByMondayId,
   getLatestEstimateAsset,
@@ -65,93 +65,30 @@ interface IngestClassification {
 const DUAL_EXTRACTION_ENABLED =
   (process.env.ESTIMATE_DUAL_EXTRACTION ?? "true") === "true";
 
-const OPENCODE_RECONCILE_ENABLED =
+const LLM_RECONCILE_ENABLED =
   (process.env.ESTIMATE_OPENCODE_RECONCILE ?? "true") === "true";
 
 const GEMINI_SMART_MODEL = (
   process.env.GEMINI_SMART_MODEL ?? "gemini-2.5-flash-lite"
 ).trim();
 
-const OPENCODE_TIMEOUT_MS = 120_000;
-const KREUZBERG_TIMEOUT_MS = 120_000;
-const INGEST_TIMEOUT_MS = 180_000;
-
-const UV_BIN =
-  process.env.UV_BIN?.trim() ||
-  (existsSync("/root/.local/bin/uv") ? "/root/.local/bin/uv" : "uv");
-
-const SPAWN_ENV = {
-  ...process.env,
-  PATH: `/root/.local/bin:${process.env.PATH ?? ""}`,
-};
-
-// -- Subprocess Runner --
-
-/** Spawn a pdf_analysis CLI subcommand and return stdout, or null on failure. */
-async function runPdfAnalysisCli(
-  subcommand: string,
-  pdfPath: string,
-  timeoutMs: number
-): Promise<string | null> {
-  try {
-    const proc = Bun.spawn(
-      [
-        UV_BIN,
-        "run",
-        "-m",
-        "pdf_analysis.cli",
-        subcommand,
-        pdfPath,
-        "--format",
-        "json",
-      ],
-      { cwd: PDF_ANALYSIS_CWD, stdout: "pipe", stderr: "pipe", env: SPAWN_ENV }
-    );
-
-    const timeout = setTimeout(() => proc.kill(), timeoutMs);
-    const stdout = await new Response(proc.stdout).text();
-    const stderr = await new Response(proc.stderr).text();
-    const exitCode = await proc.exited;
-    clearTimeout(timeout);
-
-    if (exitCode !== 0) {
-      console.log(
-        `[pipeline]   ${subcommand} failed (exit ${exitCode}): ${stderr.trim().slice(0, 200)}`
-      );
-      return null;
-    }
-
-    return stdout;
-  } catch (err) {
-    console.log(
-      `[pipeline]   ${subcommand} error: ${err instanceof Error ? err.message : String(err)}`
-    );
-    return null;
-  }
-}
-
-// -- Kreuzberg Deterministic Extraction --
+// -- PDF Analysis Service Client --
 
 /**
- * Run `pdf_analysis.cli estimate` -- deterministic kreuzberg table extraction.
+ * Kreuzberg deterministic table extraction via pdf-analysis service.
  * 100% accurate where it finds table structure. Returns null on failure.
  */
 async function runKreuzbergEstimate(
   pdfPath: string
 ): Promise<FileExtractionResult | null> {
-  const stdout = await runPdfAnalysisCli(
-    "estimate",
-    pdfPath,
-    KREUZBERG_TIMEOUT_MS
-  );
-  if (!stdout) {
-    return null;
-  }
-
   try {
-    return JSON.parse(stdout) as FileExtractionResult;
-  } catch {
-    console.log("[pipeline]   Kreuzberg returned invalid JSON");
+    return (await pdfExtractEstimate(
+      pdfPath
+    )) as unknown as FileExtractionResult;
+  } catch (err) {
+    console.log(
+      `[pipeline]   estimate error: ${err instanceof Error ? err.message : String(err)}`
+    );
     return null;
   }
 }
@@ -161,26 +98,27 @@ async function runKreuzbergEstimate(
 const ESTIMATE_DOC_TYPES = ["estimate", "bid", "quote", "proposal"];
 
 /**
- * Run `pdf_analysis.cli ingest` on a PDF -- kreuzberg text, optional OCR,
+ * Run pdf-analysis ingest via HTTP service -- kreuzberg text, optional OCR,
  * LLM classification + extraction. Returns whether the doc is an estimate
  * and, if so, the extracted data mapped to FileExtractionResult.
  */
 async function runIngest(
   pdfPath: string
 ): Promise<IngestClassification | null> {
-  const stdout = await runPdfAnalysisCli("ingest", pdfPath, INGEST_TIMEOUT_MS);
-  if (!stdout) {
+  let results: Record<string, unknown>[];
+  try {
+    results = (await ingestPdf(pdfPath)) as unknown as Record<
+      string,
+      unknown
+    >[];
+  } catch (err) {
+    console.log(
+      `[pipeline]   ingest error: ${err instanceof Error ? err.message : String(err)}`
+    );
     return null;
   }
 
-  let ingest: Record<string, unknown>;
-  try {
-    const parsed = JSON.parse(stdout);
-    ingest = Array.isArray(parsed) ? parsed[0] : parsed;
-  } catch {
-    console.log("[pipeline]   Ingest returned invalid JSON");
-    return null;
-  }
+  const ingest = results[0];
   if (!ingest) {
     return null;
   }
@@ -428,11 +366,11 @@ Return ONLY valid JSON with this exact structure:
  * Send both extractions to the LLM for intelligent reconciliation.
  * Returns merged result or null on failure.
  */
-async function reconcileWithOpencode(
+async function reconcileWithLlm(
   kreuz: FileExtractionResult | null,
   ingest: FileExtractionResult | null
 ): Promise<FileExtractionResult | null> {
-  if (!OPENCODE_RECONCILE_ENABLED) {
+  if (!LLM_RECONCILE_ENABLED) {
     return null;
   }
 
@@ -442,9 +380,8 @@ async function reconcileWithOpencode(
       JSON.stringify(kreuz, null, 2)
     ).replace("{ingest}", JSON.stringify(ingest, null, 2));
 
-    const result = await runOpencodeJsonPrompt(prompt, {
+    const result = await runGeminiJsonPrompt(prompt, {
       model: GEMINI_SMART_MODEL,
-      timeoutMs: OPENCODE_TIMEOUT_MS,
     });
 
     if (!result) {
@@ -518,7 +455,7 @@ async function reconcileExtractions(
       `[pipeline]   Both extractions returned items (kreuz=${kreuz?.line_items.length ?? 0}, llm=${ingest?.line_items.length ?? 0}) — reconciling`
     );
 
-    const llmResult = await reconcileWithOpencode(kreuz, ingest);
+    const llmResult = await reconcileWithLlm(kreuz, ingest);
     if (llmResult) {
       console.log(
         `[pipeline]   LLM reconciled: ${llmResult.line_items.length} items, $${llmResult.grand_total.toLocaleString()}`

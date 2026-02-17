@@ -166,3 +166,4 @@ packages/documents/pdf-analysis-cli/ai_docs/
 packages/documents/pdf-analysis-cli/justfile
 packages/documents/pdf-analysis-cli/specs/
 packages/documents/pdf-analysis-cli/scripts/dont_stop.py
+packages/contracts/langextract/

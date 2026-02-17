@@ -65,7 +65,7 @@ desert-services-hub/
       inspections-email-worker/      # ComplianceGo inspections (Cloudflare Worker)
       intake-worker/                 # Email intake processing (Cloudflare Worker)
       job-runner/                    # Background job orchestrator (runs in webhooks container)
-      monday-status-sync-worker/     # Monday status sync (Cloudflare Worker)
+      monday-status-sync/            # Monday status sync timer (delegates to packages/monday)
       notifications/                 # Event detection + Outlook draft creation
       outlook-folder-watcher/        # Outlook folder polling + project linking
       swppp-sync/                    # (moved to packages/sharepoint/workers/swppp-master-poller/)
@@ -264,7 +264,6 @@ Each Docker service maps to an entrypoint in the codebase.
 |--------|--------|---------|
 | `intake-worker` | `apps/cf-workers/intake-worker/` | Email intake from Cloudflare email routing |
 | `inspections-email-worker` | `apps/cf-workers/inspections-email-worker/` | ComplianceGo → SharePoint |
-| `monday-status-sync-worker` | `apps/cf-workers/monday-status-sync-worker/` | Monday.com status sync |
 | `docusign-file-automation` | `apps/cf-workers/docusign-file-automation/` | DocuSign automation scripts/references (no deployed worker) |
 
 **In-process worker modules** (run inside the `background-jobs` container via timers/job queue):

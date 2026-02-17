@@ -13,7 +13,7 @@
 
 import { afterAll, describe, expect, test } from "bun:test";
 import { getCurrentPage } from "@/portal/create";
-import { checkExpedited } from "@/portal/payment/page5";
+import { checkExpedited } from "@/portal/create/fill/page5";
 import { navigateToPage } from "@/portal/resume";
 import { waitForElement } from "@/portal/utils/helpers";
 import { portal } from "@/portal/utils/selectors";

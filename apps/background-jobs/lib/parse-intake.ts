@@ -9,53 +9,19 @@
  * Results are stored in the documents table with the reconciled markdown
  * as the summary and the full parse output as raw_extraction.
  */
-import { existsSync } from "node:fs";
-import { join } from "node:path";
 import { db } from "@lib/db/hub";
-
-// ============================================================================
-// Config
-// ============================================================================
-
-const PDF_ANALYSIS_CWD = join(
-  import.meta.dir,
-  "../../../packages/documents/pdf-analysis-cli"
-);
+import {
+  type ClassifyResult,
+  classifyPdf,
+  type ParseResult,
+  parsePdf,
+} from "@lib/pdf-analysis";
 
 const LOG = "[doc-parse]";
-
-function resolveUvBin(): string {
-  if (process.env.UV_BIN?.trim()) {
-    return process.env.UV_BIN.trim();
-  }
-  if (existsSync("/root/.local/bin/uv")) {
-    return "/root/.local/bin/uv";
-  }
-  return "uv";
-}
 
 // ============================================================================
 // Types
 // ============================================================================
-
-interface ParseOutput {
-  filename: string;
-  reconciled_markdown: string;
-  page_count: number;
-  processing_time_ms: number;
-  ocr_model: string;
-  reconcile_model: string;
-  metadata: Record<string, unknown>;
-}
-
-interface ClassifyOutput {
-  document_type: string;
-  confidence: number;
-  indicators: string[];
-  page_count: number;
-  filename: string;
-  first_page_snippet: string;
-}
 
 export interface ContractsEmailIntakePayload {
   originalSubject: string;
@@ -105,62 +71,19 @@ const insertDocumentError = db.prepare(`
 `);
 
 // ============================================================================
-// Core — Spawn pdf-analysis CLI
+// Core — PDF Analysis Service calls
 // ============================================================================
 
-async function runParse(pdfPath: string): Promise<ParseOutput> {
-  const uvBin = resolveUvBin();
-  const proc = Bun.spawn(
-    [uvBin, "run", "pdf-analysis", "parse", pdfPath, "--format", "json"],
-    {
-      cwd: PDF_ANALYSIS_CWD,
-      stdout: "pipe",
-      stderr: "pipe",
-      env: { ...process.env, PATH: process.env.PATH ?? "" },
-    }
-  );
-
-  const timeout = setTimeout(() => proc.kill(), 300_000); // 5min for OCR + reconciliation
-  const stdout = await new Response(proc.stdout).text();
-  const stderr = await new Response(proc.stderr).text();
-  const exitCode = await proc.exited;
-  clearTimeout(timeout);
-
-  if (exitCode !== 0) {
-    throw new Error(
-      `pdf-analysis parse exit ${exitCode}: ${stderr.trim().slice(0, 500)}`
-    );
+async function runParse(pdfPath: string): Promise<ParseResult> {
+  const results = await parsePdf(pdfPath);
+  if (!results[0]) {
+    throw new Error("pdf-analysis parse returned empty results");
   }
-
-  return JSON.parse(stdout) as ParseOutput;
+  return results[0];
 }
 
-async function runClassify(pdfPath: string): Promise<ClassifyOutput> {
-  const uvBin = resolveUvBin();
-  const proc = Bun.spawn(
-    [uvBin, "run", "pdf-analysis", "classify", pdfPath, "--format", "json"],
-    {
-      cwd: PDF_ANALYSIS_CWD,
-      stdout: "pipe",
-      stderr: "pipe",
-      env: { ...process.env, PATH: process.env.PATH ?? "" },
-    }
-  );
-
-  const timeout = setTimeout(() => proc.kill(), 30_000); // 30s — classify is fast
-  const stdout = await new Response(proc.stdout).text();
-  const stderr = await new Response(proc.stderr).text();
-  const exitCode = await proc.exited;
-  clearTimeout(timeout);
-
-  if (exitCode !== 0) {
-    throw new Error(
-      `pdf-analysis classify exit ${exitCode}: ${stderr.trim().slice(0, 500)}`
-    );
-  }
-
-  // classify outputs a JSON array (one per file)
-  const results = JSON.parse(stdout) as ClassifyOutput[];
+async function runClassify(pdfPath: string): Promise<ClassifyResult> {
+  const results = await classifyPdf(pdfPath);
   if (!results[0]) {
     throw new Error("pdf-analysis classify returned empty results");
   }

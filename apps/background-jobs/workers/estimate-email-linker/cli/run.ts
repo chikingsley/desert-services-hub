@@ -8,7 +8,7 @@
  *   bun apps/background-jobs/workers/estimate-email-linker/cli/run.ts --once --dry-run
  *   bun apps/background-jobs/workers/estimate-email-linker/cli/run.ts --interval=60000
  *   bun apps/background-jobs/workers/estimate-email-linker/cli/run.ts --min-id=0 --once
- *   bun apps/background-jobs/workers/estimate-email-linker/cli/run.ts --min-id=0 --batches=0 --enable-project-single
+ *   bun apps/background-jobs/workers/estimate-email-linker/cli/run.ts --min-id=0 --batches=0
  */
 
 import { pollEstimateEmailLinker } from "@background-jobs/workers/estimate-email-linker/lib/poll";
@@ -21,7 +21,6 @@ const intervalArg = args.find((a) => a.startsWith("--interval="));
 const batchArg = args.find((a) => a.startsWith("--batch="));
 const batchesArg = args.find((a) => a.startsWith("--batches="));
 const minIdArg = args.find((a) => a.startsWith("--min-id="));
-const enableProjectSingle = args.includes("--enable-project-single");
 
 const interval = intervalArg
   ? Number.parseInt(intervalArg.split("=")[1] ?? "60000", 10)
@@ -42,25 +41,27 @@ async function runOnce() {
     batchSize,
     maxBatches,
     minEmailId,
-    enableProjectSingle,
   });
 
   console.log(
     [
       "[estimate-email-linker] batch complete",
       `processed=${stats.processedEmails}`,
-      `linksInserted=${stats.linksInserted}${dryRun ? " (dry-run)" : ""}`,
+      `linked=${stats.linksInserted}`,
+      `projects=${stats.projectsLinked}`,
       `conversationLinks=${stats.conversationLinksInserted}`,
       `projectIdsBackfilled=${stats.projectIdsBackfilled}`,
-      `skippedAmbiguous=${stats.skippedAmbiguous}`,
-      `skippedNoSignal=${stats.skippedNoSignal}`,
+      `noSignal=${stats.skippedNoSignal}`,
       `lastEmailId=${stats.lastEmailId}`,
-    ].join(" | ")
+      dryRun ? "(dry-run)" : "",
+    ]
+      .filter(Boolean)
+      .join(" | ")
   );
 }
 
 console.log(
-  `[estimate-email-linker] start | once=${once} dryRun=${dryRun} interval=${interval}ms batch=${batchSize} batches=${maxBatches}${minEmailId != null ? ` minId=${minEmailId}` : ""} projectSingle=${enableProjectSingle}`
+  `[estimate-email-linker] start | once=${once} dryRun=${dryRun} interval=${interval}ms batch=${batchSize} batches=${maxBatches}${minEmailId != null ? ` minId=${minEmailId}` : ""}`
 );
 
 if (once) {

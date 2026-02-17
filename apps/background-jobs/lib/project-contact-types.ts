@@ -147,7 +147,6 @@ export interface ResolveProjectContactsOptions {
   limitDocuments?: number;
   limitAttachments?: number;
   model?: string;
-  timeoutMs?: number;
   requireLlm?: boolean;
   skipLlm?: boolean;
   createThreshold?: number;

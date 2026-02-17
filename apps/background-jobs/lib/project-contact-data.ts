@@ -6,7 +6,7 @@
  */
 import { db } from "@lib/db/hub";
 import { GEMINI_FAST_MODEL } from "../jobs/config";
-import { runOpencodeJsonPrompt } from "./email-intent/opencode";
+import { runGeminiJsonPrompt } from "./llm";
 import type {
   AttachmentRow,
   CoverageRow,
@@ -25,8 +25,6 @@ import {
   normalizePhone,
   normalizeWhitespace,
 } from "./project-contact-types";
-
-const TIMED_OUT_RE = /timed out/i;
 
 // ============================================================================
 // LLM Contact Parsing
@@ -325,8 +323,6 @@ export async function runLlmExtraction(
   }
 
   const model = (options.model ?? GEMINI_FAST_MODEL).trim();
-  const baseTimeoutMs = options.timeoutMs ?? 180_000;
-  const retryTimeoutMs = Math.max(baseTimeoutMs, 300_000);
   const prompt = buildContactPrompt({
     attachments,
     deterministicCandidates,
@@ -336,11 +332,7 @@ export async function runLlmExtraction(
   });
 
   try {
-    const parsed = await runOpencodeJsonPrompt(prompt, {
-      model,
-      timeoutMs: baseTimeoutMs,
-    });
-
+    const parsed = await runGeminiJsonPrompt(prompt, { model });
     const contactsRaw = parsed?.contacts;
     return {
       error: null,
@@ -348,27 +340,6 @@ export async function runLlmExtraction(
     };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    const retryableTimeout =
-      TIMED_OUT_RE.test(message) && retryTimeoutMs > baseTimeoutMs;
-
-    if (!retryableTimeout) {
-      return { error: message, records: [] };
-    }
-
-    try {
-      const parsed = await runOpencodeJsonPrompt(prompt, {
-        model,
-        timeoutMs: retryTimeoutMs,
-      });
-      const contactsRaw = parsed?.contacts;
-      return {
-        error: null,
-        records: parseLlmContactRecords(contactsRaw),
-      };
-    } catch (retryError) {
-      const retryMessage =
-        retryError instanceof Error ? retryError.message : String(retryError);
-      return { error: retryMessage, records: [] };
-    }
+    return { error: message, records: [] };
   }
 }

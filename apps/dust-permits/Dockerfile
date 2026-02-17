@@ -55,8 +55,9 @@ COPY package.json tsconfig.json tsconfig.base.json ./
 COPY apps/dust-permits/package.json ./apps/dust-permits/
 COPY apps/dust-permits/tsconfig.json ./apps/dust-permits/
 
-# Permit worker source
+# Permit worker source + tests
 COPY apps/dust-permits/src ./apps/dust-permits/src
+COPY apps/dust-permits/tests ./apps/dust-permits/tests
 
 # Shared libraries (needed for @lib/* imports)
 COPY lib ./lib

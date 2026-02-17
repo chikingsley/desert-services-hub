@@ -576,6 +576,32 @@ export interface FormData {
   };
 
   // ===========================================================================
+  // Payment (Point & Pay pages 1-2, after submit redirect)
+  // ===========================================================================
+
+  payment: {
+    card: {
+      nameOnCard: string;
+      cardNumber: string;
+      expiryMonth: string;
+      expiryYear: string;
+      cvv: string;
+    };
+    billing: {
+      firstName: string;
+      lastName: string;
+      addressLine1: string;
+      addressLine2?: string;
+      country: string;
+      city: string;
+      state: string;
+      postalCode: string;
+      email: string;
+      phone: string;
+    };
+  };
+
+  // ===========================================================================
   // Metadata
   // ===========================================================================
 
@@ -1022,6 +1048,29 @@ export const DEFAULTS: FormData = {
   // Page 5
   page5: {
     acceleratedProcessing: false,
+  },
+
+  // Payment (Point & Pay) — populated from PAYMENT_* env vars
+  payment: {
+    card: {
+      nameOnCard: process.env.PAYMENT_CARD_NAME ?? "",
+      cardNumber: process.env.PAYMENT_CARD_NUMBER ?? "",
+      expiryMonth: process.env.PAYMENT_CARD_EXPIRY_MONTH ?? "",
+      expiryYear: process.env.PAYMENT_CARD_EXPIRY_YEAR ?? "",
+      cvv: process.env.PAYMENT_CARD_CVV ?? "",
+    },
+    billing: {
+      firstName: process.env.PAYMENT_BILLING_FIRST_NAME ?? "",
+      lastName: process.env.PAYMENT_BILLING_LAST_NAME ?? "",
+      addressLine1: process.env.PAYMENT_BILLING_ADDRESS1 ?? "",
+      addressLine2: process.env.PAYMENT_BILLING_ADDRESS2 || undefined,
+      country: process.env.PAYMENT_BILLING_COUNTRY || "United States",
+      city: process.env.PAYMENT_BILLING_CITY ?? "",
+      state: process.env.PAYMENT_BILLING_STATE ?? "",
+      postalCode: process.env.PAYMENT_BILLING_ZIP ?? "",
+      email: process.env.PAYMENT_BILLING_EMAIL ?? "",
+      phone: process.env.PAYMENT_BILLING_PHONE ?? "",
+    },
   },
 
   _meta: {

@@ -18,10 +18,10 @@
  *   --help            Show usage
  */
 
-import { runOpencodeJsonPrompt } from "@background-jobs/lib/email-intent/opencode";
 import { gatherTriageContext } from "@background-jobs/lib/email-triage/triage-context";
 import { parseTriageOutput } from "@background-jobs/lib/email-triage/triage-parse";
 import { buildTriagePrompt } from "@background-jobs/lib/email-triage/triage-prompt";
+import { runGeminiJsonPrompt } from "@background-jobs/lib/llm";
 import { db } from "@lib/db/hub";
 
 interface EmailRow {
@@ -37,7 +37,6 @@ interface EmailRow {
 }
 
 const MODEL = (process.env.GEMINI_FAST_MODEL ?? "gemini-2.5-flash-lite").trim();
-const TIMEOUT_MS = 30_000;
 
 const ACTION_JOBS: Record<string, string> = {
   "PAYMENT:payment_confirmation": "dust_permit_payment",
@@ -148,10 +147,7 @@ async function triageOne(
   console.log(`  prompt: ${prompt.length} chars`);
 
   const start = Date.now();
-  const raw = await runOpencodeJsonPrompt(prompt, {
-    model: MODEL,
-    timeoutMs: TIMEOUT_MS,
-  });
+  const raw = await runGeminiJsonPrompt(prompt, { model: MODEL });
   const elapsed = Date.now() - start;
 
   const validProjectIds = new Set(context.candidates.projects.map((p) => p.id));
@@ -187,7 +183,6 @@ async function main() {
 
   console.log("\n  Email Triage Dry-Run");
   console.log(`  Model: ${MODEL}`);
-  console.log(`  Timeout: ${TIMEOUT_MS}ms`);
 
   const emails = args.emailId
     ? await fetchSingleEmail(args.emailId)

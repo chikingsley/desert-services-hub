@@ -47,6 +47,15 @@ export const ATTACHMENT_BACKFILL_INTERVAL_MS = parsePositiveInt(
 export const CONTRACT_PACKET_AUTOLINK_INTERVAL_MS = 60 * 1000; // 60 seconds
 export const RENEWAL_INTERVAL_MS = 60 * 60 * 1000; // 1 hour
 export const GROUP_SYNC_INTERVAL_MS = 15 * 60 * 1000; // 15 minutes
+export const MONDAY_STATUS_SYNC_ENABLED = parseBooleanFlag(
+  process.env.MONDAY_STATUS_SYNC_ENABLED,
+  true
+);
+export const MONDAY_STATUS_SYNC_INTERVAL_MS = parsePositiveInt(
+  process.env.MONDAY_STATUS_SYNC_INTERVAL_MS,
+  60 * 60 * 1000, // 1 hour
+  60_000
+);
 export const SWPPP_MASTER_SYNC_INTERVAL_MS = parsePositiveInt(
   process.env.SWPPP_MASTER_SYNC_INTERVAL_MS,
   60_000,
@@ -158,6 +167,18 @@ export const ESTIMATE_FILE_SWEEP_CURSOR_KEY = "estimate_file_sweep_offset_v1";
 // -- Contract packet autolink --
 
 export const CONTRACT_PACKET_AUTOLINK_BATCH_SIZE = 400;
+
+// -- Contract won bridge --
+
+export const CONTRACT_WON_BRIDGE_ENABLED = parseBooleanFlag(
+  process.env.CONTRACT_WON_BRIDGE_ENABLED,
+  true
+);
+export const CONTRACT_WON_BRIDGE_INTERVAL_MS = parsePositiveInt(
+  process.env.CONTRACT_WON_BRIDGE_INTERVAL_MS,
+  2 * 60 * 1000, // 2 minutes
+  30_000
+);
 
 // -- Domain constants --
 

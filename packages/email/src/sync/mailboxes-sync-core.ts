@@ -11,10 +11,10 @@ import {
   getOrCreateMailbox,
   insertAttachment,
   insertEmail,
-  linkEmailToProject,
   updateMailboxSyncState,
 } from "@lib/db/repositories";
 import type { InsertAttachmentData, InsertEmailData } from "@lib/db/types";
+import { linkEmail } from "@lib/linking/link-email";
 
 type EmailForSync = Awaited<
   ReturnType<GraphEmailClient["getAllEmailsPaginated"]>
@@ -104,26 +104,7 @@ function createEmailData(
   };
 }
 
-async function linkConversationProjectIfPossible(
-  emailId: number,
-  conversationId: string | null | undefined
-): Promise<void> {
-  if (!conversationId) {
-    return;
-  }
-
-  const siblingProject = await db
-    .query<{ project_id: number }>(
-      `SELECT project_id FROM emails
-       WHERE conversation_id = ? AND project_id IS NOT NULL AND id != ?
-       LIMIT 1`
-    )
-    .get(conversationId, emailId);
-
-  if (siblingProject?.project_id) {
-    await linkEmailToProject(emailId, siblingProject.project_id);
-  }
-}
+// Conversation→project linking is now handled by linkEmail() from @lib/linking/link-email
 
 async function getEmailAttachments(
   client: GraphEmailClient,
@@ -162,7 +143,7 @@ async function syncSingleEmail(
     createEmailData(mailboxId, email, fullText, attachmentNames)
   );
 
-  await linkConversationProjectIfPossible(emailId, email.conversationId);
+  await linkEmail(emailId);
   await enqueueEmailResolveIfNotQueued.run(
     JSON.stringify({ emailId }),
     String(emailId)

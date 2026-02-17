@@ -13,3 +13,9 @@ export {
 } from "./page2/page2";
 export { fillPage3 } from "./page3";
 export { fillPage4 } from "./page4";
+export { checkExpedited, fillPage5, submitApplication } from "./page5";
+export {
+  clickPaymentContinue,
+  confirmPayment,
+  fillPaymentPage1,
+} from "./payment";

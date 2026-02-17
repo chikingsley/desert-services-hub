@@ -44,7 +44,7 @@ const VALID_SUBCATEGORIES = new Set<string>([
 /**
  * Parse raw LLM output into a validated TriageResult.
  *
- * @param raw - Parsed JSON object from opencode runner
+ * @param raw - Parsed JSON object from LLM response
  * @param validProjectIds - Set of candidate project IDs (LLM can only pick from these)
  * @param validEstimateIds - Set of candidate estimate IDs (LLM can only pick from these)
  * @returns Validated TriageResult or null if parsing fails

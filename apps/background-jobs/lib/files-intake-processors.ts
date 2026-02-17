@@ -149,6 +149,18 @@ export async function processPdf(
     });
     const elapsed = Math.round(performance.now() - started);
 
+    // Classify from extracted text (pure regex, no file I/O)
+    let documentType = "pdf_document";
+    try {
+      const { classifyText } = await import("@lib/pdf-analysis");
+      const classified = await classifyText(extracted.content, fileName);
+      if (classified.document_type !== "unknown") {
+        documentType = classified.document_type;
+      }
+    } catch {
+      // classify-text service unavailable — fall back to generic type
+    }
+
     const rawExtraction = {
       text_content: extracted.content,
       table_count: extracted.tables.length,
@@ -161,7 +173,7 @@ export async function processPdf(
     };
 
     const row = (await insertFileRecord.get(
-      "pdf_document",
+      documentType,
       pdfPath,
       fileName,
       extracted.content.slice(0, 10_000),
@@ -174,13 +186,13 @@ export async function processPdf(
     )) as { id: number } | null;
 
     console.log(
-      `${LOG}   Stored PDF #${row?.id}: ${extracted.content.length} chars in ${elapsed}ms (${extracted.extractor})`
+      `${LOG}   Stored PDF #${row?.id} [${documentType}]: ${extracted.content.length} chars in ${elapsed}ms (${extracted.extractor})`
     );
 
     return {
       documentId: row?.id ?? null,
       fileName,
-      documentType: "pdf_document",
+      documentType,
       pageCount: 0,
       processingTimeMs: elapsed,
     };

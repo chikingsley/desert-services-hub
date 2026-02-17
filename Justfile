@@ -293,7 +293,6 @@ _cf_check strict:
     workers=(
       "apps/cf-workers/intake-worker|intake-worker|https://intake-worker.cheez2012.workers.dev/health"
       "apps/cf-workers/estimates-sync-worker|estimates-sync|https://estimates-sync.cheez2012.workers.dev/"
-      "apps/cf-workers/monday-status-sync-worker|monday-status-sync|https://monday-status-sync.cheez2012.workers.dev/"
       "apps/cf-workers/inspections-email-worker|inspection-router|https://inspection-router.cheez2012.workers.dev/"
     )
 

@@ -7,6 +7,7 @@
  */
 
 import { db } from "@lib/db/hub";
+import type { LlmProvider } from "../llm";
 import { triageEmail } from "./triage";
 
 interface UnclassifiedRow {
@@ -17,6 +18,13 @@ interface UnclassifiedRow {
   message_id: string | null;
   has_attachments: boolean;
   body_preview: string | null;
+}
+
+export interface TriageBackfillOptions {
+  batchSize: number;
+  concurrency: number;
+  /** LLM provider — "local" for Ollama backfill, "gemini" for cloud (default: "local") */
+  provider?: LlmProvider;
 }
 
 export interface TriageBackfillResult {
@@ -42,9 +50,9 @@ async function fetchBatch(batchSize: number): Promise<UnclassifiedRow[]> {
 }
 
 export async function processTriageBackfillBatch(
-  batchSize: number,
-  concurrency: number
+  options: TriageBackfillOptions
 ): Promise<TriageBackfillResult> {
+  const { batchSize, concurrency, provider = "local" } = options;
   const start = Date.now();
   const rows = await fetchBatch(batchSize);
 
@@ -68,15 +76,19 @@ export async function processTriageBackfillBatch(
         break;
       }
       try {
-        const outcome = await triageEmail(row.id, {
-          emailId: row.id,
-          messageId: row.message_id ?? "",
-          mailboxEmail: row.mailbox_email,
-          subject: row.subject ?? null,
-          fromEmail: row.from_email ?? null,
-          bodyText: row.body_preview ?? null,
-          hasAttachments: Boolean(row.has_attachments),
-        });
+        const outcome = await triageEmail(
+          row.id,
+          {
+            emailId: row.id,
+            messageId: row.message_id ?? "",
+            mailboxEmail: row.mailbox_email,
+            subject: row.subject ?? null,
+            fromEmail: row.from_email ?? null,
+            bodyText: row.body_preview ?? null,
+            hasAttachments: Boolean(row.has_attachments),
+          },
+          { provider }
+        );
         if (outcome.error) {
           errors++;
         } else {

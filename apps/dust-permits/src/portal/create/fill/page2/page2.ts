@@ -11,7 +11,11 @@
  */
 
 import type { BrowserContext, Frame, Page } from "playwright";
-import type { MapFeature, PermitMapData } from "@/lib/dust-features";
+import {
+  latLngToWebMercator,
+  type MapFeature,
+  type PermitMapData,
+} from "@/lib/dust-features";
 import { clickNext, clickRadio, sleep } from "@/portal/utils/helpers";
 import { portal } from "@/portal/utils/selectors";
 import type { MapSearchData } from "./map";
@@ -103,6 +107,70 @@ async function waitForLocationsTable(
     await sleep(2000);
   }
   return 0;
+}
+
+/**
+ * Count access-point rows rendered on Page 2.
+ */
+async function getAccessPointCount(page: Page): Promise<number> {
+  return await page.evaluate(() => {
+    const table = document.querySelector(
+      '[id="ThePage:siTable:12:accessPoints"]'
+    );
+    if (!table) {
+      return 0;
+    }
+    const rows = table.querySelectorAll("tr");
+    return Math.max(0, rows.length - 1);
+  });
+}
+
+/**
+ * Wait for access-point table to render rows after map save.
+ */
+async function waitForAccessPointsTable(
+  page: Page,
+  timeoutMs = 30_000
+): Promise<number> {
+  const startTime = Date.now();
+  while (Date.now() - startTime < timeoutMs) {
+    const count = await getAccessPointCount(page);
+    if (count > 0) {
+      return count;
+    }
+    await sleep(1000);
+  }
+  return 0;
+}
+
+function buildFallbackAccessPoints(mapData: PermitMapData): MapFeature[] {
+  const centroid = mapData.centroid;
+  if (centroid) {
+    return [
+      {
+        attributes: { source: "fallback-centroid" },
+        coordinates: [latLngToWebMercator(centroid.lat, centroid.lng)],
+        latLngCoordinates: [centroid],
+        layerIndex: -1,
+        type: "point",
+      },
+    ];
+  }
+
+  const firstVertex = mapData.disturbedArea?.latLngCoordinates[0];
+  if (!firstVertex) {
+    return [];
+  }
+
+  return [
+    {
+      attributes: { source: "fallback-disturbed-area-vertex" },
+      coordinates: [latLngToWebMercator(firstVertex.lat, firstVertex.lng)],
+      latLngCoordinates: [firstVertex],
+      layerIndex: -1,
+      type: "point",
+    },
+  ];
 }
 
 /**
@@ -373,6 +441,15 @@ export async function fillPage2Renew(
       }
     }
 
+    const accessPointCount = await waitForAccessPointsTable(page, 15_000);
+    if (accessPointCount === 0) {
+      console.log(
+        "  ✗ No access points found on existing map data (submit will fail)"
+      );
+      return false;
+    }
+    console.log(`  ✓ Access points present: ${accessPointCount}`);
+
     console.log("  Page 2 complete, clicking Next...");
     return await clickNext(page);
   } catch (error) {
@@ -448,12 +525,13 @@ async function drawAccessPoints(
   esriFrame: Frame,
   frameBox: { x: number; y: number },
   accessPoints: MapFeature[]
-): Promise<void> {
+): Promise<number> {
   if (accessPoints.length === 0) {
-    return;
+    return 0;
   }
 
   console.log(`  Drawing ${accessPoints.length} access point(s)...`);
+  let drawnCount = 0;
 
   for (const accessPoint of accessPoints) {
     // Select Access Point template
@@ -484,8 +562,11 @@ async function drawAccessPoints(
     // Draw the point
     await drawPoint(mapPopup, frameBox, pointScreenResult.coords[0]);
     console.log("  ✓ Access point drawn");
+    drawnCount += 1;
     await sleep(500);
   }
+
+  return drawnCount;
 }
 
 // ============================================================================
@@ -614,8 +695,38 @@ export async function fillPage2WithMapData(
   console.log("  ✓ Polygon drawn");
   await sleep(1500);
 
-  // Draw access points
-  await drawAccessPoints(mapPopup, esriFrame, frameBox, mapData.accessPoints);
+  // Draw access points (fallback to centroid when source permit has none)
+  const accessPointsToDraw =
+    mapData.accessPoints.length > 0
+      ? mapData.accessPoints
+      : buildFallbackAccessPoints(mapData);
+
+  if (mapData.accessPoints.length === 0) {
+    console.log(
+      `  ⚠ Source permit has no access points in FeatureServer; drawing ${accessPointsToDraw.length} fallback point(s)`
+    );
+  }
+
+  if (accessPointsToDraw.length === 0) {
+    console.log("  ✗ Could not determine any access point to draw");
+    return false;
+  }
+
+  const drawnAccessPoints = await drawAccessPoints(
+    mapPopup,
+    esriFrame,
+    frameBox,
+    accessPointsToDraw
+  );
+  if (drawnAccessPoints === 0) {
+    console.log("  ✗ Failed to draw any access points");
+    return false;
+  }
+  if (drawnAccessPoints < accessPointsToDraw.length) {
+    console.log(
+      `  ⚠ Only drew ${drawnAccessPoints}/${accessPointsToDraw.length} access point(s)`
+    );
+  }
 
   // Save and close
   console.log("  Saving and closing map...");
@@ -681,6 +792,22 @@ export async function fillPage2WithMapData(
       return false;
     }
   }
+
+  const accessPointCount = await waitForAccessPointsTable(page, 20_000);
+  if (accessPointCount === 0) {
+    console.log(
+      "  ✗ No access points found on Page 2 after map save (submit will fail)"
+    );
+    await page
+      .screenshot({
+        path: "tests/e2e/screenshots/DEBUG-page2-no-access-points.png",
+      })
+      .catch(() => {
+        /* screenshot best-effort */
+      });
+    return false;
+  }
+  console.log(`  ✓ Access points present: ${accessPointCount}`);
 
   console.log("  Page 2 complete, clicking Next...");
   return await clickNext(page);

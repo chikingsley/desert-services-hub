@@ -317,42 +317,6 @@ export interface FullCreateResult extends CreateResult {
 // ============================================================================
 
 /**
- * Credit card data for Point & Pay payment.
- * All fields loaded from environment variables - never hardcoded.
- */
-export interface PaymentCardData {
-  nameOnCard: string;
-  cardNumber: string;
-  expiryMonth: string; // "01"-"12"
-  expiryYear: string; // "2026" etc.
-  cvv: string;
-}
-
-/**
- * Billing address for Point & Pay payment.
- */
-export interface PaymentBillingData {
-  firstName: string;
-  lastName: string;
-  addressLine1: string;
-  addressLine2?: string;
-  country: string; // default "United States"
-  city: string;
-  state: string;
-  postalCode: string;
-  email: string;
-  phone: string;
-}
-
-/**
- * Combined payment data for Point & Pay.
- */
-export interface PaymentData {
-  card: PaymentCardData;
-  billing: PaymentBillingData;
-}
-
-/**
  * Result of clicking "Submit Application" on Page 5.
  */
 export interface SubmitResult {
@@ -390,7 +354,7 @@ export interface PaymentFillReport {
   failedFields: string[];
 }
 
-// Re-export page state types from form-filling/types.ts (canonical location)
+// Re-export from form-data.ts (canonical location for all form data + page states)
 export type {
   Page1State,
   Page3State,

@@ -21,7 +21,6 @@ interface CliOptions {
   limitDocuments: number;
   limitAttachments: number;
   model: string;
-  timeoutMs: number;
   apply: boolean;
   outputPath: string | null;
   createThreshold: number;
@@ -107,7 +106,6 @@ function parseArgs(argv: string[]): CliOptions {
   let limitDocuments = 140;
   let limitAttachments = 180;
   let model = GEMINI_FAST_MODEL;
-  let timeoutMs = 180_000;
   let apply = false;
   let outputPath: string | null = null;
   let createThreshold = 0.72;
@@ -149,11 +147,6 @@ function parseArgs(argv: string[]): CliOptions {
       }
       case "--model": {
         model = (argv[i + 1] ?? "").trim() || model;
-        i++;
-        break;
-      }
-      case "--timeout-ms": {
-        timeoutMs = parsePositiveInt(argv[i + 1], timeoutMs);
         i++;
         break;
       }
@@ -202,7 +195,6 @@ function parseArgs(argv: string[]): CliOptions {
     outputPath,
     projectId,
     scope,
-    timeoutMs,
   };
 }
 
@@ -256,7 +248,6 @@ function toResolverOptions(options: CliOptions): ResolveProjectContactsOptions {
     limitEmails: options.limitEmails,
     model: options.model,
     requireLlm: true,
-    timeoutMs: options.timeoutMs,
   };
 }
 

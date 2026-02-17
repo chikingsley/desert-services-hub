@@ -1234,6 +1234,25 @@ export async function activateAccessPointTemplate(
         return { error: "element not found", success: false };
       }
 
+      // Clear any existing selection first — the TemplatePicker is a toggle
+      // widget, so clicking the same template twice deselects it. Clearing
+      // ensures every click is treated as a fresh selection.
+      const { dijit } = window as unknown as Record<
+        string,
+        { registry?: { byId?: (id: string) => unknown } }
+      >;
+      const editor = dijit?.registry?.byId?.("esri_dijit_editing_Editor_0") as
+        | Record<string, unknown>
+        | undefined;
+      if (editor) {
+        const tp = editor.templatePicker as
+          | { clearSelection?: () => void; getSelected?: () => unknown }
+          | undefined;
+        if (tp?.clearSelection) {
+          tp.clearSelection();
+        }
+      }
+
       const rect = el.getBoundingClientRect();
       const centerX = rect.x + rect.width / 2;
       const centerY = rect.y + rect.height / 2;
@@ -1254,13 +1273,6 @@ export async function activateAccessPointTemplate(
       el.dispatchEvent(new MouseEvent("mouseup", eventOptions));
       el.dispatchEvent(new MouseEvent("click", eventOptions));
 
-      const { dijit } = window as unknown as Record<
-        string,
-        { registry?: { byId?: (id: string) => unknown } }
-      >;
-      const editor = dijit?.registry?.byId?.("esri_dijit_editing_Editor_0") as
-        | Record<string, unknown>
-        | undefined;
       if (!editor) {
         return { error: "no editor after click", success: false };
       }
@@ -1282,7 +1294,7 @@ export async function activateAccessPointTemplate(
     { elementId: templateId }
   );
 
-  if (result.success) {
+  if (result.success && result.selected === "yes") {
     console.log(
       `    ✓ Clicked ${templateElement.id}: selected=${result.selected}, geometryType=${result.geometryType}`
     );
@@ -1290,7 +1302,9 @@ export async function activateAccessPointTemplate(
     return true;
   }
 
-  console.log(`    ✗ Click failed: ${JSON.stringify(result)}`);
+  console.log(
+    `    ✗ Click result: selected=${result.selected}, geometryType=${result.geometryType}`
+  );
   return false;
 }
 

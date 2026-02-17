@@ -167,6 +167,41 @@ def _find_all_matches(
     return matches
 
 
+def classify_text(text: str, filename: str = "") -> ClassifyResult:
+    """Classify a document from pre-extracted text (no file I/O)."""
+    combined = text + "\n" + filename
+    snippet = text[:200].replace("\n", " ").strip()
+
+    if not text.strip():
+        return ClassifyResult("unknown", 0.0, ["no text provided"], 0, filename)
+
+    matches = _find_all_matches(combined)
+
+    if not matches:
+        # Fallback: generic contract keyword scoring
+        contract_signals = sum(
+            1
+            for keyword in [
+                "shall", "agrees to", "herein", "hereby",
+                "indemnify", "scope of work", "payment terms", "retainage",
+            ]
+            if keyword.lower() in text.lower()
+        )
+        if contract_signals >= 3:
+            return ClassifyResult(
+                "contract", 0.60, [f"{contract_signals} contract keywords"],
+                0, filename, snippet,
+            )
+        return ClassifyResult("unknown", 0.30, ["no rules matched"], 0, filename, snippet)
+
+    best_type, best_conf, best_label = matches[0]
+    indicators = [best_label]
+    for _t, _c, lbl in matches[1:3]:
+        indicators.append(f"also: {_t} ({lbl})")
+
+    return ClassifyResult(best_type, best_conf, indicators, 0, filename, snippet)
+
+
 def classify_pdf(pdf_path: Path) -> ClassifyResult:
     """Classify a PDF using multi-pass heuristic scoring.
 

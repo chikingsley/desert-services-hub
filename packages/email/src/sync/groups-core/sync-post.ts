@@ -5,14 +5,13 @@ import { htmlToText } from "@email/html-to-text";
 import type { GroupPost, GroupThread } from "@email/types";
 import { db } from "@lib/db/hub";
 import {
-  getLinkedConversationSibling,
   getOrCreateMailbox,
   insertAttachment,
   insertEmail,
-  linkEmailToProject,
   updateMailboxSyncState,
 } from "@lib/db/repositories";
 import type { InsertAttachmentData, InsertEmailData } from "@lib/db/types";
+import { linkEmail } from "@lib/linking/link-email";
 
 const ATTACHMENTS_DIR = join(
   import.meta.dir,
@@ -122,7 +121,7 @@ export async function syncConversationPost(
     receivedAt: post.receivedDateTime,
   });
 
-  await linkProjectIfPossible(emailId, conversationId);
+  await linkEmail(emailId);
   await enqueueEmailResolveIfNotQueued.run(
     JSON.stringify({ emailId }),
     String(emailId)
@@ -175,17 +174,7 @@ export async function syncConversationPost(
   return { downloadedFiles, insertedAttachments, insertedEmails: 1 };
 }
 
-async function linkProjectIfPossible(
-  emailId: number,
-  conversationId: string
-): Promise<void> {
-  const projectId = await getLinkedConversationSibling(conversationId);
-  if (!projectId) {
-    return;
-  }
-
-  await linkEmailToProject(emailId, projectId);
-}
+// Conversation→project linking is now handled by linkEmail() from @lib/linking/link-email
 
 function createAttachmentData(
   attachment: {

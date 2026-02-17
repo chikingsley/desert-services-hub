@@ -16,6 +16,12 @@
  *      a) existing project_estimates for email.project_id
  *      b) estimate.account_domain matches email.from_domain
  * 3) Project link (emails.project_id) where project has exactly 1 estimate in project_estimates
+ *
+ * Post-processing passes (run after each poll batch):
+ * 4) Conversation backfill: emails in a conversation where exactly one estimate is already
+ *    linked get the same estimate_emails row inserted (match_type = 'conversation').
+ * 5) Project ID backfill: emails.project_id is set from the estimate→project_estimates chain
+ *    when a conversation has exactly one distinct project, propagating across the full thread.
  */
 
 import { db } from "@lib/db/hub";
@@ -70,6 +76,8 @@ export interface PollStats {
   skippedAmbiguous: number;
   skippedNoSignal: number;
   lastEmailId: number;
+  conversationLinksInserted: number;
+  projectIdsBackfilled: number;
 }
 
 // ── Link insertion helper ──────────────────────────────────────────────
@@ -295,6 +303,117 @@ async function processSingleEmail(
   return { outcome: "no_signal", linksInserted: 0 };
 }
 
+// ── Post-pass: conversation backfill ──────────────────────────────────
+//
+// For every conversation that has exactly one distinct estimate already in
+// estimate_emails, insert that same link for all other (unlinked) emails in
+// the conversation. Covers cases like copies of the same email across multiple
+// mailboxes, or reply emails from the GC that contain no estimate-number signal.
+
+async function runConversationBackfill(dryRun: boolean): Promise<number> {
+  if (dryRun) {
+    const row = await db
+      .query<{ cnt: string }>(
+        `SELECT COUNT(*) AS cnt
+         FROM (
+           SELECT DISTINCT ee.estimate_id, e2.id
+           FROM estimate_emails ee
+           JOIN emails anchor ON anchor.id = ee.email_id
+           JOIN emails e2
+             ON e2.conversation_id = anchor.conversation_id
+            AND e2.conversation_id IS NOT NULL
+            AND e2.is_excluded = 0
+           WHERE anchor.conversation_id IN (
+             SELECT e3.conversation_id
+             FROM emails e3
+             JOIN estimate_emails ee3 ON ee3.email_id = e3.id
+             WHERE e3.conversation_id IS NOT NULL
+             GROUP BY e3.conversation_id
+             HAVING COUNT(DISTINCT ee3.estimate_id) = 1
+           )
+           AND NOT EXISTS (
+             SELECT 1 FROM estimate_emails ee2
+             WHERE ee2.email_id = e2.id AND ee2.estimate_id = ee.estimate_id
+           )
+         ) sub`
+      )
+      .get();
+    return Number(row?.cnt ?? 0);
+  }
+
+  const r = await db.run(`
+    INSERT INTO estimate_emails (estimate_id, email_id, match_type, match_detail)
+    SELECT DISTINCT ee.estimate_id, e2.id, 'conversation', 'conversation thread backfill'
+    FROM estimate_emails ee
+    JOIN emails anchor ON anchor.id = ee.email_id
+    JOIN emails e2
+      ON e2.conversation_id = anchor.conversation_id
+     AND e2.conversation_id IS NOT NULL
+     AND e2.is_excluded = 0
+    WHERE anchor.conversation_id IN (
+      SELECT e3.conversation_id
+      FROM emails e3
+      JOIN estimate_emails ee3 ON ee3.email_id = e3.id
+      WHERE e3.conversation_id IS NOT NULL
+      GROUP BY e3.conversation_id
+      HAVING COUNT(DISTINCT ee3.estimate_id) = 1
+    )
+    AND NOT EXISTS (
+      SELECT 1 FROM estimate_emails ee2
+      WHERE ee2.email_id = e2.id AND ee2.estimate_id = ee.estimate_id
+    )
+    ON CONFLICT DO NOTHING
+  `);
+  return r.count ?? 0;
+}
+
+// ── Post-pass: project_id backfill ────────────────────────────────────
+//
+// For conversations where all estimate_emails rows point to exactly one
+// distinct project (via project_estimates), stamp emails.project_id across
+// the entire thread. Mirrors what the folder watcher does when a folder is
+// tracked, but driven from the estimate→project chain instead.
+
+async function runProjectIdBackfill(dryRun: boolean): Promise<number> {
+  if (dryRun) {
+    const row = await db
+      .query<{ cnt: string }>(
+        `SELECT COUNT(*) AS cnt
+         FROM emails e
+         WHERE e.project_id IS NULL
+           AND e.conversation_id IS NOT NULL
+           AND e.conversation_id IN (
+             SELECT e2.conversation_id
+             FROM emails e2
+             JOIN estimate_emails ee ON ee.email_id = e2.id
+             JOIN project_estimates pe ON pe.estimate_id = ee.estimate_id
+             WHERE e2.conversation_id IS NOT NULL
+             GROUP BY e2.conversation_id
+             HAVING COUNT(DISTINCT pe.project_id) = 1
+           )`
+      )
+      .get();
+    return Number(row?.cnt ?? 0);
+  }
+
+  const r = await db.run(`
+    UPDATE emails e
+    SET project_id = subq.project_id
+    FROM (
+      SELECT e2.conversation_id, MAX(pe.project_id) AS project_id
+      FROM emails e2
+      JOIN estimate_emails ee ON ee.email_id = e2.id
+      JOIN project_estimates pe ON pe.estimate_id = ee.estimate_id
+      WHERE e2.conversation_id IS NOT NULL
+      GROUP BY e2.conversation_id
+      HAVING COUNT(DISTINCT pe.project_id) = 1
+    ) subq
+    WHERE e.conversation_id = subq.conversation_id
+      AND e.project_id IS NULL
+  `);
+  return r.count ?? 0;
+}
+
 // ── Main poll loop ─────────────────────────────────────────────────────
 
 export async function pollEstimateEmailLinker(
@@ -315,7 +434,6 @@ export async function pollEstimateEmailLinker(
   let linksInserted = 0;
   let skippedAmbiguous = 0;
   let skippedNoSignal = 0;
-
   for (let batch = 0; batch < maxBatches; batch++) {
     const rows = await db
       .query<EmailRow, [number, number]>(
@@ -377,11 +495,17 @@ export async function pollEstimateEmailLinker(
     }
   }
 
+  // Post-processing passes: run once after all batches complete.
+  const conversationLinksInserted = await runConversationBackfill(dryRun);
+  const projectIdsBackfilled = await runProjectIdBackfill(dryRun);
+
   return {
     processedEmails,
     linksInserted,
     skippedAmbiguous,
     skippedNoSignal,
     lastEmailId: lastId,
+    conversationLinksInserted,
+    projectIdsBackfilled,
   };
 }

@@ -50,6 +50,8 @@ async function runOnce() {
       "[estimate-email-linker] batch complete",
       `processed=${stats.processedEmails}`,
       `linksInserted=${stats.linksInserted}${dryRun ? " (dry-run)" : ""}`,
+      `conversationLinks=${stats.conversationLinksInserted}`,
+      `projectIdsBackfilled=${stats.projectIdsBackfilled}`,
       `skippedAmbiguous=${stats.skippedAmbiguous}`,
       `skippedNoSignal=${stats.skippedNoSignal}`,
       `lastEmailId=${stats.lastEmailId}`,

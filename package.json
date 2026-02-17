@@ -30,7 +30,7 @@
     "lint": "ultracite check",
     "fix": "ultracite fix",
     "check": "bun run typecheck && bun run lint",
-    "test": "bun test tests/ services/",
+    "test": "bun test tests/",
     "pdf": "bun run scripts/test-pdf-gen.ts",
     "db:supabase:start": "npx --yes supabase start --workdir .",
     "db:supabase:stop": "npx --yes supabase stop --workdir .",

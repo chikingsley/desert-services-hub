@@ -27,8 +27,8 @@ Classify per item as:
 - `unresolved`: no direct/fallback/mirror resolution
 
 4. Use repository helpers before writing one-off logic.
-- `getItemsRich`: `/Users/chiejimofor/Documents/Github/desert-services-hub/apps/cli-tools/monday-cli/src/client.ts`
-- `resolveAccountNames`: `/Users/chiejimofor/Documents/Github/desert-services-hub/apps/cli-tools/monday-cli/src/sync/monday-fetch.ts`
+- `getItemsRich`: `packages/monday/src/client.ts`
+- `resolveAccountNames`: `packages/monday/src/sync/monday-fetch.ts`
 
 5. Separate schema parity from business completeness.
 - “Direct column not populated” is a schema parity fact.
@@ -84,5 +84,5 @@ Monday stores each column type with different internal value shapes and exposes 
 
 ## References
 
-- Read `/Users/chiejimofor/Documents/Github/desert-services-hub/.agents/skills/monday-graphql-column-semantics/references/board-column-map.md` for live board/column semantics.
-- Read `/Users/chiejimofor/Documents/Github/desert-services-hub/.agents/skills/monday-graphql-column-semantics/references/audit-checklist.md` before producing migration recommendations.
+- Read `.claude/skills/monday-graphql-column-semantics/references/board-column-map.md` for live board/column semantics.
+- Read `.claude/skills/monday-graphql-column-semantics/references/audit-checklist.md` before producing migration recommendations.

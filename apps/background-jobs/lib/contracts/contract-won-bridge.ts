@@ -153,7 +153,8 @@ const getDocsNeedingExtraction = db.query<DocToEnqueue>(
 );
 
 /** Find unlinked CONTRACT emails that have cached extractions but no project link yet.
- *  These need re-matching (e.g., new projects added since extraction). */
+ *  These need re-matching (e.g., new projects added since extraction).
+ *  Skips lien_waiver/closeout docs to avoid queue churn. */
 const getExtractedButUnlinked = db.query<DocToEnqueue>(
   `SELECT DISTINCT ON (e.id)
      e.id AS email_id,
@@ -167,6 +168,16 @@ const getExtractedButUnlinked = db.query<DocToEnqueue>(
      AND d.raw_extraction IS NOT NULL
      AND jsonb_typeof(d.raw_extraction::jsonb) = 'object'
      AND jsonb_exists(d.raw_extraction::jsonb, 'contract_fields')
+     -- Skip lien_waivers and closeouts (never promote to Won)
+     AND coalesce(
+       d.raw_extraction::jsonb->'contract_fields'->>'document_type',
+       ''
+     ) NOT IN ('lien_waiver', 'closeout')
+     -- Must have a project name to match against
+     AND length(coalesce(
+       d.raw_extraction::jsonb->'contract_fields'->>'project_name',
+       ''
+     )) >= 5
      -- Skip docs already queued for re-match
      AND NOT EXISTS (
        SELECT 1 FROM webhook_jobs wj
@@ -206,7 +217,7 @@ const cacheContractFields = db.prepare(`
     CASE WHEN raw_extraction IS NOT NULL AND jsonb_typeof(raw_extraction::jsonb) = 'object'
          THEN raw_extraction::jsonb
          ELSE '{}'::jsonb END
-  ) || jsonb_build_object('contract_fields', $1::jsonb),
+  ) || jsonb_build_object('contract_fields', ($1::text)::jsonb),
       updated_at = now()
   WHERE id = $2
 `);
@@ -216,26 +227,30 @@ interface ProjectMatch {
   project_name: string;
 }
 
-/** Match extracted project name against projects that have estimates */
+/** Match extracted project name against projects that have estimates.
+ *  Bidirectional: project contains extracted OR extracted contains project. */
 const matchProjectByName = db.query<ProjectMatch>(
   `SELECT p.id AS project_id, p.name AS project_name
    FROM projects p
-   WHERE p.name ILIKE '%' || $1 || '%'
+   WHERE (p.name ILIKE '%' || $1 || '%' OR $1 ILIKE '%' || p.name || '%')
      AND length($1) >= 5
+     AND length(p.name) >= 5
      AND EXISTS (SELECT 1 FROM project_estimates pe WHERE pe.project_id = p.id)
    ORDER BY length(p.name) ASC, p.id DESC
    LIMIT 10`
 );
 
-/** Match extracted contractor name against accounts to narrow candidates */
+/** Match extracted contractor name against accounts to narrow candidates.
+ *  Bidirectional: account contains extracted OR extracted contains account. */
 const matchAccountByName = db.query<{
   account_id: number;
   account_name: string;
 }>(
   `SELECT id AS account_id, name AS account_name
    FROM accounts
-   WHERE name ILIKE '%' || $1 || '%'
+   WHERE (name ILIKE '%' || $1 || '%' OR $1 ILIKE '%' || name || '%')
      AND length($1) >= 4
+     AND length(name) >= 4
      AND name NOT ILIKE '%notification%'
    ORDER BY length(name) ASC
    LIMIT 5`
@@ -317,6 +332,20 @@ async function extractContractFields(
 }
 
 /**
+ * Normalize a name for fuzzy matching:
+ *  - Strip hyphens (AK-CHIN → AKCHIN matches AkChin)
+ *  - Normalize & ↔ AND
+ *  - Collapse whitespace
+ */
+function normalizeName(name: string): string {
+  return name
+    .replace(/-/g, "")
+    .replace(/&/g, " AND ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/**
  * Extract meaningful tokens from an LLM-extracted project name.
  * Strips project numbers, parenthesized portions become separate tokens.
  * E.g. "25-1-025 Estrella (Elliot Crossing)" → ["Estrella", "Elliot Crossing"]
@@ -361,10 +390,19 @@ async function matchFieldsToProject(
     return null;
   }
 
-  const nameVariants = [
+  // Generate name variants: original, normalized, and token-extracted
+  const rawVariants = [
     fields.project_name,
     ...extractNameTokens(fields.project_name),
   ];
+  const nameVariants: string[] = [];
+  for (const v of rawVariants) {
+    nameVariants.push(v);
+    const normalized = normalizeName(v);
+    if (normalized !== v) {
+      nameVariants.push(normalized);
+    }
+  }
   const seen = new Set<string>();
 
   for (const variant of nameVariants) {
@@ -384,11 +422,26 @@ async function matchFieldsToProject(
       fields.contractor_name &&
       fields.contractor_name.length >= 4
     ) {
-      const accountMatches = await matchAccountByName.all(
-        fields.contractor_name
-      );
+      // Try both raw and normalized contractor name for disambiguation
+      const disambigVariants = [fields.contractor_name];
+      const disambigNorm = normalizeName(fields.contractor_name);
+      if (disambigNorm !== fields.contractor_name) {
+        disambigVariants.push(disambigNorm);
+      }
+
+      const disambigAccounts = new Map<
+        number,
+        { account_id: number; account_name: string }
+      >();
+      for (const dv of disambigVariants) {
+        const dMatches = await matchAccountByName.all(dv);
+        for (const dm of dMatches) {
+          disambigAccounts.set(dm.account_id, dm);
+        }
+      }
+
       for (const project of projectMatches) {
-        for (const account of accountMatches) {
+        for (const account of disambigAccounts.values()) {
           const check = await projectHasAccountEstimate.get(
             project.project_id,
             account.account_id
@@ -402,8 +455,25 @@ async function matchFieldsToProject(
   }
 
   if (fields.contractor_name && fields.contractor_name.length >= 4) {
-    const accountMatches = await matchAccountByName.all(fields.contractor_name);
-    for (const account of accountMatches) {
+    // Try both raw and normalized contractor name for account lookup
+    const contractorVariants = [fields.contractor_name];
+    const normalizedContractor = normalizeName(fields.contractor_name);
+    if (normalizedContractor !== fields.contractor_name) {
+      contractorVariants.push(normalizedContractor);
+    }
+
+    const accountSet = new Map<
+      number,
+      { account_id: number; account_name: string }
+    >();
+    for (const variant of contractorVariants) {
+      const matches = await matchAccountByName.all(variant);
+      for (const m of matches) {
+        accountSet.set(m.account_id, m);
+      }
+    }
+
+    for (const account of accountSet.values()) {
       const accountProjects = await getProjectsForAccount.all(
         account.account_id
       );
@@ -411,15 +481,17 @@ async function matchFieldsToProject(
         continue;
       }
 
-      const nameUpper = fields.project_name.toUpperCase();
-      const tokenVariants = nameVariants.map((v) => v.toUpperCase());
+      const nameNorm = normalizeName(fields.project_name).toUpperCase();
+      const tokenVariants = nameVariants.map((v) =>
+        normalizeName(v).toUpperCase()
+      );
 
       for (const project of accountProjects) {
-        const projUpper = project.project_name.toUpperCase();
+        const projNorm = normalizeName(project.project_name).toUpperCase();
         for (const token of tokenVariants) {
           if (
             token.length >= 5 &&
-            (projUpper.includes(token) || nameUpper.includes(projUpper))
+            (projNorm.includes(token) || nameNorm.includes(projNorm))
           ) {
             return project.project_id;
           }
@@ -453,11 +525,15 @@ export async function processContractDocExtractJob(payload: {
     return;
   }
 
-  // Use cached extraction if available
+  // Use cached extraction if available.
+  // Handles both old format (JSON string scalar) and new format (nested object).
   let fields: ContractFields | null = null;
   if (doc.raw_extraction) {
     try {
-      fields = JSON.parse(doc.raw_extraction) as ContractFields;
+      const parsed = JSON.parse(doc.raw_extraction);
+      if (parsed && typeof parsed === "object" && "project_name" in parsed) {
+        fields = parsed as ContractFields;
+      }
     } catch {
       fields = null;
     }

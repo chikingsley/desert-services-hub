@@ -77,7 +77,7 @@ services:
   permit-worker:
     build:
       context: .
-      dockerfile: Dockerfile.permit
+      dockerfile: apps/dust-permits/Dockerfile
     container_name: desert-permit-worker
     ports:
       - "47822:47822" # API server

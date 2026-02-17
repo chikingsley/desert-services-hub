@@ -14,6 +14,7 @@ out/
 # production
 build/
 dist/
+*.tgz
 
 # debug
 npm-debug.log*
@@ -25,6 +26,7 @@ yarn-error.log*
 .env
 .env.*
 !.env.example
+.env.keys
 
 # vercel
 .vercel
@@ -40,24 +42,34 @@ next-env.d.ts
 data/*.db
 files-for-work-all/
 *.sqlite
+*.sqlite-shm
+*.sqlite-wal
 
 # IDE
 .idea/
+.vscode/
 *.swp
 *.swo
+*~
 
 # test artifacts
 coverage/
+*.lcov
+.coverage
+htmlcov/
 
 # cache
 .cache/
 .kreuzberg/
+.eslintcache
 *.log
+logs/
 
 # temp files
 *.tmp
 *.temp
 .tmp/
+temp/
 
 # Monday estimates
 services/monday/estimates.token-cache.json
@@ -75,15 +87,29 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
+*$py.class
+*.so
+*.egg
+*.egg-info/
+.Python
 .venv/
 venv/
+ENV/
 .pytest_cache/
 .ruff_cache/
 .mypy_cache/
-*.egg-info/
+develop-eggs/
+downloads/
+eggs/
+.eggs/
+sdist/
+var/
+wheels/
+.installed.cfg
 
 # Wrangler/Workers
 .dev.vars
+.wrangler/
 
 # Playwright / E2E
 test-results/
@@ -102,10 +128,7 @@ debug/
 .gemini/
 .cursor/
 .husky/
-
-# SQLite WAL files (alternate extension)
-*.sqlite-shm
-*.sqlite-wal
+.mcp.json
 
 # Archive / experiments
 archive/
@@ -117,3 +140,29 @@ experiments/
 # Ground truth project data (large PDFs, local only)
 packages/contracts/projects/ground-truth/
 packages/contracts/ground-truth/
+
+# Supabase
+supabase/.branches
+supabase/.temp
+
+# --------------------------------------------------------------------------
+# App/package-specific patterns (consolidated from sub-gitignores)
+# --------------------------------------------------------------------------
+
+# apps/dust-permits
+apps/dust-permits/emails/
+apps/dust-permits/ca-permit/
+apps/dust-permits/src/testing/failures.jsonl
+apps/dust-permits/docs/page-snapshots/
+apps/dust-permits/tests/fixtures/pdfs/
+apps/dust-permits/tests/output/
+
+# packages/narratives
+packages/narratives/templates/output/
+
+# packages/documents/pdf-analysis-cli
+packages/documents/pdf-analysis-cli/.demo-validator-state
+packages/documents/pdf-analysis-cli/ai_docs/
+packages/documents/pdf-analysis-cli/justfile
+packages/documents/pdf-analysis-cli/specs/
+packages/documents/pdf-analysis-cli/scripts/dont_stop.py

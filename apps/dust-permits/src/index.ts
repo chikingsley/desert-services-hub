@@ -173,5 +173,3 @@ http://localhost:${PORT}/health
 
 Ready for requests...
 `);
-
-export { server };

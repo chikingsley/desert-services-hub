@@ -36,4 +36,4 @@ own package/app.
 - `packages/estimates/data/reference/desert-services-2026-pricing.csv`
 - `apps/dust-permits/docs/reference/maricopa-assessor.md`
 - `apps/dust-permits/docs/reference/gila-river-indian-community/`
-- `packages/documents/pdf-generation-cli/docs/stormwater/noi-ndc-toolkit/`
+- `packages/documents/pdf-generation/src/stormwater/docs/`

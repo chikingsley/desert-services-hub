@@ -34,7 +34,7 @@ Pattern:
 Use this for focused tools with a small command surface.
 
 Reference:
-- `packages/documents/pdf-generation-cli/cli/cli.ts`
+- `packages/documents/pdf-generation/cli/cli.ts`
 
 Pattern:
 - Parse flags with `parseArgs`.

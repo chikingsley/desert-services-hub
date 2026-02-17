@@ -33,10 +33,10 @@ desert-services-hub/
     aqdata/                 # Air quality data scraping and marketing intelligence
     contracts/              # Contract parsing, review pipeline, document analysis
     documents/              # Document factory: PDF analysis, generation, SSSP, SDS, stormwater
-      src/pdf/              # PDF generation (estimate, SSSP, SDS, brand sheets)
+      pdf-generation/       # PDF generation domain (library + CLI commands)
+        src/pdf/            # PDF generation (estimate, SSSP, SDS, brand sheets)
+        cli/                # CLI for PDF generation commands (safety, quoting, stormwater)
       pdf-analysis-cli/     # PDF extraction with Gemini
-      pdf-generation-cli/   # CLI for PDF generation commands (safety, quoting, stormwater)
-      reference/safety/     # Safety reference PDFs, SDS analysis, manuals
     email/                  # Outlook sync, classification, automation, templates, notifications
       attachments/          # Default company docs (W-9, ROC license, subcontractor registration)
     estimates/              # Estimating domain: catalog, pricing, validation
@@ -374,8 +374,8 @@ Packages that have been moved to their domain folders:
 | `packages/contracts/` | Complete | `apps/contract/` (deleted) |
 | `packages/narratives/` | Complete | `apps/narrative/` (deleted) |
 | `packages/documents/` | Complete | PDF analysis CLI + PDF generation CLI (old paths deleted) |
-| `packages/documents/src/pdf/` | Complete | `lib/pdf/` → PDF generation (estimate, SSSP, SDS, brand sheets) |
-| `packages/documents/pdf-generation-cli/src/stormwater/` | Complete | NOI/NDC guide generators in package source; toolkit docs now co-located in `packages/documents/pdf-generation-cli/docs/stormwater/noi-ndc-toolkit/` |
+| `packages/documents/pdf-generation/src/pdf/` | Complete | `lib/pdf/` → PDF generation (estimate, SSSP, SDS, brand sheets) |
+| `packages/documents/pdf-generation/src/stormwater/` | Complete | NOI/NDC guide generators in package source; toolkit docs now co-located in `packages/documents/pdf-generation/src/stormwater/docs/` |
 | `packages/estimates/` | Complete | `lib/catalog/` + `lib/estimating/` → pricing catalog + estimate validation |
 | `packages/takeoff/` | Complete | `lib/takeoff/` + `lib/pdf-takeoff/` → annotation UI + takeoff logic |
 | `packages/email/src/html-to-text.ts` | Complete | `lib/html-to-text.ts` → all importers were in email package |
@@ -385,7 +385,7 @@ Documentation consolidation completed:
 
 | Docs Location | Status | Moved From |
 |---------------|--------|------------|
-| `packages/documents/pdf-generation-cli/docs/stormwater/noi-ndc-toolkit/` | Complete | `docs/az-stormwater-noi-ndc-toolkit/` |
+| `packages/documents/pdf-generation/src/stormwater/docs/` | Complete | `docs/az-stormwater-noi-ndc-toolkit/` |
 | `packages/contracts/docs/` | Complete | `docs/contracts/` |
 | `packages/monday/docs/reference/monday-webhooks.md` | Complete | `docs/reference/monday-webhooks.md` |
 | `packages/monday/docs/reference/monday-board-migration-sheet-2026-02-07.md` | Complete | `docs/reference/monday-board-migration-sheet-2026-02-07.md` |

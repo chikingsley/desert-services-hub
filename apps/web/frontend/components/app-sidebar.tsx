@@ -1,6 +1,7 @@
 import {
   FileCheck,
   FileText,
+  Loader2,
   Mail,
   MapPin,
   Monitor,
@@ -48,6 +49,7 @@ const mainNavItems = [
 
 const manageItems = [
   { title: "Emails", href: "/emails", icon: Mail },
+  { title: "Processing", href: "/processing", icon: Loader2 },
   { title: "Catalog", href: "/catalog", icon: Package },
   { title: "Map", href: "/map", icon: MapPin },
   { title: "Maricopa Portal", href: "/maricopa", icon: Monitor },

@@ -33,6 +33,7 @@ import { EmailsPage } from "@/apps/web/frontend/pages/emails";
 import { EstimateEditorPage } from "@/apps/web/frontend/pages/estimate-editor";
 import { EstimatesPage } from "@/apps/web/frontend/pages/estimates";
 import { PermitsPage } from "@/apps/web/frontend/pages/permits";
+import { ProcessingPage } from "@/apps/web/frontend/pages/processing";
 import { ProjectsPage } from "@/apps/web/frontend/pages/projects";
 import { SettingsPage } from "@/apps/web/frontend/pages/settings";
 import { TakeoffEditorPage } from "@/apps/web/frontend/pages/takeoff-editor";
@@ -150,6 +151,10 @@ const router = createBrowserRouter([
       {
         path: "emails",
         element: <EmailsPage />,
+      },
+      {
+        path: "processing",
+        element: <ProcessingPage />,
       },
       {
         path: "catalog",

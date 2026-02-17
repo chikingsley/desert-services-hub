@@ -8,6 +8,7 @@ import { CheckCircle2, Loader2, RefreshCw, Square } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import useSWR from "swr";
+import { CheckpointBanner } from "@/apps/web/frontend/components/checkpoint-banner";
 import { PageHeader } from "@/apps/web/frontend/components/page-header";
 import { Button } from "@/apps/web/frontend/components/ui/button";
 import { fetcher } from "@/apps/web/frontend/lib/fetcher";
@@ -460,6 +461,8 @@ export function AutomationPage({ visible = true }: AutomationPageProps) {
             </div>
           )}
         </div>
+
+        <CheckpointBanner />
 
         <div
           className="relative w-full overflow-hidden rounded-2xl border border-border bg-black"

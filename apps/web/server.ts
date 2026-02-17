@@ -22,6 +22,12 @@ import {
   postAutomationStop,
 } from "@/api/automation";
 import { getCatalog, getTakeoffItems } from "@/api/catalog";
+import {
+  createCheckpoint,
+  getCheckpoint,
+  listCheckpoints,
+  respondCheckpoint,
+} from "@/api/checkpoints";
 // -- Contracts --
 import {
   getArchiveIndex,
@@ -30,7 +36,7 @@ import {
   listArchives,
 } from "@/api/contracts/archive";
 import { listContracts } from "@/api/contracts/contracts";
-// -- Emails --
+import { getAttachmentMonitoring } from "@/api/emails/attachment-monitoring";
 import {
   downloadEmailAttachment,
   listEmailAttachments,
@@ -195,6 +201,16 @@ const server = serve({
       POST: h(postAutomationClipboardCopy),
     },
 
+    // Operator Checkpoints (interactive yes/no for automation)
+    "/api/checkpoints": {
+      GET: h(listCheckpoints),
+      POST: h(createCheckpoint),
+    },
+    "/api/checkpoints/:id": {
+      GET: h(getCheckpoint),
+      PUT: h(respondCheckpoint),
+    },
+
     // Contracts (Won estimates)
     "/api/contracts": {
       GET: h(listContracts),
@@ -228,6 +244,11 @@ const server = serve({
     },
     "/api/emails/:id/attachments/:attachmentId/download": {
       GET: h(downloadEmailAttachment),
+    },
+
+    // Attachment Processing
+    "/api/attachments/monitoring": {
+      GET: h(getAttachmentMonitoring),
     },
 
     // Monday.com

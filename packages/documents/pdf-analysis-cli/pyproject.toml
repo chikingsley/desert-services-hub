@@ -8,7 +8,6 @@ dependencies = [
     "google-genai>=1.0.0",
     "httpx>=0.28.0",
     "kreuzberg",
-    "mistralai>=1.6.0",
     "pydantic>=2.10.0",
     "pydantic-settings>=2.0.0",
 
@@ -85,4 +84,4 @@ all = "error"
 error-on-warning = true
 
 [tool.uv.sources]
-kreuzberg = { path = "../../../../kreuzberg/target/wheels/kreuzberg-4.3.3-cp310-abi3-linux_x86_64.whl" }
+kreuzberg = { path = "vendor/kreuzberg-4.3.3-cp310-abi3-linux_x86_64.whl" }

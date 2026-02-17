@@ -18,7 +18,6 @@ from pdf_analysis.types import (
 from .providers.base import BaseProvider
 from .providers.gemini import GeminiProvider
 from .providers.local import LocalProvider
-from .providers.mistral import MistralProvider
 
 ProviderResult = OCRResult | ExtractResult | IdentifyResult | PlanAnalysisResult
 TResult = TypeVar("TResult", bound=ProviderResult)
@@ -30,7 +29,6 @@ class ProviderManager:
         self.providers: dict[ProviderName, BaseProvider] = {
             ProviderName.GEMINI: GeminiProvider(self.settings),
             ProviderName.LOCAL: LocalProvider(self.settings),
-            ProviderName.MISTRAL: MistralProvider(self.settings),
         }
         self.order = self._resolve_order(self.settings.pdf_analysis_provider_order)
 
@@ -188,9 +186,9 @@ class ProviderManager:
                 parsed.append(provider)
 
         if not parsed:
-            parsed = [ProviderName.GEMINI, ProviderName.LOCAL, ProviderName.MISTRAL]
+            parsed = [ProviderName.LOCAL, ProviderName.GEMINI]
 
-        for provider in [ProviderName.GEMINI, ProviderName.LOCAL, ProviderName.MISTRAL]:
+        for provider in [ProviderName.LOCAL, ProviderName.GEMINI]:
             if provider not in parsed:
                 parsed.append(provider)
 

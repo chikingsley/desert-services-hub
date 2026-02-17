@@ -20,7 +20,7 @@ from pdf_analysis.types import (
 )
 from pdf_analysis.utils import parse_page_spec
 
-app = typer.Typer(help="Unified PDF analysis CLI (Gemini, local, Mistral)")
+app = typer.Typer(help="Unified PDF analysis CLI (local, Gemini)")
 
 
 def _manager() -> ProviderManager:
@@ -312,7 +312,7 @@ def classify(
 ) -> None:
     """Classify a PDF (or directory of PDFs) by document type using heuristics.
 
-    No LLM calls — uses pdfplumber text extraction and keyword rules.
+    No LLM calls — uses kreuzberg text extraction and keyword rules.
     Supports: contract, estimate, loi, po, work_order, noi, swppp_plan,
     dust_permit, insurance, tax_form, lien_waiver, prelien, checklist.
     """
@@ -355,7 +355,7 @@ def text(
     output_format: OutputFormat = typer.Option(OutputFormat.TEXT, "--format", "-f"),
     output: Path | None = typer.Option(None, "--output", "-o"),
 ) -> None:
-    """Extract text from a PDF using pdfplumber (no LLM, no API calls).
+    """Extract text from a PDF using kreuzberg (no LLM, no API calls).
 
     Fast local text extraction. Use this to see what's in a PDF before
     running LLM analysis. Returns empty for scanned/image-only PDFs.
@@ -393,7 +393,7 @@ def ingest(
 ) -> None:
     """Analyze a PDF (or directory) with LLM: classify + extract in one pass.
 
-    Uses pdfplumber for text, falls back to OCR for scanned docs.
+    Uses kreuzberg for text, falls back to OCR for scanned docs.
     Model determines document type and extracts all relevant fields.
     No hardcoded categories — the model figures it out.
     """
@@ -500,9 +500,9 @@ def noi(
 
 @app.command()
 def reconcile(
-    plumber_file: Path = typer.Argument(
+    text_file: Path = typer.Argument(
         ..., exists=True, readable=True, dir_okay=False,
-        help="Path to pdfplumber text file (or use --no-plumber to skip)",
+        help="Path to text-layer extraction file",
     ),
     ocr_file: Path = typer.Argument(
         ..., exists=True, readable=True, dir_okay=False,
@@ -523,23 +523,23 @@ def reconcile(
     ),
     output: Path | None = typer.Option(None, "--output", "-o"),
 ) -> None:
-    """Reconcile existing pdfplumber + OCR text files into clean markdown.
+    """Reconcile existing text-layer + OCR text files into clean markdown.
 
     Use this when you've already run 'text' and 'ocr' separately and want
     to (re-)run just the LLM reconciliation step. Supports chunked
     reconciliation for large documents.
 
     Example workflow:
-        pdf-analysis text doc.pdf -o doc-plumber.txt
+        pdf-analysis text doc.pdf -o doc-text.txt
         pdf-analysis ocr doc.pdf -o doc-ocr.txt
-        pdf-analysis reconcile doc-plumber.txt doc-ocr.txt -o doc.md
+        pdf-analysis reconcile doc-text.txt doc-ocr.txt -o doc.md
     """
     from pdf_analysis.parse import (
         OPENCODE_MODEL,
         OVERLAP_PAGES,
         MAX_CHARS_PER_SOURCE,
         OCR_PAGE_RE,
-        PLUMBER_PAGE_RE,
+        TEXT_PAGE_RE,
         PageText,
         _build_chunks,
         _reassemble_pages,
@@ -555,22 +555,22 @@ def reconcile(
     started = time.perf_counter()
     manager = ProviderManager(Settings())
 
-    plumber_text = plumber_file.read_text(encoding="utf-8")
+    text_layer_text = text_file.read_text(encoding="utf-8")
     ocr_text = ocr_file.read_text(encoding="utf-8")
 
-    plumber_pages = _split_text_by_pages(plumber_text, PLUMBER_PAGE_RE)
+    text_pages = _split_text_by_pages(text_layer_text, TEXT_PAGE_RE)
     ocr_pages = _split_text_by_pages(ocr_text, OCR_PAGE_RE)
 
-    if not plumber_pages and plumber_text.strip():
-        plumber_pages = [PageText(page_num=1, text=plumber_text)]
+    if not text_pages and text_layer_text.strip():
+        text_pages = [PageText(page_num=1, text=text_layer_text)]
     if not ocr_pages and ocr_text.strip():
         ocr_pages = [PageText(page_num=1, text=ocr_text)]
 
-    chunks = _build_chunks(plumber_pages, ocr_pages)
+    chunks = _build_chunks(text_pages, ocr_pages)
 
     if len(chunks) <= 1:
         reconciled, rmodel = asyncio.run(
-            _reconcile_chunk(plumber_text, ocr_text, reconcile_model, manager)
+            _reconcile_chunk(text_layer_text, ocr_text, reconcile_model, manager)
         )
     else:
         print(
@@ -580,12 +580,12 @@ def reconcile(
         parts: list[str] = []
         rmodel = reconcile_model
         for i, chunk in enumerate(chunks):
-            p_text = _reassemble_pages(chunk.plumber_pages, "--- Page {} ---", "\n\n")
+            p_text = _reassemble_pages(chunk.text_pages, "--- Page {} ---", "\n\n")
             o_text = _reassemble_pages(chunk.ocr_pages, "<!-- Page {} -->", "\n\n---\n\n")
             print(
                 f"[reconcile]   chunk {i + 1}/{len(chunks)}: "
                 f"pages {chunk.start_page}\u2013{chunk.end_page} "
-                f"(plumber={len(p_text):,} ocr={len(o_text):,})",
+                f"(text={len(p_text):,} ocr={len(o_text):,})",
                 file=sys.stderr,
             )
             chunk_md, rmodel = asyncio.run(
@@ -605,7 +605,7 @@ def reconcile(
     _write_or_echo(reconciled, output)
     typer.echo(
         f"\n[reconcile: {elapsed_ms}ms, model={rmodel}, "
-        f"plumber={len(plumber_text):,} chars, ocr={len(ocr_text):,} chars]",
+        f"text={len(text_layer_text):,} chars, ocr={len(ocr_text):,} chars]",
         err=True,
     )
 
@@ -631,11 +631,11 @@ def parse(
     ),
     output_format: OutputFormat = typer.Option(OutputFormat.MARKDOWN, "--format", "-f"),
     output: Path | None = typer.Option(None, "--output", "-o"),
-    raw: bool = typer.Option(False, "--raw", help="Also output raw pdfplumber + OCR text"),
+    raw: bool = typer.Option(False, "--raw", help="Also output raw text-layer + OCR text"),
 ) -> None:
-    """Parse a PDF using pdfplumber + OCR, reconcile into clean markdown.
+    """Parse a PDF using kreuzberg + OCR, reconcile into clean markdown.
 
-    Runs BOTH text-layer extraction (pdfplumber) and vision-based OCR,
+    Runs BOTH text-layer extraction (kreuzberg) and vision-based OCR,
     then uses an LLM (via opencode CLI) to combine them into one structured
     markdown document. Large documents are automatically split into
     page-aligned chunks with overlap. Works on single files or directories.
@@ -663,13 +663,13 @@ def parse(
 
             data = dataclasses.asdict(result)
             if not raw:
-                data.pop("pdfplumber_text", None)
+                data.pop("text_layer", None)
                 data.pop("ocr_text", None)
             rendered = json.dumps(data, indent=2)
         elif output_format == OutputFormat.MARKDOWN:
             parts = [result.reconciled_markdown]
             if raw:
-                parts.append("\n\n---\n\n## Raw: pdfplumber\n\n" + result.pdfplumber_text)
+                parts.append("\n\n---\n\n## Raw: Text Layer\n\n" + result.text_layer)
                 parts.append("\n\n---\n\n## Raw: OCR\n\n" + result.ocr_text)
             rendered = "\n".join(parts)
         else:

@@ -6,7 +6,7 @@ from pdf_analysis.parse import (
     OVERLAP_PAGES,
     ChunkSpec,
     OCR_PAGE_RE,
-    PLUMBER_PAGE_RE,
+    TEXT_PAGE_RE,
     PageText,
     _build_chunks,
     _format_reconcile_prompt,
@@ -19,9 +19,9 @@ from pdf_analysis.parse import (
 # _split_text_by_pages
 # ---------------------------------------------------------------------------
 class TestSplitTextByPages:
-    def test_plumber_format(self):
+    def test_text_layer_format(self):
         text = "--- Page 1 ---\nHello world\n\n--- Page 2 ---\nSecond page"
-        pages = _split_text_by_pages(text, PLUMBER_PAGE_RE)
+        pages = _split_text_by_pages(text, TEXT_PAGE_RE)
         assert len(pages) == 2
         assert pages[0].page_num == 1
         assert pages[0].text == "Hello world"
@@ -44,22 +44,22 @@ class TestSplitTextByPages:
         assert not pages[1].text.startswith("---")
 
     def test_empty_text(self):
-        assert _split_text_by_pages("", PLUMBER_PAGE_RE) == []
+        assert _split_text_by_pages("", TEXT_PAGE_RE) == []
         assert _split_text_by_pages("   ", OCR_PAGE_RE) == []
 
     def test_no_markers(self):
-        assert _split_text_by_pages("just plain text", PLUMBER_PAGE_RE) == []
+        assert _split_text_by_pages("just plain text", TEXT_PAGE_RE) == []
 
     def test_single_page(self):
         text = "--- Page 5 ---\nOnly page"
-        pages = _split_text_by_pages(text, PLUMBER_PAGE_RE)
+        pages = _split_text_by_pages(text, TEXT_PAGE_RE)
         assert len(pages) == 1
         assert pages[0].page_num == 5
         assert pages[0].text == "Only page"
 
     def test_sorted_by_page_num(self):
         text = "--- Page 3 ---\nThird\n\n--- Page 1 ---\nFirst"
-        pages = _split_text_by_pages(text, PLUMBER_PAGE_RE)
+        pages = _split_text_by_pages(text, TEXT_PAGE_RE)
         assert pages[0].page_num == 1
         assert pages[1].page_num == 3
 
@@ -68,9 +68,9 @@ class TestSplitTextByPages:
 # _reassemble_pages
 # ---------------------------------------------------------------------------
 class TestReassemblePages:
-    def test_plumber_roundtrip(self):
+    def test_text_layer_roundtrip(self):
         original = "--- Page 1 ---\nHello\n\n--- Page 2 ---\nWorld"
-        pages = _split_text_by_pages(original, PLUMBER_PAGE_RE)
+        pages = _split_text_by_pages(original, TEXT_PAGE_RE)
         rebuilt = _reassemble_pages(pages, "--- Page {} ---", "\n\n")
         assert "--- Page 1 ---\nHello" in rebuilt
         assert "--- Page 2 ---\nWorld" in rebuilt
@@ -114,7 +114,7 @@ class TestBuildChunks:
         chunks = _build_chunks(pages, pages, max_chars=15_000, overlap=2)
         if len(chunks) >= 2:
             # Second chunk should contain overlap pages from first chunk
-            second_page_nums = {p.page_num for p in chunks[1].plumber_pages}
+            second_page_nums = {p.page_num for p in chunks[1].text_pages}
             first_end = chunks[0].end_page
             # At least one page before the core start should be in the second chunk
             assert any(pn < chunks[1].start_page for pn in second_page_nums)
@@ -124,7 +124,7 @@ class TestBuildChunks:
         chunks = _build_chunks(pages, pages, max_chars=15_000, overlap=2)
         # First chunk should start at page 1 with no overlap pages before it
         assert chunks[0].start_page == 1
-        assert chunks[0].plumber_pages[0].page_num == 1
+        assert chunks[0].text_pages[0].page_num == 1
 
     def test_empty_pages(self):
         chunks = _build_chunks([], [], max_chars=10_000, overlap=2)
@@ -138,9 +138,9 @@ class TestBuildChunks:
         assert chunks[0].start_page == 1
 
     def test_mismatched_sources(self):
-        plumber = [PageText(1, "a" * 100), PageText(3, "c" * 100)]
+        text = [PageText(1, "a" * 100), PageText(3, "c" * 100)]
         ocr = [PageText(1, "a" * 100), PageText(2, "b" * 100), PageText(3, "c" * 100)]
-        chunks = _build_chunks(plumber, ocr, max_chars=10_000, overlap=2)
+        chunks = _build_chunks(text, ocr, max_chars=10_000, overlap=2)
         assert len(chunks) == 1
         # All 3 pages should be in the chunk
         all_pages = {p.page_num for p in chunks[0].ocr_pages}
@@ -152,15 +152,15 @@ class TestBuildChunks:
 # ---------------------------------------------------------------------------
 class TestFormatReconcilePrompt:
     def test_no_chunk_info(self):
-        prompt = _format_reconcile_prompt("plumber text", "ocr text")
-        assert "plumber text" in prompt
+        prompt = _format_reconcile_prompt("text layer content", "ocr text")
+        assert "text layer content" in prompt
         assert "ocr text" in prompt
         assert "Pages" not in prompt.split("TEXT-LAYER")[0]
 
     def test_chunk_info_included(self):
         chunk = ChunkSpec(
             start_page=10, end_page=30,
-            plumber_pages=[], ocr_pages=[],
+            text_pages=[], ocr_pages=[],
             total_doc_pages=100,
         )
         prompt = _format_reconcile_prompt("p", "o", chunk=chunk, chunk_index=1)
@@ -171,7 +171,7 @@ class TestFormatReconcilePrompt:
     def test_overlap_note_for_non_first_chunk(self):
         chunk = ChunkSpec(
             start_page=10, end_page=30,
-            plumber_pages=[PageText(8, ""), PageText(9, ""), PageText(10, "")],
+            text_pages=[PageText(8, ""), PageText(9, ""), PageText(10, "")],
             ocr_pages=[],
             total_doc_pages=100,
         )

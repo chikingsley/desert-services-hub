@@ -1,8 +1,6 @@
-"""
-PDF utilities using Kreuzberg.
+"""PDF utilities using kreuzberg.
 
 Provides PDF splitting, page extraction, and file info operations.
-Handles large documents that exceed Mistral's limits (50MB, 1000 pages).
 """
 
 import logging
@@ -14,15 +12,53 @@ from kreuzberg import (
     render_page_to_image,
     split_pdf as kreuzberg_split_pdf,
 )
+from pydantic import BaseModel
 
-from pdf_analysis.mistral_types import (
-    DEFAULT_CHUNK_SIZE,
-    MAX_FILE_SIZE_BYTES,
-    MAX_PAGES,
-    PDFChunk,
-    PDFInfo,
-    SplitResult,
-)
+# ---------------------------------------------------------------------------
+# Constants
+# ---------------------------------------------------------------------------
+
+MAX_FILE_SIZE_MB = 50
+MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024
+MAX_PAGES = 1000
+DEFAULT_CHUNK_SIZE = 500
+
+
+# ---------------------------------------------------------------------------
+# Models
+# ---------------------------------------------------------------------------
+
+
+class PDFInfo(BaseModel):
+    """Information about a PDF file."""
+
+    file_path: str
+    file_size_bytes: int
+    file_size_mb: float
+    page_count: int
+    is_encrypted: bool
+    needs_splitting: bool
+    recommended_chunks: int
+
+
+class PDFChunk(BaseModel):
+    """Information about a PDF chunk after splitting."""
+
+    chunk_number: int
+    start_page: int  # 1-indexed
+    end_page: int  # 1-indexed (inclusive)
+    page_count: int
+    file_path: str
+    file_size_bytes: int
+
+
+class SplitResult(BaseModel):
+    """Result of splitting a PDF."""
+
+    original_path: str
+    original_page_count: int
+    chunks: list[PDFChunk]
+    output_directory: str
 
 logger = logging.getLogger(__name__)
 

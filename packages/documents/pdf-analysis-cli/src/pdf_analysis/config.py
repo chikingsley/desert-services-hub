@@ -12,18 +12,15 @@ class Settings(BaseSettings):
     )
 
     gemini_api_key: str | None = None
-    mistral_api_key: str | None = None
 
     gemini_model: str = "gemini-3-flash-preview"
-    mistral_ocr_model: str = "mistral-ocr-latest"
-    mistral_chat_model: str = "mistral-large-latest"
 
     ollama_endpoint: str = "https://ollama.peacockery.studio/v1"
     ollama_model: str = "glm-ocr:latest"
     ollama_chat_model: str = "granite4:latest"
     ollama_manager_endpoint: str | None = None
 
-    pdf_analysis_provider_order: str = "local,mistral,gemini"
+    pdf_analysis_provider_order: str = "local,gemini"
     http_timeout_seconds: float = 180.0
 
     @field_validator(
@@ -42,7 +39,7 @@ class Settings(BaseSettings):
                     "ollama_endpoint": "https://ollama.peacockery.studio/v1",
                     "ollama_model": "glm-ocr:latest",
                     "ollama_chat_model": "granite4:latest",
-                    "pdf_analysis_provider_order": "local,mistral,gemini",
+                    "pdf_analysis_provider_order": "local,gemini",
                 }
                 return defaults.get(info.field_name or "", value)
         return value

@@ -318,7 +318,7 @@ Return results in this JSON structure:
         from kreuzberg import render_page_to_image
 
         pdf_bytes = Path(pdf_path).read_bytes()
-        # dpi=144 matches the old pymupdf Matrix(2, 2) (2x zoom from 72 DPI base)
+        # dpi=144 = 2x zoom from 72 DPI base
         png_data = render_page_to_image(pdf_bytes, page, dpi=144)
 
         with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp:

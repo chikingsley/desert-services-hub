@@ -1,4 +1,4 @@
-"""Fast heuristic PDF classifier using pdfplumber text extraction.
+"""Fast heuristic PDF classifier using kreuzberg text extraction.
 
 No LLM calls — just extracts first 2 pages of text and applies keyword rules.
 Handles all document types flowing through Internal Contracts:
@@ -11,7 +11,7 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
-import pdfplumber
+from kreuzberg import ExtractionConfig, PageConfig, extract_file_sync
 
 from pdf_analysis.types import DocumentType
 
@@ -134,15 +134,22 @@ _DEEP_SCAN_THRESHOLD = 5
 
 def _extract_text(pdf_path: Path, max_pages: int = 2) -> tuple[str, int]:
     """Extract text from first N pages. Returns (text, page_count)."""
-    text = ""
-    page_count = 0
-    with pdfplumber.open(pdf_path) as pdf:
-        page_count = len(pdf.pages)
-        for page in pdf.pages[:max_pages]:
-            page_text = page.extract_text()
-            if page_text:
-                text += page_text + "\n"
-    return text, page_count
+    config = ExtractionConfig(
+        pages=PageConfig(extract_pages=True),
+        force_ocr=False,
+    )
+    result = extract_file_sync(str(pdf_path), config=config)
+    page_count = result.metadata.get("page_count", 0)
+
+    if result.pages:
+        parts = []
+        for page in result.pages[:max_pages]:
+            if page.get("content", "").strip():
+                parts.append(page["content"])
+        return "\n".join(parts), page_count
+
+    # Fallback: no per-page data, use full content
+    return result.content, page_count
 
 
 def _find_all_matches(

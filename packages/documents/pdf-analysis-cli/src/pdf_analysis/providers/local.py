@@ -336,7 +336,7 @@ class LocalProvider(BaseProvider):
                 raise ValueError(
                     f"Requested page {page_num} outside document bounds 1-{total_pages}"
                 )
-            # dpi=144 matches the old pymupdf Matrix(2, 2) (2x zoom from 72 DPI base)
+            # dpi=144 = 2x zoom from 72 DPI base
             png_data = render_page_to_image(pdf_bytes, page_num - 1, dpi=144)
             path = temp_dir / f"page_{page_num:04d}.png"
             path.write_bytes(png_data)

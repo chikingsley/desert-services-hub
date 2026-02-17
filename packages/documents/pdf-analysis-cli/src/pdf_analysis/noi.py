@@ -1,6 +1,6 @@
 """Extract structured data from ADEQ NOI (Notice of Intent) certificate text.
 
-Operates on already-extracted text (from parse pipeline or pdfplumber).
+Operates on already-extracted text (from parse pipeline or kreuzberg).
 Handles both CGP25 (newer) and older ADEQ NOI formats:
 - Newer: Has direct Lat/Long fields, no site address
 - Older: Has site address under Location, coordinates from Outfall section
@@ -165,7 +165,7 @@ def _extract_outfalls(text: str) -> list[Outfall]:
 def extract_noi(text: str) -> NOIExtraction:
     """Extract structured NOI data from already-extracted text.
 
-    The text should come from the parse pipeline (pdfplumber + OCR + reconcile)
+    The text should come from the parse pipeline (kreuzberg + OCR + reconcile)
     or any other extraction method. This function only does regex parsing.
     """
     warnings: list[str] = []

@@ -2,7 +2,7 @@
 
 Two-phase approach:
 1. Fast text extraction via kreuzberg (Rust-based, no API calls)
-2. LLM analysis for classification + structured extraction (Ollama/Gemini/Mistral)
+2. LLM analysis for classification + structured extraction (Ollama/Gemini)
 
 The LLM decides what the document is and extracts relevant fields.
 No hardcoded document types — the model figures it out.
@@ -28,7 +28,7 @@ from pdf_analysis.types import ProviderSelector
 
 @dataclass(slots=True)
 class TextResult:
-    """Raw text extraction result (pymupdf, no LLM)."""
+    """Raw text extraction result (kreuzberg, no LLM)."""
 
     text: str
     page_count: int
@@ -46,7 +46,7 @@ class IngestResult:
     summary: str
     extracted: dict[str, Any]
     page_count: int
-    text_method: str  # "pdfplumber" or "ocr"
+    text_method: str  # "kreuzberg" or "ocr:<provider>"
     model: str
     processing_time_ms: int
     raw_text: str = ""

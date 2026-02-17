@@ -12,7 +12,7 @@ def test_settings_blank_values_fall_back_to_defaults() -> None:
     assert settings.ollama_endpoint == "https://ollama.peacockery.studio/v1"
     assert settings.ollama_model == "glm-ocr:latest"
     assert settings.ollama_chat_model == "granite4:latest"
-    assert settings.pdf_analysis_provider_order == "local,mistral,gemini"
+    assert settings.pdf_analysis_provider_order == "local,gemini"
 
 
 def test_completion_endpoint_variants() -> None:

@@ -110,7 +110,7 @@ _CID_RE = re.compile(r"\(cid:(\d+)\)")
 
 
 def _decode_cid_glyphs(value: str) -> str:
-    """Decode common pdfplumber cid glyphs (e.g. (cid:55) -> '7')."""
+    """Decode PDF cid glyphs (e.g. (cid:55) -> '7')."""
 
     def repl(match: re.Match[str]) -> str:
         code = int(match.group(1))

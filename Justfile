@@ -45,6 +45,33 @@ cf-check:
 cf-check-strict:
     @just _cf_check "1"
 
+# Permits
+# Run typed client integration checks (tunnel-based, no mock servers).
+permits-test-client:
+    @{{BUN}} run permits:test:client
+
+# Run full renew+pay E2E in permit-worker runtime container.
+permits-test-renew-pay:
+    @{{BUN}} run permits:test:renew-and-pay
+
+# Quick tunnel smoke check for permit-worker proxy routes.
+permits-probe:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "Probing permit tunnel routes..."
+    curl -fsS --max-time 10 "https://web.desertservices.app/api/browser/status" >/dev/null
+    tmp_file="$(mktemp)"
+    status_code="$(curl -sS -o "$tmp_file" -w '%{http_code}' \
+      -X POST "https://web.desertservices.app/api/permits/D0000000/renew-and-pay" \
+      -H "content-type: application/json" \
+      -d '{}')"
+    rm -f "$tmp_file"
+    if [[ "$status_code" != "400" ]]; then
+      echo "Expected 400 from invalid renew-and-pay payload, got: $status_code" >&2
+      exit 1
+    fi
+    echo "Permit tunnel probe OK"
+
 # Code Quality (repo-level)
 lint:
     @{{BUN}} run lint

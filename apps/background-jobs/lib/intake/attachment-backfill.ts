@@ -1,18 +1,3 @@
-/**
- * Attachment Backfill — Process Unprocessed Email Attachments
- *
- * Downloads attachments from Graph API, deduplicates them, and runs them
- * through the Kreuzberg extraction pipeline.
- *
- * Dedup strategy (two layers):
- *   1. Internet Message ID — same email across mailboxes shares an
- *      internet_message_id; skip if same (internet_message_id, name, size)
- *      already processed. Zero network cost.
- *   2. Content Hash — SHA-256 of file bytes catches forwarded copies and
- *      renames. Computed after download but before extraction.
- *
- * Processes ALL mailboxes — no allowlist/blocklist scoping.
- */
 import { mkdir, unlink } from "node:fs/promises";
 import { join } from "node:path";
 import type { GraphEmailClient } from "@email/client";
@@ -22,7 +7,19 @@ import { createGraphClient } from "@email/sync/config";
 import { createGroupsClient } from "@email/sync/groups-core/sync-group";
 import { db } from "@lib/db/hub";
 import { updateAttachmentExtraction } from "@lib/db/repositories/attachment";
+import { COLUMN_HINTS } from "@monday/sync/pipeline-config";
 import { processFilesIntake } from "./files-intake";
+import {
+  extractWithKreuzberg,
+  MIN_KREUZBERG_TEXT_LENGTH,
+  ocrWithPdfAnalysisService,
+} from "./files-intake-db";
+import {
+  classifyDocument,
+  runContractExtraction,
+  runEstimateExtraction,
+  runPermitExtraction,
+} from "./files-intake-processors";
 
 const LOG = "[attachment-backfill]";
 const BACKFILL_DIR = "/app/data/backfill";
@@ -32,19 +29,23 @@ const DOWNLOAD_TIMEOUT_MS = 10_000; // 10s max per Graph API download
 
 interface UnprocessedAttachment {
   attachment_id_pk: number;
-  graph_attachment_id: string;
+  graph_attachment_id: string | null;
   name: string;
   content_type: string | null;
   size: number | null;
-  email_id: number;
-  message_id: string;
+  source: string;
+  email_id: number | null;
+  message_id: string | null;
   internet_message_id: string | null;
   thread_id: string | null;
   conversation_id: string | null;
   project_id: number | null;
   subject: string | null;
   from_email: string | null;
-  mailbox_email: string;
+  mailbox_email: string | null;
+  monday_column_id: string | null;
+  estimate_id: number | null;
+  local_path: string | null;
 }
 
 export interface BackfillResult {
@@ -63,15 +64,7 @@ export interface ProcessUnprocessedAttachmentsOptions {
   concurrency?: number;
 }
 
-/** Inline images, calendar invites, signatures — skip patterns */
-const INLINE_IMAGE_PATTERNS = [
-  /^image\d{3}\./i, // image001.png, image002.jpg
-  /^Outlook-/i, // Outlook-abc123.png
-  /logo/i, // anything with "logo"
-  /^icon/i, // icon files
-  /^spacer\./i, // spacer.gif
-];
-
+/** Non-processable content types — calendar invites, embedded emails, crypto sigs */
 const SKIP_CONTENT_TYPES = new Set([
   "text/calendar",
   "application/x-ms-wmz",
@@ -83,38 +76,28 @@ const SKIP_CONTENT_TYPES = new Set([
 
 function shouldSkip(att: UnprocessedAttachment): boolean {
   const ct = att.content_type?.toLowerCase() ?? "";
-
-  // Skip non-processable types (calendar invites, signatures, embedded emails)
-  if (SKIP_CONTENT_TYPES.has(ct)) {
-    return true;
-  }
-
-  // Skip inline/signature images: small size OR matching name patterns
-  if (ct.startsWith("image/")) {
-    if ((att.size ?? 0) < 50_000) {
-      return true;
-    }
-    if (INLINE_IMAGE_PATTERNS.some((p) => p.test(att.name))) {
-      return true;
-    }
-  }
-
-  return false;
+  return SKIP_CONTENT_TYPES.has(ct);
 }
 
 const IC_GROUP_EMAIL = "internalcontracts@desertservices.net";
 const IC_GROUP_ID = "962f9440-9bde-4178-b538-edc7f8d3ecce";
 
 /**
- * Fetch unprocessed attachments from all mailboxes including M365 groups.
+ * Fetch unprocessed documents from all sources (email_attachment + monday_asset).
+ * The document's own extraction_status tracks processing state.
+ * emails/mailboxes are LEFT JOINed since monday_asset rows have no email_id.
  */
 const getUnprocessedAttachments = db.query<UnprocessedAttachment, [number]>(`
   SELECT
-    a.id as attachment_id_pk,
-    a.attachment_id as graph_attachment_id,
-    a.name,
-    a.content_type,
-    a.size,
+    d.id as attachment_id_pk,
+    d.outlook_attachment_id as graph_attachment_id,
+    d.file_name as name,
+    d.content_type,
+    d.file_size as size,
+    d.source,
+    d.monday_column_id,
+    d.estimate_id,
+    d.local_path,
     e.id as email_id,
     e.message_id,
     e.internet_message_id,
@@ -124,35 +107,40 @@ const getUnprocessedAttachments = db.query<UnprocessedAttachment, [number]>(`
     e.thread_id,
     e.conversation_id,
     m.email as mailbox_email
-  FROM attachments a
-  JOIN emails e ON e.id = a.email_id
-  JOIN mailboxes m ON m.id = e.mailbox_id
-  LEFT JOIN documents d ON d.attachment_id = a.id AND d.extraction_status <> 'failed'
-  WHERE (
-      a.extraction_status IS NULL
-      OR a.extraction_status = 'pending'
+  FROM documents d
+  LEFT JOIN emails e ON e.id = d.email_id
+  LEFT JOIN mailboxes m ON m.id = e.mailbox_id
+  WHERE d.source IN ('email_attachment', 'monday_asset')
+    AND (
+      d.extraction_status IS NULL
+      OR d.extraction_status = 'pending'
+      OR d.extraction_status = 'downloaded'
       OR (
-        a.extraction_status = 'failed'
-        AND a.extraction_attempts < ${MAX_RETRY_ATTEMPTS}
-        AND (a.last_attempted_at IS NULL OR a.last_attempted_at < now() - interval '${RETRY_COOLDOWN_HOURS} hours')
+        d.extraction_status = 'failed'
+        AND d.extraction_attempts < ${MAX_RETRY_ATTEMPTS}
+        AND (d.last_attempted_at IS NULL OR d.last_attempted_at < now() - interval '${RETRY_COOLDOWN_HOURS} hours')
       )
     )
-    AND d.id IS NULL
-    AND (e.classification IS NULL OR e.classification NOT IN ('SPAM', 'HR', 'IT'))
-  ORDER BY e.received_at DESC
+    AND (d.email_id IS NULL OR e.classification IS NULL OR e.classification NOT IN ('SPAM', 'HR', 'IT'))
+  ORDER BY d.created_at DESC
   LIMIT $1
 `);
 
 const updateDocumentBackfillLinks = db.prepare(`
   UPDATE documents
   SET email_id = $2,
-      attachment_id = $3,
-      project_id = $4
+      outlook_attachment_id = $3,
+      project_id = $4,
+      updated_at = now()
   WHERE id = $1
 `);
 
-const deleteFailedDocumentsForAttachment = db.prepare(`
-  DELETE FROM documents WHERE attachment_id = $1 AND extraction_status = 'failed'
+const deleteFailedParsedDocs = db.prepare(`
+  DELETE FROM documents
+  WHERE source = 'parsed'
+    AND email_id = $1
+    AND outlook_attachment_id = $2
+    AND extraction_status = 'failed'
 `);
 
 /**
@@ -164,27 +152,29 @@ const checkInternetMessageIdDupe = db.query<
   { id: number },
   [string, string, number | null, number]
 >(`
-  SELECT a2.id
-  FROM attachments a2
-  JOIN emails e2 ON e2.id = a2.email_id
-  WHERE e2.internet_message_id = $1
-    AND a2.name = $2
-    AND ($3 IS NULL OR a2.size = $3)
-    AND a2.extraction_status IN ('success', 'deduped')
-    AND a2.id <> $4
+  SELECT d2.id
+  FROM documents d2
+  JOIN emails e2 ON e2.id = d2.email_id
+  WHERE d2.source = 'email_attachment'
+    AND e2.internet_message_id = $1
+    AND d2.file_name = $2
+    AND ($3 IS NULL OR d2.file_size = $3)
+    AND d2.extraction_status IN ('success', 'deduped')
+    AND d2.id <> $4
   LIMIT 1
 `);
 
 /**
  * Layer 2: Content hash dedup.
- * Check if any previously processed attachment has the same SHA-256 hash.
+ * Check if any previously processed document has the same SHA-256 hash.
  */
 const checkContentHashDupe = db.query<{ id: number }, [string, number]>(`
-  SELECT a2.id
-  FROM attachments a2
-  WHERE a2.content_hash = $1
-    AND a2.extraction_status IN ('success', 'deduped')
-    AND a2.id <> $2
+  SELECT d2.id
+  FROM documents d2
+  WHERE d2.source = 'email_attachment'
+    AND d2.content_hash = $1
+    AND d2.extraction_status IN ('success', 'deduped')
+    AND d2.id <> $2
   LIMIT 1
 `);
 
@@ -192,16 +182,17 @@ const checkContentHashDupe = db.query<{ id: number }, [string, number]>(`
  * Store content hash after download.
  */
 const setContentHash = db.prepare(`
-  UPDATE attachments SET content_hash = $2 WHERE id = $1
+  UPDATE documents SET content_hash = $2, updated_at = now() WHERE id = $1
 `);
 
 async function markDeduped(attachmentPk: number): Promise<void> {
   await db.run(
-    `UPDATE attachments
+    `UPDATE documents
      SET extraction_status = 'deduped',
          extracted_at = now(),
          extraction_attempts = extraction_attempts + 1,
-         last_attempted_at = now()
+         last_attempted_at = now(),
+         updated_at = now()
      WHERE id = ?`,
     [attachmentPk]
   );
@@ -246,7 +237,7 @@ async function linkResultsToDocuments(
     await updateDocumentBackfillLinks.run(
       r.documentId,
       att.email_id,
-      att.attachment_id_pk,
+      att.graph_attachment_id,
       projectIdForDocument
     );
     anySuccess = true;
@@ -306,18 +297,138 @@ async function downloadGroupAttachment(
   );
 }
 
-async function processOneAttachment(
+/**
+ * Dispatch Stage 2 structured extraction based on document type.
+ * Non-throwing — logs errors but never fails the overall processing.
+ */
+async function dispatchStage2(
+  documentId: number,
+  documentType: string,
+  text: string,
+  estimateId: number | null
+): Promise<void> {
+  switch (documentType) {
+    case "estimate":
+      if (estimateId) {
+        await runEstimateExtraction(documentId, estimateId, text);
+      }
+      break;
+    case "contract":
+      await runContractExtraction(documentId, text);
+      break;
+    case "noi":
+    case "permit":
+      await runPermitExtraction(documentId, text);
+      break;
+  }
+}
+
+/**
+ * Process a Monday asset document: read from local_path, extract text,
+ * classify, and run Stage 2 extraction. Writes directly to the documents row.
+ */
+async function processMondayAsset(
+  att: UnprocessedAttachment
+): Promise<AttachmentOutcome> {
+  const { existsSync } = await import("node:fs");
+  const columnHint = att.monday_column_id
+    ? (COLUMN_HINTS[att.monday_column_id] ?? undefined)
+    : undefined;
+
+  // Find the file to process
+  const filePath = att.local_path;
+  if (!(filePath && existsSync(filePath))) {
+    const errMsg = `Monday asset file not found: ${filePath ?? "no local_path"}`;
+    await updateAttachmentExtraction(
+      att.attachment_id_pk,
+      "failed",
+      null,
+      errMsg
+    );
+    return { type: "failed", error: `${att.name}: ${errMsg}` };
+  }
+
+  console.log(
+    `${LOG}   Monday asset: "${att.name}" (column: ${att.monday_column_id}, hint: ${columnHint ?? "none"})`
+  );
+
+  // Content hash dedup
+  const fileBuffer = await Bun.file(filePath).arrayBuffer();
+  const hash = computeHash(Buffer.from(fileBuffer));
+  await setContentHash.run(att.attachment_id_pk, hash);
+
+  const hashDupe = await checkContentHashDupe.get(hash, att.attachment_id_pk);
+  if (hashDupe) {
+    console.log(
+      `${LOG}   Deduped (content hash): "${att.name}" matches document #${hashDupe.id}`
+    );
+    await markDeduped(att.attachment_id_pk);
+    return { type: "deduped" };
+  }
+
+  // Extract text via Kreuzberg
+  const extracted = await extractWithKreuzberg(filePath, {
+    minTextLength: MIN_KREUZBERG_TEXT_LENGTH,
+  });
+
+  let finalContent = extracted.content;
+  let finalExtractor = extracted.extractor;
+
+  // OCR fallback for sparse text
+  if (finalContent.length < MIN_KREUZBERG_TEXT_LENGTH) {
+    const ocrText = await ocrWithPdfAnalysisService(filePath);
+    if (ocrText.length > finalContent.length) {
+      finalContent = ocrText;
+      finalExtractor = "pdf-analysis:ocr";
+    }
+  }
+
+  // Stage 1: Classify
+  const classified = await classifyDocument(finalContent, att.name, columnHint);
+  const documentType =
+    classified.document_type !== "unknown"
+      ? classified.document_type
+      : (columnHint ?? "unknown");
+  console.log(
+    `${LOG}   Classified "${att.name}" as ${documentType} (${(classified.confidence * 100).toFixed(0)}%)`
+  );
+
+  // Update the documents row in-place (monday_asset row already exists)
+  await db.run(
+    `UPDATE documents
+     SET document_type = $2,
+         summary = $3,
+         extraction_status = 'success',
+         extraction_attempts = extraction_attempts + 1,
+         last_attempted_at = now(),
+         extracted_at = now(),
+         updated_at = now()
+     WHERE id = $1`,
+    [att.attachment_id_pk, documentType, finalContent.slice(0, 10_000)]
+  );
+
+  // Stage 2: Structured extraction
+  await dispatchStage2(
+    att.attachment_id_pk,
+    documentType,
+    finalContent,
+    att.estimate_id
+  );
+
+  console.log(`${LOG}   OK (monday): ${att.name} -> ${documentType}`);
+  return { type: "succeeded" };
+}
+
+/**
+ * Process an email attachment: download from Graph API, run through
+ * processFilesIntake (Kreuzberg + classify), then Stage 2 extraction.
+ */
+async function processEmailAttachment(
   att: UnprocessedAttachment,
   client: GraphEmailClient,
   groupClient: GraphGroupsClient
 ): Promise<AttachmentOutcome> {
-  // ---- Skip rules (inline images, calendars, etc.) ----
-  if (shouldSkip(att)) {
-    await updateAttachmentExtraction(att.attachment_id_pk, "skipped");
-    return { type: "skipped" };
-  }
-
-  // ---- Layer 1: Internet Message ID dedup (before download) ----
+  // Layer 1: Internet Message ID dedup (before download)
   if (att.internet_message_id) {
     const dupe = await checkInternetMessageIdDupe.get(
       att.internet_message_id,
@@ -331,7 +442,7 @@ async function processOneAttachment(
     }
   }
 
-  // ---- Download from Graph API ----
+  // Download from Graph API
   const ext = att.name.includes(".")
     ? att.name.split(".").pop()?.toLowerCase()
     : "bin";
@@ -340,8 +451,10 @@ async function processOneAttachment(
     `${att.email_id}-${att.attachment_id_pk}.${ext}`
   );
 
-  // Clean up stale failed document records from previous attempts
-  await deleteFailedDocumentsForAttachment.run(att.attachment_id_pk);
+  // Clean up stale failed parsed documents from previous attempts
+  if (att.email_id && att.graph_attachment_id) {
+    await deleteFailedParsedDocs.run(att.email_id, att.graph_attachment_id);
+  }
 
   console.log(
     `${LOG}   Downloading: "${att.name}" (${att.content_type}, ${att.size ?? "?"} bytes) from ${att.mailbox_email}`
@@ -351,9 +464,9 @@ async function processOneAttachment(
     att.mailbox_email === IC_GROUP_EMAIL
       ? downloadGroupAttachment(att, groupClient)
       : client.downloadAttachment(
-          att.message_id,
-          att.graph_attachment_id,
-          att.mailbox_email
+          att.message_id!,
+          att.graph_attachment_id!,
+          att.mailbox_email!
         );
 
   const buffer = await Promise.race([
@@ -366,20 +479,20 @@ async function processOneAttachment(
     ),
   ]);
 
-  // ---- Layer 2: Content hash dedup (after download, before processing) ----
+  // Layer 2: Content hash dedup (after download, before processing)
   const hash = computeHash(buffer);
   await setContentHash.run(att.attachment_id_pk, hash);
 
   const hashDupe = await checkContentHashDupe.get(hash, att.attachment_id_pk);
   if (hashDupe) {
     console.log(
-      `${LOG}   Deduped (content hash): "${att.name}" matches attachment #${hashDupe.id}`
+      `${LOG}   Deduped (content hash): "${att.name}" matches document #${hashDupe.id}`
     );
     await markDeduped(att.attachment_id_pk);
     return { type: "deduped" };
   }
 
-  // ---- Process through Kreuzberg pipeline ----
+  // Process through Kreuzberg pipeline (includes Stage 1 classify)
   await Bun.write(localPath, buffer);
 
   try {
@@ -388,7 +501,7 @@ async function processOneAttachment(
       originalSubject: att.subject ?? "",
       originalFrom: att.from_email ?? "",
       bodyText: "",
-      forwarderEmail: att.mailbox_email,
+      forwarderEmail: att.mailbox_email ?? "",
     });
 
     const { anySuccess, projectLinkSkipped } = await linkResultsToDocuments(
@@ -398,6 +511,30 @@ async function processOneAttachment(
 
     if (anySuccess) {
       await updateAttachmentExtraction(att.attachment_id_pk, "success");
+
+      // Stage 2: Structured extraction on each successful result
+      for (const r of results) {
+        if (r.documentId && r.documentType) {
+          const rawEx = await db
+            .query<
+              { raw_extraction: { text_content?: string } | null },
+              [number]
+            >("SELECT raw_extraction FROM documents WHERE id = $1")
+            .get(r.documentId);
+          const text =
+            ((rawEx?.raw_extraction as Record<string, unknown> | null)
+              ?.text_content as string) ?? "";
+          if (text.length > 0) {
+            await dispatchStage2(
+              r.documentId,
+              r.documentType,
+              text,
+              att.estimate_id
+            );
+          }
+        }
+      }
+
       let projectSummary = "no project link";
       if (att.project_id !== null) {
         projectSummary = projectLinkSkipped
@@ -423,6 +560,24 @@ async function processOneAttachment(
       // Non-fatal
     }
   }
+}
+
+async function processOneAttachment(
+  att: UnprocessedAttachment,
+  client: GraphEmailClient,
+  groupClient: GraphGroupsClient
+): Promise<AttachmentOutcome> {
+  // Skip non-processable content types
+  if (shouldSkip(att)) {
+    await updateAttachmentExtraction(att.attachment_id_pk, "skipped");
+    return { type: "skipped" };
+  }
+
+  // Route by source
+  if (att.source === "monday_asset") {
+    return processMondayAsset(att);
+  }
+  return processEmailAttachment(att, client, groupClient);
 }
 
 function tallyOutcome(

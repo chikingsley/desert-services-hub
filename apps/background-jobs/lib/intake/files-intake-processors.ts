@@ -8,208 +8,301 @@
  *   - Text files (direct read)
  *   - ZIP archives (extract + recursive processing)
  *   - Unsupported files (metadata-only storage)
+ *
+ * Two-stage LLM pipeline:
+ *   Stage 1: classifyDocument() — local LLM (granite4) for fast, cheap classification
+ *   Stage 2: runEstimateExtraction/runContractExtraction/runPermitExtraction
+ *            — Gemini 2.5 flash-lite for structured extraction, writes to documents.raw_extraction
  */
-import { existsSync } from "node:fs";
 import { mkdir, readdir, rm } from "node:fs/promises";
 import { join } from "node:path";
+import {
+  runGeminiJsonPrompt,
+  runLocalLlmJsonPrompt,
+} from "@background-jobs/lib/llm";
 import { extractFile } from "@kreuzberg/node";
 import { db } from "@lib/db/hub";
-import type {
-  ContractsEmailIntakePayload as ContractsEmailIntakePayloadType,
-  ParseIntakeResult as ParseIntakeResultType,
-} from "./parse-intake";
+import {
+  type ContractsEmailIntakePayload,
+  type EmailMeta,
+  extractWithKreuzberg,
+  insertFileError,
+  insertFileRecord,
+  KREUZBERG_OCR_BACKEND,
+  LOG,
+  MIN_KREUZBERG_TEXT_LENGTH,
+  ocrWithPdfAnalysisService,
+  type ParseIntakeResult,
+} from "./files-intake-db";
+
+export type {
+  ContractsEmailIntakePayload,
+  EmailMeta,
+  KreuzbergExtraction,
+  ParseIntakeResult,
+} from "./files-intake-db";
 
 // ============================================================================
-// Config
+// Stage 1: Document Classification (local LLM)
 // ============================================================================
 
-const LOG = "[files-intake]";
-const MIN_KREUZBERG_TEXT_LENGTH = 100;
-const KREUZBERG_OCR_BACKEND = process.env.KREUZBERG_OCR_BACKEND?.trim() || null;
-const KREUZBERG_OCR_LANGUAGE =
-  process.env.KREUZBERG_OCR_LANGUAGE?.trim() || undefined;
-
-// ============================================================================
-// pdf-analysis-cli OCR Fallback
-// ============================================================================
-
-function resolvePdfAnalysisCwd(): string | null {
-  const candidates = [
-    process.env.PDF_ANALYSIS_CLI_CWD?.trim(),
-    "/app/packages/documents/pdf-analysis-cli",
-    join(import.meta.dir, "../../../../packages/documents/pdf-analysis-cli"),
-  ].filter((x): x is string => Boolean(x));
-
-  for (const candidate of candidates) {
-    if (existsSync(join(candidate, "pyproject.toml"))) {
-      return candidate;
-    }
-  }
-  return null;
-}
-
-function resolveUvBin(): string {
-  if (process.env.UV_BIN?.trim()) {
-    return process.env.UV_BIN.trim();
-  }
-  if (existsSync("/root/.local/bin/uv")) {
-    return "/root/.local/bin/uv";
-  }
-  return "uv";
-}
+const VALID_DOCUMENT_TYPES = new Set([
+  "estimate",
+  "contract",
+  "noi",
+  "permit",
+  "plan",
+  "invoice",
+  "insurance",
+  "lien_waiver",
+  "change_order",
+  "submittal",
+  "rfi",
+  "meeting_minutes",
+  "safety",
+  "photo",
+  "logo",
+  "signature",
+  "unknown",
+]);
 
 /**
- * OCR a PDF via pdf-analysis-cli when Kreuzberg returns sparse text.
- * Returns the OCR'd text, or empty string on failure.
+ * Classify a document using local LLM. Falls back to "unknown" on any failure.
+ * The columnHint (from Monday board column) biases toward the expected type.
  */
-async function ocrWithPdfAnalysisCli(pdfPath: string): Promise<string> {
-  const cwd = resolvePdfAnalysisCwd();
-  if (!cwd) {
-    return "";
-  }
+export async function classifyDocument(
+  text: string,
+  fileName: string,
+  columnHint?: string
+): Promise<{ document_type: string; confidence: number }> {
+  const textSnippet = text.slice(0, 4000);
+  const hintLine = columnHint
+    ? `\nThe source system suggests this is likely a "${columnHint}" document. Use this as a strong hint but override if the content clearly indicates otherwise.`
+    : "";
+
+  const prompt = `Classify this construction industry document. Respond with JSON only.
+
+File name: "${fileName}"${hintLine}
+
+Document types (pick one):
+- estimate: bid estimate, quote, proposal with line items and pricing
+- contract: subcontract, agreement, purchase order, work order
+- noi: notice of intent, dust permit application, SWPPP notice
+- permit: dust permit, building permit, grading permit (issued document)
+- plan: construction plans, drawings, blueprints, site plans
+- invoice: invoice, billing, payment request, AIA pay application
+- insurance: certificate of insurance, COI, bond
+- lien_waiver: lien waiver, release of lien
+- change_order: change order, modification, amendment
+- submittal: product submittal, shop drawing, material data
+- rfi: request for information
+- meeting_minutes: meeting minutes, meeting notes
+- safety: safety plan, SWPPP narrative, BMP plan, safety data sheet
+- photo: site photo, inspection photo, progress photo
+- logo: company logo, letterhead image
+- signature: signature block, signed page
+- unknown: cannot determine
+
+First 4000 chars of extracted text:
+"""
+${textSnippet}
+"""
+
+Respond with: {"document_type": "...", "confidence": 0.0-1.0}`;
 
   try {
-    const proc = Bun.spawn(
-      [
-        resolveUvBin(),
-        "run",
-        "pdf-analysis",
-        "ocr",
-        pdfPath,
-        "--format",
-        "text",
-      ],
-      {
-        cwd,
-        stdout: "pipe",
-        stderr: "pipe",
-        env: { ...process.env, PATH: process.env.PATH ?? "" },
+    const result = await runLocalLlmJsonPrompt(prompt);
+    if (result?.document_type && typeof result.document_type === "string") {
+      const docType = result.document_type.toLowerCase();
+      if (VALID_DOCUMENT_TYPES.has(docType)) {
+        return {
+          document_type: docType,
+          confidence:
+            typeof result.confidence === "number" ? result.confidence : 0.5,
+        };
       }
-    );
-
-    const timeout = setTimeout(() => proc.kill(), 120_000);
-    const textPromise = new Response(proc.stdout).text();
-    const stderrPromise = new Response(proc.stderr).text();
-    const exitCode = await proc.exited;
-    const [text, stderr] = await Promise.all([textPromise, stderrPromise]);
-    clearTimeout(timeout);
-
-    if (exitCode !== 0) {
-      console.warn(
-        `${LOG}   pdf-analysis-cli ocr failed (exit ${exitCode}): ${stderr.trim().slice(0, 200)}`
-      );
-      return "";
     }
-    return text.trim();
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    console.warn(`${LOG}   pdf-analysis-cli ocr error: ${msg}`);
-    return "";
+    console.warn(`${LOG}   classify failed (fallback to unknown): ${msg}`);
   }
+
+  return { document_type: "unknown", confidence: 0 };
 }
 
 // ============================================================================
-// Types
+// Stage 2: Structured Extraction (Gemini 2.5 flash-lite)
 // ============================================================================
 
-export interface EmailMeta {
-  originalFrom: string;
-  originalSubject: string;
-  forwarderEmail: string;
-}
+const GEMINI_MODEL = "gemini-2.5-flash-lite";
 
-interface KreuzbergExtraction {
-  content: string;
-  tables: string[];
-  metadata: Record<string, unknown>;
-  extractor: string;
-  ocrAttempted: boolean;
-  ocrError?: string;
-}
-
-// ============================================================================
-// Prepared Statements
-// ============================================================================
-
-const insertFileRecord = db.prepare(`
-  INSERT INTO documents (
-    document_type, file_path, file_name,
-    summary, raw_extraction,
-    model, processing_time_ms,
-    extraction_status,
-    original_from, original_subject, forwarder_email
-  ) VALUES (
-    $1, $2, $3,
-    $4, $5::jsonb,
-    $6, $7,
-    'success',
-    $8, $9, $10
-  )
-  RETURNING id
+const updateRawExtraction = db.prepare(`
+  UPDATE documents
+  SET raw_extraction = $2::jsonb,
+      extraction_status = 'success',
+      updated_at = now()
+  WHERE id = $1
 `);
 
-const insertFileError = db.prepare(`
-  INSERT INTO documents (
-    file_path, file_name,
-    extraction_status, extraction_error,
-    original_from, original_subject, forwarder_email
-  ) VALUES ($1, $2, 'failed', $3, $4, $5, $6)
-  RETURNING id
+const updateEstimateFromExtraction = db.prepare(`
+  UPDATE estimates
+  SET extracted_grand_total = $2,
+      extracted_job_name = $3,
+      extraction_status = 'success',
+      updated_at = now()
+  WHERE id = $1
 `);
 
-// ============================================================================
-// Kreuzberg Extraction Helpers
-// ============================================================================
+export async function runEstimateExtraction(
+  documentId: number,
+  estimateId: number,
+  text: string
+): Promise<void> {
+  const textSnippet = text.slice(0, 30_000);
+  const prompt = `Extract structured data from this construction estimate/bid document. Respond with JSON only.
 
-function getOcrConfig(): { backend: string; language?: string } | null {
-  if (!KREUZBERG_OCR_BACKEND) {
-    return null;
-  }
-  if (KREUZBERG_OCR_LANGUAGE) {
-    return { backend: KREUZBERG_OCR_BACKEND, language: KREUZBERG_OCR_LANGUAGE };
-  }
-  return { backend: KREUZBERG_OCR_BACKEND };
-}
+Text:
+"""
+${textSnippet}
+"""
 
-async function extractWithKreuzberg(
-  filePath: string,
-  options?: { minTextLength?: number; preferOcr?: boolean }
-): Promise<KreuzbergExtraction> {
-  const minTextLength = options?.minTextLength ?? 0;
-  const preferOcr = options?.preferOcr ?? false;
-  const firstPass = await extractFile(filePath);
+Extract:
+{
+  "job_name": "project/job name",
+  "contractor": "general contractor or client name",
+  "address": "job site address if found",
+  "estimator": "person who prepared the estimate",
+  "estimate_number": "estimate or quote number",
+  "date": "estimate date (YYYY-MM-DD if possible)",
+  "line_items": [
+    {"item": "item code/name", "description": "description", "qty": 0, "unit": "unit", "unit_price": 0, "total": 0, "section": "section name or null"}
+  ],
+  "section_subtotals": [{"section": "name", "subtotal": 0}],
+  "tax": {"rate": 0, "amount": 0},
+  "grand_total": 0,
+  "notes": "any special terms, conditions, or notes"
+}`;
 
-  let content = firstPass.content ?? "";
-  let tables = firstPass.tables?.map((table) => table.markdown) ?? [];
-  const metadata =
-    (firstPass.metadata as Record<string, unknown> | undefined) ?? {};
-  const ocrConfig = getOcrConfig();
-  const shouldTryOcr =
-    ocrConfig !== null && (preferOcr || content.length < minTextLength);
-
-  let ocrAttempted = false;
-  let ocrError: string | undefined;
-  let extractor = "kreuzberg";
-
-  if (shouldTryOcr && ocrConfig) {
-    ocrAttempted = true;
-    try {
-      const ocrPass = await extractFile(filePath, null, {
-        forceOcr: true,
-        ocr: ocrConfig,
-      });
-      const ocrContent = ocrPass.content ?? "";
-      if (ocrContent.length > content.length) {
-        content = ocrContent;
-        tables = ocrPass.tables?.map((table) => table.markdown) ?? tables;
-      }
-      extractor = `kreuzberg+ocr:${ocrConfig.backend}`;
-    } catch (error) {
-      ocrError = error instanceof Error ? error.message : String(error);
+  try {
+    const result = await runGeminiJsonPrompt(prompt, { model: GEMINI_MODEL });
+    if (!result) {
+      console.warn(
+        `${LOG}   Stage 2 estimate extraction returned null for doc #${documentId}`
+      );
+      return;
     }
-  }
 
-  return { content, tables, metadata, extractor, ocrAttempted, ocrError };
+    await updateRawExtraction.run(documentId, JSON.stringify(result));
+
+    const grandTotal =
+      typeof result.grand_total === "number" ? result.grand_total : null;
+    const jobName =
+      typeof result.job_name === "string" ? result.job_name : null;
+    if (grandTotal !== null || jobName) {
+      await updateEstimateFromExtraction.run(estimateId, grandTotal, jobName);
+    }
+
+    console.log(
+      `${LOG}   Stage 2 estimate OK: doc #${documentId}, estimate #${estimateId}, total=${grandTotal}`
+    );
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error(
+      `${LOG}   Stage 2 estimate failed doc #${documentId}: ${msg}`
+    );
+  }
+}
+
+export async function runContractExtraction(
+  documentId: number,
+  text: string
+): Promise<void> {
+  const textSnippet = text.slice(0, 30_000);
+  const prompt = `Extract structured data from this construction contract/agreement document. Respond with JSON only.
+
+Text:
+"""
+${textSnippet}
+"""
+
+Extract:
+{
+  "parties": {"owner": "owner/client name", "contractor": "contractor name", "subcontractor": "subcontractor name if applicable"},
+  "contract_number": "contract or PO number",
+  "scope": "brief description of work scope",
+  "value": 0,
+  "start_date": "YYYY-MM-DD or null",
+  "end_date": "YYYY-MM-DD or null",
+  "project_name": "project name",
+  "project_address": "project address",
+  "retention_pct": 0,
+  "insurance_required": true,
+  "bond_required": false,
+  "key_terms": ["notable terms or conditions"]
+}`;
+
+  try {
+    const result = await runGeminiJsonPrompt(prompt, { model: GEMINI_MODEL });
+    if (!result) {
+      console.warn(
+        `${LOG}   Stage 2 contract extraction returned null for doc #${documentId}`
+      );
+      return;
+    }
+
+    await updateRawExtraction.run(documentId, JSON.stringify(result));
+    console.log(`${LOG}   Stage 2 contract OK: doc #${documentId}`);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error(
+      `${LOG}   Stage 2 contract failed doc #${documentId}: ${msg}`
+    );
+  }
+}
+
+export async function runPermitExtraction(
+  documentId: number,
+  text: string
+): Promise<void> {
+  const textSnippet = text.slice(0, 30_000);
+  const prompt = `Extract structured data from this construction permit or Notice of Intent (NOI) document. Respond with JSON only.
+
+Text:
+"""
+${textSnippet}
+"""
+
+Extract:
+{
+  "permit_number": "permit number or LTF number",
+  "permit_type": "dust permit, building permit, grading permit, NOI, etc.",
+  "site_name": "project or site name",
+  "site_address": "site address",
+  "acreage": 0,
+  "applicant": {"name": "applicant name", "company": "company", "phone": "phone", "email": "email"},
+  "operator": {"name": "operator name", "company": "company"},
+  "swppp_contact": {"name": "SWPPP contact name", "phone": "phone", "email": "email"},
+  "issue_date": "YYYY-MM-DD or null",
+  "expiration_date": "YYYY-MM-DD or null",
+  "status": "active, expired, pending, etc.",
+  "conditions": ["special conditions or notes"]
+}`;
+
+  try {
+    const result = await runGeminiJsonPrompt(prompt, { model: GEMINI_MODEL });
+    if (!result) {
+      console.warn(
+        `${LOG}   Stage 2 permit extraction returned null for doc #${documentId}`
+      );
+      return;
+    }
+
+    await updateRawExtraction.run(documentId, JSON.stringify(result));
+    console.log(`${LOG}   Stage 2 permit OK: doc #${documentId}`);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error(`${LOG}   Stage 2 permit failed doc #${documentId}: ${msg}`);
+  }
 }
 
 // ============================================================================
@@ -219,7 +312,7 @@ async function extractWithKreuzberg(
 export async function processPdf(
   pdfPath: string,
   emailMeta: EmailMeta
-): Promise<ParseIntakeResultType> {
+): Promise<ParseIntakeResult> {
   const fileName = pdfPath.split("/").pop() ?? pdfPath;
   const started = performance.now();
 
@@ -229,17 +322,17 @@ export async function processPdf(
     });
 
     // OCR fallback: when Kreuzberg gets sparse text and no Kreuzberg OCR backend
-    // is configured, try pdf-analysis-cli (local rapidocr or Gemini).
+    // is configured, call the pdf-analysis service.
     let finalContent = extracted.content;
     let finalExtractor = extracted.extractor;
     if (
       finalContent.length < MIN_KREUZBERG_TEXT_LENGTH &&
       !KREUZBERG_OCR_BACKEND
     ) {
-      const ocrText = await ocrWithPdfAnalysisCli(pdfPath);
+      const ocrText = await ocrWithPdfAnalysisService(pdfPath);
       if (ocrText.length > finalContent.length) {
         finalContent = ocrText;
-        finalExtractor = "pdf-analysis-cli:ocr";
+        finalExtractor = "pdf-analysis:ocr";
         console.log(
           `${LOG}   OCR fallback improved: ${ocrText.length} chars from ${pdfPath.split("/").pop()}`
         );
@@ -248,17 +341,15 @@ export async function processPdf(
 
     const elapsed = Math.round(performance.now() - started);
 
-    // Classify from extracted text (pure regex, no file I/O)
-    let documentType = "pdf_document";
-    try {
-      const { classifyText } = await import("@lib/pdf-analysis");
-      const classified = await classifyText(finalContent, fileName);
-      if (classified.document_type !== "unknown") {
-        documentType = classified.document_type;
-      }
-    } catch {
-      // classify-text service unavailable — fall back to generic type
-    }
+    // Stage 1: Classify via local LLM
+    const classified = await classifyDocument(finalContent, fileName);
+    const documentType =
+      classified.document_type !== "unknown"
+        ? classified.document_type
+        : "pdf_document";
+    console.log(
+      `${LOG}   Classified "${fileName}" as ${documentType} (${(classified.confidence * 100).toFixed(0)}%)`
+    );
 
     const rawExtraction = {
       text_content: finalContent,
@@ -268,7 +359,7 @@ export async function processPdf(
       extractor: finalExtractor,
       char_count: finalContent.length,
       ocr_attempted:
-        extracted.ocrAttempted || finalExtractor === "pdf-analysis-cli:ocr",
+        extracted.ocrAttempted || finalExtractor === "pdf-analysis:ocr",
       ocr_error: extracted.ocrError ?? null,
     };
 
@@ -325,7 +416,7 @@ export async function processPdf(
 export async function processImage(
   imagePath: string,
   emailMeta: EmailMeta
-): Promise<ParseIntakeResultType> {
+): Promise<ParseIntakeResult> {
   const fileName = imagePath.split("/").pop() ?? imagePath;
   const started = performance.now();
 
@@ -400,7 +491,7 @@ export async function processImage(
 export async function processTextFile(
   textPath: string,
   emailMeta: EmailMeta
-): Promise<ParseIntakeResultType> {
+): Promise<ParseIntakeResult> {
   const fileName = textPath.split("/").pop() ?? textPath;
   const started = performance.now();
 
@@ -470,7 +561,7 @@ export async function processTextFile(
 export async function processOfficeDocument(
   filePath: string,
   emailMeta: EmailMeta
-): Promise<ParseIntakeResultType> {
+): Promise<ParseIntakeResult> {
   const fileName = filePath.split("/").pop() ?? filePath;
   const ext = (fileName.split(".").pop() ?? "").toLowerCase();
   const started = performance.now();
@@ -571,11 +662,9 @@ async function listFilesRecursive(dir: string): Promise<string[]> {
 export async function processZipFile(
   zipPath: string,
   emailMeta: EmailMeta,
-  payload: ContractsEmailIntakePayloadType,
-  processFiles: (
-    p: ContractsEmailIntakePayloadType
-  ) => Promise<ParseIntakeResultType[]>
-): Promise<ParseIntakeResultType[]> {
+  payload: ContractsEmailIntakePayload,
+  processFiles: (p: ContractsEmailIntakePayload) => Promise<ParseIntakeResult[]>
+): Promise<ParseIntakeResult[]> {
   const fileName = zipPath.split("/").pop() ?? zipPath;
   const extractDir = join(
     "/app/data/backfill",

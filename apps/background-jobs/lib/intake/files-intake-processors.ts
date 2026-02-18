@@ -28,10 +28,8 @@ import {
   extractWithKreuzberg,
   insertFileError,
   insertFileRecord,
-  KREUZBERG_OCR_BACKEND,
   LOG,
   MIN_KREUZBERG_TEXT_LENGTH,
-  ocrWithPdfAnalysisService,
   type ParseIntakeResult,
 } from "./files-intake-db";
 
@@ -321,23 +319,8 @@ export async function processPdf(
       minTextLength: MIN_KREUZBERG_TEXT_LENGTH,
     });
 
-    // OCR fallback: when Kreuzberg gets sparse text and no Kreuzberg OCR backend
-    // is configured, call the pdf-analysis service.
-    let finalContent = extracted.content;
-    let finalExtractor = extracted.extractor;
-    if (
-      finalContent.length < MIN_KREUZBERG_TEXT_LENGTH &&
-      !KREUZBERG_OCR_BACKEND
-    ) {
-      const ocrText = await ocrWithPdfAnalysisService(pdfPath);
-      if (ocrText.length > finalContent.length) {
-        finalContent = ocrText;
-        finalExtractor = "pdf-analysis:ocr";
-        console.log(
-          `${LOG}   OCR fallback improved: ${ocrText.length} chars from ${pdfPath.split("/").pop()}`
-        );
-      }
-    }
+    const finalContent = extracted.content;
+    const finalExtractor = extracted.extractor;
 
     const elapsed = Math.round(performance.now() - started);
 
@@ -358,8 +341,7 @@ export async function processPdf(
       metadata: extracted.metadata,
       extractor: finalExtractor,
       char_count: finalContent.length,
-      ocr_attempted:
-        extracted.ocrAttempted || finalExtractor === "pdf-analysis:ocr",
+      ocr_attempted: extracted.ocrAttempted,
       ocr_error: extracted.ocrError ?? null,
     };
 

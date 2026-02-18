@@ -7,7 +7,6 @@
 
 import { extractFile } from "@kreuzberg/node";
 import { db } from "@lib/db/hub";
-import { ocrPdf } from "@lib/pdf-analysis";
 
 // ============================================================================
 // Config
@@ -19,35 +18,6 @@ export const KREUZBERG_OCR_BACKEND =
   process.env.KREUZBERG_OCR_BACKEND?.trim() || null;
 const KREUZBERG_OCR_LANGUAGE =
   process.env.KREUZBERG_OCR_LANGUAGE?.trim() || undefined;
-
-// ============================================================================
-// pdf-analysis service OCR Fallback
-// ============================================================================
-
-/**
- * OCR a PDF via the pdf-analysis HTTP service when Kreuzberg returns sparse text.
- * Returns the OCR'd text, or empty string on failure.
- */
-export async function ocrWithPdfAnalysisService(
-  pdfPath: string
-): Promise<string> {
-  try {
-    const ocr = await Promise.race([
-      ocrPdf(pdfPath, { provider: "auto" }),
-      new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error("OCR timed out")), 120_000)
-      ),
-    ]);
-    if (!ocr?.text) {
-      return "";
-    }
-    return ocr.text.trim();
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    console.warn(`${LOG}   pdf-analysis ocr error: ${msg}`);
-    return "";
-  }
-}
 
 // ============================================================================
 // Types

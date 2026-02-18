@@ -12,7 +12,6 @@ import { processFilesIntake } from "./files-intake";
 import {
   extractWithKreuzberg,
   MIN_KREUZBERG_TEXT_LENGTH,
-  ocrWithPdfAnalysisService,
 } from "./files-intake-db";
 import {
   classifyDocument,
@@ -324,6 +323,38 @@ async function dispatchStage2(
 }
 
 /**
+ * Delete a Monday asset file from disk after processing and null out local_path.
+ * Also tries to remove the parent item directory if empty.
+ */
+async function cleanupMondayAssetFile(
+  filePath: string,
+  documentId: number
+): Promise<void> {
+  try {
+    await unlink(filePath);
+    await db.run("UPDATE documents SET local_path = NULL WHERE id = $1", [
+      documentId,
+    ]);
+    // Try removing the item directory if now empty
+    const parentDir = filePath.substring(0, filePath.lastIndexOf("/"));
+    if (parentDir) {
+      try {
+        const { readdir } = await import("node:fs/promises");
+        const entries = await readdir(parentDir);
+        if (entries.length === 0) {
+          const { rmdir } = await import("node:fs/promises");
+          await rmdir(parentDir);
+        }
+      } catch {
+        // Directory not empty or doesn't exist — fine
+      }
+    }
+  } catch {
+    // Non-fatal — file may already be deleted
+  }
+}
+
+/**
  * Process a Monday asset document: read from local_path, extract text,
  * classify, and run Stage 2 extraction. Writes directly to the documents row.
  */
@@ -363,60 +394,62 @@ async function processMondayAsset(
       `${LOG}   Deduped (content hash): "${att.name}" matches document #${hashDupe.id}`
     );
     await markDeduped(att.attachment_id_pk);
+    await cleanupMondayAssetFile(filePath, att.attachment_id_pk);
     return { type: "deduped" };
   }
 
-  // Extract text via Kreuzberg
-  const extracted = await extractWithKreuzberg(filePath, {
-    minTextLength: MIN_KREUZBERG_TEXT_LENGTH,
-  });
+  try {
+    // Extract text via Kreuzberg
+    const extracted = await extractWithKreuzberg(filePath, {
+      minTextLength: MIN_KREUZBERG_TEXT_LENGTH,
+    });
 
-  let finalContent = extracted.content;
-  let finalExtractor = extracted.extractor;
+    const finalContent = extracted.content;
 
-  // OCR fallback for sparse text
-  if (finalContent.length < MIN_KREUZBERG_TEXT_LENGTH) {
-    const ocrText = await ocrWithPdfAnalysisService(filePath);
-    if (ocrText.length > finalContent.length) {
-      finalContent = ocrText;
-      finalExtractor = "pdf-analysis:ocr";
-    }
+    // Stage 1: Classify
+    const classified = await classifyDocument(
+      finalContent,
+      att.name,
+      columnHint
+    );
+    const documentType =
+      classified.document_type !== "unknown"
+        ? classified.document_type
+        : (columnHint ?? "unknown");
+    console.log(
+      `${LOG}   Classified "${att.name}" as ${documentType} (${(classified.confidence * 100).toFixed(0)}%)`
+    );
+
+    // Update the documents row in-place (monday_asset row already exists)
+    await db.run(
+      `UPDATE documents
+       SET document_type = $2,
+           summary = $3,
+           extraction_status = 'success',
+           extraction_attempts = extraction_attempts + 1,
+           last_attempted_at = now(),
+           extracted_at = now(),
+           updated_at = now()
+       WHERE id = $1`,
+      [att.attachment_id_pk, documentType, finalContent.slice(0, 10_000)]
+    );
+
+    // Stage 2: Structured extraction
+    await dispatchStage2(
+      att.attachment_id_pk,
+      documentType,
+      finalContent,
+      att.estimate_id
+    );
+
+    console.log(`${LOG}   OK (monday): ${att.name} -> ${documentType}`);
+    // Clean up file on success — data is in raw_extraction, file can be re-downloaded if needed
+    await cleanupMondayAssetFile(filePath, att.attachment_id_pk);
+    return { type: "succeeded" };
+  } catch (error) {
+    // On failure, keep the file on disk for retry
+    throw error;
   }
-
-  // Stage 1: Classify
-  const classified = await classifyDocument(finalContent, att.name, columnHint);
-  const documentType =
-    classified.document_type !== "unknown"
-      ? classified.document_type
-      : (columnHint ?? "unknown");
-  console.log(
-    `${LOG}   Classified "${att.name}" as ${documentType} (${(classified.confidence * 100).toFixed(0)}%)`
-  );
-
-  // Update the documents row in-place (monday_asset row already exists)
-  await db.run(
-    `UPDATE documents
-     SET document_type = $2,
-         summary = $3,
-         extraction_status = 'success',
-         extraction_attempts = extraction_attempts + 1,
-         last_attempted_at = now(),
-         extracted_at = now(),
-         updated_at = now()
-     WHERE id = $1`,
-    [att.attachment_id_pk, documentType, finalContent.slice(0, 10_000)]
-  );
-
-  // Stage 2: Structured extraction
-  await dispatchStage2(
-    att.attachment_id_pk,
-    documentType,
-    finalContent,
-    att.estimate_id
-  );
-
-  console.log(`${LOG}   OK (monday): ${att.name} -> ${documentType}`);
-  return { type: "succeeded" };
 }
 
 /**

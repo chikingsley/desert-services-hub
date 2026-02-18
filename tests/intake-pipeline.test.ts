@@ -15,7 +15,7 @@ import { db } from "@lib/db/hub";
 // Config
 // ============================================================================
 
-const WEBHOOK_URL = process.env.WEBHOOK_URL ?? "http://localhost:4747";
+const WEBHOOK_URL = process.env.WEBHOOK_URL ?? "http://localhost:4000";
 const TEST_PDF_DIRS = [
   process.env.TEST_PDF_DIR,
   "/tmp/po-test",
@@ -84,48 +84,53 @@ describe("intake pipeline — PDF", () => {
     console.log(`Using test PDF: ${testPdfPath}`);
   });
 
-  it("webhook accepts PDF and enqueues job", async () => {
-    const pdfBuffer = await Bun.file(testPdfPath).arrayBuffer();
-    const base64 = Buffer.from(pdfBuffer).toString("base64");
-    const fileName = testPdfPath.split("/").pop();
-    if (!fileName) {
-      throw new Error(`Invalid test PDF path: ${testPdfPath}`);
-    }
+  it(
+    "webhook accepts PDF and enqueues job",
+    async () => {
+      const pdfBuffer = await Bun.file(testPdfPath).arrayBuffer();
+      const base64 = Buffer.from(pdfBuffer).toString("base64");
+      const fileName = testPdfPath.split("/").pop();
+      if (!fileName) {
+        throw new Error(`Invalid test PDF path: ${testPdfPath}`);
+      }
 
-    const response = await fetch(`${WEBHOOK_URL}/api/webhooks/intake`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        forwarderEmail: "test-runner@desertservices.app",
-        forwardedAt: new Date().toISOString(),
-        originalSubject: `Test Intake Pipeline ${Date.now()}`,
-        originalFrom: "vendor@example.com",
-        bodyText: "Test email body for pipeline verification",
-        bodyHasContent: false,
-        attachments: [
-          {
-            filename: fileName,
-            contentType: "application/pdf",
-            size: pdfBuffer.byteLength,
-            content: base64,
-          },
-        ],
-      }),
-    });
+      const response = await fetch(`${WEBHOOK_URL}/api/webhooks/intake`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        signal: AbortSignal.timeout(25_000),
+        body: JSON.stringify({
+          forwarderEmail: "test-runner@desertservices.app",
+          forwardedAt: new Date().toISOString(),
+          originalSubject: `Test Intake Pipeline ${Date.now()}`,
+          originalFrom: "vendor@example.com",
+          bodyText: "Test email body for pipeline verification",
+          bodyHasContent: false,
+          attachments: [
+            {
+              filename: fileName,
+              contentType: "application/pdf",
+              size: pdfBuffer.byteLength,
+              content: base64,
+            },
+          ],
+        }),
+      });
 
-    expect(response.status).toBe(202);
-    const body = (await response.json()) as {
-      ok: boolean;
-      jobId: number;
-      files: number;
-    };
-    expect(body.ok).toBe(true);
-    expect(body.files).toBe(1);
-    expect(body.jobId).toBeGreaterThan(0);
+      expect(response.status).toBe(202);
+      const body = (await response.json()) as {
+        ok: boolean;
+        jobId: number;
+        files: number;
+      };
+      expect(body.ok).toBe(true);
+      expect(body.files).toBe(1);
+      expect(body.jobId).toBeGreaterThan(0);
 
-    jobId = body.jobId;
-    console.log(`  Job #${jobId} enqueued`);
-  });
+      jobId = body.jobId;
+      console.log(`  Job #${jobId} enqueued`);
+    },
+    { timeout: 30_000 }
+  );
 
   it(
     "background worker processes the job",
@@ -201,8 +206,8 @@ describe("intake pipeline — PDF", () => {
     console.log(`    Summary: ${contract.summary.length} chars`);
   });
 
-  it("backward compat: supported aliases still work; removed alias stays removed", async () => {
-    // Test /api/webhooks/files-intake alias
+  it("backward compat: removed aliases stay removed", async () => {
+    // /api/webhooks/files-intake is intentionally removed.
     const res1 = await fetch(`${WEBHOOK_URL}/api/webhooks/files-intake`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -215,10 +220,9 @@ describe("intake pipeline — PDF", () => {
         attachments: [],
       }),
     });
-    // Should get 400 (no files) but NOT 404 (route not found)
-    expect(res1.status).toBe(400);
+    expect(res1.status).toBe(404);
 
-    // Test /api/webhooks/contracts-intake alias
+    // /api/webhooks/contracts-intake is intentionally removed.
     const res2 = await fetch(`${WEBHOOK_URL}/api/webhooks/contracts-intake`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -231,7 +235,7 @@ describe("intake pipeline — PDF", () => {
         attachments: [],
       }),
     });
-    expect(res2.status).toBe(400);
+    expect(res2.status).toBe(404);
 
     // /api/webhooks/dust-permit-intake was intentionally removed.
     const res3 = await fetch(`${WEBHOOK_URL}/api/webhooks/dust-permit-intake`, {

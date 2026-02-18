@@ -1,5 +1,5 @@
-import { classifyText } from "@lib/pdf-analysis";
 import { LOG } from "@documents-intake/files-intake-db";
+import { classifyText } from "@lib/pdf-analysis";
 
 const VALID_DOCUMENT_TYPES = new Set([
   "estimate",
@@ -27,7 +27,7 @@ export async function classifyDocument(
   columnHint?: string
 ): Promise<{ document_type: string; confidence: number }> {
   try {
-    const result = await classifyText(text, fileName);
+    const result = await classifyText(text, fileName, "local");
     const docType = result.document_type.toLowerCase();
 
     if (VALID_DOCUMENT_TYPES.has(docType)) {

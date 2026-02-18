@@ -51,7 +51,7 @@ interface IncomingPayload {
 }
 
 const enqueueStmt = db.prepare(
-  "INSERT INTO webhook_jobs (job_type, payload) VALUES ('intake', ?) RETURNING id"
+  "INSERT INTO webhook_jobs (job_type, payload) VALUES ('intake', ?) RETURNING id::text as id"
 );
 
 // =============================================================================
@@ -358,8 +358,8 @@ export async function handleIntakeWebhook(req: Request): Promise<Response> {
     forwarderEmail: body.forwarderEmail ?? "",
   });
 
-  const row = (await enqueueStmt.get(payload)) as { id: number } | null;
-  const jobDbId = row?.id ?? null;
+  const row = (await enqueueStmt.get(payload)) as { id: string } | null;
+  const jobDbId = row ? Number(row.id) : null;
 
   console.log(
     `${LOG} Enqueued job #${jobDbId}: ${attachmentPaths.length} file(s) from "${body.originalSubject}"`

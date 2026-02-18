@@ -1,24 +1,10 @@
-/**
- * Files Intake — File-Type Router
- *
- * Routes files by type to the appropriate processing pipeline:
- *   - PDF → Kreuzberg extraction
- *   - Images → Kreuzberg extraction
- *   - Office → Kreuzberg native extraction (docx, xlsx, xls, doc, pptx, ppt)
- *   - Text → direct read + LLM classification
- *   - Other → metadata-only storage
- *
- * This module replaces processContractsEmailIntake as the main entry point
- * for the intake job type.
- */
-
-import {
-  processImage,
-  processOfficeDocument,
-  processPdf,
-  processTextFile,
-  processZipFile,
-} from "./files-intake-processors";
+import { db } from "@lib/db/hub";
+import { getFileCategory } from "./file-categories";
+import { processImage } from "./processors/image";
+import { processOfficeDocument } from "./processors/office";
+import { processPdf } from "./processors/pdf";
+import { processTextFile } from "./processors/text";
+import { processZipFile } from "./processors/zip";
 import type {
   ContractsEmailIntakePayload,
   EmailMeta,
@@ -27,64 +13,7 @@ import type {
 
 export type { ContractsEmailIntakePayload, ParseIntakeResult } from "./types";
 
-// ============================================================================
-// File Category Detection
-// ============================================================================
-
-const IMAGE_EXTS = new Set([
-  "jpg",
-  "jpeg",
-  "png",
-  "gif",
-  "bmp",
-  "tiff",
-  "tif",
-  "webp",
-  "heic",
-]);
-const TEXT_EXTS = new Set(["txt", "csv", "md"]);
-const PDF_EXTS = new Set(["pdf"]);
-const OFFICE_EXTS = new Set([
-  "docx",
-  "doc",
-  "xlsx",
-  "xls",
-  "pptx",
-  "ppt",
-  "odt",
-  "ods",
-  "odp",
-  "rtf",
-]);
-const ZIP_EXTS = new Set(["zip"]);
-
-type FileCategory = "pdf" | "image" | "text" | "office" | "zip" | "other";
-
-function getFileCategory(filePath: string): FileCategory {
-  const ext = (filePath.split(".").pop() ?? "").toLowerCase();
-  if (PDF_EXTS.has(ext)) {
-    return "pdf";
-  }
-  if (IMAGE_EXTS.has(ext)) {
-    return "image";
-  }
-  if (OFFICE_EXTS.has(ext)) {
-    return "office";
-  }
-  if (TEXT_EXTS.has(ext)) {
-    return "text";
-  }
-  if (ZIP_EXTS.has(ext)) {
-    return "zip";
-  }
-  return "other";
-}
-
-// ============================================================================
-// Unsupported File — store metadata only
-// ============================================================================
-
-import { db } from "@lib/db/hub";
+const LOG = "[files-intake]";
 
 const insertUnsupported = db.prepare(`
   INSERT INTO documents (
@@ -109,8 +38,6 @@ async function processUnsupported(
     emailMeta.forwarderEmail || null
   )) as { id: number } | null;
 
-  console.log(`${LOG}   Stored unsupported file #${row?.id}: ${fileName}`);
-
   return {
     documentId: row?.id ?? null,
     fileName,
@@ -120,19 +47,12 @@ async function processUnsupported(
   };
 }
 
-// ============================================================================
-// Main Entry Point
-// ============================================================================
-
-const LOG = "[files-intake]";
-
 export async function processFilesIntake(
   payload: ContractsEmailIntakePayload
 ): Promise<ParseIntakeResult[]> {
   const { attachmentPaths, originalSubject, originalFrom, forwarderEmail } =
     payload;
 
-  // Categorize files
   const pdfs: string[] = [];
   const images: string[] = [];
   const office: string[] = [];
@@ -163,7 +83,7 @@ export async function processFilesIntake(
   }
 
   console.log(
-    `${LOG} Processing ${attachmentPaths.length} file(s) from "${originalSubject}" (${originalFrom}): ${pdfs.length} PDF, ${images.length} image, ${office.length} office, ${texts.length} text, ${zips.length} zip, ${others.length} other`
+    `${LOG} Processing ${attachmentPaths.length} file(s): ${pdfs.length} PDF, ${images.length} image, ${office.length} office, ${texts.length} text, ${zips.length} zip, ${others.length} other`
   );
 
   const emailMeta: EmailMeta = {
@@ -174,22 +94,18 @@ export async function processFilesIntake(
 
   const results: ParseIntakeResult[] = [];
 
-  // Process PDFs via Kreuzberg
   for (const pdfPath of pdfs) {
     results.push(await processPdf(pdfPath, emailMeta));
   }
 
-  // Process images via Kreuzberg
   for (const imagePath of images) {
     results.push(await processImage(imagePath, emailMeta));
   }
 
-  // Process office documents via Kreuzberg
   for (const officePath of office) {
     results.push(await processOfficeDocument(officePath, emailMeta));
   }
 
-  // Extract and process ZIP archives
   for (const zipPath of zips) {
     const zipResults = await processZipFile(
       zipPath,
@@ -200,20 +116,13 @@ export async function processFilesIntake(
     results.push(...zipResults);
   }
 
-  // Process text files
   for (const textPath of texts) {
     results.push(await processTextFile(textPath, emailMeta));
   }
 
-  // Store unsupported files
   for (const otherPath of others) {
     results.push(await processUnsupported(otherPath, emailMeta));
   }
-
-  const succeeded = results.filter((r) => !r.error).length;
-  console.log(
-    `${LOG} Done: ${succeeded}/${results.length} processed successfully`
-  );
 
   return results;
 }

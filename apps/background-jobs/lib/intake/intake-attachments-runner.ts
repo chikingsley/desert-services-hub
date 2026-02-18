@@ -4,7 +4,7 @@ import {
   extractWithKreuzberg,
   MIN_KREUZBERG_TEXT_LENGTH,
 } from "@documents-intake/files-intake-db";
-import { classifyDocument } from "@documents-intake/files-intake-processors";
+import { classifyDocument } from "@documents-intake/processors/classify";
 import type { GraphEmailClient } from "@email/client";
 import type { GraphGroupsClient } from "@email/groups";
 import { createGraphClient } from "@email/sync/config";
@@ -19,13 +19,11 @@ import type {
   IntakeAttachmentsResult,
 } from "./types";
 
-const LOG = "[intake-attachments]";
 const BACKFILL_DIR = "/app/data/backfill";
 const MAX_RETRY_ATTEMPTS = 3;
 const RETRY_COOLDOWN_HOURS = 6;
-const DOWNLOAD_TIMEOUT_MS = 10_000; // 10s max per Graph API download
+const DOWNLOAD_TIMEOUT_MS = 10_000;
 
-/** Non-processable content types — calendar invites, embedded emails, crypto sigs */
 const SKIP_CONTENT_TYPES = new Set([
   "text/calendar",
   "application/x-ms-wmz",
@@ -43,11 +41,6 @@ function shouldSkip(att: IntakeAttachmentRow): boolean {
 const IC_GROUP_EMAIL = "internalcontracts@desertservices.net";
 const IC_GROUP_ID = "962f9440-9bde-4178-b538-edc7f8d3ecce";
 
-/**
- * Fetch unprocessed documents from all sources (email_attachment + monday_asset).
- * The document's own extraction_status tracks processing state.
- * emails/mailboxes are LEFT JOINed since monday_asset rows have no email_id.
- */
 const getIntakeAttachmentRows = db.query<IntakeAttachmentRow, [number]>(`
   SELECT
     d.id as attachment_id_pk,
@@ -104,11 +97,6 @@ const deleteFailedParsedDocs = db.prepare(`
     AND extraction_status = 'failed'
 `);
 
-/**
- * Layer 1: Internet Message ID dedup.
- * Check if the same file (by name + size) on the same original email
- * (by internet_message_id) has already been processed in another mailbox.
- */
 const checkInternetMessageIdDupe = db.query<
   { id: number },
   [string, string, number | null, number]
@@ -125,10 +113,6 @@ const checkInternetMessageIdDupe = db.query<
   LIMIT 1
 `);
 
-/**
- * Layer 2: Content hash dedup.
- * Check if any previously processed document has the same SHA-256 hash.
- */
 const checkContentHashDupe = db.query<{ id: number }, [string, number]>(`
   SELECT d2.id
   FROM documents d2
@@ -139,9 +123,6 @@ const checkContentHashDupe = db.query<{ id: number }, [string, number]>(`
   LIMIT 1
 `);
 
-/**
- * Store content hash after download.
- */
 const setContentHash = db.prepare(`
   UPDATE documents SET content_hash = $2, updated_at = now() WHERE id = $1
 `);
@@ -194,15 +175,6 @@ async function linkResultsToDocuments(
   return { anySuccess };
 }
 
-/**
- * Download an attachment from an M365 Group post.
- *
- * The stored `emails.thread_id` is in the wrong Exchange-style format and
- * cannot be used directly with the Graph groups API. We always resolve the
- * real thread ID via getConversationThreads, then fetch post attachments
- * inline (same approach the sync code uses) to avoid a separate
- * /attachments/{id} endpoint that returns 403.
- */
 async function downloadGroupAttachment(
   att: IntakeAttachmentRow,
   groupClient: GraphGroupsClient
@@ -211,7 +183,6 @@ async function downloadGroupAttachment(
     throw new Error("No conversation_id for group attachment");
   }
 
-  // Always resolve the real Graph API thread ID from the conversation
   const threads = await groupClient.getConversationThreads(
     IC_GROUP_ID,
     att.conversation_id
@@ -220,7 +191,6 @@ async function downloadGroupAttachment(
     throw new Error("No threads found for group conversation");
   }
 
-  // Search all threads for the post matching att.message_id
   for (const thread of threads) {
     const posts = await groupClient.getThreadPosts(
       IC_GROUP_ID,
@@ -245,10 +215,6 @@ async function downloadGroupAttachment(
   );
 }
 
-/**
- * Delete a Monday asset file from disk after processing and null out local_path.
- * Also tries to remove the parent item directory if empty.
- */
 async function cleanupMondayAssetFile(
   filePath: string,
   documentId: number
@@ -258,7 +224,7 @@ async function cleanupMondayAssetFile(
     await db.run("UPDATE documents SET local_path = NULL WHERE id = $1", [
       documentId,
     ]);
-    // Try removing the item directory if now empty
+
     const parentDir = filePath.substring(0, filePath.lastIndexOf("/"));
     if (parentDir) {
       try {
@@ -269,18 +235,14 @@ async function cleanupMondayAssetFile(
           await rmdir(parentDir);
         }
       } catch {
-        // Directory not empty or doesn't exist — fine
+        // Directory not empty or missing.
       }
     }
   } catch {
-    // Non-fatal — file may already be deleted
+    // Non-fatal cleanup failure.
   }
 }
 
-/**
- * Process a Monday asset document: read from local_path, extract text,
- * classify, and update the documents row in-place.
- */
 async function processMondayAsset(
   att: IntakeAttachmentRow
 ): Promise<AttachmentOutcome> {
@@ -289,7 +251,6 @@ async function processMondayAsset(
     ? (COLUMN_HINTS[att.monday_column_id] ?? undefined)
     : undefined;
 
-  // Find the file to process
   const filePath = att.local_path;
   if (!(filePath && existsSync(filePath))) {
     const errMsg = `Monday asset file not found: ${filePath ?? "no local_path"}`;
@@ -302,43 +263,28 @@ async function processMondayAsset(
     return { type: "failed", error: `${att.name}: ${errMsg}` };
   }
 
-  console.log(
-    `${LOG}   Monday asset: "${att.name}" (column: ${att.monday_column_id}, hint: ${columnHint ?? "none"})`
-  );
-
-  // Content hash dedup
   const fileBuffer = await Bun.file(filePath).arrayBuffer();
   const hash = computeHash(Buffer.from(fileBuffer));
   await setContentHash.run(att.attachment_id_pk, hash);
 
   const hashDupe = await checkContentHashDupe.get(hash, att.attachment_id_pk);
   if (hashDupe) {
-    console.log(
-      `${LOG}   Deduped (content hash): "${att.name}" matches document #${hashDupe.id}`
-    );
     await markDeduped(att.attachment_id_pk);
     await cleanupMondayAssetFile(filePath, att.attachment_id_pk);
     return { type: "deduped" };
   }
 
-  // Extract text via Kreuzberg
   const extracted = await extractWithKreuzberg(filePath, {
     minTextLength: MIN_KREUZBERG_TEXT_LENGTH,
   });
 
   const finalContent = extracted.content;
-
-  // Stage 1: Classify
   const classified = await classifyDocument(finalContent, att.name, columnHint);
   const documentType =
     classified.document_type !== "unknown"
       ? classified.document_type
       : (columnHint ?? "unknown");
-  console.log(
-    `${LOG}   Classified "${att.name}" as ${documentType} (${(classified.confidence * 100).toFixed(0)}%)`
-  );
 
-  // Update the documents row in-place (monday_asset row already exists)
   await db.run(
     `UPDATE documents
      SET document_type = $2,
@@ -352,22 +298,15 @@ async function processMondayAsset(
     [att.attachment_id_pk, documentType, finalContent.slice(0, 10_000)]
   );
 
-  console.log(`${LOG}   OK (monday): ${att.name} -> ${documentType}`);
-  // Clean up file on success — data is in raw_extraction, file can be re-downloaded if needed
   await cleanupMondayAssetFile(filePath, att.attachment_id_pk);
   return { type: "succeeded" };
 }
 
-/**
- * Process an email attachment: download from Graph API, run through
- * processFilesIntake (Kreuzberg + classify).
- */
 async function processEmailAttachment(
   att: IntakeAttachmentRow,
   client: GraphEmailClient,
   groupClient: GraphGroupsClient
 ): Promise<AttachmentOutcome> {
-  // Layer 1: Internet Message ID dedup (before download)
   if (att.internet_message_id) {
     const dupe = await checkInternetMessageIdDupe.get(
       att.internet_message_id,
@@ -381,7 +320,6 @@ async function processEmailAttachment(
     }
   }
 
-  // Download from Graph API
   const ext = att.name.includes(".")
     ? att.name.split(".").pop()?.toLowerCase()
     : "bin";
@@ -390,14 +328,9 @@ async function processEmailAttachment(
     `${att.email_id}-${att.attachment_id_pk}.${ext}`
   );
 
-  // Clean up stale failed parsed documents from previous attempts
   if (att.email_id && att.graph_attachment_id) {
     await deleteFailedParsedDocs.run(att.email_id, att.graph_attachment_id);
   }
-
-  console.log(
-    `${LOG}   Downloading: "${att.name}" (${att.content_type}, ${att.size ?? "?"} bytes) from ${att.mailbox_email}`
-  );
 
   const downloadFn =
     att.mailbox_email === IC_GROUP_EMAIL
@@ -427,20 +360,15 @@ async function processEmailAttachment(
     ),
   ]);
 
-  // Layer 2: Content hash dedup (after download, before processing)
   const hash = computeHash(buffer);
   await setContentHash.run(att.attachment_id_pk, hash);
 
   const hashDupe = await checkContentHashDupe.get(hash, att.attachment_id_pk);
   if (hashDupe) {
-    console.log(
-      `${LOG}   Deduped (content hash): "${att.name}" matches document #${hashDupe.id}`
-    );
     await markDeduped(att.attachment_id_pk);
     return { type: "deduped" };
   }
 
-  // Process through Kreuzberg pipeline (includes Stage 1 classify)
   await Bun.write(localPath, buffer);
 
   try {
@@ -456,7 +384,6 @@ async function processEmailAttachment(
 
     if (anySuccess) {
       await updateAttachmentExtraction(att.attachment_id_pk, "success");
-      console.log(`${LOG}   OK: ${att.name}`);
       return { type: "succeeded" };
     }
 
@@ -472,7 +399,7 @@ async function processEmailAttachment(
     try {
       await unlink(localPath);
     } catch {
-      // Non-fatal
+      // Non-fatal cleanup failure.
     }
   }
 }
@@ -482,13 +409,11 @@ async function processOneAttachment(
   client: GraphEmailClient,
   groupClient: GraphGroupsClient
 ): Promise<AttachmentOutcome> {
-  // Skip non-processable content types
   if (shouldSkip(att)) {
     await updateAttachmentExtraction(att.attachment_id_pk, "skipped");
     return { type: "skipped" };
   }
 
-  // Route by source
   if (att.source === "monday_asset") {
     return processMondayAsset(att);
   }
@@ -553,10 +478,6 @@ export async function processIntakeAttachmentRows(
     return result;
   }
 
-  console.log(
-    `${LOG} Processing batch of ${attachments.length} attachments (concurrency: ${concurrency})`
-  );
-
   await mkdir(BACKFILL_DIR, { recursive: true });
   const client = createGraphClient();
   const groupClient = createGroupsClient();
@@ -570,7 +491,6 @@ export async function processIntakeAttachmentRows(
           return await processOneAttachment(att, client, groupClient);
         } catch (err) {
           const msg = err instanceof Error ? err.message : String(err);
-          console.error(`${LOG}   FAIL: ${att.name}: ${msg}`);
           await updateAttachmentExtraction(
             att.attachment_id_pk,
             "failed",
@@ -588,10 +508,6 @@ export async function processIntakeAttachmentRows(
   }
 
   const total = result.processed + result.skipped + result.deduped;
-  console.log(
-    `${LOG} Batch complete: ${result.succeeded} ok, ${result.failed} failed, ${result.deduped} deduped, ${result.skipped} skipped (${total} total)`
-  );
-
   result.elapsedMs = Date.now() - startedAt;
   result.attachmentsPerMinute =
     result.elapsedMs > 0 ? (total / result.elapsedMs) * 60_000 : total;

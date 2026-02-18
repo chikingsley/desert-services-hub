@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "types": ["bun"],
+    "baseUrl": ".",
+    "paths": {
+      "@pdf-analysis": ["src/index.ts"],
+      "@pdf-analysis/*": ["src/*"]
+    }
+  },
+  "include": ["cli/**/*.ts", "src/**/*.ts", "tests/**/*.ts"]
+}

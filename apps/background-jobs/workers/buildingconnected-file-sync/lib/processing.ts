@@ -7,7 +7,8 @@
  */
 import { mkdir, unlink } from "node:fs/promises";
 import { join } from "node:path";
-import { processFilesIntake } from "@background-jobs/lib/intake/files-intake";
+import { shouldSkipAttachment } from "@documents-intake/attachment-policy";
+import { processFilesIntake } from "@documents-intake/files-intake";
 import type { GraphEmailClient } from "@email/client";
 import { isSubjectCompatibleWithProject } from "@email/project-subject-guard";
 import { createGraphClient } from "@email/sync/config";
@@ -92,44 +93,12 @@ export interface BuildingConnectedSyncOptions {
 // Skip Rules — inline images, calendar invites, signatures
 // ============================================================================
 
-const INLINE_IMAGE_PATTERNS = [
-  /^image\d{3}\./i, // image001.png, image002.jpg
-  /^Outlook-/i, // Outlook-abc123.png
-  /logo/i, // anything with "logo"
-  /^icon/i, // icon files
-  /^spacer\./i, // spacer.gif
-];
-
-const SKIP_CONTENT_TYPES = new Set([
-  "text/calendar",
-  "application/x-ms-wmz",
-  "message/rfc822",
-  "application/ics",
-  "application/pkcs7-signature",
-  "application/x-pkcs7-signature",
-]);
-
 function shouldSkip(att: UnprocessedAttachment): boolean {
-  const ct = att.content_type?.toLowerCase() ?? "";
-
-  // Skip non-processable types (calendar invites, signatures, embedded emails)
-  if (SKIP_CONTENT_TYPES.has(ct)) {
-    return true;
-  }
-
-  // Skip inline/signature images: small size OR matching name patterns
-  if (ct.startsWith("image/")) {
-    if ((att.size ?? 0) < 50_000) {
-      return true;
-    }
-    for (const pattern of INLINE_IMAGE_PATTERNS) {
-      if (pattern.test(att.name)) {
-        return true;
-      }
-    }
-  }
-
-  return false;
+  return shouldSkipAttachment({
+    contentType: att.content_type,
+    fileName: att.name,
+    size: att.size,
+  });
 }
 
 function docTypeToSharePointSubfolder(documentType: string | null): string {

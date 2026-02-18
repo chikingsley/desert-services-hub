@@ -7,6 +7,8 @@
  * Run: bun test ./tests/intake-pipeline.test.ts --verbose
  */
 import { afterAll, beforeAll, describe, expect, it } from "bun:test";
+import { existsSync } from "node:fs";
+import { resolve } from "node:path";
 import { db } from "@lib/db/hub";
 
 // ============================================================================
@@ -14,7 +16,12 @@ import { db } from "@lib/db/hub";
 // ============================================================================
 
 const WEBHOOK_URL = process.env.WEBHOOK_URL ?? "http://localhost:4747";
-const TEST_PDF_DIR = "/tmp/po-test";
+const TEST_PDF_DIRS = [
+  process.env.TEST_PDF_DIR,
+  "/tmp/po-test",
+  "tests/output/invoices",
+  "packages/email/resources/inbox",
+].filter((v): v is string => Boolean(v));
 const POLL_INTERVAL_MS = 2000;
 const PARSE_TIMEOUT_MS = 120_000; // 2 min for OCR + reconciliation
 
@@ -24,10 +31,18 @@ const PARSE_TIMEOUT_MS = 120_000; // 2 min for OCR + reconciliation
 
 async function findTestPdf(): Promise<string> {
   const glob = new Bun.Glob("*.pdf");
-  for await (const file of glob.scan({ cwd: TEST_PDF_DIR })) {
-    return `${TEST_PDF_DIR}/${file}`;
+  for (const dir of TEST_PDF_DIRS) {
+    const absDir = resolve(dir);
+    if (!existsSync(absDir)) {
+      continue;
+    }
+    for await (const file of glob.scan({ cwd: absDir })) {
+      return `${absDir}/${file}`;
+    }
   }
-  throw new Error(`No PDF files found in ${TEST_PDF_DIR}`);
+  throw new Error(
+    `No PDF files found. Checked: ${TEST_PDF_DIRS.map((d) => resolve(d)).join(", ")}`
+  );
 }
 
 async function waitForJobCompletion(

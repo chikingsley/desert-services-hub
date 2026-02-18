@@ -1,10 +1,8 @@
 import { mkdir, unlink } from "node:fs/promises";
 import { join } from "node:path";
-import {
-  extractWithKreuzberg,
-  MIN_KREUZBERG_TEXT_LENGTH,
-} from "@documents-intake/files-intake-db";
-import { classifyDocument } from "@documents-intake/processors/classify";
+import { shouldSkipByContentType } from "@documents-intake/attachment-policy";
+import { processFilesIntake } from "@documents-intake/files-intake";
+import { processMondayAssetDocument } from "@documents-intake/processors/monday-asset";
 import type { GraphEmailClient } from "@email/client";
 import type { GraphGroupsClient } from "@email/groups";
 import { createGraphClient } from "@email/sync/config";
@@ -12,7 +10,6 @@ import { createGroupsClient } from "@email/sync/groups-core/sync-group";
 import { db } from "@lib/db/hub";
 import { updateAttachmentExtraction } from "@lib/db/repositories/attachment";
 import { COLUMN_HINTS } from "@monday/sync/pipeline-config";
-import { processFilesIntake } from "./files-intake";
 import type {
   IntakeAttachmentRow,
   IntakeAttachmentsOptions,
@@ -24,18 +21,8 @@ const MAX_RETRY_ATTEMPTS = 3;
 const RETRY_COOLDOWN_HOURS = 6;
 const DOWNLOAD_TIMEOUT_MS = 10_000;
 
-const SKIP_CONTENT_TYPES = new Set([
-  "text/calendar",
-  "application/x-ms-wmz",
-  "message/rfc822",
-  "application/ics",
-  "application/pkcs7-signature",
-  "application/x-pkcs7-signature",
-]);
-
 function shouldSkip(att: IntakeAttachmentRow): boolean {
-  const ct = att.content_type?.toLowerCase() ?? "";
-  return SKIP_CONTENT_TYPES.has(ct);
+  return shouldSkipByContentType(att.content_type);
 }
 
 const IC_GROUP_EMAIL = "internalcontracts@desertservices.net";
@@ -127,18 +114,15 @@ const setContentHash = db.prepare(`
   UPDATE documents SET content_hash = $2, updated_at = now() WHERE id = $1
 `);
 
-async function markDeduped(attachmentPk: number): Promise<void> {
-  await db.run(
-    `UPDATE documents
-     SET extraction_status = 'deduped',
-         extracted_at = now(),
-         extraction_attempts = extraction_attempts + 1,
-         last_attempted_at = now(),
-         updated_at = now()
-     WHERE id = ?`,
-    [attachmentPk]
-  );
-}
+const markDeduped = db.prepare(`
+  UPDATE documents
+  SET extraction_status = 'deduped',
+      extracted_at = now(),
+      extraction_attempts = extraction_attempts + 1,
+      last_attempted_at = now(),
+      updated_at = now()
+  WHERE id = $1
+`);
 
 function computeHash(buffer: Buffer): string {
   const hasher = new Bun.CryptoHasher("sha256");
@@ -263,42 +247,17 @@ async function processMondayAsset(
     return { type: "failed", error: `${att.name}: ${errMsg}` };
   }
 
-  const fileBuffer = await Bun.file(filePath).arrayBuffer();
-  const hash = computeHash(Buffer.from(fileBuffer));
-  await setContentHash.run(att.attachment_id_pk, hash);
-
-  const hashDupe = await checkContentHashDupe.get(hash, att.attachment_id_pk);
-  if (hashDupe) {
-    await markDeduped(att.attachment_id_pk);
-    await cleanupMondayAssetFile(filePath, att.attachment_id_pk);
-    return { type: "deduped" };
-  }
-
-  const extracted = await extractWithKreuzberg(filePath, {
-    minTextLength: MIN_KREUZBERG_TEXT_LENGTH,
+  const outcome = await processMondayAssetDocument({
+    documentId: att.attachment_id_pk,
+    filePath,
+    fileName: att.name,
+    columnHint,
   });
 
-  const finalContent = extracted.content;
-  const classified = await classifyDocument(finalContent, att.name, columnHint);
-  const documentType =
-    classified.document_type !== "unknown"
-      ? classified.document_type
-      : (columnHint ?? "unknown");
-
-  await db.run(
-    `UPDATE documents
-     SET document_type = $2,
-         summary = $3,
-         extraction_status = 'success',
-         extraction_attempts = extraction_attempts + 1,
-         last_attempted_at = now(),
-         extracted_at = now(),
-         updated_at = now()
-     WHERE id = $1`,
-    [att.attachment_id_pk, documentType, finalContent.slice(0, 10_000)]
-  );
-
   await cleanupMondayAssetFile(filePath, att.attachment_id_pk);
+  if (outcome.status === "deduped") {
+    return { type: "deduped" };
+  }
   return { type: "succeeded" };
 }
 
@@ -315,7 +274,7 @@ async function processEmailAttachment(
       att.attachment_id_pk
     );
     if (dupe) {
-      await markDeduped(att.attachment_id_pk);
+      await markDeduped.run(att.attachment_id_pk);
       return { type: "deduped" };
     }
   }
@@ -365,7 +324,7 @@ async function processEmailAttachment(
 
   const hashDupe = await checkContentHashDupe.get(hash, att.attachment_id_pk);
   if (hashDupe) {
-    await markDeduped(att.attachment_id_pk);
+    await markDeduped.run(att.attachment_id_pk);
     return { type: "deduped" };
   }
 

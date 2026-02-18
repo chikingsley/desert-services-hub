@@ -1,5 +1,4 @@
 import { propagateDocumentProjectIds } from "@background-jobs/lib/documents/propagate-project-ids";
-import { processFilesIntake } from "@background-jobs/lib/intake/files-intake";
 import {
   handleIssuedEmail,
   handlePaymentEmail,
@@ -10,6 +9,7 @@ import {
 } from "@background-jobs/workers/estimate-poller/lib/project-seed-sync";
 import { syncEstimates } from "@background-jobs/workers/estimate-poller/lib/sync";
 import { syncSharePointFolders } from "@background-jobs/workers/estimates-sync-worker/lib/sharepoint-sync";
+import { processFilesIntake } from "@documents-intake/files-intake";
 import { processItemFiles } from "@monday/sync/pipeline";
 import { syncItem } from "@monday/sync/sync-item";
 import { PROJECT_SEED_STALE_DAYS } from "./config";

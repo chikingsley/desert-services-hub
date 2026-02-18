@@ -11,8 +11,9 @@
 import { mkdir, unlink } from "node:fs/promises";
 import { join } from "node:path";
 import { propagateDocumentProjectIds } from "@background-jobs/lib/documents/propagate-project-ids";
-import { processFilesIntake } from "@background-jobs/lib/intake/files-intake";
 import type { ContractEmailJobPayload } from "@background-jobs/lib/notifications/types";
+import { shouldSkipAttachment } from "@documents-intake/attachment-policy";
+import { processFilesIntake } from "@documents-intake/files-intake";
 import type { GraphEmailClient } from "@email/client";
 import { createGraphClient } from "@email/sync/config";
 import { db } from "@lib/db/hub";
@@ -26,42 +27,12 @@ const WORK_DIR = "/app/data/contract-intake";
 // Skip rules — same as intake-attachments-runner
 // ============================================================================
 
-const INLINE_IMAGE_PATTERNS = [
-  /^image\d{3}\./i,
-  /^Outlook-/i,
-  /logo/i,
-  /^icon/i,
-  /^spacer\./i,
-];
-
-const SKIP_CONTENT_TYPES = new Set([
-  "text/calendar",
-  "application/x-ms-wmz",
-  "message/rfc822",
-  "application/ics",
-  "application/pkcs7-signature",
-  "application/x-pkcs7-signature",
-]);
-
 function shouldSkip(att: ContractAttachmentRow): boolean {
-  const ct = att.content_type?.toLowerCase() ?? "";
-
-  if (SKIP_CONTENT_TYPES.has(ct)) {
-    return true;
-  }
-
-  if (ct.startsWith("image/")) {
-    if ((att.size ?? 0) < 50_000) {
-      return true;
-    }
-    for (const pattern of INLINE_IMAGE_PATTERNS) {
-      if (pattern.test(att.name)) {
-        return true;
-      }
-    }
-  }
-
-  return false;
+  return shouldSkipAttachment({
+    contentType: att.content_type,
+    fileName: att.name,
+    size: att.size,
+  });
 }
 
 // ============================================================================

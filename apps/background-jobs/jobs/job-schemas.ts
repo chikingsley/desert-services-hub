@@ -1,9 +1,9 @@
-import type { ContractsEmailIntakePayload } from "@background-jobs/lib/intake/files-intake";
 import type {
   ContractEmailJobPayload,
   IssuedJobPayload,
   PaymentJobPayload,
 } from "@background-jobs/lib/notifications/types";
+import type { ContractsEmailIntakePayload } from "@documents-intake/types";
 import { z } from "zod";
 
 const NON_EMPTY_STRING_SCHEMA = z.string().trim().min(1);

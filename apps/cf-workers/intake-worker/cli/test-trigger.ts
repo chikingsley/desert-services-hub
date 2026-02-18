@@ -18,7 +18,7 @@
 import { readFileSync } from "node:fs";
 import { mkdir } from "node:fs/promises";
 import { basename, extname, join } from "node:path";
-import { processFilesIntake } from "@background-jobs/lib/intake/files-intake";
+import { processFilesIntake } from "@documents-intake/files-intake";
 import { db } from "@lib/db/hub";
 
 const LOG = "[test-trigger]";

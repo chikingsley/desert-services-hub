@@ -3,7 +3,7 @@
 import { mkdir } from "node:fs/promises";
 import { dirname } from "node:path";
 
-type CliArgs = {
+interface CliArgs {
   limit: number;
   outputPath: string;
   container: string;
@@ -11,7 +11,7 @@ type CliArgs = {
   requireAddress: boolean;
   minDocCount: number;
   statuses: string[];
-};
+}
 
 interface PermitDatasetRow {
   permitId: string;
@@ -171,7 +171,10 @@ FROM (
 `.trim();
 }
 
-async function runPsqlJsonQuery(container: string, sql: string): Promise<PermitDatasetRow[]> {
+async function runPsqlJsonQuery(
+  container: string,
+  sql: string
+): Promise<PermitDatasetRow[]> {
   const proc = Bun.spawn(
     [
       "docker",
@@ -191,7 +194,7 @@ async function runPsqlJsonQuery(container: string, sql: string): Promise<PermitD
     {
       stdout: "pipe",
       stderr: "pipe",
-    },
+    }
   );
 
   const [exitCode, stdoutText, stderrText] = await Promise.all([
@@ -202,7 +205,9 @@ async function runPsqlJsonQuery(container: string, sql: string): Promise<PermitD
 
   if (exitCode !== 0) {
     const stderr = stderrText.trim();
-    throw new Error(`psql query failed (exit=${exitCode})${stderr ? `: ${stderr}` : ""}`);
+    throw new Error(
+      `psql query failed (exit=${exitCode})${stderr ? `: ${stderr}` : ""}`
+    );
   }
 
   const output = stdoutText.trim();

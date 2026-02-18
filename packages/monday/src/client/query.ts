@@ -1,7 +1,7 @@
 /**
  * Query execution for Monday.com API.
  */
-import type { GraphQLResponse } from "@monday/types";
+import type { GraphQLResponse } from "@monday/types/schema";
 
 const API_URL = "https://api.monday.com/v2";
 const API_VERSION = "2026-01";

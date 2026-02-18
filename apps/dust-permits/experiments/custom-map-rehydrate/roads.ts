@@ -1,10 +1,16 @@
 import { geocodeAddress } from "./geocoding";
 import type { LatLng, RoadGeometry } from "./types";
 
-const GOOGLE_DIRECTIONS_ENDPOINT = "https://maps.googleapis.com/maps/api/directions/json";
+const GOOGLE_DIRECTIONS_ENDPOINT =
+  "https://maps.googleapis.com/maps/api/directions/json";
 
 function getApiKey(provided?: string): string | null {
-  return provided || process.env.GOOGLE_MAPS_API_KEY || process.env.GOOGLE_MAPS_KEY || null;
+  return (
+    provided ||
+    process.env.GOOGLE_MAPS_API_KEY ||
+    process.env.GOOGLE_MAPS_KEY ||
+    null
+  );
 }
 
 export function decodePolyline(encoded: string): LatLng[] {
@@ -50,7 +56,7 @@ export function decodePolyline(encoded: string): LatLng[] {
 export async function getRoadGeometry(
   roadName: string,
   nearPoint: LatLng,
-  options: { searchRadiusMeters?: number; googleMapsApiKey?: string } = {},
+  options: { searchRadiusMeters?: number; googleMapsApiKey?: string } = {}
 ): Promise<LatLng[] | null> {
   const key = getApiKey(options.googleMapsApiKey);
   if (!key) {
@@ -117,13 +123,13 @@ export async function getRoadGeometryByName(
     intersectionPoint?: LatLng | null;
     searchRadiusMeters?: number;
     googleMapsApiKey?: string;
-  } = {},
+  } = {}
 ): Promise<RoadGeometry | null> {
   const nearPoint = options.intersectionPoint
     ? options.intersectionPoint
     : await geocodeAddress(
         `${roadName}, ${options.city ?? ""} ${options.state ?? ""}`,
-        options.googleMapsApiKey,
+        options.googleMapsApiKey
       );
 
   if (!nearPoint) {

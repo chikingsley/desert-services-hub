@@ -5,8 +5,6 @@ import { join } from "node:path";
 import pdfmake from "pdfmake";
 import { FONT_BODY, FONT_TITLE } from "./brand";
 
-export { FONT_BODY, FONT_TITLE } from "./brand";
-
 // Roboto TTFs bundled with pdfmake — portable, no system dependency
 const ROBOTO_DIR = join(
   import.meta.dir,

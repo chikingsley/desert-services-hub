@@ -10,9 +10,13 @@
  *   bun apps/background-jobs/workers/estimate-poller/setup-webhooks.ts --list
  *   bun apps/background-jobs/workers/estimate-poller/setup-webhooks.ts --delete=WEBHOOK_ID
  */
-import { createWebhook, deleteWebhook, listWebhooks } from "@monday/client";
-import type { WebhookEventType } from "@monday/types";
-import { BOARD_IDS } from "@monday/types";
+import {
+  createWebhook,
+  deleteWebhook,
+  listWebhooks,
+} from "@monday/client/webhooks";
+import type { WebhookEventType } from "@monday/types/events";
+import { BOARD_IDS } from "@monday/types/schema";
 
 const args = process.argv.slice(2);
 const urlArg = args.find((a) => a.startsWith("--url="));

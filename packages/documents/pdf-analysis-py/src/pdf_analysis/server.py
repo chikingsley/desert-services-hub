@@ -5,7 +5,7 @@ can use fetch() instead of spawning subprocesses.
 
 Endpoints:
   POST /estimate   — kreuzberg table extraction (deterministic, no LLM)
-  POST /classify   — heuristic document classification (no LLM)
+  POST /classify   — LLM document classification from PDF
   POST /ingest     — text extraction + LLM classification + structured extraction
   POST /parse      — full pipeline: kreuzberg + OCR + LLM reconciliation
   POST /ocr        — raw OCR text extraction (no LLM reconciliation)
@@ -77,6 +77,7 @@ class OcrRequest(BaseModel):
 class ClassifyTextRequest(BaseModel):
     text: str
     filename: str = ""
+    provider: str = "auto"
 
 
 class ParseRequest(BaseModel):
@@ -119,7 +120,7 @@ async def estimate_endpoint(req: FileRequest) -> dict[str, Any]:
     """Extract structured schedule of values from a Desert Services estimate PDF."""
     pdf_path = _resolve_path(req.path)
 
-    from pdf_analysis.estimates import extract_estimate
+    from pdf_analysis.analysis.estimates import extract_estimate
 
     started = time.perf_counter()
     try:
@@ -133,17 +134,19 @@ async def estimate_endpoint(req: FileRequest) -> dict[str, Any]:
 
 @app.post("/classify")
 async def classify_endpoint(req: FileRequest) -> list[dict[str, Any]]:
-    """Classify PDF by document type using heuristics (no LLM)."""
+    """Classify PDF by document type using the LLM pipeline."""
     pdf_path = _resolve_path(req.path)
 
-    from pdf_analysis.classify import ClassifyResult, classify_dir, classify_pdf
+    from pdf_analysis.analysis.classify import ClassifyResult, classify_dir, classify_pdf
+
+    provider = ProviderSelector(req.provider) if req.provider != "auto" else ProviderSelector.AUTO
 
     try:
         results: list[ClassifyResult]
         if pdf_path.is_dir():
-            results = await asyncio.to_thread(classify_dir, pdf_path)
+            results = await classify_dir(pdf_path, provider=provider)
         else:
-            results = [await asyncio.to_thread(classify_pdf, pdf_path)]
+            results = [await classify_pdf(pdf_path, provider=provider)]
         return [asdict(r) for r in results]
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
@@ -151,10 +154,11 @@ async def classify_endpoint(req: FileRequest) -> list[dict[str, Any]]:
 
 @app.post("/classify-text")
 async def classify_text_endpoint(req: ClassifyTextRequest) -> dict[str, Any]:
-    """Classify from pre-extracted text (no file I/O, pure regex)."""
-    from pdf_analysis.classify import classify_text
+    """Classify from pre-extracted text using the LLM pipeline."""
+    from pdf_analysis.analysis.classify import classify_text
 
-    result = classify_text(req.text, filename=req.filename)
+    provider = ProviderSelector(req.provider) if req.provider != "auto" else ProviderSelector.AUTO
+    result = await classify_text(req.text, filename=req.filename, provider=provider)
     return asdict(result)
 
 

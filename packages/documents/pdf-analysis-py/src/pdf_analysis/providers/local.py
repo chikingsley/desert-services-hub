@@ -26,10 +26,8 @@ from pdf_analysis.types import (
 )
 from pdf_analysis.utils import extract_json_from_text, sanitize_filename
 
-from .base import BaseProvider
 
-
-class LocalProvider(BaseProvider):
+class LocalProvider:
     name = ProviderName.LOCAL
     cost_per_1k_pages = 0.0
     _MAX_RETRIES = 5

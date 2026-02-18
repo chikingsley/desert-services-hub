@@ -435,7 +435,7 @@ class SourcePacketRunner:
             "uv",
             "run",
             "--directory",
-            "packages/documents/pdf-analysis-cli",
+            "packages/documents/pdf-analysis-py",
             "pdf-analysis",
             *args,
         ]

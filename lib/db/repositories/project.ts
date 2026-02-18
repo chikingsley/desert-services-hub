@@ -211,66 +211,7 @@ export async function getEmailsForAccount(accountId: number): Promise<Email[]> {
   return rows.map(parseEmailRow);
 }
 
-// ============================================
-// Project Alias Functions
-// ============================================
-
-export async function addProjectAlias(
-  projectId: number,
-  alias: string,
-  source: "manual" | "monday" | "learned" = "manual"
-): Promise<boolean> {
-  const normalized = normalizeProjectAlias(alias);
-  if (!normalized) {
-    return false;
-  }
-
-  try {
-    await db.run(
-      `INSERT INTO project_aliases (project_id, alias, normalized_alias, source)
-       VALUES (?, ?, ?, ?)
-       ON CONFLICT DO NOTHING`,
-      [projectId, alias, normalized, source]
-    );
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-export async function getProjectByAlias(
-  alias: string
-): Promise<Project | null> {
-  const normalized = normalizeProjectAlias(alias);
-  const row = await db
-    .query<{ project_id: number }, [string]>(
-      "SELECT project_id FROM project_aliases WHERE normalized_alias = ?"
-    )
-    .get(normalized);
-
-  if (!row) {
-    return null;
-  }
-  return getProjectById(row.project_id);
-}
-
-export async function getAliasesForProject(
-  projectId: number
-): Promise<string[]> {
-  const rows = await db
-    .query<{ alias: string }, [number]>(
-      "SELECT alias FROM project_aliases WHERE project_id = ?"
-    )
-    .all(projectId);
-  return rows.map((r) => r.alias);
-}
-
 export async function findProjectByText(text: string): Promise<Project | null> {
-  const byAlias = await getProjectByAlias(text);
-  if (byAlias) {
-    return byAlias;
-  }
-
   const normalized = normalizeProjectNameKey(text);
   const row = await db
     .query<Record<string, unknown>, [string]>(

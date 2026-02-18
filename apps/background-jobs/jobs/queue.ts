@@ -9,37 +9,44 @@ import {
   ESTIMATE_FILE_SWEEP_CURSOR_KEY,
   STALE_JOB_MINUTES,
 } from "./config";
+import type { WebhookJob } from "./types";
 
-// -- Types --
+// -- Atomic dequeue (FOR UPDATE SKIP LOCKED) --
 
-export interface WebhookJob {
-  id: number;
-  job_type: string;
-  monday_item_id: string | null;
-  payload: string;
-  status: string;
-  attempts: number;
-  max_attempts: number;
-  error: string | null;
-}
-
-// -- Prepared statements --
-
-const selectNextJob = db.query<WebhookJob>(`
-  SELECT * FROM webhook_jobs
-  WHERE status = 'pending' OR (status = 'failed' AND attempts < max_attempts)
-  ORDER BY
-    CASE
-      WHEN job_type = 'email_notification' THEN 0
-      ELSE 1
-    END,
-    created_at ASC
-  LIMIT 1
+const dequeueNextJob = db.query<WebhookJob>(`
+  WITH next AS (
+    SELECT id FROM webhook_jobs
+    WHERE status = 'pending' OR (status = 'failed' AND attempts < max_attempts)
+    ORDER BY
+      CASE WHEN job_type = 'email_notification' THEN 0 ELSE 1 END,
+      created_at ASC
+    LIMIT 1
+    FOR UPDATE SKIP LOCKED
+  )
+  UPDATE webhook_jobs
+  SET status = 'processing', started_at = now(), attempts = attempts + 1
+  FROM next
+  WHERE webhook_jobs.id = next.id
+  RETURNING webhook_jobs.*
 `);
 
-const claimJobStmt = db.prepare(
-  "UPDATE webhook_jobs SET status = 'processing', started_at = now(), attempts = attempts + 1 WHERE id = ? AND status IN ('pending', 'failed')"
-);
+const dequeueNextJobExcludeLlm = db.query<WebhookJob>(`
+  WITH next AS (
+    SELECT id FROM webhook_jobs
+    WHERE (status = 'pending' OR (status = 'failed' AND attempts < max_attempts))
+      AND job_type NOT IN ('contact_enrichment', 'email_triage_batch', 'estimate_triage')
+    ORDER BY
+      CASE WHEN job_type = 'email_notification' THEN 0 ELSE 1 END,
+      created_at ASC
+    LIMIT 1
+    FOR UPDATE SKIP LOCKED
+  )
+  UPDATE webhook_jobs
+  SET status = 'processing', started_at = now(), attempts = attempts + 1
+  FROM next
+  WHERE webhook_jobs.id = next.id
+  RETURNING webhook_jobs.*
+`);
 
 export const completeJob = db.prepare(
   "UPDATE webhook_jobs SET status = 'completed', completed_at = now(), error = NULL WHERE id = ?"
@@ -95,18 +102,31 @@ export async function enqueueFullSyncIfMissing(reason: string): Promise<void> {
   }
 }
 
-export async function dequeue(): Promise<WebhookJob | null> {
-  const job = await selectNextJob.get();
-  if (!job) {
-    return null;
-  }
+export async function dequeue(options?: {
+  excludeLlmTypes?: boolean;
+}): Promise<WebhookJob | null> {
+  const stmt = options?.excludeLlmTypes
+    ? dequeueNextJobExcludeLlm
+    : dequeueNextJob;
+  return (await stmt.get()) ?? null;
+}
 
-  const result = await claimJobStmt.run(job.id);
-  if (result.count === 0) {
-    return null;
-  }
+const enqueueIfNotPendingStmt = db.prepare(`
+  INSERT INTO webhook_jobs (job_type, payload)
+  SELECT ?, ?
+  WHERE NOT EXISTS (
+    SELECT 1 FROM webhook_jobs
+    WHERE job_type = ?
+      AND status IN ('pending', 'processing')
+  )
+`);
 
-  return { ...job, status: "processing", attempts: job.attempts + 1 };
+export async function enqueueIfNotPending(
+  jobType: string,
+  payload = "{}"
+): Promise<boolean> {
+  const result = await enqueueIfNotPendingStmt.run(jobType, payload, jobType);
+  return result.count > 0;
 }
 
 export function parseJobPayload<T>(job: WebhookJob, schema: z.ZodType<T>): T {

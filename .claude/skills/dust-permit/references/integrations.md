@@ -55,7 +55,7 @@ bun packages/email/cli/cli.ts download-attachments <messageId> \
 Primary extraction path is `pdf-analysis`:
 
 ```bash
-cd packages/documents/pdf-analysis-cli
+cd packages/documents/pdf-analysis-py
 uv run pdf-analysis noi /path/to/noi.pdf --ocr-fallback
 uv run pdf-analysis ocr /path/to/plans.pdf --output /tmp/plans.md
 ```

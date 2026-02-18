@@ -99,7 +99,7 @@ services:
       retries: 3
       start_period: 10s
     restart: unless-stopped
-    command: ["uv", "run", "--project", "packages/documents/pdf-analysis-cli", "uvicorn", "pdf_analysis.server:app", "--host", "0.0.0.0", "--port", "4848"]
+    command: ["uv", "run", "--project", "packages/documents/pdf-analysis-py", "uvicorn", "pdf_analysis.server:app", "--host", "0.0.0.0", "--port", "4848"]
 
   # ==========================================================================
   # Permit Worker — Browser automation for Maricopa County dust permits

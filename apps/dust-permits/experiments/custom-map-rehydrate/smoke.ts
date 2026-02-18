@@ -37,13 +37,17 @@ console.log("clusters:", clusters.length);
 console.log("outliers:", outliers.length);
 console.log("primary centroid:", clusters[0]?.centroid);
 
-const centerBounds = calculateBoundsFromCenter({ lat: 33.5613, lng: -112.3916 }, 200, 1.4);
+const centerBounds = calculateBoundsFromCenter(
+  { lat: 33.5613, lng: -112.3916 },
+  200,
+  1.4
+);
 
 const cornerBounds = calculateBoundsFromCorner(
   { lat: 33.5613, lng: -112.3916 },
   "northwest",
   200,
-  1.4,
+  1.4
 );
 
 console.log("center bounds:", centerBounds);

@@ -11,10 +11,6 @@ interface ProjectContextRow {
   outlook_folder: string | null;
 }
 
-interface ProjectAliasRow {
-  alias: string;
-}
-
 interface ProjectSubjectGuardContext {
   hintTexts: string[];
   hintTokenSets: Set<string>[];
@@ -69,17 +65,10 @@ async function loadProjectSubjectGuardContext(
     return null;
   }
 
-  const aliases = await db
-    .query<ProjectAliasRow, [number]>(
-      "SELECT alias FROM project_aliases WHERE project_id = ?"
-    )
-    .all(projectId);
-
   const hintTexts = uniqueStrings([
     project.name,
     project.contractor,
     project.outlook_folder,
-    ...aliases.map((row) => row.alias),
   ]);
 
   return {

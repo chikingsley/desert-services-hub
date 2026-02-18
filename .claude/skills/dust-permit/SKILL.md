@@ -36,7 +36,7 @@ ALL permit operations use the typed `PermitClient` from `@permits/client`. Alway
 ## Workflow: New Permit
 
 1. Gather NOI document (required) — search emails in Postgres, download attachments
-2. Extract data: `cd packages/documents/pdf-analysis-cli && uv run pdf-analysis noi /path/to/noi.pdf --ocr-fallback`
+2. Extract data: `cd packages/documents/pdf-analysis-py && uv run pdf-analysis noi /path/to/noi.pdf --ocr-fallback`
 3. Check company history in DB — determines `flow: "existing-company"` vs `"new-company"`
 4. Build overrides JSON if needed, copy into container: `docker cp file.json desert-permit-worker:/app/data/overrides/`
 5. `c.createPermit({ flow: "existing-company", companyName: "Name" })`

@@ -74,8 +74,8 @@ async function insertEstimateRow(params: {
 
   const inserted = (await db
     .prepare(
-      `INSERT INTO estimates (name, base_number, takeoff_id, job_name, job_address, client_name, client_address, client_email, client_phone, estimator, estimator_email, notes, status, is_locked)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `INSERT INTO estimates (name, base_number, takeoff_id, job_name, job_address, contractor, client_address, estimator, estimator_email, notes, status, is_locked)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
        RETURNING id`
     )
     .get(
@@ -86,8 +86,6 @@ async function insertEstimateRow(params: {
       normalized.job_address || null,
       normalized.client_name || null,
       normalized.client_address || null,
-      normalized.client_email || null,
-      normalized.client_phone || null,
       input.estimator || null,
       input.estimator_email || null,
       normalized.notes || null,
@@ -235,16 +233,8 @@ export async function updateEstimate(
     values.push(input.job_address || null);
   }
   if (input.client_name !== undefined) {
-    updates.push("client_name = ?");
+    updates.push("contractor = ?");
     values.push(input.client_name || null);
-  }
-  if (input.client_email !== undefined) {
-    updates.push("client_email = ?");
-    values.push(input.client_email || null);
-  }
-  if (input.client_phone !== undefined) {
-    updates.push("client_phone = ?");
-    values.push(input.client_phone || null);
   }
   if (input.notes !== undefined) {
     updates.push("notes = ?");
@@ -294,8 +284,8 @@ export async function duplicateEstimate(
 
   await db
     .prepare(
-      `INSERT INTO estimates (id, base_number, job_name, job_address, client_name, client_email, client_phone, notes, status, is_locked)
-       SELECT ?, ?, ?, job_address, client_name, client_email, client_phone, notes, 'draft', 0
+      `INSERT INTO estimates (id, base_number, job_name, job_address, contractor, notes, status, is_locked)
+       SELECT ?, ?, ?, job_address, contractor, notes, 'draft', 0
        FROM estimates WHERE id = ?`
     )
     .run(

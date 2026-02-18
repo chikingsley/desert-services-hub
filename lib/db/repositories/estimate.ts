@@ -26,13 +26,8 @@ function parseEstimateRow(row: Record<string, unknown>): Estimate {
     dueDate: row.due_date as string | null,
     location: row.location as string | null,
     sharepointUrl: row.sharepoint_url as string | null,
-    estimateStorageBucket: row.estimate_storage_bucket as string | null,
     estimateStoragePath: row.estimate_storage_path as string | null,
     estimateFileName: row.estimate_file_name as string | null,
-    estimateSyncedAt: row.estimate_synced_at as string | null,
-    plansStoragePath: row.plans_storage_path as string | null,
-    contractsStoragePath: row.contracts_storage_path as string | null,
-    noiStoragePath: row.noi_storage_path as string | null,
     syncedAt: row.synced_at as string,
     createdAt: row.created_at as string,
     updatedAt: row.updated_at as string,
@@ -58,7 +53,6 @@ function toEstimateUpsertParams(data: UpsertEstimateData): unknown[] {
     data.dueDate ?? null,
     data.location ?? null,
     data.sharepointUrl ?? null,
-    data.estimateStorageBucket ?? null,
     data.estimateStoragePath ?? null,
     data.estimateFileName ?? null,
   ];
@@ -72,8 +66,8 @@ export async function upsertEstimate(
       monday_item_id, name, estimate_number, contractor, group_id, group_title,
       monday_url, account_monday_id, account_domain, bid_status, bid_value,
       awarded_value, bid_source, awarded, due_date, location, sharepoint_url,
-      estimate_storage_bucket, estimate_storage_path, estimate_file_name, synced_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, now())
+      estimate_storage_path, estimate_file_name, synced_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, now())
     ON CONFLICT(monday_item_id) DO UPDATE SET
       name = excluded.name,
       estimate_number = excluded.estimate_number,
@@ -91,7 +85,6 @@ export async function upsertEstimate(
       due_date = excluded.due_date,
       location = excluded.location,
       sharepoint_url = excluded.sharepoint_url,
-      estimate_storage_bucket = COALESCE(excluded.estimate_storage_bucket, estimates.estimate_storage_bucket),
       estimate_storage_path = COALESCE(excluded.estimate_storage_path, estimates.estimate_storage_path),
       estimate_file_name = COALESCE(excluded.estimate_file_name, estimates.estimate_file_name),
       synced_at = now(),
@@ -118,32 +111,29 @@ export async function upsertEstimate(
 
 export async function updateEstimateStorage(
   mondayItemId: string,
-  bucket: string,
+  _bucket: string,
   path: string,
   fileName: string
 ): Promise<void> {
   await db.run(
     `UPDATE estimates
-     SET estimate_storage_bucket = ?,
-         estimate_storage_path = ?,
+     SET estimate_storage_path = ?,
          estimate_file_name = ?,
-         estimate_synced_at = now(),
          updated_at = now()
      WHERE monday_item_id = ?`,
-    [bucket, path, fileName, mondayItemId]
+    [path, fileName, mondayItemId]
   );
 }
 
 export async function updatePlansStorage(
   mondayItemId: string,
-  path: string
+  _path: string
 ): Promise<void> {
   await db.run(
     `UPDATE estimates
-     SET plans_storage_path = ?,
-         updated_at = now()
+     SET updated_at = now()
      WHERE monday_item_id = ?`,
-    [path, mondayItemId]
+    [mondayItemId]
   );
 }
 

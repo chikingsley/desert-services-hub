@@ -1,4 +1,4 @@
-import { searchByColumnValue, searchItems } from "@monday/client";
+import { searchByColumnValue, searchItems } from "@monday/client/search";
 import { resolveBoardId } from "../config";
 import { getBoardNameArg } from "./args";
 import { formatItem } from "./shared";

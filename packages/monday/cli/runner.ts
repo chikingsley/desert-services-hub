@@ -1,7 +1,9 @@
 /**
  * Monday CLI command dispatcher.
  */
-import { commandHandlers, showHelp } from "./commands";
+
+import { commandHandlers } from "./commands";
+import { showHelp } from "./commands/args";
 
 const args = process.argv.slice(2);
 

@@ -1,4 +1,4 @@
-import { getItemRich } from "@monday/client";
+import { getItemRich } from "@monday/client/rich";
 import { getItemIdArg } from "./args";
 import { formatItem } from "./shared";
 import type { CommandHandler } from "./types";

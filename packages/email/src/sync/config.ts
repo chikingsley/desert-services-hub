@@ -1,7 +1,7 @@
 /**
  * Email sync configuration — mailboxes, groups, Azure client, types.
  */
-import { GraphEmailClient } from "@email/index";
+import { GraphEmailClient } from "@email/client";
 
 // All company mailboxes to sync
 // NOTE: internalcontracts@ is a Microsoft 365 Group, not a mailbox.

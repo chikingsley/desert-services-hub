@@ -6,7 +6,7 @@
  * and maintaining estimate_contacts join table.
  */
 import { db } from "@lib/db/hub";
-import { ESTIMATING_COLUMNS } from "@monday/types";
+import { ESTIMATING_COLUMNS } from "@monday/types/schema";
 import { chunk } from "./sql-utils";
 
 const RELATION_SOURCE_DIRECT = "monday.direct_contacts";
@@ -392,7 +392,8 @@ async function replaceEstimateContactLinks(
     const deletePlaceholders = batch.map(() => "?").join(", ");
     await db.run(
       `DELETE FROM estimate_contacts
-       WHERE estimate_id IN (${deletePlaceholders})`,
+       WHERE estimate_id IN (${deletePlaceholders})
+         AND source IN ('${RELATION_SOURCE_DIRECT}', '${RELATION_SOURCE_LEGACY}')`,
       batch
     );
   }

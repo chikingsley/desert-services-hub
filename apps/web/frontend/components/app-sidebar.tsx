@@ -10,7 +10,6 @@ import {
   Search,
   Settings,
   Shield,
-  TestTube2,
 } from "lucide-react";
 import { Link, useLocation } from "react-router";
 import useSWR from "swr";
@@ -58,14 +57,6 @@ const manageItems = [
 const utilityItems = [
   { title: "Search", href: "/search", icon: Search, disabled: true },
   { title: "Settings", href: "/settings", icon: Settings },
-];
-
-const experimentItems = [
-  {
-    title: "Contracts Intake",
-    href: "/experiments/contracts-intake",
-    icon: TestTube2,
-  },
 ];
 
 // Desert sun logo component
@@ -181,34 +172,6 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {manageItems.map((item) => {
-                const isActive = pathname.startsWith(item.href);
-                return (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={isActive}
-                      tooltip={item.title}
-                    >
-                      <Link to={item.href}>
-                        <item.icon />
-                        <span>{item.title}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        <SidebarSeparator />
-
-        {/* Experiment Navigation */}
-        <SidebarGroup>
-          <SidebarGroupLabel>Experiment</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {experimentItems.map((item) => {
                 const isActive = pathname.startsWith(item.href);
                 return (
                   <SidebarMenuItem key={item.title}>

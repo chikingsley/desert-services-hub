@@ -3,7 +3,7 @@ import { processFilesIntake } from "@background-jobs/lib/intake/files-intake";
 import {
   handleIssuedEmail,
   handlePaymentEmail,
-} from "@background-jobs/lib/notifications/email-triggers";
+} from "@background-jobs/lib/notifications/email-trigger-handlers";
 import {
   markStaleProjectSeeds,
   syncProjectSeedsFromEstimates,
@@ -30,8 +30,8 @@ import {
   enqueueFullSyncIfMissing,
   enqueueJob,
   parseJobPayload,
-  type WebhookJob,
 } from "./queue";
+import type { WebhookJob } from "./types";
 
 type EstimateSyncResult = Awaited<ReturnType<typeof syncEstimates>> | null;
 

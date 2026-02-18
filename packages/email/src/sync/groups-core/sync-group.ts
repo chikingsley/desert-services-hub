@@ -1,7 +1,5 @@
 import { GraphGroupsClient } from "@email/groups";
-import { ALL_GROUPS, MS_PER_DAY as MS_PER_DAY_MS } from "@email/sync/config";
-
-export { MS_PER_DAY } from "@email/sync/config";
+import { ALL_GROUPS, MS_PER_DAY } from "@email/sync/config";
 
 import { db } from "@lib/db/hub";
 import {
@@ -194,7 +192,7 @@ export async function syncAllGroups(options: {
   onProgress?: (progress: GroupSyncProgress) => void;
 }): Promise<GroupSyncResult[]> {
   const {
-    since = new Date(Date.now() - 365 * MS_PER_DAY_MS),
+    since = new Date(Date.now() - 365 * MS_PER_DAY),
     groups,
     downloadAttachments = true,
     onProgress,

@@ -9,16 +9,20 @@ export function haversineDistanceMeters(a: LatLng, b: LatLng): number {
 
   const sinDLat = Math.sin(dLat / 2);
   const sinDLng = Math.sin(dLng / 2);
-  const h = sinDLat * sinDLat + Math.cos(lat1) * Math.cos(lat2) * sinDLng * sinDLng;
+  const h =
+    sinDLat * sinDLat + Math.cos(lat1) * Math.cos(lat2) * sinDLng * sinDLng;
 
   return 2 * R * Math.asin(Math.sqrt(h));
 }
 
 function centroid(points: LatLng[]): LatLng {
-  const sum = points.reduce((acc, p) => ({ lat: acc.lat + p.lat, lng: acc.lng + p.lng }), {
-    lat: 0,
-    lng: 0,
-  });
+  const sum = points.reduce(
+    (acc, p) => ({ lat: acc.lat + p.lat, lng: acc.lng + p.lng }),
+    {
+      lat: 0,
+      lng: 0,
+    }
+  );
 
   return {
     lat: sum.lat / points.length,
@@ -36,7 +40,7 @@ function clusterRadiusMeters(c: LatLng, points: LatLng[]): number {
 
 export function clusterSignals(
   signals: LocationSignal[],
-  radiusMeters = 500,
+  radiusMeters = 500
 ): { clusters: LocationCluster[]; outliers: LocationSignal[] } {
   const validSignals = signals.filter((s) => s.coords !== null);
   const remaining = new Set(validSignals.map((_, index) => index));
@@ -119,7 +123,7 @@ export function clusterSignals(
 
 export function calculateConsensusConfidence(
   primaryCluster: LocationCluster | null,
-  signalCount: number,
+  signalCount: number
 ): number {
   if (!primaryCluster || signalCount <= 0) {
     return 0;
@@ -129,7 +133,8 @@ export function calculateConsensusConfidence(
   const confidenceDensity = primaryCluster.totalConfidence / signalCount;
   const compactnessScore = 1 - Math.min(primaryCluster.radiusMeters / 1500, 1);
 
-  const score = 0.45 * clusterFraction + 0.35 * confidenceDensity + 0.2 * compactnessScore;
+  const score =
+    0.45 * clusterFraction + 0.35 * confidenceDensity + 0.2 * compactnessScore;
 
   return Number(Math.max(0, Math.min(1, score)).toFixed(3));
 }

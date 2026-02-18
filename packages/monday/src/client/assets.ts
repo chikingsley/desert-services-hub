@@ -1,7 +1,7 @@
 /**
  * Asset read operations.
  */
-import type { MondayAsset } from "@monday/types";
+import type { MondayAsset } from "@monday/types/schema";
 import { query } from "./query";
 
 /**

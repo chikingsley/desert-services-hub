@@ -14,7 +14,7 @@ async function splitPdf(
   inputPath: string,
   startPage: number,
   endPage: number,
-  outputPath?: string,
+  outputPath?: string
 ): Promise<void> {
   console.log(`Reading PDF: ${inputPath}`);
 
@@ -35,7 +35,10 @@ async function splitPdf(
   console.log(`Extracting pages ${start}-${end}...`);
 
   const outputDoc = await PDFDocument.create();
-  const pageIndices = Array.from({ length: end - start + 1 }, (_, i) => start - 1 + i);
+  const pageIndices = Array.from(
+    { length: end - start + 1 },
+    (_, i) => start - 1 + i
+  );
   const copiedPages = await outputDoc.copyPages(inputDoc, pageIndices);
 
   for (const page of copiedPages) {
@@ -43,7 +46,8 @@ async function splitPdf(
   }
 
   const outputBytes = await outputDoc.save();
-  const outPath = outputPath ?? inputPath.replace(".pdf", `-pages-${start}-${end}.pdf`);
+  const outPath =
+    outputPath ?? inputPath.replace(".pdf", `-pages-${start}-${end}.pdf`);
 
   await Bun.write(outPath, outputBytes);
 
@@ -57,11 +61,15 @@ async function splitPdf(
 const [inputPath, startStr, endStr, outputPath] = process.argv.slice(2);
 
 if (!(inputPath && startStr && endStr)) {
-  console.error("Usage: bun experiments/split-pdf.ts <input.pdf> <start> <end> [output.pdf]");
+  console.error(
+    "Usage: bun experiments/split-pdf.ts <input.pdf> <start> <end> [output.pdf]"
+  );
   process.exit(1);
 }
 
-splitPdf(inputPath, Number(startStr), Number(endStr), outputPath).catch((error) => {
-  console.error("Error:", error);
-  process.exit(1);
-});
+splitPdf(inputPath, Number(startStr), Number(endStr), outputPath).catch(
+  (error) => {
+    console.error("Error:", error);
+    process.exit(1);
+  }
+);

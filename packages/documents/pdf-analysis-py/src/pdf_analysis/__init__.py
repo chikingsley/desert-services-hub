@@ -22,12 +22,12 @@ def __getattr__(name: str) -> Any:
         return ProviderManager
 
     if name in {"Estimate", "extract_estimate"}:
-        from pdf_analysis.estimates import Estimate, extract_estimate
+        from pdf_analysis.analysis.estimates import Estimate, extract_estimate
 
         return {"Estimate": Estimate, "extract_estimate": extract_estimate}[name]
 
     if name in {"PlanAnalyzer", "AnalysisResult", "quick_analyze", "inspect_area"}:
-        from pdf_analysis.plan_analyzer import (
+        from pdf_analysis.analysis.plan_analyzer import (
             AnalysisResult,
             PlanAnalyzer,
             inspect_area,

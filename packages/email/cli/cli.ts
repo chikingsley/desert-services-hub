@@ -11,11 +11,11 @@
  * Run with --help for full command list.
  */
 import { DEFAULT_USER } from "@email/commands/config";
-import { draftHandlers } from "@email/commands/draft";
+import { draftHandlers } from "@email/commands/draft/handlers";
 import { foldersHandlers } from "@email/commands/folders";
 import { groupHandlers } from "@email/commands/groups";
 import { mailboxHandlers } from "@email/commands/mailboxes";
-import { organizeHandlers } from "@email/commands/organize";
+import { organizeHandlers } from "@email/commands/organize/handlers";
 import { readHandlers } from "@email/commands/read";
 import { searchHandlers } from "@email/commands/search";
 import { sendHandlers } from "@email/commands/send";

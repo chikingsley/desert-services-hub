@@ -1,4 +1,4 @@
-import { query as mondayQuery } from "@monday/client";
+import { query as mondayQuery } from "@monday/client/query";
 
 import type { AuditChainSpec, AuditItem, RichColumnValue } from "./chains";
 

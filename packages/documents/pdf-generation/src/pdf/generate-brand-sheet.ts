@@ -6,8 +6,8 @@
 import { resolve } from "node:path";
 import pdfmake from "pdfmake";
 import type { Content, TableCell } from "pdfmake/interfaces";
-import { COLORS, COMPANY } from "./shared/brand";
-import { FONT_TITLE, initFonts } from "./shared/fonts";
+import { COLORS, COMPANY, FONT_TITLE } from "./shared/brand";
+import { initFonts } from "./shared/fonts";
 import { buildFooter } from "./shared/footer";
 import { buildHeader } from "./shared/header";
 import { borderedLayout, cardLayout, noBordersLayout } from "./shared/layouts";

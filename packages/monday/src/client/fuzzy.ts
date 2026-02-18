@@ -1,7 +1,7 @@
 /**
  * Fuzzy string similarity utilities.
  */
-import type { MondayItem } from "@monday/types";
+import type { MondayItem } from "@monday/types/schema";
 import { getItems } from "./items";
 
 const WORD_SPLIT_REGEX = /\s+/;

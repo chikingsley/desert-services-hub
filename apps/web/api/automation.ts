@@ -5,7 +5,7 @@
  * the main web app API so frontend can consume a single origin.
  */
 
-import { PermitClient } from "@permits/client";
+import { PermitClient, PermitWorkerError } from "@permits/client";
 
 const client = new PermitClient();
 
@@ -24,6 +24,22 @@ function getVncUrl(req: Request): string {
 }
 
 function proxyError(error: unknown): Response {
+  if (error instanceof PermitWorkerError) {
+    const status =
+      Number.isFinite(error.status) && error.status > 0 ? error.status : 502;
+    if (error.body !== null && error.body !== undefined) {
+      return Response.json(error.body, { status });
+    }
+    return Response.json(
+      {
+        error: error.message,
+        success: false,
+        timestamp: new Date().toISOString(),
+      },
+      { status }
+    );
+  }
+
   const message = error instanceof Error ? error.message : String(error);
   return Response.json(
     {
@@ -117,6 +133,26 @@ export async function postAutomationClipboardPaste(
 export async function postAutomationClipboardCopy(): Promise<Response> {
   try {
     const result = await client.clipboardCopy();
+    return Response.json(result);
+  } catch (error) {
+    return proxyError(error);
+  }
+}
+
+/**
+ * POST /api/permits/:id/renew-and-pay
+ *
+ * Tunnel-safe proxy to permit-worker renew-and-pay endpoint.
+ * This route exists so callers can use public web tunnel base URL while
+ * still hitting the typed permit-worker contract.
+ */
+export async function postPermitRenewAndPay(
+  req: Request,
+  id: string
+): Promise<Response> {
+  try {
+    const body = (await req.json().catch(() => ({}))) as unknown;
+    const result = await client.renewAndPay(id, body as never);
     return Response.json(result);
   } catch (error) {
     return proxyError(error);

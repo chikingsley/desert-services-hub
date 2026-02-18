@@ -1,26 +1,20 @@
 /**
- * Monday File Download + Extraction Pipeline
+ * Monday File Download Pipeline
  *
- * Downloads files from Monday.com items and triggers OCR extraction for
- * estimate PDFs.
+ * Downloads files from Monday.com items into local storage and creates
+ * documents table rows with extraction_status='downloaded'.
+ * The unified document backfill handles classification + extraction.
  */
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { getItemAssets, getItemRich } from "@monday/client";
-import {
-  EXTRACTION_COLUMN,
-  FILE_COLUMNS,
-  FILES_DIR,
-} from "@monday/sync/pipeline-config";
+import { getItemAssets } from "@monday/client/assets";
+import { getItemRich } from "@monday/client/rich";
+import { FILE_COLUMNS, FILES_DIR } from "@monday/sync/pipeline-config";
 import {
   getExistingAssets,
   insertAsset,
   updateEstimatePath,
 } from "@monday/sync/pipeline-db";
-import {
-  retryExistingEstimateExtraction,
-  runExtraction,
-} from "@monday/sync/pipeline-extraction";
 
 interface FileColumnAsset {
   assetId: number;
@@ -158,16 +152,10 @@ async function downloadSingleAsset(
   console.log(
     `[pipeline]   Downloaded ${toDownload.fileName} (${(
       buffer.length / 1024
-    ).toFixed(0)}KB)`
+    ).toFixed(0)}KB) -> extraction_status='downloaded'`
   );
 
-  if (
-    toDownload.columnId === EXTRACTION_COLUMN &&
-    ext.toLowerCase() === ".pdf"
-  ) {
-    await runExtraction(mondayItemId, localPath, toDownload.fileName);
-  }
-
+  // Extraction is handled by the unified document backfill
   return true;
 }
 
@@ -220,7 +208,6 @@ export async function processItemFiles(mondayItemId: string): Promise<number> {
   const newAssets = collectNewAssetsToDownload(existingIds, columnAssets);
 
   if (newAssets.length === 0) {
-    await retryExistingEstimateExtraction(mondayItemId);
     return 0;
   }
 

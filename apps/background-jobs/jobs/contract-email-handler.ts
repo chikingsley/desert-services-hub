@@ -12,11 +12,12 @@ import { mkdir, unlink } from "node:fs/promises";
 import { join } from "node:path";
 import { propagateDocumentProjectIds } from "@background-jobs/lib/documents/propagate-project-ids";
 import { processFilesIntake } from "@background-jobs/lib/intake/files-intake";
-import type { ContractEmailJobPayload } from "@background-jobs/lib/notifications/email-triggers";
+import type { ContractEmailJobPayload } from "@background-jobs/lib/notifications/types";
 import type { GraphEmailClient } from "@email/client";
 import { createGraphClient } from "@email/sync/config";
 import { db } from "@lib/db/hub";
 import { updateAttachmentExtraction } from "@lib/db/repositories/attachment";
+import type { ContractAttachmentContext, ContractAttachmentRow } from "./types";
 
 const LOG = "[contract-email]";
 const WORK_DIR = "/app/data/contract-intake";
@@ -42,15 +43,7 @@ const SKIP_CONTENT_TYPES = new Set([
   "application/x-pkcs7-signature",
 ]);
 
-interface AttachmentRow {
-  id: number;
-  attachment_id: string;
-  name: string;
-  content_type: string | null;
-  size: number | null;
-}
-
-function shouldSkip(att: AttachmentRow): boolean {
+function shouldSkip(att: ContractAttachmentRow): boolean {
   const ct = att.content_type?.toLowerCase() ?? "";
 
   if (SKIP_CONTENT_TYPES.has(ct)) {
@@ -84,7 +77,7 @@ const classifyEmail = db.prepare(`
     AND classification IS NULL
 `);
 
-const getAttachmentsForEmail = db.query<AttachmentRow, [number]>(`
+const getAttachmentsForEmail = db.query<ContractAttachmentRow, [number]>(`
   SELECT id, outlook_attachment_id AS attachment_id, file_name AS name, content_type, file_size AS size
   FROM documents
   WHERE source = 'email_attachment'
@@ -112,18 +105,10 @@ const listDocumentIdsByAttachment = db.query<{ id: number }, [string]>(
 // Single Attachment Processing
 // ============================================================================
 
-interface AttachmentContext {
-  emailId: number;
-  messageId: string;
-  mailboxEmail: string;
-  subject: string;
-  fromEmail: string;
-}
-
 async function processOneContractAttachment(
-  att: AttachmentRow,
+  att: ContractAttachmentRow,
   client: GraphEmailClient,
-  ctx: AttachmentContext
+  ctx: ContractAttachmentContext
 ): Promise<{ status: "succeeded" | "failed"; documentIds: number[] }> {
   const ext = att.name.includes(".")
     ? att.name.split(".").pop()?.toLowerCase()
@@ -234,7 +219,7 @@ export async function processContractEmailJob(
 
   await mkdir(WORK_DIR, { recursive: true });
   const client = createGraphClient();
-  const ctx: AttachmentContext = {
+  const ctx: ContractAttachmentContext = {
     emailId,
     messageId,
     mailboxEmail,

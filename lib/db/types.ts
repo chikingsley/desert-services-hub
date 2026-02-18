@@ -203,13 +203,8 @@ export interface Estimate {
   dueDate: string | null;
   location: string | null;
   sharepointUrl: string | null;
-  estimateStorageBucket: string | null;
   estimateStoragePath: string | null;
   estimateFileName: string | null;
-  estimateSyncedAt: string | null;
-  plansStoragePath: string | null;
-  contractsStoragePath: string | null;
-  noiStoragePath: string | null;
   syncedAt: string;
   createdAt: string;
   updatedAt: string;
@@ -285,21 +280,10 @@ export type NotificationEventType =
   | "estimate_won"
   | "estimate_lost"
   | "contract_received"
-  | "contract_packet_sla_breached"
   | "swppp_scheduled"
   | "inspection_received";
 
 export type NotificationStatus = "pending" | "drafted" | "sent" | "failed";
-
-export interface Stakeholder {
-  id: number;
-  eventType: NotificationEventType;
-  email: string;
-  name: string | null;
-  role: string | null;
-  isActive: boolean;
-  createdAt: string;
-}
 
 export interface Notification {
   id: number;
@@ -389,7 +373,6 @@ export interface UpsertEstimateData {
   dueDate?: string | null;
   location?: string | null;
   sharepointUrl?: string | null;
-  estimateStorageBucket?: string | null;
   estimateStoragePath?: string | null;
   estimateFileName?: string | null;
 }

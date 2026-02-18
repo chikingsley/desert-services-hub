@@ -55,15 +55,13 @@ import {
 } from "./jobs/queue";
 import { runContractWonBridge } from "./lib/contracts/contract-won-bridge";
 import { processIntakeAttachmentRows } from "./lib/intake/intake-attachments-runner";
-import {
-  createDraftClientFromEnv,
-  type NotificationDeliveryMode,
-} from "./lib/notifications/delivery";
+import { createDraftClientFromEnv } from "./lib/notifications/delivery";
 import { detectAllEvents } from "./lib/notifications/events";
 import {
   deliverNewEvents,
   processQueuedNotifications,
 } from "./lib/notifications/notification-timer";
+import type { NotificationDeliveryMode } from "./lib/notifications/types";
 
 // ============================================================================
 // Timer Registry

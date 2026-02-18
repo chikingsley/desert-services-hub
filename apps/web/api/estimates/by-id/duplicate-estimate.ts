@@ -50,8 +50,8 @@ export async function handleDuplicateEstimate(
 
     const result = await db.transaction(async () => {
       const insertResult = await db.run(
-        `INSERT INTO estimates (base_number, takeoff_id, name, job_name, job_address, client_name, client_address, client_email, client_phone, notes, status, is_locked)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `INSERT INTO estimates (base_number, takeoff_id, name, job_name, job_address, contractor, client_address, notes, status, is_locked)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
          RETURNING id`,
         [
           newBaseNumber,
@@ -59,10 +59,8 @@ export async function handleDuplicateEstimate(
           `${originalEstimate.name} (Copy)`,
           `${originalEstimate.job_name ?? "Untitled Estimate"} (Copy)`,
           originalEstimate.job_address,
-          originalEstimate.client_name,
+          originalEstimate.contractor,
           originalEstimate.client_address,
-          originalEstimate.client_email,
-          originalEstimate.client_phone,
           originalEstimate.notes,
           "draft",
           0,

@@ -26,7 +26,6 @@ import {
 import { AutomationPage } from "@/apps/web/frontend/pages/automation";
 import { CatalogPage } from "@/apps/web/frontend/pages/catalog";
 import { ContractsPage } from "@/apps/web/frontend/pages/contracts";
-import { ContractsIntakeExperimentPage } from "@/apps/web/frontend/pages/contracts-intake-experiment";
 // Pages
 import { DashboardPage } from "@/apps/web/frontend/pages/dashboard";
 import { EmailsPage } from "@/apps/web/frontend/pages/emails";
@@ -135,10 +134,6 @@ const router = createBrowserRouter([
       {
         path: "contracts",
         element: <ContractsPage />,
-      },
-      {
-        path: "experiments/contracts-intake",
-        element: <ContractsIntakeExperimentPage />,
       },
       {
         path: "projects",

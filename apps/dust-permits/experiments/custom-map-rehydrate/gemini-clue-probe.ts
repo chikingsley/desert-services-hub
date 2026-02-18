@@ -4,7 +4,7 @@ import { mkdir, readFile } from "node:fs/promises";
 import { dirname } from "node:path";
 import { createUserContent, GoogleGenAI } from "@google/genai";
 
-type BenchmarkResult = {
+interface BenchmarkResult {
   permitId: string;
   status: "scored" | "skipped" | "error";
   metrics: { iou: number } | null;
@@ -14,31 +14,31 @@ type BenchmarkResult = {
     address: string | null;
     city: string | null;
   };
-};
+}
 
-type BenchmarkInput = {
+interface BenchmarkInput {
   results?: BenchmarkResult[];
-};
+}
 
-type PermitRow = {
+interface PermitRow {
   permitId: string;
   projectId: number | null;
   projectName: string | null;
   address: string | null;
   city: string | null;
   parcel: string | null;
-};
+}
 
-type DocumentRow = {
+interface DocumentRow {
   id: number;
   fileName: string | null;
   documentType: string | null;
   emailId: number | null;
   attachmentId: number | null;
   createdAt: string | null;
-};
+}
 
-type ProbeExtraction = {
+interface ProbeExtraction {
   apn_candidates: string[];
   coordinates: Array<{ lat: number; lng: number; context: string | null }>;
   apn_coordinate_pairs: Array<{
@@ -50,9 +50,9 @@ type ProbeExtraction = {
   disturbed_acres: number | null;
   site_address: string | null;
   notes: string[];
-};
+}
 
-type PermitProbeResult = {
+interface PermitProbeResult {
   permitId: string;
   iou: number | null;
   projectId: number | null;
@@ -71,9 +71,9 @@ type PermitProbeResult = {
     error: string | null;
     extraction: ProbeExtraction | null;
   }>;
-};
+}
 
-type CliArgs = {
+interface CliArgs {
   benchmarkPath: string;
   outPath: string;
   maxPermits: number;
@@ -82,7 +82,7 @@ type CliArgs = {
   maxIou: number;
   permitIds: string[];
   model: string;
-};
+}
 
 const DEFAULT_CONTAINER = "supabase_db_desert-services-hub";
 const DEFAULT_BENCHMARK_PATH =
@@ -120,7 +120,9 @@ function parseArgs(argv: string[]): CliArgs {
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
-    if (!arg) continue;
+    if (!arg) {
+      continue;
+    }
 
     if (arg === "--input") {
       benchmarkPath = args[i + 1] ?? benchmarkPath;
@@ -154,7 +156,9 @@ function parseArgs(argv: string[]): CliArgs {
     }
     if (arg === "--permit") {
       const permit = (args[i + 1] ?? "").trim();
-      if (permit) permitIds.push(permit);
+      if (permit) {
+        permitIds.push(permit);
+      }
       i += 1;
       continue;
     }
@@ -197,7 +201,7 @@ async function runPsqlJsonQuery<T>(sql: string): Promise<T[]> {
       "-c",
       sql,
     ],
-    { stdout: "pipe", stderr: "pipe" },
+    { stdout: "pipe", stderr: "pipe" }
   );
 
   const [exitCode, stdoutText, stderrText] = await Promise.all([
@@ -207,7 +211,9 @@ async function runPsqlJsonQuery<T>(sql: string): Promise<T[]> {
   ]);
 
   if (exitCode !== 0) {
-    throw new Error(`psql failed (exit=${exitCode}): ${stderrText.trim() || "unknown"}`);
+    throw new Error(
+      `psql failed (exit=${exitCode}): ${stderrText.trim() || "unknown"}`
+    );
   }
 
   const output = stdoutText.trim();
@@ -288,7 +294,7 @@ function normalizeExtraction(value: unknown): ProbeExtraction | null {
           const c = coord as Record<string, unknown>;
           const lat = Number(c.lat);
           const lng = Number(c.lng);
-          if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+          if (!(Number.isFinite(lat) && Number.isFinite(lng))) {
             return null;
           }
           return {
@@ -297,8 +303,11 @@ function normalizeExtraction(value: unknown): ProbeExtraction | null {
             context: typeof c.context === "string" ? c.context : null,
           };
         })
-        .filter((item): item is { lat: number; lng: number; context: string | null } =>
-          Boolean(item),
+        .filter(
+          (
+            item
+          ): item is { lat: number; lng: number; context: string | null } =>
+            Boolean(item)
         )
     : [];
 
@@ -309,7 +318,7 @@ function normalizeExtraction(value: unknown): ProbeExtraction | null {
           const apn = typeof p.apn === "string" ? p.apn : null;
           const lat = Number(p.lat);
           const lng = Number(p.lng);
-          if (!apn || !Number.isFinite(lat) || !Number.isFinite(lng)) {
+          if (!(apn && Number.isFinite(lat) && Number.isFinite(lng))) {
             return null;
           }
           return {
@@ -321,19 +330,20 @@ function normalizeExtraction(value: unknown): ProbeExtraction | null {
         })
         .filter(
           (
-            item,
+            item
           ): item is {
             apn: string;
             lat: number;
             lng: number;
             context: string | null;
-          } => Boolean(item),
+          } => Boolean(item)
         )
     : [];
 
   const disturbed = Number(raw.disturbed_acres);
   const disturbedAcreage = Number.isFinite(disturbed) ? disturbed : null;
-  const siteAddress = typeof raw.site_address === "string" ? raw.site_address : null;
+  const siteAddress =
+    typeof raw.site_address === "string" ? raw.site_address : null;
   const notes = Array.isArray(raw.notes)
     ? raw.notes.filter((v): v is string => typeof v === "string")
     : [];
@@ -350,7 +360,7 @@ function normalizeExtraction(value: unknown): ProbeExtraction | null {
 
 async function downloadAttachment(
   emailId: number,
-  attachmentId: number,
+  attachmentId: number
 ): Promise<{ ok: boolean; bytes: ArrayBuffer | null; error: string | null }> {
   const url = `http://localhost:3000/api/emails/${emailId}/attachments/db:${attachmentId}/download`;
 
@@ -379,7 +389,7 @@ async function downloadAttachment(
 async function extractWithGemini(
   ai: GoogleGenAI,
   model: string,
-  pdfBytes: ArrayBuffer,
+  pdfBytes: ArrayBuffer
 ): Promise<ProbeExtraction | null> {
   const base64 = Buffer.from(pdfBytes).toString("base64");
 
@@ -409,7 +419,7 @@ async function extractWithGemini(
 
 function selectPermits(
   args: CliArgs,
-  benchmark: BenchmarkInput,
+  benchmark: BenchmarkInput
 ): Array<{ permitId: string; iou: number | null }> {
   const results = benchmark.results ?? [];
 
@@ -417,7 +427,10 @@ function selectPermits(
     const wanted = new Set(args.permitIds.map((p) => p.trim()).filter(Boolean));
     return results
       .filter((row) => wanted.has(row.permitId))
-      .map((row) => ({ permitId: row.permitId, iou: row.metrics?.iou ?? null }));
+      .map((row) => ({
+        permitId: row.permitId,
+        iou: row.metrics?.iou ?? null,
+      }));
   }
 
   return results
@@ -516,7 +529,11 @@ async function main(): Promise<void> {
       }
 
       try {
-        const extraction = await extractWithGemini(ai, args.model, download.bytes);
+        const extraction = await extractWithGemini(
+          ai,
+          args.model,
+          download.bytes
+        );
         entry.extraction = extraction;
         probe.docsSucceeded += 1;
       } catch (error) {
@@ -528,7 +545,7 @@ async function main(): Promise<void> {
 
     results.push(probe);
     console.log(
-      `permit ${probe.permitId}: docs=${probe.docsAttempted}, extracted=${probe.docsSucceeded}`,
+      `permit ${probe.permitId}: docs=${probe.docsAttempted}, extracted=${probe.docsSucceeded}`
     );
   }
 

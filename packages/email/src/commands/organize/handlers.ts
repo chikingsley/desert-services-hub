@@ -1,9 +1,7 @@
 import { parseArgs } from "node:util";
 import type { CommandHandler } from "@email/commands/types";
-import {
-  hydrateProjectFolderCommand,
-  hydrateTrackedProjectsCommand,
-} from "./hydrate";
+import { hydrateProjectFolderCommand } from "./hydrate-project";
+import { hydrateTrackedProjectsCommand } from "./hydrate-tracked";
 import { moveMessageCommand, moveThreadCommand } from "./move";
 import {
   createProjectFolderCommand,

@@ -270,7 +270,7 @@ def estimate(
     output: Path | None = typer.Option(None, "--output", "-o"),
 ) -> None:
     """Extract structured schedule of values from a Desert Services estimate PDF."""
-    from pdf_analysis.estimates import extract_estimate
+    from pdf_analysis.analysis.estimates import extract_estimate
 
     result = extract_estimate(pdf_path)
     rendered = json.dumps(result.model_dump(), indent=2)
@@ -307,22 +307,18 @@ def estimate(
 @app.command()
 def classify(
     pdf_path: Path = typer.Argument(..., exists=True, readable=True),
+    provider: ProviderSelector = typer.Option(ProviderSelector.AUTO, "--provider", "-p"),
     output_format: OutputFormat = typer.Option(OutputFormat.TEXT, "--format", "-f"),
     output: Path | None = typer.Option(None, "--output", "-o"),
 ) -> None:
-    """Classify a PDF (or directory of PDFs) by document type using heuristics.
-
-    No LLM calls — uses kreuzberg text extraction and keyword rules.
-    Supports: contract, estimate, loi, po, work_order, noi, swppp_plan,
-    dust_permit, insurance, tax_form, lien_waiver, prelien, checklist.
-    """
-    from pdf_analysis.classify import ClassifyResult, classify_dir, classify_pdf
+    """Classify a PDF (or directory of PDFs) by document type using the LLM pipeline."""
+    from pdf_analysis.analysis.classify import ClassifyResult, classify_dir, classify_pdf
 
     results: list[ClassifyResult]
     if pdf_path.is_dir():
-        results = classify_dir(pdf_path)
+        results = asyncio.run(classify_dir(pdf_path, provider=provider))
     else:
-        results = [classify_pdf(pdf_path)]
+        results = [asyncio.run(classify_pdf(pdf_path, provider=provider))]
 
     if output_format == OutputFormat.JSON:
         import dataclasses
@@ -452,7 +448,7 @@ def noi(
     Input must be a text/markdown file that has already been through the
     parse pipeline. For PDFs, run `parse` first then pass the output here.
     """
-    from pdf_analysis.noi import extract_noi
+    from pdf_analysis.analysis.noi import extract_noi
 
     text = file_path.read_text(encoding="utf-8")
     result = extract_noi(text)

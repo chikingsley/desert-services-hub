@@ -1,7 +1,7 @@
 /**
  * Rich item fetches that include relation and mirror column data.
  */
-import type { MondayItem } from "@monday/types";
+import type { MondayItem } from "@monday/types/schema";
 import { query } from "./query";
 
 export interface MondayColumnValue {

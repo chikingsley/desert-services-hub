@@ -8,8 +8,8 @@
 import { SKIP_GROUPS } from "@background-jobs/jobs/config";
 import { db } from "@lib/db/hub";
 import { ensureEstimateHasCurrentVersion } from "@lib/db/repositories/estimate-version";
-import { getItemsRich, type MondayItemRich } from "@monday/client";
-import { BOARD_IDS, ESTIMATING_COLUMNS } from "@monday/types";
+import { getItemsRich, type MondayItemRich } from "@monday/client/rich";
+import { BOARD_IDS, ESTIMATING_COLUMNS } from "@monday/types/schema";
 import { fetchAccountSnapshots, fetchContactSnapshots } from "./sync-monday";
 import {
   collectEstimateContactPairs,
@@ -44,6 +44,11 @@ interface EstimateRow {
   lat: number | null;
   lng: number | null;
   sharepointUrl: string | null;
+}
+
+interface ContactIdRow {
+  id: number;
+  monday_item_id: string;
 }
 
 export interface SyncResult {
@@ -215,8 +220,21 @@ export async function syncEstimates(): Promise<SyncResult> {
   ]);
   const { accountIdByMondayId, synced: accountsSynced } =
     await syncAccountsToDb(accountSnapshots);
-  const { contactIdByMondayId, synced: contactsSynced } =
-    await syncContactsToDb(contactSnapshots, accountIdByMondayId);
+  const { synced: contactsSynced } = await syncContactsToDb(
+    contactSnapshots,
+    accountIdByMondayId
+  );
+  const contactIdByMondayId = new Map<string, number>();
+  const allContactIds = (await db
+    .query<ContactIdRow>(
+      `SELECT id, monday_item_id
+       FROM contacts
+       WHERE monday_item_id ~ '^[0-9]+$'`
+    )
+    .all()) as ContactIdRow[];
+  for (const row of allContactIds) {
+    contactIdByMondayId.set(row.monday_item_id, row.id);
+  }
 
   let upserted = 0;
   let errors = 0;

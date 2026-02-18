@@ -5,8 +5,6 @@ import { searchHandlers } from "./search";
 import type { CommandHandler } from "./types";
 import { updateHandlers } from "./update";
 
-export { showHelp } from "./args";
-
 export const commandHandlers: Record<string, CommandHandler> = {
   ...itemHandlers,
   ...searchHandlers,

@@ -1,9 +1,9 @@
 import { ALL_GROUPS, MS_PER_DAY } from "@email/sync/config";
+import { syncAllGroups } from "@email/sync/groups-core/sync-group";
 import {
   printGroupSyncSummary,
   showGroupStatus,
-  syncAllGroups,
-} from "@email/sync/groups";
+} from "@email/sync/groups-status";
 import { runPostProcessing } from "./post-processing";
 
 interface GroupSyncOptions {

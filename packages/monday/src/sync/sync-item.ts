@@ -4,8 +4,8 @@
 
 import { db } from "@lib/db/hub";
 import { ensureEstimateHasCurrentVersion } from "@lib/db/repositories/estimate-version";
-import { getItemRich } from "@monday/client";
-import { ESTIMATING_COLUMNS } from "@monday/types";
+import { getItemRich } from "@monday/client/rich";
+import { ESTIMATING_COLUMNS } from "@monday/types/schema";
 import { SKIP_GROUPS } from "./helpers";
 
 interface FileColumnValue {

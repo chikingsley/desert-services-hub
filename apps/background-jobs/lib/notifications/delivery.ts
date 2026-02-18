@@ -6,28 +6,12 @@
 
 import { GraphEmailClient } from "@email/client";
 import { getLogoAttachment, getTemplate } from "@email/email-templates/index";
-import type { PendingEvent } from "./events";
-import type { StakeholderRecipient } from "./stakeholders";
-
-export type NotificationDeliveryMode = "log" | "draft";
-
-interface RoutedRecipients {
-  to: Array<{ email: string; name?: string }>;
-  cc: Array<{ email: string; name?: string }>;
-}
-
-interface DraftContent {
-  body: string;
-  bodyType: "html" | "text";
-  skipSignature: boolean;
-  attachments?: Array<{
-    name: string;
-    contentType: string;
-    contentBytes: string;
-    contentId?: string;
-    isInline?: boolean;
-  }>;
-}
+import type {
+  DraftContent,
+  PendingEvent,
+  RoutedRecipients,
+  StakeholderRecipient,
+} from "./types";
 
 const DATE_ONLY_RE = /^(\d{4})-(\d{2})-(\d{2})$/;
 
@@ -152,26 +136,6 @@ async function buildDustPermitDraft(
 ): Promise<DraftContent> {
   const metadata = event.metadata;
   const logo = await getLogoAttachment();
-
-  if (event.eventType === "contract_packet_sla_breached") {
-    const body = [
-      "<p><strong>Contract packet SLA breached.</strong></p>",
-      `<p>Project: ${stringValue(metadata.projectName, "Unknown Project")}</p>`,
-      `<p>Status: ${stringValue(metadata.packetStatus, "Unknown")}</p>`,
-      `<p>Minutes since received: ${stringValue(metadata.minutesSinceReceived, "N/A")}</p>`,
-      `<p>Current owner: ${stringValue(metadata.owner, "Unassigned")}</p>`,
-      `<p>Next action: ${stringValue(metadata.nextAction, "No next action set")}</p>`,
-      `<p>Packet documents linked: ${stringValue(metadata.packetDocumentCount, "0")}</p>`,
-      `<p>Packet ID: ${stringValue(metadata.packetId, event.refId)}</p>`,
-    ].join("\n");
-
-    return {
-      body,
-      bodyType: "html",
-      skipSignature: true,
-      attachments: [logo],
-    };
-  }
 
   if (event.eventType === "dust_permit_submitted") {
     const body = await getTemplate("dust-permit-submitted", {

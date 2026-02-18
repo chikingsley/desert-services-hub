@@ -2,6 +2,7 @@
  * Job dispatch — dequeue jobs and route to the appropriate handler.
  */
 
+import type { ContractDocExtractPayload } from "@email/contracts/types";
 import { MAX_CONCURRENT_JOBS, MAX_LLM_CONCURRENT_JOBS } from "./config";
 import {
   processContractEmailReceivedJob,
@@ -13,13 +14,8 @@ import {
   processSyncFullJob,
   processSyncItemJob,
 } from "./handlers";
-import {
-  completeJob,
-  dequeue,
-  failJob,
-  parseJobPayload,
-  type WebhookJob,
-} from "./queue";
+import { completeJob, dequeue, failJob, parseJobPayload } from "./queue";
+import type { WebhookJob } from "./types";
 
 // -- LLM concurrency lane --
 
@@ -102,10 +98,9 @@ export async function processNextJob(): Promise<void> {
         const { processContractDocExtractJob } = await import(
           "@background-jobs/lib/contracts/contract-doc-extract-queue"
         );
-        const extractPayload = JSON.parse(job.payload) as {
-          email_id: number;
-          doc_id: number;
-        };
+        const extractPayload = JSON.parse(
+          job.payload
+        ) as ContractDocExtractPayload;
         await processContractDocExtractJob(extractPayload);
         break;
       }

@@ -3,7 +3,7 @@ import type {
   ContractEmailJobPayload,
   IssuedJobPayload,
   PaymentJobPayload,
-} from "@background-jobs/lib/notifications/email-triggers";
+} from "@background-jobs/lib/notifications/types";
 import { z } from "zod";
 
 const NON_EMPTY_STRING_SCHEMA = z.string().trim().min(1);
@@ -52,3 +52,19 @@ export const CONTRACT_EMAIL_PAYLOAD_SCHEMA: z.ZodType<ContractEmailJobPayload> =
     bodyText: z.string(),
     hasAttachments: z.boolean(),
   });
+
+// -- Queue-driven LLM job schemas --
+
+export const CONTACT_ENRICHMENT_PAYLOAD_SCHEMA = z.object({
+  batchSize: z.number().int().positive(),
+});
+
+export const EMAIL_TRIAGE_BATCH_PAYLOAD_SCHEMA = z.object({
+  batchSize: z.number().int().positive(),
+  concurrency: z.number().int().positive(),
+  provider: z.enum(["local", "gemini"]).default("local"),
+});
+
+export const ESTIMATE_TRIAGE_PAYLOAD_SCHEMA = z.object({
+  maxRows: z.number().int().positive(),
+});

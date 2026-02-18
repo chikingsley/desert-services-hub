@@ -160,10 +160,10 @@ apps/dust-permits/tests/output/
 # packages/narratives
 packages/narratives/templates/output/
 
-# packages/documents/pdf-analysis-cli
-packages/documents/pdf-analysis-cli/.demo-validator-state
-packages/documents/pdf-analysis-cli/ai_docs/
-packages/documents/pdf-analysis-cli/justfile
-packages/documents/pdf-analysis-cli/specs/
-packages/documents/pdf-analysis-cli/scripts/dont_stop.py
+# packages/documents/pdf-analysis-py
+packages/documents/pdf-analysis-py/.demo-validator-state
+packages/documents/pdf-analysis-py/ai_docs/
+packages/documents/pdf-analysis-py/justfile
+packages/documents/pdf-analysis-py/specs/
+packages/documents/pdf-analysis-py/scripts/dont_stop.py
 packages/contracts/langextract/

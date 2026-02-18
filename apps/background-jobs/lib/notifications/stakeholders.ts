@@ -1,74 +1,76 @@
 /**
  * Stakeholder Management
  *
- * CRUD for stakeholders — who gets notified about what event type.
+ * Static notification recipient configuration.
+ * Previously DB-backed (stakeholders table), now hardcoded since
+ * the routing was always seeded from a static list.
  */
 
-import { db } from "@lib/db/hub";
 import type { NotificationEventType } from "@lib/db/types";
+import type { StakeholderRecipient } from "./types";
 
-export interface StakeholderRecipient {
+const STAKEHOLDER_MAP: Record<string, StakeholderRecipient[]> = {
+  dust_permit_billing: [
+    { email: "eva@desertservices.net", name: "Eva", role: "billing-to" },
+    { email: "jayson@desertservices.net", name: "Jayson", role: "billing-to" },
+    { email: "don@desertservices.net", name: "Don", role: "billing-cc" },
+    {
+      email: "francine@desertservices.net",
+      name: "Francine",
+      role: "billing-cc",
+    },
+    { email: "kendra@desertservices.net", name: "Kendra", role: "billing-cc" },
+  ],
+  dust_permit_submitted: [
+    { email: "chi@desertservices.net", name: "Chi", role: "operations" },
+  ],
+  dust_permit_issued: [
+    { email: "chi@desertservices.net", name: "Chi", role: "operations" },
+  ],
+  dust_permit_expiring: [
+    { email: "chi@desertservices.net", name: "Chi", role: "operations" },
+    { email: "kendra@desertservices.net", name: "Kendra", role: "operations" },
+  ],
+  estimate_won: [
+    { email: "chi@desertservices.net", name: "Chi", role: "contracts" },
+    {
+      email: "contracts@desertservices.net",
+      name: "Contracts",
+      role: "contracts",
+    },
+  ],
+  contract_received: [
+    { email: "chi@desertservices.net", name: "Chi", role: "contracts" },
+    {
+      email: "contracts@desertservices.net",
+      name: "Contracts",
+      role: "contracts",
+    },
+  ],
+};
+
+export function getStakeholders(
+  eventType: NotificationEventType
+): StakeholderRecipient[] {
+  return STAKEHOLDER_MAP[eventType] ?? [];
+}
+
+export function listAllStakeholders(): Array<{
+  eventType: string;
   email: string;
   name: string | null;
   role: string | null;
-}
-
-export async function getStakeholders(
-  eventType: NotificationEventType
-): Promise<StakeholderRecipient[]> {
-  return await db
-    .query<StakeholderRecipient, [string]>(
-      "SELECT email, name, role FROM stakeholders WHERE event_type = ? AND is_active = 1"
-    )
-    .all(eventType);
-}
-
-export async function addStakeholder(
-  eventType: NotificationEventType,
-  email: string,
-  name?: string,
-  role?: string
-): Promise<void> {
-  await db.run(
-    `INSERT INTO stakeholders (event_type, email, name, role)
-     VALUES (?, ?, ?, ?)
-     ON CONFLICT DO NOTHING`,
-    [eventType, email, name ?? null, role ?? null]
-  );
-}
-
-export async function removeStakeholder(
-  eventType: NotificationEventType,
-  email: string
-): Promise<void> {
-  await db.run(
-    "UPDATE stakeholders SET is_active = 0 WHERE event_type = ? AND email = ?",
-    [eventType, email]
-  );
-}
-
-export async function listAllStakeholders(): Promise<
-  Array<{
+}> {
+  const result: Array<{
     eventType: string;
     email: string;
     name: string | null;
     role: string | null;
-  }>
-> {
-  return await db
-    .query<
-      {
-        eventType: string;
-        email: string;
-        name: string | null;
-        role: string | null;
-      },
-      []
-    >(
-      `SELECT event_type as eventType, email, name, role
-       FROM stakeholders
-       WHERE is_active = 1
-       ORDER BY event_type, email`
-    )
-    .all();
+  }> = [];
+  for (const [eventType, recipients] of Object.entries(STAKEHOLDER_MAP)) {
+    for (const r of recipients) {
+      result.push({ eventType, email: r.email, name: r.name, role: r.role });
+    }
+  }
+  return result;
 }

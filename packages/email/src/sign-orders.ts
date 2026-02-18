@@ -4,13 +4,10 @@
  * Generates text-only sign-order blocks for the Sandstorm template.
  */
 
-export {
+import {
   SIGN_ORDER_TYPES,
   type SignOrderType,
 } from "@lib/db/repositories/sign-order";
-
-import type { SignOrderType } from "@lib/db/repositories/sign-order";
-import { SIGN_ORDER_TYPES } from "@lib/db/repositories/sign-order";
 
 const SIGN_TYPE_LABELS: Record<SignOrderType, string> = {
   custom: "Custom",

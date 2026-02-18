@@ -64,13 +64,10 @@ COPY packages/takeoff ./packages/takeoff
 COPY lib ./lib
 
 # Install Python deps for pdf-analysis
-RUN cd packages/documents/pdf-analysis-cli && uv sync --frozen 2>/dev/null || uv sync
+RUN cd packages/documents/pdf-analysis-py && uv sync --frozen 2>/dev/null || uv sync
 
-# Install Python deps for contract extraction (LangExtract fork)
-RUN cd packages/contracts/langextract && uv sync --frozen 2>/dev/null || uv sync
-
-# Install opencode CLI (used for Kimi K2.5 reconciliation in parse pipeline)
-RUN bun add -g opencode-ai
+# Install Python deps for contract extraction (LangExtract fork) — optional
+RUN if [ -d packages/contracts/langextract ]; then cd packages/contracts/langextract && uv sync --frozen 2>/dev/null || uv sync; fi
 
 # Data + temp directories
 RUN mkdir -p /app/data /app/tmp

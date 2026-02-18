@@ -103,10 +103,10 @@ export async function handleGetEstimatePdf(req: BunRequest): Promise<Response> {
       estimator: requireText(estimate.estimator, "estimator"),
       estimatorEmail: optionalText(estimate.estimator_email),
       billTo: {
-        companyName: requireText(estimate.client_name, "client_name"),
+        companyName: requireText(estimate.contractor, "contractor"),
         address: requireText(estimate.client_address, "client_address"),
-        email: optionalText(estimate.client_email),
-        phone: optionalText(estimate.client_phone),
+        email: "",
+        phone: "",
       },
       jobInfo: {
         siteName: requireText(estimate.job_name, "job_name"),

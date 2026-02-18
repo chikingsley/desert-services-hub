@@ -4,7 +4,6 @@
  */
 import { db } from "@lib/db/hub";
 import {
-  addProjectAlias,
   findProjectByText,
   findProjectCandidates,
   getProjectById,
@@ -194,8 +193,4 @@ async function adoptProjectForFolder(params: {
      WHERE id = ?`,
     [params.folderName, params.contractor, params.projectId]
   );
-  await addProjectAlias(params.projectId, params.folderName, "learned");
-  if (params.projectName !== params.folderName) {
-    await addProjectAlias(params.projectId, params.projectName, "learned");
-  }
 }

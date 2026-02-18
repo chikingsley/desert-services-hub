@@ -4,7 +4,7 @@
 import { ALL_GROUPS } from "@email/sync/config";
 import { db } from "@lib/db/hub";
 
-import type { GroupSyncResult } from "./groups-core";
+import type { GroupSyncResult } from "./groups-core/sync-group";
 
 export function printGroupSyncSummary(results: GroupSyncResult[]): void {
   console.log(`\n${"=".repeat(60)}`);

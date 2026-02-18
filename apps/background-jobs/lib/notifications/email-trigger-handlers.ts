@@ -15,13 +15,18 @@ import { PermitClient } from "@permits/client";
 import { createDraftClientFromEnv, createNotificationDraft } from "./delivery";
 import {
   computeCostBreakdown,
-  type IssuedJobPayload,
-  type PaymentJobPayload,
   parseMaricopaIssuedEmail,
   parsePointAndPayEmail,
 } from "./email-triggers";
-import { type PendingEvent, recordNotification } from "./events";
+import { recordNotification } from "./events";
 import { getStakeholders } from "./stakeholders";
+import type {
+  FeatureServerResponse,
+  IssuedJobPayload,
+  PaymentJobPayload,
+  PdfAttachmentForDraft,
+  PendingEvent,
+} from "./types";
 
 // ============================================================================
 // Enrichment — Acreage, Facility ID, PDF
@@ -32,12 +37,6 @@ const FEATURE_SERVER_URL =
 const SQ_METERS_TO_ACRES = 0.000_247_105;
 
 const permitClient = new PermitClient();
-
-interface FeatureServerResponse {
-  features?: Array<{
-    attributes?: Record<string, unknown>;
-  }>;
-}
 
 async function fetchAcreage(permitId: string): Promise<number | null> {
   try {
@@ -77,12 +76,6 @@ async function lookupFacilityIdForRenewal(
     console.error("[email-trigger] Failed to look up facility ID:", err);
     return null;
   }
-}
-
-interface PdfAttachmentForDraft {
-  name: string;
-  contentType: string;
-  contentBytes: string;
 }
 
 async function fetchPermitApplicationPdf(

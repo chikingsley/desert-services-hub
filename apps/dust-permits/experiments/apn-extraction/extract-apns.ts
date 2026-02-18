@@ -44,7 +44,10 @@ For each APN found, provide:
 
 Return as JSON array. If no APNs found, return empty array [].`;
 
-async function extractAPNsFromPdf(ai: GoogleGenAI, pdfPath: string): Promise<ExtractionResult> {
+async function extractAPNsFromPdf(
+  ai: GoogleGenAI,
+  pdfPath: string
+): Promise<ExtractionResult> {
   const fileName = pdfPath.split("/").pop() ?? pdfPath;
 
   if (!existsSync(pdfPath)) {

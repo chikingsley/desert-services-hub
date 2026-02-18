@@ -2,8 +2,8 @@
  * Monday.com API fetchers for account and contact snapshots.
  * Extracted from sync-relations.ts to stay under the 500-line limit.
  */
-import { query } from "@monday/client";
-import { CONTACTS_COLUMNS, CONTRACTORS_COLUMNS } from "@monday/types";
+import { query } from "@monday/client/query";
+import { CONTACTS_COLUMNS, CONTRACTORS_COLUMNS } from "@monday/types/schema";
 import { chunk } from "./sql-utils";
 import {
   type MondayAccountSnapshot,

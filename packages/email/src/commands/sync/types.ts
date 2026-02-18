@@ -1,3 +1,6 @@
+/**
+ * Type-only module for sync command option/progress contracts.
+ */
 import type { SyncAllOptions } from "@email/sync/config";
 
 export interface MailboxSyncOptions extends Omit<SyncAllOptions, "onProgress"> {

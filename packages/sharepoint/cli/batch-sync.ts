@@ -217,7 +217,7 @@ const projects = await db
   SELECT e.notion_project_id, e.project_name, COUNT(DISTINCT a.id) as pdf_count
   FROM emails e
   JOIN mailboxes m ON e.mailbox_id = m.id
-  JOIN attachments a ON a.email_id = e.id
+  JOIN documents a ON a.email_id = e.id AND a.source = 'email_attachment'
   WHERE m.email = 'contracts@desertservices.net'
     AND e.notion_project_id IS NOT NULL
     AND e.notion_project_id NOT IN (${EXCLUDE_IDS.map(() => "?").join(",")})
@@ -286,13 +286,14 @@ for (const proj of projects) {
   const attachments = await db
     .query<AttachmentRow>(
       `
-    SELECT DISTINCT a.name, a.storage_bucket, a.storage_path, a.size
-    FROM attachments a
-    JOIN emails e ON a.email_id = e.id
-    WHERE e.notion_project_id = ?
-      AND a.content_type LIKE '%pdf%'
-      AND a.storage_bucket IS NOT NULL
-      AND a.storage_path IS NOT NULL
+    SELECT DISTINCT d.file_name AS name, d.storage_bucket, d.storage_path, d.file_size AS size
+    FROM documents d
+    JOIN emails e ON d.email_id = e.id
+    WHERE d.source = 'email_attachment'
+      AND e.notion_project_id = ?
+      AND d.content_type LIKE '%pdf%'
+      AND d.storage_bucket IS NOT NULL
+      AND d.storage_path IS NOT NULL
   `
     )
     .all(proj.notion_project_id);

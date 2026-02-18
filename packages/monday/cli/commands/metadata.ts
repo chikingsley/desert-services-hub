@@ -1,4 +1,4 @@
-import { getBoard, getBoardColumns } from "@monday/client";
+import { getBoard, getBoardColumns } from "@monday/client/boards";
 import { BOARDS, resolveBoardId } from "../config";
 import { getBoardNameArg } from "./args";
 import type { CommandHandler } from "./types";

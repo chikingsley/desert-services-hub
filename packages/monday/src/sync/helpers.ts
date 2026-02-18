@@ -1,27 +1,7 @@
 /**
  * Monday-specific constants for estimate folder sync.
- *
- * SharePoint path utilities live in @sharepoint/paths — re-exported here
- * so existing importers (sync-estimates.ts, sharepoint-ops.ts) keep working.
  */
-// Re-export shared SharePoint path utilities
-export {
-  CUSTOMER_PROJECTS_PATH,
-  CUSTOMER_PROJECTS_PATH_REGEX,
-  DEFAULT_STATUS,
-  extractUrl,
-  getLetterFolder,
-  getStatusFolder,
-  parseStatusFromUrl,
-  parseVariantPrefix,
-  STATUS_MAP,
-  sanitizeName,
-  VALID_STATUSES,
-  VARIANT_FOLDER_REGEX,
-  VARIANT_PREFIX_REGEX,
-} from "@sharepoint/paths";
-
-import { ESTIMATING_COLUMNS } from "@monday/types";
+import { ESTIMATING_COLUMNS } from "@monday/types/schema";
 
 export const SKIP_GROUPS = [
   "Shell Estimates ( Do Not Move)",

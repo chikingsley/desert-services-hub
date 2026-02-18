@@ -3,17 +3,15 @@
  *
  * Data parsing functions used by job handlers AFTER triage dispatch.
  * Detection/classification is handled by the unified triage system.
- *
- * Job handler implementations live in ./email-trigger-handlers.ts
  */
 
 import { DUST_PERMIT_TIERS } from "@lib/db/types";
-
-// Re-export handlers so callers don't need to update import paths
-export {
-  handleIssuedEmail,
-  handlePaymentEmail,
-} from "./email-trigger-handlers";
+import type {
+  CostBreakdown,
+  DustPermitEmailTrigger,
+  MaricopaIssuedData,
+  PointAndPayData,
+} from "./types";
 
 // ============================================================================
 // Parser Regexes
@@ -41,8 +39,6 @@ const MARICOPA_FACILITY_ADDRESS_RE =
 const DUST_PERMIT_ISSUED_SUBJECT_RE = /\bdust permit issued\b/i;
 const POINT_AND_PAY_SENDER_RE = /@pointandpay\.com$/i;
 const MARICOPA_SENDER_RE = /@maricopa\.gov$/i;
-
-export type DustPermitEmailTrigger = "pointandpay_payment" | "maricopa_issued";
 
 export function detectDustPermitEmailTrigger(
   fromEmail: string,
@@ -82,16 +78,6 @@ export function detectDustPermitEmailTrigger(
 // ============================================================================
 // Parsers
 // ============================================================================
-
-export interface PointAndPayData {
-  invoiceNumber: string | null;
-  countyInvoiceNumber: string | null;
-  amount: string | null;
-  confirmationId: string | null;
-  cardLastFour: string | null;
-  paymentDate: string | null;
-  customerPhone: string | null;
-}
 
 export function parsePointAndPayEmail(body: string): PointAndPayData {
   const invoiceMatch = body.match(POINT_AND_PAY_INVOICE_RE);
@@ -148,13 +134,6 @@ export function parsePointAndPayEmail(body: string): PointAndPayData {
   };
 }
 
-export interface MaricopaIssuedData {
-  permitNumber: string | null;
-  facilityId: string | null;
-  facilityName: string | null;
-  facilityAddress: string | null;
-}
-
 export function parseMaricopaIssuedEmail(
   body: string,
   subject: string
@@ -179,41 +158,9 @@ export function parseMaricopaIssuedEmail(
 // Job Handler Types
 // ============================================================================
 
-export interface ContractEmailJobPayload {
-  emailId: number;
-  messageId: string;
-  mailboxEmail: string;
-  subject: string;
-  fromEmail: string;
-  bodyText: string;
-  hasAttachments: boolean;
-}
-
-export interface PaymentJobPayload {
-  emailId: number;
-  messageId: string;
-  mailboxEmail: string;
-  bodyText: string;
-}
-
-export interface IssuedJobPayload {
-  emailId: number;
-  messageId: string;
-  mailboxEmail: string;
-  bodyText: string;
-  subject: string;
-}
-
 // ============================================================================
 // Cost Breakdown
 // ============================================================================
-
-export interface CostBreakdown {
-  permitCost: string;
-  adminFee: string;
-  scheduleValue: string;
-  isAccelerated: boolean;
-}
 
 export function formatUSD(amount: number): string {
   return `$${amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}`;

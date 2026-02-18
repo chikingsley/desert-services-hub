@@ -1,10 +1,11 @@
 import { ALL_MAILBOXES, MS_PER_DAY } from "@email/sync/config";
-import { showGroupStatus, syncAllGroups } from "@email/sync/groups";
+import { syncAllGroups } from "@email/sync/groups-core/sync-group";
+import { showGroupStatus } from "@email/sync/groups-status";
 import {
   printSyncSummary,
   showSyncStatus as showMailboxSyncStatus,
-  syncAllMailboxes,
-} from "@email/sync/mailboxes";
+} from "@email/sync/mailboxes-status";
+import { syncAllMailboxes } from "@email/sync/mailboxes-sync";
 import { runPostProcessing } from "./post-processing";
 import { formatGroupProgress, formatMailboxProgress } from "./progress";
 import type { MailboxSyncOptions } from "./types";

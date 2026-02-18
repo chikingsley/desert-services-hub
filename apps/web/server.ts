@@ -20,6 +20,7 @@ import {
   postAutomationReady,
   postAutomationStart,
   postAutomationStop,
+  postPermitRenewAndPay,
 } from "@/api/automation";
 import { getCatalog, getTakeoffItems } from "@/api/catalog";
 import {
@@ -36,6 +37,7 @@ import {
   listArchives,
 } from "@/api/contracts/archive";
 import { listContracts } from "@/api/contracts/contracts";
+import { listContractReview } from "@/api/contracts/review";
 import { getAttachmentMonitoring } from "@/api/emails/attachment-monitoring";
 import {
   downloadEmailAttachment,
@@ -179,6 +181,9 @@ const server = serve({
     },
 
     // Browser Automation / Permit Worker
+    "/api/browser/status": {
+      GET: h(getAutomationStatus),
+    },
     "/api/automation/status": {
       GET: h(getAutomationStatus),
     },
@@ -200,6 +205,11 @@ const server = serve({
     "/api/automation/clipboard/copy": {
       POST: h(postAutomationClipboardCopy),
     },
+    "/api/permits/:id/renew-and-pay": {
+      POST(req) {
+        return postPermitRenewAndPay(req, req.params.id);
+      },
+    },
 
     // Operator Checkpoints (interactive yes/no for automation)
     "/api/checkpoints": {
@@ -214,6 +224,9 @@ const server = serve({
     // Contracts (Won estimates)
     "/api/contracts": {
       GET: h(listContracts),
+    },
+    "/api/contracts/review": {
+      GET: h(listContractReview),
     },
 
     // Emails
@@ -280,8 +293,6 @@ const server = serve({
     "/takeoffs/*": homepage,
     "/contracts": homepage,
     "/contracts/*": homepage,
-    "/experiments": homepage,
-    "/experiments/*": homepage,
     "/projects": homepage,
     "/projects/*": homepage,
     "/permits": homepage,

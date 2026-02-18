@@ -1,6 +1,5 @@
 import type { Database } from "bun:sqlite";
-import type { MondayItemRich } from "@monday/client";
-import { getItemsRich } from "@monday/client";
+import { getItemsRich, type MondayItemRich } from "@monday/client/rich";
 import { BOARDS } from "./schema";
 
 function extractColumn(item: MondayItemRich, columnId: string): string | null {

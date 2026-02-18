@@ -9,7 +9,6 @@ import {
 
 export type ProjectMatchReasonCode =
   | "normalized_name_exact"
-  | "project_alias_exact"
   | "outlook_folder_exact"
   | "account_exact"
   | "primary_token_overlap"
@@ -89,7 +88,6 @@ interface ProjectCandidateRow {
 
 const HARD_MATCH_CODES = new Set<ProjectMatchReasonCode>([
   "normalized_name_exact",
-  "project_alias_exact",
   "outlook_folder_exact",
 ]);
 
@@ -147,12 +145,10 @@ function buildMatchDecision(
 
 async function fetchProjectCandidateRows(context: {
   nameKeys: string[];
-  aliasKeys: string[];
   primaryTokens: string[];
   accountIdHint: number | null;
-}): Promise<{ rows: ProjectCandidateRow[]; aliasMatchedIds: Set<number> }> {
+}): Promise<ProjectCandidateRow[]> {
   const rowsById = new Map<number, ProjectCandidateRow>();
-  const aliasMatchedIds = new Set<number>();
 
   if (context.nameKeys.length > 0) {
     const placeholders = context.nameKeys.map(() => "?").join(", ");
@@ -167,25 +163,6 @@ async function fetchProjectCandidateRows(context: {
       .all(...context.nameKeys);
     for (const row of rows) {
       rowsById.set(row.id, row);
-    }
-  }
-
-  if (context.aliasKeys.length > 0) {
-    const placeholders = context.aliasKeys.map(() => "?").join(", ");
-    const rows = await db
-      .query<ProjectCandidateRow>(
-        `SELECT
-           p.id, p.name, p.normalized_name, p.contractor, p.address, p.outlook_folder,
-           p.account_id, p.updated_at
-         FROM project_aliases pa
-         JOIN projects p ON p.id = pa.project_id
-         WHERE pa.normalized_alias IN (${placeholders})`
-      )
-      .all(...context.aliasKeys);
-
-    for (const row of rows) {
-      rowsById.set(row.id, row);
-      aliasMatchedIds.add(row.id);
     }
   }
 
@@ -229,7 +206,7 @@ async function fetchProjectCandidateRows(context: {
     }
   }
 
-  return { rows: [...rowsById.values()], aliasMatchedIds };
+  return [...rowsById.values()];
 }
 
 export async function findProjectCandidates(
@@ -240,14 +217,13 @@ export async function findProjectCandidates(
     return null;
   }
 
-  const { rows, aliasMatchedIds } = await fetchProjectCandidateRows({
+  const rows = await fetchProjectCandidateRows({
     nameKeys: context.nameKeys,
-    aliasKeys: context.aliasKeys,
     primaryTokens: context.primaryTokens,
     accountIdHint: context.accountIdHint,
   });
 
-  const rankingContext = buildProjectRankingContext(context, aliasMatchedIds);
+  const rankingContext = buildProjectRankingContext(context);
   const candidates = rankProjectCandidates(rows, rankingContext);
 
   const limit = Math.max(1, Math.min(25, input.limit ?? 10));
@@ -257,7 +233,6 @@ export async function findProjectCandidates(
 }
 
 interface ProjectRankingContext {
-  aliasMatchedIds: Set<number>;
   rawTexts: Set<string>;
   nameKeys: Set<string>;
   primaryTokens: Set<string>;
@@ -299,8 +274,7 @@ function buildProjectMatchContext(
 }
 
 function buildProjectRankingContext(
-  context: ProjectMatchContext,
-  aliasMatchedIds: Set<number>
+  context: ProjectMatchContext
 ): ProjectRankingContext {
   const rawTexts = uniqueStrings([
     context.primaryText,
@@ -308,7 +282,6 @@ function buildProjectRankingContext(
   ]).map((text) => text.toLowerCase());
 
   return {
-    aliasMatchedIds,
     rawTexts: new Set(rawTexts),
     nameKeys: new Set(context.nameKeys),
     primaryTokens: new Set(context.primaryTokens),
@@ -330,20 +303,6 @@ function normalizedNameReason(
     code: "normalized_name_exact",
     points: 230,
     detail: `normalized_name=${normalizedName}`,
-  };
-}
-
-function aliasReason(
-  row: ProjectCandidateRow,
-  context: ProjectRankingContext
-): ProjectMatchReason | null {
-  if (!context.aliasMatchedIds.has(row.id)) {
-    return null;
-  }
-  return {
-    code: "project_alias_exact",
-    points: 240,
-    detail: "project_aliases.normalized_alias match",
   };
 }
 
@@ -448,7 +407,6 @@ function collectCandidateReasons(
 ): ProjectMatchReason[] {
   const reasons = [
     normalizedNameReason(row, context),
-    aliasReason(row, context),
     outlookFolderReason(row, context),
     accountReason(row, context),
     primaryTokenReason(row, context),

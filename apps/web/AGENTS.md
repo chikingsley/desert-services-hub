@@ -20,13 +20,13 @@ Enforcement points:
 Required invariants:
 - Line items must resolve to catalog code or exact catalog item name.
 - Persist canonical `item_name` + catalog `description` only.
-- If `line_items` exist, require `job_name`, `client_name`, `job_address`, `client_address`.
+- If `line_items` exist, require `job_name`, `client_name` (stored as `contractor`), `job_address`, `client_address`.
 - Addresses normalize to two-line format.
 - Reject `sections` updates that omit `line_items`.
 - Validation errors return HTTP `400` with issue details (no silent defaulting).
 
 Regression coverage:
-- `apps/web/api/estimates/estimates.test.ts`
+- `tests/apps/web/api/estimates/estimates.test.ts`
 - `tests/components/estimates/estimate-workspace.test.ts`
 
 ## Permit Integration Rules

@@ -1,8 +1,10 @@
 import { afterAll, describe, expect, it } from "bun:test";
 import {
-  detectDustPermitEmailTrigger,
   handleIssuedEmail,
   handlePaymentEmail,
+} from "@background-jobs/lib/notifications/email-trigger-handlers";
+import {
+  detectDustPermitEmailTrigger,
   parseMaricopaIssuedEmail,
   parsePointAndPayEmail,
 } from "@background-jobs/lib/notifications/email-triggers";

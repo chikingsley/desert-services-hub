@@ -35,19 +35,19 @@ export interface DocumentClueResult {
   debug: string[];
 }
 
-type ProjectDocumentRow = {
+interface ProjectDocumentRow {
   id?: number;
   documentType?: string | null;
   fileName?: string | null;
   summary?: string | null;
   rawExtraction?: unknown;
-};
+}
 
-type RankedDoc = {
+interface RankedDoc {
   row: ProjectDocumentRow;
   score: number;
   reason: string[];
-};
+}
 
 const DEFAULT_CONTAINER = "supabase_db_desert-services-hub";
 const DEFAULT_STATE = "AZ";
@@ -88,15 +88,15 @@ const ROAD_NAME_PATTERN = `(?:\\b(?:N|S|E|W|NE|NW|SE|SW)\\b\\s+)?[A-Z0-9][A-Z0-9
 const ROAD_NAME_REGEX = new RegExp(ROAD_NAME_PATTERN, "g");
 const INTERSECTION_REGEX = new RegExp(
   `(${ROAD_NAME_PATTERN})\\s*(?:AND|&)\\s*(${ROAD_NAME_PATTERN})`,
-  "g",
+  "g"
 );
 const INTERSECTION_SLASH_REGEX = new RegExp(
   `(${ROAD_NAME_PATTERN})\\s*\\/\\s*(${ROAD_NAME_PATTERN})`,
-  "g",
+  "g"
 );
 const ADDRESS_REGEX = new RegExp(
   `\\b\\d{1,6}\\s+(?:N|S|E|W)?\\s*[A-Z0-9 .'-]{2,40}\\s${ROAD_SUFFIX_PATTERN}\\b`,
-  "g",
+  "g"
 );
 const COORD_REGEX = /(-?\d{1,2}\.\d{4,})\s*[,/ ]\s*(-?\d{2,3}\.\d{4,})/g;
 const APN_COORD_REGEX =
@@ -114,7 +114,7 @@ function parseJsonValue(value: unknown): unknown {
     return "";
   }
 
-  if (!trimmed.startsWith("{") && !trimmed.startsWith("[")) {
+  if (!(trimmed.startsWith("{") || trimmed.startsWith("["))) {
     return value;
   }
 
@@ -149,7 +149,9 @@ function cleanAlphaNum(value: string | null | undefined): string {
   return value.replace(/[^A-Z0-9]/gi, "").toUpperCase();
 }
 
-function extractPermitApnCandidates(parcelRaw: string | null | undefined): string[] {
+function extractPermitApnCandidates(
+  parcelRaw: string | null | undefined
+): string[] {
   if (!parcelRaw) {
     return [];
   }
@@ -184,14 +186,17 @@ function sharedPrefixLength(a: string, b: string): number {
   return i;
 }
 
-function parseAzCoordinatePair(firstRaw: string, secondRaw: string): LatLng | null {
+function parseAzCoordinatePair(
+  firstRaw: string,
+  secondRaw: string
+): LatLng | null {
   const first = Number(firstRaw);
   const second = Number(secondRaw);
-  if (!Number.isFinite(first) || !Number.isFinite(second)) {
+  if (!(Number.isFinite(first) && Number.isFinite(second))) {
     return null;
   }
 
-  const candidates: Array<LatLng> = [
+  const candidates: LatLng[] = [
     { lat: first, lng: second },
     { lat: second, lng: first },
   ];
@@ -227,7 +232,9 @@ function detectCornerPosition(context: string): CornerPosition {
 function extractTextFromUnknown(value: unknown, maxChars: number): string {
   const chunks: string[] = [];
   let totalChars = 0;
-  const stack: Array<{ value: unknown; key: string | null }> = [{ value, key: null }];
+  const stack: Array<{ value: unknown; key: string | null }> = [
+    { value, key: null },
+  ];
 
   while (stack.length > 0 && totalChars < maxChars) {
     const current = stack.pop();
@@ -243,7 +250,9 @@ function extractTextFromUnknown(value: unknown, maxChars: number): string {
       }
 
       const shouldInclude =
-        current.key === null || DEBUG_TEXT_KEYS.test(current.key) || text.length > 160;
+        current.key === null ||
+        DEBUG_TEXT_KEYS.test(current.key) ||
+        text.length > 160;
       if (!shouldInclude) {
         continue;
       }
@@ -389,7 +398,10 @@ function dedupeCoordinates(coords: LatLng[], maxCount = 12): LatLng[] {
   return out;
 }
 
-function extractCoordinatesFromApnPairs(text: string, permitApnCandidates: string[]): LatLng[] {
+function extractCoordinatesFromApnPairs(
+  text: string,
+  permitApnCandidates: string[]
+): LatLng[] {
   APN_COORD_REGEX.lastIndex = 0;
 
   const candidates: Array<{
@@ -440,7 +452,9 @@ function extractCoordinatesFromApnPairs(text: string, permitApnCandidates: strin
       continue;
     }
 
-    const numericPenalty = Number.isFinite(bestNumericDistance) ? bestNumericDistance : 0;
+    const numericPenalty = Number.isFinite(bestNumericDistance)
+      ? bestNumericDistance
+      : 0;
     const score = bestPrefix * 1000 - numericPenalty;
     candidates.push({
       coordinate,
@@ -456,12 +470,14 @@ function extractCoordinatesFromApnPairs(text: string, permitApnCandidates: strin
 
   candidates.sort(
     (a, b) =>
-      b.score - a.score || b.prefixScore - a.prefixScore || a.numericDistance - b.numericDistance,
+      b.score - a.score ||
+      b.prefixScore - a.prefixScore ||
+      a.numericDistance - b.numericDistance
   );
 
   return dedupeCoordinates(
     candidates.map((candidate) => candidate.coordinate),
-    12,
+    12
   );
 }
 
@@ -487,7 +503,7 @@ function extractCoordinates(text: string): LatLng | null {
 function extractDisturbedAcreage(text: string): number | null {
   const disturbedRegex =
     /(\d+(?:\.\d+)?)\s*ACRES?\s*(?:OF\s+)?(?:DISTURBED|DISTURBANCE|TO\s+BE\s+DISTURBED)/gi;
-  const anyAcreRegex = /(\d+(?:\.\d+)?)\s*ACRES?/gi;
+  const _anyAcreRegex = /(\d+(?:\.\d+)?)\s*ACRES?/gi;
 
   for (const match of text.matchAll(disturbedRegex)) {
     const raw = match[1];
@@ -508,7 +524,7 @@ function acreageToEstimatedSizeMeters(acres: number | null): number | null {
     return null;
   }
 
-  const areaM2 = acres * 4046.8564224;
+  const areaM2 = acres * 4046.856_422_4;
   const size = Math.sqrt(areaM2);
   if (!Number.isFinite(size)) {
     return null;
@@ -531,7 +547,10 @@ function extractAddressCandidate(text: string): string | null {
   return normalized;
 }
 
-async function runPsqlJsonQuery(container: string, sql: string): Promise<ProjectDocumentRow[]> {
+async function runPsqlJsonQuery(
+  container: string,
+  sql: string
+): Promise<ProjectDocumentRow[]> {
   const proc = Bun.spawn(
     [
       "docker",
@@ -551,7 +570,7 @@ async function runPsqlJsonQuery(container: string, sql: string): Promise<Project
     {
       stdout: "pipe",
       stderr: "pipe",
-    },
+    }
   );
 
   const [exitCode, stdoutText, stderrText] = await Promise.all([
@@ -562,7 +581,9 @@ async function runPsqlJsonQuery(container: string, sql: string): Promise<Project
 
   if (exitCode !== 0) {
     const stderr = stderrText.trim();
-    throw new Error(`document query failed (exit=${exitCode})${stderr ? `: ${stderr}` : ""}`);
+    throw new Error(
+      `document query failed (exit=${exitCode})${stderr ? `: ${stderr}` : ""}`
+    );
   }
 
   const output = stdoutText.trim();
@@ -576,7 +597,7 @@ async function runPsqlJsonQuery(container: string, sql: string): Promise<Project
 async function fetchProjectDocuments(
   projectId: number,
   container: string,
-  fetchLimit: number,
+  fetchLimit: number
 ): Promise<ProjectDocumentRow[]> {
   const safeProjectId = Math.floor(projectId);
   const safeLimit = Math.max(1, Math.min(160, Math.floor(fetchLimit)));
@@ -600,7 +621,10 @@ FROM (
   return runPsqlJsonQuery(container, sql);
 }
 
-function scoreDocumentForPermit(row: ProjectDocumentRow, permit: PermitDocumentContext): RankedDoc {
+function scoreDocumentForPermit(
+  row: ProjectDocumentRow,
+  permit: PermitDocumentContext
+): RankedDoc {
   const reason: string[] = [];
   let score = 0;
 
@@ -638,7 +662,9 @@ function scoreDocumentForPermit(row: ProjectDocumentRow, permit: PermitDocumentC
   if (address) {
     const tokens = address
       .split(/\s+/)
-      .filter((t) => t.length >= 4 && !/^(ROAD|STREET|AVENUE|DRIVE|LANE)$/.test(t))
+      .filter(
+        (t) => t.length >= 4 && !/^(ROAD|STREET|AVENUE|DRIVE|LANE)$/.test(t)
+      )
       .slice(0, 5);
 
     let tokenHits = 0;
@@ -701,7 +727,7 @@ function scoreDocumentForPermit(row: ProjectDocumentRow, permit: PermitDocumentC
 function rankDocumentsForPermit(
   rows: ProjectDocumentRow[],
   permit: PermitDocumentContext,
-  maxDocs: number,
+  maxDocs: number
 ): RankedDoc[] {
   const scored = rows.map((row) => scoreDocumentForPermit(row, permit));
   scored.sort((a, b) => b.score - a.score);
@@ -717,7 +743,7 @@ function rankDocumentsForPermit(
 export async function buildDocumentCluesForPermit(
   permit: PermitDocumentContext,
   options: DocumentClueOptions = {},
-  cache: Map<number, ProjectDocumentRow[]> | null = null,
+  cache: Map<number, ProjectDocumentRow[]> | null = null
 ): Promise<DocumentClueResult> {
   const container = options.container ?? DEFAULT_CONTAINER;
   const maxDocs = options.maxDocs ?? DEFAULT_MAX_DOCS;
@@ -735,7 +761,11 @@ export async function buildDocumentCluesForPermit(
       debug.push(`documents from cache: ${rawDocs.length}`);
     } else {
       const fetchLimit = Math.max(maxDocs * 5, 30);
-      rawDocs = await fetchProjectDocuments(permit.projectId, container, fetchLimit);
+      rawDocs = await fetchProjectDocuments(
+        permit.projectId,
+        container,
+        fetchLimit
+      );
       cache?.set(permit.projectId, rawDocs);
       debug.push(`documents queried: ${rawDocs.length}`);
     }
@@ -748,7 +778,7 @@ export async function buildDocumentCluesForPermit(
       `top relevance: ${ranked
         .slice(0, 3)
         .map((r) => `${r.row.id ?? "?"}:${r.score}`)
-        .join(", ")}`,
+        .join(", ")}`
     );
   } else {
     debug.push("no project_id; skipped document lookup");
@@ -774,28 +804,36 @@ export async function buildDocumentCluesForPermit(
   const permitApnCandidates = extractPermitApnCandidates(permit.parcel);
   const roads = combinedText ? extractRoads(combinedText) : [];
   const intersections = combinedText ? extractIntersections(combinedText) : [];
-  const primaryCoordinate = combinedText ? extractCoordinates(combinedText) : null;
+  const primaryCoordinate = combinedText
+    ? extractCoordinates(combinedText)
+    : null;
   const apnPairCoordinates = combinedText
     ? extractCoordinatesFromApnPairs(combinedText, permitApnCandidates)
     : [];
   const coordinateCandidates = dedupeCoordinates(
     [...(primaryCoordinate ? [primaryCoordinate] : []), ...apnPairCoordinates],
-    12,
+    12
   );
   const coordinates = coordinateCandidates[0] ?? null;
-  const disturbedAcreage = combinedText ? extractDisturbedAcreage(combinedText) : null;
+  const disturbedAcreage = combinedText
+    ? extractDisturbedAcreage(combinedText)
+    : null;
   const estimatedSizeMeters = acreageToEstimatedSizeMeters(disturbedAcreage);
   const fallbackAddress =
-    !permit.address && combinedText ? extractAddressCandidate(combinedText) : null;
+    !permit.address && combinedText
+      ? extractAddressCandidate(combinedText)
+      : null;
 
   if (fallbackAddress) {
     debug.push(`address extracted from docs: ${fallbackAddress}`);
   }
   if (disturbedAcreage) {
-    debug.push("disturbed acreage extracted: " + disturbedAcreage);
+    debug.push(`disturbed acreage extracted: ${disturbedAcreage}`);
   }
   if (coordinateCandidates.length > 1) {
-    debug.push("coordinate candidates extracted: " + coordinateCandidates.length);
+    debug.push(
+      `coordinate candidates extracted: ${coordinateCandidates.length}`
+    );
   }
 
   const hints: ExtractedPlanHints = {

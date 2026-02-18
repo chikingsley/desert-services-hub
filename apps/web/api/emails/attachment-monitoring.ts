@@ -43,24 +43,26 @@ interface DailyThroughput {
 
 const getQueueStats = db.query<{ status: string | null; cnt: number }, []>(`
   SELECT extraction_status as status, COUNT(*)::int as cnt
-  FROM attachments
+  FROM documents
+  WHERE source = 'email_attachment'
   GROUP BY extraction_status
 `);
 
 const getRecentActivity = db.query<RecentActivity, [number]>(`
   SELECT
-    a.id, a.name, a.email_id, a.content_type, a.size,
-    a.extraction_status, a.extraction_error, a.extracted_at,
-    a.last_attempted_at, a.content_hash,
+    d.id, d.file_name as name, d.email_id, d.content_type, d.file_size as size,
+    d.extraction_status, d.extraction_error, d.extracted_at,
+    d.last_attempted_at, d.content_hash,
     m.email as mailbox_email,
     e.subject, e.from_email, e.project_id
-  FROM attachments a
-  JOIN emails e ON e.id = a.email_id
+  FROM documents d
+  JOIN emails e ON e.id = d.email_id
   JOIN mailboxes m ON m.id = e.mailbox_id
-  WHERE a.extraction_status IS NOT NULL
-    AND a.extraction_status NOT IN ('pending')
-    AND a.extracted_at IS NOT NULL
-  ORDER BY a.extracted_at DESC
+  WHERE d.source = 'email_attachment'
+    AND d.extraction_status IS NOT NULL
+    AND d.extraction_status NOT IN ('pending')
+    AND d.extracted_at IS NOT NULL
+  ORDER BY d.extracted_at DESC
   LIMIT $1
 `);
 
@@ -71,8 +73,9 @@ const getDailyThroughput = db.query<DailyThroughput, [number]>(`
     COUNT(*) FILTER (WHERE extraction_status = 'failed')::int as failed,
     COUNT(*) FILTER (WHERE extraction_status = 'deduped')::int as deduped,
     COUNT(*) FILTER (WHERE extraction_status = 'skipped')::int as skipped
-  FROM attachments
-  WHERE extracted_at IS NOT NULL
+  FROM documents
+  WHERE source = 'email_attachment'
+    AND extracted_at IS NOT NULL
     AND extracted_at > now() - interval '30 days'
   GROUP BY extracted_at::date
   ORDER BY date DESC

@@ -1,4 +1,4 @@
-import { updateItem } from "@monday/client";
+import { updateItem } from "@monday/client/search";
 import { resolveBoardId } from "../config";
 import { getBoardNameArg, getJsonArg } from "./args";
 import type { CommandHandler } from "./types";

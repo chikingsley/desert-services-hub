@@ -8,7 +8,7 @@
  * Actual processing happens in the background worker (apps/background-jobs/worker.ts).
  */
 import { db } from "@lib/db/hub";
-import { BOARD_IDS } from "@monday/types";
+import { BOARD_IDS } from "@monday/types/schema";
 
 const enqueueStmt = db.prepare(
   "INSERT INTO webhook_jobs (job_type, monday_item_id, payload) VALUES (?, ?, ?)"

@@ -11,14 +11,7 @@
 
 import { db } from "@lib/db/hub";
 import type { NotificationEventType, NotificationStatus } from "@lib/db/types";
-
-export interface PendingEvent {
-  eventType: NotificationEventType;
-  refType: string;
-  refId: string;
-  subject: string;
-  metadata: Record<string, unknown>;
-}
+import type { PendingEvent, QueuedNotification } from "./types";
 
 /**
  * Find dust permits expiring within N days that haven't been notified.
@@ -262,73 +255,6 @@ export async function detectReceivedContracts(
 }
 
 /**
- * Find active contract packets that breached SLA and have not been notified.
- */
-export async function detectContractPacketSlaBreaches(): Promise<
-  PendingEvent[]
-> {
-  const breachedPackets = await db
-    .query<
-      {
-        id: number;
-        project_id: number;
-        project_name: string;
-        status: string;
-        owner: string | null;
-        next_action: string | null;
-        minutes_since_received: number | null;
-        received_at: string | null;
-        packet_document_count: number;
-      },
-      []
-    >(
-      `SELECT
-         cpq.id,
-         cpq.project_id,
-         cpq.project_name,
-         cpq.status,
-         cpq.owner,
-         cpq.next_action,
-         cpq.minutes_since_received,
-         cpq.received_at,
-         cpq.packet_document_count
-       FROM contract_packet_queue_v cpq
-       WHERE cpq.is_active = TRUE
-         AND cpq.is_sla_breached = TRUE
-         AND cpq.status NOT IN ('executed', 'archived')
-         AND NOT EXISTS (
-           SELECT 1
-           FROM notifications n
-           WHERE n.event_type = 'contract_packet_sla_breached'
-             AND n.ref_type = 'contract_packet'
-             AND n.ref_id = CAST(cpq.id AS TEXT)
-             AND n.status IN ('pending', 'drafted', 'sent')
-         )
-       ORDER BY cpq.minutes_since_received DESC NULLS LAST
-       LIMIT 200`
-    )
-    .all();
-
-  return breachedPackets.map((packet) => ({
-    eventType: "contract_packet_sla_breached" as const,
-    refType: "contract_packet",
-    refId: String(packet.id),
-    subject: `Contract Packet SLA Breached - ${packet.project_name}`,
-    metadata: {
-      packetId: packet.id,
-      projectId: packet.project_id,
-      projectName: packet.project_name,
-      packetStatus: packet.status,
-      owner: packet.owner,
-      nextAction: packet.next_action,
-      minutesSinceReceived: packet.minutes_since_received,
-      receivedAt: packet.received_at,
-      packetDocumentCount: packet.packet_document_count,
-    },
-  }));
-}
-
-/**
  * Run all detectors and return all pending events.
  */
 export async function detectAllEvents(): Promise<PendingEvent[]> {
@@ -338,7 +264,6 @@ export async function detectAllEvents(): Promise<PendingEvent[]> {
     ...(await detectSubmittedPermits()),
     ...(await detectIssuedPermits()),
     ...(await detectReceivedContracts()),
-    ...(await detectContractPacketSlaBreaches()),
   ];
 }
 
@@ -366,11 +291,6 @@ export async function recordNotification(
     ]
   );
   return Number(result.lastInsertRowid);
-}
-
-export interface QueuedNotification {
-  id: number;
-  event: PendingEvent;
 }
 
 /**

@@ -25,12 +25,9 @@ async function ensureColumns(): Promise<void> {
   ] as const;
 
   for (const col of columns) {
-    try {
-      await db.run(`ALTER TABLE emails ADD COLUMN ${col.name} ${col.type}`);
-      console.log(`Added column: ${col.name}`);
-    } catch {
-      // Column likely already exists.
-    }
+    await db.run(
+      `ALTER TABLE emails ADD COLUMN IF NOT EXISTS ${col.name} ${col.type}`
+    );
   }
 }
 

@@ -1,5 +1,8 @@
 /**
  * Attachment Repository
+ *
+ * Operates on the unified `documents` table with source='email_attachment'.
+ * Returns the legacy `Attachment` interface for backward compatibility.
  */
 import { db } from "@lib/db/hub";
 import { getEmailById, parseEmailRow } from "@lib/db/repositories/email";
@@ -15,10 +18,10 @@ function parseAttachmentRow(row: Record<string, unknown>): Attachment {
   return {
     id: row.id as number,
     emailId: row.email_id as number,
-    attachmentId: row.attachment_id as string,
-    name: row.name as string,
+    attachmentId: row.outlook_attachment_id as string,
+    name: row.file_name as string,
     contentType: row.content_type as string | null,
-    size: row.size as number | null,
+    size: row.file_size as number | null,
     storageBucket: row.storage_bucket as string | null,
     storagePath: row.storage_path as string | null,
     extractedText: row.extracted_text as string | null,
@@ -33,14 +36,16 @@ export async function insertAttachment(
   data: InsertAttachmentData
 ): Promise<number> {
   const result = await db.run(
-    `INSERT INTO attachments (email_id, attachment_id, name, content_type, size, storage_bucket, storage_path)
-     VALUES (?, ?, ?, ?, ?, ?, ?)
-     ON CONFLICT(email_id, attachment_id) DO UPDATE SET
-       name = excluded.name,
+    `INSERT INTO documents (source, email_id, outlook_attachment_id, file_name, content_type, file_size, storage_bucket, storage_path, document_type)
+     VALUES ('email_attachment', ?, ?, ?, ?, ?, ?, ?, 'unknown')
+     ON CONFLICT (email_id, outlook_attachment_id) WHERE source = 'email_attachment' AND outlook_attachment_id IS NOT NULL
+     DO UPDATE SET
+       file_name = excluded.file_name,
        content_type = excluded.content_type,
-       size = excluded.size,
-       storage_bucket = COALESCE(excluded.storage_bucket, attachments.storage_bucket),
-       storage_path = COALESCE(excluded.storage_path, attachments.storage_path)`,
+       file_size = excluded.file_size,
+       storage_bucket = COALESCE(excluded.storage_bucket, documents.storage_bucket),
+       storage_path = COALESCE(excluded.storage_path, documents.storage_path),
+       updated_at = now()`,
     [
       data.emailId,
       data.attachmentId,
@@ -60,7 +65,9 @@ export async function getAttachmentsForEmail(
 ): Promise<Attachment[]> {
   const rows = await db
     .query<Record<string, unknown>, [number]>(
-      "SELECT * FROM attachments WHERE email_id = ? ORDER BY name"
+      `SELECT * FROM documents
+       WHERE email_id = ? AND source = 'email_attachment'
+       ORDER BY file_name`
     )
     .all(emailId);
 
@@ -72,7 +79,7 @@ export async function getAttachmentById(
 ): Promise<Attachment | null> {
   const row = await db
     .query<Record<string, unknown>, [number]>(
-      "SELECT * FROM attachments WHERE id = ?"
+      "SELECT * FROM documents WHERE id = ?"
     )
     .get(id);
 
@@ -84,8 +91,9 @@ export async function getPendingAttachments(
 ): Promise<Attachment[]> {
   const rows = await db
     .query<Record<string, unknown>, [number]>(
-      `SELECT * FROM attachments
-       WHERE extraction_status = 'pending'
+      `SELECT * FROM documents
+       WHERE source = 'email_attachment'
+         AND extraction_status = 'pending'
        ORDER BY id
        LIMIT ?`
     )
@@ -101,13 +109,14 @@ export async function updateAttachmentExtraction(
   error?: string | null
 ): Promise<void> {
   await db.run(
-    `UPDATE attachments
+    `UPDATE documents
      SET extraction_status = ?,
          extracted_text = ?,
          extraction_error = ?,
          extracted_at = now(),
          extraction_attempts = extraction_attempts + 1,
-         last_attempted_at = now()
+         last_attempted_at = now(),
+         updated_at = now()
      WHERE id = ?`,
     [status, extractedText ?? null, error ?? null, attachmentId]
   );
@@ -123,7 +132,8 @@ export async function getAttachmentStats(): Promise<{
   const rows = await db
     .query<{ status: string; count: number }, []>(
       `SELECT extraction_status as status, COUNT(*) as count
-       FROM attachments
+       FROM documents
+       WHERE source = 'email_attachment'
        GROUP BY extraction_status`
     )
     .all();
@@ -167,12 +177,12 @@ export async function searchAttachments(
   limit = 100
 ): Promise<Attachment[]> {
   const rows = await likeSearch<Record<string, unknown>>({
-    table: "attachments a",
+    table: "documents a",
     select: "a.*",
     joins: "JOIN emails e ON a.email_id = e.id",
     columns: ["e.subject", "e.project_name", "e.contractor_name"],
     query: searchTerm,
-    extraWhere: "a.storage_path IS NOT NULL",
+    extraWhere: "a.source = 'email_attachment' AND a.storage_path IS NOT NULL",
     orderBy: "e.received_at DESC",
     limit,
   });
@@ -219,8 +229,9 @@ export async function searchEmailsFullText(
   const attachmentRows = await db
     .query<{ email_id: number }, unknown[]>(
       `SELECT DISTINCT email_id
-       FROM attachments
-       WHERE ${attClause}
+       FROM documents
+       WHERE source = 'email_attachment'
+         AND ${attClause}
        LIMIT ?`
     )
     .all(...attParams, limit);
@@ -240,5 +251,5 @@ export async function searchEmailsFullText(
 }
 
 export async function clearAttachments(): Promise<void> {
-  await db.run("DELETE FROM attachments");
+  await db.run("DELETE FROM documents WHERE source = 'email_attachment'");
 }

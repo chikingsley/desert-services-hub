@@ -20,8 +20,6 @@ from pdf_analysis.types import (
 )
 from pdf_analysis.utils import extract_json_from_text, sanitize_filename
 
-from .base import BaseProvider
-
 genai: Any = None
 types: Any = None
 
@@ -35,7 +33,7 @@ else:
     types = _types
 
 
-class GeminiProvider(BaseProvider):
+class GeminiProvider:
     name = ProviderName.GEMINI
     cost_per_1k_pages = 3.0
 

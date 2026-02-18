@@ -1,7 +1,7 @@
 /**
  * Board-level operations.
  */
-import type { MondayBoard, MondayColumn } from "@monday/types";
+import type { MondayBoard, MondayColumn } from "@monday/types/schema";
 import { query } from "./query";
 
 /**

@@ -1,7 +1,7 @@
 /**
  * Search operations.
  */
-import type { MondayItem } from "@monday/types";
+import type { MondayItem } from "@monday/types/schema";
 import { getItems } from "./items";
 import { query } from "./query";
 

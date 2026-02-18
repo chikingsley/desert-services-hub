@@ -4,9 +4,9 @@ import {
   insertFileRecord,
   LOG,
   MIN_KREUZBERG_TEXT_LENGTH,
-} from "../files-intake-db";
-import type { EmailMeta, ParseIntakeResult } from "../types";
-import { classifyDocument } from "./classify";
+} from "@documents-intake/files-intake-db";
+import { classifyDocument } from "@documents-intake/processors/classify";
+import type { EmailMeta, ParseIntakeResult } from "@documents-intake/types";
 
 export async function processPdf(
   pdfPath: string,

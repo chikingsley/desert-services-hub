@@ -84,15 +84,6 @@ function classifyHealth(key: string, value: number): HealthState {
       }
       return "FAIL";
 
-    case "contract_sla_breach_pct":
-      if (value <= 10) {
-        return "OK";
-      }
-      if (value <= 25) {
-        return "WARN";
-      }
-      return "FAIL";
-
     case "docusign_30d_project_link_pct":
     case "payapp_30d_project_link_pct":
       if (value >= 50) {
@@ -249,19 +240,19 @@ WITH m AS (
   FROM webhook_jobs WHERE job_type = 'email_resolve' AND status = 'failed'
   UNION ALL
   SELECT 'attachments_24h', COUNT(*)::numeric
-  FROM attachments WHERE created_at >= now() - interval '24 hours'
+  FROM documents WHERE source = 'email_attachment' AND created_at >= now() - interval '24 hours'
   UNION ALL
   SELECT 'attachments_24h_success', COUNT(*)::numeric
-  FROM attachments
-  WHERE created_at >= now() - interval '24 hours' AND extraction_status = 'success'
+  FROM documents
+  WHERE source = 'email_attachment' AND created_at >= now() - interval '24 hours' AND extraction_status = 'success'
   UNION ALL
   SELECT 'attachments_24h_failed', COUNT(*)::numeric
-  FROM attachments
-  WHERE created_at >= now() - interval '24 hours' AND extraction_status = 'failed'
+  FROM documents
+  WHERE source = 'email_attachment' AND created_at >= now() - interval '24 hours' AND extraction_status = 'failed'
   UNION ALL
   SELECT 'attachments_24h_pending', COUNT(*)::numeric
-  FROM attachments
-  WHERE created_at >= now() - interval '24 hours' AND extraction_status = 'pending'
+  FROM documents
+  WHERE source = 'email_attachment' AND created_at >= now() - interval '24 hours' AND extraction_status = 'pending'
   UNION ALL
   SELECT 'documents_24h', COUNT(*)::numeric
   FROM documents WHERE created_at >= now() - interval '24 hours'
@@ -277,11 +268,6 @@ WITH m AS (
   SELECT 'documents_24h_unsupported', COUNT(*)::numeric
   FROM documents
   WHERE created_at >= now() - interval '24 hours' AND extraction_status = 'unsupported'
-  UNION ALL
-  SELECT 'contract_queue_total', COUNT(*)::numeric FROM contract_packet_queue_v
-  UNION ALL
-  SELECT 'contract_queue_sla_breached', COUNT(*)::numeric
-  FROM contract_packet_queue_v WHERE is_sla_breached
   UNION ALL
   SELECT 'docusign_30d', COUNT(*)::numeric
   FROM emails
@@ -538,14 +524,6 @@ describe("ops health metrics", () => {
     });
   });
 
-  describe("contract queue", () => {
-    test("SLA breached is bounded by total", () => {
-      expect(m("contract_queue_sla_breached")).toBeLessThanOrEqual(
-        m("contract_queue_total")
-      );
-    });
-  });
-
   describe("domain signals 30d", () => {
     test("DocuSign project-linked is bounded by total", () => {
       expect(m("docusign_30d_project_linked")).toBeLessThanOrEqual(
@@ -751,9 +729,10 @@ describe("project audit", () => {
            COUNT(*) FILTER (WHERE a.extraction_status = 'success')::int AS att_success,
            COUNT(*) FILTER (WHERE a.extraction_status = 'failed')::int AS att_failed,
            COUNT(*) FILTER (WHERE a.extraction_status = 'pending')::int AS att_pending
-         FROM attachments a
+         FROM documents a
          JOIN emails e ON e.id = a.email_id
-         WHERE e.project_id = $1`
+         WHERE a.source = 'email_attachment'
+           AND e.project_id = $1`
       )
       .get(projectId);
     expect(row).not.toBeNull();
@@ -1067,14 +1046,6 @@ describe("health state classification", () => {
       expect(classifyHealth("documents_24h_success_on_processed_pct", 74)).toBe(
         "FAIL"
       );
-    });
-  });
-
-  describe("contract_sla_breach_pct (inverted: 10/25)", () => {
-    test("boundary cases", () => {
-      expect(classifyHealth("contract_sla_breach_pct", 10)).toBe("OK");
-      expect(classifyHealth("contract_sla_breach_pct", 25)).toBe("WARN");
-      expect(classifyHealth("contract_sla_breach_pct", 26)).toBe("FAIL");
     });
   });
 

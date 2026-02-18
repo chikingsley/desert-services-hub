@@ -1,7 +1,7 @@
 /**
  * Item-level fetchers.
  */
-import type { MondayItem } from "@monday/types";
+import type { MondayItem } from "@monday/types/schema";
 import { query } from "./query";
 
 const DEFAULT_MAX_ITEMS = 10_000;

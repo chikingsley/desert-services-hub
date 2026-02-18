@@ -118,13 +118,13 @@ async function main(): Promise<void> {
   console.log(`clusters: ${result.clusters.length}`);
   console.log(`confidence: ${result.consensusConfidence}`);
   console.log(
-    `consensus: ${result.consensusLocation ? `${result.consensusLocation.lat.toFixed(6)}, ${result.consensusLocation.lng.toFixed(6)}` : "none"}`,
+    `consensus: ${result.consensusLocation ? `${result.consensusLocation.lat.toFixed(6)}, ${result.consensusLocation.lng.toFixed(6)}` : "none"}`
   );
   console.log(`roads: ${result.roadGeometries.length}`);
 
   if (result.suggestedBounds) {
     console.log(
-      `bounds: N=${result.suggestedBounds.north.toFixed(6)} S=${result.suggestedBounds.south.toFixed(6)} E=${result.suggestedBounds.east.toFixed(6)} W=${result.suggestedBounds.west.toFixed(6)}`,
+      `bounds: N=${result.suggestedBounds.north.toFixed(6)} S=${result.suggestedBounds.south.toFixed(6)} E=${result.suggestedBounds.east.toFixed(6)} W=${result.suggestedBounds.west.toFixed(6)}`
     );
   }
 

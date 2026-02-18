@@ -89,6 +89,34 @@ const MAX_RETRIES = 5;
 const RETRY_DELAY_MS = 3000;
 ```
 
+### 4.1 Query Limits and Safe Fetch Strategy
+
+- `items(ids: [...])` is capped at **100 item IDs per query** (hard limit).
+- For large board reads, prefer `items_page` + cursor pagination (`next_items_page`) over large ID lists.
+- Always record **coverage** in batch tools:
+  - requested IDs
+  - returned IDs
+  - missing IDs sample
+- If coverage drops below threshold (ex: 99.5%), fail closed unless explicitly forced.
+
+Recommended defaults for sync tooling:
+
+```typescript
+const ITEMS_IDS_BATCH = 25; // conservative, below hard 100 cap
+const PAGE_SIZE = 100; // stable for items_page on large boards
+const COVERAGE_MIN = 0.995;
+```
+
+### 4.2 Safe Mutation Strategy for Connect Boards
+
+- Do not abort the whole job on one bad relation write.
+- Handle per-item write failures and continue.
+- Common relation failure:
+  - `There are items that are not in the connected boards`
+  - Meaning: one or more item IDs are invalid for that relation configuration.
+- Serialize writes per board (avoid high concurrency on same board).
+- Add per-item request timeout so one slow mutation cannot stall entire run.
+
 ### 5. API Version
 
 Use the latest stable API version:

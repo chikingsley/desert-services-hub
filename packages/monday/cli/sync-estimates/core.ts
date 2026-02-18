@@ -1,7 +1,7 @@
 /**
  * Core estimate sync logic.
  */
-import { getItemsRich } from "@monday/client";
+import { getItemsRich } from "@monday/client/rich";
 import { SKIP_GROUPS } from "@monday/sync/helpers";
 import { resolveAccountNames } from "@monday/sync/monday-fetch";
 import {
@@ -17,7 +17,7 @@ import type {
   SyncProgress,
   SyncResult,
 } from "@monday/sync/types";
-import { BOARD_IDS } from "@monday/types";
+import { BOARD_IDS } from "@monday/types/schema";
 import type { SharePointClient } from "@sharepoint/client";
 import { parseStatusFromUrl } from "@sharepoint/paths";
 import type { EstimateItem } from "./mapping";

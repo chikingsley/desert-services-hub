@@ -1,5 +1,4 @@
 import { Database } from "bun:sqlite";
-import { createTables } from "./definitions";
 import {
   extractBidsSent,
   extractChecklist,
@@ -10,6 +9,7 @@ import {
   extractSwpppMaster,
 } from "./extractors";
 import { BOARDS, DB_PATH } from "./schema";
+import { createTables } from "./tables";
 
 interface Counts {
   [key: string]: number;

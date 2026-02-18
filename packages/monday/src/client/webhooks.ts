@@ -1,7 +1,7 @@
 /**
  * Webhook operations.
  */
-import type { MondayWebhook, WebhookEventType } from "@monday/types";
+import type { MondayWebhook, WebhookEventType } from "@monday/types/events";
 import { query } from "./query";
 
 /**

@@ -2,8 +2,7 @@
 // Logo left, title right — shared across all company documents
 
 import type { Content } from "pdfmake/interfaces";
-import { COLORS } from "./brand";
-import { FONT_TITLE } from "./fonts";
+import { COLORS, FONT_TITLE } from "./brand";
 import { noPaddingLayout } from "./layouts";
 
 export interface HeaderOptions {

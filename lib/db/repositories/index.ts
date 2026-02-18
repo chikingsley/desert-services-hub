@@ -104,17 +104,14 @@ export type {
 } from "@lib/db/repositories/project";
 // Project
 export {
-  addProjectAlias,
   createProject,
   findBestProjectMatch,
   findProjectByText,
   findProjectCandidates,
-  getAliasesForProject,
   getAllProjectNames,
   getAllProjects,
   getEmailsForAccount,
   getEmailsForProject,
-  getProjectByAlias,
   getProjectById,
   getProjectsForAccount,
   linkEmailToProject,

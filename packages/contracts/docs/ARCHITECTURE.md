@@ -305,9 +305,9 @@ Templates exist in `packages/contracts/templates/` but aren't wired to any autom
 | Intake webhook | `apps/background-jobs/api/webhooks/intake.ts` |
 | Intake pipeline | `apps/background-jobs/lib/files-intake.ts` |
 | File processors | `apps/background-jobs/lib/files-intake-processors.ts` |
-| Parse pipeline (OCR) | `apps/background-jobs/lib/parse-intake.ts` |
+| Intake DB + types | `apps/background-jobs/lib/intake/files-intake-db.ts` |
 | Post-processing/linking | `apps/background-jobs/jobs/intake-processing.ts` |
-| Document classifier | `packages/documents/pdf-analysis-cli/src/pdf_analysis/classify.py` |
+| Document classifier | `packages/documents/pdf-analysis-py/src/pdf_analysis/classify.py` |
 | Intake CF worker | `apps/cf-workers/intake-worker/src/index.ts` |
 | Email processing | `apps/background-jobs/jobs/email-processing.ts` |
 | Project seed sync | `apps/background-jobs/workers/estimate-poller/lib/project-seed-sync.ts` |

@@ -59,6 +59,7 @@ export interface PollStats {
   skippedNoSignal: number;
   lastEmailId: number;
   conversationLinksInserted: number;
+  directProjectsStamped: number;
   projectIdsBackfilled: number;
 }
 
@@ -171,12 +172,50 @@ async function runConversationBackfill(dryRun: boolean): Promise<number> {
   return r.count ?? 0;
 }
 
-// ── Post-pass: project_id backfill ────────────────────────────────────
+// ── Post-pass: direct project_id stamp ───────────────────────────────
 //
-// For conversations where all estimate_emails rows point to exactly one
-// distinct project (via project_estimates), stamp emails.project_id across
-// the entire thread. Mirrors what the folder watcher does when a folder is
-// tracked, but driven from the estimate→project chain instead.
+// For emails directly linked to an estimate (via estimate_emails), stamp
+// project_id from the estimate→project_estimates chain. No conversation_id
+// required. When an email links to estimates in multiple projects, pick one
+// (MIN) — operator can manually correct rare edge cases.
+
+async function runDirectProjectStamp(dryRun: boolean): Promise<number> {
+  if (dryRun) {
+    const row = await db
+      .query<{ cnt: string }>(
+        `SELECT COUNT(*) AS cnt
+         FROM emails e
+         WHERE e.project_id IS NULL
+           AND EXISTS (
+             SELECT 1 FROM estimate_emails ee
+             JOIN project_estimates pe ON pe.estimate_id = ee.estimate_id
+             WHERE ee.email_id = e.id
+           )`
+      )
+      .get();
+    return Number(row?.cnt ?? 0);
+  }
+
+  const r = await db.run(`
+    UPDATE emails e
+    SET project_id = subq.project_id
+    FROM (
+      SELECT ee.email_id, MIN(pe.project_id) AS project_id
+      FROM estimate_emails ee
+      JOIN project_estimates pe ON pe.estimate_id = ee.estimate_id
+      GROUP BY ee.email_id
+    ) subq
+    WHERE e.id = subq.email_id
+      AND e.project_id IS NULL
+  `);
+  return r.count ?? 0;
+}
+
+// ── Post-pass: thread project_id propagation ─────────────────────────
+//
+// For conversations where emails are linked to estimates, propagate
+// project_id to all other emails in the thread. When a thread spans
+// multiple projects, picks one (MIN) — operator can manually correct.
 
 async function runProjectIdBackfill(dryRun: boolean): Promise<number> {
   if (dryRun) {
@@ -193,7 +232,6 @@ async function runProjectIdBackfill(dryRun: boolean): Promise<number> {
              JOIN project_estimates pe ON pe.estimate_id = ee.estimate_id
              WHERE e2.conversation_id IS NOT NULL
              GROUP BY e2.conversation_id
-             HAVING COUNT(DISTINCT pe.project_id) = 1
            )`
       )
       .get();
@@ -204,13 +242,12 @@ async function runProjectIdBackfill(dryRun: boolean): Promise<number> {
     UPDATE emails e
     SET project_id = subq.project_id
     FROM (
-      SELECT e2.conversation_id, MAX(pe.project_id) AS project_id
+      SELECT e2.conversation_id, MIN(pe.project_id) AS project_id
       FROM emails e2
       JOIN estimate_emails ee ON ee.email_id = e2.id
       JOIN project_estimates pe ON pe.estimate_id = ee.estimate_id
       WHERE e2.conversation_id IS NOT NULL
       GROUP BY e2.conversation_id
-      HAVING COUNT(DISTINCT pe.project_id) = 1
     ) subq
     WHERE e.conversation_id = subq.conversation_id
       AND e.project_id IS NULL
@@ -310,6 +347,7 @@ export async function pollEstimateEmailLinker(
 
   // Post-processing passes: run once after all batches complete.
   const conversationLinksInserted = await runConversationBackfill(dryRun);
+  const directProjectsStamped = await runDirectProjectStamp(dryRun);
   const projectIdsBackfilled = await runProjectIdBackfill(dryRun);
 
   return {
@@ -319,6 +357,7 @@ export async function pollEstimateEmailLinker(
     skippedNoSignal: counters.skippedNoSignal,
     lastEmailId: lastId,
     conversationLinksInserted,
+    directProjectsStamped,
     projectIdsBackfilled,
   };
 }

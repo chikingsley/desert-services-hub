@@ -2,11 +2,12 @@
  * Monday.com file fetching and account resolution for estimate sync.
  */
 
-import type { MondayColumnValue } from "@monday/client";
-import { getItemNames, query } from "@monday/client";
+import { getItemNames } from "@monday/client/items";
+import { query } from "@monday/client/query";
+import type { MondayColumnValue } from "@monday/client/rich";
 import { FILE_COLUMNS } from "@monday/sync/helpers";
 import type { Asset } from "@monday/sync/types";
-import { CONTACTS_COLUMNS, ESTIMATING_COLUMNS } from "@monday/types";
+import { CONTACTS_COLUMNS, ESTIMATING_COLUMNS } from "@monday/types/schema";
 
 interface SyncItem {
   id: string;

@@ -14,7 +14,6 @@ import {
   buildSignOrderDetails,
   buildSignOrderSubject,
   isSignOrderType,
-  SIGN_ORDER_TYPES,
 } from "@email/sign-orders";
 import { getPermitById } from "@lib/db/repositories/dust-permit";
 import type { SignOrderStatus } from "@lib/db/repositories/sign-order";
@@ -22,6 +21,7 @@ import {
   createSignOrder,
   listSignOrders,
   SIGN_ORDER_STATUSES,
+  SIGN_ORDER_TYPES,
   updateSignOrderStatus,
 } from "@lib/db/repositories/sign-order";
 

@@ -12,7 +12,12 @@ export type Bounds = {
 
 export type Direction = "north" | "south" | "east" | "west" | "unknown";
 
-export type CornerPosition = "northwest" | "northeast" | "southwest" | "southeast" | "unknown";
+export type CornerPosition =
+  | "northwest"
+  | "northeast"
+  | "southwest"
+  | "southeast"
+  | "unknown";
 
 export interface ExtractedRoad {
   name: string;

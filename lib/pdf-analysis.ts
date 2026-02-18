@@ -128,9 +128,10 @@ export function classifyPdf(pdfPath: string): Promise<ClassifyResult[]> {
 
 export function classifyText(
   text: string,
-  filename = ""
+  filename = "",
+  provider = "auto"
 ): Promise<ClassifyResult> {
-  return post<ClassifyResult>("/classify-text", { text, filename });
+  return post<ClassifyResult>("/classify-text", { text, filename, provider });
 }
 
 export function ingestPdf(

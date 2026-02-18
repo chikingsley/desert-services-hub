@@ -5,7 +5,6 @@
  * then stores the resulting files in SharePoint (project folder when confidently linked,
  * otherwise a BuildingConnected archive path).
  */
-// biome-ignore lint/nursery/noExcessiveLinesPerFile: Single-file operational flow keeps triage/debug context in one place.
 import { mkdir, unlink } from "node:fs/promises";
 import { join } from "node:path";
 import { processFilesIntake } from "@background-jobs/lib/intake/files-intake";
@@ -230,7 +229,7 @@ async function uploadAttachmentToBuildingConnectedArchive(
 const getUnprocessedAttachments = db.query<UnprocessedAttachment, [number]>(`
   SELECT
     a.id as attachment_id_pk,
-    a.attachment_id as graph_attachment_id,
+    a.outlook_attachment_id as graph_attachment_id,
     a.name,
     a.content_type,
     a.size,
@@ -248,12 +247,11 @@ const getUnprocessedAttachments = db.query<UnprocessedAttachment, [number]>(`
     e.platform_name,
     e.received_at,
     m.email as mailbox_email
-  FROM attachments a
+  FROM documents a
   JOIN emails e ON e.id = a.email_id
   JOIN mailboxes m ON m.id = e.mailbox_id
-  LEFT JOIN documents d ON d.attachment_id = a.id
-  WHERE (a.extraction_status IS NULL OR a.extraction_status = 'pending')
-    AND d.id IS NULL
+  WHERE a.source = 'email_attachment'
+    AND (a.extraction_status IS NULL OR a.extraction_status = 'pending')
     AND (
       lower(coalesce(e.from_domain, '')) = 'buildingconnected.com'
       OR lower(coalesce(e.original_sender_domain, '')) = 'buildingconnected.com'
@@ -273,7 +271,7 @@ const getUnprocessedAttachments = db.query<UnprocessedAttachment, [number]>(`
 const updateDocumentBackfillLinks = db.prepare(`
   UPDATE documents
   SET email_id = $2,
-      attachment_id = $3,
+      outlook_attachment_id = $3,
       project_id = $4
   WHERE id = $1
 `);

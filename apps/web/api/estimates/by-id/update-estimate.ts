@@ -46,10 +46,8 @@ function buildEstimateUpdateStatement(payload: NormalizedUpdatePayload): {
     column: string;
   }> = [
     { key: "job_address", column: "job_address" },
-    { key: "client_name", column: "client_name" },
+    { key: "client_name", column: "contractor" },
     { key: "client_address", column: "client_address" },
-    { key: "client_email", column: "client_email" },
-    { key: "client_phone", column: "client_phone" },
     { key: "estimator", column: "estimator" },
     { key: "estimator_email", column: "estimator_email" },
     { key: "notes", column: "notes" },

@@ -15,6 +15,8 @@ Webhook receiver, queue handlers, and polling workers.
 - Canonical runtime is `worker.ts` poll loops.
 - Do not run parallel `systemd` services for folder watcher or estimate-email-linker.
 - Persistent state belongs in Postgres via `@lib/db/hub` and repository modules.
+- Lint/format policy: never run `biome`; use `ultracite` only.
+- Tests for this app belong under top-level `tests/apps/background-jobs/...` (mirrored source path), not inside `apps/background-jobs/...`.
 
 ## Notification Pipeline
 

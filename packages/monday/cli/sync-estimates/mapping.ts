@@ -1,6 +1,6 @@
-import type { MondayColumnValue } from "@monday/client";
+import type { MondayColumnValue } from "@monday/client/rich";
 import type { EstimateProject } from "@monday/sync/types";
-import { ESTIMATING_COLUMNS } from "@monday/types";
+import { ESTIMATING_COLUMNS } from "@monday/types/schema";
 import {
   CUSTOMER_PROJECTS_PATH,
   extractUrl,

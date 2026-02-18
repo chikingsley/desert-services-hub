@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 from pathlib import Path
-from typing import TypeVar
+from typing import Protocol, TypeVar
 
 from pdf_analysis.config import Settings
 from pdf_analysis.types import (
@@ -15,7 +15,6 @@ from pdf_analysis.types import (
     ProviderStatus,
 )
 
-from .providers.base import BaseProvider
 from .providers.gemini import GeminiProvider
 from .providers.local import LocalProvider
 
@@ -23,10 +22,37 @@ ProviderResult = OCRResult | ExtractResult | IdentifyResult | PlanAnalysisResult
 TResult = TypeVar("TResult", bound=ProviderResult)
 
 
+class Provider(Protocol):
+    name: ProviderName
+    cost_per_1k_pages: float
+
+    async def is_available(self) -> bool: ...
+
+    async def ocr(
+        self,
+        pdf_path: Path,
+        pages: list[int] | None = None,
+        output_path: Path | None = None,
+    ) -> OCRResult: ...
+
+    async def chat(self, prompt: str) -> ExtractResult: ...
+
+    async def extract(
+        self,
+        pdf_path: Path,
+        prompt: str,
+        schema: dict[str, object] | None = None,
+    ) -> ExtractResult: ...
+
+    async def identify(self, pdf_path: Path) -> IdentifyResult: ...
+
+    async def analyze(self, pdf_path: Path, analysis_type: str) -> PlanAnalysisResult: ...
+
+
 class ProviderManager:
     def __init__(self, settings: Settings | None = None):
         self.settings = settings or Settings()
-        self.providers: dict[ProviderName, BaseProvider] = {
+        self.providers: dict[ProviderName, Provider] = {
             ProviderName.GEMINI: GeminiProvider(self.settings),
             ProviderName.LOCAL: LocalProvider(self.settings),
         }
@@ -123,7 +149,7 @@ class ProviderManager:
         self,
         provider: ProviderSelector,
         operation: str,
-        fn: Callable[[BaseProvider], Awaitable[TResult]],
+        fn: Callable[[Provider], Awaitable[TResult]],
     ) -> TResult:
         provider_order = self._pick_order(provider)
         errors: list[str] = []

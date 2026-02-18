@@ -198,7 +198,7 @@ export async function getCanonicalEstimateForProject(
          e.base_number,
          COALESCE(e.job_name, e.name) AS job_name,
          e.job_address,
-         e.client_name,
+         e.contractor AS client_name,
          ev.id AS current_version_id,
          ev.total AS current_version_total
        FROM project_estimates pe

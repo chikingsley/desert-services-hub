@@ -7,6 +7,8 @@ Monorepo for Desert Services operations: estimating, permits, contracts, notific
 - Runtime is self-hosted on `gmk-server` only.
 - Operational state is in local Postgres (`host.docker.internal:54322`), not SQLite.
 - External traffic is Cloudflare Tunnel to Docker services.
+- Lint/format policy: never run `biome`; use `ultracite` only.
+- Test placement policy: keep tests in top-level `tests/` only, mirrored by domain path (for example `tests/apps/web/...`, `tests/lib/...`, `tests/packages/...`). Do not place new tests inside `apps/*`, `lib/*`, or `packages/*`.
 - For permit-worker API calls from app code, use `@permits/client` (`PermitClient`), not ad-hoc `fetch()`.
 - Permit runtime and permit client are separate concerns:
   - `apps/dust-permits/` = Playwright runtime + API server.
@@ -102,3 +104,55 @@ docker exec supabase_db_desert-services-hub psql -U postgres
 
 psql -h gmk-server -p 54322 -U postgres
 ```
+
+## Intake Refactor Contract (Strict)
+
+Build code as thin orchestration + isolated processors. No exceptions unless explicitly approved.
+
+### Architecture Rules
+
+- Keep runners/jobs thin. They only coordinate flow, retries, and persistence calls.
+- Put document/file processing logic in `packages/documents/*`, not in job runners.
+- One processor per file/domain concern (pdf, image, office, text, zip, classify).
+- Shared logic goes in small reusable modules (no giant utility blobs).
+- No compatibility aliases/shims. Use only `tsconfig` path aliases.
+- No dead code, no parallel legacy paths, no temporary fallback branches.
+
+### File and Type Rules
+
+- Type-only files must be named `types.ts` and contain only types/interfaces.
+- Do not define runtime logic in `types.ts`.
+- Avoid re-export chains unless needed for public package API.
+- Keep imports explicit and local to the boundary module.
+
+### Pipeline Rules
+
+- Default pipeline is `extract -> classify`.
+- Keep OCR as a separate higher-level pipeline, not implicit fallback in the fast path.
+- Prefer deterministic stage boundaries and composable functions.
+
+### Quality Gates (Required Before Done)
+
+- Run `ultracite` on every touched file.
+- Never run `biome check`.
+- Add/adjust tests for touched behavior (unit first; integration when boundary changed).
+- Verify no stale imports/references remain after refactor.
+- Verify old replaced module is deleted in the same PR/commit.
+
+### Commit Rules
+
+- Atomic commits only (single concern per commit).
+- Commit message must state architectural intent (e.g. `refactor(intake): split processors by file type`).
+- Do not mix unrelated cleanup into the same commit.
+
+### PR/Review Output Format
+
+- First: findings/risks/regressions.
+- Then: changed files and why.
+- Then: exact commands run (lint/tests/typecheck) and result.
+
+### Reference Standards
+
+- Hexagonal Architecture (Ports and Adapters): https://alistair.cockburn.us/hexagonal-architecture
+- Layered Architecture (Presentation-Domain-Data): https://martinfowler.com/bliki/PresentationDomainDataLayering.html
+- Pipes and Filters: https://learn.microsoft.com/en-us/azure/architecture/patterns/pipes-and-filters

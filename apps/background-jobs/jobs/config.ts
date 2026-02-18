@@ -35,6 +35,11 @@ export const MAX_CONCURRENT_JOBS = parsePositiveInt(
   process.env.WORKER_MAX_CONCURRENCY,
   4
 );
+export const MAX_LLM_CONCURRENT_JOBS = parsePositiveInt(
+  process.env.MAX_LLM_CONCURRENT_JOBS,
+  2,
+  1
+);
 
 export const FULL_SYNC_INTERVAL_MS = 10 * 60 * 1000; // 10 minutes
 export const FOLDER_WATCHER_INTERVAL_MS = 30 * 1000; // 30 seconds
@@ -44,13 +49,21 @@ export const ATTACHMENT_BACKFILL_INTERVAL_MS = parsePositiveInt(
   30_000, // 30 seconds default (was 2min — faster for backlog)
   10_000
 );
-export const CONTRACT_PACKET_AUTOLINK_INTERVAL_MS = 60 * 1000; // 60 seconds
 export const RENEWAL_INTERVAL_MS = 60 * 60 * 1000; // 1 hour
 export const GROUP_SYNC_INTERVAL_MS = 15 * 60 * 1000; // 15 minutes
 export const ACCOUNT_LINKING_INTERVAL_MS = parsePositiveInt(
   process.env.ACCOUNT_LINKING_INTERVAL_MS,
-  5 * 60 * 1000, // 5 minutes
-  60_000
+  30_000, // 30s — overlap-protected, pure SQL
+  5000
+);
+export const CONTACT_LINKING_INTERVAL_MS = parsePositiveInt(
+  process.env.CONTACT_LINKING_INTERVAL_MS,
+  30_000, // 30s — overlap-protected, SQL + local LLM
+  5000
+);
+export const CONTACT_ENRICHMENT_BATCH_SIZE = parsePositiveInt(
+  process.env.CONTACT_ENRICHMENT_BATCH_SIZE,
+  50 // granite4 is local and free, no reason to be stingy
 );
 export const MONDAY_STATUS_SYNC_ENABLED = parseBooleanFlag(
   process.env.MONDAY_STATUS_SYNC_ENABLED,
@@ -137,7 +150,7 @@ export const ESTIMATE_TRIAGE_MAX_ROWS = parsePositiveInt(
   4
 );
 export const ESTIMATE_TRIAGE_PROVIDER = (
-  process.env.ESTIMATE_TRIAGE_PROVIDER ?? "mistral"
+  process.env.ESTIMATE_TRIAGE_PROVIDER ?? "glm-ocr"
 ).trim();
 
 export const GEMINI_FAST_MODEL = (
@@ -168,10 +181,6 @@ export const ESTIMATE_FILE_SWEEP_BATCH_SIZE = parsePositiveInt(
   150
 );
 export const ESTIMATE_FILE_SWEEP_CURSOR_KEY = "estimate_file_sweep_offset_v1";
-
-// -- Contract packet autolink --
-
-export const CONTRACT_PACKET_AUTOLINK_BATCH_SIZE = 400;
 
 // -- Contract won bridge --
 

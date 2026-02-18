@@ -104,7 +104,7 @@ function getSortExpression(field: SortField): string {
     case "job_name":
       return "LOWER(COALESCE(q.job_name, ''))";
     case "client_name":
-      return "LOWER(COALESCE(q.client_name, ''))";
+      return "LOWER(COALESCE(q.contractor, ''))";
     case "total":
       return "COALESCE(cv.total, 0)";
     case "status":
@@ -140,7 +140,7 @@ export async function listEstimates(req: Request): Promise<Response> {
     if (query) {
       const like = `%${query}%`;
       conditions.push(
-        "(q.job_name ILIKE ? OR q.client_name ILIKE ? OR q.base_number ILIKE ? OR q.job_address ILIKE ?)"
+        "(q.job_name ILIKE ? OR q.contractor ILIKE ? OR q.base_number ILIKE ? OR q.job_address ILIKE ?)"
       );
       params.push(like, like, like, like);
     }
@@ -174,7 +174,7 @@ export async function listEstimates(req: Request): Promise<Response> {
             q.id,
             q.base_number,
             q.job_name,
-            q.client_name,
+            q.contractor as client_name,
             q.job_address,
             COALESCE(q.status, 'draft') as status,
             q.created_at,
@@ -276,8 +276,8 @@ async function insertEstimateHeader(params: {
   const { baseNumber, jobName, status, payload } = params;
 
   const insertResult = await db.run(
-    `INSERT INTO estimates (base_number, takeoff_id, name, job_name, job_address, client_name, client_address, client_email, client_phone, estimator, estimator_email, notes, status, is_locked)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `INSERT INTO estimates (base_number, takeoff_id, name, job_name, job_address, contractor, client_address, estimator, estimator_email, notes, status, is_locked)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
      RETURNING id`,
     [
       baseNumber,
@@ -287,8 +287,6 @@ async function insertEstimateHeader(params: {
       payload.job_address || null,
       payload.client_name || null,
       payload.client_address || null,
-      payload.client_email || null,
-      payload.client_phone || null,
       payload.estimator || null,
       payload.estimator_email || null,
       payload.notes || null,

@@ -23,6 +23,7 @@ import { linkEmailToEstimate } from "@lib/db/repositories/estimate-email";
 import { linkEmailToProject } from "@lib/db/repositories/project";
 
 // ── Signal extraction (shared with batch linker) ─────────────────────
+const ESTIMATE_SIGNAL_ID_RE = /estimate:(\d+)/;
 
 function uniq<T>(xs: T[]): T[] {
   return [...new Set(xs)];
@@ -135,6 +136,15 @@ const getProjectForEstimateLinks = db.query<{ project_id: number }, [number]>(
 const hasEstimateLink = db.query<{ cnt: string }, [number]>(
   "SELECT COUNT(*) AS cnt FROM estimate_emails WHERE email_id = ?"
 );
+
+const getProjectName = db.query<{ name: string }, [number]>(
+  "SELECT name FROM projects WHERE id = ?"
+);
+
+const getEstimateName = db.query<
+  { estimate_number: string | null; name: string | null },
+  [number]
+>("SELECT estimate_number, name FROM estimates WHERE id = ?");
 
 // ── Public API ───────────────────────────────────────────────────────
 
@@ -407,11 +417,43 @@ export async function linkEmail(emailId: number): Promise<LinkEmailResult> {
   };
   const haystack = buildHaystack(email);
 
+  const hadProject = email.project_id !== null;
+  const hadEstimate = state.hasEstimate;
+
   await applyConversationProjectSignal(email, emailId, state);
   await applyPulseSignal(haystack, emailId, state);
   await applyEstimateNumberSignal(haystack, email, emailId, state);
   await applyEstimateToProjectSignal(emailId, state);
   await applyProjectToSingleEstimateSignal(emailId, state);
+
+  // Log when we actually linked something new
+  if (state.signals.length > 0) {
+    const parts: string[] = [`email #${emailId}`];
+    const subjectSnippet = (email.subject ?? "").slice(0, 60);
+    if (subjectSnippet) {
+      parts.push(`"${subjectSnippet}"`);
+    }
+
+    if (!hadProject && state.projectId !== null) {
+      const proj = await getProjectName.get(state.projectId);
+      parts.push(`→ project #${state.projectId} (${proj?.name ?? "unknown"})`);
+    }
+
+    if (!hadEstimate && state.hasEstimate) {
+      // Find which estimate from the signals
+      const estSignal = state.signals.find((s) => s.includes("→estimate:"));
+      const estIdMatch = estSignal?.match(ESTIMATE_SIGNAL_ID_RE);
+      if (estIdMatch?.[1]) {
+        const est = await getEstimateName.get(Number(estIdMatch[1]));
+        parts.push(
+          `→ estimate #${estIdMatch[1]} (${est?.estimate_number ?? est?.name ?? "unknown"})`
+        );
+      }
+    }
+
+    parts.push(`[${state.signals.join(", ")}]`);
+    console.log(`[link-email] ${parts.join(" ")}`);
+  }
 
   return {
     projectLinked: state.projectId !== null,

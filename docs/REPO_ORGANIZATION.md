@@ -36,7 +36,7 @@ desert-services-hub/
       pdf-generation/       # PDF generation domain (library + CLI commands)
         src/pdf/            # PDF generation (estimate, SSSP, SDS, brand sheets)
         cli/                # CLI for PDF generation commands (safety, quoting, stormwater)
-      pdf-analysis-cli/     # PDF extraction with Gemini
+      pdf-analysis-py/     # PDF extraction with Gemini
     email/                  # Outlook sync, classification, automation, templates, notifications
       attachments/          # Default company docs (W-9, ROC license, subcontractor registration)
     estimates/              # Estimating domain: catalog, pricing, validation
@@ -78,13 +78,18 @@ desert-services-hub/
   supabase/
     migrations/             # Postgres migration files (applied in order)
 
+  tests/                    # Top-level test suite (mirrored by source path)
+    apps/                   # Tests for apps/*
+    lib/                    # Tests for lib/*
+    packages/               # Tests for packages/*
+
   docs/                     # Cross-domain documentation (no loose files at root)
     _archive/               # Legacy/archived materials (MinIO, old SOPs, onboarding)
     reference/              # Cross-domain standards and shared runbooks (domain docs are co-located)
 
   docker-compose.yml        # All Docker service definitions
   tsconfig.json             # TypeScript config with path aliases
-  biome.jsonc               # Linter and formatter configuration
+  biome.jsonc               # Ultracite lint configuration (shared rule config)
 ```
 
 ---
@@ -201,7 +206,6 @@ packages/<domain>/
     types.ts              # Domain types
   cli/                    # CLI commands -- human-operated escape hatches
   workers/                # Long-running processes (if any)
-  tests/                  # Tests
   docs/                   # Documentation
 ```
 
@@ -210,21 +214,29 @@ packages/<domain>/
 | `src/` | Core domain logic | `lib/db`, other packages' `src/` | Everything |
 | `cli/` | Manual operations | Own `src/`, `lib/db` | Nothing (entrypoints only) |
 | `workers/` | Docker container entrypoints | Own `src/`, `lib/db` | docker-compose.yml |
-| `tests/` | Test files | Own `src/`, own `cli/` | Test runner only |
+| `tests/` (top-level) | Test files in mirrored path (`tests/apps/*`, `tests/lib/*`, `tests/packages/*`) | Source modules via aliases | Test runner only |
 
 **The rule**: `src/` is the importable library. `cli/` and `workers/` are entrypoints
 that consume `src/`. Logic flows inward, never outward.
+
+### Test Placement (Mandatory)
+
+- Keep tests in top-level `tests/` only.
+- Mirror source path from repo root.
+- Example: `apps/web/api/estimates/estimates.test.ts` -> `tests/apps/web/api/estimates/estimates.test.ts`.
+- Do not add new tests under `apps/*`, `lib/*`, or `packages/*`.
+- Exception: permit runtime E2E/integration suite remains under `apps/dust-permits/tests/*`.
 
 ---
 
 ## Code Quality Standards
 
-### Enforced by Biome (biome.jsonc)
+### Enforced by Ultracite
 
 | Rule | Limit | Rationale |
 |------|-------|-----------|
 | Cognitive complexity | **20** per function (target: 15) | [SonarSource whitepaper](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) |
-| Lines per file | **300** | Forces modular decomposition |
+| Lines per file | **500** | Forces modular decomposition |
 
 ### Refactoring Techniques (for reducing complexity)
 
@@ -236,7 +248,7 @@ that consume `src/`. Logic flows inward, never outward.
 
 ### Naming Conventions
 
-- Package folders: kebab-case (`dust-permits`, `pdf-analysis-cli`)
+- Package folders: kebab-case (`dust-permits`, `pdf-analysis-py`)
 - TypeScript files: kebab-case (`sharepoint-sync.ts`, `intake-upload.ts`)
 - Python files: snake_case (`document_map.py`, `scanner.py`)
 - Classes: PascalCase (`SharePointClient`, `SwpppMasterClient`)
@@ -295,12 +307,11 @@ Each Docker service maps to an entrypoint in the codebase.
 | `accounts` | Projects | Contractor/company accounts |
 | `contacts` | Projects | People (email, phone, title) |
 | `emails` | Email | Synced Outlook emails (647K rows, ~5GB) |
-| `attachments` | Email | Email attachment metadata |
 | `estimates` | Estimates | Bid estimates from Monday.com |
 | `estimate_versions` | Estimates | Versioned estimate snapshots |
 | `estimate_line_items` | Estimates | Individual line items per version |
 | `dust_permits_filed_by_desert_services` | Permits | Maricopa dust permits |
-| `documents` | Documents | Parsed documents + extraction JSON |
+| `documents` | Documents | Unified file store (email attachments, monday assets, parsed docs) |
 | `notifications` | Email | Notification event log |
 | `webhook_jobs` | Infrastructure | Background job queue |
 | `swppp_work_orders` | SharePoint | SWPPP Master data (synced from SharePoint) |
@@ -315,6 +326,7 @@ Defined in `tsconfig.json`. These must be updated as packages migrate.
 | Alias | Path |
 |-------|------|
 | `@lib/*` | `lib/*` |
+| `@background-jobs/*` | `apps/background-jobs/*` |
 | `@sharepoint/*` | `packages/sharepoint/src/*` |
 | `@email/*` | `packages/email/src/*` |
 | `@monday/*` | `packages/monday/src/*` |
@@ -355,8 +367,8 @@ Python packages use UV with `pyproject.toml` per package. They can be run with `
 | Package | Path | Purpose |
 |---------|------|---------|
 | `narratives` | `packages/narratives/` | Environmental narrative generation |
-| `contracts` | `packages/contracts/review/` | Contract document analysis |
-| `pdf-analysis` | `packages/documents/pdf-analysis-cli/` | PDF extraction with Gemini |
+| `pdf-analysis` | `packages/documents/pdf-analysis-py/` | PDF extraction with Gemini |
+| `langextract` | `packages/documents/langextract/` | NER entity extraction (Google langextract library) |
 
 ---
 

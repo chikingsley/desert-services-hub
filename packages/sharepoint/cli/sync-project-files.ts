@@ -159,27 +159,29 @@ let queryParams: string[];
 
 if (notionId) {
   query = `
-    SELECT a.id, a.name, a.content_type, a.storage_bucket, a.storage_path, a.size,
+    SELECT d.id, d.file_name AS name, d.content_type, d.storage_bucket, d.storage_path, d.file_size AS size,
            e.subject, e.from_email, date(e.received_at) as email_date
-    FROM attachments a
-    JOIN emails e ON a.email_id = e.id
-    WHERE e.notion_project_id = ?
-      AND a.content_type LIKE '%pdf%'
-      AND a.storage_bucket IS NOT NULL
-      AND a.storage_path IS NOT NULL
+    FROM documents d
+    JOIN emails e ON d.email_id = e.id
+    WHERE d.source = 'email_attachment'
+      AND e.notion_project_id = ?
+      AND d.content_type LIKE '%pdf%'
+      AND d.storage_bucket IS NOT NULL
+      AND d.storage_path IS NOT NULL
     ORDER BY e.received_at ASC
   `;
   queryParams = [notionId];
 } else {
   query = `
-    SELECT a.id, a.name, a.content_type, a.storage_bucket, a.storage_path, a.size,
+    SELECT d.id, d.file_name AS name, d.content_type, d.storage_bucket, d.storage_path, d.file_size AS size,
            e.subject, e.from_email, date(e.received_at) as email_date
-    FROM attachments a
-    JOIN emails e ON a.email_id = e.id
-    WHERE e.subject LIKE ?
-      AND a.content_type LIKE '%pdf%'
-      AND a.storage_bucket IS NOT NULL
-      AND a.storage_path IS NOT NULL
+    FROM documents d
+    JOIN emails e ON d.email_id = e.id
+    WHERE d.source = 'email_attachment'
+      AND e.subject LIKE ?
+      AND d.content_type LIKE '%pdf%'
+      AND d.storage_bucket IS NOT NULL
+      AND d.storage_path IS NOT NULL
     ORDER BY e.received_at ASC
   `;
   queryParams = [`%${projectNameQuery}%`];

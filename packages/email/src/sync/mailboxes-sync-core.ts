@@ -2,8 +2,8 @@
  * Email mailbox sync core routines.
  */
 
+import type { GraphEmailClient } from "@email/client";
 import { htmlToText } from "@email/html-to-text";
-import type { GraphEmailClient } from "@email/index";
 import { isSpam } from "@email/spam-filter";
 import type { SyncProgress, SyncResult } from "@email/sync/config";
 import { db } from "@lib/db/hub";

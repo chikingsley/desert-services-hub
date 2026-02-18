@@ -4,11 +4,11 @@
  * Handles folder creation, file uploads, folder moves, and URL writeback.
  */
 
-import { updateItem } from "@monday/client";
+import { updateItem } from "@monday/client/search";
 import { FILE_COLUMNS } from "@monday/sync/helpers";
 import { downloadAsset, fetchAllColumnAssets } from "@monday/sync/monday-fetch";
 import type { Asset, EstimateProject } from "@monday/sync/types";
-import { BOARD_IDS, ESTIMATING_COLUMNS } from "@monday/types";
+import { BOARD_IDS, ESTIMATING_COLUMNS } from "@monday/types/schema";
 import type { SharePointClient } from "@sharepoint/client";
 import { CUSTOMER_PROJECTS_PATH } from "@sharepoint/paths";
 

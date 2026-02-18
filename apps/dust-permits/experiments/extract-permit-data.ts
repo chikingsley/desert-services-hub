@@ -102,7 +102,7 @@ function sleep(ms: number): Promise<void> {
 
 async function waitForFileProcessing(
   ai: GoogleGenAI,
-  fileName: string,
+  fileName: string
 ): Promise<{ uri: string; mimeType: string }> {
   let attempts = 0;
 
@@ -117,11 +117,15 @@ async function waitForFileProcessing(
     }
 
     if (file.state === "FAILED") {
-      throw new Error(`File processing failed: ${file.error?.message ?? "Unknown error"}`);
+      throw new Error(
+        `File processing failed: ${file.error?.message ?? "Unknown error"}`
+      );
     }
 
     attempts++;
-    console.log(`  File processing... (attempt ${attempts}/${MAX_POLL_ATTEMPTS})`);
+    console.log(
+      `  File processing... (attempt ${attempts}/${MAX_POLL_ATTEMPTS})`
+    );
     await sleep(POLL_INTERVAL_MS);
   }
 
@@ -132,7 +136,7 @@ async function extractWithRetry(
   ai: GoogleGenAI,
   fileUri: string,
   fileMimeType: string,
-  prompt: string,
+  prompt: string
 ): Promise<PermitData> {
   let lastError: Error | null = null;
 
@@ -211,7 +215,7 @@ async function extractPermitData(pdfPath: string): Promise<void> {
       ai,
       processedFile.uri,
       processedFile.mimeType,
-      EXTRACTION_PROMPT,
+      EXTRACTION_PROMPT
     );
 
     // Output results
@@ -224,7 +228,7 @@ async function extractPermitData(pdfPath: string): Promise<void> {
     console.log(`Address: ${data.siteAddress ?? "Not found"}`);
     console.log(`Owner: ${data.owner?.name ?? "Not found"}`);
     console.log(
-      `Acreage: ${data.siteData?.disturbedAcreage ?? data.siteData?.totalAcreage ?? "Not found"}`,
+      `Acreage: ${data.siteData?.disturbedAcreage ?? data.siteData?.totalAcreage ?? "Not found"}`
     );
     console.log(`APN: ${data.apn ?? "Not found"}`);
   } finally {
@@ -234,7 +238,10 @@ async function extractPermitData(pdfPath: string): Promise<void> {
         await ai.files.delete({ name: uploadedFileName });
         console.log("\nCleaned up uploaded file.");
       } catch (cleanupError) {
-        console.warn("Warning: Failed to clean up uploaded file:", cleanupError);
+        console.warn(
+          "Warning: Failed to clean up uploaded file:",
+          cleanupError
+        );
       }
     }
   }

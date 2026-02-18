@@ -1,6 +1,8 @@
 /**
  * Requeue attachment extraction failures that look retryable (parse/OCR path).
  *
+ * Operates on the unified `documents` table (source='email_attachment').
+ *
  * Default retry signal:
  *   "insufficient data left in message"
  *
@@ -47,13 +49,12 @@ export async function runRetryAttachmentFailedParse(
       `SELECT
          m.email,
          COUNT(*)::int AS retriable
-       FROM attachments a
-       JOIN emails e ON e.id = a.email_id
+       FROM documents d
+       JOIN emails e ON e.id = d.email_id
        JOIN mailboxes m ON m.id = e.mailbox_id
-       LEFT JOIN documents d ON d.attachment_id = a.id
-       WHERE a.extraction_status = 'failed'
-         AND d.id IS NULL
-         AND lower(COALESCE(a.extraction_error, '')) LIKE '%' || ? || '%'
+       WHERE d.source = 'email_attachment'
+         AND d.extraction_status = 'failed'
+         AND lower(COALESCE(d.extraction_error, '')) LIKE '%' || ? || '%'
          AND (? = '' OR lower(m.email) = ANY(string_to_array(?, ',')))
        GROUP BY m.email
        ORDER BY m.email`
@@ -79,32 +80,34 @@ export async function runRetryAttachmentFailedParse(
   }
 
   await db.run(
-    `UPDATE attachments a
+    `UPDATE documents d
      SET extraction_status = 'pending',
          extraction_error = NULL,
-         extracted_at = NULL
-     WHERE a.id IN (
-       SELECT a2.id
-       FROM attachments a2
-       JOIN emails e ON e.id = a2.email_id
-       JOIN mailboxes m ON m.id = e.mailbox_id
-       LEFT JOIN documents d ON d.attachment_id = a2.id
-       WHERE a2.extraction_status = 'failed'
-         AND d.id IS NULL
-         AND lower(COALESCE(a2.extraction_error, '')) LIKE '%' || ? || '%'
-         AND (? = '' OR lower(m.email) = ANY(string_to_array(?, ',')))
-     )`,
+         extracted_at = NULL,
+         updated_at = now()
+     WHERE d.source = 'email_attachment'
+       AND d.extraction_status = 'failed'
+       AND d.id IN (
+         SELECT d2.id
+         FROM documents d2
+         JOIN emails e ON e.id = d2.email_id
+         JOIN mailboxes m ON m.id = e.mailbox_id
+         WHERE d2.source = 'email_attachment'
+           AND d2.extraction_status = 'failed'
+           AND lower(COALESCE(d2.extraction_error, '')) LIKE '%' || ? || '%'
+           AND (? = '' OR lower(m.email) = ANY(string_to_array(?, ',')))
+       )`,
     [matchText, mailboxArg, mailboxArg]
   );
 
   const pendingRow = await db
-    .query<{ pending: number }, [string, string, string]>(
+    .query<{ pending: number }, [string, string]>(
       `SELECT COUNT(*)::int AS pending
-       FROM attachments a
-       JOIN emails e ON e.id = a.email_id
+       FROM documents d
+       JOIN emails e ON e.id = d.email_id
        JOIN mailboxes m ON m.id = e.mailbox_id
-       WHERE a.extraction_status = 'pending'
-         AND lower(COALESCE(a.extraction_error, '')) = ''
+       WHERE d.source = 'email_attachment'
+         AND d.extraction_status = 'pending'
          AND (? = '' OR lower(m.email) = ANY(string_to_array(?, ',')))`
     )
     .get(mailboxArg, mailboxArg);

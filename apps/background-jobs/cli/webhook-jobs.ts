@@ -6,12 +6,12 @@
  * Helper for inspecting and reprocessing rows in the `webhook_jobs` table.
  *
  * Usage:
- *   bun apps/webhooks/cli/webhook-jobs.ts list --limit 20
- *   bun apps/webhooks/cli/webhook-jobs.ts list --type dust_permit_payment
- *   bun apps/webhooks/cli/webhook-jobs.ts show 123
- *   bun apps/webhooks/cli/webhook-jobs.ts requeue 123 [--force] [--keep-attempts]
- *   bun apps/webhooks/cli/webhook-jobs.ts clone 123
- *   bun apps/webhooks/cli/webhook-jobs.ts latest dust_permit_payment
+ *   bun apps/background-jobs/cli/webhook-jobs.ts list --limit 20
+ *   bun apps/background-jobs/cli/webhook-jobs.ts list --type dust_permit_payment
+ *   bun apps/background-jobs/cli/webhook-jobs.ts show 123
+ *   bun apps/background-jobs/cli/webhook-jobs.ts requeue 123 [--force] [--keep-attempts]
+ *   bun apps/background-jobs/cli/webhook-jobs.ts clone 123
+ *   bun apps/background-jobs/cli/webhook-jobs.ts latest dust_permit_payment
  *
  * Notes:
  * - Re-running completed jobs can create duplicate notification drafts.
@@ -41,7 +41,7 @@ function usage(exitCode = 1): never {
   console.log("Webhook Jobs CLI");
   console.log("");
   console.log(
-    "Usage: bun apps/webhooks/cli/webhook-jobs.ts <command> [args] [--flags]"
+    "Usage: bun apps/background-jobs/cli/webhook-jobs.ts <command> [args] [--flags]"
   );
   console.log("");
   console.log("Commands:");
@@ -55,11 +55,13 @@ function usage(exitCode = 1): never {
   console.log("");
   console.log("Examples:");
   console.log(
-    "  bun apps/webhooks/cli/webhook-jobs.ts list --type dust_permit_payment --limit 10"
+    "  bun apps/background-jobs/cli/webhook-jobs.ts list --type dust_permit_payment --limit 10"
   );
-  console.log("  bun apps/webhooks/cli/webhook-jobs.ts show 1234");
-  console.log("  bun apps/webhooks/cli/webhook-jobs.ts clone 1234");
-  console.log("  bun apps/webhooks/cli/webhook-jobs.ts requeue 1234 --force");
+  console.log("  bun apps/background-jobs/cli/webhook-jobs.ts show 1234");
+  console.log("  bun apps/background-jobs/cli/webhook-jobs.ts clone 1234");
+  console.log(
+    "  bun apps/background-jobs/cli/webhook-jobs.ts requeue 1234 --force"
+  );
   process.exit(exitCode);
 }
 

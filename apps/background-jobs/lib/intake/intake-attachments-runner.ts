@@ -17,7 +17,7 @@ import type {
   IntakeAttachmentRow,
   IntakeAttachmentsOptions,
   IntakeAttachmentsResult,
-} from "./intake-attachments-types";
+} from "./types";
 
 const LOG = "[intake-attachments]";
 const BACKFILL_DIR = "/app/data/backfill";

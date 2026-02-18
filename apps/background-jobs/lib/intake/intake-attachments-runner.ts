@@ -3,8 +3,8 @@ import { join } from "node:path";
 import {
   extractWithKreuzberg,
   MIN_KREUZBERG_TEXT_LENGTH,
-} from "@documents/intake/files-intake-db";
-import { classifyDocument } from "@documents/intake/files-intake-processors";
+} from "@documents-intake/files-intake-db";
+import { classifyDocument } from "@documents-intake/files-intake-processors";
 import type { GraphEmailClient } from "@email/client";
 import type { GraphGroupsClient } from "@email/groups";
 import { createGraphClient } from "@email/sync/config";

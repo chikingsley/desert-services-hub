@@ -14,8 +14,8 @@ import type {
   CountMarker,
   PolygonAnnotation,
   PolylineAnnotation,
+  Scaled,
 } from "@takeoff/pdf-takeoff/types";
-import type { Scaled } from "@takeoff/pdf-takeoff/types";
 
 // Helper to create a Scaled point (only x1/y1 are used in calculations)
 function point(x: number, y: number, pageNumber = 1): Scaled {

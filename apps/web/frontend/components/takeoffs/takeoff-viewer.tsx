@@ -5,10 +5,11 @@ import { PdfLoader } from "@takeoff/pdf-takeoff/components/pdf-loader";
 import type { PdfHighlighterUtils } from "@takeoff/pdf-takeoff/contexts/pdf-highlighter-context";
 import { viewportPositionToScaled } from "@takeoff/pdf-takeoff/lib/coordinates";
 import type {
+  Scaled,
   TakeoffAnnotation,
   TakeoffToolType,
+  ViewportPosition,
 } from "@takeoff/pdf-takeoff/types";
-import type { Scaled, ViewportPosition } from "@takeoff/pdf-takeoff/types";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   attachAnnotationListeners,
@@ -279,6 +280,15 @@ export function TakeoffViewer({
     setCursorPosition(null);
   }, [activeTool, drawingPoints, activeItemId, activeColor, onAnnotationAdd]);
 
+  const handleCanvasKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLDivElement>) => {
+      if (e.key === "Escape") {
+        onToolClear();
+      }
+    },
+    [onToolClear]
+  );
+
   // Handle mouse move for live preview
   const handleMouseMove = useCallback(
     (e: React.MouseEvent) => {
@@ -413,14 +423,15 @@ export function TakeoffViewer({
   ]);
 
   return (
-    <div
+    <button
       aria-label="PDF takeoff canvas"
       className="takeoff-viewer relative h-full w-full"
       onClick={handlePdfClick}
       onDoubleClick={handlePdfDoubleClick}
+      onKeyDown={handleCanvasKeyDown}
       onMouseMove={handleMouseMove}
-      role="application"
       style={{ cursor: activeTool ? "crosshair" : "default" }}
+      type="button"
     >
       <PdfLoader
         beforeLoad={() => (
@@ -491,6 +502,6 @@ export function TakeoffViewer({
         }
         `}
       </style>
-    </div>
+    </button>
   );
 }

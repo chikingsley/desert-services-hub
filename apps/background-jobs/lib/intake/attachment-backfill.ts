@@ -2,7 +2,6 @@ import { mkdir, unlink } from "node:fs/promises";
 import { join } from "node:path";
 import type { GraphEmailClient } from "@email/client";
 import type { GraphGroupsClient } from "@email/groups";
-import { isSubjectCompatibleWithProject } from "@email/project-subject-guard";
 import { createGraphClient } from "@email/sync/config";
 import { createGroupsClient } from "@email/sync/groups-core/sync-group";
 import { db } from "@lib/db/hub";
@@ -13,12 +12,7 @@ import {
   extractWithKreuzberg,
   MIN_KREUZBERG_TEXT_LENGTH,
 } from "./files-intake-db";
-import {
-  classifyDocument,
-  runContractExtraction,
-  runEstimateExtraction,
-  runPermitExtraction,
-} from "./files-intake-processors";
+import { classifyDocument } from "./files-intake-processors";
 
 const LOG = "[attachment-backfill]";
 const BACKFILL_DIR = "/app/data/backfill";
@@ -212,37 +206,24 @@ type AttachmentOutcome =
 async function linkResultsToDocuments(
   results: Awaited<ReturnType<typeof processFilesIntake>>,
   att: UnprocessedAttachment
-): Promise<{ anySuccess: boolean; projectLinkSkipped: boolean }> {
+): Promise<{ anySuccess: boolean }> {
   let anySuccess = false;
-  let projectLinkSkipped = false;
 
   for (const r of results) {
     if (!r.documentId) {
       continue;
     }
 
-    let projectIdForDocument: number | null = att.project_id;
-    if (projectIdForDocument !== null) {
-      const compatible = await isSubjectCompatibleWithProject({
-        projectId: projectIdForDocument,
-        subject: att.subject ?? "",
-      });
-      if (!compatible) {
-        projectIdForDocument = null;
-        projectLinkSkipped = true;
-      }
-    }
-
     await updateDocumentBackfillLinks.run(
       r.documentId,
       att.email_id,
       att.graph_attachment_id,
-      projectIdForDocument
+      att.project_id
     );
     anySuccess = true;
   }
 
-  return { anySuccess, projectLinkSkipped };
+  return { anySuccess };
 }
 
 /**
@@ -297,32 +278,6 @@ async function downloadGroupAttachment(
 }
 
 /**
- * Dispatch Stage 2 structured extraction based on document type.
- * Non-throwing — logs errors but never fails the overall processing.
- */
-async function dispatchStage2(
-  documentId: number,
-  documentType: string,
-  text: string,
-  estimateId: number | null
-): Promise<void> {
-  switch (documentType) {
-    case "estimate":
-      if (estimateId) {
-        await runEstimateExtraction(documentId, estimateId, text);
-      }
-      break;
-    case "contract":
-      await runContractExtraction(documentId, text);
-      break;
-    case "noi":
-    case "permit":
-      await runPermitExtraction(documentId, text);
-      break;
-  }
-}
-
-/**
  * Delete a Monday asset file from disk after processing and null out local_path.
  * Also tries to remove the parent item directory if empty.
  */
@@ -356,7 +311,7 @@ async function cleanupMondayAssetFile(
 
 /**
  * Process a Monday asset document: read from local_path, extract text,
- * classify, and run Stage 2 extraction. Writes directly to the documents row.
+ * classify, and update the documents row in-place.
  */
 async function processMondayAsset(
   att: UnprocessedAttachment
@@ -398,63 +353,46 @@ async function processMondayAsset(
     return { type: "deduped" };
   }
 
-  try {
-    // Extract text via Kreuzberg
-    const extracted = await extractWithKreuzberg(filePath, {
-      minTextLength: MIN_KREUZBERG_TEXT_LENGTH,
-    });
+  // Extract text via Kreuzberg
+  const extracted = await extractWithKreuzberg(filePath, {
+    minTextLength: MIN_KREUZBERG_TEXT_LENGTH,
+  });
 
-    const finalContent = extracted.content;
+  const finalContent = extracted.content;
 
-    // Stage 1: Classify
-    const classified = await classifyDocument(
-      finalContent,
-      att.name,
-      columnHint
-    );
-    const documentType =
-      classified.document_type !== "unknown"
-        ? classified.document_type
-        : (columnHint ?? "unknown");
-    console.log(
-      `${LOG}   Classified "${att.name}" as ${documentType} (${(classified.confidence * 100).toFixed(0)}%)`
-    );
+  // Stage 1: Classify
+  const classified = await classifyDocument(finalContent, att.name, columnHint);
+  const documentType =
+    classified.document_type !== "unknown"
+      ? classified.document_type
+      : (columnHint ?? "unknown");
+  console.log(
+    `${LOG}   Classified "${att.name}" as ${documentType} (${(classified.confidence * 100).toFixed(0)}%)`
+  );
 
-    // Update the documents row in-place (monday_asset row already exists)
-    await db.run(
-      `UPDATE documents
-       SET document_type = $2,
-           summary = $3,
-           extraction_status = 'success',
-           extraction_attempts = extraction_attempts + 1,
-           last_attempted_at = now(),
-           extracted_at = now(),
-           updated_at = now()
-       WHERE id = $1`,
-      [att.attachment_id_pk, documentType, finalContent.slice(0, 10_000)]
-    );
+  // Update the documents row in-place (monday_asset row already exists)
+  await db.run(
+    `UPDATE documents
+     SET document_type = $2,
+         summary = $3,
+         extraction_status = 'success',
+         extraction_attempts = extraction_attempts + 1,
+         last_attempted_at = now(),
+         extracted_at = now(),
+         updated_at = now()
+     WHERE id = $1`,
+    [att.attachment_id_pk, documentType, finalContent.slice(0, 10_000)]
+  );
 
-    // Stage 2: Structured extraction
-    await dispatchStage2(
-      att.attachment_id_pk,
-      documentType,
-      finalContent,
-      att.estimate_id
-    );
-
-    console.log(`${LOG}   OK (monday): ${att.name} -> ${documentType}`);
-    // Clean up file on success — data is in raw_extraction, file can be re-downloaded if needed
-    await cleanupMondayAssetFile(filePath, att.attachment_id_pk);
-    return { type: "succeeded" };
-  } catch (error) {
-    // On failure, keep the file on disk for retry
-    throw error;
-  }
+  console.log(`${LOG}   OK (monday): ${att.name} -> ${documentType}`);
+  // Clean up file on success — data is in raw_extraction, file can be re-downloaded if needed
+  await cleanupMondayAssetFile(filePath, att.attachment_id_pk);
+  return { type: "succeeded" };
 }
 
 /**
  * Process an email attachment: download from Graph API, run through
- * processFilesIntake (Kreuzberg + classify), then Stage 2 extraction.
+ * processFilesIntake (Kreuzberg + classify).
  */
 async function processEmailAttachment(
   att: UnprocessedAttachment,
@@ -496,11 +434,20 @@ async function processEmailAttachment(
   const downloadFn =
     att.mailbox_email === IC_GROUP_EMAIL
       ? downloadGroupAttachment(att, groupClient)
-      : client.downloadAttachment(
-          att.message_id!,
-          att.graph_attachment_id!,
-          att.mailbox_email!
-        );
+      : (() => {
+          if (
+            !(att.message_id && att.graph_attachment_id && att.mailbox_email)
+          ) {
+            throw new Error(
+              "Missing message_id, graph_attachment_id, or mailbox_email"
+            );
+          }
+          return client.downloadAttachment(
+            att.message_id,
+            att.graph_attachment_id,
+            att.mailbox_email
+          );
+        })();
 
   const buffer = await Promise.race([
     downloadFn,
@@ -537,44 +484,11 @@ async function processEmailAttachment(
       forwarderEmail: att.mailbox_email ?? "",
     });
 
-    const { anySuccess, projectLinkSkipped } = await linkResultsToDocuments(
-      results,
-      att
-    );
+    const { anySuccess } = await linkResultsToDocuments(results, att);
 
     if (anySuccess) {
       await updateAttachmentExtraction(att.attachment_id_pk, "success");
-
-      // Stage 2: Structured extraction on each successful result
-      for (const r of results) {
-        if (r.documentId && r.documentType) {
-          const rawEx = await db
-            .query<
-              { raw_extraction: { text_content?: string } | null },
-              [number]
-            >("SELECT raw_extraction FROM documents WHERE id = $1")
-            .get(r.documentId);
-          const text =
-            ((rawEx?.raw_extraction as Record<string, unknown> | null)
-              ?.text_content as string) ?? "";
-          if (text.length > 0) {
-            await dispatchStage2(
-              r.documentId,
-              r.documentType,
-              text,
-              att.estimate_id
-            );
-          }
-        }
-      }
-
-      let projectSummary = "no project link";
-      if (att.project_id !== null) {
-        projectSummary = projectLinkSkipped
-          ? "project link skipped by subject guard"
-          : `project #${att.project_id}`;
-      }
-      console.log(`${LOG}   OK: ${att.name} -> ${projectSummary}`);
+      console.log(`${LOG}   OK: ${att.name}`);
       return { type: "succeeded" };
     }
 

@@ -14,7 +14,6 @@ import { processItemFiles } from "@monday/sync/pipeline";
 import { syncItem } from "@monday/sync/sync-item";
 import { PROJECT_SEED_STALE_DAYS } from "./config";
 import { processEmailNotification } from "./email-processing";
-import { startIntakePostProcessing } from "./intake-processing";
 import {
   EMAIL_NOTIFICATION_PAYLOAD_SCHEMA,
   INTAKE_PAYLOAD_SCHEMA,
@@ -170,8 +169,7 @@ export async function processEmailNotificationJob(
 
 export async function processIntakeJob(job: WebhookJob): Promise<void> {
   const payload = parseJobPayload(job, INTAKE_PAYLOAD_SCHEMA);
-  const results = await processFilesIntake(payload);
-  startIntakePostProcessing(results, payload);
+  await processFilesIntake(payload);
 }
 
 export async function processDustPermitPaymentJob(

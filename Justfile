@@ -91,10 +91,6 @@ docs-path-check:
 folder-size-check:
     @{{BUN}} run .github/scripts/check-folder-size.ts
 
-# Webhook Jobs: inspect / requeue background jobs in the `webhook_jobs` table.
-jobs *args:
-    @{{BUN}} apps/background-jobs/cli/webhook-jobs.ts {{args}}
-
 # Estimate-driven project seed lifecycle sync (create/update/promote/link/canonicalize).
 # Examples:
 #   just project-seed-sync

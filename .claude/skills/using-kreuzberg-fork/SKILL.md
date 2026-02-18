@@ -30,7 +30,7 @@ uv add "onnxruntime==1.24.1"
 uv sync
 ```
 
-For reproducible installs, replace `@main` with a commit SHA.
+For reproducible installs, keep the commit SHA pinned and update it intentionally when you want to roll forward.
 
 ## Local Project Install (Editable Path)
 

@@ -2,8 +2,8 @@
  * Files Intake — Per-Type Processors
  *
  * Individual file processors extracted from files-intake.ts:
- *   - PDF (Kreuzberg extraction, optional Kreuzberg OCR pass)
- *   - Images (Kreuzberg extraction, optional Kreuzberg OCR pass)
+ *   - PDF (Kreuzberg extraction)
+ *   - Images (Kreuzberg extraction)
  *   - Office documents (Kreuzberg native extraction)
  *   - Text files (direct read)
  *   - ZIP archives (extract + recursive processing)
@@ -14,22 +14,17 @@ import { join } from "node:path";
 import { runLocalLlmJsonPrompt } from "@background-jobs/lib/llm";
 import { extractFile } from "@kreuzberg/node";
 import {
-  type ContractsEmailIntakePayload,
-  type EmailMeta,
   extractWithKreuzberg,
   insertFileError,
   insertFileRecord,
   LOG,
   MIN_KREUZBERG_TEXT_LENGTH,
-  type ParseIntakeResult,
 } from "./files-intake-db";
-
-export type {
+import type {
   ContractsEmailIntakePayload,
   EmailMeta,
-  KreuzbergExtraction,
   ParseIntakeResult,
-} from "./files-intake-db";
+} from "./types";
 
 // ============================================================================
 // Stage 1: Document Classification (local LLM)
@@ -221,7 +216,6 @@ export async function processImage(
   try {
     const extracted = await extractWithKreuzberg(imagePath, {
       minTextLength: 1,
-      preferOcr: true,
     });
     const elapsed = Math.round(performance.now() - started);
 

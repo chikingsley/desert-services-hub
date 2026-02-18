@@ -1,5 +1,10 @@
 import { mkdir, unlink } from "node:fs/promises";
 import { join } from "node:path";
+import {
+  extractWithKreuzberg,
+  MIN_KREUZBERG_TEXT_LENGTH,
+} from "@documents/intake/files-intake-db";
+import { classifyDocument } from "@documents/intake/files-intake-processors";
 import type { GraphEmailClient } from "@email/client";
 import type { GraphGroupsClient } from "@email/groups";
 import { createGraphClient } from "@email/sync/config";
@@ -8,11 +13,6 @@ import { db } from "@lib/db/hub";
 import { updateAttachmentExtraction } from "@lib/db/repositories/attachment";
 import { COLUMN_HINTS } from "@monday/sync/pipeline-config";
 import { processFilesIntake } from "./files-intake";
-import {
-  extractWithKreuzberg,
-  MIN_KREUZBERG_TEXT_LENGTH,
-} from "./files-intake-db";
-import { classifyDocument } from "./files-intake-processors";
 import type {
   IntakeAttachmentRow,
   IntakeAttachmentsOptions,

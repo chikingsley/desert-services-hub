@@ -281,7 +281,7 @@ export function TakeoffViewer({
   }, [activeTool, drawingPoints, activeItemId, activeColor, onAnnotationAdd]);
 
   const handleCanvasKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLDivElement>) => {
+    (e: React.KeyboardEvent<HTMLButtonElement>) => {
       if (e.key === "Escape") {
         onToolClear();
       }

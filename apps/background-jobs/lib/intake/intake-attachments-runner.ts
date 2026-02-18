@@ -13,49 +13,17 @@ import {
   MIN_KREUZBERG_TEXT_LENGTH,
 } from "./files-intake-db";
 import { classifyDocument } from "./files-intake-processors";
+import type {
+  IntakeAttachmentRow,
+  IntakeAttachmentsOptions,
+  IntakeAttachmentsResult,
+} from "./intake-attachments-types";
 
-const LOG = "[attachment-backfill]";
+const LOG = "[intake-attachments]";
 const BACKFILL_DIR = "/app/data/backfill";
 const MAX_RETRY_ATTEMPTS = 3;
 const RETRY_COOLDOWN_HOURS = 6;
 const DOWNLOAD_TIMEOUT_MS = 10_000; // 10s max per Graph API download
-
-interface UnprocessedAttachment {
-  attachment_id_pk: number;
-  graph_attachment_id: string | null;
-  name: string;
-  content_type: string | null;
-  size: number | null;
-  source: string;
-  email_id: number | null;
-  message_id: string | null;
-  internet_message_id: string | null;
-  thread_id: string | null;
-  conversation_id: string | null;
-  project_id: number | null;
-  subject: string | null;
-  from_email: string | null;
-  mailbox_email: string | null;
-  monday_column_id: string | null;
-  estimate_id: number | null;
-  local_path: string | null;
-}
-
-export interface BackfillResult {
-  processed: number;
-  skipped: number;
-  deduped: number;
-  succeeded: number;
-  failed: number;
-  elapsedMs: number;
-  attachmentsPerMinute: number;
-  errors: string[];
-}
-
-export interface ProcessUnprocessedAttachmentsOptions {
-  batchSize?: number;
-  concurrency?: number;
-}
 
 /** Non-processable content types — calendar invites, embedded emails, crypto sigs */
 const SKIP_CONTENT_TYPES = new Set([
@@ -67,7 +35,7 @@ const SKIP_CONTENT_TYPES = new Set([
   "application/x-pkcs7-signature",
 ]);
 
-function shouldSkip(att: UnprocessedAttachment): boolean {
+function shouldSkip(att: IntakeAttachmentRow): boolean {
   const ct = att.content_type?.toLowerCase() ?? "";
   return SKIP_CONTENT_TYPES.has(ct);
 }
@@ -80,7 +48,7 @@ const IC_GROUP_ID = "962f9440-9bde-4178-b538-edc7f8d3ecce";
  * The document's own extraction_status tracks processing state.
  * emails/mailboxes are LEFT JOINed since monday_asset rows have no email_id.
  */
-const getUnprocessedAttachments = db.query<UnprocessedAttachment, [number]>(`
+const getIntakeAttachmentRows = db.query<IntakeAttachmentRow, [number]>(`
   SELECT
     d.id as attachment_id_pk,
     d.outlook_attachment_id as graph_attachment_id,
@@ -205,7 +173,7 @@ type AttachmentOutcome =
 
 async function linkResultsToDocuments(
   results: Awaited<ReturnType<typeof processFilesIntake>>,
-  att: UnprocessedAttachment
+  att: IntakeAttachmentRow
 ): Promise<{ anySuccess: boolean }> {
   let anySuccess = false;
 
@@ -236,7 +204,7 @@ async function linkResultsToDocuments(
  * /attachments/{id} endpoint that returns 403.
  */
 async function downloadGroupAttachment(
-  att: UnprocessedAttachment,
+  att: IntakeAttachmentRow,
   groupClient: GraphGroupsClient
 ): Promise<Buffer> {
   if (!att.conversation_id) {
@@ -314,7 +282,7 @@ async function cleanupMondayAssetFile(
  * classify, and update the documents row in-place.
  */
 async function processMondayAsset(
-  att: UnprocessedAttachment
+  att: IntakeAttachmentRow
 ): Promise<AttachmentOutcome> {
   const { existsSync } = await import("node:fs");
   const columnHint = att.monday_column_id
@@ -395,7 +363,7 @@ async function processMondayAsset(
  * processFilesIntake (Kreuzberg + classify).
  */
 async function processEmailAttachment(
-  att: UnprocessedAttachment,
+  att: IntakeAttachmentRow,
   client: GraphEmailClient,
   groupClient: GraphGroupsClient
 ): Promise<AttachmentOutcome> {
@@ -510,7 +478,7 @@ async function processEmailAttachment(
 }
 
 async function processOneAttachment(
-  att: UnprocessedAttachment,
+  att: IntakeAttachmentRow,
   client: GraphEmailClient,
   groupClient: GraphGroupsClient
 ): Promise<AttachmentOutcome> {
@@ -529,7 +497,7 @@ async function processOneAttachment(
 
 function tallyOutcome(
   outcome: PromiseSettledResult<AttachmentOutcome>,
-  result: BackfillResult
+  result: IntakeAttachmentsResult
 ): void {
   const o =
     outcome.status === "fulfilled"
@@ -560,14 +528,14 @@ function tallyOutcome(
   }
 }
 
-export async function processUnprocessedAttachments(
-  options: ProcessUnprocessedAttachmentsOptions = {}
-): Promise<BackfillResult> {
+export async function processIntakeAttachmentRows(
+  options: IntakeAttachmentsOptions = {}
+): Promise<IntakeAttachmentsResult> {
   const startedAt = Date.now();
   const batchSize = Math.max(1, options.batchSize ?? 100);
   const concurrency = Math.max(1, options.concurrency ?? 10);
 
-  const result: BackfillResult = {
+  const result: IntakeAttachmentsResult = {
     processed: 0,
     skipped: 0,
     deduped: 0,
@@ -578,7 +546,7 @@ export async function processUnprocessedAttachments(
     errors: [],
   };
 
-  const attachments = await getUnprocessedAttachments.all(batchSize);
+  const attachments = await getIntakeAttachmentRows.all(batchSize);
 
   if (attachments.length === 0) {
     result.elapsedMs = Date.now() - startedAt;

@@ -8,7 +8,6 @@
  *   - dispatch.ts     -- job type routing (processNextJob)
  *   - handlers.ts     -- job handler implementations
  *   - email-processing.ts -- Outlook webhook email handling
- *   - intake-processing.ts -- document linking, contract packets, SharePoint
  *   - permit-sync.ts  -- permit-worker coordination for payment flows
  */
 
@@ -17,10 +16,12 @@ import { pollMondayStatusSync } from "@background-jobs/workers/monday-status-syn
 import { pollFolderWatcher } from "@background-jobs/workers/outlook-folder-watcher/lib/poll";
 import { syncAll as syncSwpppMaster } from "../../packages/sharepoint/workers/swppp-master-poller/lib/sync";
 import {
+  ACCOUNT_LINKING_INTERVAL_MS,
   ATTACHMENT_BACKFILL_BATCH_SIZE,
   ATTACHMENT_BACKFILL_CONCURRENCY,
   ATTACHMENT_BACKFILL_INTERVAL_MS,
-  CONTRACT_PACKET_AUTOLINK_INTERVAL_MS,
+  CONTACT_ENRICHMENT_BATCH_SIZE,
+  CONTACT_LINKING_INTERVAL_MS,
   CONTRACT_WON_BRIDGE_ENABLED,
   CONTRACT_WON_BRIDGE_INTERVAL_MS,
   EMAIL_TRIAGE_BACKFILL_BATCH_SIZE,
@@ -47,24 +48,22 @@ import {
   SWPPP_MASTER_SYNC_INTERVAL_MS,
 } from "./jobs/config";
 import { getActiveJobCount, processNextJob } from "./jobs/dispatch";
-import { backfillContractPacketDocuments } from "./jobs/intake-processing";
-import { enqueueFullSyncIfMissing, requeueStale } from "./jobs/queue";
+import {
+  enqueueFullSyncIfMissing,
+  enqueueIfNotPending,
+  requeueStale,
+} from "./jobs/queue";
 import { runContractWonBridge } from "./lib/contracts/contract-won-bridge";
-import { processTriageBackfillBatch } from "./lib/email-triage/triage-backfill";
-import { runEstimateExtractionTriage } from "./lib/estimates/estimate-extraction-triage";
-import { processUnprocessedAttachments } from "./lib/intake/attachment-backfill";
+import { processIntakeAttachmentRows } from "./lib/intake/intake-attachments-runner";
 import {
   createDraftClientFromEnv,
-  createNotificationDraft,
   type NotificationDeliveryMode,
 } from "./lib/notifications/delivery";
+import { detectAllEvents } from "./lib/notifications/events";
 import {
-  detectAllEvents,
-  loadQueuedNotifications,
-  recordNotification,
-  updateNotificationStatus,
-} from "./lib/notifications/events";
-import { getStakeholders } from "./lib/notifications/stakeholders";
+  deliverNewEvents,
+  processQueuedNotifications,
+} from "./lib/notifications/notification-timer";
 
 // ============================================================================
 // Timer Registry
@@ -123,7 +122,7 @@ function clearAllTimers(): void {
 export async function startWorker(): Promise<void> {
   console.log("[worker] Starting background job processor");
   console.log(
-    `[worker] Poll interval: ${POLL_INTERVAL_MS}ms, max concurrency: ${MAX_CONCURRENT_JOBS}, Full sync: ${FULL_SYNC_INTERVAL_MS / 60_000}min, Folder watcher: ${FOLDER_WATCHER_INTERVAL_MS / 1000}s, Estimate linker backfill: ${ESTIMATE_LINKER_INTERVAL_MS / 1000}s, SWPPP master sync: ${SWPPP_MASTER_SYNC_INTERVAL_MS / 1000}s, Monday status sync: ${MONDAY_STATUS_SYNC_ENABLED ? `${MONDAY_STATUS_SYNC_INTERVAL_MS / 60_000}min` : "disabled"}, Estimate triage: ${ESTIMATE_TRIAGE_ENABLED ? `${ESTIMATE_TRIAGE_INTERVAL_MS / 1000}s (${ESTIMATE_TRIAGE_MAX_ROWS}/run via ${ESTIMATE_TRIAGE_PROVIDER || "mistral"})` : "disabled"}, Attachment backfill: ${ATTACHMENT_BACKFILL_INTERVAL_MS / 60_000}min (batch=${ATTACHMENT_BACKFILL_BATCH_SIZE}, concurrency=${ATTACHMENT_BACKFILL_CONCURRENCY}, scope=all), Contract packet autolink: ${CONTRACT_PACKET_AUTOLINK_INTERVAL_MS / 1000}s, Email triage backfill: ${EMAIL_TRIAGE_BACKFILL_ENABLED ? `${EMAIL_TRIAGE_BACKFILL_INTERVAL_MS / 1000}s (batch=${EMAIL_TRIAGE_BACKFILL_BATCH_SIZE}, concurrency=${EMAIL_TRIAGE_BACKFILL_CONCURRENCY})` : "disabled"}, Contract won bridge: ${CONTRACT_WON_BRIDGE_ENABLED ? `${CONTRACT_WON_BRIDGE_INTERVAL_MS / 1000}s` : "disabled"}`
+    `[worker] Poll interval: ${POLL_INTERVAL_MS}ms, max concurrency: ${MAX_CONCURRENT_JOBS}, Full sync: ${FULL_SYNC_INTERVAL_MS / 60_000}min, Folder watcher: ${FOLDER_WATCHER_INTERVAL_MS / 1000}s, Estimate linker backfill: ${ESTIMATE_LINKER_INTERVAL_MS / 1000}s, SWPPP master sync: ${SWPPP_MASTER_SYNC_INTERVAL_MS / 1000}s, Monday status sync: ${MONDAY_STATUS_SYNC_ENABLED ? `${MONDAY_STATUS_SYNC_INTERVAL_MS / 60_000}min` : "disabled"}, Estimate triage: ${ESTIMATE_TRIAGE_ENABLED ? `${ESTIMATE_TRIAGE_INTERVAL_MS / 1000}s (${ESTIMATE_TRIAGE_MAX_ROWS}/run via ${ESTIMATE_TRIAGE_PROVIDER || "mistral"})` : "disabled"}, Attachment backfill: ${ATTACHMENT_BACKFILL_INTERVAL_MS / 60_000}min (batch=${ATTACHMENT_BACKFILL_BATCH_SIZE}, concurrency=${ATTACHMENT_BACKFILL_CONCURRENCY}, scope=all), Email triage backfill: ${EMAIL_TRIAGE_BACKFILL_ENABLED ? `${EMAIL_TRIAGE_BACKFILL_INTERVAL_MS / 1000}s (batch=${EMAIL_TRIAGE_BACKFILL_BATCH_SIZE}, concurrency=${EMAIL_TRIAGE_BACKFILL_CONCURRENCY})` : "disabled"}, Contract won bridge: ${CONTRACT_WON_BRIDGE_ENABLED ? `${CONTRACT_WON_BRIDGE_INTERVAL_MS / 1000}s` : "disabled"}`
   );
 
   // Recover stale jobs from previous crashes
@@ -186,9 +185,15 @@ export async function startWorker(): Promise<void> {
     ESTIMATE_LINKER_INTERVAL_MS,
     async () => {
       const stats = await pollEstimateEmailLinker();
-      if (stats.processedEmails > 0 || stats.linksInserted > 0) {
+      if (
+        stats.processedEmails > 0 ||
+        stats.linksInserted > 0 ||
+        stats.conversationLinksInserted > 0 ||
+        stats.directProjectsStamped > 0 ||
+        stats.projectIdsBackfilled > 0
+      ) {
         console.log(
-          `[worker] Estimate linker: ${stats.linksInserted} linked, ${stats.projectsLinked} projects, ${stats.processedEmails} processed, ${stats.skippedNoSignal} no-signal`
+          `[worker] Estimate linker: ${stats.linksInserted} linked, ${stats.projectsLinked} projects, ${stats.processedEmails} processed, ${stats.skippedNoSignal} no-signal, conv=${stats.conversationLinksInserted}, direct-stamp=${stats.directProjectsStamped}, backfill=${stats.projectIdsBackfilled}`
         );
       }
     },
@@ -208,25 +213,19 @@ export async function startWorker(): Promise<void> {
     { runImmediately: true }
   );
 
-  // Estimate extraction triage -- classify failed rows and retry estimate-like docs.
+  // Estimate extraction triage -- enqueue LLM triage jobs into the queue
   if (ESTIMATE_TRIAGE_ENABLED) {
     registerTimer(
       "Estimate extraction triage",
       ESTIMATE_TRIAGE_INTERVAL_MS,
       async () => {
-        const result = await runEstimateExtractionTriage({
-          provider: ESTIMATE_TRIAGE_PROVIDER || "mistral",
-          maxRows: ESTIMATE_TRIAGE_MAX_ROWS,
-          includeNullNonPdf: true,
-          onlyUntaggedFailed: true,
-          log: (line) => console.log(`[worker] ${line}`),
-        });
-
-        if (result.candidateRows > 0) {
-          console.log(
-            `[worker] Estimate extraction triage summary: candidates=${result.candidateRows}, fixed=${result.fixedByRetry}, non_estimate=${result.markedNonEstimate}, non_pdf=${result.markedNonPdf}, unknown=${result.markedUnknown}, retry_failed=${result.retryStillFailed}, no_asset=${result.skippedNoAsset}`
-          );
-        }
+        await enqueueIfNotPending(
+          "estimate_triage",
+          JSON.stringify({
+            maxRows: ESTIMATE_TRIAGE_MAX_ROWS,
+            provider: ESTIMATE_TRIAGE_PROVIDER || "glm-ocr",
+          })
+        );
       },
       { runImmediately: true }
     );
@@ -237,7 +236,7 @@ export async function startWorker(): Promise<void> {
     "Attachment backfill",
     ATTACHMENT_BACKFILL_INTERVAL_MS,
     async () => {
-      const result = await processUnprocessedAttachments({
+      const result = await processIntakeAttachmentRows({
         batchSize: ATTACHMENT_BACKFILL_BATCH_SIZE,
         concurrency: ATTACHMENT_BACKFILL_CONCURRENCY,
       });
@@ -249,40 +248,23 @@ export async function startWorker(): Promise<void> {
     }
   );
 
-  // Email triage backfill -- classify unclassified emails via local Ollama LLM
+  // Email triage backfill -- enqueue LLM triage batch jobs into the queue
   if (EMAIL_TRIAGE_BACKFILL_ENABLED) {
     registerTimer(
       "Email triage backfill",
       EMAIL_TRIAGE_BACKFILL_INTERVAL_MS,
       async () => {
-        const result = await processTriageBackfillBatch({
-          batchSize: EMAIL_TRIAGE_BACKFILL_BATCH_SIZE,
-          concurrency: EMAIL_TRIAGE_BACKFILL_CONCURRENCY,
-          provider: "local",
-        });
-        if (result.fetched > 0) {
-          console.log(
-            `[worker] Email triage backfill: ${result.processed} ok, ${result.errors} errors, ${result.elapsedMs}ms`
-          );
-        }
+        await enqueueIfNotPending(
+          "email_triage_batch",
+          JSON.stringify({
+            batchSize: EMAIL_TRIAGE_BACKFILL_BATCH_SIZE,
+            concurrency: EMAIL_TRIAGE_BACKFILL_CONCURRENCY,
+            provider: "local",
+          })
+        );
       }
     );
   }
-
-  // Contract packet auto-link -- map contract-related documents into packet evidence rows.
-  registerTimer(
-    "Contract packet autolink",
-    CONTRACT_PACKET_AUTOLINK_INTERVAL_MS,
-    async () => {
-      const stats = await backfillContractPacketDocuments();
-      if (stats.linked > 0) {
-        console.log(
-          `[worker] Contract packet autolink: ${stats.linked} document(s) linked`
-        );
-      }
-    },
-    { runImmediately: true }
-  );
 
   // Contract won bridge -- classify contracts@ emails, link to projects,
   // mark estimates as Won in Postgres + Monday when real contracts arrive.
@@ -308,6 +290,51 @@ export async function startWorker(): Promise<void> {
     );
   }
 
+  // Account linking -- domain enrichment + platform extraction + 6-signal account linker
+  registerTimer("Account linking", ACCOUNT_LINKING_INTERVAL_MS, async () => {
+    const { enrichEmailDomains } = await import("@email/sync/enrichment");
+    const { processPlatformEmails } = await import(
+      "@email/sync/platform-extraction"
+    );
+    const { linkEmailsToAccounts } = await import("@email/sync/link-accounts");
+
+    await enrichEmailDomains();
+    await processPlatformEmails();
+    const stats = await linkEmailsToAccounts();
+
+    const totalLinked =
+      stats.linkedByPlatformDomain +
+      stats.linkedByForwardDomain +
+      stats.linkedByDirectDomain +
+      stats.linkedByNameLookup +
+      stats.linkedByAlias +
+      stats.linkedByConversation;
+
+    if (totalLinked > 0 || stats.accountsCreated > 0) {
+      console.log(
+        `[worker] Account linking: ${totalLinked} linked (platform=${stats.linkedByPlatformDomain}, forward=${stats.linkedByForwardDomain}, direct=${stats.linkedByDirectDomain}, name=${stats.linkedByNameLookup}, alias=${stats.linkedByAlias}, conversation=${stats.linkedByConversation}), ${stats.accountsCreated} accounts created`
+      );
+    }
+  });
+
+  // Contact linking -- SQL layers run inline, LLM enrichment enqueued
+  registerTimer("Contact linking", CONTACT_LINKING_INTERVAL_MS, async () => {
+    const { linkEmailsToContacts } = await import("@email/sync/link-contacts");
+    // Layers 1+2 (deterministic SQL linking + contact creation) — fast, no LLM
+    const stats = await linkEmailsToContacts({ skipEnrichment: true });
+    const totalLinked = stats.linkedFrom + stats.linkedTo + stats.linkedCc;
+    if (totalLinked > 0 || stats.contactsCreated > 0) {
+      console.log(
+        `[worker] Contact linking: ${totalLinked} linked (from=${stats.linkedFrom}, to=${stats.linkedTo}, cc=${stats.linkedCc}), ${stats.contactsCreated} contacts created`
+      );
+    }
+    // Layer 3 (LLM enrichment via granite4) — queued for dispatch
+    await enqueueIfNotPending(
+      "contact_enrichment",
+      JSON.stringify({ batchSize: CONTACT_ENRICHMENT_BATCH_SIZE })
+    );
+  });
+
   // Renew expiring Outlook subscriptions (every hour)
   registerTimer("Subscription renewal", RENEWAL_INTERVAL_MS, async () => {
     const { renewExpiring } = await import("@email/subscriptions");
@@ -322,7 +349,9 @@ export async function startWorker(): Promise<void> {
   // Periodic M365 group sync (internalcontracts@ etc)
   // Graph doesn't support app-only webhooks for group conversations, so we poll.
   registerTimer("Group sync", GROUP_SYNC_INTERVAL_MS, async () => {
-    const { syncAllGroups } = await import("@email/sync/groups");
+    const { syncAllGroups } = await import(
+      "@email/sync/groups-core/sync-group"
+    );
     const since = new Date(Date.now() - 24 * 60 * 60 * 1000); // last 24h
     const results = await syncAllGroups({ since });
     for (const r of results) {
@@ -378,93 +407,6 @@ export async function startWorker(): Promise<void> {
 // ============================================================================
 // Notification Poll Timer
 // ============================================================================
-
-async function processQueuedNotifications(
-  client: ReturnType<typeof createDraftClientFromEnv>,
-  maxEvents: number
-): Promise<number> {
-  const queued = await loadQueuedNotifications(maxEvents);
-  let processed = 0;
-
-  for (const queuedNotification of queued) {
-    const event = queuedNotification.event;
-    const stakeholders = await getStakeholders(event.eventType);
-
-    if (stakeholders.length === 0) {
-      await updateNotificationStatus(queuedNotification.id, "failed", {
-        error: "No active stakeholders configured for event type",
-      });
-      processed++;
-      continue;
-    }
-
-    try {
-      const draft = await createNotificationDraft({
-        client,
-        event,
-        stakeholders,
-        mailbox: NOTIFICATIONS_MAILBOX,
-      });
-      await updateNotificationStatus(queuedNotification.id, "drafted", {
-        draftId: draft.id,
-      });
-    } catch (err) {
-      await updateNotificationStatus(queuedNotification.id, "failed", {
-        error: (err as Error).message,
-      });
-    }
-    processed++;
-  }
-
-  return processed;
-}
-
-async function deliverNewEvents(
-  events: import("./lib/notifications/events").PendingEvent[],
-  deliveryMode: NotificationDeliveryMode,
-  draftClient: ReturnType<typeof createDraftClientFromEnv> | null
-): Promise<void> {
-  for (const event of events) {
-    const stakeholders = await getStakeholders(event.eventType);
-    const recipientList = stakeholders.map((s) => s.email).join(", ");
-
-    console.log(
-      `[worker]   [${event.eventType}] ${event.subject} → ${recipientList || "(no stakeholders)"}`
-    );
-
-    if (stakeholders.length === 0) {
-      await recordNotification(
-        event,
-        "failed",
-        undefined,
-        "No active stakeholders configured for event type"
-      );
-      continue;
-    }
-
-    if (deliveryMode === "log" || !draftClient) {
-      await recordNotification(event, "pending");
-      continue;
-    }
-
-    try {
-      const draft = await createNotificationDraft({
-        client: draftClient,
-        event,
-        stakeholders,
-        mailbox: NOTIFICATIONS_MAILBOX,
-      });
-      await recordNotification(event, "drafted", draft.id);
-    } catch (err) {
-      await recordNotification(
-        event,
-        "failed",
-        undefined,
-        (err as Error).message
-      );
-    }
-  }
-}
 
 function initNotificationTimer(): void {
   let deliveryMode: NotificationDeliveryMode = NOTIFICATIONS_DELIVERY_MODE;

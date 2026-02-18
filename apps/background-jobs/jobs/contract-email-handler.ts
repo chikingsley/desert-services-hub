@@ -5,12 +5,11 @@
  *   1. Classify the email as CONTRACT (mailbox_rule)
  *   2. Download attachments from Graph API and process through intake pipeline
  *
- * Reuses the attachment processing pattern from attachment-backfill.ts.
+ * Reuses the attachment processing pattern from intake-attachments-runner.ts.
  */
 
 import { mkdir, unlink } from "node:fs/promises";
 import { join } from "node:path";
-import { enrichContractDocumentsWithLangExtract } from "@background-jobs/lib/contracts/langextract";
 import { propagateDocumentProjectIds } from "@background-jobs/lib/documents/propagate-project-ids";
 import { processFilesIntake } from "@background-jobs/lib/intake/files-intake";
 import type { ContractEmailJobPayload } from "@background-jobs/lib/notifications/email-triggers";
@@ -23,7 +22,7 @@ const LOG = "[contract-email]";
 const WORK_DIR = "/app/data/contract-intake";
 
 // ============================================================================
-// Skip rules — same as attachment-backfill
+// Skip rules — same as intake-attachments-runner
 // ============================================================================
 
 const INLINE_IMAGE_PATTERNS = [
@@ -86,23 +85,26 @@ const classifyEmail = db.prepare(`
 `);
 
 const getAttachmentsForEmail = db.query<AttachmentRow, [number]>(`
-  SELECT id, attachment_id, name, content_type, size
-  FROM attachments
-  WHERE email_id = $1
-  ORDER BY name
+  SELECT id, outlook_attachment_id AS attachment_id, file_name AS name, content_type, file_size AS size
+  FROM documents
+  WHERE source = 'email_attachment'
+    AND email_id = $1
+  ORDER BY file_name
 `);
 
 const updateDocumentLinks = db.prepare(`
   UPDATE documents
   SET email_id = $2,
-      attachment_id = $3
+      outlook_attachment_id = $3,
+      updated_at = now()
   WHERE id = $1
 `);
 
-const listDocumentIdsByAttachment = db.query<{ id: number }, [number]>(
+const listDocumentIdsByAttachment = db.query<{ id: number }, [string]>(
   `SELECT id
    FROM documents
-   WHERE attachment_id = $1
+   WHERE outlook_attachment_id = $1
+     AND source = 'parsed'
    ORDER BY id DESC`
 );
 
@@ -151,14 +153,18 @@ async function processOneContractAttachment(
     let anySuccess = false;
     for (const r of results) {
       if (r.documentId) {
-        await updateDocumentLinks.run(r.documentId, ctx.emailId, att.id);
+        await updateDocumentLinks.run(
+          r.documentId,
+          ctx.emailId,
+          att.attachment_id
+        );
         anySuccess = true;
       }
     }
 
     if (anySuccess) {
       await updateAttachmentExtraction(att.id, "success");
-      const docs = await listDocumentIdsByAttachment.all(att.id);
+      const docs = await listDocumentIdsByAttachment.all(att.attachment_id);
       console.log(`${LOG}   OK: ${att.name}`);
       return {
         status: "succeeded",
@@ -272,7 +278,6 @@ export async function processContractEmailJob(
   );
 
   if (createdDocumentIds.length > 0) {
-    await enrichContractDocumentsWithLangExtract(createdDocumentIds);
     await propagateDocumentProjectIds();
   }
 }

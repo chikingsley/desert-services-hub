@@ -9,10 +9,14 @@
  *   - Other → metadata-only storage
  *
  * This module replaces processContractsEmailIntake as the main entry point
- * for the files_intake job type.
+ * for the intake job type.
  */
 
-import type { EmailMeta } from "./files-intake-processors";
+import type {
+  ContractsEmailIntakePayload,
+  EmailMeta,
+  ParseIntakeResult,
+} from "./files-intake-db";
 import {
   processImage,
   processOfficeDocument,
@@ -20,16 +24,11 @@ import {
   processTextFile,
   processZipFile,
 } from "./files-intake-processors";
-import type {
-  ContractsEmailIntakePayload as ContractsEmailIntakePayloadType,
-  ParseIntakeResult as ParseIntakeResultType,
-} from "./parse-intake";
 
-// Re-export types so worker.ts can import from here
 export type {
   ContractsEmailIntakePayload,
   ParseIntakeResult,
-} from "./parse-intake";
+} from "./files-intake-db";
 
 // ============================================================================
 // File Category Detection
@@ -102,7 +101,7 @@ const insertUnsupported = db.prepare(`
 async function processUnsupported(
   filePath: string,
   emailMeta: EmailMeta
-): Promise<ParseIntakeResultType> {
+): Promise<ParseIntakeResult> {
   const fileName = filePath.split("/").pop() ?? filePath;
 
   const row = (await insertUnsupported.get(
@@ -131,8 +130,8 @@ async function processUnsupported(
 const LOG = "[files-intake]";
 
 export async function processFilesIntake(
-  payload: ContractsEmailIntakePayloadType
-): Promise<ParseIntakeResultType[]> {
+  payload: ContractsEmailIntakePayload
+): Promise<ParseIntakeResult[]> {
   const { attachmentPaths, originalSubject, originalFrom, forwarderEmail } =
     payload;
 
@@ -176,7 +175,7 @@ export async function processFilesIntake(
     forwarderEmail: forwarderEmail ?? "",
   };
 
-  const results: ParseIntakeResultType[] = [];
+  const results: ParseIntakeResult[] = [];
 
   // Process PDFs via Kreuzberg
   for (const pdfPath of pdfs) {

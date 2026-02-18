@@ -14,8 +14,8 @@ Scope boundary:
 ## Runtime Sources of Truth
 
 - `docker-compose.yml`
-- `apps/web/webhooks.ts`
-- `apps/web/worker.ts`
+- `apps/background-jobs/webhooks.ts`
+- `apps/background-jobs/worker.ts`
 - `Justfile`
 
 ## Runtime Topology
@@ -39,9 +39,10 @@ Scope boundary:
 ### In-Process Worker Modules
 
 Loaded by `apps/background-jobs/worker.ts`:
-- Intake processing: `apps/background-jobs/lib/files-intake.ts`
+- Intake processing: `apps/background-jobs/lib/intake/files-intake.ts`
 - Attachment backfill: `apps/background-jobs/lib/attachment-backfill.ts`
 - Estimate extraction triage: `apps/background-jobs/lib/estimate-extraction-triage.ts`
+- Contract won bridge: `apps/background-jobs/lib/contracts/contract-won-bridge.ts` (every 2 min)
 - Folder watcher poll: `apps/background-jobs/workers/outlook-folder-watcher/lib/poll.ts`
 - Estimate linker poll: `apps/background-jobs/workers/estimate-email-linker/lib/poll.ts`
 - SWPPP master poll: `packages/sharepoint/workers/swppp-master-poller/lib/sync.ts`
@@ -51,29 +52,32 @@ Loaded by `apps/background-jobs/worker.ts`:
 ### Intake Flow (canonical)
 
 1. `intake-worker` receives inbound forwarded email.
-2. Worker POSTs to `apps/web/api/webhooks/intake.ts` (`/api/webhooks/intake`).
+2. Worker POSTs to `apps/background-jobs/api/webhooks/intake.ts` (`/api/webhooks/intake`).
 3. Webhooks service enqueues `job_type=intake`.
-4. `apps/web/jobs/dispatch.ts` dispatches to `processFilesIntake`.
-
-Compatibility still active:
-- Alias webhook routes in `apps/web/webhooks.ts`: `/api/webhooks/files-intake`, `/api/webhooks/contracts-intake`
-- Alias job types in `apps/web/jobs/dispatch.ts`: `files_intake`, `contracts_email_intake`
+4. `apps/background-jobs/jobs/dispatch.ts` dispatches to `processIntakeJob`.
 
 ### Outlook Email Linking Flow
 
-1. Outlook notifications hit `apps/web/api/webhooks/outlook.ts`.
+1. Outlook notifications hit `apps/background-jobs/api/webhooks/outlook.ts`.
 2. Jobs enqueue as `email_notification`.
-3. `apps/web/jobs/dispatch.ts` processes inserts/attachments.
+3. `apps/background-jobs/jobs/dispatch.ts` processes inserts/attachments.
 4. Periodic enrichment runs via folder watcher + estimate linker timers.
 
 ### Monday Sync Flow
 
-- `apps/web/api/webhooks/monday.ts` receives Monday events (`sync_item`, `download_files`).
-- Periodic `sync_full` runs from `apps/web/jobs/dispatch.ts`.
+- `apps/background-jobs/api/webhooks/monday.ts` receives Monday events (`sync_item`, `download_files`).
+- Periodic `sync_full` runs from `apps/background-jobs/jobs/dispatch.ts`.
 
 ### Permit Email Notification Flow
 
-- Dust permit payment/issued triggers are processed in `apps/web/jobs/dispatch.ts` via notification handlers.
+- Dust permit payment/issued triggers are processed in `apps/background-jobs/jobs/dispatch.ts` via notification handlers.
+
+### Contract Won Bridge Flow
+
+1. `contracts@` email arrives → intake → document extraction → stored in `documents`.
+2. `contract_doc_extract` job (Pass 1.5) runs LLM field extraction + langextract NER.
+3. Bridge runs every 2 min: classify → link by subject → link by LLM fields → backfill → mark Won → mark Not Awarded.
+4. Winning estimate triggers `estimate_won` notification flow.
 
 ## Operational Checks
 
@@ -84,73 +88,20 @@ Compatibility still active:
 
 ## Code-Confirmed Gaps (Current)
 
-- Intake aliases are still supported for compatibility; full alias retirement is not yet complete.
 - Takeoff SharePoint migration is partially implemented and still needs closeout validation:
   - `apps/web/api/upload.ts` now uploads PDFs to SharePoint and persists `sharepoint://` references.
   - `apps/web/api/takeoffs-by-id.ts` now serves PDF bytes from SharePoint.
   - End-to-end validation and closure work remains tracked in `PEA-61`.
 
-## Actionable Backlog (Linear)
+## Active Gaps
 
-As of 2026-02-13, sourced from open issues in team `Peacockery`.
+- Takeoff SharePoint migration partially implemented (`apps/web/api/upload.ts`, `apps/web/api/takeoffs-by-id.ts`); end-to-end validation remains (`PEA-61`).
+- DocuSign Intake Automation: deterministic sandbox harness + intake/project linkage integration pending (`PEA-47`–`PEA-50`).
+- OCR benchmarking + pluggable OCR backend gating not yet enforced (`PEA-56`–`PEA-60`).
 
-### Track A — Contract Intake Queue v1
+## Next Workspaces
 
-Project: `Contract Intake Queue v1`
+See design docs for the two main UI gaps:
 
-In progress:
-- `PEA-17` (required estimate linking workflow)
-
-Todo queue:
-- `PEA-14`, `PEA-15`, `PEA-16`, `PEA-18`, `PEA-19`, `PEA-20`, `PEA-21`, `PEA-22`, `PEA-23`
-
-Execution next:
-1. Finish `PEA-17`.
-2. Deliver backend contract + state model (`PEA-14`, `PEA-22`).
-3. Ship triage UI + required actions (`PEA-15`, `PEA-16`, `PEA-18`, `PEA-19`, `PEA-20`).
-4. Close with audit/runbook (`PEA-21`, `PEA-23`).
-
-### Track B — DocuSign Intake Automation
-
-Project: `DocuSign Intake Automation`
-
-Open issues:
-- `PEA-47`, `PEA-48`, `PEA-49`, `PEA-50`
-
-Execution next:
-1. Build deterministic sandbox harness (`PEA-47`).
-2. Harden retrieval reliability (`PEA-48`).
-3. Integrate with canonical intake/project linkage (`PEA-49`).
-4. Add observability + runbook (`PEA-50`).
-
-### Track C — OCR / PDF Extraction Roadmap
-
-Project: `Kreuzberg PDF Extraction Roadmap (30/60/90)`
-
-Open issues:
-- `PEA-56`, `PEA-57`, `PEA-58`, `PEA-59`, `PEA-60`
-
-Execution next:
-1. Ship benchmark + gating baseline (`PEA-56`).
-2. Land pluggable OCR backends (`PEA-57`, `PEA-58`, `PEA-60`).
-3. Enforce repo hardening gates (`PEA-59`).
-
-### Track D — SWPPP ↔ Projects Unification
-
-Project: `SWPPP Scheduling ↔ Projects Unification`
-
-Open issues:
-- `PEA-34`, `PEA-35`, `PEA-36`, `PEA-37`, `PEA-38`, `PEA-39`, `PEA-40`, `PEA-41`
-
-Execution next:
-1. Stabilize matching and reconciliation queue (`PEA-34`, `PEA-35`).
-2. Run historical backfill + audit (`PEA-36`).
-3. Expand context graph and ops workflow (`PEA-37`, `PEA-38`, `PEA-39`, `PEA-41`).
-
-### Track E — Takeoff SharePoint Migration
-
-- `PEA-61` (in progress): backend migration landed for `apps/web/api/upload.ts` and `apps/web/api/takeoffs-by-id.ts`; remaining work is end-to-end validation, fallback verification, and closeout.
-
-## Recently Completed Baseline
-
-Project `Contracts Worker Deprecation & Runtime Audit` is completed; its execution issues are done (`PEA-24`, `PEA-25`, `PEA-26`, `PEA-27`, `PEA-29`, `PEA-30`, `PEA-31`, `PEA-32`, `PEA-51`, `PEA-52`, `PEA-53`, `PEA-54`).
+- `docs/contract-review-workspace.md` — queue + entity viewer + GC response/internal handoff
+- `docs/project-operations-dashboard.md` — project-centric view of emails, docs, permits, SWPPP, estimates

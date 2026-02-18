@@ -2,7 +2,7 @@
  * Job dispatch — dequeue jobs and route to the appropriate handler.
  */
 
-import { MAX_CONCURRENT_JOBS } from "./config";
+import { MAX_CONCURRENT_JOBS, MAX_LLM_CONCURRENT_JOBS } from "./config";
 import {
   processContractEmailReceivedJob,
   processDownloadFilesJob,
@@ -13,11 +13,26 @@ import {
   processSyncFullJob,
   processSyncItemJob,
 } from "./handlers";
-import { completeJob, dequeue, failJob, type WebhookJob } from "./queue";
+import {
+  completeJob,
+  dequeue,
+  failJob,
+  parseJobPayload,
+  type WebhookJob,
+} from "./queue";
+
+// -- LLM concurrency lane --
+
+const LLM_JOB_TYPES = new Set([
+  "contact_enrichment",
+  "email_triage_batch",
+  "estimate_triage",
+]);
 
 // -- State --
 
 let activeJobs = 0;
+let activeLlmJobs = 0;
 
 export function getActiveJobCount(): number {
   return activeJobs;
@@ -32,14 +47,22 @@ export async function processNextJob(): Promise<void> {
 
   activeJobs += 1;
   let job: WebhookJob | null = null;
+  let isLlm = false;
   try {
-    job = await dequeue();
+    job = await dequeue({
+      excludeLlmTypes: activeLlmJobs >= MAX_LLM_CONCURRENT_JOBS,
+    });
     if (!job) {
       return;
     }
 
+    isLlm = LLM_JOB_TYPES.has(job.job_type);
+    if (isLlm) {
+      activeLlmJobs += 1;
+    }
+
     console.log(
-      `[worker] Processing job #${job.id}: ${job.job_type} (attempt ${job.attempts})`
+      `[worker] Processing job #${job.id}: ${job.job_type} (attempt ${job.attempts})${isLlm ? " [LLM]" : ""}`
     );
 
     switch (job.job_type) {
@@ -59,8 +82,6 @@ export async function processNextJob(): Promise<void> {
         await processEmailNotificationJob(job);
         break;
 
-      case "files_intake":
-      case "contracts_email_intake":
       case "intake":
         await processIntakeJob(job);
         break;
@@ -79,13 +100,65 @@ export async function processNextJob(): Promise<void> {
 
       case "contract_doc_extract": {
         const { processContractDocExtractJob } = await import(
-          "../lib/contracts/contract-won-bridge"
+          "@background-jobs/lib/contracts/contract-doc-extract-queue"
         );
         const extractPayload = JSON.parse(job.payload) as {
           email_id: number;
           doc_id: number;
         };
         await processContractDocExtractJob(extractPayload);
+        break;
+      }
+
+      case "contact_enrichment": {
+        const { CONTACT_ENRICHMENT_PAYLOAD_SCHEMA } = await import(
+          "./job-schemas"
+        );
+        const payload = parseJobPayload(job, CONTACT_ENRICHMENT_PAYLOAD_SCHEMA);
+        const { enrichContacts } = await import("@email/sync/link-contacts");
+        const result = await enrichContacts(payload.batchSize);
+        if (result.enriched > 0 || result.errors > 0) {
+          console.log(
+            `[worker] Contact enrichment: ${result.enriched} enriched, ${result.errors} errors`
+          );
+        }
+        break;
+      }
+
+      case "email_triage_batch": {
+        const { EMAIL_TRIAGE_BATCH_PAYLOAD_SCHEMA } = await import(
+          "./job-schemas"
+        );
+        const payload = parseJobPayload(job, EMAIL_TRIAGE_BATCH_PAYLOAD_SCHEMA);
+        const { processTriageBackfillBatch } = await import(
+          "@background-jobs/lib/email-triage/triage-backfill"
+        );
+        const result = await processTriageBackfillBatch(payload);
+        if (result.fetched > 0) {
+          console.log(
+            `[worker] Email triage batch: ${result.processed} ok, ${result.errors} errors, ${result.elapsedMs}ms`
+          );
+        }
+        break;
+      }
+
+      case "estimate_triage": {
+        const { ESTIMATE_TRIAGE_PAYLOAD_SCHEMA } = await import(
+          "./job-schemas"
+        );
+        const payload = parseJobPayload(job, ESTIMATE_TRIAGE_PAYLOAD_SCHEMA);
+        const { runEstimateExtractionTriage } = await import(
+          "@background-jobs/lib/estimates/estimate-extraction-triage"
+        );
+        const result = await runEstimateExtractionTriage({
+          maxRows: payload.maxRows,
+          log: (line) => console.log(`[worker] ${line}`),
+        });
+        if (result.candidateRows > 0) {
+          console.log(
+            `[worker] Estimate triage: candidates=${result.candidateRows}, reset=${result.resetToPending}, non_pdf=${result.markedNonPdf}, no_asset=${result.skippedNoAsset}`
+          );
+        }
         break;
       }
 
@@ -106,6 +179,9 @@ export async function processNextJob(): Promise<void> {
       console.error(`[worker] Job processing error: ${msg}`);
     }
   } finally {
+    if (isLlm) {
+      activeLlmJobs -= 1;
+    }
     activeJobs -= 1;
   }
 }

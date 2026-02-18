@@ -49,13 +49,6 @@ export async function ocrWithPdfAnalysisService(
   }
 }
 
-/**
- * Backward-compatible alias while call sites are being updated.
- */
-export async function ocrWithPdfAnalysisCli(pdfPath: string): Promise<string> {
-  return ocrWithPdfAnalysisService(pdfPath);
-}
-
 // ============================================================================
 // Types
 // ============================================================================

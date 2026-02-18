@@ -169,12 +169,6 @@ export async function processEmailNotificationJob(
 }
 
 export async function processIntakeJob(job: WebhookJob): Promise<void> {
-  if (job.job_type !== "intake") {
-    console.warn(
-      `[worker] Deprecated intake alias job_type \`${job.job_type}\` encountered; canonical type is \`intake\`.`
-    );
-  }
-
   const payload = parseJobPayload(job, INTAKE_PAYLOAD_SCHEMA);
   const results = await processFilesIntake(payload);
   startIntakePostProcessing(results, payload);

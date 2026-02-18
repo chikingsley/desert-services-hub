@@ -31,10 +31,6 @@ check:
 services-install:
     @echo "No user systemd pollers to install. Pollers run as Docker Compose services."
 
-# Legacy no-op alias.
-services-enable-only:
-    @just services-install
-
 services-status:
     @docker compose ps background-jobs
 
@@ -97,7 +93,7 @@ folder-size-check:
 
 # Webhook Jobs: inspect / requeue background jobs in the `webhook_jobs` table.
 jobs *args:
-    @{{BUN}} apps/web/cli/webhook-jobs.ts {{args}}
+    @{{BUN}} apps/background-jobs/cli/webhook-jobs.ts {{args}}
 
 # Estimate-driven project seed lifecycle sync (create/update/promote/link/canonicalize).
 # Examples:

@@ -34,13 +34,6 @@ const server = serve({
     "/api/webhooks/intake": {
       POST: handler(handleIntakeWebhook),
     },
-    // Backward compat aliases (old CF Workers may still POST here)
-    "/api/webhooks/files-intake": {
-      POST: handler(handleIntakeWebhook),
-    },
-    "/api/webhooks/contracts-intake": {
-      POST: handler(handleIntakeWebhook),
-    },
   },
 
   fetch() {

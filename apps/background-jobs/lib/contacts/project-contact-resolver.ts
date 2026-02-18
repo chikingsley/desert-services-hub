@@ -32,7 +32,7 @@ import type {
   ProjectContactResolutionResult,
   ProjectEstimateRow,
   ResolveProjectContactsOptions,
-} from "./project-contact-types";
+} from "./types";
 import {
   clampConfidence,
   DEFAULT_CREATE_THRESHOLD,
@@ -41,7 +41,7 @@ import {
   normalizeName,
   normalizePhone,
   titleCaseFromLocalPart,
-} from "./project-contact-types";
+} from "./types";
 
 // ============================================================================
 // Helpers

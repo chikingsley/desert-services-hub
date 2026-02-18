@@ -11,7 +11,7 @@ import type {
   EstimateMatchDecision as EstimateMatchDecisionInternal,
   EstimateMatchHintInput as EstimateMatchHintInputInternal,
   EstimateMatchReason as EstimateMatchReasonInternal,
-} from "@lib/db/repositories/estimate-email-matching-types";
+} from "@lib/db/repositories/types";
 import { likeSearch } from "@lib/db/search";
 
 /**

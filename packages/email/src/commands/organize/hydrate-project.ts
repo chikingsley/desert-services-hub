@@ -16,7 +16,7 @@ import {
 import type {
   HydrateProjectOptions,
   HydrateProjectStats,
-} from "./hydrate-types";
+} from "./types";
 import {
   getMailboxByUser,
   getTrackedFolderForProject,

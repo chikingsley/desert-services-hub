@@ -7,37 +7,18 @@
  */
 
 import type { EmailClassification } from "@lib/db/types";
-import type { TriageResult, TriageSubcategory } from "./triage-types";
+import {
+  TRIAGE_CATEGORIES,
+  TRIAGE_SUBCATEGORIES,
+  type TriageSubcategory,
+} from "./triage-taxonomy";
+import type { TriageResult } from "./types";
 
 // ── Valid values ────────────────────────────────────────────
 
-const VALID_CATEGORIES = new Set<string>([
-  "CONTRACT",
-  "DUST_PERMIT",
-  "SWPPP",
-  "ESTIMATE",
-  "INSURANCE",
-  "INVOICE",
-  "PAYMENT",
-  "HR",
-  "IT",
-  "SCHEDULE",
-  "CHANGE_ORDER",
-  "INTERNAL",
-  "VENDOR",
-  "SPAM",
-  "UNKNOWN",
-]);
+const VALID_CATEGORIES = new Set<string>(TRIAGE_CATEGORIES);
 
-const VALID_SUBCATEGORIES = new Set<string>([
-  "payment_confirmation",
-  "permit_issued",
-  "permit_filed",
-  "new_contract",
-  "contract_revision",
-  "estimate_inquiry",
-  "general",
-]);
+const VALID_SUBCATEGORIES = new Set<string>(TRIAGE_SUBCATEGORIES);
 
 // ── Parser ──────────────────────────────────────────────────
 

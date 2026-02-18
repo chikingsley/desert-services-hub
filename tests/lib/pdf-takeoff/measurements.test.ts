@@ -14,7 +14,7 @@ import type {
   CountMarker,
   PolygonAnnotation,
   PolylineAnnotation,
-} from "@takeoff/pdf-takeoff/takeoff-types";
+} from "@takeoff/pdf-takeoff/types";
 import type { Scaled } from "@takeoff/pdf-takeoff/types";
 
 // Helper to create a Scaled point (only x1/y1 are used in calculations)

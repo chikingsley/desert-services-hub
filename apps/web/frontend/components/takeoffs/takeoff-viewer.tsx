@@ -1,15 +1,14 @@
 "use client";
 
-import {
-  PdfHighlighter,
-  type PdfHighlighterUtils,
-  PdfLoader,
-  type Scaled,
-  type TakeoffAnnotation,
-  type TakeoffToolType,
-  type ViewportPosition,
-  viewportPositionToScaled,
-} from "@takeoff/pdf-takeoff";
+import { PdfHighlighter } from "@takeoff/pdf-takeoff/components/pdf-highlighter";
+import { PdfLoader } from "@takeoff/pdf-takeoff/components/pdf-loader";
+import type { PdfHighlighterUtils } from "@takeoff/pdf-takeoff/contexts/pdf-highlighter-context";
+import { viewportPositionToScaled } from "@takeoff/pdf-takeoff/lib/coordinates";
+import type {
+  TakeoffAnnotation,
+  TakeoffToolType,
+} from "@takeoff/pdf-takeoff/types";
+import type { Scaled, ViewportPosition } from "@takeoff/pdf-takeoff/types";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   attachAnnotationListeners,

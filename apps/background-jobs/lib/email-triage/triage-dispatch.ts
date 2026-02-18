@@ -12,22 +12,20 @@ import { db } from "@lib/db/hub";
 import { updateEmailClassification } from "@lib/db/repositories/email";
 import { linkEmailToEstimate } from "@lib/db/repositories/estimate-email";
 import { linkEmailToProject } from "@lib/db/repositories/project";
+import { TRIAGE_ACTION_JOB_MAP } from "./triage-taxonomy";
 import type {
   TriageEmailMeta,
   TriageJobType,
   TriageResult,
-} from "./triage-types";
+} from "./types";
 
 const SPAM_AUTO_EXCLUDE_CONFIDENCE = 0.9;
 
-// ── Action mapping ──────────────────────────────────────────
+// ── Payload builders ────────────────────────────────────────
 
-interface DispatchAction {
-  jobType: TriageJobType;
-  buildPayload: (meta: TriageEmailMeta) => Record<string, unknown>;
-}
-
-const buildContractPayload = (meta: TriageEmailMeta) => ({
+const buildContractPayload = (
+  meta: TriageEmailMeta
+): Record<string, unknown> => ({
   emailId: meta.emailId,
   messageId: meta.messageId,
   mailboxEmail: meta.mailboxEmail,
@@ -37,38 +35,24 @@ const buildContractPayload = (meta: TriageEmailMeta) => ({
   hasAttachments: meta.hasAttachments,
 });
 
-const ACTION_MAP: Record<string, DispatchAction> = {
-  "PAYMENT:payment_confirmation": {
-    jobType: "dust_permit_payment",
-    buildPayload: (meta) => ({
-      emailId: meta.emailId,
-      messageId: meta.messageId,
-      mailboxEmail: meta.mailboxEmail,
-      bodyText: meta.bodyText ?? "",
-    }),
-  },
-  "DUST_PERMIT:permit_issued": {
-    jobType: "dust_permit_issued_email",
-    buildPayload: (meta) => ({
-      emailId: meta.emailId,
-      messageId: meta.messageId,
-      mailboxEmail: meta.mailboxEmail,
-      bodyText: meta.bodyText ?? "",
-      subject: meta.subject ?? "",
-    }),
-  },
-  "CONTRACT:new_contract": {
-    jobType: "contract_email_received",
-    buildPayload: buildContractPayload,
-  },
-  "CONTRACT:contract_revision": {
-    jobType: "contract_email_received",
-    buildPayload: buildContractPayload,
-  },
-  "CHANGE_ORDER:contract_revision": {
-    jobType: "contract_email_received",
-    buildPayload: buildContractPayload,
-  },
+const JOB_PAYLOAD_BUILDERS: Record<
+  TriageJobType,
+  (meta: TriageEmailMeta) => Record<string, unknown>
+> = {
+  dust_permit_payment: (meta) => ({
+    emailId: meta.emailId,
+    messageId: meta.messageId,
+    mailboxEmail: meta.mailboxEmail,
+    bodyText: meta.bodyText ?? "",
+  }),
+  dust_permit_issued_email: (meta) => ({
+    emailId: meta.emailId,
+    messageId: meta.messageId,
+    mailboxEmail: meta.mailboxEmail,
+    bodyText: meta.bodyText ?? "",
+    subject: meta.subject ?? "",
+  }),
+  contract_email_received: buildContractPayload,
 };
 
 // ── Main dispatch ───────────────────────────────────────────
@@ -185,61 +169,61 @@ async function tryLinkEstimateFallback(
 function resolveDispatchAction(
   result: TriageResult,
   meta: TriageEmailMeta
-): DispatchAction | undefined {
+): TriageJobType | null {
   const actionKey = `${result.category}:${result.subcategory ?? "general"}`;
-  const explicit = ACTION_MAP[actionKey];
+  const explicit =
+    TRIAGE_ACTION_JOB_MAP[actionKey as keyof typeof TRIAGE_ACTION_JOB_MAP];
   if (explicit) {
     return explicit;
   }
 
   if (result.category === "CONTRACT" && meta.hasAttachments) {
-    return {
-      jobType: "contract_email_received",
-      buildPayload: buildContractPayload,
-    };
+    return "contract_email_received";
   }
 
-  return undefined;
+  return null;
 }
 
 export async function dispatchTriageResult(
   result: TriageResult,
   meta: TriageEmailMeta
 ): Promise<DispatchResult> {
-  const outcome: DispatchResult = {
-    classified: false,
-    jobEnqueued: null,
-    projectLinked: false,
-    estimateLinked: false,
-  };
+  return await db.transaction(async () => {
+    const outcome: DispatchResult = {
+      classified: false,
+      jobEnqueued: null,
+      projectLinked: false,
+      estimateLinked: false,
+    };
 
-  // 1. Persist classification
-  await updateEmailClassification(
-    meta.emailId,
-    result.category,
-    result.confidence,
-    "llm"
-  );
-  outcome.classified = true;
+    // 1. Persist classification
+    await updateEmailClassification(
+      meta.emailId,
+      result.category,
+      result.confidence,
+      "llm"
+    );
+    outcome.classified = true;
 
-  // 1b. SPAM with high confidence → auto-exclude email + block domain
-  await handleSpamAutoExclude(result, meta);
+    // 1b. SPAM with high confidence → auto-exclude email + block domain
+    await handleSpamAutoExclude(result, meta);
 
-  // 2. Link to project if LLM picked one (fallback — only if deterministic
-  //    linkEmail() didn't already set project_id)
-  outcome.projectLinked = await tryLinkProjectFallback(result, meta);
+    // 2. Link to project if LLM picked one (fallback — only if deterministic
+    //    linkEmail() didn't already set project_id)
+    outcome.projectLinked = await tryLinkProjectFallback(result, meta);
 
-  // 3. Link to estimate if LLM picked one (fallback — only if deterministic
-  //    linkEmail() didn't already create an estimate_emails link)
-  outcome.estimateLinked = await tryLinkEstimateFallback(result, meta);
+    // 3. Link to estimate if LLM picked one (fallback — only if deterministic
+    //    linkEmail() didn't already create an estimate_emails link)
+    outcome.estimateLinked = await tryLinkEstimateFallback(result, meta);
 
-  // 4. Enqueue job if this classification triggers an action
-  const action = resolveDispatchAction(result, meta);
-  if (action) {
-    const payload = action.buildPayload(meta);
-    enqueueJob.run(action.jobType, null, JSON.stringify(payload));
-    outcome.jobEnqueued = action.jobType;
-  }
+    // 4. Enqueue job if this classification triggers an action
+    const jobType = resolveDispatchAction(result, meta);
+    if (jobType) {
+      const payload = JOB_PAYLOAD_BUILDERS[jobType](meta);
+      await enqueueJob.run(jobType, null, JSON.stringify(payload));
+      outcome.jobEnqueued = jobType;
+    }
 
-  return outcome;
+    return outcome;
+  });
 }

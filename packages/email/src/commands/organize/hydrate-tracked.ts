@@ -1,7 +1,7 @@
 import { assertWritableMailbox } from "@email/commands/config";
 import { db } from "@lib/db/hub";
 import { hydrateProjectFolderCommand } from "./hydrate-project";
-import type { HydrateTrackedOptions } from "./hydrate-types";
+import type { HydrateTrackedOptions } from "./types";
 import { getMailboxByUser } from "./repository";
 
 export async function hydrateTrackedProjectsCommand(

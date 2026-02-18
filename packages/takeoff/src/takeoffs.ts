@@ -1,4 +1,4 @@
-import type { TakeoffAnnotation } from "@takeoff/pdf-takeoff";
+import type { TakeoffAnnotation } from "@takeoff/pdf-takeoff/types";
 
 export interface Takeoff {
   id: string;

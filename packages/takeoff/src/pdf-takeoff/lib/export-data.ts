@@ -3,7 +3,7 @@
  */
 
 import type { ScalePresetConfig } from "../config";
-import type { TakeoffAnnotation } from "../takeoff-types";
+import type { TakeoffAnnotation } from "../types";
 import { type MeasurementSummary, summarizeByItem } from "./measurements";
 
 /**

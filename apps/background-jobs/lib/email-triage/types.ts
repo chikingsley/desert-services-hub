@@ -6,18 +6,9 @@
  */
 
 import type { EmailClassification } from "@lib/db/types";
+import type { TriageSubcategory } from "./triage-taxonomy";
 
 // ── LLM Output ──────────────────────────────────────────────
-
-/** Subcategories that trigger specific automated actions. */
-export type TriageSubcategory =
-  | "payment_confirmation"
-  | "permit_issued"
-  | "permit_filed"
-  | "new_contract"
-  | "contract_revision"
-  | "estimate_inquiry"
-  | "general";
 
 /** Parsed + validated result from the LLM triage call. */
 export interface TriageResult {

@@ -1,4 +1,7 @@
-import type { TakeoffAnnotation, TakeoffToolType } from "@takeoff/pdf-takeoff";
+import type {
+  TakeoffAnnotation,
+  TakeoffToolType,
+} from "@takeoff/pdf-takeoff/types";
 import type { PresetItem } from "@/apps/web/frontend/components/takeoffs/takeoff-presets";
 
 // Map preset item types to takeoff tool types

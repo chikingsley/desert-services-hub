@@ -29,7 +29,7 @@ import type {
   ViewportPosition,
 } from "../types";
 import { HighlightLayer } from "./highlight-layer";
-import type { PdfHighlighterProps } from "./pdf-highlighter-types";
+import type { PdfHighlighterProps } from "./types";
 import {
   DEFAULT_SCALE_VALUE,
   disableTextSelection,

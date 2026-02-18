@@ -11,7 +11,7 @@ import type {
   EstimateMatchContext,
   EstimateMatchEmailRow,
   EstimateMatchHintInput,
-} from "@lib/db/repositories/estimate-email-matching-types";
+} from "@lib/db/repositories/types";
 import {
   COMMON_FREE_EMAIL_DOMAINS,
   extractEstimateNumbers,
@@ -23,7 +23,7 @@ import {
   parseRawExtraction,
   uniquePositiveInts,
   uniqueStrings,
-} from "@lib/db/repositories/estimate-email-matching-types";
+} from "@lib/db/repositories/types";
 
 interface DocumentHintCollection {
   contractorHints: string[];

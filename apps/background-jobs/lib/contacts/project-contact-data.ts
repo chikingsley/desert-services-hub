@@ -18,14 +18,14 @@ import type {
   ProjectEstimateRow,
   ProjectRow,
   ResolveProjectContactsOptions,
-} from "./project-contact-types";
+} from "./types";
 import {
   clampConfidence,
   normalizeEmailAddress,
   normalizeName,
   normalizePhone,
   normalizeWhitespace,
-} from "./project-contact-types";
+} from "./types";
 
 // ============================================================================
 // LLM Contact Parsing
@@ -289,16 +289,17 @@ export async function fetchAttachments(
 ): Promise<AttachmentRow[]> {
   return (await db
     .query<AttachmentRow, [number, number]>(
-      `SELECT a.id,
-              a.email_id,
-              a.name,
-              a.extracted_text
-       FROM attachments a
-       JOIN emails e ON e.id = a.email_id
+      `SELECT d.id,
+              d.email_id,
+              d.file_name AS name,
+              d.extracted_text
+       FROM documents d
+       JOIN emails e ON e.id = d.email_id
        WHERE e.project_id = ?
-         AND a.extraction_status = 'success'
-         AND COALESCE(length(a.extracted_text), 0) > 0
-       ORDER BY a.extracted_at DESC NULLS LAST, a.id DESC
+         AND d.source = 'email_attachment'
+         AND d.extraction_status = 'success'
+         AND COALESCE(length(d.extracted_text), 0) > 0
+       ORDER BY d.extracted_at DESC NULLS LAST, d.id DESC
        LIMIT ?`
     )
     .all(projectId, limit)) as AttachmentRow[];

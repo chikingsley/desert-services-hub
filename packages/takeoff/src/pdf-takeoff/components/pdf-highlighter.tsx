@@ -1,12 +1,12 @@
 import { PdfHighlighterContext } from "../contexts/pdf-highlighter-context";
 import { DrawingCanvas } from "./drawing-canvas";
 import { MouseSelection } from "./mouse-selection";
-import type { PdfHighlighterProps } from "./pdf-highlighter-types";
+import type { PdfHighlighterProps } from "./types";
 import { ShapeCanvas } from "./shape-canvas";
 import { TipContainer } from "./tip-container";
 import { usePdfHighlighter } from "./use-pdf-highlighter";
 
-export type { PdfHighlighterProps } from "./pdf-highlighter-types";
+export type { PdfHighlighterProps } from "./types";
 
 /**
  * This is a large-scale PDF viewer component designed to facilitate

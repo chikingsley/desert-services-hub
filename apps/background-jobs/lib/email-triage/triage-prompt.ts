@@ -5,7 +5,28 @@
  * the email, thread, documents, attachments, and candidate projects/estimates.
  */
 
-import type { TriageContext } from "./triage-types";
+import {
+  TRIAGE_CATEGORY_GUIDANCE,
+  TRIAGE_SUBCATEGORY_GUIDANCE,
+} from "./triage-taxonomy";
+import type { TriageContext } from "./types";
+
+function formatGuidanceLines(
+  guidance: Record<string, string>,
+  labelTransform: (label: string) => string = (label) => label
+): string {
+  return Object.entries(guidance)
+    .map(
+      ([label, description]) => `- ${labelTransform(label)} — ${description}`
+    )
+    .join("\n");
+}
+
+const CATEGORY_LINES = formatGuidanceLines(TRIAGE_CATEGORY_GUIDANCE);
+const SUBCATEGORY_LINES = formatGuidanceLines(
+  TRIAGE_SUBCATEGORY_GUIDANCE,
+  (label) => label
+);
 
 const SYSTEM_INSTRUCTIONS = `You classify incoming emails for Desert Services, a dust control and environmental services company based in Arizona.
 
@@ -28,30 +49,10 @@ Return a JSON object with these fields:
 }
 
 CATEGORIES:
-- PAYMENT — Payment processor confirmations, receipts, transaction notifications (e.g. PointAndPay)
-- DUST_PERMIT — Dust permit notifications, issuances, renewals, filing requests from Maricopa/ADEQ
-- CONTRACT — Contract documents, agreements, subcontracts, scope of values received
-- CHANGE_ORDER — Change orders, amendments to existing contracts
-- ESTIMATE — Bid estimates, proposals, pricing requests, RFPs
-- INSURANCE — Insurance certificates, COI requests, coverage documents
-- INVOICE — Invoices, billing statements, accounts payable
-- SWPPP — Stormwater pollution prevention plans, NOI documents
-- HR — Human resources, payroll, benefits, employee matters
-- IT — Technology, systems, account access, tools
-- SCHEDULE — Scheduling, calendar, meeting coordination
-- INTERNAL — Internal Desert Services team communications, administrative
-- VENDOR — Vendor/supplier correspondence, material orders
-- SPAM — Marketing, unsolicited, junk mail
-- UNKNOWN — Cannot determine category
+${CATEGORY_LINES}
 
 SUBCATEGORIES (use when applicable, otherwise null):
-- payment_confirmation — Confirmed payment receipt from a payment processor
-- permit_issued — Official permit issuance/approval from a government authority
-- permit_filed — Permit application filed/submitted confirmation
-- new_contract — New contract or subcontract received with documents
-- contract_revision — Contract amendment, revision, or change order
-- estimate_inquiry — Question about a specific estimate
-- general — Category is clear but no specific automated action needed
+${SUBCATEGORY_LINES}
 
 RULES:
 - Only pick project_id/estimate_id from the provided candidates. Never invent IDs.

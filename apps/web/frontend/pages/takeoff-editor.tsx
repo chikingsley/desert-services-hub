@@ -2,7 +2,10 @@
  * Takeoff Editor Page
  */
 
-import type { TakeoffAnnotation, TakeoffToolType } from "@takeoff/pdf-takeoff";
+import type {
+  TakeoffAnnotation,
+  TakeoffToolType,
+} from "@takeoff/pdf-takeoff/types";
 import {
   aggregateTakeoffAnnotations,
   type TakeoffCatalogItem,

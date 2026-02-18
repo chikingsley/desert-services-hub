@@ -11,15 +11,21 @@
  *   5. Dispatch (persist classification, link, enqueue job)
  */
 
+import { INTERNAL_DOMAINS } from "@background-jobs/jobs/config";
 import type { LlmProvider } from "@background-jobs/lib/llm";
 import { runJsonPrompt } from "@background-jobs/lib/llm";
-import { getEmailById } from "@lib/db/repositories/email";
+import {
+  getEmailById,
+  updateEmailClassification,
+} from "@lib/db/repositories/email";
+import type { EmailClassification } from "@lib/db/types";
 import { gatherTriageContext } from "./triage-context";
 import type { DispatchResult } from "./triage-dispatch";
 import { dispatchTriageResult } from "./triage-dispatch";
 import { parseTriageOutput } from "./triage-parse";
 import { buildTriagePrompt } from "./triage-prompt";
-import type { TriageEmailMeta, TriageMode, TriageResult } from "./triage-types";
+import { ACTION_CATEGORIES } from "./triage-taxonomy";
+import type { TriageEmailMeta, TriageMode, TriageResult } from "./types";
 
 // ── Config ──────────────────────────────────────────────────
 
@@ -36,14 +42,6 @@ const EMAIL_TRIAGE_MODEL = (
   process.env.GEMINI_FAST_MODEL ?? "gemini-2.5-flash-lite"
 ).trim();
 const LOCAL_LLM_MODEL = process.env.LOCAL_LLM_MODEL ?? "granite4:latest";
-
-// ── Internal domains (fast-path) ────────────────────────────
-
-const INTERNAL_DOMAINS = new Set([
-  "desertservices.net",
-  "desertservices.app",
-  "upwindcompanies.com",
-]);
 
 // ── Public API ──────────────────────────────────────────────
 
@@ -109,6 +107,7 @@ export async function triageEmail(
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
     console.error(`[triage] LLM failed for email ${emailId}: ${msg}`);
+    await persistTerminalUnknown(emailId, "llm_failed");
     return {
       result: null,
       dispatch: null,
@@ -129,6 +128,7 @@ export async function triageEmail(
       `[triage] failed to parse LLM output for email ${emailId}:`,
       JSON.stringify(raw)
     );
+    await persistTerminalUnknown(emailId, "parse_failed");
     return {
       result: null,
       dispatch: null,
@@ -208,6 +208,7 @@ async function checkFastPath(emailId: number): Promise<TriageOutcome | null> {
   if (email.isInternal && !email.hasAttachments) {
     const fromDomain = email.fromDomain?.toLowerCase();
     if (fromDomain && INTERNAL_DOMAINS.has(fromDomain)) {
+      await updateEmailClassification(emailId, "INTERNAL", 1, "pattern");
       return {
         result: null,
         dispatch: null,
@@ -220,6 +221,7 @@ async function checkFastPath(emailId: number): Promise<TriageOutcome | null> {
 
   // Empty email — nothing to classify
   if (!(email.subject || email.bodyFull || email.hasAttachments)) {
+    await updateEmailClassification(emailId, "UNKNOWN", 0, "pattern");
     return {
       result: null,
       dispatch: null,
@@ -233,10 +235,13 @@ async function checkFastPath(emailId: number): Promise<TriageOutcome | null> {
 }
 
 function isActionCategory(classification: string): boolean {
-  return (
-    classification === "PAYMENT" ||
-    classification === "DUST_PERMIT" ||
-    classification === "CONTRACT" ||
-    classification === "CHANGE_ORDER"
-  );
+  return ACTION_CATEGORIES.has(classification as EmailClassification);
+}
+
+async function persistTerminalUnknown(
+  emailId: number,
+  _reason: "llm_failed" | "parse_failed"
+): Promise<void> {
+  // Mark terminal failures as UNKNOWN so backfill doesn't retry the same row forever.
+  await updateEmailClassification(emailId, "UNKNOWN", 0, "llm");
 }

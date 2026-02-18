@@ -1,8 +1,8 @@
-import {
-  scaledPositionToViewport,
-  type TakeoffAnnotation,
-  type TakeoffToolType,
-} from "@takeoff/pdf-takeoff";
+import { scaledPositionToViewport } from "@takeoff/pdf-takeoff/lib/coordinates";
+import type {
+  TakeoffAnnotation,
+  TakeoffToolType,
+} from "@takeoff/pdf-takeoff/types";
 
 interface Viewer {
   getPageView: (

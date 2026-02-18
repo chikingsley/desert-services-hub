@@ -4,14 +4,14 @@ import type {
   EstimateMatchContext,
   EstimateMatchDecision,
   EstimateMatchReason,
-} from "@lib/db/repositories/estimate-email-matching-types";
+} from "@lib/db/repositories/types";
 import {
   extractEstimateNumbers,
   extractMondayItemIds,
   normalizeEstimateNumberDigits,
   tokenize,
   tokenOverlap,
-} from "@lib/db/repositories/estimate-email-matching-types";
+} from "@lib/db/repositories/types";
 
 function scoreFromTokenOverlap(
   hintSources: string[],

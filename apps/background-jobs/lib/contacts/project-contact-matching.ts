@@ -16,7 +16,7 @@ import type {
   LlmContactRecord,
   ProjectContactCandidate,
   ProjectContactProposal,
-} from "./project-contact-types";
+} from "./types";
 import {
   addCandidateEvidence,
   candidateKeyOf,
@@ -26,7 +26,7 @@ import {
   normalizeEmailAddress,
   normalizeName,
   parseEmailAddressList,
-} from "./project-contact-types";
+} from "./types";
 
 // ============================================================================
 // Contact Lookup

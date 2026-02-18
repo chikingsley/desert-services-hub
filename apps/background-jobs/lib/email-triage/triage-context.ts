@@ -18,7 +18,7 @@ import type {
   TriageEstimateCandidate,
   TriageProjectCandidate,
   TriageThreadEmail,
-} from "./triage-types";
+} from "./types";
 
 // ── Limits ──────────────────────────────────────────────────
 
@@ -226,14 +226,15 @@ async function fetchAttachments(
 
   const rows = await db
     .query<AttachmentRow>(
-      `SELECT a.name, a.content_type, a.extracted_text
-       FROM attachments a
-       JOIN emails e ON a.email_id = e.id
+      `SELECT d.file_name AS name, d.content_type, d.extracted_text
+       FROM documents d
+       JOIN emails e ON d.email_id = e.id
        WHERE e.conversation_id = $1
-         AND a.extraction_status = 'success'
-         AND a.extracted_text IS NOT NULL
-         AND length(a.extracted_text) > 0
-       ORDER BY a.created_at DESC
+         AND d.source = 'email_attachment'
+         AND d.extraction_status = 'success'
+         AND d.extracted_text IS NOT NULL
+         AND length(d.extracted_text) > 0
+       ORDER BY d.created_at DESC
        LIMIT $2`
     )
     .all(conversationId, MAX_ATTACHMENTS);

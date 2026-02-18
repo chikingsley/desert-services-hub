@@ -25,7 +25,7 @@ Use this skill when requests mention any of:
 For a project that should consume the forked Python package directly from Git:
 
 ```bash
-uv add "kreuzberg[rapidocr] @ git+https://github.com/chikingsley/kreuzberg.git@7eb05766b#subdirectory=packages/python"
+uv add "kreuzberg[rapidocr] @ git+https://github.com/chikingsley/kreuzberg.git@54f047c46#subdirectory=packages/python"
 uv add "onnxruntime==1.24.1"
 uv sync
 ```
@@ -58,7 +58,7 @@ Use one of these patterns:
 1. Git-based install in container:
 
 ```bash
-uv add "kreuzberg[rapidocr] @ git+https://github.com/chikingsley/kreuzberg.git@7eb05766b#subdirectory=packages/python"
+uv add "kreuzberg[rapidocr] @ git+https://github.com/chikingsley/kreuzberg.git@54f047c46#subdirectory=packages/python"
 uv add "onnxruntime==1.24.1"
 uv sync --frozen
 ```

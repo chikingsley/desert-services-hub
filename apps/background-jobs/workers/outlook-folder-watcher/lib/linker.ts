@@ -5,7 +5,7 @@
  */
 
 import { isSubjectCompatibleWithProject } from "@email/project-subject-guard";
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 
 interface MessageForLinking {
   id?: string;
@@ -17,7 +17,9 @@ interface MessageForLinking {
 const findConversationProjectAnchor = db.query<
   { id: number },
   [string, number]
->("SELECT id FROM emails WHERE conversation_id = ? AND project_id = ? LIMIT 1");
+>(
+  "SELECT id FROM emails WHERE conversation_id = $1 AND project_id = $2 LIMIT 1"
+);
 
 /**
  * Link messages to a Supabase Postgres project.
@@ -43,7 +45,7 @@ async function findEmailByMessage(
   if (msg.internetMessageId) {
     const found = await db
       .query<EmailRecord, [string]>(
-        "SELECT id, project_id, conversation_id, subject FROM emails WHERE internet_message_id = ?"
+        "SELECT id, project_id, conversation_id, subject FROM emails WHERE internet_message_id = $1"
       )
       .get(msg.internetMessageId);
     if (found) {
@@ -55,7 +57,7 @@ async function findEmailByMessage(
     return (
       db
         .query<EmailRecord, [string]>(
-          "SELECT id, project_id, conversation_id, subject FROM emails WHERE message_id = ?"
+          "SELECT id, project_id, conversation_id, subject FROM emails WHERE message_id = $1"
         )
         .get(msg.id) ?? null
     );
@@ -126,7 +128,7 @@ export async function linkMessages(
       continue;
     }
 
-    await db.run("UPDATE emails SET project_id = ? WHERE id = ?", [
+    await db.run("UPDATE emails SET project_id = $1 WHERE id = $2", [
       hubProjectId,
       email.id,
     ]);
@@ -142,7 +144,7 @@ export async function linkMessages(
   let threadExpanded = 0;
   for (const convId of conversationIds) {
     const result = await db.run(
-      "UPDATE emails SET project_id = ? WHERE conversation_id = ? AND project_id IS NULL",
+      "UPDATE emails SET project_id = $1 WHERE conversation_id = $2 AND project_id IS NULL",
       [hubProjectId, convId]
     );
     threadExpanded += result.count;
@@ -151,11 +153,11 @@ export async function linkMessages(
   // Update project stats
   await db.run(
     `UPDATE projects SET
-       email_count = (SELECT COUNT(*) FROM emails WHERE project_id = ?),
-       first_seen = (SELECT MIN(received_at) FROM emails WHERE project_id = ?),
-       last_seen = (SELECT MAX(received_at) FROM emails WHERE project_id = ?),
+       email_count = (SELECT COUNT(*) FROM emails WHERE project_id = $1),
+       first_seen = (SELECT MIN(received_at) FROM emails WHERE project_id = $2),
+       last_seen = (SELECT MAX(received_at) FROM emails WHERE project_id = $3),
        updated_at = now()
-     WHERE id = ?`,
+     WHERE id = $4`,
     [hubProjectId, hubProjectId, hubProjectId, hubProjectId]
   );
 
@@ -180,7 +182,7 @@ export async function checkDustPermitIssued(
   const emails = await db
     .query<{ body_preview: string }, [number]>(
       `SELECT body_preview FROM emails
-       WHERE project_id = ?
+       WHERE project_id = $1
          AND subject = 'Dust Permit Issued'
          AND from_email LIKE '%maricopa.gov%'
          AND body_preview LIKE '%application D0%'`
@@ -200,15 +202,15 @@ export async function checkDustPermitIssued(
     // Link permit to project
     await db.run(
       `UPDATE dust_permits_filed_by_desert_services
-       SET project_id = ?, updated_at = (extract(epoch FROM now()))::bigint
-       WHERE id = ? AND (project_id IS NULL OR project_id != ?)`,
+       SET project_id = $1, updated_at = (extract(epoch FROM now()))::bigint
+       WHERE id = $2 AND (project_id IS NULL OR project_id != $3)`,
       [hubProjectId, permitId, hubProjectId]
     );
 
     // Mark project as Issued
     const result = await db.run(
       `UPDATE projects SET dust_permit_status = 'Issued', updated_at = now()
-       WHERE id = ? AND dust_permit_status NOT IN ('Issued', 'Closed', 'Billing Sent')`,
+       WHERE id = $1 AND dust_permit_status NOT IN ('Issued', 'Closed', 'Billing Sent')`,
       [hubProjectId]
     );
 

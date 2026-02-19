@@ -2,7 +2,7 @@
  * State management for folder watcher.
  * Stores delta tokens, tracked folders, and event log in Postgres.
  */
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 
 export interface TrackedFolder {
   id: number;
@@ -19,7 +19,7 @@ export interface TrackedFolder {
 export async function getConfig(key: string): Promise<string | null> {
   const row = await db
     .query<{ value: string }, [string]>(
-      "SELECT value FROM folder_watcher_config WHERE key = ?"
+      "SELECT value FROM folder_watcher_config WHERE key = $1"
     )
     .get(key);
   return row?.value ?? null;
@@ -120,6 +120,6 @@ export async function getRecentEvents(limit = 20): Promise<
         created_at: string;
       },
       [number]
-    >("SELECT * FROM folder_watcher_events ORDER BY id DESC LIMIT ?")
+    >("SELECT * FROM folder_watcher_events ORDER BY id DESC LIMIT $1")
     .all(limit);
 }

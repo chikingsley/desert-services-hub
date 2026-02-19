@@ -1,9 +1,9 @@
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 import {
   tokenizeProjectText,
   tokenOverlap,
   uniqueStrings,
-} from "@lib/db/repositories/project";
+} from "@lib/db/repositories/project-matching-utils";
 
 interface ProjectContextRow {
   name: string;
@@ -58,7 +58,7 @@ async function loadProjectSubjectGuardContext(
 ): Promise<ProjectSubjectGuardContext | null> {
   const project = await db
     .query<ProjectContextRow, [number]>(
-      "SELECT name, contractor, outlook_folder FROM projects WHERE id = ?"
+      "SELECT name, contractor, outlook_folder FROM projects WHERE id = $1"
     )
     .get(projectId);
   if (!project) {

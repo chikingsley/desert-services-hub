@@ -7,7 +7,7 @@
  * Design principles:
  * - Conservative: only auto-link when the match is unambiguous.
  * - Idempotent: all writes use ON CONFLICT DO NOTHING / WHERE ... IS NULL.
- * - Incremental: stores a "last processed email id" in estimate_poller_config.
+ * - Incremental: stores a "last processed email id" in background_worker_config.
  *
  * Per-email signals (delegated to linkEmail):
  *   1) Conversation → project (sibling in same thread already has project_id)
@@ -23,16 +23,16 @@
  *      chain when a conversation has exactly one distinct project.
  */
 
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 import { linkEmail } from "@lib/linking/link-email";
 
-// Reuse estimate-poller config table for lightweight worker state.
+// Shared worker checkpoint table for lightweight worker state.
 const CONFIG_KEY_LAST_EMAIL_ID = "estimate_email_linker_last_email_id";
 
 async function getConfig(key: string): Promise<string | null> {
   const row = await db
     .query<{ value: string }, [string]>(
-      "SELECT value FROM estimate_poller_config WHERE key = ?"
+      "SELECT value FROM background_worker_config WHERE key = $1"
     )
     .get(key);
   return row?.value ?? null;
@@ -40,7 +40,7 @@ async function getConfig(key: string): Promise<string | null> {
 
 async function setConfig(key: string, value: string): Promise<void> {
   await db.run(
-    "INSERT INTO estimate_poller_config (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value",
+    "INSERT INTO background_worker_config (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value",
     [key, value]
   );
 }
@@ -264,7 +264,7 @@ function fetchCandidateEmailRows(
       `
       SELECT e.id
       FROM emails e
-      WHERE e.id > ?
+      WHERE e.id > $1
         AND e.is_excluded = 0
         AND NOT EXISTS (SELECT 1 FROM estimate_emails ee WHERE ee.email_id = e.id)
         AND (
@@ -277,7 +277,7 @@ function fetchCandidateEmailRows(
           OR e.body_preview ILIKE '%estimate%'
         )
       ORDER BY e.id ASC
-      LIMIT ?
+      LIMIT $2
     `
     )
     .all(lastId, batchSize);

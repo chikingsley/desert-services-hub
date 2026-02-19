@@ -5,14 +5,17 @@
 import type { GraphEmailClient } from "@email/client";
 import { htmlToText } from "@email/html-to-text";
 import { isSpam } from "@email/spam-filter";
+import { processBodyLinksForEmail } from "@email/sync/body-link-sync";
 import type { SyncProgress, SyncResult } from "@email/sync/config";
-import { db } from "@lib/db/hub";
+import { insertAttachment } from "@lib/db/repositories/attachment";
+import {
+  appendEmailAttachmentNames,
+  insertEmail,
+} from "@lib/db/repositories/email";
 import {
   getOrCreateMailbox,
-  insertAttachment,
-  insertEmail,
   updateMailboxSyncState,
-} from "@lib/db/repositories";
+} from "@lib/db/repositories/mailbox";
 import type { InsertAttachmentData, InsertEmailData } from "@lib/db/types";
 import { linkEmail } from "@lib/linking/link-email";
 
@@ -23,18 +26,6 @@ type EmailForSync = Awaited<
 interface SingleEmailSyncResult {
   attachmentCount: number;
 }
-
-const enqueueEmailResolveIfNotQueued = db.prepare(`
-  INSERT INTO webhook_jobs (job_type, payload)
-  SELECT 'email_resolve', ?
-  WHERE NOT EXISTS (
-    SELECT 1
-      FROM webhook_jobs
-     WHERE job_type = 'email_resolve'
-       AND status IN ('pending', 'processing')
-       AND payload::jsonb->>'emailId' = ?
-  )
-`);
 
 async function fetchMailboxEmails(
   client: GraphEmailClient,
@@ -144,15 +135,24 @@ async function syncSingleEmail(
   );
 
   await linkEmail(emailId);
-  await enqueueEmailResolveIfNotQueued.run(
-    JSON.stringify({ emailId }),
-    String(emailId)
-  );
 
   let attachmentCount = 0;
   for (const attachment of attachmentRows) {
     await insertAttachment({ ...attachment, emailId });
     attachmentCount += 1;
+  }
+
+  if (fetchAttachments) {
+    const bodyLinkResult = await processBodyLinksForEmail({
+      bodyHtml: email.bodyContent,
+      bodyText: fullText,
+      emailId,
+      mailboxEmail,
+    });
+
+    attachmentCount += bodyLinkResult.attachmentsInserted;
+
+    await appendEmailAttachmentNames(emailId, bodyLinkResult.names);
   }
 
   return { attachmentCount };

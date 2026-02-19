@@ -7,13 +7,13 @@
  *
  * Usage:
  *   import { ensureAllSubscriptions, renewExpiring } from "@email/subscriptions";
- *   await ensureAllSubscriptions("https://hub.desertservices.app/api/webhooks/outlook");
+ *   await ensureAllSubscriptions("https://<project-ref>.supabase.co/functions/v1/outlook-webhook");
  *   await renewExpiring(24); // renew subs expiring within 24h
  */
 import type { GraphEmailClient } from "@email/client";
 import { ALL_MAILBOXES, createGraphClient } from "@email/sync/config";
-import { db } from "@lib/db/hub";
-import { getOrCreateMailbox } from "@lib/db/repositories";
+import { db } from "@lib/db/client";
+import { getOrCreateMailbox } from "@lib/db/repositories/mailbox";
 
 // Max subscription lifetime for messages is 4230 min. Use 4200 for headroom.
 const SUBSCRIPTION_LIFETIME_MIN = 4200;
@@ -35,24 +35,24 @@ interface OutlookSubscription {
 // Prepared Statements
 // ============================================================================
 
-const upsertSub = db.prepare(`
+const upsertSub = db.query(`
   INSERT INTO outlook_subscriptions (subscription_id, mailbox_email, mailbox_id, resource, change_type, expiration, client_state)
-  VALUES (?, ?, ?, ?, ?, ?, ?)
+  VALUES ($1, $2, $3, $4, $5, $6, $7)
   ON CONFLICT(subscription_id) DO UPDATE SET
     expiration = excluded.expiration,
     renewed_at = now()
 `);
 
-const deleteSubStmt = db.prepare(
-  "DELETE FROM outlook_subscriptions WHERE subscription_id = ?"
+const deleteSubStmt = db.query(
+  "DELETE FROM outlook_subscriptions WHERE subscription_id = $1"
 );
 
 const getSubByMailbox = db.query<OutlookSubscription>(
-  "SELECT * FROM outlook_subscriptions WHERE mailbox_email = ? LIMIT 1"
+  "SELECT * FROM outlook_subscriptions WHERE mailbox_email = $1 LIMIT 1"
 );
 
 const getExpiringSubs = db.query<OutlookSubscription>(
-  "SELECT * FROM outlook_subscriptions WHERE expiration < ?"
+  "SELECT * FROM outlook_subscriptions WHERE expiration < $1"
 );
 
 const getAllSubs = db.query<OutlookSubscription>(

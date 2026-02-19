@@ -2,7 +2,7 @@
  * Contracts API handlers
  * Route: GET /api/contracts
  */
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 
 type SortField =
   | "updated_at"
@@ -123,7 +123,7 @@ export async function listContracts(req: Request): Promise<Response> {
 
     const [items, countResult, facetRows, valueRow] = await Promise.all([
       db
-        .prepare(
+        .query(
           `SELECT
             e.id, e.monday_item_id, e.name, e.estimate_number,
             e.contractor, e.group_id, e.bid_status, e.bid_value,
@@ -146,11 +146,11 @@ export async function listContracts(req: Request): Promise<Response> {
            ) proj ON true
            ${where}
            ORDER BY ${orderBy} ${sortDirection.toUpperCase()}, e.id DESC
-           LIMIT ? OFFSET ?`
+           LIMIT $1 OFFSET $2`
         )
         .all(...params, perPage, offset) as Promise<ContractRow[]>,
       db
-        .prepare(
+        .query(
           `SELECT count(*)::int as total
            FROM estimates e
            LEFT JOIN LATERAL (
@@ -165,7 +165,7 @@ export async function listContracts(req: Request): Promise<Response> {
         )
         .get(...params) as Promise<{ total: number } | null>,
       db
-        .prepare(
+        .query(
           `SELECT COALESCE(proj.contract_status, 'Unlinked') as status, COUNT(*)::int as count
            FROM estimates e
            LEFT JOIN LATERAL (
@@ -182,7 +182,7 @@ export async function listContracts(req: Request): Promise<Response> {
         )
         .all() as Promise<Array<{ status: string; count: number }>>,
       db
-        .prepare(
+        .query(
           `SELECT COALESCE(SUM(COALESCE(awarded_value, bid_value, 0)), 0)::bigint as total_value
            FROM estimates
            WHERE bid_status = 'Won'`

@@ -1,62 +1,12 @@
 /**
  * Project Repository
  */
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 import { parseEmailRow } from "@lib/db/repositories/email";
-import type {
-  ProjectMatchCandidate as ProjectMatchCandidateInternal,
-  ProjectMatchContext as ProjectMatchContextInternal,
-  ProjectMatchDecision as ProjectMatchDecisionInternal,
-  ProjectMatchInput as ProjectMatchInputInternal,
-  ProjectMatchReasonCode as ProjectMatchReasonCodeInternal,
-  ProjectMatchReason as ProjectMatchReasonInternal,
-  ProjectMatchResult as ProjectMatchResultInternal,
-} from "@lib/db/repositories/project-matching";
-import { findProjectCandidates as findProjectCandidatesInternal } from "@lib/db/repositories/project-matching";
-import {
-  normalizeProjectAlias as normalizeProjectAliasInternal,
-  normalizeProjectNameKey as normalizeProjectNameKeyInternal,
-  tokenizeProjectText as tokenizeProjectTextInternal,
-  tokenOverlap as tokenOverlapInternal,
-  uniqueStrings as uniqueStringsInternal,
-} from "@lib/db/repositories/project-matching-utils";
+import { findProjectCandidates } from "@lib/db/repositories/project-matching";
+import { normalizeProjectNameKey } from "@lib/db/repositories/project-matching-utils";
+import type { ProjectMatchInput } from "@lib/db/repositories/types";
 import type { Email, Project } from "@lib/db/types";
-
-export function normalizeProjectAlias(text: string): string {
-  return normalizeProjectAliasInternal(text);
-}
-
-export function normalizeProjectNameKey(text: string): string {
-  return normalizeProjectNameKeyInternal(text);
-}
-
-export function tokenizeProjectText(
-  text: string,
-  opts?: { stopWords?: Set<string>; minLen?: number }
-): Set<string> {
-  return tokenizeProjectTextInternal(text, opts);
-}
-
-export function tokenOverlap(
-  lhs: Set<string>,
-  rhs: Set<string>
-): { common: string[]; ratio: number } {
-  return tokenOverlapInternal(lhs, rhs);
-}
-
-export function uniqueStrings(
-  values: Array<string | null | undefined>
-): string[] {
-  return uniqueStringsInternal(values);
-}
-
-export type ProjectMatchReasonCode = ProjectMatchReasonCodeInternal;
-export type ProjectMatchReason = ProjectMatchReasonInternal;
-export type ProjectMatchCandidate = ProjectMatchCandidateInternal;
-export type ProjectMatchDecision = ProjectMatchDecisionInternal;
-export type ProjectMatchContext = ProjectMatchContextInternal;
-export type ProjectMatchInput = ProjectMatchInputInternal;
-export type ProjectMatchResult = ProjectMatchResultInternal;
 
 function parseProjectRow(row: Record<string, unknown>): Project {
   return {
@@ -151,7 +101,7 @@ export async function linkEmailToProject(
 ): Promise<void> {
   const existing = await db
     .query<{ project_id: number | null }, [number]>(
-      "SELECT project_id FROM emails WHERE id = ?"
+      "SELECT project_id FROM emails WHERE id = $1"
     )
     .get(emailId);
 
@@ -171,7 +121,7 @@ export async function linkEmailToProject(
   }
 
   const result = await db.run(
-    "UPDATE emails SET project_id = ? WHERE id = ? AND project_id IS NULL",
+    "UPDATE emails SET project_id = $1 WHERE id = $2 AND project_id IS NULL",
     [projectId, emailId]
   );
   if (result.count === 0) {
@@ -185,7 +135,7 @@ export async function linkEmailToProject(
       first_seen = (SELECT MIN(received_at) FROM emails WHERE project_id = projects.id),
       last_seen = (SELECT MAX(received_at) FROM emails WHERE project_id = projects.id),
       updated_at = now()
-    WHERE id = ?
+    WHERE id = $1
   `,
     [projectId]
   );
@@ -223,12 +173,6 @@ export async function findProjectByText(text: string): Promise<Project | null> {
     return parseProjectRow(row);
   }
   return null;
-}
-
-export function findProjectCandidates(
-  input: ProjectMatchInput
-): Promise<ProjectMatchResult | null> {
-  return findProjectCandidatesInternal(input);
 }
 
 export async function findBestProjectMatch(

@@ -10,12 +10,15 @@ import {
 } from "../../src/lib/assessor";
 import { queryPermitMapFeatures } from "../../src/lib/dust-features";
 import { calculateBoundsFromCenter } from "./bounds";
-import { buildDocumentCluesForPermit } from "./document-clues";
+import {
+  buildDocumentCluesForPermit,
+  type ProjectDocumentRow,
+} from "./document-clues";
 import { buildGeminiDocumentCluesForPermit } from "./gemini-document-clues";
 import { runRehydratedPipeline } from "./pipeline";
 import type { Bounds, LatLng } from "./types";
 
-type InputPermit = {
+interface InputPermit {
   permitId: string;
   projectName?: string | null;
   address?: string | null;
@@ -24,7 +27,7 @@ type InputPermit = {
   status?: string | null;
   projectId?: number | null;
   docCount?: number;
-};
+}
 
 type PredictionSource =
   | "apn"
@@ -35,7 +38,7 @@ type PredictionSource =
   | "doc_bounds_only"
   | "none";
 
-type CliArgs = {
+interface CliArgs {
   inputPath: string;
   outputPath: string;
   limit: number | null;
@@ -67,11 +70,11 @@ type CliArgs = {
   recordHistory: boolean;
   historyPath: string;
   label: string | null;
-};
+}
 
 type BenchmarkStatus = "scored" | "skipped" | "error";
 
-type BenchmarkResult = {
+interface BenchmarkResult {
   permitId: string;
   status: BenchmarkStatus;
   reason: string | null;
@@ -111,13 +114,14 @@ type BenchmarkResult = {
     passIou: boolean;
   } | null;
   debug: string[];
-};
+}
 
 const EARTH_RADIUS_M = 6_371_000;
 const DEFAULT_DOC_CONTAINER = "supabase_db_desert-services-hub";
 const DEFAULT_HISTORY_PATH =
   "experiments/custom-map-rehydrate/ITERATION_LOG.md";
 const OVERRIDE_DELTA_TIE_TOLERANCE_M = 30;
+const HAS_DIGIT_RE = /\d/;
 
 function nowStamp(): string {
   const iso = new Date().toISOString().replace(/[:.]/g, "-");
@@ -400,8 +404,7 @@ function parseArgs(argv: string[]): CliArgs {
     docCoordinateParcelMaxDeltaM <= 0
   ) {
     throw new Error(
-      "Invalid --doc-coordinate-parcel-max-delta: " +
-        docCoordinateParcelMaxDeltaM
+      `Invalid --doc-coordinate-parcel-max-delta: ${docCoordinateParcelMaxDeltaM}`
     );
   }
 
@@ -410,13 +413,12 @@ function parseArgs(argv: string[]): CliArgs {
     docCoordinateParcelMinDeltaM < 0
   ) {
     throw new Error(
-      "Invalid --doc-coordinate-parcel-min-delta: " +
-        docCoordinateParcelMinDeltaM
+      `Invalid --doc-coordinate-parcel-min-delta: ${docCoordinateParcelMinDeltaM}`
     );
   }
 
   if (!Number.isFinite(docSizeOverageRatio) || docSizeOverageRatio <= 1) {
-    throw new Error("Invalid --doc-size-overage-ratio: " + docSizeOverageRatio);
+    throw new Error(`Invalid --doc-size-overage-ratio: ${docSizeOverageRatio}`);
   }
 
   if (
@@ -424,15 +426,15 @@ function parseArgs(argv: string[]): CliArgs {
     docSizeMinScale <= 0 ||
     docSizeMinScale >= 1
   ) {
-    throw new Error("Invalid --doc-size-min-scale: " + docSizeMinScale);
+    throw new Error(`Invalid --doc-size-min-scale: ${docSizeMinScale}`);
   }
 
   if (!Number.isFinite(geminiMaxDocs) || geminiMaxDocs <= 0) {
-    throw new Error("Invalid --gemini-max-docs: " + geminiMaxDocs);
+    throw new Error(`Invalid --gemini-max-docs: ${geminiMaxDocs}`);
   }
 
   if (!Number.isFinite(geminiMaxDocBytes) || geminiMaxDocBytes <= 0) {
-    throw new Error("Invalid --gemini-max-doc-bytes: " + geminiMaxDocBytes);
+    throw new Error(`Invalid --gemini-max-doc-bytes: ${geminiMaxDocBytes}`);
   }
 
   return {
@@ -484,7 +486,7 @@ function extractApnCandidates(parcelRaw: string | null | undefined): string[] {
   const out: string[] = [];
 
   for (const token of rawTokens) {
-    if (!/\d/.test(token)) {
+    if (!HAS_DIGIT_RE.test(token)) {
       continue;
     }
 
@@ -501,7 +503,7 @@ function extractApnCandidates(parcelRaw: string | null | undefined): string[] {
 }
 
 function coordinateKey(coord: LatLng): string {
-  return coord.lat.toFixed(6) + "," + coord.lng.toFixed(6);
+  return `${coord.lat.toFixed(6)},${coord.lng.toFixed(6)}`;
 }
 
 function dedupeCoordinates(coords: LatLng[], maxCount = 10): LatLng[] {
@@ -791,7 +793,7 @@ function approximateSetMetrics(
   };
 }
 
-function boundsToPolygon(bounds: Bounds): LatLng[] {
+function _boundsToPolygon(bounds: Bounds): LatLng[] {
   return [
     { lat: bounds.north, lng: bounds.west },
     { lat: bounds.north, lng: bounds.east },
@@ -812,6 +814,8 @@ function isInside(point: LatLng, bounds: Bounds, edge: ClipEdge): boolean {
       return point.lat >= bounds.south;
     case "top":
       return point.lat <= bounds.north;
+    default:
+      return false;
   }
 }
 
@@ -863,7 +867,7 @@ function clipPolygonByEdge(
     return output;
   }
 
-  let prev = polygon[polygon.length - 1];
+  let prev = polygon.at(-1);
   if (!prev) {
     return output;
   }
@@ -1049,7 +1053,7 @@ function buildFallbackBoundsFromHints(
 async function evaluatePermit(
   permit: InputPermit,
   options: CliArgs,
-  documentCache: Map<number, any[]>
+  documentCache: Map<number, ProjectDocumentRow[]>
 ): Promise<BenchmarkResult> {
   const debug: string[] = [];
   const apnCandidates = extractApnCandidates(permit.parcel);
@@ -1110,7 +1114,7 @@ async function evaluatePermit(
           state: "AZ",
           county: "Maricopa",
         },
-        documentCache as Map<number, any[]>
+        documentCache
       );
 
       debug.push(...clueResult.debug.map((d) => `doc-clues: ${d}`));
@@ -1657,7 +1661,7 @@ async function main(): Promise<void> {
   console.log(`gemini clues: ${options.withGeminiClues ? "on" : "off"}`);
 
   const startedAt = Date.now();
-  const documentCache = new Map<number, any[]>();
+  const documentCache = new Map<number, ProjectDocumentRow[]>();
 
   const results = await runWithConcurrency(
     permits,

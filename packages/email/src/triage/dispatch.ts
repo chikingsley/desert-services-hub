@@ -7,7 +7,7 @@
  * - Enqueue the appropriate job handler for action-triggering categories
  */
 
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 import { updateEmailClassification } from "@lib/db/repositories/email";
 import { linkEmailToEstimate } from "@lib/db/repositories/estimate-email";
 import { linkEmailToProject } from "@lib/db/repositories/project";
@@ -77,19 +77,19 @@ async function handleSpamAutoExclude(
     return;
   }
 
-  await db.run("UPDATE emails SET is_excluded = 1 WHERE id = ?", [
+  await db.run("UPDATE emails SET is_excluded = 1 WHERE id = $1", [
     meta.emailId,
   ]);
   await db.run(
     `INSERT INTO domain_rules (domain, classification, is_excluded)
-     VALUES (?, 'SPAM', true)
+     VALUES ($1, 'SPAM', true)
      ON CONFLICT (domain) DO NOTHING`,
     [domain]
   );
 
   const updated = await db.run(
     `UPDATE emails SET is_excluded = 1, classification = 'SPAM', classification_method = 'domain_rule'
-     WHERE is_excluded = 0 AND lower(from_email) LIKE ?`,
+     WHERE is_excluded = 0 AND lower(from_email) LIKE $1`,
     [`%@${domain}`]
   );
   const count = (updated as unknown as { count?: number })?.count ?? 0;
@@ -108,7 +108,7 @@ async function tryLinkProjectFallback(
 
   const existing = await db
     .query<{ project_id: number | null }, [number]>(
-      "SELECT project_id FROM emails WHERE id = ?"
+      "SELECT project_id FROM emails WHERE id = $1"
     )
     .get(meta.emailId);
 
@@ -138,7 +138,7 @@ async function tryLinkEstimateFallback(
 
   const hasLink = await db
     .query<{ cnt: string }, [number]>(
-      "SELECT COUNT(*) AS cnt FROM estimate_emails WHERE email_id = ?"
+      "SELECT COUNT(*) AS cnt FROM estimate_emails WHERE email_id = $1"
     )
     .get(meta.emailId);
 

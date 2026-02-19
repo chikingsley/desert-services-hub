@@ -1,4 +1,4 @@
-/* eslint-disable no-process-env */
+/* eslint_disable no-process-env */
 import * as Sentry from "@sentry/nextjs";
 
 export function register() {

@@ -13,15 +13,12 @@ import {
   printHydrateProjectCompletion,
   printHydrateProjectVerboseSummary,
 } from "./hydrate-project/report";
-import type {
-  HydrateProjectOptions,
-  HydrateProjectStats,
-} from "./types";
 import {
   getMailboxByUser,
   getTrackedFolderForProject,
   resolveProject,
 } from "./repository";
+import type { HydrateProjectOptions, HydrateProjectStats } from "./types";
 
 interface ProjectFolderContext {
   folderId: string;

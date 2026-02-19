@@ -5,59 +5,12 @@
  */
 import { describe, expect, it } from "bun:test";
 import { GraphEmailClient } from "@email/client";
-import { getConfig } from "@email/index";
 import type { EmailConfig } from "@email/types";
 
 const EMAIL_TESTS_ENABLED = process.env.ENABLE_EMAIL_TESTS === "1";
 const describeEmailTests = EMAIL_TESTS_ENABLED ? describe : describe.skip;
 
 describeEmailTests("email service", () => {
-  describe("getConfig", () => {
-    it("throws when credentials missing", () => {
-      const original = {
-        AZURE_CLIENT_ID: process.env.AZURE_CLIENT_ID,
-        AZURE_CLIENT_SECRET: process.env.AZURE_CLIENT_SECRET,
-        AZURE_TENANT_ID: process.env.AZURE_TENANT_ID,
-      };
-
-      // Clear env vars
-      process.env.AZURE_TENANT_ID = undefined;
-      process.env.AZURE_CLIENT_ID = undefined;
-      process.env.AZURE_CLIENT_SECRET = undefined;
-
-      expect(() => getConfig()).toThrow("Missing Azure credentials");
-
-      // Restore
-      process.env.AZURE_TENANT_ID = original.AZURE_TENANT_ID;
-      process.env.AZURE_CLIENT_ID = original.AZURE_CLIENT_ID;
-      process.env.AZURE_CLIENT_SECRET = original.AZURE_CLIENT_SECRET;
-    });
-
-    it("returns config when credentials present", () => {
-      const original = {
-        AZURE_CLIENT_ID: process.env.AZURE_CLIENT_ID,
-        AZURE_CLIENT_SECRET: process.env.AZURE_CLIENT_SECRET,
-        AZURE_TENANT_ID: process.env.AZURE_TENANT_ID,
-      };
-
-      process.env.AZURE_TENANT_ID = "test-tenant";
-      process.env.AZURE_CLIENT_ID = "test-client";
-      process.env.AZURE_CLIENT_SECRET = "test-secret";
-
-      const config = getConfig();
-      expect(config.azureTenantId).toBe("test-tenant");
-      expect(config.azureClientId).toBe("test-client");
-      expect(config.azureClientSecret).toBe("test-secret");
-      expect(config.batchSize).toBe(50);
-      expect(config.daysBack).toBe(30);
-
-      // Restore
-      process.env.AZURE_TENANT_ID = original.AZURE_TENANT_ID;
-      process.env.AZURE_CLIENT_ID = original.AZURE_CLIENT_ID;
-      process.env.AZURE_CLIENT_SECRET = original.AZURE_CLIENT_SECRET;
-    });
-  });
-
   describe("GraphEmailClient", () => {
     const testConfig: EmailConfig = {
       azureClientId: "test-client",

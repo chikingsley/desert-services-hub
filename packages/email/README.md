@@ -5,7 +5,6 @@
 - `cli/` runnable scripts
 - `src/` reusable email modules (client, commands, sync, enrichment, templates)
 - `tests/` test coverage
-- `resources/` tracked reference assets used by inbox workflows
 - `data/` local runtime artifacts (ignored by git)
 
 ## Entrypoints
@@ -24,15 +23,15 @@
 
 ## Outlook Webhooks (Real-time Email Sync)
 
-Microsoft Graph change notifications push new emails to our webhook endpoint in real-time instead of waiting for the 5-min polling cycle.
+Microsoft Graph change notifications push new emails to our webhook endpoint in real-time instead of relying on periodic fallback sync.
 
 ### How it works
 
 1. Subscriptions registered for all 36 mailboxes via Graph API
-2. Microsoft POSTs to `https://monday-estimates.desertservices.app/api/webhooks/outlook`
-3. Webhook enqueues `email_notification` jobs to `webhook_jobs` table
-4. Background worker fetches the single message, stores it, enriches it
-5. Existing 5-min polling stays as fallback for missed notifications
+2. Microsoft POSTs to `https://<project-ref>.supabase.co/functions/v1/outlook-webhook`
+3. Edge function enqueues `email_notification` via `enqueue_background_job`
+4. Background worker consumes `pgmq.q_background_jobs`, stores/enriches the message
+5. A 15-minute `mailbox_fallback_sync` job provides recovery for missed notifications
 
 ### Subscription lifecycle
 
@@ -57,5 +56,5 @@ status                                    # Show subscription health
 
 ### Env vars
 
-- `WEBHOOK_BASE_URL` — public tunnel URL (currently `https://monday-estimates.desertservices.app`)
+- `WEBHOOK_BASE_URL` — Supabase project base URL (for example `https://<project-ref>.supabase.co`)
 - `OUTLOOK_WEBHOOK_SECRET` — clientState validation secret

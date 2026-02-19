@@ -3,13 +3,13 @@ import { join } from "node:path";
 import type { GraphGroupsClient } from "@email/groups";
 import { htmlToText } from "@email/html-to-text";
 import type { GroupPost, GroupThread } from "@email/types";
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
+import { insertAttachment } from "@lib/db/repositories/attachment";
+import { insertEmail } from "@lib/db/repositories/email";
 import {
   getOrCreateMailbox,
-  insertAttachment,
-  insertEmail,
   updateMailboxSyncState,
-} from "@lib/db/repositories";
+} from "@lib/db/repositories/mailbox";
 import type { InsertAttachmentData, InsertEmailData } from "@lib/db/types";
 import { linkEmail } from "@lib/linking/link-email";
 
@@ -20,20 +20,9 @@ const ATTACHMENTS_DIR = join(
   "attachments"
 );
 
-const enqueueIntake = db.prepare(
-  "INSERT INTO webhook_jobs (job_type, payload) VALUES ('intake', ?)"
+const enqueueIntake = db.query<{ id: number | null }>(
+  "SELECT public.enqueue_background_job('intake', ($1::text)::jsonb, NULL, 3, FALSE)::bigint AS id"
 );
-const enqueueEmailResolveIfNotQueued = db.prepare(`
-  INSERT INTO webhook_jobs (job_type, payload)
-  SELECT 'email_resolve', ?
-  WHERE NOT EXISTS (
-    SELECT 1
-      FROM webhook_jobs
-     WHERE job_type = 'email_resolve'
-       AND status IN ('pending', 'processing')
-       AND payload::jsonb->>'emailId' = ?
-  )
-`);
 const IC_GROUP_EMAIL = "internalcontracts@desertservices.net";
 
 export interface SyncConversationPostResult {
@@ -122,10 +111,6 @@ export async function syncConversationPost(
   });
 
   await linkEmail(emailId);
-  await enqueueEmailResolveIfNotQueued.run(
-    JSON.stringify({ emailId }),
-    String(emailId)
-  );
 
   const pdfPaths: string[] = [];
   let downloadedFiles = 0;
@@ -160,7 +145,7 @@ export async function syncConversationPost(
   }
 
   if (groupEmail === IC_GROUP_EMAIL && pdfPaths.length > 0) {
-    await enqueueIntake.run(
+    await enqueueIntake.get(
       JSON.stringify({
         attachmentPaths: pdfPaths,
         bodyText: fullText,

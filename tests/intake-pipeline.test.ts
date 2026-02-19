@@ -9,18 +9,18 @@
 import { afterAll, beforeAll, describe, expect, it } from "bun:test";
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 
 // ============================================================================
 // Config
 // ============================================================================
 
-const WEBHOOK_URL = process.env.WEBHOOK_URL ?? "http://localhost:4000";
+const WEBHOOK_URL = process.env.WEBHOOK_URL ?? "http://localhost:4747";
 const TEST_PDF_DIRS = [
   process.env.TEST_PDF_DIR,
   "/tmp/po-test",
   "tests/output/invoices",
-  "packages/email/resources/inbox",
+  "packages/narratives/data/samples",
 ].filter((v): v is string => Boolean(v));
 const POLL_INTERVAL_MS = 2000;
 const PARSE_TIMEOUT_MS = 120_000; // 2 min for OCR + reconciliation

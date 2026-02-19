@@ -1,7 +1,7 @@
 /**
  * Project ↔ Estimate linking (join table)
  */
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 
 export type ProjectEstimateLinkSource =
   | "manual"
@@ -73,7 +73,7 @@ export async function linkEstimateToProject(
   try {
     await db.run(
       `INSERT INTO project_estimates (project_id, estimate_id, source)
-       VALUES (?, ?, ?)
+       VALUES ($1, $2, $3)
        ON CONFLICT DO NOTHING`,
       [projectId, estimateId, source]
     );
@@ -92,7 +92,7 @@ export async function setCanonicalEstimateForProject(
     await db.transaction(async () => {
       await db.run(
         `INSERT INTO project_estimates (project_id, estimate_id, source)
-         VALUES (?, ?, ?)
+         VALUES ($1, $2, $3)
          ON CONFLICT (project_id, estimate_id)
          DO UPDATE SET source = EXCLUDED.source`,
         [projectId, estimateId, source]
@@ -102,14 +102,14 @@ export async function setCanonicalEstimateForProject(
       await db.run(
         `UPDATE project_estimates
          SET is_canonical = FALSE
-         WHERE project_id = ? AND is_canonical = TRUE`,
+         WHERE project_id = $1 AND is_canonical = TRUE`,
         [projectId]
       );
 
       await db.run(
         `UPDATE project_estimates
          SET is_canonical = TRUE, canonicalized_at = now()
-         WHERE project_id = ? AND estimate_id = ?`,
+         WHERE project_id = $1 AND estimate_id = $2`,
         [projectId, estimateId]
       );
     });
@@ -148,7 +148,7 @@ export async function getEstimatesForProject(
          pe.created_at
        FROM project_estimates pe
        JOIN estimates e ON e.id = pe.estimate_id
-       WHERE pe.project_id = ?
+       WHERE pe.project_id = $1
        ORDER BY pe.is_canonical DESC,
                 pe.canonicalized_at DESC NULLS LAST,
                 pe.created_at DESC NULLS LAST,
@@ -210,7 +210,7 @@ export async function getCanonicalEstimateForProject(
          ORDER BY is_current DESC, version_number DESC, created_at DESC
          LIMIT 1
        ) ev ON true
-       WHERE pe.project_id = ?
+       WHERE pe.project_id = $1
          AND pe.is_canonical = TRUE
        ORDER BY pe.canonicalized_at DESC NULLS LAST, pe.created_at DESC NULLS LAST
        LIMIT 1`
@@ -265,7 +265,7 @@ export async function getCanonicalProjectSov(
       }>(
         `SELECT id, name, title, show_subtotal, sort_order
          FROM estimate_sections
-         WHERE version_id = ?
+         WHERE version_id = $1
          ORDER BY sort_order`
       )
       .all(canonicalEstimate.currentVersionId),
@@ -294,7 +294,7 @@ export async function getCanonicalProjectSov(
            notes,
            sort_order
          FROM estimate_line_items
-         WHERE version_id = ?
+         WHERE version_id = $1
          ORDER BY sort_order`
       )
       .all(canonicalEstimate.currentVersionId),

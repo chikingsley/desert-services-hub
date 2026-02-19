@@ -1,5 +1,5 @@
 import { parseArgs } from "node:util";
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 import { SharePointClient } from "@sharepoint/client";
 
 const SHAREPOINT_ROOT = "Customer Projects/Active";
@@ -220,7 +220,7 @@ const projects = await db
   JOIN documents a ON a.email_id = e.id AND a.source = 'email_attachment'
   WHERE m.email = 'contracts@desertservices.net'
     AND e.notion_project_id IS NOT NULL
-    AND e.notion_project_id NOT IN (${EXCLUDE_IDS.map(() => "?").join(",")})
+    AND e.notion_project_id NOT IN (${EXCLUDE_IDS.map(() => "$1").join(",")})
     AND a.content_type LIKE '%pdf%'
     AND a.storage_bucket IS NOT NULL
     AND a.storage_path IS NOT NULL
@@ -290,7 +290,7 @@ for (const proj of projects) {
     FROM documents d
     JOIN emails e ON d.email_id = e.id
     WHERE d.source = 'email_attachment'
-      AND e.notion_project_id = ?
+      AND e.notion_project_id = $1
       AND d.content_type LIKE '%pdf%'
       AND d.storage_bucket IS NOT NULL
       AND d.storage_path IS NOT NULL

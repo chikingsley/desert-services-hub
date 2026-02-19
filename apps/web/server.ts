@@ -22,6 +22,13 @@ import {
   postAutomationStop,
   postPermitRenewAndPay,
 } from "@/api/automation";
+import {
+  getBuildingConnectedAuthStatus,
+  postBuildingConnectedAuthClipboardCopy,
+  postBuildingConnectedAuthClipboardPaste,
+  postBuildingConnectedAuthStart,
+  postBuildingConnectedAuthStop,
+} from "@/api/buildingconnected-auth";
 import { getCatalog, getTakeoffItems } from "@/api/catalog";
 import {
   createCheckpoint,
@@ -205,6 +212,21 @@ const server = serve({
     "/api/automation/clipboard/copy": {
       POST: h(postAutomationClipboardCopy),
     },
+    "/api/buildingconnected/auth/status": {
+      GET: h(getBuildingConnectedAuthStatus),
+    },
+    "/api/buildingconnected/auth/start": {
+      POST: h(postBuildingConnectedAuthStart),
+    },
+    "/api/buildingconnected/auth/stop": {
+      POST: h(postBuildingConnectedAuthStop),
+    },
+    "/api/buildingconnected/auth/clipboard/paste": {
+      POST: h(postBuildingConnectedAuthClipboardPaste),
+    },
+    "/api/buildingconnected/auth/clipboard/copy": {
+      POST: h(postBuildingConnectedAuthClipboardCopy),
+    },
     "/api/permits/:id/renew-and-pay": {
       POST(req) {
         return postPermitRenewAndPay(req, req.params.id);
@@ -302,6 +324,7 @@ const server = serve({
     "/catalog": homepage,
     "/map": homepage,
     "/maricopa": homepage,
+    "/buildingconnected": homepage,
     "/automation": homepage,
     "/settings": homepage,
   },

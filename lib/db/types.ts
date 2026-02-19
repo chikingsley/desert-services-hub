@@ -55,6 +55,13 @@ export type ExtractionStatus =
   | "skipped"
   | "deduped";
 
+export type BodyLinkScanStatus =
+  | "pending"
+  | "no_links"
+  | "success"
+  | "gated"
+  | "failed";
+
 // ============================================
 // Entity Interfaces
 // ============================================
@@ -164,6 +171,15 @@ export interface Email {
   realSenderEmail: string | null;
   realSenderDomain: string | null;
   isExcluded: boolean;
+
+  // Body-link scanning
+  bodyLinkScanStatus: BodyLinkScanStatus | null;
+  bodyLinkScannedAt: string | null;
+  bodyLinkScanError: string | null;
+  bodyLinkScanLinksFound: number;
+  bodyLinkScanAttachmentsAdded: number;
+  bodyLinkScanAttempts: number;
+  bodyLinkScanVersion: number;
 
   createdAt: string;
 }

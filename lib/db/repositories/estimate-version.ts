@@ -1,4 +1,4 @@
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 
 interface EstimateVersionStateRow {
   id: string;
@@ -25,10 +25,10 @@ export async function ensureEstimateHasCurrentVersion(
   const total = options.total ?? 0;
 
   const versions = (await db
-    .prepare(
+    .query(
       `SELECT id, is_current, version_number, created_at
        FROM estimate_versions
-       WHERE estimate_id = ?
+       WHERE estimate_id = $1
        ORDER BY is_current DESC, version_number DESC, created_at DESC, id DESC`
     )
     .all(estimateId)) as EstimateVersionStateRow[];
@@ -36,9 +36,9 @@ export async function ensureEstimateHasCurrentVersion(
   if (versions.length === 0) {
     const versionId = crypto.randomUUID();
     await db
-      .prepare(
+      .query(
         `INSERT INTO estimate_versions (id, estimate_id, version_number, source, total, is_current)
-         VALUES (?, ?, 1, ?, ?, 1)`
+         VALUES ($1, $2, 1, $3, $4, 1)`
       )
       .run(versionId, estimateId, source, total);
     return { versionId, created: true };
@@ -50,10 +50,10 @@ export async function ensureEstimateHasCurrentVersion(
 
   if (needsNormalization) {
     await db
-      .prepare(
+      .query(
         `UPDATE estimate_versions
-         SET is_current = CASE WHEN id = ? THEN 1 ELSE 0 END
-         WHERE estimate_id = ?`
+         SET is_current = CASE WHEN id = $1 THEN 1 ELSE 0 END
+         WHERE estimate_id = $2`
       )
       .run(preferred.id, estimateId);
   }

@@ -154,13 +154,13 @@ async function walkPath(
 ): Promise<WalkStats> {
   const stats: WalkStats = { errors: 0, files: 0, folders: 0 };
 
-  const insertFolder = options.db?.prepare(`
+  const insertFolder = options.db?.query(`
     INSERT OR REPLACE INTO folders
     (path, name, depth, parent_path, child_count, web_url, sharepoint_id, created_at, modified_at)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
 
-  const insertFile = options.db?.prepare(`
+  const insertFile = options.db?.query(`
     INSERT OR REPLACE INTO files
     (path, name, folder_path, size, mime_type, web_url, sharepoint_id, created_at, modified_at)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)

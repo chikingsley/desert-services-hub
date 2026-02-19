@@ -6,7 +6,7 @@
  */
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { App } from "@/apps/web/frontend/App";
+import { App } from "@/apps/web/frontend/app";
 
 const elem = document.getElementById("root");
 if (!elem) {

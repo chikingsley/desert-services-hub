@@ -1,15 +1,15 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
-import { db } from "@lib/db/hub";
-import {
-  normalizeProjectAlias,
-  normalizeProjectNameKey,
-  type ProjectMatchResult,
-} from "@lib/db/repositories/project";
+import { db } from "@lib/db/client";
 import {
   getProjectMatchReview,
   resolveProjectMatchReview,
   upsertProjectMatchReview,
 } from "@lib/db/repositories/project-match-review";
+import {
+  normalizeProjectAlias,
+  normalizeProjectNameKey,
+} from "@lib/db/repositories/project-matching-utils";
+import type { ProjectMatchResult } from "@lib/db/repositories/types";
 
 const RUN_TAG = crypto.randomUUID().slice(0, 8).toLowerCase();
 const TEST_PREFIX = `_TEST_DELETE_ME_PROJECT_REVIEW_${RUN_TAG}_`;
@@ -69,7 +69,7 @@ function buildResult(primaryText: string): ProjectMatchResult {
 async function createProject(name: string): Promise<number> {
   const rows = (await db.run(
     `INSERT INTO projects (name, normalized_name)
-     VALUES (?, ?)
+     VALUES ($1, $2)
      RETURNING id`,
     [name, normalizeProjectNameKey(name)]
   )) as Array<{ id: number }>;
@@ -108,18 +108,20 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await db.run(
-    "DELETE FROM project_match_reviews WHERE source = ? AND source_key = ?",
+    "DELETE FROM project_match_reviews WHERE source = $1 AND source_key = $2",
     [SOURCE, SOURCE_KEY]
   );
 
   if (createdProjectIds.length > 0) {
     await db.run(
       `DELETE FROM projects
-       WHERE id IN (${createdProjectIds.map(() => "?").join(", ")})`,
+       WHERE id IN (${createdProjectIds.map(() => "$1").join(", ")})`,
       createdProjectIds
     );
   } else {
-    await db.run("DELETE FROM projects WHERE name LIKE ?", [`${TEST_PREFIX}%`]);
+    await db.run("DELETE FROM projects WHERE name LIKE $1", [
+      `${TEST_PREFIX}%`,
+    ]);
   }
 });
 

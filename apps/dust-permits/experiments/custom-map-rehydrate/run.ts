@@ -3,11 +3,11 @@
 import { runRehydratedPipeline } from "./pipeline";
 import type { ExtractedPlanHints, RehydrateOptions } from "./types";
 
-type CliArgs = {
+interface CliArgs {
   inputPath: string | null;
   outputPath: string | null;
   options: RehydrateOptions;
-};
+}
 
 function parseArgs(argv: string[]): CliArgs {
   const args = [...argv];

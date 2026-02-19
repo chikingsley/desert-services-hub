@@ -141,10 +141,10 @@ function prepareSyncRun(
 }
 
 function createInsertBidStatement(db: Database) {
-  return db.prepare(`
+  return db.query(`
     INSERT OR REPLACE INTO bc_bids
     (id, project_name, received_at, gc_company, lead_name, lead_phone, lead_email, location, description, rfp_url, all_links, subject, conversation_id, synced_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, datetime('now'))
   `);
 }
 

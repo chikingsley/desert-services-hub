@@ -74,6 +74,8 @@ Sync Commands:
   sync-mailboxes [options]    Sync email from all/specific mailboxes
   sync-mailboxes status       Show sync status for all mailboxes + groups
   sync-groups [options]       Sync M365 group conversations
+  body-link-backfill [opts]   Backfill/download body links for stored emails
+  body-link-auth-bootstrap    Bootstrap persistent BuildingConnected auth state
 
 Admin Commands:
   mailboxes                   List all tenant mailboxes from Graph API

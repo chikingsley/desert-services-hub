@@ -147,7 +147,7 @@ export async function postAutomationClipboardCopy(): Promise<Response> {
  * still hitting the typed permit-worker contract.
  */
 export async function postPermitRenewAndPay(
-  req: Request,
+  req: { json(): Promise<unknown> },
   id: string
 ): Promise<Response> {
   try {

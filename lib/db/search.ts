@@ -3,7 +3,7 @@
  *
  * Eliminates duplicated `%query%` pattern matching across repositories.
  */
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 
 /**
  * Build an ILIKE WHERE clause and its params.

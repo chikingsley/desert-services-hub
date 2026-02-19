@@ -3,7 +3,7 @@
  * Routes: GET/POST /api/upload/pdf
  */
 
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 import { createSharePointClientFromEnv } from "@sharepoint/intake-upload";
 import {
   buildTakeoffSharePointPath,
@@ -21,7 +21,7 @@ interface TakeoffPdfRow {
 }
 
 const getTakeoffPdfRow = db.query<TakeoffPdfRow>(
-  "SELECT id, pdf_url FROM takeoffs WHERE id = ?"
+  "SELECT id, pdf_url FROM takeoffs WHERE id = $1"
 );
 
 // POST /api/upload/pdf - Upload a PDF for a takeoff
@@ -101,8 +101,8 @@ export async function uploadPdf(req: Request): Promise<Response> {
     const pdfUrl = encodeSharePointPdfUrl(sharePointPath);
 
     await db
-      .prepare(
-        "UPDATE takeoffs SET pdf_url = ?, updated_at = now() WHERE id = ?"
+      .query(
+        "UPDATE takeoffs SET pdf_url = $1, updated_at = now() WHERE id = $2"
       )
       .run(pdfUrl, takeoffId);
 

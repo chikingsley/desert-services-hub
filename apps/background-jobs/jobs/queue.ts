@@ -1,8 +1,8 @@
 /**
- * Job queue operations — dequeue, claim, complete, fail, enqueue.
+ * Job queue operations backed by pgmq.
  */
 
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 import type { z } from "zod";
 import {
   ESTIMATE_FILE_SWEEP_BATCH_SIZE,
@@ -11,93 +11,165 @@ import {
 } from "./config";
 import type { WebhookJob } from "./types";
 
-// -- Atomic dequeue (FOR UPDATE SKIP LOCKED) --
+const QUEUE_TABLE = "pgmq.q_background_jobs";
+const DEFAULT_MAX_ATTEMPTS = 3;
+const VISIBILITY_TIMEOUT_SECONDS = STALE_JOB_MINUTES * 60;
 
-const dequeueNextJob = db.query<WebhookJob>(`
+interface QueueRow {
+  msg_id: number;
+  read_ct: number;
+  message:
+    | {
+        job_type?: string;
+        monday_item_id?: string | null;
+        payload?: unknown;
+        max_attempts?: number;
+      }
+    | string;
+}
+
+const getBackgroundWorkerConfigValue = db.query<{ value: string }>(
+  "SELECT value FROM background_worker_config WHERE key = $1"
+);
+
+const setBackgroundWorkerConfigValue = db.query(
+  "INSERT INTO background_worker_config (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value"
+);
+
+const enqueueBackgroundJob = db.query<{ id: number }>(
+  "SELECT public.enqueue_background_job($1, ($2::text)::jsonb, $3, $4, $5)::bigint AS id"
+);
+
+const dequeueNextJob = db.query<QueueRow>(`
   WITH next AS (
-    SELECT id FROM webhook_jobs
-    WHERE status = 'pending' OR (status = 'failed' AND attempts < max_attempts)
+    SELECT msg_id
+    FROM ${QUEUE_TABLE}
+    WHERE vt <= now()
+      AND read_ct < COALESCE((message->>'max_attempts')::int, ${DEFAULT_MAX_ATTEMPTS})
     ORDER BY
-      CASE WHEN job_type = 'email_notification' THEN 0 ELSE 1 END,
-      created_at ASC
+      CASE WHEN message->>'job_type' = 'email_notification' THEN 0 ELSE 1 END,
+      msg_id ASC
     LIMIT 1
     FOR UPDATE SKIP LOCKED
   )
-  UPDATE webhook_jobs
-  SET status = 'processing', started_at = now(), attempts = attempts + 1
+  UPDATE ${QUEUE_TABLE} AS q
+  SET
+    vt = now() + make_interval(secs => ${VISIBILITY_TIMEOUT_SECONDS}),
+    read_ct = q.read_ct + 1
   FROM next
-  WHERE webhook_jobs.id = next.id
-  RETURNING webhook_jobs.*
+  WHERE q.msg_id = next.msg_id
+  RETURNING q.msg_id, q.read_ct, q.message
 `);
 
-const dequeueNextJobExcludeLlm = db.query<WebhookJob>(`
+const dequeueNextJobExcludeLlm = db.query<QueueRow>(`
   WITH next AS (
-    SELECT id FROM webhook_jobs
-    WHERE (status = 'pending' OR (status = 'failed' AND attempts < max_attempts))
-      AND job_type NOT IN ('contact_enrichment', 'email_triage_batch', 'estimate_triage')
+    SELECT msg_id
+    FROM ${QUEUE_TABLE}
+    WHERE vt <= now()
+      AND read_ct < COALESCE((message->>'max_attempts')::int, ${DEFAULT_MAX_ATTEMPTS})
+      AND message->>'job_type' NOT IN ('contact_enrichment', 'email_triage_batch', 'estimate_triage')
     ORDER BY
-      CASE WHEN job_type = 'email_notification' THEN 0 ELSE 1 END,
-      created_at ASC
+      CASE WHEN message->>'job_type' = 'email_notification' THEN 0 ELSE 1 END,
+      msg_id ASC
     LIMIT 1
     FOR UPDATE SKIP LOCKED
   )
-  UPDATE webhook_jobs
-  SET status = 'processing', started_at = now(), attempts = attempts + 1
+  UPDATE ${QUEUE_TABLE} AS q
+  SET
+    vt = now() + make_interval(secs => ${VISIBILITY_TIMEOUT_SECONDS}),
+    read_ct = q.read_ct + 1
   FROM next
-  WHERE webhook_jobs.id = next.id
-  RETURNING webhook_jobs.*
+  WHERE q.msg_id = next.msg_id
+  RETURNING q.msg_id, q.read_ct, q.message
 `);
 
-export const completeJob = db.prepare(
-  "UPDATE webhook_jobs SET status = 'completed', completed_at = now(), error = NULL WHERE id = ?"
+const deleteMessage = db.query(
+  "SELECT pgmq.delete('background_jobs', $1::bigint)"
 );
 
-export const failJob = db.prepare(
-  "UPDATE webhook_jobs SET status = 'failed', error = ? WHERE id = ?"
-);
-
-export const requeueStale = db.prepare(`
-  UPDATE webhook_jobs SET status = 'pending', started_at = NULL
-  WHERE status = 'processing' AND started_at < now() - interval '${STALE_JOB_MINUTES} minutes'
+const requeueSoon = db.query(`
+  UPDATE ${QUEUE_TABLE}
+  SET vt = now() + make_interval(secs => 5)
+  WHERE msg_id = $1
 `);
 
-export const enqueueJob = db.prepare(
-  "INSERT INTO webhook_jobs (job_type, monday_item_id, payload) VALUES (?, ?, ?)"
-);
-
-const enqueueDownloadFilesIfNotQueued = db.prepare(`
-  INSERT INTO webhook_jobs (job_type, monday_item_id, payload)
-  SELECT 'download_files', ?, '{}'
-  WHERE NOT EXISTS (
-    SELECT 1 FROM webhook_jobs
-    WHERE job_type = 'download_files'
-      AND monday_item_id = ?
-      AND status IN ('pending', 'processing')
-  )
+const insertDeadLetter = db.query(`
+  INSERT INTO background_job_dead_letters
+    (job_id, job_type, monday_item_id, payload, attempts, max_attempts, error)
+  VALUES
+    ($1, $2, $3, $4::jsonb, $5, $6, $7)
 `);
 
-const enqueueFullSync = db.prepare(
-  "INSERT INTO webhook_jobs (job_type, payload) VALUES ('sync_full', '{}')"
-);
+const countVisibleByType = db.query<{ count: number }>(`
+  SELECT COUNT(*)::int AS count
+  FROM ${QUEUE_TABLE}
+  WHERE message->>'job_type' = $1
+`);
 
-const pendingFullSyncCount = db.query<{ count: number }>(
-  "SELECT COUNT(*) as count FROM webhook_jobs WHERE job_type = 'sync_full' AND status IN ('pending', 'processing')"
-);
+const enqueueDownloadFilesIfNotQueued = db.query<{ id: number | null }>(`
+  SELECT public.enqueue_background_job(
+    'download_files',
+    '{}'::jsonb,
+    $1,
+    ${DEFAULT_MAX_ATTEMPTS},
+    TRUE
+  )::bigint AS id
+`);
 
-const getEstimatePollerConfigValue = db.query<{ value: string }>(
-  "SELECT value FROM estimate_poller_config WHERE key = ?"
-);
+function normalizePayload(payload: unknown): string {
+  if (typeof payload === "string") {
+    return payload;
+  }
+  return JSON.stringify(payload ?? {});
+}
 
-const setEstimatePollerConfigValue = db.prepare(
-  "INSERT INTO estimate_poller_config (key, value) VALUES (?, ?) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value"
-);
+function parseQueueMessage(row: QueueRow): WebhookJob {
+  const raw =
+    typeof row.message === "string" ? JSON.parse(row.message) : row.message;
+  const jobType = raw?.job_type;
+  if (!jobType || typeof jobType !== "string") {
+    throw new Error(`Queue message ${row.msg_id} missing job_type`);
+  }
 
-// -- Functions --
+  return {
+    id: row.msg_id,
+    job_type: jobType,
+    monday_item_id:
+      typeof raw?.monday_item_id === "string" ? raw.monday_item_id : null,
+    payload: JSON.stringify(raw?.payload ?? {}),
+    attempts: row.read_ct,
+    max_attempts:
+      Number.isInteger(raw?.max_attempts) && (raw?.max_attempts as number) > 0
+        ? (raw?.max_attempts as number)
+        : DEFAULT_MAX_ATTEMPTS,
+  };
+}
+
+export async function enqueueJob(
+  jobType: string,
+  options?: {
+    mondayItemId?: string | null;
+    payload?: unknown;
+    maxAttempts?: number;
+    dedupe?: boolean;
+  }
+): Promise<number | null> {
+  const payload = normalizePayload(options?.payload);
+  const maxAttempts = Math.max(1, options?.maxAttempts ?? DEFAULT_MAX_ATTEMPTS);
+  const row = await enqueueBackgroundJob.get(
+    jobType,
+    payload,
+    options?.mondayItemId ?? null,
+    maxAttempts,
+    options?.dedupe ?? false
+  );
+  return row?.id ?? null;
+}
 
 export async function enqueueFullSyncIfMissing(reason: string): Promise<void> {
-  const pending = await pendingFullSyncCount.get();
+  const pending = await countVisibleByType.get("sync_full");
   if (Number(pending?.count ?? 0) === 0) {
-    await enqueueFullSync.run();
+    await enqueueJob("sync_full", { payload: {}, dedupe: true });
     console.log(`[worker] Queued full sync (${reason})`);
   }
 }
@@ -108,25 +180,41 @@ export async function dequeue(options?: {
   const stmt = options?.excludeLlmTypes
     ? dequeueNextJobExcludeLlm
     : dequeueNextJob;
-  return (await stmt.get()) ?? null;
+  const row = await stmt.get();
+  return row ? parseQueueMessage(row) : null;
 }
 
-const enqueueIfNotPendingStmt = db.prepare(`
-  INSERT INTO webhook_jobs (job_type, payload)
-  SELECT ?, ?
-  WHERE NOT EXISTS (
-    SELECT 1 FROM webhook_jobs
-    WHERE job_type = ?
-      AND status IN ('pending', 'processing')
-  )
-`);
+export async function completeJob(jobId: number): Promise<void> {
+  await deleteMessage.run(jobId);
+}
+
+export async function failJob(job: WebhookJob, error: string): Promise<void> {
+  if (job.attempts >= job.max_attempts) {
+    await insertDeadLetter.run(
+      job.id,
+      job.job_type,
+      job.monday_item_id,
+      job.payload,
+      job.attempts,
+      job.max_attempts,
+      error.slice(0, 1000)
+    );
+    await deleteMessage.run(job.id);
+    return;
+  }
+
+  await requeueSoon.run(job.id);
+}
 
 export async function enqueueIfNotPending(
   jobType: string,
-  payload = "{}"
+  payload: unknown = {}
 ): Promise<boolean> {
-  const result = await enqueueIfNotPendingStmt.run(jobType, payload, jobType);
-  return result.count > 0;
+  const id = await enqueueJob(jobType, {
+    payload,
+    dedupe: true,
+  });
+  return id !== null;
 }
 
 export function parseJobPayload<T>(job: WebhookJob, schema: z.ZodType<T>): T {
@@ -165,7 +253,7 @@ export async function enqueueEstimateFileSweep(
   }
 
   const batchSize = Math.min(ESTIMATE_FILE_SWEEP_BATCH_SIZE, ids.length);
-  const offsetRow = await getEstimatePollerConfigValue.get(
+  const offsetRow = await getBackgroundWorkerConfigValue.get(
     ESTIMATE_FILE_SWEEP_CURSOR_KEY
   );
   let offset = Number.parseInt(offsetRow?.value ?? "0", 10);
@@ -183,14 +271,14 @@ export async function enqueueEstimateFileSweep(
 
   let queued = 0;
   for (const itemId of batch) {
-    const result = await enqueueDownloadFilesIfNotQueued.run(itemId, itemId);
-    if (result.count > 0) {
+    const result = await enqueueDownloadFilesIfNotQueued.get(itemId);
+    if (result?.id) {
       queued++;
     }
   }
 
   const nextOffset = (offset + batchSize) % ids.length;
-  await setEstimatePollerConfigValue.run(
+  await setBackgroundWorkerConfigValue.run(
     ESTIMATE_FILE_SWEEP_CURSOR_KEY,
     String(nextOffset)
   );

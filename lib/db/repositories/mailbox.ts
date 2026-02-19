@@ -1,7 +1,7 @@
 /**
  * Mailbox Repository
  */
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 import type { Mailbox } from "@lib/db/types";
 
 export async function getMailbox(email: string): Promise<Mailbox | null> {
@@ -17,7 +17,7 @@ export async function getMailbox(email: string): Promise<Mailbox | null> {
         updated_at: string;
       },
       [string]
-    >("SELECT * FROM mailboxes WHERE email = ?")
+    >("SELECT * FROM mailboxes WHERE email = $1")
     .get(email);
 
   if (!row) {
@@ -44,7 +44,7 @@ export async function getOrCreateMailbox(
     return existing;
   }
 
-  await db.run("INSERT INTO mailboxes (email, display_name) VALUES (?, ?)", [
+  await db.run("INSERT INTO mailboxes (email, display_name) VALUES ($1, $2)", [
     email,
     displayName ?? null,
   ]);
@@ -63,9 +63,9 @@ export async function updateMailboxSyncState(
   await db.run(
     `UPDATE mailboxes
      SET last_sync_at = now(),
-         email_count = ?,
+         email_count = $1,
          updated_at = now()
-     WHERE id = ?`,
+     WHERE id = $2`,
     [emailCount, mailboxId]
   );
 }

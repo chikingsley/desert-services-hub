@@ -11,12 +11,12 @@
  *   5. Dispatch (persist classification, link, enqueue job)
  */
 
-import { runJsonPrompt } from "@email/llm/json-runner";
 import {
   getEmailById,
   updateEmailClassification,
 } from "@lib/db/repositories/email";
 import type { EmailClassification } from "@lib/db/types";
+import { chat } from "@lib/pdf-analysis";
 import { gatherTriageContext } from "./context";
 import { dispatchTriageResult } from "./dispatch";
 import type {
@@ -52,7 +52,7 @@ const EMAIL_TRIAGE_MODEL = (
 ).trim();
 const LOCAL_LLM_MODEL = process.env.LOCAL_LLM_MODEL ?? "granite4:latest";
 const DEFAULT_TRIAGE_PROVIDER =
-  (process.env.EMAIL_TRIAGE_PROVIDER ?? "gemini").trim().toLowerCase() ===
+  (process.env.EMAIL_TRIAGE_PROVIDER ?? "local").trim().toLowerCase() ===
   "local"
     ? "local"
     : "gemini";
@@ -106,13 +106,14 @@ export async function triageEmail(
   }
 
   const provider = options?.provider ?? DEFAULT_TRIAGE_PROVIDER;
-  const model = provider === "local" ? LOCAL_LLM_MODEL : EMAIL_TRIAGE_MODEL;
+  const _model = provider === "local" ? LOCAL_LLM_MODEL : EMAIL_TRIAGE_MODEL;
 
   const prompt = buildTriagePrompt(context);
   let raw: Record<string, unknown> | null = null;
 
   try {
-    raw = await runJsonPrompt(prompt, { model, provider });
+    const chatResult = await chat(prompt, provider);
+    raw = Object.keys(chatResult.data).length > 0 ? chatResult.data : null;
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
     console.error(`[triage] LLM failed for email ${emailId}: ${msg}`);

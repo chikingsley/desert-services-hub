@@ -1,4 +1,4 @@
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 import { parseEmailRow } from "@lib/db/repositories/email";
 
 const LIST_COLUMNS = `
@@ -128,7 +128,7 @@ async function supportsSearchDocument(): Promise<boolean> {
   }
 
   const row = (await db
-    .prepare(
+    .query(
       `SELECT 1
        FROM information_schema.columns
        WHERE table_schema = current_schema()
@@ -148,7 +148,7 @@ async function supportsEmailListDedupMv(): Promise<boolean> {
   }
 
   const row = (await db
-    .prepare(
+    .query(
       `SELECT 1
        FROM pg_matviews
        WHERE schemaname = current_schema()
@@ -173,7 +173,7 @@ async function getEmailStatsCached(
 
   const statsWhere = showExcluded ? "" : "WHERE is_excluded = 0";
   const value = (await db
-    .prepare(
+    .query(
       `SELECT
         count(*)::int as total,
         count(*) FILTER (WHERE classification = 'ESTIMATE')::int as estimates,
@@ -204,7 +204,7 @@ async function getEmailListDedupMvCountCached(): Promise<number> {
   }
 
   const row = (await db
-    .prepare("SELECT count(*)::int AS total FROM email_list_dedup_mv")
+    .query("SELECT count(*)::int AS total FROM email_list_dedup_mv")
     .get()) as { total: number } | null;
   const value = row?.total ?? 0;
   emailListDedupCountCache.set(key, {
@@ -255,11 +255,11 @@ async function tryListFromDedupMv(
 
   const [emails, total, statsResult] = await Promise.all([
     db
-      .prepare(
+      .query(
         `SELECT *, recipient_count
          FROM email_list_dedup_mv
          ORDER BY received_at DESC
-         LIMIT ? OFFSET ?`
+         LIMIT $1 OFFSET $2`
       )
       .all(params.limit, params.offset) as Promise<Record<string, unknown>[]>,
     getEmailListDedupMvCountCached(),
@@ -486,7 +486,7 @@ export async function listEmails(req: Request): Promise<Response> {
     const query = buildDedupQuery(where);
 
     const [emails, statsResult] = await Promise.all([
-      db.prepare(query).all(...values, params.limit, params.offset) as Promise<
+      db.query(query).all(...values, params.limit, params.offset) as Promise<
         Record<string, unknown>[]
       >,
       getEmailStatsCached(params.includeExcluded),

@@ -147,7 +147,7 @@ export const BODY_LINK_BACKFILL_LOOKBACK_DAYS = parsePositiveInt(
 );
 export const BODY_LINK_BACKFILL_LIMIT = parsePositiveInt(
   process.env.BODY_LINK_BACKFILL_LIMIT,
-  200
+  20
 );
 export const BODY_LINK_BACKFILL_MAX_LINKS = parsePositiveInt(
   process.env.BODY_LINK_BACKFILL_MAX_LINKS,

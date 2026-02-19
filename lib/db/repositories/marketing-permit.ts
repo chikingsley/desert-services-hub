@@ -4,7 +4,7 @@
  * CRUD operations for marketing_permits (all Maricopa County permits).
  * Used for market intelligence and sales prospecting.
  */
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 import type {
   MarketingPermit,
   PermitStatus,
@@ -52,7 +52,7 @@ export async function upsertMarketingPermit(
       previous_app_id, project_start_date, project_end_date,
       address, city, parcel, is_block_permit, is_accelerated,
       invoice_number, invoice_charges, invoice_balance, raw_data
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)
     ON CONFLICT(id) DO UPDATE SET
       project_name = COALESCE(excluded.project_name, marketing_permits.project_name),
       company_id = COALESCE(excluded.company_id, marketing_permits.company_id),
@@ -105,7 +105,7 @@ export async function markDetailScraped(id: string): Promise<void> {
   await db.run(
     `UPDATE marketing_permits
      SET detail_scraped_at = (extract(epoch FROM now()))::bigint
-     WHERE id = ?`,
+     WHERE id = $1`,
     [id]
   );
 }

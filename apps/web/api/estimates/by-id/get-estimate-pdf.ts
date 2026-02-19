@@ -2,7 +2,7 @@ import {
   generateEstimatePDF,
   getEstimatePDFFilename,
 } from "@documents/pdf/estimate/generate-estimate-pdf.server";
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 import type {
   EditorEstimate,
   EditorLineItem,
@@ -47,7 +47,7 @@ export async function handleGetEstimatePdf(req: BunRequest): Promise<Response> {
     }
 
     const estimate = (await db
-      .prepare("SELECT * FROM estimates WHERE id = ?")
+      .query("SELECT * FROM estimates WHERE id = $1")
       .get(id)) as EstimateRow | undefined;
 
     if (!estimate) {
@@ -58,16 +58,16 @@ export async function handleGetEstimatePdf(req: BunRequest): Promise<Response> {
 
     const sectionsData = version
       ? ((await db
-          .prepare(
-            "SELECT * FROM estimate_sections WHERE version_id = ? ORDER BY sort_order"
+          .query(
+            "SELECT * FROM estimate_sections WHERE version_id = $1 ORDER BY sort_order"
           )
           .all(version.id)) as EstimateSectionRow[])
       : [];
 
     const lineItemsData = version
       ? ((await db
-          .prepare(
-            "SELECT * FROM estimate_line_items WHERE version_id = ? ORDER BY sort_order"
+          .query(
+            "SELECT * FROM estimate_line_items WHERE version_id = $1 ORDER BY sort_order"
           )
           .all(version.id)) as EstimateLineItemRow[])
       : [];

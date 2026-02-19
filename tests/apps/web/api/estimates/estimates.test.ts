@@ -6,7 +6,7 @@
  */
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { findItem } from "@estimates/catalog/catalog";
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 import type {
   EstimateLineItemRow,
   EstimateRow,
@@ -106,7 +106,7 @@ function makePostRequestWithParams(
 async function createTestProject(name: string): Promise<number> {
   const rows = (await db.run(
     `INSERT INTO projects (name, normalized_name)
-     VALUES (?, ?)
+     VALUES ($1, $2)
      RETURNING id`,
     [name, name.toLowerCase()]
   )) as Array<{ id: number }>;
@@ -143,7 +143,7 @@ beforeAll(async () => {
 afterAll(async () => {
   for (const id of testEstimateIds) {
     try {
-      await db.prepare("DELETE FROM estimates WHERE id = ?").run(id);
+      await db.query("DELETE FROM estimates WHERE id = $1").run(id);
     } catch {
       // Ignore cleanup errors
     }
@@ -151,14 +151,14 @@ afterAll(async () => {
 
   for (const id of testProjectIds) {
     try {
-      await db.prepare("DELETE FROM projects WHERE id = ?").run(id);
+      await db.query("DELETE FROM projects WHERE id = $1").run(id);
     } catch {
       // Ignore cleanup errors
     }
   }
 
   const remainingEstimates = (await db
-    .prepare("SELECT COUNT(*) as count FROM estimates WHERE name LIKE ?")
+    .query("SELECT COUNT(*) as count FROM estimates WHERE name LIKE $1")
     .get(`${TEST_PREFIX}%`)) as { count: number };
 
   if (remainingEstimates.count > 0) {
@@ -168,7 +168,7 @@ afterAll(async () => {
   }
 
   const remainingProjects = (await db
-    .prepare("SELECT COUNT(*) as count FROM projects WHERE name LIKE ?")
+    .query("SELECT COUNT(*) as count FROM projects WHERE name LIKE $1")
     .get(`${TEST_PREFIX}%`)) as { count: number };
 
   if (remainingProjects.count > 0) {
@@ -242,7 +242,7 @@ describe("createEstimate", () => {
 
     // Query database directly and verify ACTUAL VALUES
     const row = (await db
-      .prepare("SELECT * FROM estimates WHERE id = ?")
+      .query("SELECT * FROM estimates WHERE id = $1")
       .get(id)) as EstimateRow;
 
     expect(row.name).toBe(input.job_name);
@@ -282,7 +282,7 @@ describe("createEstimate", () => {
 
     // Verify line item fields were canonicalized from catalog
     const item = (await db
-      .prepare("SELECT * FROM estimate_line_items WHERE version_id = ?")
+      .query("SELECT * FROM estimate_line_items WHERE version_id = $1")
       .get(version_id)) as EstimateLineItemRow;
 
     expect(item.item_name).toBe(UNIQUE.ITEM_NAME);
@@ -307,7 +307,7 @@ describe("createEstimate", () => {
     testEstimateIds.push(id);
 
     const section = (await db
-      .prepare("SELECT * FROM estimate_sections WHERE version_id = ?")
+      .query("SELECT * FROM estimate_sections WHERE version_id = $1")
       .get(version_id)) as EstimateSectionRow;
 
     expect(section.name).toBe(UNIQUE.SECTION_NAME);
@@ -340,13 +340,11 @@ describe("createEstimate", () => {
     testEstimateIds.push(id);
 
     const section = (await db
-      .prepare("SELECT id FROM estimate_sections WHERE version_id = ?")
+      .query("SELECT id FROM estimate_sections WHERE version_id = $1")
       .get(version_id)) as { id: string };
 
     const item = (await db
-      .prepare(
-        "SELECT section_id FROM estimate_line_items WHERE version_id = ?"
-      )
+      .query("SELECT section_id FROM estimate_line_items WHERE version_id = $1")
       .get(version_id)) as { section_id: string };
 
     // Item should reference the NEW section ID, not the original
@@ -438,7 +436,7 @@ describe("getEstimate", () => {
   test("returns null current_version when estimate has no versions", async () => {
     const inserted = (await db.run(
       `INSERT INTO estimates (name, status)
-       VALUES (?, ?)
+       VALUES ($1, $2)
        RETURNING id`,
       [`${TEST_PREFIX}LegacyNoVersion`, "draft"]
     )) as Array<{ id: string }>;
@@ -495,7 +493,7 @@ describe("updateEstimate", () => {
 
     // Query database and verify values ACTUALLY changed
     const row = (await db
-      .prepare("SELECT name, client_name, status FROM estimates WHERE id = ?")
+      .query("SELECT name, client_name, status FROM estimates WHERE id = $1")
       .get(testId)) as {
       name: string;
       client_name: string;
@@ -532,13 +530,13 @@ describe("updateEstimate", () => {
     expect(response.status).toBe(200);
 
     const version = (await db
-      .prepare(
-        "SELECT id FROM estimate_versions WHERE estimate_id = ? AND is_current = 1"
+      .query(
+        "SELECT id FROM estimate_versions WHERE estimate_id = $1 AND is_current = 1"
       )
       .get(testId)) as { id: string };
 
     const items = (await db
-      .prepare("SELECT * FROM estimate_line_items WHERE version_id = ?")
+      .query("SELECT * FROM estimate_line_items WHERE version_id = $1")
       .all(version.id)) as EstimateLineItemRow[];
 
     expect(items).toHaveLength(1);
@@ -552,7 +550,7 @@ describe("updateEstimate", () => {
   test("creates a version when updating a legacy estimate missing versions", async () => {
     const inserted = (await db.run(
       `INSERT INTO estimates (name, status)
-       VALUES (?, ?)
+       VALUES ($1, $2)
        RETURNING id`,
       [`${TEST_PREFIX}LegacyUpdateNoVersion`, "draft"]
     )) as Array<{ id: string }>;
@@ -581,15 +579,15 @@ describe("updateEstimate", () => {
     );
 
     const version = (await db
-      .prepare(
-        "SELECT id FROM estimate_versions WHERE estimate_id = ? AND is_current = 1"
+      .query(
+        "SELECT id FROM estimate_versions WHERE estimate_id = $1 AND is_current = 1"
       )
       .get(id)) as { id: string } | null;
     expect(version).toBeTruthy();
 
     const items = (await db
-      .prepare(
-        "SELECT item_name, description, quantity FROM estimate_line_items WHERE version_id = ?"
+      .query(
+        "SELECT item_name, description, quantity FROM estimate_line_items WHERE version_id = $1"
       )
       .all(version?.id)) as Array<{
       item_name: string;
@@ -641,11 +639,11 @@ describe("deleteEstimate", () => {
 
     // Verify everything exists first
     expect(
-      await db.prepare("SELECT 1 FROM estimates WHERE id = ?").get(id)
+      await db.query("SELECT 1 FROM estimates WHERE id = $1").get(id)
     ).toBeTruthy();
     expect(
       await db
-        .prepare("SELECT 1 FROM estimate_versions WHERE id = ?")
+        .query("SELECT 1 FROM estimate_versions WHERE id = $1")
         .get(version_id)
     ).toBeTruthy();
 
@@ -655,21 +653,21 @@ describe("deleteEstimate", () => {
 
     // Verify everything is gone
     expect(
-      await db.prepare("SELECT 1 FROM estimates WHERE id = ?").get(id)
+      await db.query("SELECT 1 FROM estimates WHERE id = $1").get(id)
     ).toBeNull();
     expect(
       await db
-        .prepare("SELECT 1 FROM estimate_versions WHERE id = ?")
+        .query("SELECT 1 FROM estimate_versions WHERE id = $1")
         .get(version_id)
     ).toBeNull();
     expect(
       await db
-        .prepare("SELECT 1 FROM estimate_sections WHERE version_id = ?")
+        .query("SELECT 1 FROM estimate_sections WHERE version_id = $1")
         .get(version_id)
     ).toBeNull();
     expect(
       await db
-        .prepare("SELECT 1 FROM estimate_line_items WHERE version_id = ?")
+        .query("SELECT 1 FROM estimate_line_items WHERE version_id = $1")
         .get(version_id)
     ).toBeNull();
   });
@@ -726,7 +724,7 @@ describe("duplicateEstimate", () => {
 
     // Verify the copy has all the same data
     const copy = (await db
-      .prepare("SELECT * FROM estimates WHERE id = ?")
+      .query("SELECT * FROM estimates WHERE id = $1")
       .get(newId)) as EstimateRow;
 
     expect(copy.name).toContain("DuplicateOriginal");
@@ -736,13 +734,13 @@ describe("duplicateEstimate", () => {
 
     // Verify section was copied
     const copyVersion = (await db
-      .prepare(
-        "SELECT id FROM estimate_versions WHERE estimate_id = ? AND is_current = 1"
+      .query(
+        "SELECT id FROM estimate_versions WHERE estimate_id = $1 AND is_current = 1"
       )
       .get(newId)) as { id: string };
 
     const copySections = (await db
-      .prepare("SELECT name FROM estimate_sections WHERE version_id = ?")
+      .query("SELECT name FROM estimate_sections WHERE version_id = $1")
       .all(copyVersion.id)) as Array<{ name: string }>;
 
     expect(copySections).toHaveLength(1);
@@ -750,7 +748,7 @@ describe("duplicateEstimate", () => {
 
     // Verify line item was copied WITH DESCRIPTION
     const copyItems = (await db
-      .prepare("SELECT * FROM estimate_line_items WHERE version_id = ?")
+      .query("SELECT * FROM estimate_line_items WHERE version_id = $1")
       .all(copyVersion.id)) as EstimateLineItemRow[];
 
     expect(copyItems).toHaveLength(1);
@@ -781,7 +779,7 @@ describe("finalizeEstimate", () => {
 
     await db.run(
       `INSERT INTO project_estimates (project_id, estimate_id, source)
-       VALUES (?, ?, ?)
+       VALUES ($1, $2, $3)
        ON CONFLICT DO NOTHING`,
       [projectId, Number(id), "test"]
     );
@@ -790,16 +788,16 @@ describe("finalizeEstimate", () => {
     expect(response.status).toBe(200);
 
     const estimate = (await db
-      .prepare("SELECT is_locked FROM estimates WHERE id = ?")
+      .query("SELECT is_locked FROM estimates WHERE id = $1")
       .get(id)) as { is_locked: number };
     expect(estimate.is_locked).toBe(1);
 
     const canonical = (await db
-      .prepare(
+      .query(
         `SELECT estimate_id, is_canonical, canonicalized_at
          FROM project_estimates
-         WHERE project_id = ?
-           AND estimate_id = ?`
+         WHERE project_id = $1
+           AND estimate_id = $2`
       )
       .get(projectId, Number(id))) as {
       estimate_id: number;
@@ -830,7 +828,7 @@ describe("finalizeEstimate", () => {
 
     await db.run(
       `INSERT INTO project_estimates (project_id, estimate_id, source)
-       VALUES (?, ?, ?), (?, ?, ?)
+       VALUES ($1, $2, $3), ($4, $5, $6)
        ON CONFLICT DO NOTHING`,
       [projectA, Number(id), "test", projectB, Number(id), "test"]
     );
@@ -871,16 +869,16 @@ describe("finalizeEstimate", () => {
 
     await db.run(
       `INSERT INTO project_estimates (project_id, estimate_id, source)
-       VALUES (?, ?, ?), (?, ?, ?)
+       VALUES ($1, $2, $3), ($4, $5, $6)
        ON CONFLICT DO NOTHING`,
       [projectId, Number(firstId), "test", projectId, Number(secondId), "test"]
     );
 
     await db.run(
       `UPDATE project_estimates
-       SET is_canonical = CASE WHEN estimate_id = ? THEN TRUE ELSE FALSE END,
-           canonicalized_at = CASE WHEN estimate_id = ? THEN now() ELSE canonicalized_at END
-       WHERE project_id = ?`,
+       SET is_canonical = CASE WHEN estimate_id = $1 THEN TRUE ELSE FALSE END,
+           canonicalized_at = CASE WHEN estimate_id = $2 THEN now() ELSE canonicalized_at END
+       WHERE project_id = $3`,
       [Number(firstId), Number(firstId), projectId]
     );
 
@@ -893,10 +891,10 @@ describe("finalizeEstimate", () => {
     expect(response.status).toBe(200);
 
     const rows = (await db
-      .prepare(
+      .query(
         `SELECT estimate_id, is_canonical
          FROM project_estimates
-         WHERE project_id = ?
+         WHERE project_id = $1
          ORDER BY estimate_id ASC`
       )
       .all(projectId)) as Array<{
@@ -1031,8 +1029,8 @@ describe("integration workflow", () => {
     testEstimateIds.push(createData.id);
 
     const initialLineItem = (await db
-      .prepare(
-        "SELECT item_name, description, quantity FROM estimate_line_items WHERE version_id = ?"
+      .query(
+        "SELECT item_name, description, quantity FROM estimate_line_items WHERE version_id = $1"
       )
       .get(createData.version_id)) as {
       item_name: string;
@@ -1057,8 +1055,8 @@ describe("integration workflow", () => {
     expect(invalidUpdate.status).toBe(400);
 
     const afterInvalid = (await db
-      .prepare(
-        "SELECT item_name, description, quantity FROM estimate_line_items WHERE version_id = ?"
+      .query(
+        "SELECT item_name, description, quantity FROM estimate_line_items WHERE version_id = $1"
       )
       .get(createData.version_id)) as {
       item_name: string;

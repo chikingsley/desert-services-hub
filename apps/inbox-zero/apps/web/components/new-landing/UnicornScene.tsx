@@ -11,7 +11,7 @@ declare global {
   interface Window {
     UnicornStudio?: UnicornStudioInitFlag;
   }
-  // eslint-disable-next-line no-var
+  // eslint_disable-next-line no-var
   var UnicornStudio:
     | {
         init: () => void;

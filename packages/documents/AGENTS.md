@@ -1,6 +1,49 @@
 # Documents Package (`packages/documents`)
 
-PDF analysis and generation pipelines (SSSP, SDS, estimate docs, parsing).
+PDF analysis and generation pipelines.
+
+---
+
+## Intake / PDF Analysis (`packages/documents/intake`)
+
+Python FastAPI service for all document processing. Runs as `desert-pdf-analysis` on port 4848.
+
+**Rule: TypeScript never does document extraction. It calls this service.**
+
+### API Quick Reference
+
+```ts
+import { nativeExtract, ocrExtract, fullExtract, extractEstimate, extractNoi, extractContract } from "@lib/pdf-analysis";
+```
+
+| Function | Endpoint | Use when |
+|----------|----------|----------|
+| `nativeExtract(path)` | `/native-text-extraction` | Default — kreuzberg + classify |
+| `ocrExtract(path)` | `/ocr-extraction` | Scanned/image docs, vision pass |
+| `fullExtract(path)` | `/full-extraction` | High quality, expensive |
+| `extractEstimate(path)` | `/estimate` | Desert Services estimate PDFs |
+| `extractNoi(path)` | `/noi` | ADEQ NOI certificates |
+| `extractContract(path)` | `/contract` | Subcontracts, POs, work orders |
+
+Both `/estimate` and `/noi` return a `flags: string[]` field — LLM QC pass highlighting anomalies (math errors, missing fields, out-of-range values). Empty = clean.
+
+### Rebuild
+
+```bash
+docker compose build pdf-analysis && docker compose up -d pdf-analysis
+```
+
+### Local dev
+
+```bash
+cd packages/documents/intake
+uv sync
+uv run uvicorn pdf_analysis.server:app --port 4848 --reload
+uv run pytest
+uv run ruff check src/
+```
+
+---
 
 ## SSSP Workflow Rules
 
@@ -28,6 +71,8 @@ Contact formatting:
   - `C: (###) ###-####`
   - `O: (###) ###-####`
 
+---
+
 ## SDS Workflow Rules
 
 When requested, clarify output type:
@@ -53,6 +98,8 @@ Reliability rules:
 - Prefer `entry.pdfPath` in `data/sds/sds-input.json`.
 - Use `--download-sheets-from-url` only when needed.
 - Use `--fail-on-missing-sheets` for strict client-facing builds.
+
+---
 
 ## Delivery (Work Mac)
 

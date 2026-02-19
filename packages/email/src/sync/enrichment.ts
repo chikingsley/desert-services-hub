@@ -1,7 +1,7 @@
 /**
  * Post-sync email enrichment — domain extraction, internal flag, forward detection.
  */
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 
 const INTERNAL_DOMAINS = new Set([
   "desertservices.net",
@@ -128,14 +128,14 @@ export async function enrichEmailDomains(): Promise<void> {
 
   console.log(`Enriching ${emails.length} emails...\n`);
 
-  const updateStmt = db.prepare(`
+  const updateStmt = db.query(`
     UPDATE emails SET
-      from_domain = ?,
-      is_internal = ?,
-      is_forwarded = ?,
-      original_sender_email = ?,
-      original_sender_domain = ?
-    WHERE id = ?
+      from_domain = $1,
+      is_internal = $2,
+      is_forwarded = $3,
+      original_sender_email = $4,
+      original_sender_domain = $5
+    WHERE id = $6
   `);
 
   let enriched = 0;

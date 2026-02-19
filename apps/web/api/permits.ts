@@ -2,7 +2,7 @@
  * Dust Permits API handlers
  * Route: GET /api/permits
  */
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 
 type SortField =
   | "submitted_date"
@@ -113,7 +113,7 @@ export async function listPermits(req: Request): Promise<Response> {
 
     const [items, countResult, statusRows] = await Promise.all([
       db
-        .prepare(
+        .query(
           `SELECT
             d.id,
             d.project_name,
@@ -129,11 +129,11 @@ export async function listPermits(req: Request): Promise<Response> {
            LEFT JOIN projects p ON p.id = d.project_id
            ${where}
            ORDER BY ${orderBy} ${sortDirection.toUpperCase()} NULLS LAST, d.id DESC
-           LIMIT ? OFFSET ?`
+           LIMIT $1 OFFSET $2`
         )
         .all(...params, perPage, offset) as Promise<PermitRow[]>,
       db
-        .prepare(
+        .query(
           `SELECT count(*)::int as total
            FROM dust_permits_filed_by_desert_services d
            LEFT JOIN projects p ON p.id = d.project_id
@@ -141,7 +141,7 @@ export async function listPermits(req: Request): Promise<Response> {
         )
         .get(...params) as Promise<{ total: number } | null>,
       db
-        .prepare(
+        .query(
           `SELECT COALESCE(status, 'Unknown') as status, COUNT(*)::int as count
            FROM dust_permits_filed_by_desert_services
            GROUP BY COALESCE(status, 'Unknown')

@@ -2,9 +2,8 @@
  * Attachment Repository
  *
  * Operates on the unified `documents` table with source='email_attachment'.
- * Returns the legacy `Attachment` interface for backward compatibility.
  */
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 import { getEmailById, parseEmailRow } from "@lib/db/repositories/email";
 import { likeSearch, likeWhere } from "@lib/db/search";
 import type {
@@ -35,9 +34,10 @@ function parseAttachmentRow(row: Record<string, unknown>): Attachment {
 export async function insertAttachment(
   data: InsertAttachmentData
 ): Promise<number> {
-  const result = await db.run(
-    `INSERT INTO documents (source, email_id, outlook_attachment_id, file_name, content_type, file_size, storage_bucket, storage_path, document_type)
-     VALUES ('email_attachment', ?, ?, ?, ?, ?, ?, ?, 'unknown')
+  const row = await db
+    .query<{ id: number }>(
+      `INSERT INTO documents (source, email_id, outlook_attachment_id, file_name, content_type, file_size, storage_bucket, storage_path, document_type)
+     VALUES ('email_attachment', $1, $2, $3, $4, $5, $6, $7, 'unknown')
      ON CONFLICT (email_id, outlook_attachment_id) WHERE source = 'email_attachment' AND outlook_attachment_id IS NOT NULL
      DO UPDATE SET
        file_name = excluded.file_name,
@@ -45,19 +45,20 @@ export async function insertAttachment(
        file_size = excluded.file_size,
        storage_bucket = COALESCE(excluded.storage_bucket, documents.storage_bucket),
        storage_path = COALESCE(excluded.storage_path, documents.storage_path),
-       updated_at = now()`,
-    [
+       updated_at = now()
+     RETURNING id`
+    )
+    .get(
       data.emailId,
       data.attachmentId,
       data.name,
       data.contentType ?? null,
       data.size ?? null,
       data.storageBucket ?? null,
-      data.storagePath ?? null,
-    ]
-  );
+      data.storagePath ?? null
+    );
 
-  return Number(result.lastInsertRowid);
+  return Number(row?.id ?? 0);
 }
 
 export async function getAttachmentsForEmail(
@@ -110,14 +111,14 @@ export async function updateAttachmentExtraction(
 ): Promise<void> {
   await db.run(
     `UPDATE documents
-     SET extraction_status = ?,
-         extracted_text = ?,
-         extraction_error = ?,
+     SET extraction_status = $1,
+         extracted_text = $2,
+         extraction_error = $3,
          extracted_at = now(),
          extraction_attempts = extraction_attempts + 1,
          last_attempted_at = now(),
          updated_at = now()
-     WHERE id = ?`,
+     WHERE id = $4`,
     [status, extractedText ?? null, error ?? null, attachmentId]
   );
 }
@@ -232,7 +233,7 @@ export async function searchEmailsFullText(
        FROM documents
        WHERE source = 'email_attachment'
          AND ${attClause}
-       LIMIT ?`
+       LIMIT $1`
     )
     .all(...attParams, limit);
 

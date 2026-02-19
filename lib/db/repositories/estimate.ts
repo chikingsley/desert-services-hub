@@ -1,7 +1,7 @@
 /**
  * Estimate Repository
  */
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 import { ensureEstimateHasCurrentVersion } from "@lib/db/repositories/estimate-version";
 import { likeSearch } from "@lib/db/search";
 import type { Estimate, UpsertEstimateData } from "@lib/db/types";
@@ -67,7 +67,7 @@ export async function upsertEstimate(
       monday_url, account_monday_id, account_domain, bid_status, bid_value,
       awarded_value, bid_source, awarded, due_date, location, sharepoint_url,
       estimate_storage_path, estimate_file_name, synced_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, now())
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, now())
     ON CONFLICT(monday_item_id) DO UPDATE SET
       name = excluded.name,
       estimate_number = excluded.estimate_number,
@@ -94,7 +94,7 @@ export async function upsertEstimate(
 
   const row = await db
     .query<{ id: number }, [string]>(
-      "SELECT id FROM estimates WHERE monday_item_id = ?"
+      "SELECT id FROM estimates WHERE monday_item_id = $1"
     )
     .get(data.mondayItemId);
 
@@ -117,10 +117,10 @@ export async function updateEstimateStorage(
 ): Promise<void> {
   await db.run(
     `UPDATE estimates
-     SET estimate_storage_path = ?,
-         estimate_file_name = ?,
+     SET estimate_storage_path = $1,
+         estimate_file_name = $2,
          updated_at = now()
-     WHERE monday_item_id = ?`,
+     WHERE monday_item_id = $3`,
     [path, fileName, mondayItemId]
   );
 }
@@ -132,7 +132,7 @@ export async function updatePlansStorage(
   await db.run(
     `UPDATE estimates
      SET updated_at = now()
-     WHERE monday_item_id = ?`,
+     WHERE monday_item_id = $1`,
     [mondayItemId]
   );
 }
@@ -222,4 +222,33 @@ export async function searchEstimates(
   });
 
   return rows.map(parseEstimateRow);
+}
+
+export interface EstimateExtractionTriageResult {
+  candidateRows: number;
+  processedRows: number;
+  resetToPending: number;
+  markedNonPdf: number;
+  skippedNoAsset: number;
+}
+
+const runEstimateExtractionTriageStmt = db.query<{
+  candidate_rows: number;
+  processed_rows: number;
+  reset_to_pending: number;
+  marked_non_pdf: number;
+  skipped_no_asset: number;
+}>("SELECT * FROM public.run_estimate_extraction_triage($1)");
+
+export async function runEstimateExtractionTriage(
+  maxRows?: number
+): Promise<EstimateExtractionTriageResult> {
+  const row = await runEstimateExtractionTriageStmt.get(maxRows ?? 10);
+  return {
+    candidateRows: Number(row?.candidate_rows ?? 0),
+    processedRows: Number(row?.processed_rows ?? 0),
+    resetToPending: Number(row?.reset_to_pending ?? 0),
+    markedNonPdf: Number(row?.marked_non_pdf ?? 0),
+    skippedNoAsset: Number(row?.skipped_no_asset ?? 0),
+  };
 }

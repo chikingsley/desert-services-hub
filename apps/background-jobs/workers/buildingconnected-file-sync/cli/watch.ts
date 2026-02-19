@@ -17,9 +17,7 @@ import type { BuildingConnectedSyncResult } from "@background-jobs/workers/build
 import { syncBuildingConnectedFiles } from "@background-jobs/workers/buildingconnected-file-sync/lib/processing";
 
 const DEFAULT_INTERVAL_MS = Number.parseInt(
-  process.env.BUILDINGCONNECTED_SYNC_INTERVAL_MS ??
-    process.env.ATTACHMENT_BACKFILL_INTERVAL_MS ??
-    "120000",
+  process.env.BUILDINGCONNECTED_SYNC_INTERVAL_MS ?? "120000",
   10
 );
 

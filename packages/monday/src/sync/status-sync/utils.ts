@@ -45,7 +45,7 @@ export function normalizeProjectNumber(
 
 export function getProjectLinkSyncConfig(): ProjectLinkSyncConfig {
   return {
-    enabled: parseBoolean(process.env.ENABLE_PROJECT_LINK_SYNC),
+    enabled: parseBoolean(process.env.ENABLE_PROJECT_LINK_SYNC, true),
     projectsBoardId: process.env.PROJECTS_BOARD_ID ?? BOARD_IDS.PROJECTS,
     estimateProjectLinkCol:
       process.env.ESTIMATE_PROJECT_LINK_COL ?? ESTIMATING_COLUMNS.PROJECTS.id,
@@ -58,9 +58,9 @@ export function getProjectLinkSyncConfig(): ProjectLinkSyncConfig {
   };
 }
 
-function parseBoolean(value: string | undefined): boolean {
+function parseBoolean(value: string | undefined, fallback = false): boolean {
   if (!value) {
-    return false;
+    return fallback;
   }
   const normalized = value.trim().toLowerCase();
   return normalized === "true" || normalized === "1" || normalized === "yes";

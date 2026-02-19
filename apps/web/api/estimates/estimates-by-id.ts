@@ -3,7 +3,7 @@
  * Routes: /api/estimates/:id, /api/estimates/:id/pdf, /api/estimates/:id/duplicate, /api/estimates/:id/finalize, /api/estimates/:id/takeoff
  */
 
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 import {
   getCanonicalEstimateForProject,
   linkEstimateToProject,
@@ -35,7 +35,7 @@ export async function getEstimate(req: BunRequest): Promise<Response> {
     }
 
     const estimate = (await db
-      .prepare("SELECT * FROM estimates WHERE id = ?")
+      .query("SELECT * FROM estimates WHERE id = $1")
       .get(id)) as EstimateRow | undefined;
 
     if (!estimate) {
@@ -46,16 +46,16 @@ export async function getEstimate(req: BunRequest): Promise<Response> {
 
     const sections = version
       ? ((await db
-          .prepare(
-            "SELECT * FROM estimate_sections WHERE version_id = ? ORDER BY sort_order"
+          .query(
+            "SELECT * FROM estimate_sections WHERE version_id = $1 ORDER BY sort_order"
           )
           .all(version.id)) as EstimateSectionRow[])
       : [];
 
     const lineItems = version
       ? ((await db
-          .prepare(
-            "SELECT * FROM estimate_line_items WHERE version_id = ? ORDER BY sort_order"
+          .query(
+            "SELECT * FROM estimate_line_items WHERE version_id = $1 ORDER BY sort_order"
           )
           .all(version.id)) as EstimateLineItemRow[])
       : [];
@@ -108,7 +108,7 @@ export async function finalizeEstimate(req: BunRequest): Promise<Response> {
     }
 
     const estimate = await db
-      .prepare("SELECT id FROM estimates WHERE id = ?")
+      .query("SELECT id FROM estimates WHERE id = $1")
       .get(id);
 
     if (!estimate) {
@@ -164,10 +164,10 @@ export async function finalizeEstimate(req: BunRequest): Promise<Response> {
     }
 
     await db
-      .prepare(
+      .query(
         `UPDATE estimates
          SET is_locked = 1, updated_at = now()
-         WHERE id = ?`
+         WHERE id = $1`
       )
       .run(id);
 
@@ -198,14 +198,14 @@ export async function deleteEstimate(req: BunRequest): Promise<Response> {
     }
 
     const estimate = await db
-      .prepare("SELECT id FROM estimates WHERE id = ?")
+      .query("SELECT id FROM estimates WHERE id = $1")
       .get(id);
 
     if (!estimate) {
       return Response.json({ error: "Estimate not found" }, { status: 404 });
     }
 
-    await db.prepare("DELETE FROM estimates WHERE id = ?").run(id);
+    await db.query("DELETE FROM estimates WHERE id = $1").run(id);
 
     return Response.json({ success: true });
   } catch (error) {
@@ -236,7 +236,7 @@ export async function getEstimateTakeoff(req: BunRequest): Promise<Response> {
     }
 
     const estimate = (await db
-      .prepare("SELECT takeoff_id FROM estimates WHERE id = ?")
+      .query("SELECT takeoff_id FROM estimates WHERE id = $1")
       .get(id)) as { takeoff_id: string | null } | undefined;
 
     if (!estimate?.takeoff_id) {
@@ -244,10 +244,10 @@ export async function getEstimateTakeoff(req: BunRequest): Promise<Response> {
     }
 
     const takeoff = (await db
-      .prepare(
+      .query(
         `SELECT id, name, status, created_at, updated_at
          FROM takeoffs
-         WHERE id = ?`
+         WHERE id = $1`
       )
       .get(estimate.takeoff_id)) as
       | {

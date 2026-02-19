@@ -11,7 +11,7 @@
  * Safe to call repeatedly.
  */
 import { createHash } from "node:crypto";
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 
 // ── Types ────────────────────────────────────────────────────────────
 
@@ -307,6 +307,148 @@ async function callOllamaJson(
   return parseOllamaJson(data.choices?.[0]?.message?.content ?? "");
 }
 
+async function isOllamaHealthy(): Promise<boolean> {
+  try {
+    const healthRes = await fetch(OLLAMA_BASE_URL.replace("/v1", ""), {
+      signal: AbortSignal.timeout(3000),
+    });
+    return healthRes.ok;
+  } catch {
+    return false;
+  }
+}
+
+async function fetchSignatureSnippets(
+  email: string
+): Promise<Array<{ body_preview: string }>> {
+  return await db
+    .query<{ body_preview: string }, [string, number]>(SIGNATURE_SNIPPETS_SQL)
+    .all(email.toLowerCase().trim(), 5);
+}
+
+async function markContactSearched(contactId: number): Promise<void> {
+  await db.run(
+    "UPDATE contacts SET contractor_searched_at = now() WHERE id = $1",
+    [contactId]
+  );
+}
+
+function buildSignatureText(snippets: Array<{ body_preview: string }>): string {
+  return snippets
+    .map((snippet) => {
+      const text = snippet.body_preview.trim();
+      return text.length > 500 ? text.slice(-500) : text;
+    })
+    .join("\n---\n");
+}
+
+function buildEnrichmentPrompt(
+  contact: ContactForEnrichment,
+  signatureText: string
+): string {
+  return `Extract contact information for "${contact.name}" (${contact.email}) from these email snippets.
+Look for phone number, job title, and company name in the signature block.
+
+${signatureText}
+
+Respond with ONLY valid JSON:
+{"phone": "digits only or null", "title": "job title or null", "company": "company name or null"}`;
+}
+
+interface ParsedEnrichmentFields {
+  phone: string | null;
+  title: string | null;
+  company: string | null;
+}
+
+function parseEnrichmentFields(
+  result: Record<string, unknown> | null
+): ParsedEnrichmentFields {
+  const phone =
+    typeof result?.phone === "string" && result.phone.length >= 7
+      ? result.phone.replace(NON_DIGIT_RE, "").slice(-10)
+      : null;
+  const title =
+    typeof result?.title === "string" && result.title.length > 1
+      ? result.title.trim()
+      : null;
+  const company =
+    typeof result?.company === "string" && result.company.length > 1
+      ? result.company.trim()
+      : null;
+
+  return { phone, title, company };
+}
+
+function buildUpdateStatement(
+  contactId: number,
+  fields: ParsedEnrichmentFields
+): { query: string; params: Array<string | number> } | null {
+  const sets: string[] = [];
+  const params: Array<string | number> = [];
+
+  if (fields.phone && fields.phone.length >= 10) {
+    sets.push("phone = ?");
+    params.push(fields.phone);
+  }
+  if (fields.title) {
+    sets.push("title = ?");
+    params.push(fields.title);
+  }
+  if (fields.company) {
+    sets.push("imported_account_name = COALESCE(imported_account_name, ?)");
+    params.push(fields.company);
+  }
+
+  if (sets.length === 0) {
+    return null;
+  }
+
+  sets.push("updated_at = now()");
+  params.push(contactId);
+
+  return {
+    query: `UPDATE contacts SET ${sets.join(", ")} WHERE id = $1`,
+    params,
+  };
+}
+
+async function enrichSingleContact(
+  contact: ContactForEnrichment
+): Promise<"enriched" | "skipped" | "error"> {
+  try {
+    const snippets = await fetchSignatureSnippets(contact.email);
+
+    // Mark as attempted regardless of enrichment outcome.
+    await markContactSearched(contact.id);
+
+    if (snippets.length === 0) {
+      return "skipped";
+    }
+
+    const prompt = buildEnrichmentPrompt(contact, buildSignatureText(snippets));
+    const result = await callOllamaJson(prompt);
+    const fields = parseEnrichmentFields(result);
+    const statement = buildUpdateStatement(contact.id, fields);
+
+    if (!statement) {
+      return "skipped";
+    }
+
+    await db.run(statement.query, statement.params);
+    return "enriched";
+  } catch (err) {
+    console.error(
+      `[link-contacts] Enrichment error for #${contact.id} (${contact.email}):`,
+      err
+    );
+    await markContactSearched(contact.id).catch(() => {
+      // Best-effort stamp; ignore secondary failure.
+    });
+    return "error";
+  }
+}
+
 export async function enrichContacts(
   batchSize: number
 ): Promise<{ enriched: number; errors: number }> {
@@ -318,15 +460,8 @@ export async function enrichContacts(
     return { enriched: 0, errors: 0 };
   }
 
-  // Quick health check — skip enrichment if Ollama is down
-  try {
-    const healthRes = await fetch(OLLAMA_BASE_URL.replace("/v1", ""), {
-      signal: AbortSignal.timeout(3000),
-    });
-    if (!healthRes.ok) {
-      return { enriched: 0, errors: 0 };
-    }
-  } catch {
+  // Quick health check — skip enrichment if Ollama is down.
+  if (!(await isOllamaHealthy())) {
     return { enriched: 0, errors: 0 };
   }
 
@@ -334,104 +469,13 @@ export async function enrichContacts(
   let errors = 0;
 
   for (const contact of contacts) {
-    try {
-      const snippets = await db
-        .query<{ body_preview: string }, [string, number]>(
-          SIGNATURE_SNIPPETS_SQL
-        )
-        .all(contact.email.toLowerCase().trim(), 5);
-
-      // Mark as attempted regardless of outcome
-      await db.run(
-        "UPDATE contacts SET contractor_searched_at = now() WHERE id = ?",
-        [contact.id]
-      );
-
-      if (snippets.length === 0) {
-        continue;
-      }
-
-      // Use tail of each snippet (signature area)
-      const signatureTexts = snippets
-        .map((s) => {
-          const text = s.body_preview.trim();
-          return text.length > 500 ? text.slice(-500) : text;
-        })
-        .join("\n---\n");
-
-      const prompt = `Extract contact information for "${contact.name}" (${contact.email}) from these email snippets.
-Look for phone number, job title, and company name in the signature block.
-
-${signatureTexts}
-
-Respond with ONLY valid JSON:
-{"phone": "digits only or null", "title": "job title or null", "company": "company name or null"}`;
-
-      const result = await callOllamaJson(prompt);
-      if (!result) {
-        continue;
-      }
-
-      const phone =
-        typeof result.phone === "string" && result.phone.length >= 7
-          ? result.phone.replace(NON_DIGIT_RE, "").slice(-10)
-          : null;
-      const title =
-        typeof result.title === "string" && result.title.length > 1
-          ? result.title.trim()
-          : null;
-      const company =
-        typeof result.company === "string" && result.company.length > 1
-          ? result.company.trim()
-          : null;
-
-      if (!(phone || title || company)) {
-        continue;
-      }
-
-      const sets: string[] = [];
-      const params: (string | number)[] = [];
-
-      if (phone && phone.length >= 10) {
-        sets.push("phone = ?");
-        params.push(phone);
-      }
-      if (title) {
-        sets.push("title = ?");
-        params.push(title);
-      }
-      if (company) {
-        sets.push("imported_account_name = COALESCE(imported_account_name, ?)");
-        params.push(company);
-      }
-
-      if (sets.length === 0) {
-        continue;
-      }
-
-      sets.push("updated_at = now()");
-      params.push(contact.id);
-
-      await db.run(
-        `UPDATE contacts SET ${sets.join(", ")} WHERE id = ?`,
-        params
-      );
+    const outcome = await enrichSingleContact(contact);
+    if (outcome === "enriched") {
       enriched++;
-    } catch (err) {
-      console.error(
-        `[link-contacts] Enrichment error for #${contact.id} (${contact.email}):`,
-        err
-      );
+      continue;
+    }
+    if (outcome === "error") {
       errors++;
-      // Still mark as attempted to prevent infinite retry
-      await db
-        .run(
-          "UPDATE contacts SET contractor_searched_at = now() WHERE id = ?",
-          [contact.id]
-        )
-        .catch(() => {
-          // Best-effort stamp; ignore secondary failure.
-        });
     }
   }
 

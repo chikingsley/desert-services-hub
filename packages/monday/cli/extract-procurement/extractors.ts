@@ -26,7 +26,7 @@ function extractBoolean(item: MondayItemRich, columnId: string): number | null {
 
 export async function extractOpenBids(db: Database): Promise<number> {
   const items = await getItemsRich(String(BOARDS.OPEN_BIDS));
-  const stmt = db.prepare(`
+  const stmt = db.query(`
     INSERT OR REPLACE INTO open_bids (
       monday_id, name, group_id, group_title,
       contractor_name, contact_name, phone, email,
@@ -34,7 +34,7 @@ export async function extractOpenBids(db: Database): Promise<number> {
       estimate_number, bid_amount, service_lines, project_type,
       site_sqft, building_sqft, certified_payroll,
       date_received, sent_date, raw_columns
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22)
   `);
 
   for (const item of items) {
@@ -69,7 +69,7 @@ export async function extractOpenBids(db: Database): Promise<number> {
 
 export async function extractBidsSent(db: Database): Promise<number> {
   const items = await getItemsRich(String(BOARDS.BIDS_SENT));
-  const stmt = db.prepare(`
+  const stmt = db.query(`
     INSERT OR REPLACE INTO bids_sent (
       monday_id, name, group_id, group_title,
       contractor_name, contact_name, phone, email,
@@ -77,7 +77,7 @@ export async function extractBidsSent(db: Database): Promise<number> {
       bid_amount, status, project_end_date, tags,
       acreage, building_sqft, sent_via, date_received,
       due_date, service_lines, tivan_records_match, raw_columns
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24)
   `);
 
   for (const item of items) {
@@ -114,7 +114,7 @@ export async function extractBidsSent(db: Database): Promise<number> {
 
 export async function extractChecklist(db: Database): Promise<number> {
   const items = await getItemsRich(String(BOARDS.CHECKLIST));
-  const stmt = db.prepare(`
+  const stmt = db.query(`
     INSERT OR REPLACE INTO checklist (
       monday_id, name, group_id, group_title,
       contractor, location, contract_status, signage_status,
@@ -122,7 +122,7 @@ export async function extractChecklist(db: Database): Promise<number> {
       date_signed, estimate_number, extract_info,
       contract_email, onsite_title, onsite_email,
       onsite_phone, onsite_contact, raw_columns
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)
   `);
 
   for (const item of items) {
@@ -155,12 +155,12 @@ export async function extractChecklist(db: Database): Promise<number> {
 
 export async function extractDustPermits(db: Database): Promise<number> {
   const items = await getItemsRich(String(BOARDS.DUST_PERMITS_WM));
-  const stmt = db.prepare(`
+  const stmt = db.query(`
     INSERT OR REPLACE INTO dust_permits (
       monday_id, name, group_id, group_title,
       contractor, status, last_activity_date, type,
       permit_number, due_date_renewal, county, raw_columns
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
   `);
 
   for (const item of items) {
@@ -185,13 +185,13 @@ export async function extractDustPermits(db: Database): Promise<number> {
 
 export async function extractSignage(db: Database): Promise<number> {
   const items = await getItemsRich(String(BOARDS.SIGNAGE));
-  const stmt = db.prepare(`
+  const stmt = db.query(`
     INSERT OR REPLACE INTO signage (
       monday_id, name, group_id, group_title,
       status, date_received, projected_install_date, same_as_install,
       signage_type, onsite_contact_name, onsite_contact_email, onsite_contact_phone,
       site_location, initial_contact_name, initial_contact_email, contractor, raw_columns
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
   `);
 
   for (const item of items) {
@@ -221,14 +221,14 @@ export async function extractSignage(db: Database): Promise<number> {
 
 export async function extractSwpppMaster(db: Database): Promise<number> {
   const items = await getItemsRich(String(BOARDS.SWPPP_MASTER));
-  const stmt = db.prepare(`
+  const stmt = db.query(`
     INSERT OR REPLACE INTO swppp_master (
       monday_id, name, group_id, group_title,
       install_date, status, owner_contractor, project_name,
       address, contact, phone, job_description,
       date_entered, comments, sw21_103_43, work_completed,
       item_id, raw_columns
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
   `);
 
   for (const item of items) {
@@ -259,12 +259,12 @@ export async function extractSwpppMaster(db: Database): Promise<number> {
 
 export async function extractInspections(db: Database): Promise<number> {
   const items = await getItemsRich(String(BOARDS.INSPECTIONS_WM));
-  const stmt = db.prepare(`
+  const stmt = db.query(`
     INSERT OR REPLACE INTO inspections (
       monday_id, name, group_id, group_title,
       company_name, install_date, location, contact,
       email, phone, address, status, raw_columns
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
   `);
 
   for (const item of items) {

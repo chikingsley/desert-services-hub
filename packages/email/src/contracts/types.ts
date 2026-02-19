@@ -11,12 +11,15 @@ export interface ContractWonBridgeResult {
 
 export interface WonCandidate {
   email_id: number;
+  email_received_at: string;
   project_id: number;
   project_name: string;
   estimate_id: number;
   estimate_name: string;
   account_name: string | null;
   monday_item_id: string | null;
+  bid_value: number | null;
+  awarded_value: number | null;
   match_type: "single_estimate" | "account_match";
 }
 
@@ -66,3 +69,30 @@ export interface ContractDocExtractPayload {
 export type ContractDocExtractEnqueueJob = (
   payload: ContractDocExtractPayload
 ) => Promise<void>;
+
+export interface ContractEmailJobPayload {
+  emailId: number;
+  messageId: string;
+  mailboxEmail: string;
+  subject: string;
+  fromEmail: string;
+  bodyText: string;
+  hasAttachments: boolean;
+}
+
+export interface ContractAttachmentRow {
+  id: number;
+  attachment_id: string;
+  name: string;
+  content_type: string | null;
+  size: number | null;
+  storage_path: string | null;
+}
+
+export interface ContractAttachmentContext {
+  emailId: number;
+  messageId: string;
+  mailboxEmail: string;
+  subject: string;
+  fromEmail: string;
+}

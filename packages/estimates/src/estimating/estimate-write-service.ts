@@ -9,7 +9,7 @@ import type {
   Estimate,
   UpdateEstimateInput,
 } from "@estimates/estimating/types";
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 
 function mapCreateLineItemToValidationInput(
   item: NonNullable<CreateEstimateInput["line_items"]>[number]
@@ -73,9 +73,9 @@ async function insertEstimateRow(params: {
   const { baseNumber, input, normalized } = params;
 
   const inserted = (await db
-    .prepare(
+    .query(
       `INSERT INTO estimates (name, base_number, takeoff_id, job_name, job_address, contractor, client_address, estimator, estimator_email, notes, status, is_locked)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
        RETURNING id`
     )
     .get(
@@ -107,9 +107,9 @@ async function insertInitialVersion(
 ): Promise<string> {
   const versionId = crypto.randomUUID();
   await db
-    .prepare(
+    .query(
       `INSERT INTO estimate_versions (id, estimate_id, version_number, total, is_current)
-       VALUES (?, ?, 1, ?, 1)`
+       VALUES ($1, $2, 1, $3, 1)`
     )
     .run(versionId, estimateId, total);
 
@@ -128,9 +128,9 @@ async function insertSections(
   for (const section of sections) {
     const sectionId = crypto.randomUUID();
     await db
-      .prepare(
+      .query(
         `INSERT INTO estimate_sections (id, version_id, name, title, show_subtotal, sort_order)
-         VALUES (?, ?, ?, ?, ?, ?)`
+         VALUES ($1, $2, $3, $4, $5, $6)`
       )
       .run(
         sectionId,
@@ -162,9 +162,9 @@ async function insertLineItems(
       : null;
 
     await db
-      .prepare(
+      .query(
         `INSERT INTO estimate_line_items (id, version_id, section_id, item_name, description, quantity, unit, unit_price, notes, sort_order)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`
       )
       .run(
         lineItemId,
@@ -257,7 +257,7 @@ export async function updateEstimate(
   values.push(id);
 
   await db
-    .prepare(`UPDATE estimates SET ${updates.join(", ")} WHERE id = ?`)
+    .query(`UPDATE estimates SET ${updates.join(", ")} WHERE id = $1`)
     .run(...values);
 
   return await getEstimate(id);
@@ -265,7 +265,7 @@ export async function updateEstimate(
 
 // Delete an estimate
 export async function deleteEstimate(id: string): Promise<boolean> {
-  const result = await db.prepare("DELETE FROM estimates WHERE id = ?").run(id);
+  const result = await db.query("DELETE FROM estimates WHERE id = $1").run(id);
   return (result as unknown as { count: number }).count > 0;
 }
 
@@ -283,10 +283,10 @@ export async function duplicateEstimate(
   const newEstimateId = crypto.randomUUID();
 
   await db
-    .prepare(
+    .query(
       `INSERT INTO estimates (id, base_number, job_name, job_address, contractor, notes, status, is_locked)
-       SELECT ?, ?, ?, job_address, contractor, notes, 'draft', 0
-       FROM estimates WHERE id = ?`
+       SELECT $1, $2, $3, job_address, contractor, notes, 'draft', 0
+       FROM estimates WHERE id = $4`
     )
     .run(
       newEstimateId,
@@ -305,9 +305,9 @@ export async function duplicateEstimate(
   for (const section of originalVersion.sections) {
     const newSectionId = crypto.randomUUID();
     await db
-      .prepare(
+      .query(
         `INSERT INTO estimate_sections (id, version_id, name, title, show_subtotal, sort_order)
-         VALUES (?, ?, ?, ?, ?, ?)`
+         VALUES ($1, $2, $3, $4, $5, $6)`
       )
       .run(
         newSectionId,
@@ -326,9 +326,9 @@ export async function duplicateEstimate(
       ? sectionIdMap.get(item.section_id)
       : null;
     await db
-      .prepare(
+      .query(
         `INSERT INTO estimate_line_items (id, version_id, section_id, item_name, description, quantity, unit, unit_price, notes, sort_order)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`
       )
       .run(
         newLineItemId,

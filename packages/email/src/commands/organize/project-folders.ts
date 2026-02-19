@@ -1,5 +1,5 @@
 import { assertWritableMailbox, getAppClient } from "@email/commands/config";
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 import {
   getFolderWatcherConfigValue,
   getTrackedFolderForProject,

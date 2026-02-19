@@ -1,14 +1,14 @@
-export type LatLng = {
+export interface LatLng {
   lat: number;
   lng: number;
-};
+}
 
-export type Bounds = {
+export interface Bounds {
   north: number;
   south: number;
   east: number;
   west: number;
-};
+}
 
 export type Direction = "north" | "south" | "east" | "west" | "unknown";
 

@@ -193,8 +193,8 @@ export interface TriageOutcome {
 }
 
 export interface TriageOptions {
-  /** Override LLM provider (default: gemini) */
-  provider?: import("@email/llm/json-runner").LlmProvider;
+  /** Override LLM provider (default: local) */
+  provider?: "gemini" | "local";
   /** Internal domains used by the fast-path INTERNAL classification guard. */
   internalDomains?: ReadonlySet<string>;
   /** Optional enqueue adapter for action jobs. */
@@ -245,7 +245,7 @@ export interface TriageBackfillOptions {
   batchSize: number;
   concurrency: number;
   /** LLM provider — "local" for Ollama backfill, "gemini" for cloud (default: "local") */
-  provider?: import("@email/llm/json-runner").LlmProvider;
+  provider?: "gemini" | "local";
   /** Internal domains used by the fast-path INTERNAL classification guard. */
   internalDomains?: ReadonlySet<string>;
   /** Optional enqueue adapter for action jobs. */

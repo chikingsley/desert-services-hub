@@ -106,21 +106,23 @@ const CLASS_LABELS: Record<string, string> = {
 };
 
 function SeverityIcon({ severity }: { severity?: string }) {
-  if (severity === "critical")
+  if (severity === "critical") {
     return <XCircle className="h-3 w-3 shrink-0 text-red-600" />;
-  if (severity === "warning")
+  }
+  if (severity === "warning") {
     return <AlertTriangle className="h-3 w-3 shrink-0 text-amber-600" />;
+  }
   return <Info className="h-3 w-3 shrink-0 text-blue-600" />;
 }
 
 function EntityRow({ entity }: { entity: ReviewEntity }) {
   const sev = entity.attributes.severity;
-  const colorClass =
-    sev === "critical"
-      ? "border-red-500/20 bg-red-500/5"
-      : sev === "warning"
-        ? "border-amber-500/20 bg-amber-500/5"
-        : "border-blue-500/20 bg-blue-500/5";
+  let colorClass = "border-blue-500/20 bg-blue-500/5";
+  if (sev === "critical") {
+    colorClass = "border-red-500/20 bg-red-500/5";
+  } else if (sev === "warning") {
+    colorClass = "border-amber-500/20 bg-amber-500/5";
+  }
 
   return (
     <div className={`rounded-lg border p-2.5 text-xs ${colorClass}`}>
@@ -286,7 +288,9 @@ export function ContractsPage() {
     params.set("perPage", "200");
     params.set("sort", sort);
     const q = debouncedSearch.trim();
-    if (q) params.set("q", q);
+    if (q) {
+      params.set("q", q);
+    }
     return params.toString();
   }, [sort, debouncedSearch]);
 
@@ -316,7 +320,9 @@ export function ContractsPage() {
     items.find((item) => item.id === selectedId) ?? items[0] ?? null;
 
   const reviewDocsForSelected = useMemo(() => {
-    if (!(selectedItem?.project_id && reviewData?.items)) return [];
+    if (!(selectedItem?.project_id && reviewData?.items)) {
+      return [];
+    }
     return reviewData.items.filter(
       (doc) => doc.project_id === selectedItem.project_id
     );

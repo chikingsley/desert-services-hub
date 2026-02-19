@@ -2,18 +2,20 @@
  * Project lookup and creation for the folder watcher.
  * Matches Outlook folder names to Postgres projects, creating if needed.
  */
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 import {
   findProjectByText,
-  findProjectCandidates,
   getProjectById,
-  normalizeProjectAlias,
-  normalizeProjectNameKey,
 } from "@lib/db/repositories/project";
 import {
   resolveProjectMatchReview,
   upsertProjectMatchReview,
 } from "@lib/db/repositories/project-match-review";
+import { findProjectCandidates } from "@lib/db/repositories/project-matching";
+import {
+  normalizeProjectAlias,
+  normalizeProjectNameKey,
+} from "@lib/db/repositories/project-matching-utils";
 
 /**
  * Parse folder name into project name and contractor.
@@ -52,7 +54,7 @@ export async function findProjectByFolder(
   // 1. Exact outlook_folder match
   const byFolder = await db
     .query<{ id: number }, [string]>(
-      "SELECT id FROM projects WHERE outlook_folder = ?"
+      "SELECT id FROM projects WHERE outlook_folder = $1"
     )
     .get(folderName);
   if (byFolder) {
@@ -151,7 +153,7 @@ async function createProjectFromFolder(
   const row = await db
     .query<{ id: number }, [string, string, string, string | null]>(
       `INSERT INTO projects (name, normalized_name, outlook_folder, contractor)
-       VALUES (?, ?, ?, ?)
+       VALUES ($1, $2, $3, $4)
        RETURNING id`
     )
     .get(projectName, normalizedName, folderName, contractor);
@@ -175,8 +177,8 @@ async function adoptProjectForFolder(params: {
   await db.run(
     `UPDATE projects
      SET
-       outlook_folder = COALESCE(outlook_folder, ?),
-       contractor = COALESCE(contractor, ?),
+       outlook_folder = COALESCE(outlook_folder, $1),
+       contractor = COALESCE(contractor, $2),
        lifecycle_state = CASE
          WHEN lifecycle_state = 'archived' THEN lifecycle_state
          ELSE 'active'
@@ -190,7 +192,7 @@ async function adoptProjectForFolder(params: {
          ELSE NULL
        END,
        updated_at = now()
-     WHERE id = ?`,
+     WHERE id = $3`,
     [params.folderName, params.contractor, params.projectId]
   );
 }

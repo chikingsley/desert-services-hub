@@ -3,8 +3,7 @@
  */
 
 import type { ScalePresetConfig } from "../config";
-import type { TakeoffAnnotation } from "../types";
-import type { Scaled } from "../types";
+import type { Scaled, TakeoffAnnotation } from "../types";
 
 /**
  * Calculate the length of a polyline in PDF points.

@@ -2,7 +2,7 @@
  * Takeoffs API handlers
  * Routes: GET /api/takeoffs, POST /api/takeoffs
  */
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 
 type SortField = "updated_at" | "created_at" | "name" | "status";
 type SortDirection = "asc" | "desc";
@@ -103,19 +103,19 @@ export async function listTakeoffs(req: Request): Promise<Response> {
 
     const [rows, countResult, statusRows] = await Promise.all([
       db
-        .prepare(
+        .query(
           `SELECT *
            FROM takeoffs
            ${where}
            ORDER BY ${orderBy} ${sortDirection.toUpperCase()}, id DESC
-           LIMIT ? OFFSET ?`
+           LIMIT $1 OFFSET $2`
         )
         .all(...params, perPage, offset) as Promise<TakeoffRow[]>,
       db
-        .prepare(`SELECT count(*)::int as total FROM takeoffs ${where}`)
+        .query(`SELECT count(*)::int as total FROM takeoffs ${where}`)
         .get(...params) as Promise<{ total: number } | null>,
       db
-        .prepare(
+        .query(
           `SELECT COALESCE(status, 'Unknown') as status, COUNT(*)::int as count
            FROM takeoffs
            GROUP BY COALESCE(status, 'Unknown')
@@ -157,9 +157,9 @@ export async function createTakeoff(req: Request): Promise<Response> {
   const id = crypto.randomUUID();
 
   await db
-    .prepare(
+    .query(
       `INSERT INTO takeoffs (id, name, pdf_url, annotations, page_scales, status)
-       VALUES (?, ?, ?, ?, ?, ?)`
+       VALUES ($1, $2, $3, $4, $5, $6)`
     )
     .run(
       id,
@@ -171,7 +171,7 @@ export async function createTakeoff(req: Request): Promise<Response> {
     );
 
   const takeoff = (await db
-    .prepare("SELECT * FROM takeoffs WHERE id = ?")
+    .query("SELECT * FROM takeoffs WHERE id = $1")
     .get(id)) as TakeoffRow;
 
   return Response.json({

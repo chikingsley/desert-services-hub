@@ -1,10 +1,10 @@
-import { db } from "@lib/db/hub";
-import {
-  normalizeProjectAlias,
-  type ProjectMatchCandidate,
-  type ProjectMatchDecision,
-  type ProjectMatchResult,
-} from "@lib/db/repositories/project";
+import { db } from "@lib/db/client";
+import { normalizeProjectAlias } from "@lib/db/repositories/project-matching-utils";
+import type {
+  ProjectMatchCandidate,
+  ProjectMatchDecision,
+  ProjectMatchResult,
+} from "@lib/db/repositories/types";
 import type {
   ProjectMatchReview,
   ProjectMatchReviewStatus,
@@ -122,7 +122,7 @@ export async function upsertProjectMatchReview(params: {
          candidates,
          decision,
          note
-       ) VALUES (?, ?, 'pending', ?, ?::jsonb, ?, ?, ?, ?::jsonb, ?::jsonb, ?)
+       ) VALUES ($1, $2, 'pending', $3, $4::jsonb, $5, $6, $7, $8::jsonb, $9::jsonb, $10)
        ON CONFLICT (source, source_key) DO UPDATE SET
          status = CASE
            WHEN project_match_reviews.status = 'resolved' THEN project_match_reviews.status
@@ -169,11 +169,11 @@ export async function resolveProjectMatchReview(params: {
   await db.run(
     `UPDATE project_match_reviews
      SET status = 'resolved',
-         selected_project_id = ?,
-         resolution_note = ?,
+         selected_project_id = $1,
+         resolution_note = $2,
          resolved_at = now(),
          updated_at = now()
-     WHERE source = ? AND source_key = ?`,
+     WHERE source = $3 AND source_key = $4`,
     [params.projectId, params.resolutionNote ?? null, params.source, sourceKey]
   );
 }
@@ -189,7 +189,7 @@ export async function getProjectMatchReview(
 
   const row = await db
     .query<ReviewRow, [string, string]>(
-      "SELECT * FROM project_match_reviews WHERE source = ? AND source_key = ?"
+      "SELECT * FROM project_match_reviews WHERE source = $1 AND source_key = $2"
     )
     .get(source, normalized);
   return row ? parseReviewRow(row) : null;

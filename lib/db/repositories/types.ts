@@ -105,6 +105,74 @@ export interface EstimateCandidateResult {
   decision: EstimateMatchDecision;
 }
 
+export type ProjectMatchReasonCode =
+  | "normalized_name_exact"
+  | "outlook_folder_exact"
+  | "account_exact"
+  | "primary_token_overlap"
+  | "contractor_token_overlap"
+  | "address_token_overlap";
+
+export interface ProjectMatchReason {
+  code: ProjectMatchReasonCode;
+  points: number;
+  detail: string;
+}
+
+export interface ProjectMatchCandidate {
+  projectId: number;
+  name: string;
+  contractor: string | null;
+  address: string | null;
+  outlookFolder: string | null;
+  accountId: number | null;
+  updatedAt: string;
+  score: number;
+  confidence: number;
+  reasons: ProjectMatchReason[];
+}
+
+export interface ProjectMatchDecision {
+  best: ProjectMatchCandidate | null;
+  runnerUp: ProjectMatchCandidate | null;
+  autoLink: boolean;
+  gap: number;
+  reason: string;
+  thresholds: {
+    minScore: number;
+    minGap: number;
+  };
+}
+
+export interface ProjectMatchContext {
+  primaryText: string;
+  aliasHints: string[];
+  contractorHint: string | null;
+  addressHint: string | null;
+  accountIdHint: number | null;
+  primaryNameKey: string;
+  nameKeys: string[];
+  aliasKeys: string[];
+  primaryTokens: string[];
+  contractorTokens: string[];
+  addressTokens: string[];
+}
+
+export interface ProjectMatchInput {
+  primaryText: string;
+  aliasHints?: string[];
+  contractorHint?: string | null;
+  addressHint?: string | null;
+  accountIdHint?: number | null;
+  limit?: number;
+}
+
+export interface ProjectMatchResult {
+  context: ProjectMatchContext;
+  candidates: ProjectMatchCandidate[];
+  decision: ProjectMatchDecision;
+}
+
 const NON_ALPHA_NUMERIC_SPACE = /[^a-z0-9\s]/g;
 const MULTI_SPACE = /\s+/g;
 const HAS_DIGIT = /\d/;

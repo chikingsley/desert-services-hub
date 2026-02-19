@@ -1,4 +1,4 @@
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 import {
   normalizeProjectAlias,
   normalizeProjectNameKey,
@@ -6,74 +6,15 @@ import {
   tokenOverlap,
   uniqueStrings,
 } from "@lib/db/repositories/project-matching-utils";
-
-export type ProjectMatchReasonCode =
-  | "normalized_name_exact"
-  | "outlook_folder_exact"
-  | "account_exact"
-  | "primary_token_overlap"
-  | "contractor_token_overlap"
-  | "address_token_overlap";
-
-export interface ProjectMatchReason {
-  code: ProjectMatchReasonCode;
-  points: number;
-  detail: string;
-}
-
-export interface ProjectMatchCandidate {
-  projectId: number;
-  name: string;
-  contractor: string | null;
-  address: string | null;
-  outlookFolder: string | null;
-  accountId: number | null;
-  updatedAt: string;
-  score: number;
-  confidence: number;
-  reasons: ProjectMatchReason[];
-}
-
-export interface ProjectMatchDecision {
-  best: ProjectMatchCandidate | null;
-  runnerUp: ProjectMatchCandidate | null;
-  autoLink: boolean;
-  gap: number;
-  reason: string;
-  thresholds: {
-    minScore: number;
-    minGap: number;
-  };
-}
-
-export interface ProjectMatchContext {
-  primaryText: string;
-  aliasHints: string[];
-  contractorHint: string | null;
-  addressHint: string | null;
-  accountIdHint: number | null;
-  primaryNameKey: string;
-  nameKeys: string[];
-  aliasKeys: string[];
-  primaryTokens: string[];
-  contractorTokens: string[];
-  addressTokens: string[];
-}
-
-export interface ProjectMatchInput {
-  primaryText: string;
-  aliasHints?: string[];
-  contractorHint?: string | null;
-  addressHint?: string | null;
-  accountIdHint?: number | null;
-  limit?: number;
-}
-
-export interface ProjectMatchResult {
-  context: ProjectMatchContext;
-  candidates: ProjectMatchCandidate[];
-  decision: ProjectMatchDecision;
-}
+import type {
+  ProjectMatchCandidate,
+  ProjectMatchContext,
+  ProjectMatchDecision,
+  ProjectMatchInput,
+  ProjectMatchReason,
+  ProjectMatchReasonCode,
+  ProjectMatchResult,
+} from "@lib/db/repositories/types";
 
 interface ProjectCandidateRow {
   id: number;

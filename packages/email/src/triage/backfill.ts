@@ -5,7 +5,7 @@
  * runs them through the triage pipeline in bounded concurrent workers.
  */
 
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 import { triageEmail } from "./triage";
 import type {
   TriageBackfillOptions,

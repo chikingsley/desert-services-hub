@@ -2,7 +2,7 @@
  * Takeoff by ID API handlers
  * Routes: /api/takeoffs/:id, /api/takeoffs/:id/pdf, /api/takeoffs/:id/estimate
  */
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 import { createSharePointClientFromEnv } from "@sharepoint/intake-upload";
 import {
   decodeSharePointPdfPath,
@@ -19,7 +19,7 @@ export async function getTakeoff(req: BunRequest): Promise<Response> {
   const { id } = req.params;
 
   const takeoff = (await db
-    .prepare("SELECT * FROM takeoffs WHERE id = ?")
+    .query("SELECT * FROM takeoffs WHERE id = $1")
     .get(id)) as Record<string, unknown> | undefined;
 
   if (!takeoff) {
@@ -66,11 +66,11 @@ export async function updateTakeoff(req: BunRequest): Promise<Response> {
   values.push(id);
 
   await db
-    .prepare(`UPDATE takeoffs SET ${updates.join(", ")} WHERE id = ?`)
+    .query(`UPDATE takeoffs SET ${updates.join(", ")} WHERE id = $1`)
     .run(...values);
 
   const takeoff = (await db
-    .prepare("SELECT * FROM takeoffs WHERE id = ?")
+    .query("SELECT * FROM takeoffs WHERE id = $1")
     .get(id)) as Record<string, unknown>;
 
   return Response.json({
@@ -83,7 +83,7 @@ export async function updateTakeoff(req: BunRequest): Promise<Response> {
 // DELETE /api/takeoffs/:id - Delete a takeoff
 export async function deleteTakeoff(req: BunRequest): Promise<Response> {
   const { id } = req.params;
-  await db.prepare("DELETE FROM takeoffs WHERE id = ?").run(id);
+  await db.query("DELETE FROM takeoffs WHERE id = $1").run(id);
   return Response.json({ success: true });
 }
 
@@ -92,7 +92,7 @@ export async function getTakeoffPdf(req: BunRequest): Promise<Response> {
   const { id } = req.params;
 
   const takeoff = (await db
-    .prepare("SELECT pdf_url FROM takeoffs WHERE id = ?")
+    .query("SELECT pdf_url FROM takeoffs WHERE id = $1")
     .get(id)) as { pdf_url: string | null } | undefined;
 
   if (!takeoff?.pdf_url) {
@@ -162,10 +162,10 @@ export async function getTakeoffEstimate(req: BunRequest): Promise<Response> {
     const { id } = req.params;
 
     const estimate = (await db
-      .prepare(
+      .query(
         `SELECT e.id, e.base_number, e.job_name, e.status, e.created_at
          FROM estimates e
-         WHERE e.takeoff_id = ?
+         WHERE e.takeoff_id = $1
          ORDER BY e.created_at DESC
          LIMIT 1`
       )

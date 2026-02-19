@@ -12,7 +12,7 @@
  */
 
 import { cleanCompany } from "@email/enrichment/pdl/company";
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 
 const RATE_LIMIT_DELAY_MS = 6500; // 6.5 seconds between calls (safe margin)
 

@@ -9,7 +9,7 @@
  * Extractions are cached in documents.raw_extraction.contract_fields.
  */
 
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 import type {
   ContractDocExtractEnqueueJob,
   ContractDocExtractPayload,
@@ -51,10 +51,11 @@ const getDocsNeedingExtraction = db.query<DocToEnqueue>(
      )
      -- Skip docs already queued
      AND NOT EXISTS (
-       SELECT 1 FROM webhook_jobs wj
-       WHERE wj.job_type = 'contract_doc_extract'
-         AND wj.payload::jsonb->>'doc_id' = d.id::text
-         AND wj.status IN ('pending', 'processing')
+       SELECT 1
+       FROM pgmq.q_background_jobs q
+       WHERE q.message->>'job_type' = 'contract_doc_extract'
+         AND q.message->'payload'->>'doc_id' = d.id::text
+         AND q.read_ct < COALESCE((q.message->>'max_attempts')::int, 3)
      )
    ORDER BY e.id, length(d.summary) DESC
    LIMIT 200`
@@ -83,10 +84,11 @@ const getExtractedButUnlinked = db.query<DocToEnqueue>(
      )) >= 5
      -- Skip docs already queued for re-match
      AND NOT EXISTS (
-       SELECT 1 FROM webhook_jobs wj
-       WHERE wj.job_type = 'contract_doc_extract'
-         AND wj.payload::jsonb->>'doc_id' = d.id::text
-         AND wj.status IN ('pending', 'processing')
+       SELECT 1
+       FROM pgmq.q_background_jobs q
+       WHERE q.message->>'job_type' = 'contract_doc_extract'
+         AND q.message->'payload'->>'doc_id' = d.id::text
+         AND q.read_ct < COALESCE((q.message->>'max_attempts')::int, 3)
      )
    ORDER BY e.id, length(d.summary) DESC
    LIMIT 50`
@@ -106,7 +108,7 @@ Return ONLY valid JSON. Use null for any field you cannot confidently extract.
 Document text:
 `;
 
-const cacheContractFields = db.prepare(`
+const cacheContractFields = db.query(`
   UPDATE documents
   SET raw_extraction = (
     CASE WHEN raw_extraction IS NOT NULL AND jsonb_typeof(raw_extraction::jsonb) = 'object'
@@ -167,7 +169,7 @@ const getProjectsForAccount = db.query<ProjectMatch>(
    LIMIT 50`
 );
 
-const linkEmailToProject = db.prepare(`
+const linkEmailToProject = db.query(`
   UPDATE emails SET project_id = $1 WHERE id = $2 AND project_id IS NULL
 `);
 
@@ -182,10 +184,6 @@ const getDocSummary = db.query<{
    FROM documents WHERE id = $1`
 );
 
-const GEMINI_MODEL = (
-  process.env.GEMINI_FAST_MODEL ?? "gemini-2.5-flash-lite"
-).trim();
-
 // ============================================================================
 // Extraction & Matching
 // ============================================================================
@@ -193,11 +191,13 @@ const GEMINI_MODEL = (
 async function extractContractFields(
   summary: string
 ): Promise<ContractFields | null> {
-  const { runGeminiJsonPrompt } = await import("@email/llm/json-runner");
-  const result = await runGeminiJsonPrompt(
+  const { chat } = await import("@lib/pdf-analysis");
+  const chatResult = await chat(
     EXTRACT_PROMPT + summary.slice(0, 3000),
-    { model: GEMINI_MODEL }
+    "gemini"
   );
+  const result =
+    Object.keys(chatResult.data).length > 0 ? chatResult.data : null;
   if (!result) {
     return null;
   }
@@ -318,7 +318,7 @@ async function matchViaLlm(fields: ContractFields): Promise<number | null> {
     .map(([id, name]) => `  ${id}: ${name}`)
     .join("\n");
 
-  const { runGeminiJsonPrompt } = await import("@email/llm/json-runner");
+  const { chat } = await import("@lib/pdf-analysis");
   const prompt = `You are matching a contract document to a project in our database.
 
 The document references:
@@ -333,7 +333,9 @@ Which project ID is this document for? Consider abbreviations, naming variations
 Return JSON: {"project_id": <number or null>, "confidence": "high"|"medium"|"low", "reason": "<brief explanation>"}
 Return null for project_id if none of the candidates are a match.`;
 
-  const result = await runGeminiJsonPrompt(prompt, { model: GEMINI_MODEL });
+  const chatResult = await chat(prompt, "gemini");
+  const result =
+    Object.keys(chatResult.data).length > 0 ? chatResult.data : null;
   if (
     !result ||
     typeof result.project_id !== "number" ||

@@ -23,6 +23,7 @@ const args = process.argv.slice(2);
 const command = args[0];
 
 const TRAILING_SLASH_RE = /\/$/;
+const OUTLOOK_WEBHOOK_PATH = "/functions/v1/outlook-webhook";
 
 function getFlag(name: string): string | undefined {
   const flag = args.find((a) => a.startsWith(`--${name}=`));
@@ -43,7 +44,7 @@ function getWebhookUrl(): string {
     process.exit(1);
   }
 
-  return `${url.replace(TRAILING_SLASH_RE, "")}/api/webhooks/outlook`;
+  return `${url.replace(TRAILING_SLASH_RE, "")}${OUTLOOK_WEBHOOK_PATH}`;
 }
 
 async function main(): Promise<void> {
@@ -173,7 +174,7 @@ Commands:
   status                                    Show subscription health
 
 Options:
-  --url=https://...    Override webhook base URL (or set WEBHOOK_BASE_URL)`);
+  --url=https://...    Override edge base URL (or set WEBHOOK_BASE_URL)`);
     }
   }
 }

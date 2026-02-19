@@ -5,7 +5,7 @@
  * (create/renew/revise drafts, close, delete).
  */
 
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 import { getPermitById, upsertPermit } from "@lib/db/repositories/dust-permit";
 import type { DeepPartial, FormData } from "@/form-data";
 
@@ -97,7 +97,7 @@ export async function markPermitClosedRecord(permitId: string): Promise<void> {
 
 export async function deletePermitRecord(permitId: string): Promise<void> {
   await db.run(
-    "DELETE FROM dust_permits_filed_by_desert_services WHERE id = ?",
+    "DELETE FROM dust_permits_filed_by_desert_services WHERE id = $1",
     [permitId]
   );
 }

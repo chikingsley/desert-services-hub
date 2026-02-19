@@ -2,7 +2,7 @@
  * Project by ID API handlers
  * Route: /api/projects/:id/final-sov
  */
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 import { getCanonicalProjectSov } from "@lib/db/repositories/project-estimate";
 
 // Bun extends Request with params from route matching
@@ -27,7 +27,7 @@ export async function getProjectFinalSov(
     }
 
     const project = (await db
-      .prepare("SELECT id, name FROM projects WHERE id = ?")
+      .query("SELECT id, name FROM projects WHERE id = $1")
       .get(projectId)) as { id: number; name: string } | null;
 
     if (!project) {

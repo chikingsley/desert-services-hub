@@ -28,9 +28,11 @@
 !packages/permits/
 !packages/takeoff/
 !packages/contracts/
+!packages/aqdata/
 
 # Permit worker (browser automation)
 !apps/dust-permits/
+!apps/aqdata-worker/
 
 # Shared libraries
 !lib/

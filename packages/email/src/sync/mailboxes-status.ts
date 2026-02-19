@@ -2,7 +2,7 @@
  * Mailbox sync summaries and status reporting.
  */
 import { ALL_MAILBOXES, type SyncResult } from "@email/sync/config";
-import { getAllMailboxes } from "@lib/db/repositories";
+import { getAllMailboxes } from "@lib/db/repositories/mailbox";
 
 export function printSyncSummary(results: SyncResult[]): void {
   console.log(`\n${"=".repeat(60)}`);

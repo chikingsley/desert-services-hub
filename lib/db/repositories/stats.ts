@@ -1,7 +1,7 @@
 /**
  * Statistics & Cleanup Functions
  */
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 import { parseEmailRow } from "@lib/db/repositories/email";
 import type {
   ClassificationStats,

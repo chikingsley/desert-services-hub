@@ -2,7 +2,7 @@
  * Functions for linking emails to estimates.
  * Used by agents and scripts to associate emails with estimates.
  */
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 import { findEstimateCandidatesForEmail as findEstimateCandidatesForEmailInternal } from "@lib/db/repositories/estimate-email-matching";
 import type {
   EstimateCandidateResult as EstimateCandidateResultInternal,
@@ -31,7 +31,7 @@ export async function linkEmailToEstimate(
   try {
     await db.run(
       `INSERT INTO estimate_emails (estimate_id, email_id, match_type, match_detail)
-       VALUES (?, ?, ?, ?)
+       VALUES ($1, $2, $3, $4)
        ON CONFLICT DO NOTHING`,
       [estimateId, emailId, source, detail || null]
     );
@@ -67,7 +67,7 @@ export async function unlinkEmailFromEstimate(
   emailId: number
 ): Promise<boolean> {
   const result = await db.run(
-    "DELETE FROM estimate_emails WHERE estimate_id = ? AND email_id = ?",
+    "DELETE FROM estimate_emails WHERE estimate_id = $1 AND email_id = $2",
     [estimateId, emailId]
   );
   return result.count > 0;
@@ -98,7 +98,7 @@ export async function getEstimateEmails(estimateId: number) {
       ee.match_detail
     FROM estimate_emails ee
     JOIN emails e ON ee.email_id = e.id
-    WHERE ee.estimate_id = ?
+    WHERE ee.estimate_id = $1
     ORDER BY e.received_at ASC
   `)
     .all(estimateId);
@@ -125,7 +125,7 @@ export async function getEmailEstimates(emailId: number) {
       ee.match_type
     FROM estimate_emails ee
     JOIN estimates est ON ee.estimate_id = est.id
-    WHERE ee.email_id = ?
+    WHERE ee.email_id = $1
   `)
     .all(emailId);
 }
@@ -164,7 +164,7 @@ export async function findEmail(search: string | number) {
           received_at: string;
         },
         [number]
-      >("SELECT id, subject, from_email, received_at FROM emails WHERE id = ?")
+      >("SELECT id, subject, from_email, received_at FROM emails WHERE id = $1")
       .get(search);
   }
 

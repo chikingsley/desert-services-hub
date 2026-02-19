@@ -1,4 +1,4 @@
-// eslint-disable no-process-env
+// eslint_disable no-process-env
 // Run with: `NODE_ENV=development npx tsx scripts/listRedisUsage.ts`
 
 import "dotenv/config";

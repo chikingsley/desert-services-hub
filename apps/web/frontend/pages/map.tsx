@@ -1,20 +1,23 @@
-/**
- * Map Page — OSM streets + Maricopa County parcels + satellite toggle.
- * CSS loaded via <link> tag in index.html.
- */
 import maplibregl from "maplibre-gl";
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { ParcelInfo } from "./map-helpers";
+import { MapControls } from "./map-controls";
+import type { LowestPoint, ParcelInfo } from "./map-helpers";
 import {
+  buildParcelSamplePoints,
   EMPTY_FC,
+  fetch3DepSamples,
   fetchApnLabels,
+  findLowestPoint,
+  findLowestTerrainPoint,
   isEsriQueryResult,
+  metersToFeet,
   PARCEL_QUERY_URL,
   PARCEL_TILE_URL,
   parseEsriFeature,
+  TERRAIN_DEM_TILE_URL,
 } from "./map-helpers";
+import { MapSelectedPanel } from "./map-selected-panel";
 
-// Store base layer IDs so we can toggle them without re-scanning
 let baseLayerIds: string[] = [];
 
 function applySatelliteToggle(
@@ -56,22 +59,97 @@ function applySatelliteToggle(
       showSatellite ? "#000000" : "#ffffff"
     );
   }
-  console.log(
-    "[map] satellite:",
-    showSatellite,
-    "toggled",
-    baseLayerIds.length,
-    "base layers"
-  );
 }
 
 export function MapPage() {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
+  const lowestPointJobRef = useRef(0);
   const [isSatellite, setIsSatellite] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searching, setSearching] = useState(false);
   const [selected, setSelected] = useState<ParcelInfo | null>(null);
+  const [lowestPoint, setLowestPoint] = useState<LowestPoint | null>(null);
+  const [findingLowestPoint, setFindingLowestPoint] = useState(false);
+
+  const setLowestPointMarker = useCallback(
+    (map: maplibregl.Map, point: LowestPoint | null) => {
+      const src = map.getSource("lowest-point") as
+        | maplibregl.GeoJSONSource
+        | undefined;
+      if (!src) {
+        return;
+      }
+      if (!point) {
+        src.setData(EMPTY_FC);
+        return;
+      }
+
+      const feet = metersToFeet(point.elevationMeters);
+      const prefix = point.approximate ? "Approx low" : "Lowest point";
+      const label = `${prefix}: ${feet.toFixed(1)} ft`;
+
+      src.setData({
+        type: "FeatureCollection",
+        features: [
+          {
+            type: "Feature",
+            geometry: {
+              type: "Point",
+              coordinates: point.point,
+            },
+            properties: { label },
+          },
+        ],
+      });
+    },
+    []
+  );
+
+  const analyzeLowestPoint = useCallback(
+    async (
+      map: maplibregl.Map,
+      parcel: GeoJSON.Feature<GeoJSON.Polygon, { APN: string }>
+    ) => {
+      const jobId = ++lowestPointJobRef.current;
+      setFindingLowestPoint(true);
+      setLowestPoint(null);
+      setLowestPointMarker(map, null);
+
+      const points = buildParcelSamplePoints(parcel);
+      if (points.length === 0) {
+        setFindingLowestPoint(false);
+        return;
+      }
+
+      const terrainLowest = findLowestTerrainPoint(map, points);
+
+      try {
+        const samples = await fetch3DepSamples(points);
+        if (lowestPointJobRef.current !== jobId) {
+          return;
+        }
+        const usgsLowest = findLowestPoint(samples);
+        if (usgsLowest) {
+          setLowestPoint(usgsLowest);
+          setLowestPointMarker(map, usgsLowest);
+          return;
+        }
+
+        if (terrainLowest) {
+          setLowestPoint(terrainLowest);
+          setLowestPointMarker(map, terrainLowest);
+        }
+      } catch (err) {
+        console.error("[map] 3DEP lowest-point failed:", err);
+      } finally {
+        if (lowestPointJobRef.current === jobId) {
+          setFindingLowestPoint(false);
+        }
+      }
+    },
+    [setLowestPointMarker]
+  );
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) {
@@ -92,10 +170,17 @@ export function MapPage() {
     );
 
     map.on("load", () => {
-      // Capture base layer IDs before adding our custom layers
       baseLayerIds = map.getStyle().layers.map((l) => l.id);
 
-      // Satellite tiles — hidden, at bottom of stack
+      map.addSource("terrain-dem", {
+        type: "raster-dem",
+        tiles: [TERRAIN_DEM_TILE_URL],
+        tileSize: 256,
+        encoding: "terrarium",
+        maxzoom: 15,
+      });
+      map.setTerrain({ source: "terrain-dem", exaggeration: 1 });
+
       map.addSource("satellite", {
         type: "raster",
         tiles: [
@@ -110,7 +195,6 @@ export function MapPage() {
         layout: { visibility: "none" },
       });
 
-      // Parcel boundary raster tiles — on top of satellite
       map.addSource("parcels", {
         type: "raster",
         tiles: [PARCEL_TILE_URL],
@@ -124,7 +208,6 @@ export function MapPage() {
         minzoom: 13,
       });
 
-      // APN labels — lightweight centroid query, no geometry
       map.addSource("apn-labels", { type: "geojson", data: EMPTY_FC });
       map.addLayer({
         id: "apn-labels",
@@ -144,7 +227,6 @@ export function MapPage() {
         },
       });
 
-      // Fetch APN labels for visible parcels
       let loadingLabels = false;
       const updateLabels = async () => {
         if (map.getZoom() < 15 || loadingLabels) {
@@ -154,7 +236,6 @@ export function MapPage() {
         try {
           const fc = await fetchApnLabels(map);
           if (fc) {
-            console.log("[map] labels loaded:", fc.features.length);
             const src = map.getSource("apn-labels") as
               | maplibregl.GeoJSONSource
               | undefined;
@@ -171,7 +252,6 @@ export function MapPage() {
       map.on("moveend", updateLabels);
       updateLabels();
 
-      // Selected parcel highlight
       map.addSource("selected-parcel", { type: "geojson", data: EMPTY_FC });
       map.addLayer({
         id: "selected-fill",
@@ -185,14 +265,40 @@ export function MapPage() {
         source: "selected-parcel",
         paint: { "line-color": "#1565c0", "line-width": 3.5 },
       });
+      map.addSource("lowest-point", { type: "geojson", data: EMPTY_FC });
+      map.addLayer({
+        id: "lowest-point-marker",
+        type: "circle",
+        source: "lowest-point",
+        paint: {
+          "circle-radius": 6,
+          "circle-color": "#f57c00",
+          "circle-stroke-color": "#ffffff",
+          "circle-stroke-width": 2,
+        },
+      });
+      map.addLayer({
+        id: "lowest-point-label",
+        type: "symbol",
+        source: "lowest-point",
+        layout: {
+          "text-field": ["get", "label"],
+          "text-size": 12,
+          "text-offset": [0, 1.3],
+          "text-anchor": "top",
+          "text-font": ["Noto Sans Bold"],
+        },
+        paint: {
+          "text-color": "#1a1a1a",
+          "text-halo-color": "#ffffff",
+          "text-halo-width": 1.5,
+        },
+      });
 
-      // Click to select
       map.on("click", async (e) => {
         if (map.getZoom() < 14) {
           return;
         }
-        console.log("[map] click query at", e.lngLat.lng, e.lngLat.lat);
-
         const params = new URLSearchParams({
           geometry: `${e.lngLat.lng},${e.lngLat.lat}`,
           geometryType: "esriGeometryPoint",
@@ -210,8 +316,6 @@ export function MapPage() {
           if (!isEsriQueryResult(data)) {
             return;
           }
-          console.log("[map] click result:", data.features?.length, "features");
-
           if (!data.features?.length) {
             return;
           }
@@ -225,6 +329,7 @@ export function MapPage() {
           ) as maplibregl.GeoJSONSource;
           src.setData(result.geojson);
           setSelected(result.info);
+          await analyzeLowestPoint(map, result.geojson);
         } catch (err) {
           console.error("[map] click query failed:", err);
         }
@@ -233,8 +338,6 @@ export function MapPage() {
       map.on("mousemove", () => {
         map.getCanvas().style.cursor = map.getZoom() >= 14 ? "pointer" : "";
       });
-
-      console.log("[map] loaded, layers:", map.getStyle().layers.length);
     });
 
     mapRef.current = map;
@@ -242,7 +345,7 @@ export function MapPage() {
       map.remove();
       mapRef.current = null;
     };
-  }, []);
+  }, [analyzeLowestPoint]);
 
   const toggleSatellite = useCallback(() => {
     const map = mapRef.current;
@@ -261,8 +364,15 @@ export function MapPage() {
     }
     setSearching(true);
     setSelected(null);
-    console.log("[map] searching APN:", q);
-
+    lowestPointJobRef.current += 1;
+    setFindingLowestPoint(false);
+    setLowestPoint(null);
+    const lowestSrc = mapRef.current?.getSource("lowest-point") as
+      | maplibregl.GeoJSONSource
+      | undefined;
+    if (lowestSrc) {
+      lowestSrc.setData(EMPTY_FC);
+    }
     const cleanApn = q.replace(/[-\s.]/g, "");
     const params = new URLSearchParams({
       where: `APN = '${cleanApn}'`,
@@ -279,8 +389,6 @@ export function MapPage() {
         setSearching(false);
         return;
       }
-      console.log("[map] search result:", data.features?.length, "features");
-
       if (!data.features?.length) {
         setSearching(false);
         return;
@@ -300,8 +408,8 @@ export function MapPage() {
       const src = map.getSource("selected-parcel") as maplibregl.GeoJSONSource;
       src.setData(result.geojson);
       setSelected(result.info);
+      await analyzeLowestPoint(map, result.geojson);
 
-      // Fly to parcel
       const bounds = new maplibregl.LngLatBounds();
       const coords = (result.geojson.geometry as GeoJSON.Polygon)
         .coordinates[0];
@@ -314,7 +422,7 @@ export function MapPage() {
     }
 
     setSearching(false);
-  }, [searchQuery]);
+  }, [analyzeLowestPoint, searchQuery]);
 
   const clearSelection = useCallback(() => {
     const src = mapRef.current?.getSource("selected-parcel") as
@@ -323,6 +431,15 @@ export function MapPage() {
     if (src) {
       src.setData(EMPTY_FC);
     }
+    const lowestSrc = mapRef.current?.getSource("lowest-point") as
+      | maplibregl.GeoJSONSource
+      | undefined;
+    if (lowestSrc) {
+      lowestSrc.setData(EMPTY_FC);
+    }
+    lowestPointJobRef.current += 1;
+    setFindingLowestPoint(false);
+    setLowestPoint(null);
     setSelected(null);
   }, []);
 
@@ -341,144 +458,22 @@ export function MapPage() {
         }
       `}</style>
       <div ref={containerRef} style={{ position: "absolute", inset: 0 }} />
+      <MapControls
+        isSatellite={isSatellite}
+        onSearch={handleSearch}
+        onSearchQueryChange={setSearchQuery}
+        onToggleSatellite={toggleSatellite}
+        searching={searching}
+        searchQuery={searchQuery}
+      />
 
-      {/* Satellite toggle */}
-      <div style={{ position: "absolute", top: 12, left: 12, zIndex: 10 }}>
-        <button
-          onClick={toggleSatellite}
-          style={{
-            padding: "6px 14px",
-            background: isSatellite ? "#1565c0" : "rgba(255,255,255,0.92)",
-            color: isSatellite ? "#fff" : "#333",
-            border: "1px solid #ccc",
-            borderRadius: 6,
-            fontSize: 13,
-            fontWeight: 500,
-            cursor: "pointer",
-            boxShadow: "0 1px 4px rgba(0,0,0,0.15)",
-          }}
-          type="button"
-        >
-          {isSatellite ? "Streets" : "Satellite"}
-        </button>
-      </div>
-
-      {/* Search */}
-      <div
-        style={{
-          position: "absolute",
-          top: 12,
-          left: "50%",
-          transform: "translateX(-50%)",
-          zIndex: 10,
-          display: "flex",
-          gap: 6,
-        }}
-      >
-        <input
-          onChange={(e) => setSearchQuery(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              handleSearch();
-            }
-          }}
-          placeholder="Search APN..."
-          style={{
-            width: 220,
-            padding: "7px 12px",
-            border: "1px solid #ccc",
-            borderRadius: 6,
-            fontSize: 13,
-            background: "rgba(255,255,255,0.95)",
-            boxShadow: "0 1px 4px rgba(0,0,0,0.15)",
-            outline: "none",
-          }}
-          type="text"
-          value={searchQuery}
-        />
-        <button
-          disabled={searching}
-          onClick={handleSearch}
-          style={{
-            padding: "7px 14px",
-            background: "rgba(255,255,255,0.95)",
-            border: "1px solid #ccc",
-            borderRadius: 6,
-            fontSize: 13,
-            fontWeight: 500,
-            cursor: "pointer",
-            boxShadow: "0 1px 4px rgba(0,0,0,0.15)",
-            opacity: searching ? 0.5 : 1,
-          }}
-          type="button"
-        >
-          {searching ? "..." : "Search"}
-        </button>
-      </div>
-
-      {/* Selected parcel info */}
       {selected && (
-        <div
-          style={{
-            position: "absolute",
-            bottom: 20,
-            left: 12,
-            zIndex: 10,
-            background: "rgba(255,255,255,0.95)",
-            border: "1px solid #ccc",
-            borderRadius: 8,
-            padding: "12px 16px",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.18)",
-            fontSize: 13,
-            lineHeight: 1.6,
-            minWidth: 220,
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "start",
-            }}
-          >
-            <strong style={{ fontSize: 14 }}>Parcel</strong>
-            <button
-              onClick={clearSelection}
-              style={{
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-                fontSize: 16,
-                color: "#999",
-                padding: "0 2px",
-                lineHeight: 1,
-              }}
-              type="button"
-            >
-              &times;
-            </button>
-          </div>
-          <div style={{ marginTop: 4 }}>
-            <div>
-              <b>APN:</b> {selected.apn}
-            </div>
-            {selected.address && (
-              <div>
-                <b>Address:</b> {selected.address}
-              </div>
-            )}
-            {selected.owner && (
-              <div>
-                <b>Owner:</b> {selected.owner}
-              </div>
-            )}
-            {selected.acres != null && (
-              <div>
-                <b>Size:</b> {selected.acres.toLocaleString()} sq ft
-              </div>
-            )}
-          </div>
-        </div>
+        <MapSelectedPanel
+          findingLowestPoint={findingLowestPoint}
+          lowestPoint={lowestPoint}
+          onClear={clearSelection}
+          selected={selected}
+        />
       )}
     </div>
   );

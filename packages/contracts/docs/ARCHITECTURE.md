@@ -1,6 +1,6 @@
 # Contracts Pipeline Architecture
 
-**Updated:** 2026-02-16
+**Updated:** 2026-02-19
 **Purpose:** Single source of truth for how contract documents flow through the system, what's connected, and where the gaps are.
 
 ## How It Works Today (The Reality)
@@ -20,24 +20,17 @@
                │  Graph webhook fires
                ▼
   ┌─────────────────────────────────────────────────┐
-  │  POST /api/webhooks/outlook                      │
-  │  (background-jobs container)                     │
+  │  POST /functions/v1/outlook-webhook              │
+  │  (Supabase Edge Function)                        │
   │                                                  │
-  │  ✅ Stores email row in `emails` table           │
-  │  ✅ Downloads attachments → `attachments` table  │
-  │  ❌ Does NOT classify email                      │
-  │  ❌ Does NOT link to project                     │
-  │  ❌ Does NOT trigger parsing                     │
-  │  ❌ Does NOT create contract packet              │
+  │  ✅ Enqueues `email_notification` (pgmq)         │
+  │  ✅ background-jobs worker stores email/attachments │
+  │  ✅ Triage can classify + dispatch action jobs   │
+  │  ⚠️ Contract packet automation still has gaps    │
   └────────────┬────────────────────────────────────┘
                │
                ▼
-          🛑 DEAD END
-     (attachments sit with extraction_status = 'pending')
-
-
-  TO GET ANYTHING PARSED, you must manually forward
-  the email to intake@desertservices.app:
+   Alternate/manual intake path (still supported):
 
   ┌─────────────────────────────────────────────────┐
   │  Forward email → intake@desertservices.app       │
@@ -79,7 +72,8 @@ Projects are NOT created manually. Two automated sources:
 ```sql
 Monday.com ESTIMATING board
     │
-    │  Syncs every ~60 seconds (estimate-poller worker)
+    │  `sync_full` runs on pg_cron (10 min) and `sync_item` runs on Monday webhook events.
+    │  Webhook path also enqueues deduped `monday_status_sync`; cron keeps hourly fallback.
     ▼
 syncEstimates() → estimates table
     │
@@ -103,7 +97,8 @@ syncProjectSeedsFromEstimates()
 projects table + project_estimates join table
 ```
 
-**Key file:** `apps/background-jobs/workers/estimate-poller/lib/project-seed-sync.ts`
+**Sync core:** `packages/monday/src/sync/estimate-sync/full-sync.ts`  
+**Key file:** `packages/monday/src/sync/project-seed/sync.ts`
 
 ### Source 2: Outlook Folder Watcher (Secondary)
 
@@ -111,7 +106,7 @@ projects table + project_estimates join table
 New folder appears under Projects/Active/
     │
     │  Folder name: "ProjectName - Contractor"
-    │  Polls every ~30 seconds
+    │  Polls every minute via `pg_cron`
     ▼
 findProjectByFolder()
     │
@@ -301,18 +296,18 @@ Templates exist in `packages/contracts/templates/` but aren't wired to any autom
 
 | Component | Path |
 |-----------|------|
-| Email webhook | `apps/background-jobs/api/webhooks/outlook.ts` |
+| Email webhook ingress | `supabase/functions/outlook-webhook/index.ts` |
 | Intake webhook | `apps/background-jobs/api/webhooks/intake.ts` |
-| Intake pipeline | `packages/documents/intake/files-intake.ts` |
-| File processors | `packages/documents/intake/processors/*.ts` |
-| Intake DB + types | `packages/documents/intake/files-intake-db.ts` |
-| Post-processing/linking | `apps/background-jobs/lib/intake/intake-attachments-runner.ts` |
-| Document classifier | `packages/documents/pdf-analysis-py/src/pdf_analysis/classify.py` |
+| Intake pipeline | `packages/documents/intake/src/files-intake.ts` |
+| PDF analysis/classification | `packages/documents/intake/src/pdf_analysis/analysis/*.py` |
+| Intake DB + types | `lib/db/repositories/intake-document.ts` |
+| Post-processing/linking | `packages/documents/intake/src/attachment-backfill.ts` |
+| Document classifier | `packages/documents/intake/src/pdf_analysis/analysis/classify.py` |
 | Intake CF worker | `apps/cf-workers/intake-worker/src/index.ts` |
 | Email processing | `apps/background-jobs/jobs/email-processing.ts` |
-| Project seed sync | `apps/background-jobs/workers/estimate-poller/lib/project-seed-sync.ts` |
+| Project seed sync | `packages/monday/src/sync/project-seed/sync.ts` |
 | Folder watcher projects | `apps/background-jobs/workers/outlook-folder-watcher/lib/projects.ts` |
-| Project matching | `lib/project-matching.ts` |
+| Project matching | `lib/db/repositories/project-matching.ts` |
 | Project SOV | `lib/db/repositories/project-sov.ts` |
 | Canonical estimate | `lib/db/repositories/project-estimate.ts` |
 | Contract packets schema | `supabase/migrations/20260212170000_contract_packet_lifecycle.sql` |
@@ -328,7 +323,8 @@ Templates exist in `packages/contracts/templates/` but aren't wired to any autom
 
 | Service | Container | What It Does For Contracts |
 |---------|-----------|---------------------------|
-| `background-jobs` | `desert-webhooks` | Email webhook, job queue, intake processing, folder watcher, estimate sync |
+| `background-jobs` | `desert-webhooks` | Queue consumer, intake processing, folder watcher, estimate sync |
 | `web` | `desert-web` | Contracts API, frontend UI, SOV endpoints |
+| `supabase edge` | Managed | Monday/Outlook/intake webhook ingress |
 | `intake-worker` | Cloudflare Edge | Receives forwarded emails, extracts attachments, posts to intake webhook |
 | `docusign-dispatcher` | Cloudflare Edge | Routes DocuSign signing links from contracts@ |

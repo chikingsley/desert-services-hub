@@ -2,7 +2,7 @@
  * Project contacts roll-up API handler
  * Route: GET /api/projects/:id/contacts
  */
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 
 type BunProjectRequest = Request & { params: { id: string } };
 
@@ -46,7 +46,7 @@ export async function getProjectContacts(
       .query<ProjectRow, [number]>(
         `SELECT id, name, lifecycle_state, account_id
          FROM projects
-         WHERE id = ?`
+         WHERE id = $1`
       )
       .get(projectId)) as ProjectRow | null;
 
@@ -70,7 +70,7 @@ export async function getProjectContacts(
            FROM project_estimates pe
            JOIN estimate_contacts ec ON ec.estimate_id = pe.estimate_id
            JOIN contacts c ON c.id = ec.contact_id
-           WHERE pe.project_id = ?
+           WHERE pe.project_id = $1
            GROUP BY c.id, c.name, c.email, c.phone, c.title, c.account_id
          ),
          email_links AS (
@@ -87,7 +87,7 @@ export async function getProjectContacts(
            FROM emails e
            JOIN contact_emails ce ON ce.email_id = e.id
            JOIN contacts c ON c.id = ce.contact_id
-           WHERE e.project_id = ?
+           WHERE e.project_id = $2
            GROUP BY c.id, c.name, c.email, c.phone, c.title, c.account_id
          ),
          combined AS (

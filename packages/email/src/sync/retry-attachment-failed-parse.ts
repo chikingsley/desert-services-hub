@@ -13,7 +13,7 @@
  *   bun packages/email/cli/retry-attachment-failed-parse.ts --match "custom error text"
  */
 
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 
 interface RetryRow {
   email: string;
@@ -54,8 +54,8 @@ export async function runRetryAttachmentFailedParse(
        JOIN mailboxes m ON m.id = e.mailbox_id
        WHERE d.source = 'email_attachment'
          AND d.extraction_status = 'failed'
-         AND lower(COALESCE(d.extraction_error, '')) LIKE '%' || ? || '%'
-         AND (? = '' OR lower(m.email) = ANY(string_to_array(?, ',')))
+         AND lower(COALESCE(d.extraction_error, '')) LIKE '%' || $1 || '%'
+         AND ($2 = '' OR lower(m.email) = ANY(string_to_array($3, ',')))
        GROUP BY m.email
        ORDER BY m.email`
     )
@@ -94,8 +94,8 @@ export async function runRetryAttachmentFailedParse(
          JOIN mailboxes m ON m.id = e.mailbox_id
          WHERE d2.source = 'email_attachment'
            AND d2.extraction_status = 'failed'
-           AND lower(COALESCE(d2.extraction_error, '')) LIKE '%' || ? || '%'
-           AND (? = '' OR lower(m.email) = ANY(string_to_array(?, ',')))
+           AND lower(COALESCE(d2.extraction_error, '')) LIKE '%' || $1 || '%'
+           AND ($2 = '' OR lower(m.email) = ANY(string_to_array($3, ',')))
        )`,
     [matchText, mailboxArg, mailboxArg]
   );
@@ -108,7 +108,7 @@ export async function runRetryAttachmentFailedParse(
        JOIN mailboxes m ON m.id = e.mailbox_id
        WHERE d.source = 'email_attachment'
          AND d.extraction_status = 'pending'
-         AND (? = '' OR lower(m.email) = ANY(string_to_array(?, ',')))`
+         AND ($1 = '' OR lower(m.email) = ANY(string_to_array($2, ',')))`
     )
     .get(mailboxArg, mailboxArg);
 

@@ -13,6 +13,13 @@ import {
   handleAQDataDetailScrape,
   handleAQDataSync,
 } from "./api/aqdata";
+import {
+  handleBuildingConnectedAuthClipboardCopy,
+  handleBuildingConnectedAuthClipboardPaste,
+  handleBuildingConnectedAuthStart,
+  handleBuildingConnectedAuthStatus,
+  handleBuildingConnectedAuthStop,
+} from "./api/buildingconnected-auth";
 import { healthCheck } from "./api/health";
 import { handleIntakeWebhook } from "./api/webhooks/intake";
 import { startWorker } from "./worker";
@@ -32,6 +39,22 @@ const server = serve({
   routes: {
     "/api/health": {
       GET: healthCheck,
+    },
+    "/api/buildingconnected/auth/status": {
+      GET: handleBuildingConnectedAuthStatus,
+    },
+    "/api/buildingconnected/auth/start": {
+      POST: ((req: Request) => handleBuildingConnectedAuthStart(req)) as never,
+    },
+    "/api/buildingconnected/auth/stop": {
+      POST: handleBuildingConnectedAuthStop,
+    },
+    "/api/buildingconnected/auth/clipboard/paste": {
+      POST: ((req: Request) =>
+        handleBuildingConnectedAuthClipboardPaste(req)) as never,
+    },
+    "/api/buildingconnected/auth/clipboard/copy": {
+      POST: handleBuildingConnectedAuthClipboardCopy,
     },
     "/api/aqdata/sync": {
       POST: handleAQDataSync,

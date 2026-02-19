@@ -8,7 +8,7 @@
 import { enrichEmailDomains } from "@email/sync/enrichment";
 import { linkEmailsToAccounts } from "@email/sync/link-accounts";
 import { processPlatformEmails } from "@email/sync/platform-extraction";
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 
 export async function runEmailPostProcessing(): Promise<void> {
   console.log("=".repeat(60));

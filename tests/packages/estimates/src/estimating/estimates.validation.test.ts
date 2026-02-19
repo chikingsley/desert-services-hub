@@ -3,7 +3,7 @@ import { findItem } from "@estimates/catalog/catalog";
 import { applyLineItemChanges } from "@estimates/estimating/estimate-line-item-change-service";
 import { getEstimateWithDetails } from "@estimates/estimating/estimate-read-service";
 import { createEstimate } from "@estimates/estimating/estimate-write-service";
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 
 const TEST_PREFIX = "_TEST_ESTIMATE_GUARDS_";
 const testEstimateIds: string[] = [];
@@ -22,7 +22,7 @@ if (!(PRIMARY_ITEM && SECONDARY_ITEM)) {
 afterAll(async () => {
   for (const id of testEstimateIds) {
     try {
-      await db.prepare("DELETE FROM estimates WHERE id = ?").run(id);
+      await db.query("DELETE FROM estimates WHERE id = $1").run(id);
     } catch {
       // Ignore cleanup failures
     }
@@ -65,7 +65,7 @@ describe("createEstimate guardrails", () => {
     testEstimateIds.push(estimate.id);
 
     const row = (await db
-      .prepare("SELECT job_address, client_address FROM estimates WHERE id = ?")
+      .query("SELECT job_address, client_address FROM estimates WHERE id = $1")
       .get(estimate.id)) as { job_address: string; client_address: string };
     expect(row.job_address).toBe(
       "3633 E Thunderbird Road\nPhoenix, Arizona 85032"

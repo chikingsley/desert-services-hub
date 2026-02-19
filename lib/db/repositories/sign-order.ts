@@ -4,7 +4,7 @@
  * Tracks Sandstorm sign-order drafts and lifecycle status per project.
  */
 
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 
 export const SIGN_ORDER_STATUSES = [
   "drafted",
@@ -131,7 +131,7 @@ export async function createSignOrder(
       message_id,
       status,
       metadata
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?::jsonb)
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15::jsonb)
     RETURNING id`,
     [
       input.projectId ?? null,
@@ -169,11 +169,11 @@ export async function updateSignOrderStatus(options: {
   await db.run(
     `UPDATE sign_orders
      SET
-      status = ?,
-      draft_id = COALESCE(?, draft_id),
-      message_id = COALESCE(?, message_id),
+      status = $1,
+      draft_id = COALESCE($2, draft_id),
+      message_id = COALESCE($3, message_id),
       updated_at = now()
-     WHERE id = ?`,
+     WHERE id = $4`,
     [
       options.status,
       options.draftId ?? null,

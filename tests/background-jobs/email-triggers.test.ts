@@ -2,13 +2,13 @@ import { afterAll, describe, expect, it } from "bun:test";
 import {
   handleIssuedEmail,
   handlePaymentEmail,
-} from "@background-jobs/lib/notifications/email-trigger-handlers";
+} from "@email/notifications/email-trigger-handlers";
 import {
   detectDustPermitEmailTrigger,
   parseMaricopaIssuedEmail,
   parsePointAndPayEmail,
-} from "@background-jobs/lib/notifications/email-triggers";
-import { db } from "@lib/db/hub";
+} from "@email/notifications/email-triggers";
+import { db } from "@lib/db/client";
 
 // ============================================================================
 // Real email fixtures (verbatim from production emails)
@@ -294,7 +294,7 @@ describe("handlePaymentEmail — integration", () => {
 
   afterAll(async () => {
     // Clean up any test notifications
-    await db.run("DELETE FROM notifications WHERE subject LIKE ?", [
+    await db.run("DELETE FROM notifications WHERE subject LIKE $1", [
       `${TEST_REF_PREFIX}%`,
     ]);
     // Clean up test notifications

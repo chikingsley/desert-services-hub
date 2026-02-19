@@ -2,7 +2,7 @@ import {
   EstimatePayloadValidationError,
   validateUpdateEstimatePayload,
 } from "@estimates/estimating/estimate-payload-validation";
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 import type { EstimateRow, EstimateVersionRow } from "@lib/db/types";
 import {
   type BunRequest,
@@ -85,7 +85,7 @@ async function updateEstimateRow(
   values.push(estimateId);
 
   await db
-    .prepare(`UPDATE estimates SET ${fields.join(", ")} WHERE id = ?`)
+    .query(`UPDATE estimates SET ${fields.join(", ")} WHERE id = $1`)
     .run(...values);
 }
 
@@ -99,9 +99,9 @@ async function ensureCurrentVersion(
   if (!version) {
     const versionId = crypto.randomUUID();
     await db
-      .prepare(
+      .query(
         `INSERT INTO estimate_versions (id, estimate_id, version_number, total, is_current)
-         VALUES (?, ?, 1, 0, 1)`
+         VALUES ($1, $2, 1, 0, 1)`
       )
       .run(versionId, estimateId);
 
@@ -117,10 +117,10 @@ async function ensureCurrentVersion(
 
   if (version.is_current !== 1) {
     await db
-      .prepare(
+      .query(
         `UPDATE estimate_versions
-         SET is_current = CASE WHEN id = ? THEN 1 ELSE 0 END
-         WHERE estimate_id = ?`
+         SET is_current = CASE WHEN id = $1 THEN 1 ELSE 0 END
+         WHERE estimate_id = $2`
       )
       .run(version.id, estimateId);
     version = { ...version, is_current: 1 };
@@ -131,16 +131,16 @@ async function ensureCurrentVersion(
 
 async function clearVersionSectionsAndItems(versionId: string): Promise<void> {
   await db
-    .prepare("DELETE FROM estimate_line_items WHERE version_id = ?")
+    .query("DELETE FROM estimate_line_items WHERE version_id = $1")
     .run(versionId);
   await db
-    .prepare("DELETE FROM estimate_sections WHERE version_id = ?")
+    .query("DELETE FROM estimate_sections WHERE version_id = $1")
     .run(versionId);
 }
 
 async function clearVersionLineItems(versionId: string): Promise<void> {
   await db
-    .prepare("DELETE FROM estimate_line_items WHERE version_id = ?")
+    .query("DELETE FROM estimate_line_items WHERE version_id = $1")
     .run(versionId);
 }
 
@@ -186,7 +186,7 @@ async function insertSections(
 
 async function loadExistingSectionIds(versionId: string): Promise<Set<string>> {
   const existingSections = (await db
-    .prepare("SELECT id FROM estimate_sections WHERE version_id = ?")
+    .query("SELECT id FROM estimate_sections WHERE version_id = $1")
     .all(versionId)) as Array<{ id: string }>;
 
   return new Set(existingSections.map((section) => section.id));
@@ -270,7 +270,7 @@ async function updateVersionTotal(
   total: number
 ): Promise<void> {
   await db
-    .prepare("UPDATE estimate_versions SET total = ? WHERE id = ?")
+    .query("UPDATE estimate_versions SET total = $1 WHERE id = $2")
     .run(total, versionId);
 }
 
@@ -338,7 +338,7 @@ export async function handleUpdateEstimate(req: BunRequest): Promise<Response> {
     }
 
     const existing = (await db
-      .prepare("SELECT * FROM estimates WHERE id = ?")
+      .query("SELECT * FROM estimates WHERE id = $1")
       .get(id)) as EstimateRow | undefined;
     if (!existing) {
       return Response.json({ error: "Estimate not found" }, { status: 404 });
@@ -351,7 +351,7 @@ export async function handleUpdateEstimate(req: BunRequest): Promise<Response> {
     await applyVersionChanges(id, payload);
 
     const updated = (await db
-      .prepare("SELECT updated_at FROM estimates WHERE id = ?")
+      .query("SELECT updated_at FROM estimates WHERE id = $1")
       .get(id)) as { updated_at: string } | null;
 
     return Response.json({ success: true, updated_at: updated?.updated_at });

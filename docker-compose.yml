@@ -15,6 +15,9 @@ services:
       PORT: 3000
       DATABASE_URL: postgresql://postgres:postgres@host.docker.internal:54322/postgres
       MONDAY_FILES_DIR: /app/data/monday-files
+      BACKGROUND_JOBS_BASE_URL: ${BACKGROUND_JOBS_BASE_URL:-http://background-jobs:4747}
+      BUILDINGCONNECTED_AUTH_VNC_PORT: ${BUILDINGCONNECTED_AUTH_VNC_PORT:-6081}
+      BUILDINGCONNECTED_AUTH_VNC_URL: ${BUILDINGCONNECTED_AUTH_VNC_URL:-https://buildingconnected-vnc.desertservices.app/vnc.html?autoconnect=true&resize=scale&reconnect=true&reconnect_delay=2000&view_only=false&shared=true}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     healthcheck:
@@ -36,6 +39,7 @@ services:
     container_name: desert-webhooks
     ports:
       - "4000:4747"
+      - "6081:6080" # noVNC web interface for BuildingConnected auth bootstrap
     env_file: .env
     environment:
       NODE_ENV: production
@@ -71,6 +75,11 @@ services:
       AQDATA_SYNC_ENABLED: ${AQDATA_SYNC_ENABLED:-1}
       AQDATA_DETAIL_SCRAPE_ENABLED: ${AQDATA_DETAIL_SCRAPE_ENABLED:-1}
       AQDATA_DETAIL_SCRAPE_BATCH_SIZE: ${AQDATA_DETAIL_SCRAPE_BATCH_SIZE:-10}
+      BUILDINGCONNECTED_AUTH_MANUAL_TIMEOUT_MS: ${BUILDINGCONNECTED_AUTH_MANUAL_TIMEOUT_MS:-1200000}
+      BACKGROUND_JOBS_VNC_ENABLED: ${BACKGROUND_JOBS_VNC_ENABLED:-1}
+      BACKGROUND_JOBS_VNC_PORT: 6080
+      BACKGROUND_JOBS_VNC_RESOLUTION: ${BACKGROUND_JOBS_VNC_RESOLUTION:-1920x1080}
+      DISPLAY: ":1"
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:
@@ -82,7 +91,7 @@ services:
       retries: 3
       start_period: 5s
     restart: unless-stopped
-    command: ["bun", "run", "apps/background-jobs/webhooks.ts"]
+    command: ["/app/apps/background-jobs/start-stack.sh"]
 
   # ==========================================================================
   # PDF Analysis — FastAPI service for PDF extraction, classification, OCR
@@ -202,6 +211,7 @@ volumes:
 #
 # Web app:        http://localhost:3000
 # Background Jobs: http://localhost:4747 (tunneled to webhooks.desertservices.app)
+# BC Auth VNC:    http://localhost:6081 (buildingconnected-vnc.desertservices.app)
 # Permit Worker:  http://localhost:47822 (API + Dashboard)
 # Permit VNC:     http://localhost:6080 (watch browser automation / maricopa-vnc.desertservices.app)
 #

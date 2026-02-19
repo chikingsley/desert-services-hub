@@ -1,6 +1,6 @@
 # Desert Services Hub — System Map
 
-Last updated: 2026-02-16
+Last updated: 2026-02-19
 
 ## Purpose
 
@@ -16,6 +16,8 @@ Scope boundary:
 - `docker-compose.yml`
 - `apps/background-jobs/webhooks.ts`
 - `apps/background-jobs/worker.ts`
+- `supabase/functions/README.md`
+- `supabase/migrations/20260219120000_pgmq_pgcron_atomic_rewrite.sql`
 - `Justfile`
 
 ## Runtime Topology
@@ -25,10 +27,17 @@ Scope boundary:
 | Service | Entry | Responsibility |
 |---|---|---|
 | `web` | `apps/web/server.ts` | Frontend + API server on `:3000` |
-| `background-jobs` | `apps/background-jobs/webhooks.ts` | Webhook ingress + job queue + sync timers (notifications + SWPPP master sync) on `:4747` |
-| ~~`notifications`~~ | *(absorbed into background-jobs)* | Notification polling runs as timer in worker.ts |
+| `background-jobs` | `apps/background-jobs/webhooks.ts` | AQData endpoints, intake webhook adapter, pgmq queue consumer on `:4747` |
+| `pdf-analysis` | `packages/documents/intake/src/pdf_analysis/server.py` | PDF extraction/classification/OCR service on `:4848` |
 | `permit-worker` | `apps/dust-permits` | Permit automation API + VNC |
+| `aqdata-worker` | `apps/aqdata-worker/server.ts` | AQData sync/scrape service on `:47823` |
 | `tunnel` (optional) | Cloudflared | Public ingress |
+
+### Supabase Edge Functions (Webhook Ingress)
+
+- `monday-webhook`
+- `outlook-webhook`
+- `intake-webhook` (forwarder to `background-jobs` intake endpoint)
 
 ### Cloudflare Worker Deployments
 
@@ -36,48 +45,48 @@ Scope boundary:
 - `estimates-sync` (`apps/cf-workers/estimates-sync-worker`)
 - `inspection-router` (`apps/cf-workers/inspections-email-worker`)
 
-### In-Process Worker Modules
+### Queue Runtime
 
-Loaded by `apps/background-jobs/worker.ts`:
-- Intake processing: `apps/background-jobs/lib/intake/files-intake.ts`
-- Attachment backfill: `apps/background-jobs/lib/attachment-backfill.ts`
-- Estimate extraction triage: `apps/background-jobs/lib/estimate-extraction-triage.ts`
-- Contract won bridge: `apps/background-jobs/lib/contracts/contract-won-bridge.ts` (every 2 min)
-- Folder watcher poll: `apps/background-jobs/workers/outlook-folder-watcher/lib/poll.ts`
-- Estimate linker poll: `apps/background-jobs/workers/estimate-email-linker/lib/poll.ts`
-- SWPPP master poll: `packages/sharepoint/workers/swppp-master-poller/lib/sync.ts`
+- Queue backend: `pgmq.q_background_jobs`
+- Scheduler: `pg_cron` jobs `bg_*`
+- Consumer/dispatcher: `apps/background-jobs/jobs/dispatch.ts`
+- Queue operations: `apps/background-jobs/jobs/queue.ts`
 
 ## Canonical Runtime Flows
 
 ### Intake Flow (canonical)
 
-1. `intake-worker` receives inbound forwarded email.
-2. Worker POSTs to `apps/background-jobs/api/webhooks/intake.ts` (`/api/webhooks/intake`).
-3. Webhooks service enqueues `job_type=intake`.
-4. `apps/background-jobs/jobs/dispatch.ts` dispatches to `processIntakeJob`.
+1. Intake payload arrives from `apps/cf-workers/intake-worker` (or `supabase/functions/intake-webhook`).
+2. `apps/background-jobs/api/webhooks/intake.ts` saves attachments/linked files to local intake storage.
+3. Intake webhook enqueues `job_type=intake` via `public.enqueue_background_job`.
+4. `apps/background-jobs/jobs/dispatch.ts` routes to `processIntakeJob`.
 
-### Outlook Email Linking Flow
+### Outlook Email Flow
 
-1. Outlook notifications hit `apps/background-jobs/api/webhooks/outlook.ts`.
-2. Jobs enqueue as `email_notification`.
-3. `apps/background-jobs/jobs/dispatch.ts` processes inserts/attachments.
-4. Periodic enrichment runs via folder watcher + estimate linker timers.
+1. Microsoft Graph notifications hit `supabase/functions/outlook-webhook`.
+2. Edge function enqueues `email_notification` via `public.enqueue_background_job`.
+3. `apps/background-jobs/jobs/dispatch.ts` runs `processEmailNotificationJob`.
+4. Triage may enqueue follow-on jobs (`dust_permit_payment`, `dust_permit_issued_email`, `contract_email_received`).
+5. Periodic email/project enrichment runs through cron-driven jobs (`folder_watcher_poll`, `estimate_linker_poll`, `account_linking`, `contact_linking`, `contact_enrichment`).
 
 ### Monday Sync Flow
 
-- `apps/background-jobs/api/webhooks/monday.ts` receives Monday events (`sync_item`, `download_files`).
-- Periodic `sync_full` runs from `apps/background-jobs/jobs/dispatch.ts`.
-
-### Permit Email Notification Flow
-
-- Dust permit payment/issued triggers are processed in `apps/background-jobs/jobs/dispatch.ts` via notification handlers.
+1. Monday webhooks hit `supabase/functions/monday-webhook`.
+2. Edge function enqueues `sync_item`.
+3. `processSyncItemJob` syncs one item and may enqueue `download_files`.
+4. `sync_full` runs on schedule and orchestrates estimate sync, project seed sync, estimate file sweep, SharePoint sync, and document project propagation.
 
 ### Contract Won Bridge Flow
 
-1. `contracts@` email arrives → intake → document extraction → stored in `documents`.
-2. `contract_doc_extract` job (Pass 1.5) runs LLM field extraction + langextract NER.
-3. Bridge runs every 2 min: classify → link by subject → link by LLM fields → backfill → mark Won → mark Not Awarded.
-4. Winning estimate triggers `estimate_won` notification flow.
+1. `contract_won_bridge` runs on `pg_cron`.
+2. Bridge pipeline classifies/links contract emails, enqueues `contract_doc_extract`, backfills docs, and marks Won/Lost.
+3. Winning estimate updates trigger downstream notifications logic.
+
+### Permit Flow
+
+1. Payment/issued jobs are enqueued by email triage.
+2. Handlers run permit sync orchestration via `@permits/client` (`apps/background-jobs/jobs/permit-sync.ts`).
+3. Notification drafts/events are emitted by `packages/email/src/notifications/*`.
 
 ## Operational Checks
 
@@ -89,8 +98,8 @@ Loaded by `apps/background-jobs/worker.ts`:
 ## Code-Confirmed Gaps (Current)
 
 - Takeoff SharePoint migration is partially implemented and still needs closeout validation:
-  - `apps/web/api/upload.ts` now uploads PDFs to SharePoint and persists `sharepoint://` references.
-  - `apps/web/api/takeoffs-by-id.ts` now serves PDF bytes from SharePoint.
+  - `apps/web/api/upload.ts` uploads PDFs to SharePoint and persists `sharepoint://` references.
+  - `apps/web/api/takeoffs-by-id.ts` serves PDF bytes from SharePoint.
   - End-to-end validation and closure work remains tracked in `PEA-61`.
 
 ## Active Gaps

@@ -7,7 +7,7 @@
  *
  * Used by:
  *   - cli/watch.ts (standalone CLI)
- *   - apps/web/worker.ts (background job in web container)
+ *   - apps/background-jobs/jobs/dispatch.ts (`folder_watcher_poll` job handler)
  */
 
 import {
@@ -35,8 +35,8 @@ import {
   setConfig,
   updateTrackedFolder,
 } from "@background-jobs/workers/outlook-folder-watcher/lib/state";
-import { db as hubDb } from "@lib/db/hub";
-import { normalizeProjectNameKey } from "@lib/db/repositories/project";
+import { db as hubDb } from "@lib/db/client";
+import { normalizeProjectNameKey } from "@lib/db/repositories/project-matching-utils";
 import { linkEmail } from "@lib/linking/link-email";
 
 // -- Handlers --
@@ -71,7 +71,7 @@ async function handleRenamedFolder(
 
   const tracked = await hubDb
     .query<{ project_id: number | null }, [string]>(
-      "SELECT project_id FROM tracked_folders WHERE folder_id = ?"
+      "SELECT project_id FROM tracked_folders WHERE folder_id = $1"
     )
     .get(folder.id);
 
@@ -81,7 +81,7 @@ async function handleRenamedFolder(
   if (tracked?.project_id) {
     const { projectName, contractor } = parseFolderName(folder.displayName);
     await hubDb.run(
-      "UPDATE projects SET name = ?, normalized_name = ?, outlook_folder = ?, contractor = COALESCE(?, contractor), updated_at = now() WHERE id = ?",
+      "UPDATE projects SET name = $1, normalized_name = $2, outlook_folder = $3, contractor = COALESCE($4, contractor), updated_at = now() WHERE id = $5",
       [
         projectName,
         normalizeProjectNameKey(projectName),
@@ -108,7 +108,7 @@ async function handleRenamedFolder(
 async function handleDeletedFolder(folder: FolderChange): Promise<void> {
   const tracked = await hubDb
     .query<{ display_name: string; project_id: number | null }, [string]>(
-      "SELECT display_name, project_id FROM tracked_folders WHERE folder_id = ?"
+      "SELECT display_name, project_id FROM tracked_folders WHERE folder_id = $1"
     )
     .get(folder.id);
 
@@ -281,7 +281,7 @@ export async function pollFolderWatcher(): Promise<boolean> {
 
     const tracked = await hubDb
       .query<{ display_name: string }, [string]>(
-        "SELECT display_name FROM tracked_folders WHERE folder_id = ?"
+        "SELECT display_name FROM tracked_folders WHERE folder_id = $1"
       )
       .get(folder.id);
 

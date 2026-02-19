@@ -1,7 +1,7 @@
 /**
  * Account Repository
  */
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 import type { Account, AccountType } from "@lib/db/types";
 
 function parseAccountRow(row: Record<string, unknown>): Account {
@@ -25,8 +25,8 @@ export async function createAccount(
   type: AccountType = "contractor"
 ): Promise<Account> {
   await db.run(
-    `INSERT INTO accounts (domain, name, type) VALUES (?, ?, ?)
-     ON CONFLICT(domain) DO UPDATE SET name = ?, type = ?, updated_at = now()`,
+    `INSERT INTO accounts (domain, name, type) VALUES ($1, $2, $3)
+     ON CONFLICT(domain) DO UPDATE SET name = $4, type = $5, updated_at = now()`,
     [domain, name, type, name, type]
   );
 
@@ -59,7 +59,7 @@ export async function getAccountIdByAlias(
 ): Promise<number | null> {
   const row = await db
     .query<{ account_id: number }, [string]>(
-      "SELECT account_id FROM company_aliases WHERE alias = ?"
+      "SELECT account_id FROM company_aliases WHERE alias = $1"
     )
     .get(alias.toLowerCase());
 
@@ -73,7 +73,7 @@ export async function addCompanyAlias(
   try {
     await db.run(
       `INSERT INTO company_aliases (account_id, alias)
-       VALUES (?, ?)
+       VALUES ($1, $2)
        ON CONFLICT DO NOTHING`,
       [accountId, alias.toLowerCase()]
     );
@@ -112,7 +112,7 @@ export async function linkEmailToAccount(
   emailId: number,
   accountId: number
 ): Promise<void> {
-  await db.run("UPDATE emails SET account_id = ? WHERE id = ?", [
+  await db.run("UPDATE emails SET account_id = $1 WHERE id = $2", [
     accountId,
     emailId,
   ]);

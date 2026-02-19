@@ -2,7 +2,7 @@
  * Emails API handlers
  * Routes: GET /api/emails, GET /api/emails/:id, POST /api/emails/:id/classification
  */
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 import { parseEmailRow } from "@lib/db/repositories/email";
 import { findEstimateCandidatesForEmail } from "@lib/db/repositories/estimate-email";
 import { listEmails as listEmailsHandler } from "./list-emails";
@@ -54,7 +54,7 @@ export async function listEmailSenders(req: Request): Promise<Response> {
     const qLike = `%${q}%`;
 
     const rows = (await db
-      .prepare(
+      .query(
         `WITH candidates AS (
           SELECT lower(from_email) AS email, nullif(trim(from_name), '') AS display_name
           FROM emails
@@ -75,10 +75,10 @@ export async function listEmailSenders(req: Request): Promise<Response> {
         FROM candidates
         WHERE email IS NOT NULL
           AND email <> ''
-          AND (? = '' OR email ILIKE ? OR coalesce(display_name, '') ILIKE ?)
+          AND ($1 = '' OR email ILIKE $2 OR coalesce(display_name, '') ILIKE $3)
         GROUP BY email
         ORDER BY count DESC, email ASC
-        LIMIT ?`
+        LIMIT $4`
       )
       .all(q, qLike, qLike, limit)) as {
       email: string;
@@ -111,7 +111,7 @@ export async function getEmail(req: Request): Promise<Response> {
     }
 
     const row = (await db
-      .prepare("SELECT * FROM emails WHERE id = ?")
+      .query("SELECT * FROM emails WHERE id = $1")
       .get(emailId)) as Record<string, unknown> | null;
 
     if (!row) {
@@ -123,11 +123,11 @@ export async function getEmail(req: Request): Promise<Response> {
 
     if (internetMsgId) {
       const siblings = (await db
-        .prepare(
+        .query(
           `SELECT m.email as mailbox, e.received_at
            FROM emails e
            JOIN mailboxes m ON m.id = e.mailbox_id
-           WHERE e.internet_message_id = ?
+           WHERE e.internet_message_id = $1
            ORDER BY m.email`
         )
         .all(internetMsgId)) as {
@@ -209,7 +209,7 @@ export async function setEmailClassification(req: Request): Promise<Response> {
     }
 
     const row = (await db
-      .prepare("SELECT id FROM emails WHERE id = ?")
+      .query("SELECT id FROM emails WHERE id = $1")
       .get(emailId)) as { id: number } | null;
     if (!row) {
       return Response.json({ error: "Email not found" }, { status: 404 });
@@ -218,23 +218,23 @@ export async function setEmailClassification(req: Request): Promise<Response> {
     const isExcluded = body.is_excluded;
     if (isExcluded === undefined) {
       await db
-        .prepare(
+        .query(
           `UPDATE emails
-           SET classification = ?,
+           SET classification = $1,
                classification_confidence = NULL,
-               classification_method = ?
-           WHERE id = ?`
+               classification_method = $2
+           WHERE id = $3`
         )
         .run(classification, method, emailId);
     } else {
       await db
-        .prepare(
+        .query(
           `UPDATE emails
-           SET classification = ?,
+           SET classification = $1,
                classification_confidence = NULL,
-               classification_method = ?,
-               is_excluded = ?
-           WHERE id = ?`
+               classification_method = $2,
+               is_excluded = $3
+           WHERE id = $4`
         )
         .run(classification, method, isExcluded ? 1 : 0, emailId);
     }
@@ -275,7 +275,7 @@ export async function setDomainRule(req: Request): Promise<Response> {
     // Upsert the domain rule
     await db.run(
       `INSERT INTO domain_rules (domain, classification, is_excluded)
-       VALUES (?, ?, ?)
+       VALUES ($1, $2, $3)
        ON CONFLICT (domain) DO UPDATE SET
          classification = excluded.classification,
          is_excluded = excluded.is_excluded`,
@@ -288,7 +288,7 @@ export async function setDomainRule(req: Request): Promise<Response> {
 
     if (isExcluded) {
       await db
-        .prepare(
+        .query(
           `UPDATE emails SET is_excluded = 1 WHERE is_excluded = 0 AND ${domainCondition}`
         )
         .run(...domainParams);
@@ -296,8 +296,8 @@ export async function setDomainRule(req: Request): Promise<Response> {
 
     if (classification) {
       await db
-        .prepare(
-          `UPDATE emails SET classification = ?, classification_method = 'domain_rule'
+        .query(
+          `UPDATE emails SET classification = $1, classification_method = 'domain_rule'
            WHERE ${domainCondition}`
         )
         .run(classification, ...domainParams);
@@ -321,7 +321,7 @@ export async function setDomainRule(req: Request): Promise<Response> {
 export async function listDomainRules(_req: Request): Promise<Response> {
   try {
     const rules = (await db
-      .prepare(
+      .query(
         "SELECT domain, classification, is_excluded, created_at FROM domain_rules ORDER BY domain"
       )
       .all()) as {

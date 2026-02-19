@@ -237,13 +237,19 @@ function createExtractionResult(
 
 function extractCompanyFromFromEmail(
   config: PlatformDomainConfig,
-  fromEmail: string | null
+  fromEmail: string | null,
+  fromName: string | null
 ): string | null {
-  if (!(config.fromEmailPattern && fromEmail)) {
+  if (!config.fromEmailPattern) {
     return null;
   }
-  const emailMatch = fromEmail.match(config.fromEmailPattern);
-  return emailMatch?.[1] ? emailMatch[1].replaceAll(/_/g, " ") : null;
+  // Try display name first (e.g. "Turner via DocuSign"), then raw email address
+  for (const candidate of [fromName, fromEmail]) {
+    if (!candidate) continue;
+    const m = candidate.match(config.fromEmailPattern);
+    if (m?.[1]) return m[1].replaceAll(/_/g, " ");
+  }
+  return null;
 }
 
 function extractCompanyFromSubject(
@@ -317,6 +323,7 @@ function hasExtractionSignal(result: PlatformExtraction): boolean {
 export function extractRealSender(
   domain: string | null,
   fromEmail: string | null,
+  fromName: string | null,
   body: string | null,
   subject: string | null
 ): PlatformExtraction | null {
@@ -326,7 +333,11 @@ export function extractRealSender(
   }
 
   const result = createExtractionResult(config);
-  result.realSenderCompany = extractCompanyFromFromEmail(config, fromEmail);
+  result.realSenderCompany = extractCompanyFromFromEmail(
+    config,
+    fromEmail,
+    fromName
+  );
 
   if (!result.realSenderCompany) {
     result.realSenderCompany = extractCompanyFromSubject(config, subject);

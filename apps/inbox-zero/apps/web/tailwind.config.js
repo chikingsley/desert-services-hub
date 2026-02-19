@@ -1,7 +1,7 @@
 const { fontFamily } = require("tailwindcss/defaultTheme");
 
 /** @type {import('tailwindcss').Config} */
-/* eslint-disable max-len */
+/* eslint_disable max-len */
 module.exports = {
   darkMode: ["class"],
   content: [

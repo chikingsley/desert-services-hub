@@ -27,11 +27,12 @@ export function decodePolyline(encoded: string): LatLng[] {
     do {
       byte = encoded.charCodeAt(index) - 63;
       index += 1;
-      result |= (byte & 0x1f) << shift;
+      result += (byte % 32) * 2 ** shift;
       shift += 5;
     } while (byte >= 0x20);
 
-    const deltaLat = (result & 1) !== 0 ? ~(result >> 1) : result >> 1;
+    const deltaLat =
+      result % 2 !== 0 ? -(Math.floor(result / 2) + 1) : Math.floor(result / 2);
     lat += deltaLat;
 
     shift = 0;
@@ -40,11 +41,12 @@ export function decodePolyline(encoded: string): LatLng[] {
     do {
       byte = encoded.charCodeAt(index) - 63;
       index += 1;
-      result |= (byte & 0x1f) << shift;
+      result += (byte % 32) * 2 ** shift;
       shift += 5;
     } while (byte >= 0x20);
 
-    const deltaLng = (result & 1) !== 0 ? ~(result >> 1) : result >> 1;
+    const deltaLng =
+      result % 2 !== 0 ? -(Math.floor(result / 2) + 1) : Math.floor(result / 2);
     lng += deltaLng;
 
     points.push({ lat: lat / 1e5, lng: lng / 1e5 });

@@ -38,4 +38,4 @@ Regression coverage:
 ## Runtime Notes
 
 - Runs in container `desert-web` on port `3000`.
-- Uses shared Postgres through `@lib/db/hub`.
+- Uses shared Postgres through `@lib/db/client`.

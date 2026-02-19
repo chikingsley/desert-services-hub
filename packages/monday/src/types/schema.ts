@@ -88,7 +88,7 @@ export const ESTIMATING_COLUMNS = {
   OWNER: { id: "deal_owner", type: "people" },
   DUE_DATE: { id: "date_mksf70mc", type: "date" },
   BID_SENT_DATE: { id: "date_mksfz5mn", type: "date" },
-  CLOSE_DATE: { id: "deal_close_date", type: "date" },
+  DATE_AWARDED: { id: "deal_close_date", type: "date" },
   PROJECT_START_DATE: { id: "date_mktggxm", type: "date" },
   PROJECT_END_DATE: { id: "date_mktgw5mt", type: "date" },
   LOCATION: { id: "location_mksej8dy", type: "location" },

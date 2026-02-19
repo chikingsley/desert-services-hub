@@ -1,5 +1,5 @@
 import { afterAll, describe, expect, test } from "bun:test";
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 import { ensureEstimateHasCurrentVersion } from "@lib/db/repositories/estimate-version";
 
 const TEST_PREFIX = "_TEST_DELETE_ME_ESTIMATE_VERSION_INTEGRITY_";
@@ -8,7 +8,7 @@ const createdEstimateIds: number[] = [];
 async function createEstimate(name: string): Promise<number> {
   const rows = (await db.run(
     `INSERT INTO estimates (name, bid_status)
-     VALUES (?, ?)
+     VALUES ($1, $2)
      RETURNING id`,
     [name, "draft"]
   )) as Array<{ id: number }>;
@@ -22,11 +22,11 @@ async function createEstimate(name: string): Promise<number> {
 
 afterAll(async () => {
   for (const id of createdEstimateIds) {
-    await db.prepare("DELETE FROM estimates WHERE id = ?").run(id);
+    await db.query("DELETE FROM estimates WHERE id = $1").run(id);
   }
 
   const remaining = (await db
-    .prepare("SELECT count(*)::int AS count FROM estimates WHERE name LIKE ?")
+    .query("SELECT count(*)::int AS count FROM estimates WHERE name LIKE $1")
     .get(`${TEST_PREFIX}%`)) as { count: number } | null;
 
   if ((remaining?.count ?? 0) > 0) {
@@ -48,10 +48,10 @@ describe("ensureEstimateHasCurrentVersion", () => {
     expect(result.created).toBe(true);
 
     const versions = (await db
-      .prepare(
+      .query(
         `SELECT version_number, source, total, is_current
          FROM estimate_versions
-         WHERE estimate_id = ?`
+         WHERE estimate_id = $1`
       )
       .all(estimateId)) as Array<{
       version_number: number;
@@ -73,15 +73,15 @@ describe("ensureEstimateHasCurrentVersion", () => {
     const v1 = crypto.randomUUID();
     const v2 = crypto.randomUUID();
     await db
-      .prepare(
+      .query(
         `INSERT INTO estimate_versions (id, estimate_id, version_number, source, total, is_current)
-         VALUES (?, ?, ?, ?, ?, ?)`
+         VALUES ($1, $2, $3, $4, $5, $6)`
       )
       .run(v1, estimateId, 1, "manual", 10, 0);
     await db
-      .prepare(
+      .query(
         `INSERT INTO estimate_versions (id, estimate_id, version_number, source, total, is_current)
-         VALUES (?, ?, ?, ?, ?, ?)`
+         VALUES ($1, $2, $3, $4, $5, $6)`
       )
       .run(v2, estimateId, 2, "manual", 20, 0);
 
@@ -90,10 +90,10 @@ describe("ensureEstimateHasCurrentVersion", () => {
     expect(result.versionId).toBe(v2);
 
     const currentRows = (await db
-      .prepare(
+      .query(
         `SELECT id
          FROM estimate_versions
-         WHERE estimate_id = ? AND is_current = 1`
+         WHERE estimate_id = $1 AND is_current = 1`
       )
       .all(estimateId)) as Array<{ id: string }>;
 
@@ -107,15 +107,15 @@ describe("ensureEstimateHasCurrentVersion", () => {
     const v1 = crypto.randomUUID();
     const v2 = crypto.randomUUID();
     await db
-      .prepare(
+      .query(
         `INSERT INTO estimate_versions (id, estimate_id, version_number, source, total, is_current)
-         VALUES (?, ?, ?, ?, ?, ?)`
+         VALUES ($1, $2, $3, $4, $5, $6)`
       )
       .run(v1, estimateId, 1, "manual", 10, 1);
     await db
-      .prepare(
+      .query(
         `INSERT INTO estimate_versions (id, estimate_id, version_number, source, total, is_current)
-         VALUES (?, ?, ?, ?, ?, ?)`
+         VALUES ($1, $2, $3, $4, $5, $6)`
       )
       .run(v2, estimateId, 2, "manual", 20, 0);
 
@@ -124,10 +124,10 @@ describe("ensureEstimateHasCurrentVersion", () => {
     expect(result.versionId).toBe(v1);
 
     const rows = (await db
-      .prepare(
+      .query(
         `SELECT id, is_current
          FROM estimate_versions
-         WHERE estimate_id = ?
+         WHERE estimate_id = $1
          ORDER BY version_number ASC`
       )
       .all(estimateId)) as Array<{ id: string; is_current: number }>;

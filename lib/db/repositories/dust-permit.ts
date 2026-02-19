@@ -3,7 +3,7 @@
  *
  * CRUD and query operations for dust_permits_filed_by_desert_services.
  */
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 import { likeSearch } from "@lib/db/search";
 import type { Permit, PermitStatus, UpsertPermitData } from "@lib/db/types";
 
@@ -73,7 +73,7 @@ export async function upsertPermit(data: UpsertPermitData): Promise<void> {
       previous_app_id, project_start_date, project_end_date,
       address, city, parcel, is_block_permit, is_accelerated,
       invoice_number, invoice_charges, invoice_balance
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)
     ON CONFLICT(id) DO UPDATE SET
       project_name = COALESCE(excluded.project_name, dust_permits_filed_by_desert_services.project_name),
       facility_id = COALESCE(excluded.facility_id, dust_permits_filed_by_desert_services.facility_id),
@@ -162,7 +162,7 @@ export async function linkPermitToAccount(
   accountId: number
 ): Promise<void> {
   await db.run(
-    "UPDATE dust_permits_filed_by_desert_services SET account_id = ?, updated_at = (extract(epoch FROM now()))::bigint WHERE id = ?",
+    "UPDATE dust_permits_filed_by_desert_services SET account_id = $1, updated_at = (extract(epoch FROM now()))::bigint WHERE id = $2",
     [accountId, permitId]
   );
 }
@@ -172,7 +172,7 @@ export async function linkPermitToProject(
   projectId: number
 ): Promise<void> {
   await db.run(
-    "UPDATE dust_permits_filed_by_desert_services SET project_id = ?, updated_at = (extract(epoch FROM now()))::bigint WHERE id = ?",
+    "UPDATE dust_permits_filed_by_desert_services SET project_id = $1, updated_at = (extract(epoch FROM now()))::bigint WHERE id = $2",
     [projectId, permitId]
   );
 }
@@ -261,7 +261,7 @@ export async function getPermitStats(): Promise<{
 export async function permitExists(id: string): Promise<boolean> {
   const row = await db
     .query<{ n: number }, [string]>(
-      "SELECT 1 as n FROM dust_permits_filed_by_desert_services WHERE id = ? LIMIT 1"
+      "SELECT 1 as n FROM dust_permits_filed_by_desert_services WHERE id = $1 LIMIT 1"
     )
     .get(id);
   return row !== null;
@@ -302,7 +302,7 @@ export async function markPermitScraped(
     await db.run(
       `UPDATE dust_permits_filed_by_desert_services
        SET updated_at = (extract(epoch FROM now()))::bigint
-       WHERE id = ?`,
+       WHERE id = $1`,
       [id]
     );
   }
@@ -333,14 +333,14 @@ export async function getPermitsByPortalCompany(
 export async function deleteRecentPermits(count: number): Promise<string[]> {
   const rows = await db
     .query<{ id: string }, [number]>(
-      "SELECT id FROM dust_permits_filed_by_desert_services ORDER BY created_at DESC LIMIT ?"
+      "SELECT id FROM dust_permits_filed_by_desert_services ORDER BY created_at DESC LIMIT $1"
     )
     .all(count);
   const ids = rows.map((r) => r.id);
   if (ids.length > 0) {
     for (const id of ids) {
       await db.run(
-        "DELETE FROM dust_permits_filed_by_desert_services WHERE id = ?",
+        "DELETE FROM dust_permits_filed_by_desert_services WHERE id = $1",
         [id]
       );
     }

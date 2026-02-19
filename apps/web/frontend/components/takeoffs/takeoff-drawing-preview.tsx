@@ -1,6 +1,5 @@
 import type { PdfHighlighterUtils } from "@takeoff/pdf-takeoff/contexts/pdf-highlighter-context";
-import type { TakeoffToolType } from "@takeoff/pdf-takeoff/types";
-import type { Scaled } from "@takeoff/pdf-takeoff/types";
+import type { Scaled, TakeoffToolType } from "@takeoff/pdf-takeoff/types";
 
 interface TakeoffDrawingPreviewProps {
   drawingPoints: Scaled[];

@@ -1,61 +1,40 @@
 /**
  * BuildingConnected File Sync
  *
- * Pulls BuildingConnected-signaled email attachments from Graph, runs document intake,
- * then stores the resulting files in SharePoint (project folder when confidently linked,
- * otherwise a BuildingConnected archive path).
+ * Pulls BuildingConnected-signaled email attachments from Graph and runs document intake.
  */
 import { mkdir, unlink } from "node:fs/promises";
 import { join } from "node:path";
-import { shouldSkipAttachment } from "@documents-intake/attachment-policy";
 import { processFilesIntake } from "@documents-intake/files-intake";
 import type { GraphEmailClient } from "@email/client";
 import { isSubjectCompatibleWithProject } from "@email/project-subject-guard";
 import { createGraphClient } from "@email/sync/config";
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 import { updateAttachmentExtraction } from "@lib/db/repositories/attachment";
-import {
-  createSharePointClientFromEnv,
-  uploadLocalFileToProjectSubfolder,
-} from "@sharepoint/intake-upload";
-import { buildSharePointUrl, sanitizeName } from "@sharepoint/paths";
 import type { BuildingConnectedSignalFields } from "./signal";
 import { hasBuildingConnectedSignal } from "./signal";
 
 const LOG = "[buildingconnected-file-sync]";
 const BACKFILL_DIR = "/app/data/buildingconnected-file-sync";
 const CONCURRENCY = 3;
-const PATH_EDGE_SLASHES_RE = /^\/+|\/+$/g;
 
-const DISABLED_FLAG_VALUES = new Set(["0", "false", "no", "off"]);
-
-function parseEnabledFlag(value: string | undefined, fallback = true): boolean {
-  if (!value?.trim()) {
+function parsePositiveInt(
+  value: string | undefined,
+  fallback: number,
+  min = 1
+): number {
+  const parsed = Number.parseInt(value ?? "", 10);
+  if (!Number.isFinite(parsed)) {
     return fallback;
   }
-  return !DISABLED_FLAG_VALUES.has(value.trim().toLowerCase());
+  return Math.max(min, parsed);
 }
 
-const BUILDINGCONNECTED_SYNC_ARCHIVE_UPLOAD = parseEnabledFlag(
-  process.env.BUILDINGCONNECTED_SYNC_ARCHIVE_UPLOAD ??
-    process.env.ATTACHMENT_BACKFILL_UPLOAD_BC_ARCHIVE,
-  true
+const BUILDINGCONNECTED_SYNC_DOWNLOAD_TIMEOUT_MS = parsePositiveInt(
+  process.env.BUILDINGCONNECTED_SYNC_DOWNLOAD_TIMEOUT_MS,
+  20_000,
+  1000
 );
-const BUILDINGCONNECTED_SYNC_SHAREPOINT_REQUIRED = parseEnabledFlag(
-  process.env.BUILDINGCONNECTED_SYNC_SHAREPOINT_REQUIRED,
-  true
-);
-const BUILDINGCONNECTED_SYNC_ARCHIVE_ROOT = (
-  process.env.BUILDINGCONNECTED_SYNC_ARCHIVE_ROOT ??
-  process.env.ATTACHMENT_BACKFILL_BC_ARCHIVE_ROOT ??
-  "Customer Projects/Submitted/_Platform Intake/BuildingConnected"
-)
-  .trim()
-  .replace(PATH_EDGE_SLASHES_RE, "");
-
-type SharePointClientInstance = NonNullable<
-  ReturnType<typeof createSharePointClientFromEnv>
->;
 
 // ============================================================================
 // Types
@@ -71,7 +50,6 @@ interface UnprocessedAttachment extends BuildingConnectedSignalFields {
   message_id: string;
   project_id: number | null;
   subject: string | null;
-  received_at: string | null;
   mailbox_email: string;
 }
 
@@ -90,108 +68,6 @@ export interface BuildingConnectedSyncOptions {
 }
 
 // ============================================================================
-// Skip Rules — inline images, calendar invites, signatures
-// ============================================================================
-
-function shouldSkip(att: UnprocessedAttachment): boolean {
-  return shouldSkipAttachment({
-    contentType: att.content_type,
-    fileName: att.name,
-    size: att.size,
-  });
-}
-
-function docTypeToSharePointSubfolder(documentType: string | null): string {
-  const t = (documentType ?? "").toLowerCase();
-  if (t.includes("noi")) {
-    return "NOI";
-  }
-  if (t.includes("plan")) {
-    return "Plans";
-  }
-  if (t.includes("estimate")) {
-    return "Estimates";
-  }
-  return "Contracts";
-}
-
-function getUtcDateParts(iso: string | null): {
-  year: string;
-  month: string;
-  day: string;
-} {
-  const parsed = iso ? new Date(iso) : new Date();
-  const date = Number.isNaN(parsed.getTime()) ? new Date() : parsed;
-  return {
-    day: String(date.getUTCDate()).padStart(2, "0"),
-    month: String(date.getUTCMonth() + 1).padStart(2, "0"),
-    year: date.getUTCFullYear().toString(),
-  };
-}
-
-function splitExtension(fileName: string): { stem: string; ext: string } {
-  const idx = fileName.lastIndexOf(".");
-  if (idx <= 0 || idx === fileName.length - 1) {
-    return { ext: "", stem: fileName };
-  }
-  return { ext: fileName.slice(idx), stem: fileName.slice(0, idx) };
-}
-
-function buildStableAltName(fileName: string, stableSuffix: string): string {
-  const safeSuffix = sanitizeName(stableSuffix).replaceAll(/\s+/g, "-");
-  const { stem, ext } = splitExtension(fileName);
-  return `${stem}-intake-${safeSuffix}${ext}`;
-}
-
-function buildBuildingConnectedArchiveFolder(
-  att: UnprocessedAttachment
-): string {
-  const { year, month, day } = getUtcDateParts(att.received_at);
-  const mailbox =
-    sanitizeName(att.mailbox_email || "unknown-mailbox") || "unknown-mailbox";
-  return `${BUILDINGCONNECTED_SYNC_ARCHIVE_ROOT}/${year}/${month}/${day}/${mailbox}`;
-}
-
-async function uploadAttachmentToBuildingConnectedArchive(
-  sp: SharePointClientInstance,
-  att: UnprocessedAttachment,
-  content: Buffer
-): Promise<string | null> {
-  if (
-    !(
-      BUILDINGCONNECTED_SYNC_ARCHIVE_UPLOAD &&
-      BUILDINGCONNECTED_SYNC_ARCHIVE_ROOT
-    )
-  ) {
-    return null;
-  }
-
-  const folderPath = buildBuildingConnectedArchiveFolder(att);
-  await sp.ensureFolder(folderPath);
-
-  const desiredName =
-    sanitizeName(att.name || `attachment-${att.attachment_id_pk}`) ||
-    `attachment-${att.attachment_id_pk}`;
-  const desiredPath = `${folderPath}/${desiredName}`;
-
-  let finalName = desiredName;
-  if (await sp.exists(desiredPath)) {
-    const altName = buildStableAltName(
-      desiredName,
-      `${att.email_id}-${att.attachment_id_pk}`
-    );
-    const altPath = `${folderPath}/${altName}`;
-    if (await sp.exists(altPath)) {
-      return buildSharePointUrl(folderPath);
-    }
-    finalName = altName;
-  }
-
-  await sp.upload(folderPath, finalName, content);
-  return buildSharePointUrl(folderPath);
-}
-
-// ============================================================================
 // Queries
 // ============================================================================
 
@@ -199,9 +75,9 @@ const getUnprocessedAttachments = db.query<UnprocessedAttachment, [number]>(`
   SELECT
     a.id as attachment_id_pk,
     a.outlook_attachment_id as graph_attachment_id,
-    a.name,
+    a.file_name as name,
     a.content_type,
-    a.size,
+    a.file_size as size,
     e.id as email_id,
     e.message_id,
     e.project_id,
@@ -214,7 +90,6 @@ const getUnprocessedAttachments = db.query<UnprocessedAttachment, [number]>(`
     e.real_sender_email,
     e.real_sender_domain,
     e.platform_name,
-    e.received_at,
     m.email as mailbox_email
   FROM documents a
   JOIN emails e ON e.id = a.email_id
@@ -237,7 +112,7 @@ const getUnprocessedAttachments = db.query<UnprocessedAttachment, [number]>(`
   LIMIT $1
 `);
 
-const updateDocumentBackfillLinks = db.prepare(`
+const updateDocumentBackfillLinks = db.query(`
   UPDATE documents
   SET email_id = $2,
       outlook_attachment_id = $3,
@@ -254,18 +129,16 @@ type AttachmentOutcome =
   | { type: "succeeded" }
   | { type: "failed"; error: string };
 
-// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Multi-branch operational flow handles parse, linking, and SharePoint fallback atomically.
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Multi-branch operational flow handles parse and linking atomically.
 async function processOneAttachment(
   att: UnprocessedAttachment,
-  client: GraphEmailClient,
-  sharePointClient: SharePointClientInstance | null
+  client: GraphEmailClient
 ): Promise<AttachmentOutcome> {
   const hasBuildingConnected = hasBuildingConnectedSignal(att);
   if (!hasBuildingConnected) {
     await updateAttachmentExtraction(att.attachment_id_pk, "skipped");
     return { type: "skipped" };
   }
-  const shouldSkipForParse = shouldSkip(att);
 
   // File extension from attachment name
   const ext = att.name.includes(".")
@@ -281,63 +154,26 @@ async function processOneAttachment(
     `${LOG}   Downloading: "${att.name}" (${att.content_type}, ${att.size ?? "?"} bytes) from ${att.mailbox_email}`
   );
 
-  const buffer = await client.downloadAttachment(
-    att.message_id,
-    att.graph_attachment_id,
-    att.mailbox_email
-  );
+  const buffer = (await Promise.race([
+    client.downloadAttachment(
+      att.message_id,
+      att.graph_attachment_id,
+      att.mailbox_email
+    ),
+    new Promise<Buffer>((_, reject) =>
+      setTimeout(
+        () =>
+          reject(
+            new Error(
+              `Download timed out after ${BUILDINGCONNECTED_SYNC_DOWNLOAD_TIMEOUT_MS}ms`
+            )
+          ),
+        BUILDINGCONNECTED_SYNC_DOWNLOAD_TIMEOUT_MS
+      )
+    ),
+  ])) as Buffer;
 
   await Bun.write(localPath, buffer);
-
-  let uploadedToProject = false;
-  let uploadedToBuildingConnectedArchive = false;
-
-  const ensureBuildingConnectedArchiveUpload = async (): Promise<void> => {
-    if (uploadedToBuildingConnectedArchive || uploadedToProject) {
-      return;
-    }
-
-    if (!sharePointClient) {
-      if (BUILDINGCONNECTED_SYNC_SHAREPOINT_REQUIRED) {
-        throw new Error(
-          "SharePoint client unavailable (missing AZURE_* credentials)"
-        );
-      }
-      return;
-    }
-
-    const folderUrl = await uploadAttachmentToBuildingConnectedArchive(
-      sharePointClient,
-      att,
-      buffer
-    );
-    if (!folderUrl && BUILDINGCONNECTED_SYNC_SHAREPOINT_REQUIRED) {
-      throw new Error(
-        "BuildingConnected archive upload is disabled (set BUILDINGCONNECTED_SYNC_ARCHIVE_UPLOAD=1)"
-      );
-    }
-    if (folderUrl) {
-      console.log(`${LOG}   BC archive upload: "${att.name}" -> ${folderUrl}`);
-      uploadedToBuildingConnectedArchive = true;
-    }
-  };
-
-  if (shouldSkipForParse) {
-    try {
-      await ensureBuildingConnectedArchiveUpload();
-      await updateAttachmentExtraction(att.attachment_id_pk, "skipped");
-      return { type: "skipped" };
-    } catch (error) {
-      const msg = error instanceof Error ? error.message : String(error);
-      await updateAttachmentExtraction(
-        att.attachment_id_pk,
-        "failed",
-        null,
-        msg.slice(0, 1000)
-      );
-      return { error: `${att.name}: ${msg}`, type: "failed" };
-    }
-  }
 
   try {
     // Run through the file analysis pipeline (Kreuzberg-first for PDFs, OCR fallback)
@@ -374,37 +210,9 @@ async function processOneAttachment(
           projectIdForDocument
         );
 
-        if (sharePointClient && projectIdForDocument !== null) {
-          try {
-            const uploaded = await uploadLocalFileToProjectSubfolder(
-              sharePointClient,
-              {
-                localPath,
-                originalFileName: att.name,
-                projectId: projectIdForDocument,
-                stableSuffix: String(r.documentId),
-                subfolder: docTypeToSharePointSubfolder(r.documentType ?? null),
-              }
-            );
-            if (uploaded) {
-              uploadedToProject = true;
-              console.log(
-                `${LOG}   SharePoint project upload: "${att.name}" -> ${uploaded.folderUrl}`
-              );
-            }
-          } catch (error) {
-            const msg = error instanceof Error ? error.message : String(error);
-            console.warn(
-              `${LOG}   SharePoint project upload failed for "${att.name}": ${msg}`
-            );
-          }
-        }
-
         anySuccess = true;
       }
     }
-
-    await ensureBuildingConnectedArchiveUpload();
 
     if (anySuccess) {
       await updateAttachmentExtraction(att.attachment_id_pk, "success");
@@ -480,13 +288,6 @@ export async function syncBuildingConnectedFiles(
 
   // Single Graph client for the entire batch (token is cached internally)
   const client = createGraphClient();
-  const sharePointClient = createSharePointClientFromEnv();
-
-  if (!sharePointClient && BUILDINGCONNECTED_SYNC_SHAREPOINT_REQUIRED) {
-    throw new Error(
-      `${LOG} SharePoint client unavailable; BuildingConnected sync requires AZURE_* credentials`
-    );
-  }
 
   // Process in chunks of CONCURRENCY
   for (let i = 0; i < attachments.length; i += CONCURRENCY) {
@@ -495,7 +296,7 @@ export async function syncBuildingConnectedFiles(
     const outcomes = await Promise.allSettled(
       chunk.map(async (att) => {
         try {
-          return await processOneAttachment(att, client, sharePointClient);
+          return await processOneAttachment(att, client);
         } catch (error) {
           const msg = error instanceof Error ? error.message : String(error);
           console.error(`${LOG}   FAIL: ${att.name}: ${msg}`);

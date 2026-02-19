@@ -1,4 +1,4 @@
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 import { getMailbox } from "@lib/db/repositories/mailbox";
 import {
   findProjectByText,
@@ -37,7 +37,7 @@ export async function resolveProject(projectArg: string): Promise<Project> {
 
   const byFolder = await db
     .query<{ id: number }, [string]>(
-      "SELECT id FROM projects WHERE outlook_folder = ? LIMIT 1"
+      "SELECT id FROM projects WHERE outlook_folder = $1 LIMIT 1"
     )
     .get(trimmed);
   if (byFolder) {
@@ -59,8 +59,8 @@ export async function resolveProject(projectArg: string): Promise<Project> {
     >(
       `SELECT id, name, outlook_folder
        FROM projects
-       WHERE name ILIKE '%' || ? || '%'
-          OR outlook_folder ILIKE '%' || ? || '%'
+       WHERE name ILIKE '%' || $1 || '%'
+          OR outlook_folder ILIKE '%' || $2 || '%'
        ORDER BY last_seen DESC NULLS LAST
        LIMIT 10`
     )
@@ -87,7 +87,7 @@ export async function getTrackedFolderForProject(
       { folder_id: string; display_name: string; parent_folder_id: string },
       [number]
     >(
-      "SELECT folder_id, display_name, parent_folder_id FROM tracked_folders WHERE project_id = ?"
+      "SELECT folder_id, display_name, parent_folder_id FROM tracked_folders WHERE project_id = $1"
     )
     .all(project.id);
 
@@ -122,7 +122,7 @@ export async function getTrackedFolderForProject(
         },
         [string]
       >(
-        "SELECT folder_id, display_name, parent_folder_id, project_id FROM tracked_folders WHERE display_name = ? LIMIT 1"
+        "SELECT folder_id, display_name, parent_folder_id, project_id FROM tracked_folders WHERE display_name = $1 LIMIT 1"
       )
       .get(project.outlookFolder);
 
@@ -149,7 +149,7 @@ export async function getFolderWatcherConfigValue(
 ): Promise<string | null> {
   const row = await db
     .query<{ value: string }, [string]>(
-      "SELECT value FROM folder_watcher_config WHERE key = ?"
+      "SELECT value FROM folder_watcher_config WHERE key = $1"
     )
     .get(key);
   return row?.value ?? null;
@@ -196,7 +196,7 @@ export async function updateEmailMessageIdInDb(options: {
     if (internetMessageId) {
       const countRow = await db
         .query<{ count: number }, [number, string]>(
-          "SELECT COUNT(*)::int AS count FROM emails WHERE mailbox_id = ? AND internet_message_id = ?"
+          "SELECT COUNT(*)::int AS count FROM emails WHERE mailbox_id = $1 AND internet_message_id = $2"
         )
         .get(mailboxId, internetMessageId);
 

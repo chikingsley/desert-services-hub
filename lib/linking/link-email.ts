@@ -18,7 +18,7 @@
  *   - linkEmailToProject skips if project_id already set
  *   - linkEmailToEstimate uses ON CONFLICT DO NOTHING
  */
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 import { linkEmailToEstimate } from "@lib/db/repositories/estimate-email";
 import { linkEmailToProject } from "@lib/db/repositories/project";
 
@@ -97,7 +97,7 @@ interface EmailForLinking {
 const getEmailForLinking = db.query<EmailForLinking, [number]>(
   `SELECT id, subject, normalized_subject, body_preview, attachment_names,
           from_domain, project_id, conversation_id
-   FROM emails WHERE id = ?`
+   FROM emails WHERE id = $1`
 );
 
 const getConversationProject = db.query<
@@ -105,7 +105,7 @@ const getConversationProject = db.query<
   [string, number]
 >(
   `SELECT project_id FROM emails
-   WHERE conversation_id = ? AND project_id IS NOT NULL AND id != ?
+   WHERE conversation_id = $1 AND project_id IS NOT NULL AND id != $2
    LIMIT 1`
 );
 
@@ -115,36 +115,36 @@ interface EstimateLookupRow {
 }
 
 const getEstimateByMondayItemId = db.query<EstimateLookupRow, [string]>(
-  "SELECT id, account_domain FROM estimates WHERE monday_item_id = ?"
+  "SELECT id, account_domain FROM estimates WHERE monday_item_id = $1"
 );
 
 const getEstimatesByNumber = db.query<EstimateLookupRow, [string]>(
-  "SELECT id, account_domain FROM estimates WHERE estimate_number = ?"
+  "SELECT id, account_domain FROM estimates WHERE estimate_number = $1"
 );
 
 const getProjectEstimateIds = db.query<{ estimate_id: number }, [number]>(
-  "SELECT estimate_id FROM project_estimates WHERE project_id = ?"
+  "SELECT estimate_id FROM project_estimates WHERE project_id = $1"
 );
 
 const getProjectForEstimateLinks = db.query<{ project_id: number }, [number]>(
   `SELECT DISTINCT pe.project_id
    FROM estimate_emails ee
    JOIN project_estimates pe ON pe.estimate_id = ee.estimate_id
-   WHERE ee.email_id = ?`
+   WHERE ee.email_id = $1`
 );
 
 const hasEstimateLink = db.query<{ cnt: string }, [number]>(
-  "SELECT COUNT(*) AS cnt FROM estimate_emails WHERE email_id = ?"
+  "SELECT COUNT(*) AS cnt FROM estimate_emails WHERE email_id = $1"
 );
 
 const getProjectName = db.query<{ name: string }, [number]>(
-  "SELECT name FROM projects WHERE id = ?"
+  "SELECT name FROM projects WHERE id = $1"
 );
 
 const getEstimateName = db.query<
   { estimate_number: string | null; name: string | null },
   [number]
->("SELECT estimate_number, name FROM estimates WHERE id = ?");
+>("SELECT estimate_number, name FROM estimates WHERE id = $1");
 
 // ── Public API ───────────────────────────────────────────────────────
 

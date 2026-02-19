@@ -30,7 +30,7 @@ import {
 import { join } from "node:path";
 import { parseArgs } from "node:util";
 import { getAppClient } from "@email/commands/config";
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 
 import { escapeODataStringLiteral, sanitizeFilename } from "./shared";
 
@@ -231,11 +231,11 @@ async function buildDownloadAttempts(
           e.received_at
         from emails e
         join mailboxes m on m.id = e.mailbox_id
-        where e.internet_message_id = ?
+        where e.internet_message_id = $1
         order by
           case
-            when lower(m.email) = lower(?) then 0
-            when lower(m.email) = lower(?) then 1
+            when lower(m.email) = lower($2) then 0
+            when lower(m.email) = lower($3) then 1
             else 2
           end,
           e.received_at desc

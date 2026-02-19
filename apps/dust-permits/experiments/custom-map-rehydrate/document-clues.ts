@@ -35,7 +35,7 @@ export interface DocumentClueResult {
   debug: string[];
 }
 
-interface ProjectDocumentRow {
+export interface ProjectDocumentRow {
   id?: number;
   documentType?: string | null;
   fileName?: string | null;
@@ -101,6 +101,15 @@ const ADDRESS_REGEX = new RegExp(
 const COORD_REGEX = /(-?\d{1,2}\.\d{4,})\s*[,/ ]\s*(-?\d{2,3}\.\d{4,})/g;
 const APN_COORD_REGEX =
   /([0-9]{3}[-\s]?[0-9]{2}[-\s]?[0-9A-Z]{3,4})\s+(-?\d{1,2}\.\d{4,})\s*[,/ ]\s*(-?\d{2,3}\.\d{4,})/g;
+const HAS_DIGIT_RE = /\d/;
+const CORNER_NW_RE = /NORTH\s*WEST|\bNW\b/;
+const CORNER_NE_RE = /NORTH\s*EAST|\bNE\b/;
+const CORNER_SW_RE = /SOUTH\s*WEST|\bSW\b/;
+const CORNER_SE_RE = /SOUTH\s*EAST|\bSE\b/;
+const WHITESPACE_SPLIT_RE = /\s+/;
+const ADDRESS_TOKEN_SKIP_RE = /^(ROAD|STREET|AVENUE|DRIVE|LANE)$/;
+const PLAN_KEYWORDS_RE =
+  /SWPPP|GRADING|DRAINAGE|SITE PLAN|DISTURBED|PARCEL|APN/;
 
 const DEBUG_TEXT_KEYS = /text|content|summary|ocr|body|notes|extraction/i;
 
@@ -161,7 +170,7 @@ function extractPermitApnCandidates(
   const out: string[] = [];
 
   for (const token of rawTokens) {
-    if (!/\d/.test(token)) {
+    if (!HAS_DIGIT_RE.test(token)) {
       continue;
     }
 
@@ -213,16 +222,16 @@ function parseAzCoordinatePair(
 function detectCornerPosition(context: string): CornerPosition {
   const text = context.toUpperCase();
 
-  if (/NORTH\s*WEST|\bNW\b/.test(text)) {
+  if (CORNER_NW_RE.test(text)) {
     return "northwest";
   }
-  if (/NORTH\s*EAST|\bNE\b/.test(text)) {
+  if (CORNER_NE_RE.test(text)) {
     return "northeast";
   }
-  if (/SOUTH\s*WEST|\bSW\b/.test(text)) {
+  if (CORNER_SW_RE.test(text)) {
     return "southwest";
   }
-  if (/SOUTH\s*EAST|\bSE\b/.test(text)) {
+  if (CORNER_SE_RE.test(text)) {
     return "southeast";
   }
 
@@ -594,7 +603,7 @@ async function runPsqlJsonQuery(
   return JSON.parse(output) as ProjectDocumentRow[];
 }
 
-async function fetchProjectDocuments(
+function fetchProjectDocuments(
   projectId: number,
   container: string,
   fetchLimit: number
@@ -661,10 +670,8 @@ function scoreDocumentForPermit(
 
   if (address) {
     const tokens = address
-      .split(/\s+/)
-      .filter(
-        (t) => t.length >= 4 && !/^(ROAD|STREET|AVENUE|DRIVE|LANE)$/.test(t)
-      )
+      .split(WHITESPACE_SPLIT_RE)
+      .filter((t) => t.length >= 4 && !ADDRESS_TOKEN_SKIP_RE.test(t))
       .slice(0, 5);
 
     let tokenHits = 0;
@@ -682,7 +689,7 @@ function scoreDocumentForPermit(
 
   if (projectName) {
     const tokens = projectName
-      .split(/\s+/)
+      .split(WHITESPACE_SPLIT_RE)
       .filter((t) => t.length >= 4)
       .slice(0, 6);
 
@@ -699,7 +706,7 @@ function scoreDocumentForPermit(
     }
   }
 
-  if (/SWPPP|GRADING|DRAINAGE|SITE PLAN|DISTURBED|PARCEL|APN/.test(haystack)) {
+  if (PLAN_KEYWORDS_RE.test(haystack)) {
     score += 4;
     reason.push("planKeywords");
   }

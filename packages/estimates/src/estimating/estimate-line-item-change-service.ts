@@ -8,7 +8,7 @@ import type {
   EstimateLineItem,
   LineItemChange,
 } from "@estimates/estimating/types";
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 import type { EstimateRow } from "@lib/db/types";
 
 function normalizeChangeLineItem(
@@ -47,9 +47,9 @@ async function applyAddLineItemChange(params: {
 
   const lineItemId = crypto.randomUUID();
   await db
-    .prepare(
+    .query(
       `INSERT INTO estimate_line_items (id, version_id, section_id, item_name, description, quantity, unit, unit_price, notes, sort_order)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`
     )
     .run(
       lineItemId,
@@ -76,7 +76,7 @@ async function applyRemoveLineItemChange(
   }
 
   await db
-    .prepare("DELETE FROM estimate_line_items WHERE id = ? AND version_id = ?")
+    .query("DELETE FROM estimate_line_items WHERE id = $1 AND version_id = $2")
     .run(change.id, versionId);
 }
 
@@ -119,10 +119,10 @@ async function applyUpdateLineItemChange(params: {
   );
 
   await db
-    .prepare(
+    .query(
       `UPDATE estimate_line_items
-       SET section_id = ?, item_name = ?, description = ?, quantity = ?, unit = ?, unit_price = ?, notes = ?, updated_at = now()
-       WHERE id = ? AND version_id = ?`
+       SET section_id = $1, item_name = $2, description = $3, quantity = $4, unit = $5, unit_price = $6, notes = $7, updated_at = now()
+       WHERE id = $8 AND version_id = $9`
     )
     .run(
       item.section_id ?? null,
@@ -139,14 +139,14 @@ async function applyUpdateLineItemChange(params: {
 
 async function recalculateVersionTotal(versionId: string): Promise<void> {
   const result = (await db
-    .prepare(
-      "SELECT SUM(quantity * unit_price) as total FROM estimate_line_items WHERE version_id = ?"
+    .query(
+      "SELECT SUM(quantity * unit_price) as total FROM estimate_line_items WHERE version_id = $1"
     )
     .get(versionId)) as { total: number } | null;
 
   const newTotal = result?.total || 0;
   await db
-    .prepare("UPDATE estimate_versions SET total = ? WHERE id = ?")
+    .query("UPDATE estimate_versions SET total = $1 WHERE id = $2")
     .run(newTotal, versionId);
 }
 
@@ -161,7 +161,7 @@ export async function applyLineItemChanges(
   }
 
   const estimateRow = (await db
-    .prepare("SELECT * FROM estimates WHERE id = ?")
+    .query("SELECT * FROM estimates WHERE id = $1")
     .get(estimateId)) as EstimateRow | null;
   if (!estimateRow) {
     return null;
@@ -170,8 +170,8 @@ export async function applyLineItemChanges(
   const currentVersion = estimate.current_version;
   const versionId = currentVersion.id;
   const sortOrderRow = (await db
-    .prepare(
-      "SELECT COALESCE(MAX(sort_order), -1) AS max_sort_order FROM estimate_line_items WHERE version_id = ?"
+    .query(
+      "SELECT COALESCE(MAX(sort_order), -1) AS max_sort_order FROM estimate_line_items WHERE version_id = $1"
     )
     .get(versionId)) as { max_sort_order: number } | null;
 

@@ -5,14 +5,16 @@
 import type { GraphEmailClient } from "@email/client";
 import { htmlToText } from "@email/html-to-text";
 import { isSpam } from "@email/spam-filter";
+import { processBodyLinksForEmail } from "@email/sync/body-link-sync";
 import { createGraphClient } from "@email/sync/config";
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
+import { insertAttachment } from "@lib/db/repositories/attachment";
 import {
+  appendEmailAttachmentNames,
   getEmailByMessageId,
-  getOrCreateMailbox,
-  insertAttachment,
   insertEmail,
-} from "@lib/db/repositories";
+} from "@lib/db/repositories/email";
+import { getOrCreateMailbox } from "@lib/db/repositories/mailbox";
 import type { InsertAttachmentData, InsertEmailData } from "@lib/db/types";
 import { linkEmail } from "@lib/linking/link-email";
 
@@ -104,8 +106,9 @@ async function storeAttachments(
   mailboxEmail: string,
   messageId: string,
   emailId: number
-): Promise<number> {
+): Promise<{ inserted: number; names: string[] }> {
   let inserted = 0;
+  const names: string[] = [];
   try {
     const attachments = await client.getAttachments(messageId, mailboxEmail);
     for (const attachment of attachments) {
@@ -120,12 +123,32 @@ async function storeAttachments(
       };
       await insertAttachment(attachmentData);
       inserted++;
+      names.push(attachment.name);
     }
   } catch {
     // Ignore transient attachment fetch failures; email row is still persisted.
   }
 
-  return inserted;
+  return { inserted, names };
+}
+
+async function storeBodyLinkAttachments(
+  email: EmailMessageRow,
+  mailboxEmail: string,
+  bodyText: string,
+  emailId: number
+): Promise<{ inserted: number; names: string[] }> {
+  const result = await processBodyLinksForEmail({
+    bodyHtml: email.bodyContent,
+    bodyText,
+    emailId,
+    mailboxEmail,
+  });
+
+  return {
+    inserted: result.attachmentsInserted,
+    names: result.names,
+  };
 }
 
 // Conversation→project linking is now handled by linkEmail() from @lib/linking/link-email
@@ -139,7 +162,7 @@ export async function enrichSingleEmail(
 ): Promise<void> {
   const row = await db
     .query<{ from_email: string | null; subject: string | null }>(
-      "SELECT from_email, subject FROM emails WHERE id = ?"
+      "SELECT from_email, subject FROM emails WHERE id = $1"
     )
     .get(emailId);
 
@@ -153,7 +176,7 @@ export async function enrichSingleEmail(
   const isForwarded = adapters.forwardSubjectRegex.test(row.subject ?? "");
 
   await db.run(
-    "UPDATE emails SET from_domain = ?, is_internal = ?, is_forwarded = ? WHERE id = ?",
+    "UPDATE emails SET from_domain = $1, is_internal = $2, is_forwarded = $3 WHERE id = $4",
     [fromDomain, isInternal ? 1 : 0, isForwarded ? 1 : 0, emailId]
   );
 }
@@ -190,7 +213,23 @@ export async function processEmailNotification(
   const emailId = await insertEmail(emailData);
 
   await enrichSingleEmail(emailId, adapters);
-  await storeAttachments(client, mailboxEmail, messageId, emailId);
+  const graphAttachments = await storeAttachments(
+    client,
+    mailboxEmail,
+    messageId,
+    emailId
+  );
+  const bodyLinkAttachments = await storeBodyLinkAttachments(
+    email,
+    mailboxEmail,
+    bodyText,
+    emailId
+  );
+  const allAttachmentNames = [
+    ...graphAttachments.names,
+    ...bodyLinkAttachments.names,
+  ];
+  await appendEmailAttachmentNames(emailId, allAttachmentNames);
   await linkEmail(emailId);
 
   console.log(`[worker] Webhook synced: "${email.subject}" in ${mailboxEmail}`);
@@ -201,6 +240,7 @@ export async function processEmailNotification(
     subject: email.subject,
     fromEmail: email.fromEmail,
     bodyText,
-    hasAttachments: email.hasAttachments ?? false,
+    hasAttachments:
+      (email.hasAttachments ?? false) || bodyLinkAttachments.inserted > 0,
   });
 }

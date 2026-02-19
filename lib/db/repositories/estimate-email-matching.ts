@@ -1,4 +1,4 @@
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 import {
   buildEstimateDecision,
   buildEstimateHintText,
@@ -168,7 +168,7 @@ async function fetchEstimateRowsByDomain(
          monday_item_id::text as monday_item_id, account_domain,
          job_address, location, bid_status, updated_at
        FROM estimates
-       WHERE lower(coalesce(account_domain, '')) = lower(?)
+       WHERE lower(coalesce(account_domain, '')) = lower($1)
        ORDER BY updated_at DESC
        LIMIT 120`
     )
@@ -197,9 +197,9 @@ async function fetchEstimateRowsByFuzzySearch(
          coalesce(job_address, '') || ' ' ||
          coalesce(location, '') || ' ' ||
          coalesce(estimate_number, '')
-       ) ILIKE ?
+       ) ILIKE $1
        ORDER BY updated_at DESC
-       LIMIT ?`
+       LIMIT $2`
     )
     .all(pattern, limit);
 }
@@ -214,7 +214,7 @@ async function resolveEmailMatchContext(
          id, subject, body_preview, attachment_names, from_domain,
          contractor_name, project_name, monday_estimate_id
        FROM emails
-       WHERE id = ?`
+       WHERE id = $1`
     )
     .get(emailId);
   if (!email) {
@@ -225,7 +225,7 @@ async function resolveEmailMatchContext(
     .query<DocumentExtractionRow, [number]>(
       `SELECT raw_extraction, summary, file_name
        FROM documents
-       WHERE email_id = ?
+       WHERE email_id = $1
        ORDER BY created_at DESC
        LIMIT 12`
     )

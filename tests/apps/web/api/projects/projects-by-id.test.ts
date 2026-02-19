@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { findItem } from "@estimates/catalog/catalog";
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 import {
   linkEstimateToProject,
   setCanonicalEstimateForProject,
@@ -36,7 +36,7 @@ function makeProjectRequest(id: number): Request & { params: { id: string } } {
 async function createProject(name: string): Promise<number> {
   const rows = (await db.run(
     `INSERT INTO projects (name, normalized_name)
-     VALUES (?, ?)
+     VALUES ($1, $2)
      RETURNING id`,
     [name, name.toLowerCase()]
   )) as Array<{ id: number }>;
@@ -68,18 +68,18 @@ beforeAll(async () => {
 
 afterAll(async () => {
   for (const id of estimateIds) {
-    await db.prepare("DELETE FROM estimates WHERE id = ?").run(id);
+    await db.query("DELETE FROM estimates WHERE id = $1").run(id);
   }
 
   for (const id of projectIds) {
-    await db.prepare("DELETE FROM projects WHERE id = ?").run(id);
+    await db.query("DELETE FROM projects WHERE id = $1").run(id);
   }
 
   await db
-    .prepare("DELETE FROM projects WHERE name LIKE ?")
+    .query("DELETE FROM projects WHERE name LIKE $1")
     .run(`${TEST_PREFIX}%`);
   await db
-    .prepare("DELETE FROM estimates WHERE name LIKE ?")
+    .query("DELETE FROM estimates WHERE name LIKE $1")
     .run(`${TEST_PREFIX}%`);
 });
 

@@ -19,7 +19,7 @@
  */
 
 import { GraphEmailClient } from "@email/client";
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 
 interface MailboxWorkRow {
   id: number;
@@ -75,7 +75,7 @@ async function getMailboxesToProcess(
         `SELECT m.id, m.email, COUNT(e.id)::int AS email_rows
          FROM mailboxes m
          LEFT JOIN emails e ON e.mailbox_id = m.id
-         WHERE lower(m.email) = ANY (string_to_array(?, ','))
+         WHERE lower(m.email) = ANY (string_to_array($1, ','))
          GROUP BY m.id, m.email
          ORDER BY m.email`
       )
@@ -120,7 +120,7 @@ async function updateBatchMappings(
              (x->>'email_id')::integer AS email_id,
              x->>'old_id' AS old_id,
              x->>'new_id' AS new_id
-           FROM jsonb_array_elements(?::jsonb) AS x
+           FROM jsonb_array_elements($1::jsonb) AS x
          ),
          colliding AS (
            SELECT DISTINCT m.email_id
@@ -148,7 +148,7 @@ async function updateBatchMappings(
            (x->>'email_id')::integer AS email_id,
            x->>'old_id' AS old_id,
            x->>'new_id' AS new_id
-         FROM jsonb_array_elements(?::jsonb) AS x
+         FROM jsonb_array_elements($1::jsonb) AS x
        ),
        colliding AS (
          SELECT DISTINCT m.email_id
@@ -215,10 +215,10 @@ async function processMailbox(options: {
       .query<EmailRow, [number, number, number]>(
         `SELECT id, message_id
          FROM emails
-         WHERE mailbox_id = ?
-           AND id > ?
+         WHERE mailbox_id = $1
+           AND id > $2
          ORDER BY id
-         LIMIT ?`
+         LIMIT $3`
       )
       .all(mailbox.id, cursorId, effectiveBatch);
 

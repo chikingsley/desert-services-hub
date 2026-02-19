@@ -4,7 +4,7 @@
  * Provides queue stats and recent activity for the attachment backfill pipeline.
  * Route: GET /api/attachments/monitoring
  */
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 
 interface QueueStats {
   pending: number;

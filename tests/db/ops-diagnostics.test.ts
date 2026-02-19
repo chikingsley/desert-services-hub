@@ -2,7 +2,7 @@
  * Ops Diagnostics Test Suite
  *
  * Integration tests validating the SQL queries used for system health
- * monitoring, project auditing, resolver scoping, and contract reporting.
+ * monitoring, project auditing, linking scope analysis, and contract reporting.
  *
  * All queries are READ-ONLY against the live Postgres database.
  * Assertions verify query shape, type safety, and relational invariants
@@ -11,8 +11,9 @@
  * Run: bun test tests/db/ops-diagnostics.test.ts --verbose
  */
 
+/* biome-ignore lint/nursery/noExcessiveLinesPerFile: This integration suite intentionally keeps related diagnostics in one file. */
 import { beforeAll, describe, expect, test } from "bun:test";
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 
 // ---------------------------------------------------------------------------
 // Health state classifier (ported from ops-status.sh metric_state)
@@ -22,11 +23,10 @@ type HealthState = "OK" | "WARN" | "FAIL" | "INFO";
 
 function classifyHealth(key: string, value: number): HealthState {
   switch (key) {
-    case "resolver_pending":
-    case "resolver_failed":
+    case "background_dead_letters_24h":
       return value === 0 ? "OK" : "WARN";
 
-    case "emails_1h_resolve_coverage_pct":
+    case "emails_1h_estimate_link_coverage_pct":
       if (value >= 99) {
         return "OK";
       }
@@ -35,7 +35,7 @@ function classifyHealth(key: string, value: number): HealthState {
       }
       return "FAIL";
 
-    case "emails_24h_resolve_coverage_pct":
+    case "emails_24h_estimate_link_coverage_pct":
       if (value >= 90) {
         return "OK";
       }
@@ -139,14 +139,10 @@ WITH m AS (
   SELECT 'emails_created_1h', COUNT(*)::numeric
   FROM emails WHERE created_at >= now() - interval '1 hour'
   UNION ALL
-  SELECT 'emails_created_1h_with_resolve_job', COUNT(*)::numeric
+  SELECT 'emails_created_1h_with_estimate_link', COUNT(*)::numeric
   FROM emails e
   WHERE e.created_at >= now() - interval '1 hour'
-    AND EXISTS (
-      SELECT 1 FROM webhook_jobs j
-      WHERE j.job_type = 'email_resolve'
-        AND j.payload::jsonb->>'emailId' = e.id::text
-    )
+    AND EXISTS (SELECT 1 FROM estimate_emails ee WHERE ee.email_id = e.id)
   UNION ALL
   SELECT 'emails_created_24h', COUNT(*)::numeric
   FROM emails WHERE created_at >= now() - interval '24 hours'
@@ -160,14 +156,16 @@ WITH m AS (
   WHERE e.created_at >= now() - interval '24 hours'
     AND EXISTS (SELECT 1 FROM estimate_emails ee WHERE ee.email_id = e.id)
   UNION ALL
-  SELECT 'emails_created_24h_with_resolve_job', COUNT(*)::numeric
-  FROM emails e
-  WHERE e.created_at >= now() - interval '24 hours'
-    AND EXISTS (
-      SELECT 1 FROM webhook_jobs j
-      WHERE j.job_type = 'email_resolve'
-        AND j.payload::jsonb->>'emailId' = e.id::text
-    )
+  SELECT 'background_jobs_visible', COUNT(*)::numeric
+  FROM pgmq.q_background_jobs
+  WHERE vt <= now()
+  UNION ALL
+  SELECT 'background_dead_letters_total', COUNT(*)::numeric
+  FROM background_job_dead_letters
+  UNION ALL
+  SELECT 'background_dead_letters_24h', COUNT(*)::numeric
+  FROM background_job_dead_letters
+  WHERE failed_at >= now() - interval '24 hours'
   UNION ALL
   SELECT 'projects_total', COUNT(*)::numeric FROM projects
   UNION ALL
@@ -226,18 +224,6 @@ WITH m AS (
   FROM project_estimates pe
   WHERE pe.is_canonical = TRUE
     AND EXISTS (SELECT 1 FROM estimate_emails ee WHERE ee.estimate_id = pe.estimate_id)
-  UNION ALL
-  SELECT 'resolver_completed', COUNT(*)::numeric
-  FROM webhook_jobs WHERE job_type = 'email_resolve' AND status = 'completed'
-  UNION ALL
-  SELECT 'resolver_pending', COUNT(*)::numeric
-  FROM webhook_jobs WHERE job_type = 'email_resolve' AND status = 'pending'
-  UNION ALL
-  SELECT 'resolver_processing', COUNT(*)::numeric
-  FROM webhook_jobs WHERE job_type = 'email_resolve' AND status = 'processing'
-  UNION ALL
-  SELECT 'resolver_failed', COUNT(*)::numeric
-  FROM webhook_jobs WHERE job_type = 'email_resolve' AND status = 'failed'
   UNION ALL
   SELECT 'attachments_24h', COUNT(*)::numeric
   FROM documents WHERE source = 'email_attachment' AND created_at >= now() - interval '24 hours'
@@ -299,7 +285,7 @@ SELECT key, value::text FROM m ORDER BY key
 `;
 
 // ---------------------------------------------------------------------------
-// Resolver backfill scope WHERE clauses (ported from email-resolver-backfill.sh)
+// Linking scope WHERE clauses
 // ---------------------------------------------------------------------------
 
 const BACKFILL_SCOPES: Record<string, string> = {
@@ -336,16 +322,14 @@ function buildScopeStatsQuery(whereClause: string): string {
       ORDER BY e.created_at DESC NULLS LAST, e.id DESC
       LIMIT 50000
     ),
-    queued AS (
-      SELECT DISTINCT (j.payload::jsonb->>'emailId')::bigint AS email_id
-      FROM webhook_jobs j
-      WHERE j.job_type = 'email_resolve'
-        AND j.status IN ('pending', 'processing')
+    linked AS (
+      SELECT DISTINCT ee.email_id
+      FROM estimate_emails ee
     )
     SELECT
       (SELECT COUNT(*)::int FROM target) AS target_rows,
-      (SELECT COUNT(*)::int FROM target t JOIN queued q ON q.email_id = t.email_id) AS already_queued_rows,
-      (SELECT COUNT(*)::int FROM target t LEFT JOIN queued q ON q.email_id = t.email_id WHERE q.email_id IS NULL) AS enqueueable_rows
+      (SELECT COUNT(*)::int FROM target t JOIN linked l ON l.email_id = t.email_id) AS already_linked_rows,
+      (SELECT COUNT(*)::int FROM target t LEFT JOIN linked l ON l.email_id = t.email_id WHERE l.email_id IS NULL) AS remaining_rows
   `;
 }
 
@@ -398,9 +382,9 @@ describe("ops health metrics", () => {
         "emails_with_project",
         "projects_total",
         "estimates_total",
-        "resolver_completed",
-        "resolver_pending",
-        "resolver_failed",
+        "background_jobs_visible",
+        "background_dead_letters_total",
+        "background_dead_letters_24h",
       ];
       for (const key of expected) {
         expect(metrics.has(key)).toBe(true);
@@ -439,11 +423,11 @@ describe("ops health metrics", () => {
       );
     });
 
-    test("resolve job coverage is bounded by cohort size", () => {
-      expect(m("emails_created_1h_with_resolve_job")).toBeLessThanOrEqual(
+    test("estimate-link coverage is bounded by cohort size", () => {
+      expect(m("emails_created_1h_with_estimate_link")).toBeLessThanOrEqual(
         m("emails_created_1h")
       );
-      expect(m("emails_created_24h_with_resolve_job")).toBeLessThanOrEqual(
+      expect(m("emails_created_24h_with_estimate_link")).toBeLessThanOrEqual(
         m("emails_created_24h")
       );
     });
@@ -485,22 +469,27 @@ describe("ops health metrics", () => {
     });
   });
 
-  describe("resolver queue", () => {
+  describe("background queue", () => {
     test("queue counts are non-negative", () => {
-      expect(m("resolver_completed")).toBeGreaterThanOrEqual(0);
-      expect(m("resolver_pending")).toBeGreaterThanOrEqual(0);
-      expect(m("resolver_processing")).toBeGreaterThanOrEqual(0);
-      expect(m("resolver_failed")).toBeGreaterThanOrEqual(0);
+      expect(m("background_jobs_visible")).toBeGreaterThanOrEqual(0);
+      expect(m("background_dead_letters_total")).toBeGreaterThanOrEqual(0);
+      expect(m("background_dead_letters_24h")).toBeGreaterThanOrEqual(0);
     });
 
-    test("resolver status detail query returns expected columns", async () => {
+    test("pending jobs grouped by type returns expected columns", async () => {
       const rows = await db
-        .query<{ status: string; count: number }>(
-          "SELECT status, COUNT(*)::int AS count FROM webhook_jobs WHERE job_type = 'email_resolve' GROUP BY status ORDER BY status"
+        .query<{ job_type: string; count: number }>(
+          `SELECT
+             message->>'job_type' AS job_type,
+             COUNT(*)::int AS count
+           FROM pgmq.q_background_jobs
+           WHERE vt <= now()
+           GROUP BY message->>'job_type'
+           ORDER BY count DESC`
         )
         .all();
       for (const row of rows) {
-        expect(typeof row.status).toBe("string");
+        expect(typeof row.job_type).toBe("string");
         expect(row.count).toBeGreaterThanOrEqual(0);
       }
     });
@@ -814,16 +803,16 @@ describe("project audit", () => {
 });
 
 // ===========================================================================
-// 3. RESOLVER BACKFILL SCOPES
+// 3. LINKING SCOPES
 // ===========================================================================
 
-describe("resolver backfill scopes", () => {
+describe("linking scopes", () => {
   const scopeResults = new Map<
     string,
     {
       target_rows: number;
-      already_queued_rows: number;
-      enqueueable_rows: number;
+      already_linked_rows: number;
+      remaining_rows: number;
     }
   >();
 
@@ -832,8 +821,8 @@ describe("resolver backfill scopes", () => {
       const row = await db
         .query<{
           target_rows: number;
-          already_queued_rows: number;
-          enqueueable_rows: number;
+          already_linked_rows: number;
+          remaining_rows: number;
         }>(buildScopeStatsQuery(where))
         .get();
       if (row) {
@@ -850,8 +839,8 @@ describe("resolver backfill scopes", () => {
         return;
       }
       expect(row.target_rows).toBeGreaterThanOrEqual(0);
-      expect(row.already_queued_rows).toBeGreaterThanOrEqual(0);
-      expect(row.enqueueable_rows).toBeGreaterThanOrEqual(0);
+      expect(row.already_linked_rows).toBeGreaterThanOrEqual(0);
+      expect(row.remaining_rows).toBeGreaterThanOrEqual(0);
     });
 
     test(`scope "${scope}" stats sum correctly`, () => {
@@ -860,7 +849,7 @@ describe("resolver backfill scopes", () => {
       if (!row) {
         return;
       }
-      expect(row.already_queued_rows + row.enqueueable_rows).toBe(
+      expect(row.already_linked_rows + row.remaining_rows).toBe(
         row.target_rows
       );
     });
@@ -935,57 +924,66 @@ describe("contract status", () => {
 // ===========================================================================
 
 describe("health state classification", () => {
-  describe("resolver_pending / resolver_failed", () => {
+  describe("background_dead_letters_24h", () => {
     test("0 -> OK", () => {
-      expect(classifyHealth("resolver_pending", 0)).toBe("OK");
-      expect(classifyHealth("resolver_failed", 0)).toBe("OK");
+      expect(classifyHealth("background_dead_letters_24h", 0)).toBe("OK");
     });
 
     test("positive -> WARN", () => {
-      expect(classifyHealth("resolver_pending", 1)).toBe("WARN");
-      expect(classifyHealth("resolver_failed", 5)).toBe("WARN");
+      expect(classifyHealth("background_dead_letters_24h", 1)).toBe("WARN");
+      expect(classifyHealth("background_dead_letters_24h", 5)).toBe("WARN");
     });
   });
 
-  describe("emails_1h_resolve_coverage_pct", () => {
+  describe("emails_1h_estimate_link_coverage_pct", () => {
     test("99+ -> OK", () => {
-      expect(classifyHealth("emails_1h_resolve_coverage_pct", 99)).toBe("OK");
-      expect(classifyHealth("emails_1h_resolve_coverage_pct", 100)).toBe("OK");
+      expect(classifyHealth("emails_1h_estimate_link_coverage_pct", 99)).toBe(
+        "OK"
+      );
+      expect(classifyHealth("emails_1h_estimate_link_coverage_pct", 100)).toBe(
+        "OK"
+      );
     });
 
     test("95-98.99 -> WARN", () => {
-      expect(classifyHealth("emails_1h_resolve_coverage_pct", 95)).toBe("WARN");
-      expect(classifyHealth("emails_1h_resolve_coverage_pct", 98.5)).toBe(
+      expect(classifyHealth("emails_1h_estimate_link_coverage_pct", 95)).toBe(
+        "WARN"
+      );
+      expect(classifyHealth("emails_1h_estimate_link_coverage_pct", 98.5)).toBe(
         "WARN"
       );
     });
 
     test("<95 -> FAIL", () => {
-      expect(classifyHealth("emails_1h_resolve_coverage_pct", 94.9)).toBe(
+      expect(classifyHealth("emails_1h_estimate_link_coverage_pct", 94.9)).toBe(
         "FAIL"
       );
-      expect(classifyHealth("emails_1h_resolve_coverage_pct", 0)).toBe("FAIL");
+      expect(classifyHealth("emails_1h_estimate_link_coverage_pct", 0)).toBe(
+        "FAIL"
+      );
     });
   });
 
-  describe("emails_24h_resolve_coverage_pct", () => {
+  describe("emails_24h_estimate_link_coverage_pct", () => {
     test("90+ -> OK", () => {
-      expect(classifyHealth("emails_24h_resolve_coverage_pct", 90)).toBe("OK");
+      expect(classifyHealth("emails_24h_estimate_link_coverage_pct", 90)).toBe(
+        "OK"
+      );
     });
 
     test("70-89.99 -> WARN", () => {
-      expect(classifyHealth("emails_24h_resolve_coverage_pct", 70)).toBe(
+      expect(classifyHealth("emails_24h_estimate_link_coverage_pct", 70)).toBe(
         "WARN"
       );
-      expect(classifyHealth("emails_24h_resolve_coverage_pct", 89.9)).toBe(
-        "WARN"
-      );
+      expect(
+        classifyHealth("emails_24h_estimate_link_coverage_pct", 89.9)
+      ).toBe("WARN");
     });
 
     test("<70 -> FAIL", () => {
-      expect(classifyHealth("emails_24h_resolve_coverage_pct", 69.9)).toBe(
-        "FAIL"
-      );
+      expect(
+        classifyHealth("emails_24h_estimate_link_coverage_pct", 69.9)
+      ).toBe("FAIL");
     });
   });
 

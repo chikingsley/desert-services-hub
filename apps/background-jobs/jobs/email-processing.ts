@@ -2,27 +2,40 @@
  * Email notification processing — wires unified triage into the webhook handler.
  */
 
-import { triageEmail } from "@background-jobs/lib/email-triage/triage";
 import type { EmailNotificationAdapters } from "@email/handlers/webhook-notification-handler";
 import {
   enrichSingleEmail as processEmail,
   processEmailNotification as processEmailNotificationWithAdapters,
 } from "@email/handlers/webhook-notification-handler";
+import { triageEmail } from "@email/triage/triage";
+import type { TriageEnqueueJob } from "@email/triage/types";
 import { FWD_RE, INTERNAL_DOMAINS } from "./config";
+import { enqueueJob } from "./queue";
+
+const enqueueTriageActionJob: TriageEnqueueJob = async (jobType, payload) => {
+  await enqueueJob(jobType, { payload });
+};
 
 const adapters: EmailNotificationAdapters = {
   internalDomains: INTERNAL_DOMAINS,
   forwardSubjectRegex: FWD_RE,
   triageAndDispatch: async (emailId, meta) => {
-    const outcome = await triageEmail(emailId, {
+    const outcome = await triageEmail(
       emailId,
-      messageId: meta.messageId,
-      mailboxEmail: meta.mailboxEmail,
-      subject: meta.subject,
-      fromEmail: meta.fromEmail,
-      bodyText: meta.bodyText,
-      hasAttachments: meta.hasAttachments,
-    });
+      {
+        emailId,
+        messageId: meta.messageId,
+        mailboxEmail: meta.mailboxEmail,
+        subject: meta.subject,
+        fromEmail: meta.fromEmail,
+        bodyText: meta.bodyText,
+        hasAttachments: meta.hasAttachments,
+      },
+      {
+        internalDomains: INTERNAL_DOMAINS,
+        enqueueJob: enqueueTriageActionJob,
+      }
+    );
 
     if (outcome.error) {
       console.error(

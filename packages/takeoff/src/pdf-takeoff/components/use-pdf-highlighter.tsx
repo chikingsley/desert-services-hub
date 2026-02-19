@@ -29,7 +29,6 @@ import type {
   ViewportPosition,
 } from "../types";
 import { HighlightLayer } from "./highlight-layer";
-import type { PdfHighlighterProps } from "./types";
 import {
   DEFAULT_SCALE_VALUE,
   disableTextSelection,
@@ -41,6 +40,7 @@ import {
   pdfjsLoaded,
   SCROLL_MARGIN,
 } from "./pdf-highlighter-utils";
+import type { PdfHighlighterProps } from "./types";
 
 export function usePdfHighlighter({
   highlights,

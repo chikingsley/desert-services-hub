@@ -3,7 +3,7 @@
  *
  * Extracts the real sender/company from platform-originated emails.
  */
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 import {
   extractRealSender,
   isPlatformEmail,
@@ -13,27 +13,10 @@ import {
   shouldExcludePlatformEmail,
 } from "./platform-extraction-core";
 
-async function ensureColumns(): Promise<void> {
-  const columns = [
-    { name: "is_platform_email", type: "INTEGER DEFAULT 0" },
-    { name: "platform_name", type: "TEXT" },
-    { name: "real_sender_name", type: "TEXT" },
-    { name: "real_sender_company", type: "TEXT" },
-    { name: "real_sender_email", type: "TEXT" },
-    { name: "real_sender_domain", type: "TEXT" },
-    { name: "is_excluded", type: "INTEGER DEFAULT 0" },
-  ] as const;
-
-  for (const col of columns) {
-    await db.run(
-      `ALTER TABLE emails ADD COLUMN IF NOT EXISTS ${col.name} ${col.type}`
-    );
-  }
-}
-
 interface EmailRow {
   id: number;
   from_email: string | null;
+  from_name: string | null;
   from_domain: string | null;
   subject: string | null;
   body_full: string | null;
@@ -114,6 +97,7 @@ async function processPlatformEmail(
   const extraction = extractRealSender(
     domain,
     email.from_email,
+    email.from_name,
     body,
     email.subject
   );
@@ -132,14 +116,12 @@ async function processPlatformEmail(
 export async function processPlatformEmails(): Promise<void> {
   console.log("Processing platform emails...\n");
 
-  await ensureColumns();
-
   const platformDomains = Object.keys(PLATFORM_DOMAINS);
   const platformDomainsStr = platformDomains.map((d) => `'${d}'`).join(",");
 
   const emails = await db
     .query<EmailRow>(
-      `SELECT id, from_email, from_domain, subject, body_full, body_preview FROM emails
+      `SELECT id, from_email, from_name, from_domain, subject, body_full, body_preview FROM emails
        WHERE real_sender_email IS NULL
          AND (from_domain IN (${platformDomainsStr}) OR is_excluded IS NULL)`
     )
@@ -147,16 +129,16 @@ export async function processPlatformEmails(): Promise<void> {
 
   console.log(`Processing ${emails.length} emails...\n`);
 
-  const updateStmt = db.prepare(
+  const updateStmt = db.query(
     `UPDATE emails SET
-      is_platform_email = ?,
-      platform_name = ?,
-      real_sender_name = ?,
-      real_sender_company = ?,
-      real_sender_email = ?,
-      real_sender_domain = ?,
-      is_excluded = ?
-    WHERE id = ?`
+      is_platform_email = $1,
+      platform_name = $2,
+      real_sender_name = $3,
+      real_sender_company = $4,
+      real_sender_email = $5,
+      real_sender_domain = $6,
+      is_excluded = $7
+    WHERE id = $8`
   );
 
   let excluded = 0;

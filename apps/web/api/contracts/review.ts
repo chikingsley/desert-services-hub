@@ -5,7 +5,7 @@
  * Returns contract documents that have been processed by langextract NER,
  * with their extracted entities grouped and severity-counted.
  */
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 
 interface EntityRow {
   class: string;

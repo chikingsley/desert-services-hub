@@ -2699,13 +2699,13 @@ describe("findMatchingRules - Integration Tests", () => {
     const OriginalRegExp = RegExp;
     // Monkeypatch RegExp to throw for our specific pattern
     // Only for this test; restore afterwards
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint_disable-next-line @typescript-eslint/no-explicit-any
     (globalThis as any).RegExp = ((pattern: string) => {
       if (pattern.includes("trigger-error")) {
         throw new Error("synthetic error");
       }
       // Delegate to original
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint_disable-next-line @typescript-eslint/no-explicit-any
       return new (OriginalRegExp as any)(pattern);
     }) as unknown as RegExpConstructor;
 
@@ -2714,7 +2714,7 @@ describe("findMatchingRules - Integration Tests", () => {
       expect(matched).toBe(false);
     } finally {
       // restore
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint_disable-next-line @typescript-eslint/no-explicit-any
       (globalThis as any).RegExp =
         OriginalRegExp as unknown as RegExpConstructor;
     }

@@ -3,7 +3,7 @@
  *
  * Links emails to accounts using domain-centric signals.
  */
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 
 const IGNORED_DOMAINS = new Set([
   "desertservices.net",
@@ -44,13 +44,13 @@ async function findOrCreateAccountByDomain(
   }
 
   const existing = await db
-    .query<{ id: number }>("SELECT id FROM accounts WHERE domain = ?")
+    .query<{ id: number }>("SELECT id FROM accounts WHERE domain = $1")
     .get(lowerDomain);
 
   if (existing) {
     if (companyName) {
       await db.run(
-        "UPDATE accounts SET name = ? WHERE id = ? AND (name IS NULL OR name = '')",
+        "UPDATE accounts SET name = $1 WHERE id = $2 AND (name IS NULL OR name = '')",
         [companyName, existing.id]
       );
     }
@@ -61,7 +61,7 @@ async function findOrCreateAccountByDomain(
   const inserted = await db
     .query<{ id: number }>(
       `INSERT INTO accounts (domain, name, type)
-       VALUES (?, ?, 'contractor')
+       VALUES ($1, $2, 'contractor')
        ON CONFLICT(domain) DO UPDATE SET
          name = COALESCE(NULLIF(accounts.name, ''), EXCLUDED.name),
          updated_at = now()
@@ -263,7 +263,7 @@ async function linkPlatformEmailsByCompanyAlias(
     stats.processed++;
     const aliasMatch = await db
       .query<{ account_id: number }>(
-        "SELECT account_id FROM company_aliases WHERE alias = ?"
+        "SELECT account_id FROM company_aliases WHERE alias = $1"
       )
       .get(email.real_sender_company.toLowerCase());
 
@@ -307,7 +307,7 @@ async function propagateConversationAccountLinks(
       const sibling = await db
         .query<{ account_id: number }>(
           `SELECT account_id FROM emails
-           WHERE conversation_id = ? AND account_id IS NOT NULL AND account_id > 0
+           WHERE conversation_id = $1 AND account_id IS NOT NULL AND account_id > 0
            LIMIT 1`
         )
         .get(email.conversation_id);
@@ -359,8 +359,8 @@ export async function linkEmailsToAccounts(): Promise<LinkStats> {
     (await db.query<{ c: number }>("SELECT COUNT(*) as c FROM accounts").get())
       ?.c ?? 0;
 
-  const updateStmt = db.prepare(
-    "UPDATE emails SET account_id = ? WHERE id = ? AND (account_id IS NULL OR account_id != ?)"
+  const updateStmt = db.query(
+    "UPDATE emails SET account_id = $1 WHERE id = $2 AND (account_id IS NULL OR account_id != $3)"
   );
 
   try {

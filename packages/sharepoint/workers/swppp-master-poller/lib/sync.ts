@@ -6,7 +6,7 @@
  * to accounts.
  */
 
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 import type { SwpppProject } from "@sharepoint/swppp/client";
 import { SwpppMasterClient } from "@sharepoint/swppp/client";
 import { WORKSHEETS, type WorksheetName } from "@sharepoint/swppp/config";
@@ -53,7 +53,7 @@ async function upsertWorkOrders(projects: SwpppProject[]): Promise<number> {
         row_number, worksheet, date, contractor, job_name, address,
         contact, phone, work_description, date_entered, comments,
         invoice, work_completed, synced_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, now())
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, now())
       ON CONFLICT(worksheet, row_number) DO UPDATE SET
         date = excluded.date,
         contractor = excluded.contractor,

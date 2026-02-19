@@ -167,7 +167,7 @@ async function runPsqlJsonQuery<T>(
   return JSON.parse(output) as T[];
 }
 
-async function loadProjectDocs(
+function loadProjectDocs(
   projectId: number,
   maxRows: number,
   container: string

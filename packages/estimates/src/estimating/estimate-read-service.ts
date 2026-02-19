@@ -4,7 +4,7 @@ import type {
   EstimateSection,
   EstimateVersion,
 } from "@estimates/estimating/types";
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 import { generateBaseNumber } from "@lib/utils";
 
 // Generate a unique base number (YYMMDD format with suffix for duplicates)
@@ -12,9 +12,9 @@ export async function getNextBaseNumber(): Promise<string> {
   const baseNumber = generateBaseNumber();
 
   const existing = (await db
-    .prepare(
+    .query(
       `SELECT base_number FROM estimates
-       WHERE base_number LIKE ?
+       WHERE base_number LIKE $1
        ORDER BY base_number DESC
        LIMIT 1`
     )
@@ -56,7 +56,7 @@ function parseEstimateRow(
 // List all estimates
 export async function listEstimates(): Promise<Estimate[]> {
   const rows = (await db
-    .prepare(
+    .query(
       `SELECT q.*,
         (SELECT COALESCE(json_agg(json_build_object(
           'id', v.id,
@@ -76,7 +76,7 @@ export async function listEstimates(): Promise<Estimate[]> {
 // Get a single estimate by ID
 export async function getEstimate(id: string): Promise<Estimate | null> {
   const row = (await db
-    .prepare(
+    .query(
       `SELECT q.*,
         (SELECT COALESCE(json_agg(json_build_object(
           'id', v.id,
@@ -86,7 +86,7 @@ export async function getEstimate(id: string): Promise<Estimate | null> {
           'created_at', v.created_at
         )), '[]'::json) FROM estimate_versions v WHERE v.estimate_id = q.id) as versions
       FROM estimates q
-      WHERE q.id = ?`
+      WHERE q.id = $1`
     )
     .get(id)) as (Record<string, unknown> & { versions: unknown }) | null;
 
@@ -98,7 +98,7 @@ export async function getEstimateByBaseNumber(
   baseNumber: string
 ): Promise<Estimate | null> {
   const row = (await db
-    .prepare(
+    .query(
       `SELECT q.*,
         (SELECT COALESCE(json_agg(json_build_object(
           'id', v.id,
@@ -108,7 +108,7 @@ export async function getEstimateByBaseNumber(
           'created_at', v.created_at
         )), '[]'::json) FROM estimate_versions v WHERE v.estimate_id = q.id) as versions
       FROM estimates q
-      WHERE q.base_number = ?`
+      WHERE q.base_number = $1`
     )
     .get(baseNumber)) as
     | (Record<string, unknown> & { versions: unknown })
@@ -135,16 +135,16 @@ export async function getEstimateWithDetails(id: string): Promise<
   }
 
   const sections = (await db
-    .prepare(
+    .query(
       `SELECT id, name, title, show_subtotal, sort_order
        FROM estimate_sections
-       WHERE version_id = ?
+       WHERE version_id = $1
        ORDER BY sort_order`
     )
     .all(currentVersion.id)) as EstimateSection[];
 
   const lineItems = (await db
-    .prepare(
+    .query(
       `SELECT
         id,
         section_id,
@@ -156,7 +156,7 @@ export async function getEstimateWithDetails(id: string): Promise<
         notes,
         sort_order
        FROM estimate_line_items
-       WHERE version_id = ?
+       WHERE version_id = $1
        ORDER BY sort_order`
     )
     .all(currentVersion.id)) as EstimateLineItem[];

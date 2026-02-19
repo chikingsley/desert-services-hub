@@ -290,7 +290,7 @@ async function handleContractWonBridge(): Promise<void> {
     "@background-jobs/jobs/contracts-won-bridge"
   );
   const { syncProjectSeedsFromEstimates } = await import(
-    "@background-jobs/workers/estimate-poller/lib/project-seed-sync"
+    "@monday/sync/project-seed/sync"
   );
 
   const stats = await runContractWonBridge();
@@ -390,7 +390,7 @@ async function handleMondayStatusSync(): Promise<void> {
     return;
   }
   const { pollMondayStatusSync } = await import(
-    "@background-jobs/workers/monday-status-sync/lib/poll"
+    "@monday/sync/status-sync/poll"
   );
   const result = await pollMondayStatusSync();
   if (result.skipped) {

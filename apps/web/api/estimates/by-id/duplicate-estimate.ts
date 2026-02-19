@@ -1,4 +1,4 @@
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 import type {
   EstimateLineItemRow,
   EstimateRow,
@@ -21,7 +21,7 @@ export async function handleDuplicateEstimate(
     }
 
     const originalEstimate = (await db
-      .prepare("SELECT * FROM estimates WHERE id = ?")
+      .query("SELECT * FROM estimates WHERE id = $1")
       .get(id)) as EstimateRow | undefined;
 
     if (!originalEstimate) {
@@ -32,16 +32,16 @@ export async function handleDuplicateEstimate(
 
     const originalSections = originalVersion
       ? ((await db
-          .prepare(
-            "SELECT * FROM estimate_sections WHERE version_id = ? ORDER BY sort_order"
+          .query(
+            "SELECT * FROM estimate_sections WHERE version_id = $1 ORDER BY sort_order"
           )
           .all(originalVersion.id)) as EstimateSectionRow[])
       : [];
 
     const originalLineItems = originalVersion
       ? ((await db
-          .prepare(
-            "SELECT * FROM estimate_line_items WHERE version_id = ? ORDER BY sort_order"
+          .query(
+            "SELECT * FROM estimate_line_items WHERE version_id = $1 ORDER BY sort_order"
           )
           .all(originalVersion.id)) as EstimateLineItemRow[])
       : [];
@@ -51,7 +51,7 @@ export async function handleDuplicateEstimate(
     const result = await db.transaction(async () => {
       const insertResult = await db.run(
         `INSERT INTO estimates (base_number, takeoff_id, name, job_name, job_address, contractor, client_address, notes, status, is_locked)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
          RETURNING id`,
         [
           newBaseNumber,
@@ -73,9 +73,9 @@ export async function handleDuplicateEstimate(
 
       const newVersionId = crypto.randomUUID();
       await db
-        .prepare(
+        .query(
           `INSERT INTO estimate_versions (id, estimate_id, version_number, total, is_current)
-           VALUES (?, ?, 1, ?, 1)`
+           VALUES ($1, $2, 1, $3, 1)`
         )
         .run(newVersionId, newEstimateId, originalVersion?.total ?? 0);
 

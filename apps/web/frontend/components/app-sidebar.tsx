@@ -1,4 +1,5 @@
 import {
+  Building2,
   FileCheck,
   FileText,
   Loader2,
@@ -52,6 +53,7 @@ const manageItems = [
   { title: "Catalog", href: "/catalog", icon: Package },
   { title: "Map", href: "/map", icon: MapPin },
   { title: "Maricopa Portal", href: "/maricopa", icon: Monitor },
+  { title: "BuildingConnected", href: "/buildingconnected", icon: Building2 },
 ];
 
 const utilityItems = [

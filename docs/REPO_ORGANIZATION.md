@@ -57,18 +57,13 @@ desert-services-hub/
       frontend/             # React components and pages
       server.ts             # Web server entrypoint
       webhooks.ts           # Webhook receiver entrypoint
-    workers/                # Background workers and Cloudflare Workers
+    workers/                # Background worker modules in background-jobs container
       buildingconnected-file-sync/   # BC attachment sync + SharePoint archival
       estimate-email-linker/         # Estimate-to-email linking logic
-      estimate-poller/               # Monday.com estimate polling
-      estimates-sync-worker/         # SharePoint folder sync for estimates
-      inspections-email-worker/      # ComplianceGo inspections (Cloudflare Worker)
-      intake-worker/                 # Email intake processing (Cloudflare Worker)
-      job-runner/                    # Background job orchestrator (runs in webhooks container)
-      monday-status-sync/            # Monday status sync timer (delegates to packages/monday)
-      notifications/                 # Event detection + Outlook draft creation
       outlook-folder-watcher/        # Outlook folder polling + project linking
-      swppp-sync/                    # (moved to packages/sharepoint/workers/swppp-master-poller/)
+    cf-workers/             # Cloudflare edge workers
+      intake-worker/                 # Email intake processing (Cloudflare Worker)
+      inspections-email-worker/      # ComplianceGo inspections (Cloudflare Worker)
 
   lib/                      # Cross-cutting shared infrastructure (not domain-specific)
     db/                     # Postgres client, repositories, types (136 importers)
@@ -266,7 +261,7 @@ Each Docker service maps to an entrypoint in the codebase.
 | `web` | `desert-web` | 3000 | `apps/web/server.ts` | `apps/web/` |
 | `background-jobs` | `desert-webhooks` | 4747 | `apps/background-jobs/webhooks.ts` | `apps/background-jobs/` |
 | `permit-worker` | `desert-permit-worker` | 47822 | `apps/dust-permits/src/index.ts` | `apps/dust-permits/` |
-| ~~`notifications`~~ | *(removed)* | -- | *(absorbed into background-jobs worker.ts timer)* | `apps/background-jobs/lib/notifications/` |
+| `notifications` | *(domain package)* | -- | Used by background-jobs notifications tick | `packages/email/src/notifications/` |
 | `swppp-sync` | `desert-swppp-sync` | -- | `packages/sharepoint/workers/swppp-master-poller/cli/sync.ts` | `packages/sharepoint/` |
 | `tunnel` | `desert-tunnel` | -- | Cloudflare tunnel config | -- |
 
@@ -282,10 +277,9 @@ Each Docker service maps to an entrypoint in the codebase.
 
 | Worker | Folder | Trigger |
 |--------|--------|---------|
-| `estimate-poller` | `apps/background-jobs/workers/estimate-poller/` | Timer (every 60s) |
+| `monday sync pipelines` | `packages/monday/src/sync/` | `sync_full`, `sync_item`, `monday_status_sync` jobs |
 | `estimate-email-linker` | `apps/background-jobs/workers/estimate-email-linker/` | Timer (every 60s) |
 | `outlook-folder-watcher` | `apps/background-jobs/workers/outlook-folder-watcher/` | Timer (every 30s) |
-| `estimates-sync-worker` | `apps/background-jobs/workers/estimates-sync-worker/` | Job dispatch |
 | `buildingconnected-file-sync` | `apps/background-jobs/workers/buildingconnected-file-sync/` | Attachment backfill |
 
 ---
@@ -297,7 +291,7 @@ Each Docker service maps to an entrypoint in the codebase.
 3. **Access via repositories only.** Never write raw SQL in domain logic.
    Import from `@lib/db/repositories`.
 4. **Migrations in `supabase/migrations/`** with timestamp prefix: `20260214230000_description.sql`.
-5. **Connection**: `import { db } from "@lib/db/hub"` -- Postgres via Bun.sql.
+5. **Connection**: `import { db } from "@lib/db/client"` -- Postgres via Bun.sql.
 
 ### Core Tables
 
@@ -313,7 +307,7 @@ Each Docker service maps to an entrypoint in the codebase.
 | `dust_permits_filed_by_desert_services` | Permits | Maricopa dust permits |
 | `documents` | Documents | Unified file store (email attachments, monday assets, parsed docs) |
 | `notifications` | Email | Notification event log |
-| `webhook_jobs` | Infrastructure | Background job queue |
+| `pgmq.q_background_jobs` | Infrastructure | Background job queue |
 | `swppp_work_orders` | SharePoint | SWPPP Master data (synced from SharePoint) |
 | `tracked_folders` | Email | Outlook folder watcher state |
 
@@ -406,15 +400,14 @@ Documentation consolidation completed:
 | `apps/dust-permits/docs/reference/maricopa-assessor.md` | Complete | `docs/reference/maricopa-county-assessor-api.md` |
 | `apps/dust-permits/docs/reference/gila-river-indian-community/` | Complete | `docs/reference/grig/` (legacy typo name) |
 
-In-process worker modules now live in `apps/background-jobs/workers/`. Future migration into packages:
+In-process worker modules and sync pipelines migration status:
 
 | Worker | Current Location | Target Package | Notes |
 |--------|-----------------|---------------|-------|
-| ~~`notifications`~~ | `apps/background-jobs/lib/notifications/` | *(absorbed)* | Now a timer in background-jobs worker.ts |
+| `notifications` | `packages/email/src/notifications/` | In package | Consumed by background-jobs notifications tick |
+| `monday sync + project seed` | `packages/monday/src/sync/` | In package | Completed migration from legacy `estimate-poller` / `estimates-sync-worker` |
 | `outlook-folder-watcher` | `apps/background-jobs/workers/` | `packages/email/` | Email domain owns folder watching |
 | `estimate-email-linker` | `apps/background-jobs/workers/` | `packages/email/` or `packages/estimates/` | TBD |
-| `estimate-poller` | `apps/background-jobs/workers/` | `packages/estimates/` | Monday.com estimate sync |
-| `estimates-sync-worker` | `apps/background-jobs/workers/` | `packages/sharepoint/` or `packages/estimates/` | SharePoint folder sync |
 | `buildingconnected-file-sync` | `apps/background-jobs/workers/` | `packages/buildingconnected/` (future) | Needs own package |
 
 Remaining in `lib/` (genuinely cross-cutting, used by multiple domains):

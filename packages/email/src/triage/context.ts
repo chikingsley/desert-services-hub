@@ -6,7 +6,7 @@
  * This assembled context is what gets passed to the LLM.
  */
 
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 import { getEmailById } from "@lib/db/repositories/email";
 import { findEstimateCandidatesForEmail } from "@lib/db/repositories/estimate-email-matching";
 import { findProjectCandidates } from "@lib/db/repositories/project-matching";

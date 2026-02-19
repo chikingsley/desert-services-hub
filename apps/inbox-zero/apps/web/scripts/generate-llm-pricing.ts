@@ -1,4 +1,4 @@
-// eslint-disable no-process-env
+// eslint_disable no-process-env
 // Run with: `bun run generate-llm-pricing`
 import { writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";

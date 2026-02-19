@@ -1,7 +1,7 @@
 /**
  * Email Trigger Tests — Detection, parsing, and cost breakdown for dust permit notifications.
  *
- * Run: bun test tests/apps/background-jobs/lib/notifications/email-triggers.test.ts
+ * Run: bun test tests/apps/background/notifications/email-triggers.test.ts
  */
 
 import { describe, expect, test } from "bun:test";
@@ -10,7 +10,7 @@ import {
   detectDustPermitEmailTrigger,
   parseMaricopaIssuedEmail,
   parsePointAndPayEmail,
-} from "@background-jobs/lib/notifications/email-triggers";
+} from "@email/notifications/email-triggers";
 
 function expectCostBreakdownValue(
   result: ReturnType<typeof computeCostBreakdown>

@@ -94,40 +94,31 @@ export function CatalogCategoryCard({
   return (
     <div className="overflow-hidden rounded-xl border border-border/50 bg-card transition-all duration-200 hover:border-border">
       {/* Category Header */}
-      <div
-        className="group flex cursor-pointer items-center gap-3 px-5 py-4 transition-colors hover:bg-muted/30"
-        onClick={onToggle}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            onToggle();
-          }
-        }}
-        role="button"
-        tabIndex={0}
-      >
+      <div className="group flex items-center gap-3 px-5 py-4 transition-colors hover:bg-muted/30">
         <button
-          className="rounded p-0.5 transition-colors hover:bg-muted"
+          className="flex min-w-0 flex-1 items-center gap-3 text-left"
+          onClick={onToggle}
           type="button"
         >
-          {isExpanded ? (
-            <ChevronDown className="h-5 w-5 text-muted-foreground" />
-          ) : (
-            <ChevronRight className="h-5 w-5 text-muted-foreground" />
-          )}
+          <span className="rounded p-0.5 transition-colors hover:bg-muted">
+            {isExpanded ? (
+              <ChevronDown className="h-5 w-5 text-muted-foreground" />
+            ) : (
+              <ChevronRight className="h-5 w-5 text-muted-foreground" />
+            )}
+          </span>
+          <span className="min-w-0 flex-1">
+            <h3 className="truncate font-display font-semibold text-base">
+              {displayName}
+            </h3>
+            <p className="text-muted-foreground text-xs">
+              {totalItems} item{totalItems !== 1 ? "s" : ""} •{" "}
+              <span className="capitalize">
+                {category.selectionMode.replace("-", " ")}
+              </span>
+            </p>
+          </span>
         </button>
-
-        <div className="min-w-0 flex-1">
-          <h3 className="truncate font-display font-semibold text-base">
-            {displayName}
-          </h3>
-          <p className="text-muted-foreground text-xs">
-            {totalItems} item{totalItems !== 1 ? "s" : ""} •{" "}
-            <span className="capitalize">
-              {category.selectionMode.replace("-", " ")}
-            </span>
-          </p>
-        </div>
 
         {/* Visible action buttons */}
         {!readOnly && (
@@ -293,46 +284,37 @@ function SubcategorySection({
   return (
     <div className="border-border/30 border-t">
       {/* Subcategory Header */}
-      <div
-        className="group flex cursor-pointer items-center gap-3 bg-muted/20 px-5 py-3 transition-colors hover:bg-muted/40"
-        onClick={onToggle}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            onToggle();
-          }
-        }}
-        role="button"
-        tabIndex={0}
-      >
+      <div className="group flex items-center gap-3 bg-muted/20 px-5 py-3 transition-colors hover:bg-muted/40">
         <button
-          className="rounded p-0.5 transition-colors hover:bg-muted"
+          className="flex min-w-0 flex-1 items-center gap-3 text-left"
+          onClick={onToggle}
           type="button"
         >
-          {isExpanded ? (
-            <ChevronDown className="h-4 w-4 text-muted-foreground" />
-          ) : (
-            <ChevronRight className="h-4 w-4 text-muted-foreground" />
-          )}
-        </button>
-
-        <div className="min-w-0 flex-1">
-          <h4 className="truncate font-medium text-sm">
-            {subcategory.name}
-            {subcategory.hidden && (
-              <span className="ml-2 text-muted-foreground/60 text-xs">
-                (Hidden)
-              </span>
+          <span className="rounded p-0.5 transition-colors hover:bg-muted">
+            {isExpanded ? (
+              <ChevronDown className="h-4 w-4 text-muted-foreground" />
+            ) : (
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
             )}
-          </h4>
-          <p className="text-muted-foreground text-xs">
-            {subcategory.items.length} item
-            {subcategory.items.length !== 1 ? "s" : ""} •{" "}
-            <span className="capitalize">
-              {subcategory.selectionMode.replace("-", " ")}
-            </span>
-          </p>
-        </div>
+          </span>
+          <span className="min-w-0 flex-1">
+            <h4 className="truncate font-medium text-sm">
+              {subcategory.name}
+              {subcategory.hidden && (
+                <span className="ml-2 text-muted-foreground/60 text-xs">
+                  (Hidden)
+                </span>
+              )}
+            </h4>
+            <p className="text-muted-foreground text-xs">
+              {subcategory.items.length} item
+              {subcategory.items.length !== 1 ? "s" : ""} •{" "}
+              <span className="capitalize">
+                {subcategory.selectionMode.replace("-", " ")}
+              </span>
+            </p>
+          </span>
+        </button>
 
         {/* Visible action buttons */}
         {!readOnly && (

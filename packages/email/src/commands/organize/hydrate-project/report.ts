@@ -1,8 +1,5 @@
-import type {
-  HydrateProjectOptions,
-  HydrateProjectStats,
-} from "../types";
 import { createFolderLabeler, formatDate } from "../shared";
+import type { HydrateProjectOptions, HydrateProjectStats } from "../types";
 import type { HydrateProjectPlan } from "./types";
 
 interface ProjectSummaryContext {

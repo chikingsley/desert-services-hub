@@ -19,12 +19,12 @@ import { readFileSync } from "node:fs";
 import { mkdir } from "node:fs/promises";
 import { basename, extname, join } from "node:path";
 import { processFilesIntake } from "@documents-intake/files-intake";
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 
 const LOG = "[test-trigger]";
 
-const enqueueStmt = db.prepare(
-  "INSERT INTO webhook_jobs (job_type, payload) VALUES ('intake', ?) RETURNING id"
+const enqueueStmt = db.query(
+  "SELECT public.enqueue_background_job('intake', ($1::text)::jsonb, NULL, 3, FALSE)::bigint AS id"
 );
 
 const INTAKE_DIR = join(import.meta.dir, "../../../../data/files-intake");

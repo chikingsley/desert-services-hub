@@ -9,17 +9,16 @@ import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { getItemAssets } from "@monday/client/assets";
 import { getItemRich } from "@monday/client/rich";
+import {
+  type FileColumnAsset,
+  parseFileColumnValue,
+} from "@monday/sync/estimate-sync/file-assets";
 import { FILE_COLUMNS, FILES_DIR } from "@monday/sync/pipeline-config";
 import {
   getExistingAssets,
   insertAsset,
   updateEstimatePath,
 } from "@monday/sync/pipeline-db";
-
-interface FileColumnAsset {
-  assetId: number;
-  name: string;
-}
 
 interface FileColumnValue {
   id: string;
@@ -32,28 +31,8 @@ interface NewAssetDownload {
   fileName: string;
 }
 
-/**
- * Parse a Monday file column value JSON to get asset references.
- * File columns store: {"files":[{"assetId":123,"name":"file.pdf",...}]}
- */
-function parseFileColumnValue(rawValue: string | null): FileColumnAsset[] {
-  if (!rawValue) {
-    return [];
-  }
-
-  try {
-    const parsed = JSON.parse(rawValue) as {
-      files?: Array<{ assetId: number; name: string }>;
-    };
-    return (
-      parsed.files?.map((file) => ({
-        assetId: file.assetId,
-        name: file.name,
-      })) ?? []
-    );
-  } catch {
-    return [];
-  }
+export interface ProcessItemFilesOptions {
+  forceAssetIds?: Iterable<string>;
 }
 
 function ensureDir(dir: string): void {
@@ -187,11 +166,10 @@ async function downloadAssets(
   return downloaded;
 }
 
-/**
- * Download new files from a Monday item and run extraction if needed.
- * Returns the number of files downloaded.
- */
-export async function processItemFiles(mondayItemId: string): Promise<number> {
+export async function processItemFiles(
+  mondayItemId: string,
+  options?: ProcessItemFilesOptions
+): Promise<number> {
   const item = await getItemRich(mondayItemId);
   if (!item) {
     console.log(`[pipeline] Item ${mondayItemId} not found`);
@@ -205,14 +183,41 @@ export async function processItemFiles(mondayItemId: string): Promise<number> {
 
   const existingRows = await getExistingAssets.all(mondayItemId);
   const existingIds = new Set(existingRows.map((row) => row.monday_asset_id));
+  const forcedIds = options?.forceAssetIds
+    ? new Set(Array.from(options.forceAssetIds, (id) => String(id)))
+    : null;
   const newAssets = collectNewAssetsToDownload(existingIds, columnAssets);
+  const forceDownloads: NewAssetDownload[] = [];
+  if (forcedIds && forcedIds.size > 0) {
+    for (const [columnId, assets] of columnAssets) {
+      for (const asset of assets) {
+        if (forcedIds.has(String(asset.assetId))) {
+          forceDownloads.push({
+            columnId,
+            assetId: asset.assetId,
+            fileName: asset.name,
+          });
+        }
+      }
+    }
+  }
+  const allDownloads = [
+    ...newAssets,
+    ...forceDownloads.filter(
+      (forced) =>
+        !newAssets.some(
+          (next) =>
+            next.assetId === forced.assetId && next.columnId === forced.columnId
+        )
+    ),
+  ];
 
-  if (newAssets.length === 0) {
+  if (allDownloads.length === 0) {
     return 0;
   }
 
   console.log(
-    `[pipeline] ${item.name}: ${newAssets.length} new file(s) to download`
+    `[pipeline] ${item.name}: ${allDownloads.length} file(s) to download${forceDownloads.length > 0 ? ` (forced=${forceDownloads.length})` : ""}`
   );
 
   const allAssets = await getItemAssets(mondayItemId);
@@ -220,7 +225,7 @@ export async function processItemFiles(mondayItemId: string): Promise<number> {
   const itemDir = join(FILES_DIR, mondayItemId);
   ensureDir(itemDir);
 
-  return downloadAssets(mondayItemId, itemDir, newAssets, assetUrlMap);
+  return downloadAssets(mondayItemId, itemDir, allDownloads, assetUrlMap);
 }
 
 /**

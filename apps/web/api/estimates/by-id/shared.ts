@@ -1,4 +1,4 @@
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 import type { EstimateVersionRow } from "@lib/db/types";
 import { generateBaseNumber } from "@lib/utils";
 
@@ -11,10 +11,10 @@ export async function getPreferredEstimateVersion(
   estimateId: number
 ): Promise<EstimateVersionRow | undefined> {
   return (await db
-    .prepare(
+    .query(
       `SELECT *
        FROM estimate_versions
-       WHERE estimate_id = ?
+       WHERE estimate_id = $1
        ORDER BY is_current DESC, version_number DESC, created_at DESC
        LIMIT 1`
     )
@@ -68,10 +68,10 @@ export async function getLinkedProjectIds(
   estimateId: number
 ): Promise<number[]> {
   const linkedRows = (await db
-    .prepare(
+    .query(
       `SELECT DISTINCT project_id
        FROM project_estimates
-       WHERE estimate_id = ?
+       WHERE estimate_id = $1
        ORDER BY project_id ASC`
     )
     .all(estimateId)) as Array<{ project_id: number }>;
@@ -132,9 +132,9 @@ export async function getNextBaseNumber(): Promise<string> {
   const baseNumber = generateBaseNumber();
 
   const existing = (await db
-    .prepare(
+    .query(
       `SELECT base_number FROM estimates
-       WHERE base_number LIKE ?
+       WHERE base_number LIKE $1
        ORDER BY base_number DESC
        LIMIT 1`
     )

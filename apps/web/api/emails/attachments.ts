@@ -4,7 +4,7 @@
  * Provides attachment listing and download for a specific email.
  */
 import { createGraphClient } from "@email/sync/config";
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 import {
   getAttachmentById,
   getAttachmentsForEmail,
@@ -55,8 +55,8 @@ async function getEmailMessageAndMailbox(emailId: number): Promise<{
   hasAttachments: boolean;
 } | null> {
   const emailRow = (await db
-    .prepare(
-      "SELECT message_id, mailbox_id, has_attachments FROM emails WHERE id = ?"
+    .query(
+      "SELECT message_id, mailbox_id, has_attachments FROM emails WHERE id = $1"
     )
     .get(emailId)) as {
     message_id: string;
@@ -69,7 +69,7 @@ async function getEmailMessageAndMailbox(emailId: number): Promise<{
   }
 
   const mailboxRow = (await db
-    .prepare("SELECT email FROM mailboxes WHERE id = ?")
+    .query("SELECT email FROM mailboxes WHERE id = $1")
     .get(emailRow.mailbox_id)) as { email: string } | null;
 
   if (!mailboxRow?.email) {

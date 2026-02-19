@@ -1,6 +1,6 @@
 import { existsSync } from "node:fs";
 
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 import { getProjectById } from "@lib/db/repositories/project";
 import { getEstimatesForProject } from "@lib/db/repositories/project-estimate";
 import type { Project } from "@lib/db/types";
@@ -14,7 +14,7 @@ import {
 } from "@sharepoint/paths";
 
 const getAccountNameById = db.query<{ name: string }>(
-  "SELECT name FROM accounts WHERE id = ?"
+  "SELECT name FROM accounts WHERE id = $1"
 );
 
 const STATUS_CANDIDATES = ["Active", "Submitted", "Lost", "Finished"] as const;

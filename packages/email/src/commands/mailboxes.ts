@@ -5,7 +5,7 @@
 import { getAppClient } from "@email/commands/config";
 import type { CommandHandler } from "@email/commands/types";
 import { ALL_MAILBOXES } from "@email/sync/config";
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 
 async function getMailboxStats(): Promise<
   Map<string, { emailCount: number; lastSync: string | null }>

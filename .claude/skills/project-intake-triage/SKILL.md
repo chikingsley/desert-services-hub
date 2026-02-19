@@ -19,6 +19,69 @@ This skill turns “what is this project?” into a repeatable workflow:
 3. Download every useful attachment into a local triage folder (contracts, LOIs, estimates, permits, NOIs, etc.).
 4. Produce a short summary that points a human to the most important docs.
 
+## Fast Path (DB-First, 60-90s)
+
+Use this path for urgent asks like:
+- "Find PV B3 and tell me the attached estimate."
+- "Do we have a subcontract for this project?"
+- "Given this estimate number, what project and contract docs are linked?"
+
+### Rules
+- Start in Postgres first (`projects` -> `project_estimates` -> `documents`).
+- Do not start with repo-wide text search for data lookups.
+- Run focused queries with `bun` SQL if `psql` is unavailable.
+- Return a compact answer with IDs and linkage confidence.
+
+### Minimal Query Sequence
+
+1) Resolve project candidates by name/anchor:
+
+```sql
+select id, name, project_number, monday_item_id, updated_at
+from projects
+where name ilike '%pv b3%' or name ilike '%pv%b3%'
+order by updated_at desc
+limit 20;
+```
+
+2) Resolve canonical estimate linkage:
+
+```sql
+select pe.project_id, pe.estimate_id, pe.is_canonical, pe.source,
+       e.name, e.estimate_number, e.monday_item_id, e.bid_status, e.bid_value, e.awarded_value
+from project_estimates pe
+join estimates e on e.id = pe.estimate_id
+where pe.project_id = <project_id>
+order by pe.is_canonical desc nulls last, pe.created_at desc;
+```
+
+3) Pull contract/subcontract evidence for that project:
+
+```sql
+select d.id, d.project_id, d.estimate_id, d.document_type, d.file_name, d.extraction_status, d.updated_at
+from documents d
+where d.project_id = <project_id>
+  and (
+    d.document_type ilike '%contract%'
+    or d.file_name ilike '%contract%'
+    or d.file_name ilike '%subcontract%'
+    or coalesce(d.summary,'') ilike '%contract%'
+    or coalesce(d.summary,'') ilike '%subcontract%'
+  )
+order by d.updated_at desc nulls last;
+```
+
+4) If `estimate_id` is null on key contract docs, still trust canonical `project_estimates` linkage and report doc-link gap explicitly.
+
+### Output Contract
+
+Always return:
+- `project_id` + project name
+- canonical `estimate_id` + estimate number + Monday item id
+- top contract/subcontract doc IDs + filenames + extraction status
+- confidence (`high` when canonical estimate exists and contract-like docs exist)
+- explicit gaps (`contract docs not estimate-linked`, `no canonical estimate`, etc.)
+
 ## Fast DoD Audit (Run First)
 
 Use the deterministic audit pack before ad-hoc querying:

@@ -8,7 +8,7 @@ import { existsSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 import { getAppClient } from "@email/commands/config";
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 import { escapeODataStringLiteral, sanitizeFilename } from "./shared";
 import type { CandidateType, EmailRow } from "./source-packet-scoring";
 
@@ -36,7 +36,7 @@ export async function getNarrativeEmail(
         coalesce(e.attachment_names, '[]') as attachment_names
       from emails e
       join mailboxes m on m.id = e.mailbox_id
-      where e.id = ?
+      where e.id = $1
       limit 1
       `
     )
@@ -82,11 +82,11 @@ async function queryNoiCandidatesWithPermit(params: {
       join mailboxes m on m.id = e.mailbox_id
       where e.has_attachments = 1
         and e.attachment_names ilike '%.pdf%'
-        and e.received_at between ? and ?
+        and e.received_at between $1 and $2
         and (
-          e.subject ilike ? or
-          e.attachment_names ilike ? or
-          coalesce(e.body_preview, '') ilike ?
+          e.subject ilike $3 or
+          e.attachment_names ilike $4 or
+          coalesce(e.body_preview, '') ilike $5
         )
         and (
           e.subject ~* '(noi|azpdes|mydeq|cgp)' or
@@ -202,10 +202,10 @@ async function findAlternateMessageIds(
         select e.message_id, m.email as mailbox_email
         from emails e
         join mailboxes m on m.id = e.mailbox_id
-        where e.internet_message_id = ?
-          and e.id <> ?
+        where e.internet_message_id = $1
+          and e.id <> $2
         order by
-          case when lower(m.email) = lower(?) then 0 else 1 end,
+          case when lower(m.email) = lower($3) then 0 else 1 end,
           e.received_at desc
         limit 12
         `
@@ -245,10 +245,10 @@ async function findAlternateMessageIds(
         select e.message_id, m.email as mailbox_email
         from emails e
         join mailboxes m on m.id = e.mailbox_id
-        where e.attachment_names ilike ?
-          and e.id <> ?
+        where e.attachment_names ilike $1
+          and e.id <> $2
         order by
-          case when lower(m.email) = lower(?) then 0 else 1 end,
+          case when lower(m.email) = lower($3) then 0 else 1 end,
           e.received_at desc
         limit 20
         `

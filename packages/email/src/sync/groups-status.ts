@@ -2,7 +2,7 @@
  * M365 group sync summaries and status reporting.
  */
 import { ALL_GROUPS } from "@email/sync/config";
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 
 import type { GroupSyncResult } from "./groups-core/sync-group";
 
@@ -54,7 +54,7 @@ export async function showGroupStatus(): Promise<void> {
   for (const [email, groupId] of Object.entries(ALL_GROUPS)) {
     const mailbox = await db
       .query<{ email_count: number; last_sync_at: string | null }>(
-        "SELECT email_count, last_sync_at FROM mailboxes WHERE email = ?"
+        "SELECT email_count, last_sync_at FROM mailboxes WHERE email = $1"
       )
       .get(email);
 

@@ -4,7 +4,7 @@
  * Single source of truth for folder name sanitization, letter-folder routing,
  * variant-prefix parsing, status mapping, and URL helpers.
  *
- * Consumers: estimates-sync-worker, monday package sync, inspections-email-worker
+ * Consumers: monday sync package, inspections-email-worker
  */
 
 // =============================================================================

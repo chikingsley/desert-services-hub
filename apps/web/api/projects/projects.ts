@@ -2,7 +2,7 @@
  * Projects API handlers
  * Route: GET /api/projects
  */
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 
 type SortField =
   | "last_seen"
@@ -141,7 +141,7 @@ export async function listProjects(req: Request): Promise<Response> {
 
     const [items, countResult, contractRows, dustRows] = await Promise.all([
       db
-        .prepare(
+        .query(
           `SELECT
             p.id,
             p.name,
@@ -176,11 +176,11 @@ export async function listProjects(req: Request): Promise<Response> {
            ) docs ON true
            ${where}
            ORDER BY ${orderBy} ${sortDirection.toUpperCase()} NULLS LAST, p.id DESC
-           LIMIT ? OFFSET ?`
+           LIMIT $1 OFFSET $2`
         )
         .all(...params, perPage, offset) as Promise<ProjectRow[]>,
       db
-        .prepare(
+        .query(
           `SELECT count(*)::int as total
            FROM projects p
            LEFT JOIN accounts a ON a.id = p.account_id
@@ -188,7 +188,7 @@ export async function listProjects(req: Request): Promise<Response> {
         )
         .get(...params) as Promise<{ total: number } | null>,
       db
-        .prepare(
+        .query(
           `SELECT COALESCE(contract_status, 'Pending') as status, count(*)::int as count
            FROM projects
            GROUP BY COALESCE(contract_status, 'Pending')
@@ -196,7 +196,7 @@ export async function listProjects(req: Request): Promise<Response> {
         )
         .all() as Promise<Array<{ status: string; count: number }>>,
       db
-        .prepare(
+        .query(
           `SELECT COALESCE(dust_permit_status, 'Not Needed') as status, count(*)::int as count
            FROM projects
            GROUP BY COALESCE(dust_permit_status, 'Not Needed')

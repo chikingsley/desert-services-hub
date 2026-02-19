@@ -9,10 +9,12 @@
  */
 import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 import { getOneDriveFileFromShareUrl } from "@lib/graph/files";
 
-const INTAKE_DIR = join(import.meta.dir, "../../../data/intake");
+const INTAKE_DIR =
+  process.env.INTAKE_DIR?.trim() ||
+  join(import.meta.dir, "../../../../data/intake");
 const LOG = "[webhook:intake]";
 const INVALID_FILENAME_CHARS_PATTERN = /[/\\?%*:|"<>]/g;
 const LEADING_DOTS_PATTERN = /^\.+/;
@@ -50,8 +52,8 @@ interface IncomingPayload {
   fileLinks?: FileLink[];
 }
 
-const enqueueStmt = db.prepare(
-  "INSERT INTO webhook_jobs (job_type, payload) VALUES ('intake', ?) RETURNING id::text as id"
+const enqueueStmt = db.query(
+  "SELECT public.enqueue_background_job('intake', ($1::text)::jsonb, NULL, 3, FALSE)::bigint AS id"
 );
 
 // =============================================================================
@@ -358,8 +360,8 @@ export async function handleIntakeWebhook(req: Request): Promise<Response> {
     forwarderEmail: body.forwarderEmail ?? "",
   });
 
-  const row = (await enqueueStmt.get(payload)) as { id: string } | null;
-  const jobDbId = row ? Number(row.id) : null;
+  const row = (await enqueueStmt.get(payload)) as { id: number } | null;
+  const jobDbId = row?.id ?? null;
 
   console.log(
     `${LOG} Enqueued job #${jobDbId}: ${attachmentPaths.length} file(s) from "${body.originalSubject}"`

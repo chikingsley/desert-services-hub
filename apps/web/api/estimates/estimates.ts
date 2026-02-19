@@ -7,7 +7,7 @@ import {
   EstimatePayloadValidationError,
   validateCreateEstimatePayload,
 } from "@estimates/estimating/estimate-payload-validation";
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 import { generateBaseNumber } from "@lib/utils";
 
 interface EstimateListRow {
@@ -37,9 +37,9 @@ async function getNextBaseNumber(): Promise<string> {
   const baseNumber = generateBaseNumber();
 
   const existing = (await db
-    .prepare(
+    .query(
       `SELECT base_number FROM estimates
-       WHERE base_number LIKE ?
+       WHERE base_number LIKE $1
        ORDER BY base_number DESC
        LIMIT 1`
     )
@@ -169,7 +169,7 @@ export async function listEstimates(req: Request): Promise<Response> {
 
     const [rows, countResult, statusFacetRows] = await Promise.all([
       db
-        .prepare(
+        .query(
           `SELECT
             q.id,
             q.base_number,
@@ -194,14 +194,14 @@ export async function listEstimates(req: Request): Promise<Response> {
           ) cv ON TRUE
           ${where}
           ORDER BY ${orderByExpression} ${sortDirection.toUpperCase()}, q.id DESC
-          LIMIT ? OFFSET ?`
+          LIMIT $1 OFFSET $2`
         )
         .all(...params, perPage, offset) as Promise<EstimateListRow[]>,
       db
-        .prepare(`SELECT count(*)::int as total FROM estimates q ${where}`)
+        .query(`SELECT count(*)::int as total FROM estimates q ${where}`)
         .get(...params) as Promise<{ total: number } | null>,
       db
-        .prepare(
+        .query(
           `SELECT COALESCE(status, 'draft') as status, count(*)::int as count
            FROM estimates
            GROUP BY COALESCE(status, 'draft')
@@ -242,13 +242,13 @@ export async function listEstimates(req: Request): Promise<Response> {
         statuses: statusFacetRows,
         sources: {
           manual: await db
-            .prepare(
+            .query(
               "SELECT count(*)::int as count FROM estimates WHERE takeoff_id IS NULL"
             )
             .get()
             .then((r) => (r as { count: number } | null)?.count ?? 0),
           takeoff: await db
-            .prepare(
+            .query(
               "SELECT count(*)::int as count FROM estimates WHERE takeoff_id IS NOT NULL"
             )
             .get()
@@ -277,7 +277,7 @@ async function insertEstimateHeader(params: {
 
   const insertResult = await db.run(
     `INSERT INTO estimates (base_number, takeoff_id, name, job_name, job_address, contractor, client_address, estimator, estimator_email, notes, status, is_locked)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
      RETURNING id`,
     [
       baseNumber,
@@ -304,9 +304,9 @@ async function insertEstimateVersion(
 ): Promise<string> {
   const versionId = crypto.randomUUID();
   await db
-    .prepare(
+    .query(
       `INSERT INTO estimate_versions (id, estimate_id, version_number, total, is_current)
-       VALUES (?, ?, 1, ?, 1)`
+       VALUES ($1, $2, 1, $3, 1)`
     )
     .run(versionId, estimateId, total);
   return versionId;

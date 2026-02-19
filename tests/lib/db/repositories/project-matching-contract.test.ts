@@ -1,9 +1,7 @@
 import { afterAll, describe, expect, test } from "bun:test";
-import { db } from "@lib/db/hub";
-import {
-  findProjectCandidates,
-  normalizeProjectNameKey,
-} from "@lib/db/repositories/project";
+import { db } from "@lib/db/client";
+import { findProjectCandidates } from "@lib/db/repositories/project-matching";
+import { normalizeProjectNameKey } from "@lib/db/repositories/project-matching-utils";
 
 const RUN_TAG = crypto.randomUUID().slice(0, 8).toLowerCase();
 const TEST_PREFIX = `_TEST_DELETE_ME_PROJECT_MATCH_${RUN_TAG}_`;
@@ -13,7 +11,7 @@ const createdAccountIds: number[] = [];
 async function createAccount(name: string): Promise<number> {
   const rows = (await db.run(
     `INSERT INTO accounts (name, domain, type)
-     VALUES (?, ?, 'contractor')
+     VALUES ($1, $2, 'contractor')
      RETURNING id`,
     [name, `${crypto.randomUUID()}@example.test`]
   )) as Array<{ id: number }>;
@@ -33,7 +31,7 @@ async function createProject(params: {
 }): Promise<number> {
   const rows = (await db.run(
     `INSERT INTO projects (account_id, name, normalized_name, contractor, address)
-     VALUES (?, ?, ?, ?, ?)
+     VALUES ($1, $2, $3, $4, $5)
      RETURNING id`,
     [
       params.accountId,
@@ -55,21 +53,25 @@ afterAll(async () => {
   if (createdProjectIds.length > 0) {
     await db.run(
       `DELETE FROM projects
-       WHERE id IN (${createdProjectIds.map(() => "?").join(", ")})`,
+       WHERE id IN (${createdProjectIds.map(() => "$1").join(", ")})`,
       createdProjectIds
     );
   } else {
-    await db.run("DELETE FROM projects WHERE name LIKE ?", [`${TEST_PREFIX}%`]);
+    await db.run("DELETE FROM projects WHERE name LIKE $1", [
+      `${TEST_PREFIX}%`,
+    ]);
   }
 
   if (createdAccountIds.length > 0) {
     await db.run(
       `DELETE FROM accounts
-       WHERE id IN (${createdAccountIds.map(() => "?").join(", ")})`,
+       WHERE id IN (${createdAccountIds.map(() => "$1").join(", ")})`,
       createdAccountIds
     );
   } else {
-    await db.run("DELETE FROM accounts WHERE name LIKE ?", [`${TEST_PREFIX}%`]);
+    await db.run("DELETE FROM accounts WHERE name LIKE $1", [
+      `${TEST_PREFIX}%`,
+    ]);
   }
 });
 

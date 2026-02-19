@@ -21,7 +21,7 @@
  */
 
 import { parseArgs } from "node:util";
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 import { SharePointClient } from "@sharepoint/client";
 
 // Regex patterns for filename sanitization (module-level for performance)

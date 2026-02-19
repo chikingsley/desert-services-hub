@@ -3,6 +3,7 @@ import { calculateConsensusConfidence, clusterSignals } from "./consensus";
 import { geocodeAddress, geocodeIntersection } from "./geocoding";
 import { getRoadGeometryByName } from "./roads";
 import type {
+  Bounds,
   CornerPosition,
   ExtractedPlanHints,
   LatLng,
@@ -223,7 +224,7 @@ export async function runRehydratedPipeline(
     log
   );
 
-  let suggestedBounds = null;
+  let suggestedBounds: Bounds | null = null;
   if (consensusLocation) {
     const sizeMeters = pickSiteSizeMeters(hints, options);
     const aspectRatio = options.aspectRatio ?? 1;

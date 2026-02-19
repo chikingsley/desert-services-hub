@@ -1,4 +1,4 @@
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 import type {
   HydrateProjectMoveMessage,
   HydrateProjectPlan,
@@ -30,12 +30,12 @@ export function getThreadSummariesForProject(
               MAX(received_at) AS last_received_at,
               COUNT(*)::int AS email_count
        FROM emails
-       WHERE mailbox_id = ?
-         AND project_id = ?
+       WHERE mailbox_id = $1
+         AND project_id = $2
          AND conversation_id IS NOT NULL
        GROUP BY conversation_id
        ORDER BY last_received_at DESC NULLS LAST
-       LIMIT ?`
+       LIMIT $3`
     )
     .all(mailboxId, projectId, maxThreads);
 }
@@ -58,7 +58,7 @@ export async function getMixedConversationIds(
     .query<{ conversation_id: string }>(
       `SELECT conversation_id
        FROM emails
-       WHERE mailbox_id = ?
+       WHERE mailbox_id = $1
          AND conversation_id IN (${placeholders})
        GROUP BY conversation_id
        HAVING COUNT(DISTINCT project_id) > 1`
@@ -78,7 +78,7 @@ export async function getOrphanEmailCountForProject(
 ): Promise<number> {
   const orphanRow = await db
     .query<{ count: number }, [number, number]>(
-      "SELECT COUNT(*)::int AS count FROM emails WHERE mailbox_id = ? AND project_id = ? AND conversation_id IS NULL"
+      "SELECT COUNT(*)::int AS count FROM emails WHERE mailbox_id = $1 AND project_id = $2 AND conversation_id IS NULL"
     )
     .get(mailboxId, projectId);
 

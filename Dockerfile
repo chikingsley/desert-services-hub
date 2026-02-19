@@ -29,14 +29,33 @@ ENV NODE_ENV=production
 # LibreOffice-core for legacy .doc/.xls/.ppt extraction via Kreuzberg
 # unzip for ZIP archive extraction in files-intake pipeline
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends python3 python3-venv curl libreoffice-core unzip && \
+    apt-get install -y --no-install-recommends \
+      python3 \
+      python3-venv \
+      curl \
+      libreoffice-core \
+      unzip \
+      libgl1 \
+      xauth \
+      tigervnc-standalone-server \
+      tigervnc-common \
+      tigervnc-tools \
+      novnc \
+      websockify \
+      openbox \
+      xdotool \
+      xclip && \
     curl -LsSf https://astral.sh/uv/install.sh | sh && \
+    ln -sf /usr/share/novnc/vnc.html /usr/share/novnc/index.html && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 ENV PATH="/root/.local/bin:$PATH"
 
 # Copy JS deps
 COPY --from=deps /app/node_modules ./node_modules
+
+# Install Chromium for Playwright-based body-link downloads (BuildingConnected/Egnyte/Dropbox)
+RUN bunx playwright install --with-deps chromium
 
 # Config files
 COPY package.json tsconfig.json tsconfig.base.json bunfig.toml ./
@@ -46,6 +65,7 @@ COPY apps/web ./apps/web
 
 # Background jobs — webhook receiver + job queue + sync timers + notifications
 COPY apps/background-jobs ./apps/background-jobs
+RUN chmod +x /app/apps/background-jobs/start-stack.sh
 
 # CF Workers — shared modules referenced by background-jobs workers
 COPY apps/cf-workers ./apps/cf-workers
@@ -64,7 +84,7 @@ COPY packages/takeoff ./packages/takeoff
 COPY lib ./lib
 
 # Install Python deps for pdf-analysis
-RUN cd packages/documents/pdf-analysis-py && uv sync --frozen 2>/dev/null || uv sync
+RUN cd packages/documents/intake && uv sync --frozen 2>/dev/null || uv sync
 
 # Install Python deps for contract extraction (LangExtract fork) — optional
 RUN if [ -d packages/contracts/langextract ]; then cd packages/contracts/langextract && uv sync --frozen 2>/dev/null || uv sync; fi

@@ -246,7 +246,7 @@ FROM (
   return rows[0] ?? null;
 }
 
-async function loadProjectDocs(projectId: number): Promise<DocumentRow[]> {
+function loadProjectDocs(projectId: number): Promise<DocumentRow[]> {
   const safeProjectId = Math.floor(projectId);
   const sql = `
 SELECT COALESCE(json_agg(t), '[]'::json)

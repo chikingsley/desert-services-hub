@@ -9,7 +9,7 @@ import {
   type SyncAllOptions,
   type SyncResult,
 } from "@email/sync/config";
-import { getMailbox } from "@lib/db/repositories";
+import { getMailbox } from "@lib/db/repositories/mailbox";
 import { syncMailboxFull } from "./mailboxes-sync-core";
 
 function getDefaultSince(since?: Date): Date {

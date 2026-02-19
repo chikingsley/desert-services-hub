@@ -1,7 +1,7 @@
 import { GraphGroupsClient } from "@email/groups";
 import { ALL_GROUPS, MS_PER_DAY } from "@email/sync/config";
 
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 import {
   createGroupMailbox,
   setMailboxSyncState,

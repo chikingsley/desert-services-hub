@@ -5,21 +5,21 @@
  * Usage: bun packages/email/src/commands/spam-domains.ts <domain1> [domain2] [domain3] ...
  */
 
-import { db } from "@lib/db/hub";
+import { db } from "@lib/db/client";
 
-const insertRule = db.prepare(`
+const insertRule = db.query(`
   INSERT INTO domain_rules (domain, is_excluded, reason)
   VALUES ($1, true, $2)
   ON CONFLICT (domain) DO UPDATE SET is_excluded = true, reason = $2, reviewed_at = now()
 `);
 
-const backfillEmails = db.prepare(`
+const backfillEmails = db.query(`
   UPDATE emails
   SET is_excluded = 1
   WHERE from_domain = $1 AND is_excluded = 0
 `);
 
-const countAffected = db.prepare<{ cnt: string }>(`
+const countAffected = db.query<{ cnt: string }>(`
   SELECT count(*)::text as cnt
   FROM emails
   WHERE from_domain = $1 AND is_excluded = 0

@@ -1,6 +1,6 @@
-import { LoadStats } from "@/providers/StatLoaderProvider";
+import { redirect } from "next/navigation";
 import { checkUserOwnsEmailAccount } from "@/utils/email-account";
-import { SetupContent } from "./SetupContent";
+import { prefixPath } from "@/utils/path";
 
 export default async function SetupPage(props: {
   params: Promise<{ emailAccountId: string }>;
@@ -8,10 +8,5 @@ export default async function SetupPage(props: {
   const { emailAccountId } = await props.params;
   await checkUserOwnsEmailAccount({ emailAccountId });
 
-  return (
-    <>
-      <SetupContent />
-      <LoadStats loadBefore showToast={false} />
-    </>
-  );
+  redirect(prefixPath(emailAccountId, "/automation"));
 }

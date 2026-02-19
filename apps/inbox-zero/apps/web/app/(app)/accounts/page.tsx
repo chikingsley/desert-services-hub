@@ -2,7 +2,7 @@
 
 import { useAction } from "next-safe-action/hooks";
 import Link from "next/link";
-import { Trash2, MoreVertical, Settings } from "lucide-react";
+import { Trash2, MoreVertical } from "lucide-react";
 import { useEffect } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
@@ -102,9 +102,13 @@ function AccountHeader({
           {emailAccount.name?.[0] || emailAccount.email?.[0]}
         </AvatarFallback>
       </Avatar>
-      <div className="flex flex-col space-y-1.5 flex-1">
-        <CardTitle>{emailAccount.name}</CardTitle>
-        <CardDescription>{emailAccount.email}</CardDescription>
+      <div className="flex min-w-0 flex-1 flex-col space-y-1.5">
+        <CardTitle className="truncate" title={emailAccount.name || undefined}>
+          {emailAccount.name || emailAccount.email}
+        </CardTitle>
+        <CardDescription className="truncate" title={emailAccount.email}>
+          {emailAccount.email}
+        </CardDescription>
       </div>
       <div
         onClick={(e) => e.stopPropagation()}
@@ -163,42 +167,32 @@ function AccountOptionsDropdown({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-        <DropdownMenuItem asChild>
-          <Link
-            href={prefixPath(emailAccount.id, "/setup")}
-            className="flex items-center gap-2"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <Settings className="size-4" />
-            Setup
-          </Link>
-        </DropdownMenuItem>
         <ConfirmDialog
-            trigger={
-              <DropdownMenuItem
-                onSelect={(e) => {
-                  e?.preventDefault();
-                  e?.stopPropagation?.();
-                }}
-                onClick={(e) => e.stopPropagation()}
-                className="flex items-center gap-2 text-destructive focus:text-destructive"
-                disabled={isExecuting}
-              >
-                <Trash2 className="size-4" />
-                Delete
-              </DropdownMenuItem>
-            }
-            title="Delete Account"
-            description={
-              emailAccount.isPrimary
-                ? `Are you sure you want to delete "${emailAccount.email}"? This is your primary account. You will be logged out and need to log in again. Your oldest remaining account will become your new primary account. All data for "${emailAccount.email}" will be permanently deleted from Inbox Zero.`
-                : `Are you sure you want to delete "${emailAccount.email}"? This will delete all data for it on Inbox Zero.`
-            }
-            confirmText="Delete"
-            onConfirm={() => {
-              execute({ emailAccountId: emailAccount.id });
-            }}
-          />
+          trigger={
+            <DropdownMenuItem
+              onSelect={(e) => {
+                e?.preventDefault();
+                e?.stopPropagation?.();
+              }}
+              onClick={(e) => e.stopPropagation()}
+              className="flex items-center gap-2 text-destructive focus:text-destructive"
+              disabled={isExecuting}
+            >
+              <Trash2 className="size-4" />
+              Delete
+            </DropdownMenuItem>
+          }
+          title="Delete Account"
+          description={
+            emailAccount.isPrimary
+              ? `Are you sure you want to delete "${emailAccount.email}"? This is your primary account. You will be logged out and need to log in again. Your oldest remaining account will become your new primary account. All data for "${emailAccount.email}" will be permanently deleted from Inbox Zero.`
+              : `Are you sure you want to delete "${emailAccount.email}"? This will delete all data for it on Inbox Zero.`
+          }
+          confirmText="Delete"
+          onConfirm={() => {
+            execute({ emailAccountId: emailAccount.id });
+          }}
+        />
       </DropdownMenuContent>
     </DropdownMenu>
   );

@@ -80,6 +80,7 @@ services:
       BACKGROUND_JOBS_VNC_PORT: 6080
       BACKGROUND_JOBS_VNC_RESOLUTION: ${BACKGROUND_JOBS_VNC_RESOLUTION:-1920x1080}
       DISPLAY: ":1"
+      DOCKER_CONTAINER: "true"
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:

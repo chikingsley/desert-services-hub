@@ -509,16 +509,18 @@ async function runBootstrap(
 
   await mkdir(dirname(options.statePath), { recursive: true });
 
+  const isDocker = Boolean(
+    process.env.CONTAINER || process.env.DOCKER_CONTAINER
+  );
+
   const browser = await chromium.launch({
     headless: options.headless,
-    args: options.headless
-      ? [
-          "--no-sandbox",
-          "--disable-dev-shm-usage",
-          "--disable-gpu",
-          "--disable-blink-features=AutomationControlled",
-        ]
-      : ["--disable-blink-features=AutomationControlled"],
+    args: [
+      "--disable-blink-features=AutomationControlled",
+      ...(options.headless || isDocker
+        ? ["--no-sandbox", "--disable-dev-shm-usage", "--disable-gpu"]
+        : []),
+    ],
   });
 
   try {

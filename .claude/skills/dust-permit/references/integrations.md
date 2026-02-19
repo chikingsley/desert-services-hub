@@ -5,10 +5,20 @@ Current integration points for dust permit operations in `desert-services-hub`.
 ## Runtime + Service Boundaries
 
 - Permit automation runtime: `apps/dust-permits` (container `desert-permit-worker`)
-- API endpoint:
+- Typed client: `packages/permits/src/client.ts` (`PermitClient`)
+- CLI: `packages/permits/cli.ts` → `bun run permit <command>`
+- API:
   - Host shell: `http://localhost:47822`
   - Container network: `http://permit-worker:47822`
-- Canonical client in repository code: `@permits/client` (`packages/permits/src/client.ts`)
+
+## Who Uses What
+
+| Caller | Interface | URL |
+|--------|-----------|-----|
+| Claude Code / ops / shell | `bun run permit` CLI | `http://localhost:47822` |
+| `apps/web/api/automation.ts` | `PermitClient` (app code) | `http://permit-worker:47822` |
+| `apps/background-jobs/jobs/permit-sync.ts` | `PermitClient` (app code) | `http://permit-worker:47822` |
+| `packages/email/src/notifications/email-trigger-handlers.ts` | `PermitClient` (app code) | `http://permit-worker:47822` |
 
 ## Source of Truth
 
@@ -60,30 +70,9 @@ uv run pdf-analysis noi /path/to/noi.pdf --ocr-fallback
 uv run pdf-analysis ocr /path/to/plans.pdf --output /tmp/plans.md
 ```
 
-## Permit Operations
-
-Use API/PermitClient, not legacy CLI-first workflows.
-
-- Full endpoint contract: `references/api-reference.md`
-- Common operations:
-  - `POST /api/permits/create`
-  - `POST /api/permits/:id/renew`
-  - `POST /api/permits/:id/revise` (body key is `revisionType`)
-  - `POST /api/permits/:id/close`
-  - `POST /api/scrape/pdf`
-  - `DELETE /api/permits/drafts`
-
-## Repository Callers
-
-Current code paths already using `PermitClient`:
-
-- `apps/web/api/automation.ts`
-- `apps/background-jobs/jobs/permit-sync.ts`
-- `apps/background-jobs/lib/notifications/email-trigger-handlers.ts`
-
 ## Guardrails
 
 - Do not use deleted legacy path `apps/workers/permit-workers/`.
 - Do not use SQLite as source of truth for permit state.
-- Do not introduce new raw `fetch()` permit calls in app code; use `PermitClient`.
-- For ad-hoc terminal work, prefer `curl` against port `47822`.
+- App code (web, background-jobs) should use `PermitClient` over raw `fetch()`.
+- Shell / Claude Code should use `bun run permit` CLI, not inline scripts or raw curl.

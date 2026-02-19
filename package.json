@@ -32,6 +32,7 @@
     "fix": "ultracite fix",
     "check": "bun run typecheck && bun run lint",
     "test": "bun test tests/",
+    "permit": "bun packages/permits/cli.ts",
     "permits:guard:no-mock": "bash -lc 'if rg -n \"Bun\\\\.serve\\\\(\" packages/permits/tests; then echo \"Mock servers are not allowed in packages/permits/tests\"; exit 1; fi'",
     "permits:test:client": "bun run permits:guard:no-mock && bun test tests/packages/permits/tests/client.test.ts",
     "permits:test:renew-and-pay": "docker exec desert-permit-worker sh -lc \"cd /app/apps/dust-permits && bun test tests/e2e/renew-and-pay.test.ts\"",

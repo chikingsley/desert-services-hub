@@ -49,7 +49,7 @@ export const renewBodySchema = z.object({
 
 export const renewAndPayBodySchema = z.object({
   companyName: z.string().describe("Company name for renewal"),
-  expedited: z.boolean().optional().default(true),
+  expedited: z.boolean().optional().default(false),
 });
 
 export const closeBodySchema = z.object({

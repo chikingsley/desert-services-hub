@@ -601,7 +601,7 @@ export async function renewAndPayFull(
   companyName: string,
   options?: { expedited?: boolean; dryRun?: boolean }
 ): Promise<RenewAndPayResult> {
-  const expedited = options?.expedited ?? true;
+  const expedited = options?.expedited ?? false;
   const dryRun = options?.dryRun ?? false;
 
   // Phase 1: Renew to Page 5

@@ -1,63 +1,51 @@
 # Permit Operations Command Reference
 
-For agent and ops workflows, use the permit-worker HTTP API (or `PermitClient`) as the canonical interface.
+Use `bun run permit` for all permit operations. The CLI wraps `PermitClient` and auto-defaults to `http://localhost:47822`.
 
-- API reference: `references/api-reference.md`
-- Typed client: `packages/permits/src/client.ts`
-
-## Recommended Host Commands (`curl`)
+## Commands
 
 ```bash
-# Health
-curl http://localhost:47822/health
+# Health + status
+bun run permit health
+bun run permit browser-status
 
-# List permits
-curl http://localhost:47822/api/permits
+# Read operations
+bun run permit list
+bun run permit get D0061391
 
-# Get one permit
-curl http://localhost:47822/api/permits/D0061391
-
-# Renew permit
-curl -X POST http://localhost:47822/api/permits/D0058823/renew \
-  -H 'Content-Type: application/json' \
-  -d '{"companyName":"Weis Builders Inc"}'
-
-# Revise permit
-curl -X POST http://localhost:47822/api/permits/D0064070/revise \
-  -H 'Content-Type: application/json' \
-  -d '{"revisionType":"contact","notes":"Update contact details"}'
-
-# Close permit
-curl -X POST http://localhost:47822/api/permits/D0056240/close \
-  -H 'Content-Type: application/json' \
-  -d '{"reason":"Project complete"}'
-
-# Delete all drafts
-curl -X DELETE http://localhost:47822/api/permits/drafts
+# Mutations (auto 5-min timeout for browser automation)
+bun run permit close D0063827 --reason completed
+bun run permit renew D0058823 --company "Weis Builders Inc"
+bun run permit renew-and-pay D0058823 --company "Weis Builders Inc" --dry-run
+bun run permit renew-and-pay D0058823 --company "Weis Builders Inc" --yes
+bun run permit revise D0064070 --type contact --notes "Update contact details"
+bun run permit scrape-pdf D0061391
+bun run permit scrape D0061391
+bun run permit delete D0XXXXXX
+bun run permit delete-drafts
+bun run permit sync
+bun run permit sync-company
 ```
 
-## Create Permit with Overrides
+## Create Permit (via curl — not yet in CLI)
 
-`/api/permits/create` expects `formDataPath` (in-container file path).
+`/api/permits/create` requires `formDataPath` (in-container file path), so it needs docker cp first:
 
 ```bash
-# Copy overrides into running permit-worker container
 docker exec desert-permit-worker sh -lc 'mkdir -p /app/data/overrides'
 docker cp /tmp/project-overrides.json desert-permit-worker:/app/data/overrides/project-overrides.json
 
-# Call create endpoint
 curl -X POST http://localhost:47822/api/permits/create \
   -H 'Content-Type: application/json' \
   -d '{"flow":"existing-company","companyName":"Company Name","formDataPath":"/app/data/overrides/project-overrides.json"}'
 ```
 
-## Legacy CLI Note (App-Local Debug Only)
-
-`apps/dust-permits/src/cli.ts` still exists for package-level debugging from inside `apps/dust-permits`, but it is not the canonical ops path for multi-service runtime.
+## E2E Tests (in-container)
 
 ```bash
-cd apps/dust-permits
-bun src/cli.ts list
-```
+# Renew+pay E2E in permit-worker runtime (VNC-visible)
+docker exec desert-permit-worker sh -lc 'cd /app/apps/dust-permits && bun test tests/e2e/renew-and-pay.test.ts'
 
-Do not use legacy path references such as `apps/workers/permit-workers/` or SQLite-based permit lookup instructions.
+# Close E2E (dry run)
+docker exec desert-permit-worker sh -lc 'cd /app/apps/dust-permits && bun test tests/e2e/close.test.ts'
+```

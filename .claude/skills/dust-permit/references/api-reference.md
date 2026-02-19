@@ -1,30 +1,22 @@
 # Permit Worker API Reference
 
-Canonical permit operations are the permit-worker HTTP API plus the typed `PermitClient`.
+## CLI (Primary Interface)
+
+All permit operations use the CLI at `packages/permits/cli.ts`, which wraps `PermitClient`:
+
+```bash
+bun run permit <command> [args] [flags]
+```
+
+The CLI auto-defaults to `http://localhost:47822` (host port binding). See `bun run permit` for full usage.
 
 ## Base URLs
 
-- Host shell: `http://localhost:47822`
-- Container-to-container: `http://permit-worker:47822`
-
-## Canonical Client (Repository Code)
-
-```ts
-import { PermitClient } from "@permits/client";
-
-const client = new PermitClient();
-const permit = await client.getPermit("D0061391");
-```
-
-`PermitClient` lives in `packages/permits/src/client.ts` and matches the API contract in `packages/permits/src/types.ts`.
-
-## Health + Basic Checks
-
-```bash
-curl http://localhost:47822/health
-curl http://localhost:47822/api/permits
-curl http://localhost:47822/api/permits/D0061391
-```
+| Context | URL | When |
+|---------|-----|------|
+| Host shell / CLI | `http://localhost:47822` | CLI default, Claude Code, local dev |
+| Docker container | `http://permit-worker:47822` | App code via `PermitClient` default |
+| Override | `PERMIT_WORKER_URL` env var | Either context |
 
 ## Endpoint Contract
 
@@ -52,30 +44,6 @@ curl http://localhost:47822/api/permits/D0061391
 | `POST` | `/api/browser/clipboard/paste` | `{ text }` |
 | `POST` | `/api/browser/clipboard/copy` | none |
 
-## Common `curl` Operations
-
-```bash
-# Renew
-curl -X POST http://localhost:47822/api/permits/D0058823/renew \
-  -H 'Content-Type: application/json' \
-  -d '{"companyName":"Weis Builders Inc"}'
-
-# Revise (note: key is revisionType, not type)
-curl -X POST http://localhost:47822/api/permits/D0064070/revise \
-  -H 'Content-Type: application/json' \
-  -d '{"revisionType":"contact","notes":"Update contact phone"}'
-
-# Close
-curl -X POST http://localhost:47822/api/permits/D0056240/close \
-  -H 'Content-Type: application/json' \
-  -d '{"reason":"Project complete"}'
-
-# Scrape PDF
-curl -X POST http://localhost:47822/api/scrape/pdf \
-  -H 'Content-Type: application/json' \
-  -d '{"permitId":"D0061391"}'
-```
-
 ## Create Permit Notes
 
 `POST /api/permits/create` accepts `formDataPath` (path inside the permit-worker container), not inline `formData`.
@@ -90,5 +58,3 @@ curl -X POST http://localhost:47822/api/permits/create \
   -H 'Content-Type: application/json' \
   -d '{"flow":"existing-company","companyName":"Company Name","formDataPath":"/app/data/overrides/project-overrides.json"}'
 ```
-
-If you do not need overrides, omit `formDataPath` and use defaults.

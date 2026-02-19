@@ -15,31 +15,80 @@ docker exec supabase_db_desert-services-hub psql -U postgres -t -A -c \
   "SELECT id, company_name, status, expiration_date FROM dust_permits_filed_by_desert_services WHERE id = 'D0XXXXXX'"
 ```
 
-## Step 2: Call via `@permits/client`
+## Step 2: Use the permit CLI (`bun run permit`)
 
-ALL permit operations use the typed `PermitClient` from `@permits/client`. Always use `timeoutMs: 300000` — browser automation takes 2-3 minutes for mutations.
+All operations go through the typed `PermitClient` via the CLI at `packages/permits/cli.ts`. Browser automation takes 2-3 minutes for mutations — the CLI handles timeouts automatically.
 
-| Operation | Method | Args |
-|-----------|--------|------|
-| Renew | `c.renewPermit(id, { companyName })` | `companyName` from DB |
-| Close | `c.closePermit(id, { reason })` | `"completed"`, etc. |
-| Revise | `c.revisePermit(id, { revisionType, notes })` | types: `boundary`, `acreage`, `contact`, `schedule`, `bmp`, `other` |
-| Download PDF | `c.scrapePdf(id)` | returns `success`, `permitId`, `pdfPath` |
-| Create | `c.createPermit({ flow, companyName })` | `"existing-company"` or `"new-company"` |
+```bash
+# Close a permit
+bun run permit close D0XXXXXX --reason completed
 
-## Workflow: Renewal
+# Renew a permit (--company from DB lookup)
+bun run permit renew D0XXXXXX --company "Company Name"
+
+# Revise a permit (types: boundary | acreage | contact | schedule | bmp | other)
+bun run permit revise D0XXXXXX --type contact --notes "Update contact info"
+
+# Download PDF
+bun run permit scrape-pdf D0XXXXXX
+
+# Health check
+bun run permit health
+
+# List all permits
+bun run permit list
+
+# Get single permit
+bun run permit get D0XXXXXX
+
+# Delete a draft / all drafts
+bun run permit delete D0XXXXXX
+bun run permit delete-drafts
+
+# Sync
+bun run permit sync
+bun run permit sync-company
+
+# Browser session status
+bun run permit browser-status
+```
+
+## Workflow: Renewal (no payment)
 
 1. DB lookup → get `company_name`, verify `status` is Active, check `expiration_date`
-2. `c.renewPermit("D0XXXXXX", { companyName: "Company Name" })`
+2. `bun run permit renew D0XXXXXX --company "Company Name"`
 3. Response includes `applicationId` of the renewal draft
+
+## Workflow: Renew + Pay
+
+1. DB lookup → get `company_name`, verify `status` is Active
+2. First do a dry run: `bun run permit renew-and-pay D0XXXXXX --company "Company Name" --dry-run`
+3. Review the amounts in the dry-run response
+4. If approved: `bun run permit renew-and-pay D0XXXXXX --company "Company Name" --yes`
+5. The CLI will show a confirmation prompt (unless `--yes` is passed)
+
+**CRITICAL — Expedited Processing:**
+- Expedited is OFF by default. Never pass `--expedited` unless the user explicitly requests accelerated processing.
+- Expedited = "Accelerated Processing" checkbox on Maricopa portal. It costs significantly more.
+- Only add `--expedited` when the user says words like "expedited", "accelerated", "rush".
+
+## Workflow: Close
+
+1. DB lookup → verify `status` is Active
+2. `bun run permit close D0XXXXXX --reason completed`
 
 ## Workflow: New Permit
 
 1. Gather NOI document (required) — search emails in Postgres, download attachments
 2. Extract data: `cd packages/documents/pdf-analysis-py && uv run pdf-analysis noi /path/to/noi.pdf --ocr-fallback`
 3. Check company history in DB — determines `flow: "existing-company"` vs `"new-company"`
-4. Build overrides JSON if needed, copy into container: `docker cp file.json desert-permit-worker:/app/data/overrides/`
-5. `c.createPermit({ flow: "existing-company", companyName: "Name" })`
+4. Copy overrides into container if needed: `docker cp file.json desert-permit-worker:/app/data/overrides/`
+5. Create permit (currently via curl — CLI create command coming soon):
+   ```bash
+   curl -X POST http://localhost:47822/api/permits/create \
+     -H 'Content-Type: application/json' \
+     -d '{"flow":"existing-company","companyName":"Name","formDataPath":"/app/data/overrides/file.json"}'
+   ```
 
 ## Find Permit
 

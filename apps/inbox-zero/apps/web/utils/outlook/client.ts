@@ -135,11 +135,11 @@ export const getOutlookClientWithRefresh = async ({
   mailboxEmail?: string | null;
   logger: Logger;
 }): Promise<OutlookClient> => {
-  const appOnlyMailbox = getAppOnlyMailbox(mailboxEmail);
+  const appOnlyMailbox = getConfiguredAppOnlyMailbox(mailboxEmail);
 
   if (!refreshToken) {
-    if (isAppOnlyModeEnabled() && appOnlyMailbox) {
-      const appToken = await getAppOnlyAccessToken(logger);
+    if (isOutlookAppOnlyModeEnabled() && appOnlyMailbox) {
+      const appToken = await getMicrosoftAppOnlyAccessToken(logger);
       return createOutlookClient(appToken, logger, {
         appOnly: true,
         mailbox: appOnlyMailbox,
@@ -343,11 +343,11 @@ function rewriteMeEndpoint(path: string, mailboxPath: string): string {
   return path;
 }
 
-function isAppOnlyModeEnabled() {
+export function isOutlookAppOnlyModeEnabled() {
   return process.env.INBOXZERO_OUTLOOK_APP_ONLY === "true";
 }
 
-function getAppOnlyMailbox(mailboxEmail?: string | null) {
+export function getConfiguredAppOnlyMailbox(mailboxEmail?: string | null) {
   const explicitMailbox = mailboxEmail?.trim().toLowerCase();
   if (explicitMailbox) return explicitMailbox;
 
@@ -358,7 +358,7 @@ function getAppOnlyMailbox(mailboxEmail?: string | null) {
   return null;
 }
 
-async function getAppOnlyAccessToken(logger: Logger) {
+export async function getMicrosoftAppOnlyAccessToken(logger: Logger) {
   if (!env.MICROSOFT_CLIENT_ID || !env.MICROSOFT_CLIENT_SECRET) {
     throw new SafeError("Microsoft app credentials not configured");
   }

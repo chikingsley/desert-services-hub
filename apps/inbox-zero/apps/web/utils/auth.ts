@@ -670,7 +670,7 @@ async function ensureBypassAppOnlyMailbox({
   });
   const accountId = account.id;
 
-  await prisma.emailAccount.upsert({
+  const emailAccount = await prisma.emailAccount.upsert({
     where: { email: mailboxEmail },
     update: {
       userId,
@@ -684,6 +684,39 @@ async function ensureBypassAppOnlyMailbox({
       accountId,
       name: mailboxEmail,
       watchEmailsExpirationDate: new Date(0),
+    },
+    select: { id: true },
+  });
+
+  await ensureBypassAppOnlyDriveConnection({
+    emailAccountId: emailAccount.id,
+    mailboxEmail,
+  });
+}
+
+async function ensureBypassAppOnlyDriveConnection({
+  emailAccountId,
+  mailboxEmail,
+}: {
+  emailAccountId: string;
+  mailboxEmail: string;
+}) {
+  await prisma.driveConnection.upsert({
+    where: {
+      emailAccountId_provider: {
+        emailAccountId,
+        provider: "microsoft",
+      },
+    },
+    create: {
+      emailAccountId,
+      provider: "microsoft",
+      email: mailboxEmail,
+      isConnected: true,
+    },
+    update: {
+      email: mailboxEmail,
+      isConnected: true,
     },
   });
 }

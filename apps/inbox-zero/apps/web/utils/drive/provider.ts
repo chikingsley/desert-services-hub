@@ -11,6 +11,11 @@ import { MICROSOFT_DRIVE_SCOPES } from "@/utils/drive/scopes";
 import { SafeError } from "@/utils/error";
 import { env } from "@/env";
 import prisma from "@/utils/prisma";
+import {
+  getConfiguredAppOnlyMailbox,
+  getMicrosoftAppOnlyAccessToken,
+  isOutlookAppOnlyModeEnabled,
+} from "@/utils/outlook/client";
 
 type OAuthTokenResponse = {
   access_token?: string;
@@ -52,13 +57,24 @@ function createDriveProvider(
 export async function createDriveProviderWithRefresh(
   connection: Pick<
     DriveConnection,
-    "id" | "provider" | "accessToken" | "refreshToken" | "expiresAt"
+    "id" | "provider" | "email" | "accessToken" | "refreshToken" | "expiresAt"
   >,
   logger: Logger,
 ): Promise<DriveProvider> {
-  const { provider, accessToken, refreshToken, expiresAt } = connection;
+  const { provider, email, accessToken, refreshToken, expiresAt } = connection;
 
   if (!refreshToken) {
+    if (isMicrosoftProvider(provider) && isOutlookAppOnlyModeEnabled()) {
+      const appOnlyMailbox = getConfiguredAppOnlyMailbox(email);
+      if (appOnlyMailbox) {
+        const appToken = await getMicrosoftAppOnlyAccessToken(logger);
+        return new OneDriveProvider(appToken, logger, {
+          appOnly: true,
+          mailbox: appOnlyMailbox,
+        });
+      }
+    }
+
     throw new SafeError(
       "Unable to access your drive. Please reconnect your drive and try again.",
     );

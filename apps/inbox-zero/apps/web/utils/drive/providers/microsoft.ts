@@ -16,18 +16,30 @@ export class OneDriveProvider implements DriveProvider {
   private readonly accessToken: string;
   private readonly logger: Logger;
 
-  constructor(accessToken: string, logger?: Logger) {
+  constructor(
+    accessToken: string,
+    logger?: Logger,
+    options?: { appOnly?: boolean; mailbox?: string | null },
+  ) {
     this.accessToken = accessToken;
     this.logger = (logger || createScopedLogger("onedrive-provider")).with({
       provider: "microsoft",
     });
 
-    this.client = Client.init({
+    const rawClient = Client.init({
       authProvider: (done) => {
         done(null, this.accessToken);
       },
       defaultVersion: "v1.0",
     });
+
+    const mailbox = options?.mailbox?.trim().toLowerCase();
+    if (options?.appOnly && mailbox) {
+      this.client = createMailboxScopedClient(rawClient, mailbox);
+      return;
+    }
+
+    this.client = rawClient;
   }
 
   toJSON() {
@@ -236,4 +248,35 @@ export class OneDriveProvider implements DriveProvider {
         : undefined,
     };
   }
+}
+
+function createMailboxScopedClient(client: Client, mailbox: string): Client {
+  const mailboxPath = `/users/${encodeURIComponent(mailbox)}`;
+  const proxied = new Proxy(client, {
+    get(target, prop, receiver) {
+      if (prop !== "api") return Reflect.get(target, prop, receiver);
+
+      return (path: string) => target.api(rewriteMeEndpoint(path, mailboxPath));
+    },
+  });
+
+  return proxied as Client;
+}
+
+function rewriteMeEndpoint(path: string, mailboxPath: string): string {
+  const mePattern = /^\/me(?=\/|$)/;
+  if (mePattern.test(path)) {
+    return path.replace(mePattern, mailboxPath);
+  }
+
+  const absoluteV1MePattern =
+    /https:\/\/graph\.microsoft\.com\/v1\.0\/me(?=\/|$)/;
+  if (absoluteV1MePattern.test(path)) {
+    return path.replace(
+      absoluteV1MePattern,
+      `https://graph.microsoft.com/v1.0${mailboxPath}`,
+    );
+  }
+
+  return path;
 }

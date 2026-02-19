@@ -1,0 +1,50 @@
+{
+  "name": "inbox-zero",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "turbo build --filter=./apps/web",
+    "dev": "turbo dev --filter=./apps/web",
+    "test": "turbo run test --filter=./apps/web",
+    "lint": "turbo lint",
+    "postinstall": "echo 'Skipping marketing clone in internal fork'",
+    "ncu": "ncu -u -ws",
+    "check": "ultracite check",
+    "fix": "ultracite fix",
+    "setup": "tsx packages/cli/src/main.ts setup",
+    "setup-aws": "tsx packages/cli/src/main.ts setup-aws",
+    "setup-terraform": "tsx packages/cli/src/main.ts setup-terraform",
+    "start:cli": "tsx packages/cli/src/main.ts start",
+    "docker:local:build": "./docker/scripts/publish-ghcr.sh --local",
+    "docker:local:push": "./docker/scripts/publish-ghcr.sh",
+    "docker:local:run": "./docker/scripts/run-local.sh"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.4.2",
+    "@clack/prompts": "1.0.0",
+    "@turbo/gen": "2.8.3",
+    "commander": "14.0.3",
+    "lint-staged": "16.2.7",
+    "prettier": "3.6.2",
+    "tsconfig-paths": "^4.2.0",
+    "tsx": "4.21.0",
+    "turbo": "2.8.3",
+    "ultracite": "7.1.5"
+  },
+  "packageManager": "bun@1.2.22",
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx,json,jsonc,css,scss,md,mdx}": [
+      "ultracite fix"
+    ]
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "overrides": {
+    "@types/react": "19.0.10",
+    "@types/react-dom": "19.0.4"
+  }
+}

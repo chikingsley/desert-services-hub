@@ -1,0 +1,654 @@
+import {
+  APICallError,
+  type ModelMessage,
+  type Tool,
+  ToolLoopAgent,
+  type JSONValue,
+  generateObject,
+  generateText,
+  RetryError,
+  streamText,
+  smoothStream,
+  stepCountIs,
+  type StreamTextOnFinishCallback,
+  type StreamTextOnStepFinishCallback,
+  NoObjectGeneratedError,
+  TypeValidationError,
+} from "ai";
+import { jsonrepair } from "jsonrepair";
+import { saveAiUsage } from "@/utils/usage";
+import type { EmailAccountWithAI, UserAIFields } from "@/utils/llms/types";
+import {
+  addUserErrorMessageWithNotification,
+  ErrorType,
+} from "@/utils/error-messages";
+import {
+  captureException,
+  isAnthropicInsufficientBalanceError,
+  isIncorrectOpenAIAPIKeyError,
+  isInsufficientCreditsError,
+  isInvalidAIModelError,
+  isOpenAIAPIKeyDeactivatedError,
+  isAiQuotaExceededError,
+  markAsHandledUserKeyError,
+  SafeError,
+} from "@/utils/error";
+import {
+  getModel,
+  type ModelType,
+  type ResolvedModel,
+  type SelectModel,
+} from "@/utils/llms/model";
+import { createScopedLogger } from "@/utils/logger";
+import {
+  extractLLMErrorInfo,
+  isTransientNetworkError,
+  withNetworkRetry,
+  withLLMRetry,
+} from "./retry";
+
+const logger = createScopedLogger("llms");
+
+const MAX_LOG_LENGTH = 200;
+
+type LLMProviderOptions = Record<string, Record<string, JSONValue>>;
+
+const commonOptions: {
+  experimental_telemetry: { isEnabled: boolean };
+  headers?: Record<string, string>;
+  providerOptions?: LLMProviderOptions;
+} = { experimental_telemetry: { isEnabled: true } };
+
+export function createGenerateText({
+  emailAccount,
+  label,
+  modelOptions,
+}: {
+  emailAccount: Pick<EmailAccountWithAI, "email" | "id" | "userId">;
+  label: string;
+  modelOptions: ReturnType<typeof getModel>;
+}): typeof generateText {
+  return async (...args) => {
+    const [options, ...restArgs] = args;
+    const modelCandidates = getModelCandidates(modelOptions);
+
+    const generate = async (candidate: ResolvedModel) => {
+      const systemText =
+        typeof options.system === "string" ? options.system : undefined;
+
+      logger.trace("Generating text", {
+        label,
+        system: systemText?.slice(0, MAX_LOG_LENGTH),
+        prompt: options.prompt?.slice(0, MAX_LOG_LENGTH),
+      });
+
+      const result = await generateText(
+        {
+          ...options,
+          ...commonOptions,
+          providerOptions: {
+            ...commonOptions.providerOptions,
+            ...candidate.providerOptions,
+            ...options.providerOptions,
+          },
+          model: candidate.model,
+        },
+        ...restArgs,
+      );
+
+      if (result.usage) {
+        await saveAiUsage({
+          email: emailAccount.email,
+          usage: result.usage,
+          provider: candidate.provider,
+          model: candidate.modelName,
+          label,
+        });
+      }
+
+      if (options.tools) {
+        const toolCallInput = result.toolCalls?.[0]?.input;
+        logger.trace("Result", {
+          label,
+          result: toolCallInput,
+        });
+      }
+
+      return result;
+    };
+
+    for (let index = 0; index < modelCandidates.length; index++) {
+      const candidate = modelCandidates[index];
+      const nextCandidate = modelCandidates[index + 1];
+
+      try {
+        return await withLLMRetry(
+          () => withNetworkRetry(() => generate(candidate), { label }),
+          { label },
+        );
+      } catch (error) {
+        if (nextCandidate && shouldFallbackToNextModel(error)) {
+          logger.warn("LLM call failed, trying fallback model", {
+            label,
+            provider: candidate.provider,
+            model: candidate.modelName,
+            fallbackProvider: nextCandidate.provider,
+            fallbackModel: nextCandidate.modelName,
+            error,
+          });
+          continue;
+        }
+
+        await handleError(
+          error,
+          emailAccount.userId,
+          emailAccount.email,
+          emailAccount.id,
+          label,
+          candidate.modelName,
+          modelOptions.hasUserApiKey,
+        );
+        throw error;
+      }
+    }
+
+    throw new Error("No models available for generation");
+  };
+}
+
+export function createGenerateObject({
+  emailAccount,
+  label,
+  modelOptions,
+}: {
+  emailAccount: Pick<EmailAccountWithAI, "email" | "id" | "userId">;
+  label: string;
+  modelOptions: ReturnType<typeof getModel>;
+}): typeof generateObject {
+  return async (...args) => {
+    const [options, ...restArgs] = args;
+    const modelCandidates = getModelCandidates(modelOptions);
+
+    const generate = async (candidate: ResolvedModel) => {
+      const systemText =
+        typeof options.system === "string" ? options.system : undefined;
+
+      logger.trace("Generating object", {
+        label,
+        system: systemText?.slice(0, MAX_LOG_LENGTH),
+        prompt: options.prompt?.slice(0, MAX_LOG_LENGTH),
+      });
+
+      if (
+        !systemText?.includes("JSON") &&
+        typeof options.prompt === "string" &&
+        !options.prompt?.includes("JSON")
+      ) {
+        logger.warn("Missing JSON in prompt", { label });
+      }
+
+      const result = await generateObject(
+        {
+          experimental_repairText: async ({ text }) => {
+            logger.info("Repairing text", { label });
+            const fixed = jsonrepair(text);
+            return fixed;
+          },
+          ...options,
+          ...commonOptions,
+          providerOptions: {
+            ...commonOptions.providerOptions,
+            ...candidate.providerOptions,
+            ...options.providerOptions,
+          },
+          model: candidate.model,
+        },
+        ...restArgs,
+      );
+
+      if (result.usage) {
+        await saveAiUsage({
+          email: emailAccount.email,
+          usage: result.usage,
+          provider: candidate.provider,
+          model: candidate.modelName,
+          label,
+        });
+      }
+
+      logger.trace("Generated object", {
+        label,
+        result: result.object,
+      });
+
+      return result;
+    };
+
+    for (let index = 0; index < modelCandidates.length; index++) {
+      const candidate = modelCandidates[index];
+      const nextCandidate = modelCandidates[index + 1];
+
+      try {
+        return await withLLMRetry(
+          () =>
+            withNetworkRetry(() => generate(candidate), {
+              label,
+              shouldRetry: (error) =>
+                NoObjectGeneratedError.isInstance(error) ||
+                TypeValidationError.isInstance(error),
+            }),
+          { label },
+        );
+      } catch (error) {
+        if (nextCandidate && shouldFallbackToNextModel(error)) {
+          logger.warn("LLM object generation failed, trying fallback model", {
+            label,
+            provider: candidate.provider,
+            model: candidate.modelName,
+            fallbackProvider: nextCandidate.provider,
+            fallbackModel: nextCandidate.modelName,
+            error,
+          });
+          continue;
+        }
+
+        await handleError(
+          error,
+          emailAccount.userId,
+          emailAccount.email,
+          emailAccount.id,
+          label,
+          candidate.modelName,
+          modelOptions.hasUserApiKey,
+        );
+        throw error;
+      }
+    }
+
+    throw new Error("No models available for generation");
+  };
+}
+
+export async function chatCompletionStream({
+  userAi,
+  modelType,
+  messages,
+  tools,
+  maxSteps,
+  userEmail,
+  usageLabel: label,
+  providerOptions: requestProviderOptions,
+  onFinish,
+  onStepFinish,
+}: {
+  userAi: UserAIFields;
+  modelType?: ModelType;
+  messages: ModelMessage[];
+  tools?: Record<string, Tool>;
+  maxSteps?: number;
+  userEmail: string;
+  usageLabel: string;
+  providerOptions?: LLMProviderOptions;
+  onFinish?: StreamTextOnFinishCallback<Record<string, Tool>>;
+  onStepFinish?: StreamTextOnStepFinishCallback<Record<string, Tool>>;
+}) {
+  const modelOptions = getModel(userAi, modelType);
+  const modelCandidates = getModelCandidates(modelOptions);
+
+  for (let index = 0; index < modelCandidates.length; index++) {
+    const candidate = modelCandidates[index];
+    const nextCandidate = modelCandidates[index + 1];
+    const mergedProviderOptions = mergeProviderOptions(
+      commonOptions.providerOptions,
+      candidate.providerOptions as LLMProviderOptions | undefined,
+      requestProviderOptions,
+    );
+
+    try {
+      return streamText({
+        model: candidate.model,
+        messages,
+        tools,
+        stopWhen: maxSteps ? stepCountIs(maxSteps) : undefined,
+        ...commonOptions,
+        providerOptions: {
+          ...mergedProviderOptions,
+        },
+        experimental_transform: smoothStream({ chunking: "word" }),
+        onStepFinish,
+        onFinish: async (result) => {
+          const usagePromise = saveAiUsage({
+            email: userEmail,
+            provider: candidate.provider,
+            model: candidate.modelName,
+            usage: result.usage,
+            label,
+          });
+
+          const finishPromise = onFinish?.(result);
+
+          try {
+            await Promise.all([usagePromise, finishPromise]);
+          } catch (error) {
+            logger.error("Error in onFinish callback", {
+              label,
+              userEmail,
+              error,
+            });
+            logger.trace("Result", { result });
+            captureException(error, {
+              userEmail,
+              extra: { label },
+            });
+          }
+        },
+        onError: (error) => {
+          logger.error("Error in chat completion stream", {
+            label,
+            userEmail,
+            error,
+          });
+          captureException(error, {
+            userEmail,
+            extra: { label },
+          });
+        },
+      });
+    } catch (error) {
+      if (nextCandidate && shouldFallbackToNextModel(error)) {
+        logger.warn("Chat completion failed, trying fallback model", {
+          label,
+          provider: candidate.provider,
+          model: candidate.modelName,
+          fallbackProvider: nextCandidate.provider,
+          fallbackModel: nextCandidate.modelName,
+          error,
+        });
+        continue;
+      }
+
+      logger.error("Error in chat completion stream", {
+        label,
+        userEmail,
+        error,
+      });
+      captureException(error, {
+        userEmail,
+        extra: { label },
+      });
+      throw error;
+    }
+  }
+
+  throw new Error("No models available for chat completion stream");
+}
+
+export async function toolCallAgentStream({
+  userAi,
+  modelType,
+  messages,
+  tools,
+  maxSteps,
+  userEmail,
+  usageLabel: label,
+  providerOptions: requestProviderOptions,
+  onFinish,
+  onStepFinish,
+}: {
+  userAi: UserAIFields;
+  modelType?: ModelType;
+  messages: ModelMessage[];
+  tools?: Record<string, Tool>;
+  maxSteps?: number;
+  userEmail: string;
+  usageLabel: string;
+  providerOptions?: LLMProviderOptions;
+  onFinish?: StreamTextOnFinishCallback<Record<string, Tool>>;
+  onStepFinish?: StreamTextOnStepFinishCallback<Record<string, Tool>>;
+}) {
+  const modelOptions = getModel(userAi, modelType);
+  const modelCandidates = getModelCandidates(modelOptions);
+
+  for (let index = 0; index < modelCandidates.length; index++) {
+    const candidate = modelCandidates[index];
+    const nextCandidate = modelCandidates[index + 1];
+    const mergedProviderOptions = mergeProviderOptions(
+      commonOptions.providerOptions,
+      candidate.providerOptions as LLMProviderOptions | undefined,
+      requestProviderOptions,
+    );
+
+    const agent = new ToolLoopAgent({
+      model: candidate.model,
+      tools,
+      stopWhen: maxSteps ? stepCountIs(maxSteps) : undefined,
+      ...commonOptions,
+      providerOptions: mergedProviderOptions,
+      onFinish: async (result) => {
+        const usagePromise = saveAiUsage({
+          email: userEmail,
+          provider: candidate.provider,
+          model: candidate.modelName,
+          usage: result.totalUsage,
+          label,
+        });
+
+        const finishPromise = onFinish?.(
+          result as Parameters<
+            NonNullable<StreamTextOnFinishCallback<Record<string, Tool>>>
+          >[0],
+        );
+
+        try {
+          await Promise.all([usagePromise, finishPromise]);
+        } catch (error) {
+          logger.error("Error in onFinish callback", {
+            label,
+            userEmail,
+            error,
+          });
+          logger.trace("Result", { result });
+          captureException(error, {
+            userEmail,
+            extra: { label },
+          });
+        }
+      },
+    });
+
+    try {
+      return await agent.stream({
+        messages,
+        experimental_transform: smoothStream({ chunking: "word" }),
+        onStepFinish: onStepFinish
+          ? async (stepResult) => {
+              await onStepFinish(
+                stepResult as Parameters<
+                  NonNullable<
+                    StreamTextOnStepFinishCallback<Record<string, Tool>>
+                  >
+                >[0],
+              );
+            }
+          : undefined,
+      });
+    } catch (error) {
+      if (nextCandidate && shouldFallbackToNextModel(error)) {
+        logger.warn("Tool-call stream failed, trying fallback model", {
+          label,
+          provider: candidate.provider,
+          model: candidate.modelName,
+          fallbackProvider: nextCandidate.provider,
+          fallbackModel: nextCandidate.modelName,
+          error,
+        });
+        continue;
+      }
+
+      logger.error("Error in chat completion stream", {
+        label,
+        userEmail,
+        error,
+      });
+      captureException(error, {
+        userEmail,
+        extra: { label },
+      });
+      throw error;
+    }
+  }
+
+  throw new Error("No models available for tool-call stream");
+}
+
+async function handleError(
+  error: unknown,
+  userId: string,
+  userEmail: string,
+  emailAccountId: string,
+  label: string,
+  modelName: string,
+  hasUserApiKey: boolean,
+) {
+  const isUserKeyInsufficientCredits =
+    hasUserApiKey &&
+    APICallError.isInstance(error) &&
+    isInsufficientCreditsError(error);
+
+  if (isUserKeyInsufficientCredits) {
+    logger.warn("User API key has insufficient credits", {
+      userId,
+      emailAccountId,
+      label,
+      modelName,
+    });
+  } else {
+    logger.error("Error in LLM call", {
+      error,
+      userId,
+      userEmail,
+      emailAccountId,
+      label,
+      modelName,
+    });
+  }
+
+  if (RetryError.isInstance(error) && isAiQuotaExceededError(error)) {
+    return await addUserErrorMessageWithNotification({
+      userId,
+      userEmail,
+      emailAccountId,
+      errorType: ErrorType.AI_QUOTA_ERROR,
+      errorMessage:
+        "Your AI provider has rejected requests due to rate limits or quota. Please check your provider account if this persists.",
+      logger,
+    });
+  }
+
+  if (APICallError.isInstance(error)) {
+    if (isIncorrectOpenAIAPIKeyError(error)) {
+      return await addUserErrorMessageWithNotification({
+        userId,
+        userEmail,
+        emailAccountId,
+        errorType: ErrorType.INCORRECT_OPENAI_API_KEY,
+        errorMessage:
+          "Your OpenAI API key is invalid. Please update it in your settings.",
+        logger,
+      });
+    }
+
+    if (isInvalidAIModelError(error)) {
+      await addUserErrorMessageWithNotification({
+        userId,
+        userEmail,
+        emailAccountId,
+        errorType: ErrorType.INVALID_AI_MODEL,
+        errorMessage:
+          "The AI model you specified does not exist. Please check your settings.",
+        logger,
+      });
+      throw new SafeError(
+        "The AI model you specified does not exist. Please update your AI settings.",
+      );
+    }
+
+    if (isOpenAIAPIKeyDeactivatedError(error)) {
+      return await addUserErrorMessageWithNotification({
+        userId,
+        userEmail,
+        emailAccountId,
+        errorType: ErrorType.OPENAI_API_KEY_DEACTIVATED,
+        errorMessage:
+          "Your OpenAI API key has been deactivated. Please update it in your settings.",
+        logger,
+      });
+    }
+
+    if (isAnthropicInsufficientBalanceError(error)) {
+      return await addUserErrorMessageWithNotification({
+        userId,
+        userEmail,
+        emailAccountId,
+        errorType: ErrorType.ANTHROPIC_INSUFFICIENT_BALANCE,
+        errorMessage:
+          "Your Anthropic account has insufficient credits. Please add credits or update your settings.",
+        logger,
+      });
+    }
+
+    if (isInsufficientCreditsError(error) && hasUserApiKey) {
+      markAsHandledUserKeyError(error);
+      return await addUserErrorMessageWithNotification({
+        userId,
+        userEmail,
+        emailAccountId,
+        errorType: ErrorType.INSUFFICIENT_CREDITS,
+        errorMessage:
+          "Your AI provider account has insufficient credits. Please add credits or update your API key in settings.",
+        logger,
+      });
+    }
+  }
+}
+
+function getModelCandidates(modelOptions: SelectModel): ResolvedModel[] {
+  const primaryModel: ResolvedModel = {
+    provider: modelOptions.provider,
+    modelName: modelOptions.modelName,
+    model: modelOptions.model,
+    providerOptions: modelOptions.providerOptions,
+  };
+
+  return [primaryModel, ...modelOptions.fallbackModels];
+}
+
+function shouldFallbackToNextModel(error: unknown): boolean {
+  if (RetryError.isInstance(error) && isAiQuotaExceededError(error)) {
+    return true;
+  }
+
+  const llmErrorInfo = extractLLMErrorInfo(error);
+  if (llmErrorInfo.retryable) return true;
+
+  return isTransientNetworkError(error);
+}
+
+function mergeProviderOptions(
+  ...providerOptionsList: (LLMProviderOptions | undefined)[]
+) {
+  const merged: LLMProviderOptions = {};
+
+  for (const options of providerOptionsList) {
+    if (!options) continue;
+
+    for (const [providerKey, value] of Object.entries(options)) {
+      merged[providerKey] = {
+        ...(merged[providerKey] || {}),
+        ...value,
+      };
+    }
+  }
+
+  return merged;
+}

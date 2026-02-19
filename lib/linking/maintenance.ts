@@ -67,8 +67,8 @@ export async function runConversationBackfill(dryRun = false): Promise<number> {
          SELECT estimate_id, email_id FROM estimate_emails
        ),
        inserted AS (
-         INSERT INTO estimate_emails (estimate_id, email_id)
-         SELECT estimate_id, email_id
+         INSERT INTO estimate_emails (estimate_id, email_id, match_type)
+         SELECT estimate_id, email_id, 'conversation_backfill'
          FROM missing_links
          ON CONFLICT DO NOTHING
          RETURNING 1
@@ -133,8 +133,7 @@ export async function runDirectProjectStamp(dryRun = false): Promise<number> {
        ),
        updated AS (
          UPDATE emails
-         SET project_id = tu.project_id,
-             updated_at = NOW()
+         SET project_id = tu.project_id
          FROM to_update tu
          WHERE emails.id = tu.id AND emails.project_id IS NULL
          RETURNING 1
@@ -195,8 +194,7 @@ export async function runProjectIdBackfill(dryRun = false): Promise<number> {
        ),
        updated AS (
          UPDATE emails
-         SET project_id = tu.project_id,
-             updated_at = NOW()
+         SET project_id = tu.project_id
          FROM to_update tu
          WHERE emails.id = tu.email_id AND emails.project_id IS NULL
          RETURNING 1

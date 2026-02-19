@@ -1,8 +1,8 @@
-import { runContractWonBridge as runCore } from "@email/contracts/contract-won-bridge";
+import { runContractWonBridge as runCore } from "@contract/contract-won-bridge";
 import type {
   ContractDocExtractPayload,
   ContractWonBridgeResult,
-} from "@email/contracts/types";
+} from "@contract/types";
 import { enqueueJob } from "./queue";
 
 export async function runContractWonBridge(): Promise<ContractWonBridgeResult> {

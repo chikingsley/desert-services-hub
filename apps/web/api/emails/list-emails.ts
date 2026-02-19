@@ -289,25 +289,27 @@ async function addSearchCondition(
 
   const hasSearchDocument = await supportsSearchDocument();
   if (hasSearchDocument) {
-    conditions.push("search_document @@ websearch_to_tsquery('english', ?)");
+    const p = values.length + 1;
+    conditions.push(`search_document @@ websearch_to_tsquery('english', $${p})`);
     values.push(search);
     return;
   }
 
   const like = `%${search}%`;
+  const p = values.length + 1;
   conditions.push(`(
-    coalesce(subject, '') ILIKE ?
-    OR coalesce(from_name, '') ILIKE ?
-    OR coalesce(from_email, '') ILIKE ?
-    OR coalesce(body_preview, '') ILIKE ?
-    OR coalesce(project_name, '') ILIKE ?
-    OR coalesce(contractor_name, '') ILIKE ?
-    OR coalesce(attachment_names, '') ILIKE ?
-    OR coalesce(real_sender_name, '') ILIKE ?
-    OR coalesce(real_sender_email, '') ILIKE ?
-    OR coalesce(original_sender_email, '') ILIKE ?
-    OR coalesce(original_sender_domain, '') ILIKE ?
-    OR coalesce(real_sender_company, '') ILIKE ?
+    coalesce(subject, '') ILIKE $${p}
+    OR coalesce(from_name, '') ILIKE $${p + 1}
+    OR coalesce(from_email, '') ILIKE $${p + 2}
+    OR coalesce(body_preview, '') ILIKE $${p + 3}
+    OR coalesce(project_name, '') ILIKE $${p + 4}
+    OR coalesce(contractor_name, '') ILIKE $${p + 5}
+    OR coalesce(attachment_names, '') ILIKE $${p + 6}
+    OR coalesce(real_sender_name, '') ILIKE $${p + 7}
+    OR coalesce(real_sender_email, '') ILIKE $${p + 8}
+    OR coalesce(original_sender_email, '') ILIKE $${p + 9}
+    OR coalesce(original_sender_domain, '') ILIKE $${p + 10}
+    OR coalesce(real_sender_company, '') ILIKE $${p + 11}
   )`);
   values.push(
     like,
@@ -348,13 +350,14 @@ function addFromCondition(
     return;
   }
 
+  const p = values.length + 1;
   if (from.includes("@")) {
-    conditions.push("from_email ILIKE ?");
+    conditions.push(`from_email ILIKE $${p}`);
     values.push(`%${from}%`);
     return;
   }
 
-  conditions.push("from_domain = ?");
+  conditions.push(`from_domain = $${p}`);
   values.push(from);
 }
 
@@ -367,7 +370,8 @@ function addClassificationCondition(
     return;
   }
 
-  conditions.push("classification = ?");
+  const p = values.length + 1;
+  conditions.push(`classification = $${p}`);
   values.push(classification);
 }
 
@@ -380,11 +384,14 @@ function addSenderCondition(
     return;
   }
 
-  const placeholders = senders.map(() => "?").join(", ");
+  const offset = values.length;
+  const placeholders1 = senders.map((_, i) => `$${offset + i + 1}`).join(", ");
+  const placeholders2 = senders.map((_, i) => `$${offset + senders.length + i + 1}`).join(", ");
+  const placeholders3 = senders.map((_, i) => `$${offset + senders.length * 2 + i + 1}`).join(", ");
   conditions.push(`(
-    lower(from_email) IN (${placeholders})
-    OR lower(real_sender_email) IN (${placeholders})
-    OR lower(original_sender_email) IN (${placeholders})
+    lower(from_email) IN (${placeholders1})
+    OR lower(real_sender_email) IN (${placeholders2})
+    OR lower(original_sender_email) IN (${placeholders3})
   )`);
   values.push(...senders, ...senders, ...senders);
 }
@@ -398,7 +405,8 @@ function addExcludeClassificationsCondition(
     return;
   }
 
-  const placeholders = excludeClassifications.map(() => "?").join(", ");
+  const offset = values.length;
+  const placeholders = excludeClassifications.map((_, i) => `$${offset + i + 1}`).join(", ");
   conditions.push(
     `(classification IS NULL OR classification NOT IN (${placeholders}))`
   );
@@ -438,7 +446,9 @@ async function buildWhereClause(
   };
 }
 
-function buildDedupQuery(where: string): string {
+function buildDedupQuery(where: string, paramCount: number): string {
+  const limitParam = `$${paramCount + 1}`;
+  const offsetParam = `$${paramCount + 2}`;
   return `
     WITH base AS (
       SELECT
@@ -469,7 +479,7 @@ function buildDedupQuery(where: string): string {
     SELECT *, recipient_count, total
     FROM deduped
     ORDER BY received_at DESC
-    LIMIT ? OFFSET ?
+    LIMIT ${limitParam} OFFSET ${offsetParam}
   `;
 }
 
@@ -483,7 +493,7 @@ export async function listEmails(req: Request): Promise<Response> {
     }
 
     const { where, values } = await buildWhereClause(params);
-    const query = buildDedupQuery(where);
+    const query = buildDedupQuery(where, values.length);
 
     const [emails, statsResult] = await Promise.all([
       db.query(query).all(...values, params.limit, params.offset) as Promise<

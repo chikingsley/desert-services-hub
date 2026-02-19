@@ -10,4 +10,4 @@ To run:
 bun run dev
 ```
 
-Then visit http://localhost:3010/ to view email previews.
+Then visit <http://localhost:3010/> to view email previews.

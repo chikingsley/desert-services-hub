@@ -16,7 +16,7 @@ export async function hydrateTrackedProjectsCommand(
     );
   }
 
-  const limitSql = options.maxProjects > 0 ? "LIMIT ?" : "";
+  const limitSql = options.maxProjects > 0 ? "LIMIT $1" : "";
   const rows = await db
     .query<{ project_id: number; project_name: string }>(
       `SELECT p.id AS project_id, p.name AS project_name

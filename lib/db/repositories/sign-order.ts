@@ -191,19 +191,20 @@ export async function listSignOrders(options?: {
 }): Promise<SignOrderRecord[]> {
   const conditions: string[] = [];
   const params: unknown[] = [];
+  let paramIndex = 1;
 
   if (typeof options?.projectId === "number") {
-    conditions.push("project_id = ?");
+    conditions.push(`project_id = $${paramIndex++}`);
     params.push(options.projectId);
   }
 
   if (options?.projectName) {
-    conditions.push("project_name ILIKE ?");
+    conditions.push(`project_name ILIKE $${paramIndex++}`);
     params.push(`%${options.projectName}%`);
   }
 
   if (options?.status) {
-    conditions.push("status = ?");
+    conditions.push(`status = $${paramIndex++}`);
     params.push(options.status);
   }
 
@@ -235,7 +236,7 @@ export async function listSignOrders(options?: {
       FROM sign_orders
       ${where}
       ORDER BY created_at DESC
-      LIMIT ?`
+      LIMIT $${paramIndex}`
     )
     .all(...params, Math.max(1, Math.min(500, limit)));
 

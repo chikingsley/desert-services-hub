@@ -34,6 +34,12 @@
 !apps/dust-permits/
 !apps/aqdata-worker/
 
+# BC worker (BuildingConnected auth)
+!apps/bc-worker/
+
+# Shared infrastructure (VNC startup scripts, etc.)
+!infra/
+
 # Shared libraries
 !lib/
 

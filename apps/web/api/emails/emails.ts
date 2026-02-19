@@ -283,24 +283,21 @@ export async function setDomainRule(req: Request): Promise<Response> {
     );
 
     // Apply to existing emails: exact domain + subdomains
-    const domainCondition = "(from_domain = ? OR from_domain LIKE ?)";
-    const domainParams = [domain, `%.${domain}`];
-
     if (isExcluded) {
       await db
         .query(
-          `UPDATE emails SET is_excluded = 1 WHERE is_excluded = 0 AND ${domainCondition}`
+          `UPDATE emails SET is_excluded = 1 WHERE is_excluded = 0 AND (from_domain = $1 OR from_domain LIKE $2)`
         )
-        .run(...domainParams);
+        .run(domain, `%.${domain}`);
     }
 
     if (classification) {
       await db
         .query(
           `UPDATE emails SET classification = $1, classification_method = 'domain_rule'
-           WHERE ${domainCondition}`
+           WHERE (from_domain = $2 OR from_domain LIKE $3)`
         )
-        .run(classification, ...domainParams);
+        .run(classification, domain, `%.${domain}`);
     }
 
     console.log(

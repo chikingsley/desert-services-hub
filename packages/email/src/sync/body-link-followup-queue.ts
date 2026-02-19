@@ -1,5 +1,5 @@
 import { db } from "@lib/db/client";
-import type { BodyLinkSource } from "./body-link-attachments";
+import type { BodyLinkSource } from "@lib/downloads/types";
 
 export interface BodyLinkManualFollowupPayload {
   emailId: number;

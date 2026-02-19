@@ -6,10 +6,8 @@ import {
   recordBodyLinkScanResult,
 } from "@lib/db/repositories/email";
 import type { BodyLinkScanStatus } from "@lib/db/types";
-import {
-  type BodyLinkDownloadFailure,
-  downloadBodyLinkAttachmentsWithReport,
-} from "./body-link-attachments";
+import type { BodyLinkDownloadFailure } from "@lib/downloads/types";
+import { downloadBodyLinkAttachmentsWithReport } from "./body-link-attachments";
 import {
   type BodyLinkManualFollowupPayload,
   enqueueBodyLinkManualFollowup,

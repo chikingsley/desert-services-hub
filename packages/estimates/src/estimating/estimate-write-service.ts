@@ -223,29 +223,36 @@ export async function updateEstimate(
 
   const updates: string[] = [];
   const values: (string | number | null)[] = [];
+  let paramIndex = 0;
 
   if (input.job_name !== undefined) {
-    updates.push("job_name = ?");
+    paramIndex++;
+    updates.push(`job_name = $${paramIndex}`);
     values.push(input.job_name);
   }
   if (input.job_address !== undefined) {
-    updates.push("job_address = ?");
+    paramIndex++;
+    updates.push(`job_address = $${paramIndex}`);
     values.push(input.job_address || null);
   }
   if (input.client_name !== undefined) {
-    updates.push("contractor = ?");
+    paramIndex++;
+    updates.push(`contractor = $${paramIndex}`);
     values.push(input.client_name || null);
   }
   if (input.notes !== undefined) {
-    updates.push("notes = ?");
+    paramIndex++;
+    updates.push(`notes = $${paramIndex}`);
     values.push(input.notes || null);
   }
   if (input.status !== undefined) {
-    updates.push("status = ?");
+    paramIndex++;
+    updates.push(`status = $${paramIndex}`);
     values.push(input.status);
   }
   if (input.is_locked !== undefined) {
-    updates.push("is_locked = ?");
+    paramIndex++;
+    updates.push(`is_locked = $${paramIndex}`);
     values.push(input.is_locked ? 1 : 0);
   }
 
@@ -254,10 +261,11 @@ export async function updateEstimate(
   }
 
   updates.push("updated_at = now()");
+  paramIndex++;
   values.push(id);
 
   await db
-    .query(`UPDATE estimates SET ${updates.join(", ")} WHERE id = $1`)
+    .query(`UPDATE estimates SET ${updates.join(", ")} WHERE id = $${paramIndex}`)
     .run(...values);
 
   return await getEstimate(id);

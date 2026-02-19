@@ -88,7 +88,8 @@ export async function handleDuplicateEstimate(
           const newSectionId = crypto.randomUUID();
           sectionIdMap.set(section.id, newSectionId);
 
-          sectionPlaceholders.push("(?, ?, ?, ?, ?, ?)");
+          const offset = sectionValues.length;
+          sectionPlaceholders.push(`($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4}, $${offset + 5}, $${offset + 6})`);
           sectionValues.push(
             newSectionId,
             newVersionId,
@@ -115,7 +116,8 @@ export async function handleDuplicateEstimate(
             ? (sectionIdMap.get(item.section_id) ?? null)
             : null;
 
-          itemPlaceholders.push("(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+          const offset = itemValues.length;
+          itemPlaceholders.push(`($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4}, $${offset + 5}, $${offset + 6}, $${offset + 7}, $${offset + 8}, $${offset + 9}, $${offset + 10}, $${offset + 11})`);
           itemValues.push(
             newLineItemId,
             newVersionId,

@@ -1,17 +1,11 @@
-import {
-  assertSendEnabled,
-  assertWritableMailbox,
-  getWriteClient,
-} from "@email/commands/config";
+import { assertSendEnabled, getAppClient } from "@email/commands/config";
 
 export async function sendDraftCommand(
   draftId: string,
   userId?: string
 ): Promise<void> {
   assertSendEnabled("send-draft");
-  assertWritableMailbox(userId, "send-draft");
-  const resolvedUserId = userId as string;
-  const client = await getWriteClient(resolvedUserId);
-  await client.sendDraft(draftId, resolvedUserId);
+  const client = getAppClient();
+  await client.sendDraft(draftId, userId);
   console.log(`Done - Draft sent successfully (ID: ${draftId})`);
 }

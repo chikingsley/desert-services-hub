@@ -42,31 +42,32 @@ export async function updateTakeoff(req: BunRequest): Promise<Response> {
   const values: (string | number | null)[] = [];
 
   if (body.name !== undefined) {
-    updates.push("name = ?");
     values.push(body.name as string);
+    updates.push(`name = $${values.length}`);
   }
   if (body.pdf_url !== undefined) {
-    updates.push("pdf_url = ?");
     values.push(body.pdf_url as string);
+    updates.push(`pdf_url = $${values.length}`);
   }
   if (body.annotations !== undefined) {
-    updates.push("annotations = ?");
     values.push(JSON.stringify(body.annotations));
+    updates.push(`annotations = $${values.length}`);
   }
   if (body.page_scales !== undefined) {
-    updates.push("page_scales = ?");
     values.push(JSON.stringify(body.page_scales));
+    updates.push(`page_scales = $${values.length}`);
   }
   if (body.status !== undefined) {
-    updates.push("status = ?");
     values.push(body.status as string);
+    updates.push(`status = $${values.length}`);
   }
 
   updates.push("updated_at = now()");
   values.push(id);
+  const idParam = `$${values.length}`;
 
   await db
-    .query(`UPDATE takeoffs SET ${updates.join(", ")} WHERE id = $1`)
+    .query(`UPDATE takeoffs SET ${updates.join(", ")} WHERE id = ${idParam}`)
     .run(...values);
 
   const takeoff = (await db

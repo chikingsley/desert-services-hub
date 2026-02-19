@@ -1,11 +1,11 @@
 import {
   handleIssuedEmail,
   handlePaymentEmail,
-} from "@email/notifications/email-trigger-handlers";
+} from "@lib/notifications/email-trigger-handlers";
 import type {
   IssuedJobPayload,
   PaymentJobPayload,
-} from "@email/notifications/types";
+} from "@lib/notifications/types";
 import {
   ensurePermitSyncForPayment,
   extractPointAndPayInvoiceNumber,

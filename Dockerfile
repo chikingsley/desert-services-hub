@@ -35,18 +35,8 @@ RUN apt-get update && \
       curl \
       libreoffice-core \
       unzip \
-      libgl1 \
-      xauth \
-      tigervnc-standalone-server \
-      tigervnc-common \
-      tigervnc-tools \
-      novnc \
-      websockify \
-      openbox \
-      xdotool \
-      xclip && \
+      libgl1 && \
     curl -LsSf https://astral.sh/uv/install.sh | sh && \
-    ln -sf /usr/share/novnc/vnc.html /usr/share/novnc/index.html && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 ENV PATH="/root/.local/bin:$PATH"

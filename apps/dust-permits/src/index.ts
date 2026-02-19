@@ -24,15 +24,12 @@ import {
   handleGetPermit,
   handleHealthCheck,
   handleListPermits,
+  handleRenewAndPay,
   handleRenewPermit,
   handleRevisePermit,
 } from "@/api/permits";
-import { handleRenewAndPay } from "@/api/permits-payment";
 import { handleScrapePdf, handleScrapePermit } from "@/api/scrape";
 import { handleCompanySync, handleSync } from "@/api/sync";
-import { initSentry } from "@/portal/utils/sentry";
-
-initSentry();
 
 const PORT = Number(process.env.PORT) || 47_822;
 const parsedIdleTimeoutSeconds = Number.parseInt(

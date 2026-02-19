@@ -2,6 +2,8 @@
 import { existsSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import { basename, dirname, join } from "node:path";
+import { buildUniquePath } from "@lib/downloads/fs";
+import { sanitizeFilename } from "@lib/downloads/utils";
 import {
   PLAYWRIGHT_BUILDINGCONNECTED_EMAIL_SELECTORS,
   PLAYWRIGHT_BUILDINGCONNECTED_LOGIN_LINK_SELECTORS,
@@ -16,8 +18,6 @@ import {
   type PlaywrightBodyLinkSource,
 } from "./body-link-playwright-selectors";
 
-const INVALID_FILENAME_CHARS_PATTERN = /[/\\?%*:|"<>]/g;
-const LEADING_DOTS_PATTERN = /^\.+/;
 const PLAYWRIGHT_FALLBACK_ENABLED =
   process.env.EMAIL_BODY_LINK_PLAYWRIGHT !== "0";
 const PLAYWRIGHT_HEADLESS =
@@ -180,15 +180,6 @@ export interface PlaywrightFallbackDownloadResult {
   nonRetryable: boolean;
 }
 
-function sanitizeFilename(name: string): string {
-  const clean = name
-    .replace(INVALID_FILENAME_CHARS_PATTERN, "_")
-    .replace(LEADING_DOTS_PATTERN, "")
-    .trim()
-    .slice(0, 255);
-  return clean.length > 0 ? clean : "file";
-}
-
 function ensureExtension(name: string, fallbackFilename: string): string {
   if (name.includes(".")) {
     return name;
@@ -199,23 +190,6 @@ function ensureExtension(name: string, fallbackFilename: string): string {
     return `${name}${fallbackFilename.slice(dot)}`;
   }
   return name;
-}
-
-function buildUniquePath(destDir: string, filename: string): string {
-  const clean = sanitizeFilename(filename);
-  const dot = clean.lastIndexOf(".");
-  const base = dot > 0 ? clean.slice(0, dot) : clean;
-  const ext = dot > 0 ? clean.slice(dot) : "";
-
-  let candidate = join(destDir, clean);
-  let suffix = 1;
-
-  while (existsSync(candidate)) {
-    candidate = join(destDir, `${base}-${suffix}${ext}`);
-    suffix++;
-  }
-
-  return candidate;
 }
 
 function buildDebugBaseName(

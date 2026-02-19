@@ -1,7 +1,7 @@
 import {
   type BuildingConnectedSyncResult,
   syncBuildingConnectedFiles,
-} from "@background-jobs/workers/buildingconnected-file-sync/lib/processing";
+} from "../../../packages/documents/bc-sync/processing";
 
 export interface RunBuildingConnectedSyncOptions {
   enabled: boolean;

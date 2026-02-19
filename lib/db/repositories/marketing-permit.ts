@@ -115,7 +115,7 @@ export async function getMarketingPermit(
 ): Promise<MarketingPermit | null> {
   const row = await db
     .query<Record<string, unknown>, [string]>(
-      "SELECT * FROM marketing_permits WHERE id = ?"
+      "SELECT * FROM marketing_permits WHERE id = $1"
     )
     .get(id);
   return row ? parseMarketingPermitRow(row) : null;
@@ -129,26 +129,27 @@ export async function getMarketingPermits(options?: {
 }): Promise<MarketingPermit[]> {
   let sql = "SELECT * FROM marketing_permits WHERE 1=1";
   const params: unknown[] = [];
+  let paramIndex = 1;
 
   if (options?.status) {
-    sql += " AND status = ?";
+    sql += ` AND status = $${paramIndex++}`;
     params.push(options.status);
   }
 
   if (options?.companyName) {
-    sql += " AND company_name ILIKE ?";
+    sql += ` AND company_name ILIKE $${paramIndex++}`;
     params.push(`%${options.companyName}%`);
   }
 
   sql += " ORDER BY submitted_date DESC";
 
   if (options?.limit) {
-    sql += " LIMIT ?";
+    sql += ` LIMIT $${paramIndex++}`;
     params.push(options.limit);
   }
 
   if (options?.offset) {
-    sql += " OFFSET ?";
+    sql += ` OFFSET $${paramIndex++}`;
     params.push(options.offset);
   }
 
@@ -191,7 +192,7 @@ export async function getPermitsNeedingDetailScrape(
       `SELECT * FROM marketing_permits
        WHERE detail_scraped_at IS NULL
        ORDER BY scraped_at DESC NULLS LAST
-       LIMIT ?`
+       LIMIT $1`
     )
     .all(limit);
   return rows.map(parseMarketingPermitRow);

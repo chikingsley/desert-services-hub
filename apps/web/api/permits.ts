@@ -92,16 +92,18 @@ export async function listPermits(req: Request): Promise<Response> {
     const params: unknown[] = [];
 
     if (statuses.length > 0) {
+      const offset = params.length;
       conditions.push(
-        `COALESCE(d.status, 'Unknown') IN (${statuses.map(() => "?").join(", ")})`
+        `COALESCE(d.status, 'Unknown') IN (${statuses.map((_, i) => `$${offset + i + 1}`).join(", ")})`
       );
       params.push(...statuses);
     }
 
     if (query) {
       const like = `%${query}%`;
+      const offset = params.length;
       conditions.push(
-        "(d.project_name ILIKE ? OR d.id ILIKE ? OR d.address ILIKE ? OR d.company_name ILIKE ? OR p.name ILIKE ?)"
+        `(d.project_name ILIKE $${offset + 1} OR d.id ILIKE $${offset + 2} OR d.address ILIKE $${offset + 3} OR d.company_name ILIKE $${offset + 4} OR p.name ILIKE $${offset + 5})`
       );
       params.push(like, like, like, like, like);
     }
@@ -110,6 +112,9 @@ export async function listPermits(req: Request): Promise<Response> {
       conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
     const orderBy = getSortExpression(sortField);
     const offset = (page - 1) * perPage;
+
+    const limitParam = `$${params.length + 1}`;
+    const offsetParam = `$${params.length + 2}`;
 
     const [items, countResult, statusRows] = await Promise.all([
       db
@@ -129,7 +134,7 @@ export async function listPermits(req: Request): Promise<Response> {
            LEFT JOIN projects p ON p.id = d.project_id
            ${where}
            ORDER BY ${orderBy} ${sortDirection.toUpperCase()} NULLS LAST, d.id DESC
-           LIMIT $1 OFFSET $2`
+           LIMIT ${limitParam} OFFSET ${offsetParam}`
         )
         .all(...params, perPage, offset) as Promise<PermitRow[]>,
       db

@@ -182,7 +182,7 @@ async function queryEvaToJaysonEmails(
       coalesce(e.attachment_names, '[]') as attachment_names
     from emails e
     join mailboxes m on m.id = e.mailbox_id
-    where lower(m.email) = lower(?)
+    where lower(m.email) = lower($1)
       and e.from_email ilike 'eva@%'
       and e.to_emails ilike '%jayson@%'
       and e.has_attachments = 1
@@ -191,7 +191,7 @@ async function queryEvaToJaysonEmails(
   const params: unknown[] = [JAYSON];
 
   if (sinceDate) {
-    query += " and e.received_at >= ?";
+    query += " and e.received_at >= $2";
     params.push(sinceDate.toISOString());
   }
 

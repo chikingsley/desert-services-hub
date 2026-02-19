@@ -2,25 +2,16 @@
  * Email CLI shared configuration and client initialization.
  *
  * Constants, mailbox/group mappings, and singleton Graph clients.
+ * Write-mailbox enforcement lives in GraphEmailClient — not here.
  */
-import { GraphEmailClient } from "@email/client";
+import { GraphEmailClient, WRITABLE_MAILBOXES } from "@email/client";
 import { GraphGroupsClient } from "@email/groups";
-import { z } from "zod";
 
 // ============================================================================
 // Constants
 // ============================================================================
 
 export const DEFAULT_USER = "chi@desertservices.net";
-
-export const WRITABLE_MAILBOXES = [
-  "chi@desertservices.net",
-  "contracts@desertservices.net",
-  "dustpermits@desertservices.net",
-] as const;
-
-const WritableMailboxSchema = z.enum(WRITABLE_MAILBOXES);
-export type WritableMailbox = z.infer<typeof WritableMailboxSchema>;
 
 export const KNOWN_MAILBOXES = {
   chi: "chi@desertservices.net",
@@ -91,6 +82,13 @@ export function resolveGroupId(groupIdOrName: string): string {
   return knownId ?? groupIdOrName;
 }
 
+/**
+ * Early CLI-level guard for folder/state operations (moveEmail, createFolder, etc.)
+ * that are not guarded at the GraphEmailClient level.
+ *
+ * For outgoing email operations (createDraft, sendDraft, createReplyDraft),
+ * GraphEmailClient enforces the allowlist itself — no need to call this.
+ */
 export function assertWritableMailbox(
   userId: string | undefined,
   operation: string
@@ -101,28 +99,12 @@ export function assertWritableMailbox(
         `Allowed mailboxes: ${WRITABLE_MAILBOXES.join(", ")}`
     );
   }
-  const parsed = WritableMailboxSchema.safeParse(userId.toLowerCase().trim());
-  if (!parsed.success) {
+  if (!(WRITABLE_MAILBOXES as readonly string[]).includes(userId.toLowerCase().trim())) {
     throw new Error(
       `Operation "${operation}" not allowed on mailbox "${userId}". ` +
         `Write operations are restricted to: ${WRITABLE_MAILBOXES.join(", ")}`
     );
   }
-}
-
-export function resolveWritableMailbox(
-  userId: string | undefined,
-  operation: string
-): WritableMailbox {
-  assertWritableMailbox(userId, operation);
-  const normalized = userId?.toLowerCase().trim();
-  if (!normalized) {
-    throw new Error(
-      `Operation "${operation}" requires explicit --user. ` +
-        `Allowed mailboxes: ${WRITABLE_MAILBOXES.join(", ")}`
-    );
-  }
-  return normalized as WritableMailbox;
 }
 
 export function assertSendEnabled(operation: string): void {
@@ -170,11 +152,6 @@ export async function getUserClientForMailbox(
   userClient = new GraphEmailClient(emailConfig);
   await userClient.initUserAuth(userId);
   return userClient;
-}
-
-export function getWriteClient(userId: string): Promise<GraphEmailClient> {
-  resolveWritableMailbox(userId, "write");
-  return Promise.resolve(getAppClient());
 }
 
 export function getGroupsClient(): GraphGroupsClient {

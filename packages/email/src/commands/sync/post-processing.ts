@@ -1,9 +1,9 @@
 export async function runPostProcessing(): Promise<void> {
-  const { enrichEmailDomains } = await import("@email/sync/enrichment");
+  const { enrichEmailDomains } = await import("@lib/linking/enrichment");
   const { processPlatformEmails } = await import(
     "@email/sync/platform-extraction"
   );
-  const { linkEmailsToAccounts } = await import("@email/sync/link-accounts");
+  const { linkEmailsToAccounts } = await import("@lib/linking/link-accounts");
 
   console.log(`\n${"=".repeat(60)}`);
   console.log("EXTRACTING PLATFORM SENDERS");

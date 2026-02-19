@@ -52,7 +52,7 @@ export async function createProject(
       [string, string, number | null, string | null]
     >(
       `INSERT INTO projects (name, normalized_name, account_id, address)
-       VALUES (?, ?, ?, ?)
+       VALUES ($1, $2, $3, $4)
        RETURNING *`
     )
     .get(name, normalized, accountId ?? null, address ?? null);
@@ -66,7 +66,7 @@ export async function createProject(
 export async function getProjectById(id: number): Promise<Project | null> {
   const row = await db
     .query<Record<string, unknown>, [number]>(
-      "SELECT * FROM projects WHERE id = ?"
+      "SELECT * FROM projects WHERE id = $1"
     )
     .get(id);
 
@@ -78,7 +78,7 @@ export async function getProjectsForAccount(
 ): Promise<Project[]> {
   const rows = await db
     .query<Record<string, unknown>, [number]>(
-      "SELECT * FROM projects WHERE account_id = ? ORDER BY last_seen DESC"
+      "SELECT * FROM projects WHERE account_id = $1 ORDER BY last_seen DESC"
     )
     .all(accountId);
 
@@ -144,7 +144,7 @@ export async function linkEmailToProject(
 export async function getEmailsForProject(projectId: number): Promise<Email[]> {
   const rows = await db
     .query<Record<string, unknown>, [number]>(
-      "SELECT * FROM emails WHERE project_id = ? ORDER BY received_at ASC"
+      "SELECT * FROM emails WHERE project_id = $1 ORDER BY received_at ASC"
     )
     .all(projectId);
 
@@ -154,7 +154,7 @@ export async function getEmailsForProject(projectId: number): Promise<Email[]> {
 export async function getEmailsForAccount(accountId: number): Promise<Email[]> {
   const rows = await db
     .query<Record<string, unknown>, [number]>(
-      "SELECT * FROM emails WHERE account_id = ? ORDER BY received_at DESC"
+      "SELECT * FROM emails WHERE account_id = $1 ORDER BY received_at DESC"
     )
     .all(accountId);
 
@@ -165,7 +165,7 @@ export async function findProjectByText(text: string): Promise<Project | null> {
   const normalized = normalizeProjectNameKey(text);
   const row = await db
     .query<Record<string, unknown>, [string]>(
-      "SELECT * FROM projects WHERE normalized_name = ?"
+      "SELECT * FROM projects WHERE normalized_name = $1"
     )
     .get(normalized);
 

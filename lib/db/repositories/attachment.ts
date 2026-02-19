@@ -67,7 +67,7 @@ export async function getAttachmentsForEmail(
   const rows = await db
     .query<Record<string, unknown>, [number]>(
       `SELECT * FROM documents
-       WHERE email_id = ? AND source = 'email_attachment'
+       WHERE email_id = $1 AND source = 'email_attachment'
        ORDER BY file_name`
     )
     .all(emailId);
@@ -80,7 +80,7 @@ export async function getAttachmentById(
 ): Promise<Attachment | null> {
   const row = await db
     .query<Record<string, unknown>, [number]>(
-      "SELECT * FROM documents WHERE id = ?"
+      "SELECT * FROM documents WHERE id = $1"
     )
     .get(id);
 
@@ -96,7 +96,7 @@ export async function getPendingAttachments(
        WHERE source = 'email_attachment'
          AND extraction_status = 'pending'
        ORDER BY id
-       LIMIT ?`
+       LIMIT $1`
     )
     .all(limit);
 
@@ -195,21 +195,27 @@ export async function searchEmailsFullText(
   query: string,
   limit = 50
 ): Promise<Array<Email & { matchSource: "subject" | "body" | "attachment" }>> {
-  const { clause, params } = likeWhere(["subject", "body_full"], query);
+  // $1 = CASE pattern, $2/$3 = likeWhere params, $4 = LIMIT
+  const casePattern = `%${query}%`;
+  const { clause, params, nextIndex } = likeWhere(
+    ["subject", "body_full"],
+    query,
+    2
+  );
 
   const emailRows = await db
     .query<Record<string, unknown> & { match_source: string }, unknown[]>(
       `SELECT *,
         CASE
-          WHEN subject ILIKE ? THEN 'subject'
+          WHEN subject ILIKE $1 THEN 'subject'
           ELSE 'body'
         END as match_source
        FROM emails
        WHERE ${clause}
        ORDER BY received_at DESC
-       LIMIT ?`
+       LIMIT $${nextIndex}`
     )
-    .all(params[0], ...params, limit);
+    .all(casePattern, ...params, limit);
 
   const results: Array<
     Email & { matchSource: "subject" | "body" | "attachment" }
@@ -222,10 +228,8 @@ export async function searchEmailsFullText(
     });
   }
 
-  const { clause: attClause, params: attParams } = likeWhere(
-    ["extracted_text"],
-    query
-  );
+  const { clause: attClause, params: attParams, nextIndex: attNext } =
+    likeWhere(["extracted_text"], query);
 
   const attachmentRows = await db
     .query<{ email_id: number }, unknown[]>(
@@ -233,7 +237,7 @@ export async function searchEmailsFullText(
        FROM documents
        WHERE source = 'email_attachment'
          AND ${attClause}
-       LIMIT $1`
+       LIMIT $${attNext}`
     )
     .all(...attParams, limit);
 

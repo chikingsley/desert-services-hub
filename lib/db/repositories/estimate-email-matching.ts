@@ -98,7 +98,7 @@ async function fetchEstimateRowsByRef(
   if (refs.length === 0) {
     return [];
   }
-  const placeholders = refs.map(() => "?").join(", ");
+  const placeholders = refs.map((_, i) => `$${i + 1}`).join(", ");
   return await db
     .query<EstimateCandidateRow>(
       `SELECT
@@ -120,7 +120,7 @@ async function fetchEstimateRowsByIds(
   if (ids.length === 0) {
     return [];
   }
-  const placeholders = ids.map(() => "?").join(", ");
+  const placeholders = ids.map((_, i) => `$${i + 1}`).join(", ");
   return await db
     .query<EstimateCandidateRow>(
       `SELECT
@@ -140,7 +140,7 @@ async function fetchEstimateRowsByMondayItemId(
   if (mondayItemIds.length === 0) {
     return [];
   }
-  const placeholders = mondayItemIds.map(() => "?").join(", ");
+  const placeholders = mondayItemIds.map((_, i) => `$${i + 1}`).join(", ");
   return await db
     .query<EstimateCandidateRow>(
       `SELECT

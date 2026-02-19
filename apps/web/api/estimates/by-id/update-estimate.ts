@@ -29,16 +29,16 @@ function buildEstimateUpdateStatement(payload: NormalizedUpdatePayload): {
   const values: UpdateValue[] = [];
 
   if (payload.base_number !== undefined) {
-    fields.push("base_number = ?");
     values.push(payload.base_number);
+    fields.push(`base_number = $${values.length}`);
   }
 
   if (payload.job_name !== undefined) {
     const jobName = payload.job_name || "Untitled Estimate";
-    fields.push("name = ?");
     values.push(jobName);
-    fields.push("job_name = ?");
+    fields.push(`name = $${values.length}`);
     values.push(jobName);
+    fields.push(`job_name = $${values.length}`);
   }
 
   const nullableTextColumns: Array<{
@@ -59,19 +59,19 @@ function buildEstimateUpdateStatement(payload: NormalizedUpdatePayload): {
     if (value === undefined) {
       continue;
     }
-    fields.push(`${mapping.column} = ?`);
     values.push(value || null);
+    fields.push(`${mapping.column} = $${values.length}`);
   }
 
   if (payload.status !== undefined) {
     const status = payload.status || "draft";
-    fields.push("status = ?");
     values.push(status);
+    fields.push(`status = $${values.length}`);
   }
 
   if (payload.is_locked !== undefined) {
-    fields.push("is_locked = ?");
     values.push(payload.is_locked ? 1 : 0);
+    fields.push(`is_locked = $${values.length}`);
   }
 
   return { fields, values };
@@ -83,9 +83,10 @@ async function updateEstimateRow(
 ): Promise<void> {
   const { fields, values } = buildEstimateUpdateStatement(payload);
   values.push(estimateId);
+  const idParam = `$${values.length}`;
 
   await db
-    .query(`UPDATE estimates SET ${fields.join(", ")} WHERE id = $1`)
+    .query(`UPDATE estimates SET ${fields.join(", ")} WHERE id = ${idParam}`)
     .run(...values);
 }
 
@@ -164,7 +165,8 @@ async function insertSections(
     sectionIdMap.set(section.id, sectionId);
     validSectionIds.add(sectionId);
 
-    sectionPlaceholders.push("(?, ?, ?, ?, ?, ?)");
+    const offset = sectionValues.length;
+    sectionPlaceholders.push(`($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4}, $${offset + 5}, $${offset + 6})`);
     sectionValues.push(
       sectionId,
       versionId,
@@ -232,7 +234,8 @@ async function insertLineItems(
       sectionState
     );
 
-    itemPlaceholders.push("(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    const offset = itemValues.length;
+    itemPlaceholders.push(`($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4}, $${offset + 5}, $${offset + 6}, $${offset + 7}, $${offset + 8}, $${offset + 9}, $${offset + 10}, $${offset + 11})`);
     itemValues.push(
       lineItemId,
       versionId,

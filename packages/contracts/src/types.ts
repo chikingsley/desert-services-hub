@@ -1,0 +1,107 @@
+export interface ContractWonBridgeResult {
+  contractsClassified: number;
+  contractsLinked: number;
+  contractDocExtractsEnqueued: number;
+  documentsBackfilled: number;
+  estimatesMarkedWon: number;
+  estimatesMarkedLost: number;
+  mondayUpdates: number;
+  errors: string[];
+}
+
+export interface WonCandidate {
+  email_id: number;
+  email_received_at: string;
+  project_id: number;
+  project_name: string;
+  estimate_id: number;
+  estimate_name: string;
+  account_name: string | null;
+  monday_item_id: string | null;
+  bid_value: number | null;
+  awarded_value: number | null;
+  match_type: "single_estimate" | "account_match";
+}
+
+export interface LoserCandidate {
+  estimate_id: number;
+  estimate_name: string;
+  account_name: string | null;
+  monday_item_id: string | null;
+}
+
+export interface WonPhaseResult {
+  estimatesMarkedWon: number;
+  mondayUpdates: number;
+  errors: string[];
+  wonByProject: Map<number, number[]>;
+}
+
+export interface LoserPhaseResult {
+  estimatesMarkedLost: number;
+  mondayUpdates: number;
+  errors: string[];
+}
+
+export interface DocToEnqueue {
+  email_id: number;
+  doc_id: number;
+}
+
+export interface ContractFields {
+  project_name: string | null;
+  contractor_name: string | null;
+  project_address: string | null;
+  po_number: string | null;
+  document_type: string | null;
+}
+
+export interface ProjectMatch {
+  project_id: number;
+  project_name: string;
+}
+
+export interface ContractDocExtractPayload {
+  email_id: number;
+  doc_id: number;
+}
+
+export type ContractDocExtractEnqueueJob = (
+  payload: ContractDocExtractPayload
+) => Promise<void>;
+
+export interface ContractAttachmentRow {
+  id: number;
+  attachment_id: string;
+  name: string;
+  content_type: string | null;
+  size: number | null;
+  storage_path: string | null;
+}
+
+export interface ContractAttachmentContext {
+  emailId: number;
+  messageId: string;
+  mailboxEmail: string;
+  subject: string;
+  fromEmail: string;
+}
+
+// ── Job Payload Schemas ─────────────────────────────────────
+
+import { z } from "zod";
+
+const NON_EMPTY_STRING = z.string().trim().min(1);
+
+export const CONTRACT_EMAIL_PAYLOAD_SCHEMA = z.object({
+  emailId: z.number().int().positive(),
+  messageId: NON_EMPTY_STRING,
+  mailboxEmail: NON_EMPTY_STRING,
+  subject: z.string(),
+  fromEmail: z.string(),
+  bodyText: z.string(),
+  hasAttachments: z.boolean(),
+});
+export type ContractEmailJobPayload = z.infer<
+  typeof CONTRACT_EMAIL_PAYLOAD_SCHEMA
+>;

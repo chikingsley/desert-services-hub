@@ -103,16 +103,18 @@ export async function listContracts(req: Request): Promise<Response> {
     const params: unknown[] = [];
 
     if (statuses.length > 0) {
+      const offset = params.length;
       conditions.push(
-        `COALESCE(proj.contract_status, 'Unlinked') IN (${statuses.map(() => "?").join(", ")})`
+        `COALESCE(proj.contract_status, 'Unlinked') IN (${statuses.map((_, i) => `$${offset + i + 1}`).join(", ")})`
       );
       params.push(...statuses);
     }
 
     if (query) {
       const like = `%${query}%`;
+      const offset = params.length;
       conditions.push(
-        "(e.name ILIKE ? OR e.contractor ILIKE ? OR e.estimate_number ILIKE ? OR e.location ILIKE ? OR proj.project_name ILIKE ?)"
+        `(e.name ILIKE $${offset + 1} OR e.contractor ILIKE $${offset + 2} OR e.estimate_number ILIKE $${offset + 3} OR e.location ILIKE $${offset + 4} OR proj.project_name ILIKE $${offset + 5})`
       );
       params.push(like, like, like, like, like);
     }
@@ -120,6 +122,9 @@ export async function listContracts(req: Request): Promise<Response> {
     const where = `WHERE ${conditions.join(" AND ")}`;
     const orderBy = getSortExpression(sortField);
     const offset = (page - 1) * perPage;
+
+    const limitParam = `$${params.length + 1}`;
+    const offsetParam = `$${params.length + 2}`;
 
     const [items, countResult, facetRows, valueRow] = await Promise.all([
       db
@@ -146,7 +151,7 @@ export async function listContracts(req: Request): Promise<Response> {
            ) proj ON true
            ${where}
            ORDER BY ${orderBy} ${sortDirection.toUpperCase()}, e.id DESC
-           LIMIT $1 OFFSET $2`
+           LIMIT ${limitParam} OFFSET ${offsetParam}`
         )
         .all(...params, perPage, offset) as Promise<ContractRow[]>,
       db

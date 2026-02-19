@@ -92,7 +92,9 @@ async function fetchProjectCandidateRows(context: {
   const rowsById = new Map<number, ProjectCandidateRow>();
 
   if (context.nameKeys.length > 0) {
-    const placeholders = context.nameKeys.map(() => "?").join(", ");
+    const placeholders = context.nameKeys
+      .map((_, i) => `$${i + 1}`)
+      .join(", ");
     const rows = await db
       .query<ProjectCandidateRow>(
         `SELECT
@@ -110,19 +112,21 @@ async function fetchProjectCandidateRows(context: {
   if (context.primaryTokens.length > 0 || context.accountIdHint != null) {
     const whereParts: string[] = [];
     const params: unknown[] = [];
+    let paramIndex = 1;
 
     if (context.accountIdHint != null) {
-      whereParts.push("account_id = ?");
+      whereParts.push(`account_id = $${paramIndex++}`);
       params.push(context.accountIdHint);
     }
 
     if (context.primaryTokens.length > 0) {
-      const tokenClauses = context.primaryTokens
-        .slice(0, 6)
-        .map(
-          () =>
-            "(name ILIKE ? OR contractor ILIKE ? OR address ILIKE ? OR outlook_folder ILIKE ?)"
-        );
+      const tokenClauses = context.primaryTokens.slice(0, 6).map(() => {
+        const p1 = paramIndex++;
+        const p2 = paramIndex++;
+        const p3 = paramIndex++;
+        const p4 = paramIndex++;
+        return `(name ILIKE $${p1} OR contractor ILIKE $${p2} OR address ILIKE $${p3} OR outlook_folder ILIKE $${p4})`;
+      });
       whereParts.push(tokenClauses.join(" OR "));
       for (const token of context.primaryTokens.slice(0, 6)) {
         const pattern = `%${token}%`;

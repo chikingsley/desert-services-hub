@@ -113,23 +113,26 @@ export async function listProjects(req: Request): Promise<Response> {
     const params: unknown[] = [];
 
     if (contractStatuses.length > 0) {
+      const offset = params.length;
       conditions.push(
-        `COALESCE(p.contract_status, 'Pending') IN (${contractStatuses.map(() => "?").join(", ")})`
+        `COALESCE(p.contract_status, 'Pending') IN (${contractStatuses.map((_, i) => `$${offset + i + 1}`).join(", ")})`
       );
       params.push(...contractStatuses);
     }
 
     if (dustStatuses.length > 0) {
+      const offset = params.length;
       conditions.push(
-        `COALESCE(p.dust_permit_status, 'Not Needed') IN (${dustStatuses.map(() => "?").join(", ")})`
+        `COALESCE(p.dust_permit_status, 'Not Needed') IN (${dustStatuses.map((_, i) => `$${offset + i + 1}`).join(", ")})`
       );
       params.push(...dustStatuses);
     }
 
     if (query) {
       const like = `%${query}%`;
+      const offset = params.length;
       conditions.push(
-        "(p.name ILIKE ? OR p.contractor ILIKE ? OR a.name ILIKE ? OR p.address ILIKE ? OR p.project_number ILIKE ?)"
+        `(p.name ILIKE $${offset + 1} OR p.contractor ILIKE $${offset + 2} OR a.name ILIKE $${offset + 3} OR p.address ILIKE $${offset + 4} OR p.project_number ILIKE $${offset + 5})`
       );
       params.push(like, like, like, like, like);
     }
@@ -138,6 +141,9 @@ export async function listProjects(req: Request): Promise<Response> {
       conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
     const orderBy = getSortExpression(sortField);
     const offset = (page - 1) * perPage;
+
+    const limitParam = `$${params.length + 1}`;
+    const offsetParam = `$${params.length + 2}`;
 
     const [items, countResult, contractRows, dustRows] = await Promise.all([
       db
@@ -176,7 +182,7 @@ export async function listProjects(req: Request): Promise<Response> {
            ) docs ON true
            ${where}
            ORDER BY ${orderBy} ${sortDirection.toUpperCase()} NULLS LAST, p.id DESC
-           LIMIT $1 OFFSET $2`
+           LIMIT ${limitParam} OFFSET ${offsetParam}`
         )
         .all(...params, perPage, offset) as Promise<ProjectRow[]>,
       db

@@ -2,18 +2,17 @@ import {
   normalizeEmailBody,
   validateEmailBodyOrThrow,
 } from "@email/commands/body-policy";
-import { assertWritableMailbox, getWriteClient } from "@email/commands/config";
+import { getAppClient } from "@email/commands/config";
 import { loadFileAttachments } from "@email/commands/helpers";
 import type { ReplyDraftByIdCommandOptions } from "./types";
 
 export async function replyDraftByIdCommand(
   options: ReplyDraftByIdCommandOptions
 ): Promise<void> {
-  assertWritableMailbox(options.userId, "reply-draft-by-id");
   const normalizedBody = normalizeEmailBody(options.body);
   validateEmailBodyOrThrow(normalizedBody);
   const userId = options.userId as string;
-  const client = await getWriteClient(userId);
+  const client = getAppClient();
 
   const attachments = options.attachmentPaths
     ? await loadFileAttachments(options.attachmentPaths)

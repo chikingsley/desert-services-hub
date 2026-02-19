@@ -164,7 +164,7 @@ if (notionId) {
     FROM documents d
     JOIN emails e ON d.email_id = e.id
     WHERE d.source = 'email_attachment'
-      AND e.notion_project_id = ?
+      AND e.notion_project_id = $1
       AND d.content_type LIKE '%pdf%'
       AND d.storage_bucket IS NOT NULL
       AND d.storage_path IS NOT NULL
@@ -178,7 +178,7 @@ if (notionId) {
     FROM documents d
     JOIN emails e ON d.email_id = e.id
     WHERE d.source = 'email_attachment'
-      AND e.subject LIKE ?
+      AND e.subject LIKE $1
       AND d.content_type LIKE '%pdf%'
       AND d.storage_bucket IS NOT NULL
       AND d.storage_path IS NOT NULL

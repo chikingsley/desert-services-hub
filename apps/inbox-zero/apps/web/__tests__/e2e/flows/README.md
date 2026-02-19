@@ -288,11 +288,11 @@ E2E_PORT=3007 ./scripts/run-e2e-local.sh
 
 ### "No account found"
 
-Test accounts aren't in the database. Run `pnpm dev:e2e`, visit http://localhost:3000, and sign in with each account.
+Test accounts aren't in the database. Run `pnpm dev:e2e`, visit <http://localhost:3000>, and sign in with each account.
 
 ### Token expired
 
-OAuth tokens may expire. Run `pnpm dev:e2e` and sign in again at http://localhost:3000.
+OAuth tokens may expire. Run `pnpm dev:e2e` and sign in again at <http://localhost:3000>.
 
 ### Draft not created
 

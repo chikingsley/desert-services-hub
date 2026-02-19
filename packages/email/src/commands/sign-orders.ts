@@ -7,7 +7,11 @@
  */
 
 import { parseArgs } from "node:util";
-import { getWriteClient, resolveWritableMailbox } from "@email/commands/config";
+import {
+  assertWritableMailbox,
+  getAppClient,
+  resolveMailbox,
+} from "@email/commands/config";
 import type { CommandHandler } from "@email/commands/types";
 import { getLogoAttachment, getTemplate } from "@email/email-templates/index";
 import {
@@ -96,10 +100,9 @@ async function signOrderDraftCommand(args: string[]): Promise<void> {
     },
   });
 
-  const mailbox = resolveWritableMailbox(
-    optionalString(values.user),
-    "sign-order-draft"
-  );
+  const rawUser = optionalString(values.user);
+  assertWritableMailbox(rawUser, "sign-order-draft");
+  const mailbox = resolveMailbox(rawUser as string);
 
   const signTypeRaw = optionalString(values["sign-type"]);
   if (!(signTypeRaw && isSignOrderType(signTypeRaw))) {
@@ -154,7 +157,7 @@ async function signOrderDraftCommand(args: string[]): Promise<void> {
   });
 
   const logo = await getLogoAttachment();
-  const client = await getWriteClient(mailbox);
+  const client = getAppClient();
 
   const draft = await client.createDraft({
     attachments: [logo],

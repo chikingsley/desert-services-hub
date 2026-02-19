@@ -1,13 +1,15 @@
+import { CONTRACT_EMAIL_PAYLOAD_SCHEMA } from "@contract/types";
 import { processFilesIntake } from "@documents-intake/files-intake";
 import { db } from "@lib/db/client";
+import {
+  ISSUED_PAYLOAD_SCHEMA,
+  PAYMENT_PAYLOAD_SCHEMA,
+} from "@lib/notifications/types";
 import { processEmailNotification } from "./email-processing";
 import {
   BODY_LINK_MANUAL_FOLLOWUP_PAYLOAD_SCHEMA,
-  CONTRACT_EMAIL_PAYLOAD_SCHEMA,
   EMAIL_NOTIFICATION_PAYLOAD_SCHEMA,
   INTAKE_PAYLOAD_SCHEMA,
-  ISSUED_PAYLOAD_SCHEMA,
-  PAYMENT_PAYLOAD_SCHEMA,
 } from "./job-schemas";
 import {
   processDustPermitIssuedEmailJob as processIssuedPayload,
@@ -91,7 +93,7 @@ export async function processContractEmailReceivedJob(
   job: WebhookJob
 ): Promise<void> {
   const { processContractEmailJob } = await import(
-    "@email/contracts/contract-email-handler"
+    "@contract/contract-email-handler"
   );
   const payload = parseJobPayload(job, CONTRACT_EMAIL_PAYLOAD_SCHEMA);
   await processContractEmailJob(payload);

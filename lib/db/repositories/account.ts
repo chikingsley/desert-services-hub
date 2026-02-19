@@ -32,7 +32,7 @@ export async function createAccount(
 
   const row = await db
     .query<Record<string, unknown>, [string]>(
-      "SELECT * FROM accounts WHERE domain = ?"
+      "SELECT * FROM accounts WHERE domain = $1"
     )
     .get(domain);
 
@@ -47,7 +47,7 @@ export async function getAccountByDomain(
 ): Promise<Account | null> {
   const row = await db
     .query<Record<string, unknown>, [string]>(
-      "SELECT * FROM accounts WHERE domain = ?"
+      "SELECT * FROM accounts WHERE domain = $1"
     )
     .get(domain);
 
@@ -85,7 +85,7 @@ export async function addCompanyAlias(
 
 export async function getAllAccounts(type?: AccountType): Promise<Account[]> {
   const query = type
-    ? "SELECT * FROM accounts WHERE type = ? ORDER BY email_count DESC"
+    ? "SELECT * FROM accounts WHERE type = $1 ORDER BY email_count DESC"
     : "SELECT * FROM accounts ORDER BY email_count DESC";
 
   const rows = type

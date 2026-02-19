@@ -28,6 +28,7 @@ packages/
   permits/               # @permits/client typed permit-worker client
   monday/                # Monday.com API operations
   email/                 # Graph + email templates
+  enrichment/            # PDL, Jina, Clearbit, avatar enrichment services
   documents/             # PDF analysis/generation pipelines
   contracts/             # Contract tooling
   narratives/            # Narrative generation
@@ -47,6 +48,7 @@ lib/
 - `packages/permits/AGENTS.md`: typed client contract and tests.
 - `apps/background-jobs/AGENTS.md`: webhook jobs, notification triggers, sync/linking worker rules.
 - `apps/web/AGENTS.md`: estimate API guardrails and permit API integration from web.
+- `packages/enrichment/AGENTS.md`: PDL, Jina, Clearbit enrichment services (standalone, no email dependency).
 - `packages/documents/AGENTS.md`: SSSP/SDS generation workflow rules.
 
 ## Docker Services
@@ -59,17 +61,18 @@ lib/
 | `aqdata-worker` | `desert-aqdata-worker` | 47823 | AQData export sync + detail scrape |
 | `tunnel` | `desert-tunnel` | — | Cloudflare tunnel |
 
-## Permit Worker Integration (Canonical)
+## Permit Worker Integration
 
-```ts
-import { PermitClient } from "@permits/client";
+- **Shell / Claude Code**: Use the CLI — `bun run permit <command>` (wraps `PermitClient`, defaults to `http://localhost:47822`)
+- **App code** (web, background-jobs): Use `PermitClient` from `@permits/client` (defaults to `http://permit-worker:47822`)
+- **Never** write inline bun scripts or raw curl for permit operations.
 
-const client = new PermitClient();
-await client.createPermit(req);
-await client.renewPermit(id, req);
-await client.renewAndPay(id, req);
-await client.closePermit(id, req);
-await client.revisePermit(id, req);
+```bash
+# Examples
+bun run permit close D0063827 --reason completed
+bun run permit renew D0063827 --company "Weis Builders Inc"
+bun run permit scrape-pdf D0063827
+bun run permit health
 ```
 
 ## Canonical Commands

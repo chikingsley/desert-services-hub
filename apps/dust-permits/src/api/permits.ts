@@ -1,12 +1,17 @@
 /**
  * Permits API Handlers
  *
- * Thin HTTP handlers that wrap core business logic.
- * Uses shared browser session for performance.
+ * All permit HTTP handlers live here. No separate "helpers" file.
  */
 
+import {
+  getActivePermits,
+  getPermitById,
+} from "@lib/db/repositories/dust-permit";
+import type { Permit as DbPermit } from "@lib/db/types";
+import { z } from "zod";
 import type { DeepPartial, FormData } from "@/form-data";
-import { buildFormData } from "@/form-data";
+import { buildFormData, DEFAULTS } from "@/form-data";
 import {
   validateBuiltFormData,
   validateFormDataOverrides,
@@ -17,26 +22,169 @@ import {
   markPermitClosedRecord,
   persistDraftPermitRecord,
 } from "@/lib/permit-records";
+import type { Permit as DashboardPermit } from "@/lib/types";
 import { closePermit } from "@/portal/close";
 import { createApplicationFull, renewPermitFull } from "@/portal/create";
-import { deleteAllDrafts, deleteByApplicationId } from "@/portal/delete";
-import { withBrowserSessionOperation } from "@/portal/utils/browser";
-import { captureError } from "@/portal/utils/sentry";
 import {
-  apiCreateSchema,
-  apiReviseSchema,
-  closeBodySchema,
-  ensureBrowserSession,
-  getPermitForDashboard,
-  jsonError,
-  jsonSuccess,
-  listPermitsForDashboard,
-  log,
-  renewBodySchema,
-  validateCreateMapPreflight,
-} from "./permits-helpers";
+  checkExpedited,
+  clickPaymentContinue,
+  confirmPayment,
+  fillPaymentPage1,
+  submitApplication,
+} from "@/portal/create/fill";
+import { deleteAllDrafts, deleteByApplicationId } from "@/portal/delete";
+import {
+  ensureBrowserSessionReady,
+  getSessionPageAndContext,
+  withBrowserSessionOperation,
+} from "@/portal/utils/browser";
+import { checkpoint } from "@/portal/utils/operator";
 
-/** Human-readable descriptions for each revision type */
+// ─── Shared utilities ────────────────────────────────────────────────
+
+const log = (msg: string) => process.stderr.write(`${msg}\n`);
+
+function jsonError(error: string, status = 400): Response {
+  return Response.json(
+    { error, success: false, timestamp: new Date().toISOString() },
+    { status }
+  );
+}
+
+function jsonSuccess(data: Record<string, unknown>): Response {
+  return Response.json({
+    success: true,
+    ...data,
+    timestamp: new Date().toISOString(),
+  });
+}
+
+async function ensureBrowserSession(): Promise<
+  | {
+      success: true;
+      page: NonNullable<ReturnType<typeof getSessionPageAndContext>>;
+    }
+  | { success: false; error: string }
+> {
+  const session = await ensureBrowserSessionReady();
+  const ctx = getSessionPageAndContext();
+
+  if (!ctx) {
+    return { error: "No browser session available", success: false };
+  }
+
+  if (!(session.isLoggedIn && session.portalReady)) {
+    return { error: "Failed to login to portal", success: false };
+  }
+
+  return { page: ctx, success: true };
+}
+
+// ─── Schemas ─────────────────────────────────────────────────────────
+
+const apiCreateSchema = z.object({
+  companyName: z.string().optional().describe("Company name for the permit"),
+  copyFromApp: z
+    .string()
+    .optional()
+    .describe("Permit ID to copy from (for renew flow)"),
+  flow: z
+    .enum(["new-company", "existing-company", "renew"])
+    .describe("Creation flow type"),
+  formDataPath: z
+    .string()
+    .optional()
+    .describe("Path to form data JSON overrides"),
+});
+
+const apiReviseSchema = z.object({
+  notes: z.string().optional().describe("Additional notes"),
+  revisionType: z.string().describe("Type of revision"),
+});
+
+const renewBodySchema = z.object({
+  companyName: z.string().describe("Company name for renewal"),
+});
+
+export const renewAndPayBodySchema = z.object({
+  companyName: z.string().describe("Company name for renewal"),
+  expedited: z.boolean().optional().default(false),
+});
+
+const closeBodySchema = z.object({
+  reason: z.string().optional().describe("Reason for closing"),
+});
+
+// ─── DB → API transform ─────────────────────────────────────────────
+
+function transformPermitForDashboard(dbPermit: DbPermit): DashboardPermit {
+  const permitNumber = dbPermit.id;
+  const company = dbPermit.companyName || "Unknown";
+  const projectName = dbPermit.projectName || "Unnamed Project";
+  const address = dbPermit.address
+    ? `${dbPermit.address}${dbPermit.city ? `, ${dbPermit.city}` : ""}`
+    : undefined;
+
+  return {
+    address,
+    company,
+    current: {
+      id: dbPermit.id,
+      applicationNumber: dbPermit.id,
+      permitNumber: dbPermit.id,
+      version: 1,
+      versionType: "new",
+      projectName,
+      company,
+      address,
+      requestStatus: "complete",
+      permitStatus:
+        (dbPermit.status as DashboardPermit["current"]["permitStatus"]) ||
+        "Draft",
+      submittedAt: dbPermit.submittedDate || undefined,
+      effectiveAt: dbPermit.effectiveDate || undefined,
+      expiresAt: dbPermit.expirationDate || undefined,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    },
+    history: [],
+    permitNumber,
+    projectName,
+  };
+}
+
+// ─── Map preflight validation ────────────────────────────────────────
+
+async function validateCreateMapPreflight(
+  formData: FormData
+): Promise<{ valid: true } | { valid: false; error: string }> {
+  const { latitude, longitude, acresDisturbed } = formData.site;
+  if (typeof latitude !== "number" || typeof longitude !== "number") {
+    return { valid: true };
+  }
+
+  try {
+    const { buildPermitMapDataFromSiteCoordinates } = await import(
+      "@/lib/site-drawing"
+    );
+    await buildPermitMapDataFromSiteCoordinates(
+      { acresDisturbed, latitude, longitude },
+      { includeAccessPoint: false }
+    );
+  } catch (error) {
+    return {
+      error: `Map preflight failed for site ${latitude.toFixed(6)},${longitude.toFixed(6)}: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
+      valid: false,
+    };
+  }
+
+  return { valid: true };
+}
+
+// ─── Revision type descriptions ──────────────────────────────────────
+
 const REVISION_TYPE_DESCRIPTIONS: Record<string, string> = {
   acreage: "Acreage Change - Modify total acreage amount",
   bmp: "BMP Modifications - Update best management practices",
@@ -46,22 +194,25 @@ const REVISION_TYPE_DESCRIPTIONS: Record<string, string> = {
   schedule: "Project Schedule - Change start/end dates",
 };
 
+// ─── Handlers ────────────────────────────────────────────────────────
+
 /**
- * GET /api/permits - List all permits
+ * GET /api/permits
  */
 export async function handleListPermits(): Promise<Response> {
-  return Response.json(await listPermitsForDashboard());
+  const dbPermits = await getActivePermits();
+  return Response.json(dbPermits.map(transformPermitForDashboard));
 }
 
 /**
- * GET /api/permits/:id - Get single permit
+ * GET /api/permits/:id
  */
 export async function handleGetPermit(id: string): Promise<Response> {
-  const permit = await getPermitForDashboard(id);
+  const permit = await getPermitById(id);
   if (!permit) {
     return jsonError(`Permit ${id} not found`, 404);
   }
-  return Response.json(permit);
+  return Response.json(transformPermitForDashboard(permit));
 }
 
 /** Load and validate form data overrides from a JSON file path. */
@@ -90,33 +241,8 @@ async function loadOverridesFromFile(
   return { data: validation.data };
 }
 
-/** Persist draft record after successful create, logging on failure. */
-async function tryPersistDraftRecord(
-  applicationId: string,
-  companyName: string,
-  flow: string,
-  formData: FormData,
-  copyFromApp?: string
-): Promise<void> {
-  try {
-    await persistDraftPermitRecord({
-      applicationId,
-      companyName,
-      flow,
-      formData,
-      sourcePermitId: copyFromApp ?? null,
-    });
-  } catch (error) {
-    log(
-      `   ⚠ Failed to persist draft permit record: ${
-        error instanceof Error ? error.message : String(error)
-      }`
-    );
-  }
-}
-
 /**
- * POST /api/permits/create - Create new permit
+ * POST /api/permits/create
  */
 export async function handleCreatePermit(body: unknown): Promise<Response> {
   const parsed = apiCreateSchema.safeParse(body);
@@ -167,13 +293,19 @@ export async function handleCreatePermit(body: unknown): Promise<Response> {
     }
 
     if (result.applicationId) {
-      await tryPersistDraftRecord(
-        result.applicationId,
-        companyName,
-        flow,
-        formData,
-        copyFromApp
-      );
+      try {
+        await persistDraftPermitRecord({
+          applicationId: result.applicationId,
+          companyName,
+          flow,
+          formData,
+          sourcePermitId: copyFromApp ?? null,
+        });
+      } catch (error) {
+        log(
+          `   Failed to persist draft: ${error instanceof Error ? error.message : String(error)}`
+        );
+      }
     }
 
     return jsonSuccess({
@@ -183,25 +315,18 @@ export async function handleCreatePermit(body: unknown): Promise<Response> {
     });
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : String(error);
-    if (error instanceof Error) {
-      captureError(error, {
-        extra: { companyName, copyFromApp },
-        operation: "createPermit",
-        step: flow,
-      });
-    }
     return jsonError(errorMsg, 500);
   }
 }
 
 /**
- * POST /api/permits/:id/renew - Renew permit
+ * POST /api/permits/:id/renew
  */
 export async function handleRenewPermit(
   id: string,
   body: unknown
 ): Promise<Response> {
-  log(`\n🔄 RENEW permit request: ${id}`);
+  log(`\n  RENEW permit request: ${id}`);
 
   const parsed = renewBodySchema.safeParse(body);
   if (!parsed.success) {
@@ -242,19 +367,184 @@ export async function handleRenewPermit(
     return jsonSuccess(result);
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : String(error);
-    log(`   ✗ Renew error: ${errorMsg}`);
+    log(`  Renew error: ${errorMsg}`);
     return jsonError(`Renew error: ${errorMsg}`, 500);
   }
 }
 
 /**
- * POST /api/permits/:id/close - Close permit
+ * POST /api/permits/:id/renew-and-pay
+ *
+ * Same phases as the E2E test, with operator checkpoints between them.
+ *
+ * 1. Renew through pages 1-5
+ * 2. Checkpoint → "Submit renewal?"
+ * 3. Set expedited (if requested) + submit
+ * 4. Fill payment form + advance to review
+ * 5. Checkpoint → "Pay $X?"
+ * 6. Confirm payment
+ */
+export async function handleRenewAndPay(
+  id: string,
+  body: unknown
+): Promise<Response> {
+  log(`\n  RENEW & PAY permit request: ${id}`);
+
+  const parsed = renewAndPayBodySchema.safeParse(body);
+  if (!parsed.success) {
+    return jsonError(parsed.error.issues[0]?.message || "Invalid input");
+  }
+
+  const { companyName, expedited } = parsed.data;
+
+  if (!DEFAULTS.payment.card.cardNumber) {
+    return jsonError(
+      "Payment env vars not configured (PAYMENT_CARD_NUMBER missing)",
+      500
+    );
+  }
+
+  try {
+    const sessionResult = await ensureBrowserSession();
+    if (sessionResult.success === false) {
+      return jsonError(sessionResult.error, 500);
+    }
+
+    const { page, context } = sessionResult.page;
+
+    // Phase 1: Renew through pages 1-5
+    const renewResult = await renewPermitFull(page, context, id, companyName);
+
+    if (!renewResult.success) {
+      return jsonError(renewResult.error || "Renewal failed", 500);
+    }
+
+    const appId = renewResult.applicationId;
+    log(`  Renewal created: ${appId}`);
+
+    if (appId) {
+      await persistDraftPermitRecord({
+        applicationId: appId,
+        companyName,
+        flow: "renew",
+        sourcePermitId: id,
+      });
+    }
+
+    // Checkpoint: approve submission
+    const submitApproved = await checkpoint(`Submit renewal for ${id}?`, {
+      permitId: id,
+      companyName,
+      applicationId: appId,
+      expedited,
+    });
+
+    if (!submitApproved) {
+      return jsonSuccess({
+        applicationId: appId,
+        stage: "page5-ready",
+        error: "Operator declined submission",
+        success: false,
+      });
+    }
+
+    // Phase 2: Expedited + Submit
+    if (expedited) {
+      await checkExpedited(page, true);
+    }
+
+    const submitResult = await submitApplication(page);
+    log(
+      `  Submit: success=${submitResult.success}, redirect=${submitResult.redirectedToPayment}`
+    );
+
+    if (!submitResult.success) {
+      return jsonError(`Submit failed: ${submitResult.error}`, 500);
+    }
+
+    if (!submitResult.redirectedToPayment) {
+      return jsonSuccess({
+        applicationId: appId,
+        stage: "submitted-no-payment",
+        success: true,
+      });
+    }
+
+    // Phase 3: Fill payment + advance to review
+    const fillReport = await fillPaymentPage1(page, DEFAULTS.payment);
+    log(`  Filled: ${fillReport.filledFields.join(", ")}`);
+
+    if (!fillReport.success) {
+      return jsonError(
+        `Payment fill failed: ${fillReport.failedFields.join(", ")}`,
+        500
+      );
+    }
+
+    const advanced = await clickPaymentContinue(page);
+    if (!advanced) {
+      return jsonError("Failed to advance to payment review page", 500);
+    }
+
+    // Dry-run to read amounts
+    const review = await confirmPayment(page, { dryRun: true });
+
+    // Checkpoint: approve payment
+    const payApproved = await checkpoint(
+      `Pay ${review.totalPaid || "unknown"} for ${id}? Card ****${review.cardLastFour || "????"}`,
+      {
+        permitId: id,
+        applicationId: appId,
+        amount: review.amount,
+        convenienceFee: review.convenienceFee,
+        totalPaid: review.totalPaid,
+        cardLastFour: review.cardLastFour,
+      }
+    );
+
+    if (!payApproved) {
+      return jsonSuccess({
+        applicationId: appId,
+        stage: "payment-review",
+        amount: review.amount,
+        convenienceFee: review.convenienceFee,
+        totalPaid: review.totalPaid,
+        error: "Operator declined payment",
+        success: false,
+      });
+    }
+
+    // Phase 4: Confirm payment
+    log("  Processing payment...");
+    const payResult = await confirmPayment(page, { dryRun: false });
+    log(
+      `  Payment: success=${payResult.success}, total=${payResult.totalPaid}`
+    );
+
+    return jsonSuccess({
+      applicationId: appId,
+      stage: "paid",
+      amount: payResult.amount,
+      convenienceFee: payResult.convenienceFee,
+      totalPaid: payResult.totalPaid,
+      cardLastFour: payResult.cardLastFour,
+      success: payResult.success,
+    });
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    log(`  Renew & Pay error: ${errorMsg}`);
+    return jsonError(`Renew & Pay error: ${errorMsg}`, 500);
+  }
+}
+
+/**
+ * POST /api/permits/:id/close
  */
 export async function handleClosePermit(
   id: string,
   body: unknown
 ): Promise<Response> {
-  log(`\n🔒 CLOSE permit request: ${id}`);
+  log(`\n  CLOSE permit request: ${id}`);
 
   const parsed = closeBodySchema.safeParse(body);
   if (!parsed.success) {
@@ -282,19 +572,19 @@ export async function handleClosePermit(
     return jsonSuccess(result);
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : String(error);
-    log(`   ✗ Close error: ${errorMsg}`);
+    log(`  Close error: ${errorMsg}`);
     return jsonError(`Close error: ${errorMsg}`, 500);
   }
 }
 
 /**
- * POST /api/permits/:id/revise - Revise permit
+ * POST /api/permits/:id/revise
  */
 export async function handleRevisePermit(
   id: string,
   body: unknown
 ): Promise<Response> {
-  log(`\n📝 REVISE permit request: ${id}`);
+  log(`\n  REVISE permit request: ${id}`);
 
   const parsed = apiReviseSchema.safeParse(body);
   if (!parsed.success) {
@@ -359,16 +649,16 @@ export async function handleRevisePermit(
     });
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : String(error);
-    log(`   ✗ Revise error: ${errorMsg}`);
+    log(`  Revise error: ${errorMsg}`);
     return jsonError(`Revise error: ${errorMsg}`, 500);
   }
 }
 
 /**
- * DELETE /api/permits/:id - Delete single draft
+ * DELETE /api/permits/:id
  */
 export async function handleDeletePermit(id: string): Promise<Response> {
-  log(`\n🗑️  DELETE permit request: ${id}`);
+  log(`\n  DELETE permit request: ${id}`);
 
   try {
     const sessionResult = await ensureBrowserSession();
@@ -384,24 +674,24 @@ export async function handleDeletePermit(id: string): Promise<Response> {
 
     if (deleted) {
       await deletePermitRecord(id);
-      log(`   ✓ Delete completed for ${id}`);
+      log(`  Delete completed for ${id}`);
       return jsonSuccess({ message: `Permit ${id} deleted successfully` });
     }
 
-    log(`   ✗ Delete failed for ${id}`);
+    log(`  Delete failed for ${id}`);
     return jsonError(`Delete failed for ${id} - check browser`, 500);
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : String(error);
-    log(`   ✗ Delete error: ${errorMsg}`);
+    log(`  Delete error: ${errorMsg}`);
     return jsonError(`Delete error: ${errorMsg}`, 500);
   }
 }
 
 /**
- * DELETE /api/permits/drafts - Delete all drafts
+ * DELETE /api/permits/drafts
  */
 export async function handleDeleteAllDrafts(): Promise<Response> {
-  log("\n🗑️  DELETE ALL DRAFTS request");
+  log("\n  DELETE ALL DRAFTS request");
 
   try {
     const sessionResult = await ensureBrowserSession();
@@ -419,7 +709,7 @@ export async function handleDeleteAllDrafts(): Promise<Response> {
     }
 
     const deletedDbCount = await deleteAllDraftPermitRecords();
-    log("   ✓ Deleted all portal drafts");
+    log("  Deleted all portal drafts");
     return jsonSuccess({
       deletedAll: true,
       deletedDbCount,
@@ -427,13 +717,13 @@ export async function handleDeleteAllDrafts(): Promise<Response> {
     });
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : String(error);
-    log(`   ✗ Delete all drafts error: ${errorMsg}`);
+    log(`  Delete all drafts error: ${errorMsg}`);
     return jsonError(`Delete error: ${errorMsg}`, 500);
   }
 }
 
 /**
- * GET /health - Health check
+ * GET /health
  */
 export function handleHealthCheck(): Response {
   return Response.json({

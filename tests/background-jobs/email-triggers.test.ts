@@ -2,12 +2,12 @@ import { afterAll, describe, expect, it } from "bun:test";
 import {
   handleIssuedEmail,
   handlePaymentEmail,
-} from "@email/notifications/email-trigger-handlers";
+} from "@lib/notifications/email-trigger-handlers";
 import {
   detectDustPermitEmailTrigger,
   parseMaricopaIssuedEmail,
   parsePointAndPayEmail,
-} from "@email/notifications/email-triggers";
+} from "@lib/notifications/email-triggers";
 import { db } from "@lib/db/client";
 
 // ============================================================================

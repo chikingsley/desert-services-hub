@@ -87,4 +87,3 @@ This ensures:
 - Tests may take 30+ seconds due to API rate limits
 - Make sure your test account has proper permissions
 - **Microsoft Graph**: All API requests use immutable IDs (`Prefer: IdType="ImmutableId"` header) to ensure message IDs remain stable across operations
-

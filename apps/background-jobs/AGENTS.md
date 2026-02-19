@@ -9,7 +9,7 @@ Webhook receiver, queue handlers, and polling workers.
 - `worker.ts`: pgmq queue consumer (no domain timers).
 - `workers/*`: folder watcher/linker and other periodic workers.
 - `@monday/sync/*`: Monday estimate/status/sharepoint/project-seed sync logic (package-owned).
-- `@email/notifications/*`: email-trigger detection and draft notification delivery.
+- `@lib/notifications/*`: email-trigger detection and draft notification delivery.
 
 ## Runtime Rules
 

@@ -87,12 +87,14 @@ export async function listTakeoffs(req: Request): Promise<Response> {
     const params: unknown[] = [];
 
     if (statuses.length > 0) {
-      conditions.push(`status IN (${statuses.map(() => "?").join(", ")})`);
+      const offset = params.length;
+      conditions.push(`status IN (${statuses.map((_, i) => `$${offset + i + 1}`).join(", ")})`);
       params.push(...statuses);
     }
 
     if (query) {
-      conditions.push("name ILIKE ?");
+      const offset = params.length;
+      conditions.push(`name ILIKE $${offset + 1}`);
       params.push(`%${query}%`);
     }
 
@@ -101,6 +103,9 @@ export async function listTakeoffs(req: Request): Promise<Response> {
     const orderBy = getSortExpression(sortField);
     const offset = (page - 1) * perPage;
 
+    const limitParam = `$${params.length + 1}`;
+    const offsetParam = `$${params.length + 2}`;
+
     const [rows, countResult, statusRows] = await Promise.all([
       db
         .query(
@@ -108,7 +113,7 @@ export async function listTakeoffs(req: Request): Promise<Response> {
            FROM takeoffs
            ${where}
            ORDER BY ${orderBy} ${sortDirection.toUpperCase()}, id DESC
-           LIMIT $1 OFFSET $2`
+           LIMIT ${limitParam} OFFSET ${offsetParam}`
         )
         .all(...params, perPage, offset) as Promise<TakeoffRow[]>,
       db

@@ -1,10 +1,6 @@
 import { afterEach, describe, expect, it } from "bun:test";
-import {
-  assertSendEnabled,
-  assertWritableMailbox,
-  resolveWritableMailbox,
-  WRITABLE_MAILBOXES,
-} from "@email/commands/config";
+import { WRITABLE_MAILBOXES } from "@email/client";
+import { assertSendEnabled, assertWritableMailbox } from "@email/commands/config";
 
 const ORIGINAL_ENABLE_SEND = process.env.EMAIL_CLI_ENABLE_SEND;
 const EMAIL_TESTS_ENABLED = process.env.ENABLE_EMAIL_TESTS === "1";
@@ -34,12 +30,10 @@ describeEmailTests("email write policy", () => {
       ).toThrow("not allowed on mailbox");
     });
 
-    it("normalizes writable mailbox values", () => {
-      const normalized = resolveWritableMailbox(
-        "  CHI@DESERTSERVICES.NET ",
-        "draft"
-      );
-      expect(normalized).toBe("chi@desertservices.net");
+    it("normalizes case and whitespace when checking writable mailboxes", () => {
+      expect(() =>
+        assertWritableMailbox("  CHI@DESERTSERVICES.NET ", "draft")
+      ).not.toThrow();
     });
 
     it("disables sending by default", () => {

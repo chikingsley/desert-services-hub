@@ -139,8 +139,9 @@ export async function listEstimates(req: Request): Promise<Response> {
 
     if (query) {
       const like = `%${query}%`;
+      const offset = params.length;
       conditions.push(
-        "(q.job_name ILIKE ? OR q.contractor ILIKE ? OR q.base_number ILIKE ? OR q.job_address ILIKE ?)"
+        `(q.job_name ILIKE $${offset + 1} OR q.contractor ILIKE $${offset + 2} OR q.base_number ILIKE $${offset + 3} OR q.job_address ILIKE $${offset + 4})`
       );
       params.push(like, like, like, like);
     }
@@ -152,13 +153,15 @@ export async function listEstimates(req: Request): Promise<Response> {
     }
 
     if (statuses.length > 0) {
+      const offset = params.length;
       conditions.push(
-        `COALESCE(q.status, 'draft') IN (${statuses.map(() => "?").join(", ")})`
+        `COALESCE(q.status, 'draft') IN (${statuses.map((_, i) => `$${offset + i + 1}`).join(", ")})`
       );
       params.push(...statuses);
     } else {
       // Default behavior for main list: hide Yet to Bid until explicitly filtered in.
-      conditions.push("COALESCE(q.status, 'draft') <> ?");
+      const offset = params.length;
+      conditions.push(`COALESCE(q.status, 'draft') <> $${offset + 1}`);
       params.push("Yet to Bid");
     }
 
@@ -166,6 +169,9 @@ export async function listEstimates(req: Request): Promise<Response> {
       conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
     const orderByExpression = getSortExpression(sortField);
     const offset = (page - 1) * perPage;
+
+    const limitParam = `$${params.length + 1}`;
+    const offsetParam = `$${params.length + 2}`;
 
     const [rows, countResult, statusFacetRows] = await Promise.all([
       db
@@ -194,7 +200,7 @@ export async function listEstimates(req: Request): Promise<Response> {
           ) cv ON TRUE
           ${where}
           ORDER BY ${orderByExpression} ${sortDirection.toUpperCase()}, q.id DESC
-          LIMIT $1 OFFSET $2`
+          LIMIT ${limitParam} OFFSET ${offsetParam}`
         )
         .all(...params, perPage, offset) as Promise<EstimateListRow[]>,
       db
@@ -329,7 +335,8 @@ async function insertEstimateSections(
   for (const section of sections) {
     const sectionId = crypto.randomUUID();
     sectionIdMap.set(section.id, sectionId);
-    sectionPlaceholders.push("(?, ?, ?, ?, ?, ?)");
+    const offset = sectionValues.length;
+    sectionPlaceholders.push(`($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4}, $${offset + 5}, $${offset + 6})`);
     sectionValues.push(
       sectionId,
       versionId,
@@ -366,7 +373,8 @@ async function insertEstimateLineItems(params: {
 
   for (const item of lineItems) {
     const lineItemId = crypto.randomUUID();
-    itemPlaceholders.push("(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    const offset = itemValues.length;
+    itemPlaceholders.push(`($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4}, $${offset + 5}, $${offset + 6}, $${offset + 7}, $${offset + 8}, $${offset + 9}, $${offset + 10}, $${offset + 11})`);
     itemValues.push(
       lineItemId,
       versionId,

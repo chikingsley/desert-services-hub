@@ -7,8 +7,8 @@ import {
   enrichSingleEmail as processEmail,
   processEmailNotification as processEmailNotificationWithAdapters,
 } from "@email/handlers/webhook-notification-handler";
-import { triageEmail } from "@email/triage/triage";
-import type { TriageEnqueueJob } from "@email/triage/types";
+import { triageEmail } from "@lib/triage/triage";
+import type { TriageEnqueueJob } from "@lib/triage/types";
 import { FWD_RE, INTERNAL_DOMAINS } from "./config";
 import { enqueueJob } from "./queue";
 
@@ -41,6 +41,12 @@ const adapters: EmailNotificationAdapters = {
       console.error(
         `[email-processing] triage error for email ${emailId}: ${outcome.error}`
       );
+    }
+
+    // Trigger event-driven linking and sync
+    await enqueueJob("link_estimate", { payload: { emailId } });
+    if (meta.hasAttachments) {
+      await enqueueJob("sync_bc_file", { payload: { emailId } });
     }
   },
 };

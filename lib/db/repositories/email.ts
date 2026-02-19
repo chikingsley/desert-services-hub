@@ -299,7 +299,7 @@ export async function getEmailByMessageId(
 ): Promise<Email | null> {
   const row = await db
     .query<Record<string, unknown>, [string]>(
-      "SELECT * FROM emails WHERE message_id = ?"
+      "SELECT * FROM emails WHERE message_id = $1"
     )
     .get(messageId);
 
@@ -313,7 +313,7 @@ export async function getEmailByMessageId(
 export async function getEmailById(id: number): Promise<Email | null> {
   const row = await db
     .query<Record<string, unknown>, [number]>(
-      "SELECT * FROM emails WHERE id = ?"
+      "SELECT * FROM emails WHERE id = $1"
     )
     .get(id);
 
@@ -349,21 +349,22 @@ export async function updateEmailProjectLink(
 ): Promise<void> {
   const updates: string[] = [];
   const values: (string | number | null)[] = [];
+  let paramIndex = 1;
 
   if (data.projectName !== undefined) {
-    updates.push("project_name = ?");
+    updates.push(`project_name = $${paramIndex++}`);
     values.push(data.projectName);
   }
   if (data.contractorName !== undefined) {
-    updates.push("contractor_name = ?");
+    updates.push(`contractor_name = $${paramIndex++}`);
     values.push(data.contractorName);
   }
   if (data.mondayEstimateId !== undefined) {
-    updates.push("monday_estimate_id = ?");
+    updates.push(`monday_estimate_id = $${paramIndex++}`);
     values.push(data.mondayEstimateId);
   }
   if (data.notionProjectId !== undefined) {
-    updates.push("notion_project_id = ?");
+    updates.push(`notion_project_id = $${paramIndex++}`);
     values.push(data.notionProjectId);
   }
 
@@ -372,7 +373,10 @@ export async function updateEmailProjectLink(
   }
 
   values.push(emailId);
-  await db.run(`UPDATE emails SET ${updates.join(", ")} WHERE id = $1`, values);
+  await db.run(
+    `UPDATE emails SET ${updates.join(", ")} WHERE id = $${paramIndex}`,
+    values
+  );
 }
 
 export async function appendEmailAttachmentNames(
@@ -540,7 +544,7 @@ export async function getUnclassifiedEmails(limit = 1000): Promise<Email[]> {
       `SELECT * FROM emails
        WHERE classification IS NULL
        ORDER BY received_at DESC
-       LIMIT ?`
+       LIMIT $1`
     )
     .all(limit);
 
@@ -554,9 +558,9 @@ export async function getEmailsByClassification(
   const rows = await db
     .query<Record<string, unknown>, [string, number]>(
       `SELECT * FROM emails
-       WHERE classification = ?
+       WHERE classification = $1
        ORDER BY received_at DESC
-       LIMIT ?`
+       LIMIT $2`
     )
     .all(classification, limit);
 
@@ -567,14 +571,17 @@ export async function getEmailsWithoutProjectLink(
   classifications: EmailClassification[],
   limit = 1000
 ): Promise<Email[]> {
-  const placeholders = classifications.map(() => "?").join(", ");
+  const placeholders = classifications
+    .map((_, i) => `$${i + 1}`)
+    .join(", ");
+  const limitIndex = classifications.length + 1;
   const rows = await db
     .query<Record<string, unknown>, (string | number)[]>(
       `SELECT * FROM emails
        WHERE classification IN (${placeholders})
        AND monday_estimate_id IS NULL
        ORDER BY received_at DESC
-       LIMIT ?`
+       LIMIT $${limitIndex}`
     )
     .all(...classifications, limit);
 
@@ -584,7 +591,7 @@ export async function getEmailsWithoutProjectLink(
 export async function getRecentEmails(limit = 10): Promise<Email[]> {
   const rows = await db
     .query<Record<string, unknown>, [number]>(
-      "SELECT * FROM emails ORDER BY id DESC LIMIT ?"
+      "SELECT * FROM emails ORDER BY id DESC LIMIT $1"
     )
     .all(limit);
   return rows.map(parseEmailRow);
@@ -596,7 +603,7 @@ export async function getEmailsWithAttachments(limit = 100): Promise<Email[]> {
       `SELECT * FROM emails
        WHERE has_attachments = 1
        ORDER BY received_at DESC
-       LIMIT ?`
+       LIMIT $1`
     )
     .all(limit);
 

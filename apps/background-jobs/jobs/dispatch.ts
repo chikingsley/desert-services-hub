@@ -3,13 +3,13 @@
  */
 // biome-ignore-all lint/nursery/noExcessiveLinesPerFile: Centralized job routing keeps queue behavior in one place.
 
-import type { ContractDocExtractPayload } from "@email/contracts/types";
-import { processTriageBackfillBatch } from "@email/triage/backfill";
+import type { ContractDocExtractPayload } from "@contract/types";
+import { runEstimateExtractionTriage } from "@lib/db/repositories/estimate";
+import { processTriageBackfillBatch } from "@lib/triage/backfill";
 import type {
   TriageBackfillOptions,
   TriageEnqueueJob,
-} from "@email/triage/types";
-import { runEstimateExtractionTriage } from "@lib/db/repositories/estimate";
+} from "@lib/triage/types";
 import { runBuildingConnectedSync } from "./buildingconnected-sync";
 import {
   AQDATA_DETAIL_SCRAPE_BATCH_SIZE,
@@ -82,16 +82,18 @@ export function getActiveJobCount(): number {
 
 async function handleContractDocExtract(job: WebhookJob): Promise<void> {
   const { processContractDocExtractJob } = await import(
-    "@email/contracts/contract-doc-extract-queue"
+    "@contract/contract-doc-extract-queue"
   );
   const extractPayload = JSON.parse(job.payload) as ContractDocExtractPayload;
   await processContractDocExtractJob(extractPayload);
 }
 
 async function handleContactEnrichment(job: WebhookJob): Promise<void> {
-  const { CONTACT_ENRICHMENT_PAYLOAD_SCHEMA } = await import("./job-schemas");
+  const { CONTACT_ENRICHMENT_PAYLOAD_SCHEMA } = await import(
+    "@enrichment/types"
+  );
   const payload = parseJobPayload(job, CONTACT_ENRICHMENT_PAYLOAD_SCHEMA);
-  const { enrichContacts } = await import("@email/sync/link-contacts");
+  const { enrichContacts } = await import("@lib/linking/link-contacts");
   const result = await enrichContacts(payload.batchSize);
   if (result.enriched > 0 || result.errors > 0) {
     console.log(
@@ -101,7 +103,9 @@ async function handleContactEnrichment(job: WebhookJob): Promise<void> {
 }
 
 async function handleEmailTriageBatch(job: WebhookJob): Promise<void> {
-  const { EMAIL_TRIAGE_BATCH_PAYLOAD_SCHEMA } = await import("./job-schemas");
+  const { EMAIL_TRIAGE_BATCH_PAYLOAD_SCHEMA } = await import(
+    "@lib/triage/types"
+  );
   const payload = parseJobPayload(job, EMAIL_TRIAGE_BATCH_PAYLOAD_SCHEMA);
   const result = await processTriageBackfillBatch({
     ...(payload as TriageBackfillOptions),
@@ -213,26 +217,52 @@ async function handleBodyLinkBackfill(job: WebhookJob): Promise<void> {
 }
 
 async function handleFolderWatcherPoll(): Promise<void> {
-  const { pollFolderWatcher } = await import(
-    "@background-jobs/workers/outlook-folder-watcher/lib/poll"
-  );
+  const { pollFolderWatcher } = await import("@lib/graph/folder-watcher/poll");
   await pollFolderWatcher();
 }
 
-async function handleEstimateLinkerPoll(): Promise<void> {
-  const { pollEstimateEmailLinker } = await import(
-    "@background-jobs/workers/estimate-email-linker/lib/poll"
+async function handleEstimateLinkerMaintenance(): Promise<void> {
+  const { runEstimateLinkerMaintenance } = await import(
+    "@lib/linking/maintenance"
   );
-  const stats = await pollEstimateEmailLinker();
+  const stats = await runEstimateLinkerMaintenance();
   if (
-    stats.processedEmails > 0 ||
-    stats.linksInserted > 0 ||
     stats.conversationLinksInserted > 0 ||
     stats.directProjectsStamped > 0 ||
     stats.projectIdsBackfilled > 0
   ) {
     console.log(
-      `[worker] Estimate linker: ${stats.linksInserted} linked, ${stats.projectsLinked} projects, ${stats.processedEmails} processed, ${stats.skippedNoSignal} no-signal, conv=${stats.conversationLinksInserted}, direct-stamp=${stats.directProjectsStamped}, backfill=${stats.projectIdsBackfilled}`
+      `[worker] Estimate linker maintenance: conv=${stats.conversationLinksInserted}, direct-stamp=${stats.directProjectsStamped}, backfill=${stats.projectIdsBackfilled}`
+    );
+  }
+}
+
+async function handleLinkEstimate(job: WebhookJob): Promise<void> {
+  const { LINK_ESTIMATE_PAYLOAD_SCHEMA } = await import("@lib/linking/types");
+  const payload = parseJobPayload(job, LINK_ESTIMATE_PAYLOAD_SCHEMA);
+  const { linkEmail } = await import("@lib/linking/link-email");
+
+  const result = await linkEmail(payload.emailId);
+  if (result.projectLinked || result.estimateLinked) {
+    console.log(
+      `[worker] Linked email ${payload.emailId}: project=${result.projectLinked}, estimate=${result.estimateLinked} (signals: ${result.signals.join(", ")})`
+    );
+  }
+}
+
+async function handleSyncBcFile(job: WebhookJob): Promise<void> {
+  const { SYNC_BC_FILE_PAYLOAD_SCHEMA } = await import(
+    "../../../packages/documents/bc-sync/types"
+  );
+  const payload = parseJobPayload(job, SYNC_BC_FILE_PAYLOAD_SCHEMA);
+  const { processBcFilesForEmail } = await import(
+    "../../../packages/documents/bc-sync/processing"
+  );
+
+  const result = await processBcFilesForEmail(payload.emailId);
+  if (result.processed > 0 || result.failed > 0) {
+    console.log(
+      `[worker] BC file sync for email ${payload.emailId}: ${result.succeeded} ok, ${result.failed} failed, ${result.skipped} skipped`
     );
   }
 }
@@ -325,11 +355,11 @@ async function handleContractWonBridge(): Promise<void> {
 }
 
 async function handleAccountLinking(): Promise<void> {
-  const { enrichEmailDomains } = await import("@email/sync/enrichment");
+  const { enrichEmailDomains } = await import("@lib/linking/enrichment");
   const { processPlatformEmails } = await import(
     "@email/sync/platform-extraction"
   );
-  const { linkEmailsToAccounts } = await import("@email/sync/link-accounts");
+  const { linkEmailsToAccounts } = await import("@lib/linking/link-accounts");
 
   await enrichEmailDomains();
   await processPlatformEmails();
@@ -351,7 +381,7 @@ async function handleAccountLinking(): Promise<void> {
 }
 
 async function handleContactLinking(): Promise<void> {
-  const { linkEmailsToContacts } = await import("@email/sync/link-contacts");
+  const { linkEmailsToContacts } = await import("@lib/linking/link-contacts");
   const stats = await linkEmailsToContacts({ skipEnrichment: true });
   const totalLinked = stats.linkedFrom + stats.linkedTo + stats.linkedCc;
   if (totalLinked > 0 || stats.contactsCreated > 0) {
@@ -446,11 +476,11 @@ async function handlePermitDetailScrape(): Promise<void> {
 
 async function handleNotificationsTick(): Promise<void> {
   const { createDraftClientFromEnv } = await import(
-    "@email/notifications/delivery"
+    "@lib/notifications/delivery"
   );
-  const { detectAllEvents } = await import("@email/notifications/events");
+  const { detectAllEvents } = await import("@lib/notifications/events");
   const { deliverNewEvents, processQueuedNotifications } = await import(
-    "@email/notifications/notification-timer"
+    "@lib/notifications/notification-timer"
   );
 
   let deliveryMode = NOTIFICATIONS_DELIVERY_MODE;
@@ -515,7 +545,9 @@ const JOB_HANDLERS: Record<string, (job: WebhookJob) => Promise<void>> = {
   mailbox_fallback_sync: handleMailboxFallbackSync,
   body_link_backfill: handleBodyLinkBackfill,
   folder_watcher_poll: async () => handleFolderWatcherPoll(),
-  estimate_linker_poll: async () => handleEstimateLinkerPoll(),
+  estimate_linker_maintenance: async () => handleEstimateLinkerMaintenance(),
+  link_estimate: handleLinkEstimate,
+  sync_bc_file: handleSyncBcFile,
   swppp_master_sync: async () => handleSwpppMasterSync(),
   attachment_backfill: async () => handleAttachmentBackfill(),
   contract_won_bridge: async () => handleContractWonBridge(),

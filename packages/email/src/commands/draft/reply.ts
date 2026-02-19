@@ -2,26 +2,20 @@ import {
   normalizeEmailBody,
   validateEmailBodyOrThrow,
 } from "@email/commands/body-policy";
-import {
-  assertWritableMailbox,
-  getAppClient,
-  getWriteClient,
-} from "@email/commands/config";
+import { getAppClient } from "@email/commands/config";
 import { loadFileAttachments } from "@email/commands/helpers";
 import type { ReplyDraftCommandOptions } from "./types";
 
 export async function replyDraftCommand(
   options: ReplyDraftCommandOptions
 ): Promise<void> {
-  assertWritableMailbox(options.userId, "reply-draft");
   const normalizedBody = normalizeEmailBody(options.body);
   validateEmailBodyOrThrow(normalizedBody);
   const userId = options.userId as string;
-  const appCl = getAppClient();
-  const writeCl = await getWriteClient(userId);
+  const client = getAppClient();
 
   console.log(`Searching for: "${options.query}"...`);
-  const emails = await appCl.searchEmails({
+  const emails = await client.searchEmails({
     limit: options.limit ?? 5,
     query: options.query,
     userId,
@@ -67,7 +61,7 @@ export async function replyDraftCommand(
   console.log(
     `\nCreating ${options.replyAll ? "reply-all" : "reply"} draft...`
   );
-  const draft = await writeCl.createReplyDraft({
+  const draft = await client.createReplyDraft({
     attachments: attachments.length > 0 ? attachments : undefined,
     body: normalizedBody,
     messageId: selectedEmail.id,

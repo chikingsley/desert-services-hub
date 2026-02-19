@@ -1,6 +1,7 @@
 # Repository Guidelines
 
 ## Build & Test Commands
+
 - Development: `bun run dev`
 - Build: `bun run build`
 - Lint: `bun run lint`
@@ -14,6 +15,7 @@
 - When adding a new workspace package, add its `package.json` COPY line to `docker/Dockerfile.prod` and `docker/Dockerfile.local`.
 
 ## Code Style
+
 - TypeScript with strict null checks
 - Path aliases: `@/` for imports from project root
 - NextJS app router with (app) directory, tailwindcss
@@ -34,10 +36,12 @@
 - Env vars: add to `.env.example`, `env.ts`, and `turbo.json`. Prefix client-side with `NEXT_PUBLIC_`.
 
 ## Component Guidelines
+
 - Use shadcn/ui components when available
 - Use `LoadingContent` component for async data: `<LoadingContent loading={isLoading} error={error}>{data && <YourComponent data={data} />}</LoadingContent>`
 
 ## Fullstack Workflow
+
 See `.claude/skills/fullstack-workflow/SKILL.md` for full examples and templates.
 
 - API route middleware: `withError` (public, no auth), `withAuth` (user-level), `withEmailAccount` (email-account-level). Export response type via `Awaited<ReturnType<typeof getData>>`.

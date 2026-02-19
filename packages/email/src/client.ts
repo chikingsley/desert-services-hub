@@ -2,6 +2,17 @@ import type { TokenCredential } from "@azure/identity";
 import { ClientSecretCredential } from "@azure/identity";
 import type { AuthenticationResult, DeviceCodeRequest } from "@azure/msal-node";
 import { PublicClientApplication } from "@azure/msal-node";
+
+/**
+ * The only mailboxes permitted for write operations (createDraft, sendDraft, send, reply, forward).
+ * Enforced at the client level so no caller can bypass it regardless of code path.
+ */
+export const WRITABLE_MAILBOXES = [
+  "chi@desertservices.net",
+  "contracts@desertservices.net",
+  "dustpermits@desertservices.net",
+] as const;
+export type WritableMailbox = (typeof WRITABLE_MAILBOXES)[number];
 // Operation modules
 import {
   downloadAllAttachments,
@@ -272,6 +283,22 @@ export class GraphEmailClient implements GraphClientContext {
     return this.client;
   }
 
+  /**
+   * Enforce the writable mailbox allowlist for app-auth write operations.
+   * Called by every write method that accepts a userId.
+   * User-auth write ops (sendEmail, replyToEmail, forwardEmail) are safe by
+   * construction — they require an interactive device-code login.
+   */
+  private assertWritableUserId(userId: string, operation: string): void {
+    const normalized = userId.toLowerCase().trim();
+    if (!(WRITABLE_MAILBOXES as readonly string[]).includes(normalized)) {
+      throw new Error(
+        `[GraphEmailClient] "${operation}" blocked: mailbox "${userId}" is not in the write allowlist. ` +
+          `Allowed: ${WRITABLE_MAILBOXES.join(", ")}`
+      );
+    }
+  }
+
   /** Get the base API path (/me or /users/{userId}) based on auth mode. */
   getBasePath(userId?: string): string {
     if (this.authMode === "user") {
@@ -375,12 +402,15 @@ export class GraphEmailClient implements GraphClientContext {
     return replyToEmail(this, options);
   }
   createDraft(options: Parameters<typeof createDraft>[1]) {
+    if (options.userId) this.assertWritableUserId(options.userId, "createDraft");
     return createDraft(this, options);
   }
   sendDraft(draftId: string, userId?: string) {
+    if (userId) this.assertWritableUserId(userId, "sendDraft");
     return sendDraft(this, draftId, userId);
   }
   createReplyDraft(options: Parameters<typeof createReplyDraft>[1]) {
+    this.assertWritableUserId(options.userId, "createReplyDraft");
     return createReplyDraft(this, options);
   }
   forwardEmail(

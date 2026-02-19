@@ -39,9 +39,9 @@ export async function getLowConfidenceEmails(
     .query<Record<string, unknown>, [number, number]>(
       `SELECT * FROM emails
        WHERE classification IS NOT NULL
-       AND classification_confidence < ?
+       AND classification_confidence < $1
        ORDER BY received_at DESC
-       LIMIT ?`
+       LIMIT $2`
     )
     .all(threshold, limit);
 

@@ -46,7 +46,6 @@ To help you spend less time in your inbox, so you can focus on what matters most
 - **Meeting Briefs:** Get personalized briefings before every meeting, pulling context from your email and calendar.
 - **Smart Filing:** Automatically save email attachments to Google Drive or OneDrive.
 
-
 Learn more in our [docs](https://docs.getinboxzero.com).
 
 ## Feature Screenshots
@@ -94,7 +93,7 @@ npx @inbox-zero/cli setup      # One-time setup wizard
 npx @inbox-zero/cli start      # Start containers
 ```
 
-Open http://localhost:3000
+Open <http://localhost:3000>
 
 For complete self-hosting instructions, production deployment, OAuth setup, and configuration options, see our **[Self-Hosting Docs](https://docs.getinboxzero.com/hosting/quick-start)**.
 
@@ -112,7 +111,7 @@ cd apps/web && bunx prisma migrate dev && cd ../..
 bun dev
 ```
 
-Open http://localhost:3000
+Open <http://localhost:3000>
 
 See the **[Contributing Guide](https://docs.getinboxzero.com/contributing)** for more details including devcontainer setup.
 

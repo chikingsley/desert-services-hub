@@ -39,7 +39,7 @@ This service provides an automated solution for unsubscribing from email newslet
    ```
 
    Replace the API keys with your actual keys, and adjust the CORS_ORIGIN if needed.
-   You can get a Google AI API Key here: https://aistudio.google.com/app/apikey
+   You can get a Google AI API Key here: <https://aistudio.google.com/app/apikey>
 
 4. Install Playwright and its dependencies:
 
@@ -55,7 +55,7 @@ This service provides an automated solution for unsubscribing from email newslet
    ```
    bun run start
    ```
-   The server will start on http://localhost:5000 by default.
+   The server will start on <http://localhost:5000> by default.
 
 ## Usage
 

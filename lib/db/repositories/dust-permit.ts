@@ -105,7 +105,7 @@ export async function upsertPermit(data: UpsertPermitData): Promise<void> {
 export async function getPermitById(id: string): Promise<Permit | null> {
   const row = await db
     .query<Record<string, unknown>, [string]>(
-      "SELECT * FROM dust_permits_filed_by_desert_services WHERE id = ?"
+      "SELECT * FROM dust_permits_filed_by_desert_services WHERE id = $1"
     )
     .get(id);
   return row ? parsePermitRow(row) : null;
@@ -116,7 +116,7 @@ export async function getPermitsByProject(
 ): Promise<Permit[]> {
   const rows = await db
     .query<Record<string, unknown>, [number]>(
-      "SELECT * FROM dust_permits_filed_by_desert_services WHERE project_id = ? ORDER BY submitted_date DESC"
+      "SELECT * FROM dust_permits_filed_by_desert_services WHERE project_id = $1 ORDER BY submitted_date DESC"
     )
     .all(projectId);
   return rows.map(parsePermitRow);
@@ -127,7 +127,7 @@ export async function getPermitsByAccount(
 ): Promise<Permit[]> {
   const rows = await db
     .query<Record<string, unknown>, [number]>(
-      "SELECT * FROM dust_permits_filed_by_desert_services WHERE account_id = ? ORDER BY submitted_date DESC"
+      "SELECT * FROM dust_permits_filed_by_desert_services WHERE account_id = $1 ORDER BY submitted_date DESC"
     )
     .all(accountId);
   return rows.map(parsePermitRow);
@@ -136,7 +136,7 @@ export async function getPermitsByAccount(
 export async function getPermitsByStatus(status: string): Promise<Permit[]> {
   const rows = await db
     .query<Record<string, unknown>, [string]>(
-      "SELECT * FROM dust_permits_filed_by_desert_services WHERE status = ? ORDER BY submitted_date DESC"
+      "SELECT * FROM dust_permits_filed_by_desert_services WHERE status = $1 ORDER BY submitted_date DESC"
     )
     .all(status);
   return rows.map(parsePermitRow);
@@ -273,7 +273,7 @@ export async function getExpiringPermits(withinDays = 30): Promise<Permit[]> {
       `SELECT * FROM dust_permits_filed_by_desert_services
        WHERE status = 'Active'
          AND expiration_date IS NOT NULL
-         AND expiration_date <= (CURRENT_DATE + MAKE_INTERVAL(days => ?))::text
+         AND expiration_date <= (CURRENT_DATE + MAKE_INTERVAL(days => $1))::text
        ORDER BY expiration_date`
     )
     .all(withinDays);
@@ -286,7 +286,7 @@ export async function getPermitsNeedingScrape(limit = 100): Promise<Permit[]> {
       `SELECT * FROM dust_permits_filed_by_desert_services
        WHERE updated_at = created_at
        ORDER BY created_at
-       LIMIT ?`
+       LIMIT $1`
     )
     .all(limit);
   return rows.map(parsePermitRow);
@@ -323,7 +323,7 @@ export async function getPermitsByPortalCompany(
   const rows = await db
     .query<Record<string, unknown>, [string]>(
       `SELECT * FROM dust_permits_filed_by_desert_services
-       WHERE portal_company_id = ?
+       WHERE portal_company_id = $1
        ORDER BY submitted_date DESC`
     )
     .all(portalCompanyId);

@@ -5,10 +5,10 @@
  * → account linking) without fetching any new mail from Graph.
  */
 
-import { enrichEmailDomains } from "@email/sync/enrichment";
-import { linkEmailsToAccounts } from "@email/sync/link-accounts";
 import { processPlatformEmails } from "@email/sync/platform-extraction";
 import { db } from "@lib/db/client";
+import { enrichEmailDomains } from "@lib/linking/enrichment";
+import { linkEmailsToAccounts } from "@lib/linking/link-accounts";
 
 export async function runEmailPostProcessing(): Promise<void> {
   console.log("=".repeat(60));

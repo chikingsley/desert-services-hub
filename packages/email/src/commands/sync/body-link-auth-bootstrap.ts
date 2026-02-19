@@ -52,6 +52,26 @@ function getDefaultDebugDir(): string {
   );
 }
 
+const VNC_RESOLUTION_RE = /^(\d{2,5})x(\d{2,5})$/i;
+
+function parseVncViewport(raw: string | undefined): {
+  width: number;
+  height: number;
+} | null {
+  const match = raw?.trim().match(VNC_RESOLUTION_RE);
+  if (!match) return null;
+  const w = Number.parseInt(match[1], 10);
+  const h = Number.parseInt(match[2], 10);
+  return w > 0 && h > 0 ? { width: w, height: h } : null;
+}
+
+function getViewport(): { width: number; height: number } {
+  return (
+    parseVncViewport(process.env.VNC_RESOLUTION) ??
+    parseVncViewport(process.env.BACKGROUND_JOBS_VNC_RESOLUTION) ?? { width: 1600, height: 1200 }
+  );
+}
+
 export interface BodyLinkAuthBootstrapOptions {
   debugDir: string;
   email: string;
@@ -512,11 +532,13 @@ async function runBootstrap(
   const isDocker = Boolean(
     process.env.CONTAINER || process.env.DOCKER_CONTAINER
   );
+  const viewport = getViewport();
 
   const browser = await chromium.launch({
     headless: options.headless,
     args: [
       "--disable-blink-features=AutomationControlled",
+      "--start-maximized",
       ...(options.headless || isDocker
         ? ["--no-sandbox", "--disable-dev-shm-usage", "--disable-gpu"]
         : []),
@@ -527,7 +549,7 @@ async function runBootstrap(
     const context = await browser.newContext({
       acceptDownloads: true,
       userAgent: getPlaywrightUserAgent(),
-      viewport: { width: 1600, height: 1200 },
+      viewport,
       storageState: existsSync(options.statePath)
         ? options.statePath
         : undefined,

@@ -142,7 +142,7 @@ export async function getEstimateByMondayId(
 ): Promise<Estimate | null> {
   const row = await db
     .query<Record<string, unknown>, [string]>(
-      "SELECT * FROM estimates WHERE monday_item_id = ?"
+      "SELECT * FROM estimates WHERE monday_item_id = $1"
     )
     .get(mondayItemId);
 
@@ -152,7 +152,7 @@ export async function getEstimateByMondayId(
 export async function getEstimateById(id: number): Promise<Estimate | null> {
   const row = await db
     .query<Record<string, unknown>, [number]>(
-      "SELECT * FROM estimates WHERE id = ?"
+      "SELECT * FROM estimates WHERE id = $1"
     )
     .get(id);
 

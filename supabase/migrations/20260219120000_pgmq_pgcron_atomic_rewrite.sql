@@ -128,7 +128,7 @@ END $$;
 -- Note: pg_cron cadence is minute-based. Former 30s jobs now run every minute.
 SELECT public.schedule_background_job('bg_sync_full', '*/10 * * * *', 'sync_full', '{}'::jsonb, TRUE, 3);
 SELECT public.schedule_background_job('bg_folder_watcher', '* * * * *', 'folder_watcher_poll', '{}'::jsonb, TRUE, 3);
-SELECT public.schedule_background_job('bg_estimate_linker', '* * * * *', 'estimate_linker_poll', '{}'::jsonb, TRUE, 3);
+SELECT public.schedule_background_job('bg_estimate_linker', '* * * * *', 'estimate_linker_maintenance', '{}'::jsonb, TRUE, 3);
 SELECT public.schedule_background_job('bg_swppp_master_sync', '* * * * *', 'swppp_master_sync', '{}'::jsonb, TRUE, 3);
 SELECT public.schedule_background_job('bg_attachment_backfill', '* * * * *', 'attachment_backfill', '{}'::jsonb, TRUE, 3);
 SELECT public.schedule_background_job('bg_email_triage_batch', '* * * * *', 'email_triage_batch', '{"batchSize":20,"concurrency":3,"provider":"local"}'::jsonb, TRUE, 3);

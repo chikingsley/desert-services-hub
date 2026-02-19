@@ -2,18 +2,17 @@ import {
   normalizeEmailBody,
   validateEmailBodyOrThrow,
 } from "@email/commands/body-policy";
-import { assertWritableMailbox, getWriteClient } from "@email/commands/config";
+import { getAppClient } from "@email/commands/config";
 import { loadFileAttachments } from "@email/commands/helpers";
 import type { DraftCommandOptions } from "./types";
 
 export async function createDraftCommand(
   options: DraftCommandOptions
 ): Promise<void> {
-  assertWritableMailbox(options.userId, "draft");
   const normalizedBody = normalizeEmailBody(options.body);
   validateEmailBodyOrThrow(normalizedBody);
   const userId = options.userId as string;
-  const client = await getWriteClient(userId);
+  const client = getAppClient();
 
   const toRecipients = options.to
     ? options.to.split(",").map((email) => ({ email: email.trim() }))

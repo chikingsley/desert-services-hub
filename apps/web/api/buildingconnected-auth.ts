@@ -30,10 +30,10 @@ function normalizeVncUrl(rawUrl: string): string {
   }
 }
 
-function getBackgroundJobsBaseUrl(): string {
+function getBcWorkerBaseUrl(): string {
   return (
-    process.env.BACKGROUND_JOBS_BASE_URL?.trim() ||
-    "http://background-jobs:4747"
+    process.env.BC_WORKER_BASE_URL?.trim() ||
+    "http://bc-worker:47824"
   );
 }
 
@@ -66,7 +66,7 @@ async function proxyBackgroundJobs(
   path: string,
   init?: RequestInit
 ): Promise<Response> {
-  const upstream = await fetch(`${getBackgroundJobsBaseUrl()}${path}`, init);
+  const upstream = await fetch(`${getBcWorkerBaseUrl()}${path}`, init);
   const payload = (await upstream.json().catch(() => ({}))) as
     | Record<string, unknown>
     | undefined;
@@ -79,7 +79,7 @@ export async function getBuildingConnectedAuthStatus(
 ): Promise<Response> {
   try {
     const upstream = await fetch(
-      `${getBackgroundJobsBaseUrl()}/api/buildingconnected/auth/status`
+      `${getBcWorkerBaseUrl()}/api/buildingconnected/auth/status`
     );
     const payload = (await upstream.json().catch(() => ({}))) as
       | Record<string, unknown>

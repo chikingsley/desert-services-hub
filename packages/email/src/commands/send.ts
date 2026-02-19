@@ -6,11 +6,7 @@ import {
   normalizeEmailBody,
   validateEmailBodyOrThrow,
 } from "@email/commands/body-policy";
-import {
-  assertSendEnabled,
-  assertWritableMailbox,
-  getWriteClient,
-} from "@email/commands/config";
+import { assertSendEnabled, getAppClient } from "@email/commands/config";
 import { loadFileAttachments } from "@email/commands/helpers";
 import type { CommandHandler } from "@email/commands/types";
 
@@ -24,11 +20,10 @@ async function sendCommand(options: {
   userId?: string;
 }) {
   assertSendEnabled("send");
-  assertWritableMailbox(options.userId, "send");
   const normalizedBody = normalizeEmailBody(options.body);
   validateEmailBodyOrThrow(normalizedBody);
   const userId = options.userId as string;
-  const client = await getWriteClient(userId);
+  const client = getAppClient();
 
   const toRecipients = options.to
     .split(",")
@@ -65,11 +60,10 @@ async function replyCommand(options: {
   skipSignature: boolean;
 }) {
   assertSendEnabled("reply");
-  assertWritableMailbox(options.userId, "reply");
   const normalizedBody = normalizeEmailBody(options.body);
   validateEmailBodyOrThrow(normalizedBody);
   const userId = options.userId as string;
-  const client = await getWriteClient(userId);
+  const client = getAppClient();
 
   const draft = await client.createReplyDraft({
     body: normalizedBody,

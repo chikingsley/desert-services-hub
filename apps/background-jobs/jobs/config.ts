@@ -24,7 +24,7 @@ function parsePositiveInt(
   return Math.max(min, parsed);
 }
 
-// -- Polling intervals --
+// -- Queue consumer controls --
 
 export const POLL_INTERVAL_MS = parsePositiveInt(
   process.env.WORKER_POLL_INTERVAL_MS,
@@ -41,48 +41,13 @@ export const MAX_LLM_CONCURRENT_JOBS = parsePositiveInt(
   1
 );
 
-export const FULL_SYNC_INTERVAL_MS = 10 * 60 * 1000; // 10 minutes
-export const FOLDER_WATCHER_INTERVAL_MS = 30 * 1000; // 30 seconds
-export const ESTIMATE_LINKER_INTERVAL_MS = 60 * 1000; // 60 seconds
-export const ATTACHMENT_BACKFILL_INTERVAL_MS = parsePositiveInt(
-  process.env.ATTACHMENT_BACKFILL_INTERVAL_MS,
-  30_000, // 30 seconds default (was 2min — faster for backlog)
-  10_000
-);
-export const RENEWAL_INTERVAL_MS = 60 * 60 * 1000; // 1 hour
-export const GROUP_SYNC_INTERVAL_MS = 15 * 60 * 1000; // 15 minutes
-export const ACCOUNT_LINKING_INTERVAL_MS = parsePositiveInt(
-  process.env.ACCOUNT_LINKING_INTERVAL_MS,
-  30_000, // 30s — overlap-protected, pure SQL
-  5000
-);
-export const CONTACT_LINKING_INTERVAL_MS = parsePositiveInt(
-  process.env.CONTACT_LINKING_INTERVAL_MS,
-  30_000, // 30s — overlap-protected, SQL + local LLM
-  5000
-);
 export const CONTACT_ENRICHMENT_BATCH_SIZE = parsePositiveInt(
   process.env.CONTACT_ENRICHMENT_BATCH_SIZE,
-  50 // granite4 is local and free, no reason to be stingy
+  50
 );
 export const MONDAY_STATUS_SYNC_ENABLED = parseBooleanFlag(
   process.env.MONDAY_STATUS_SYNC_ENABLED,
   true
-);
-export const MONDAY_STATUS_SYNC_INTERVAL_MS = parsePositiveInt(
-  process.env.MONDAY_STATUS_SYNC_INTERVAL_MS,
-  60 * 60 * 1000, // 1 hour
-  60_000
-);
-export const SWPPP_MASTER_SYNC_INTERVAL_MS = parsePositiveInt(
-  process.env.SWPPP_MASTER_SYNC_INTERVAL_MS,
-  60_000,
-  30_000
-);
-export const NOTIFICATIONS_INTERVAL_MS = parsePositiveInt(
-  process.env.NOTIFICATIONS_INTERVAL_MS,
-  5 * 60 * 1000, // 5 minutes
-  30_000
 );
 export const NOTIFICATIONS_MAX_EVENTS = parsePositiveInt(
   process.env.NOTIFICATIONS_MAX_EVENTS,
@@ -113,17 +78,20 @@ export const ATTACHMENT_BACKFILL_CONCURRENCY = parsePositiveInt(
   process.env.ATTACHMENT_BACKFILL_CONCURRENCY,
   15
 );
+export const BUILDINGCONNECTED_SYNC_ENABLED = parseBooleanFlag(
+  process.env.BUILDINGCONNECTED_SYNC_ENABLED,
+  true
+);
+export const BUILDINGCONNECTED_SYNC_BATCH_SIZE = parsePositiveInt(
+  process.env.BUILDINGCONNECTED_SYNC_BATCH_SIZE,
+  50
+);
 
 // -- Email triage backfill --
 
 export const EMAIL_TRIAGE_BACKFILL_ENABLED = parseBooleanFlag(
   process.env.EMAIL_TRIAGE_BACKFILL_ENABLED,
   true
-);
-export const EMAIL_TRIAGE_BACKFILL_INTERVAL_MS = parsePositiveInt(
-  process.env.EMAIL_TRIAGE_BACKFILL_INTERVAL_MS,
-  30_000, // 30 seconds between batches
-  5000
 );
 export const EMAIL_TRIAGE_BACKFILL_BATCH_SIZE = parsePositiveInt(
   process.env.EMAIL_TRIAGE_BACKFILL_BATCH_SIZE,
@@ -140,11 +108,6 @@ export const ESTIMATE_TRIAGE_ENABLED = parseBooleanFlag(
   process.env.ESTIMATE_TRIAGE_ENABLED,
   true
 );
-export const ESTIMATE_TRIAGE_INTERVAL_MS = parsePositiveInt(
-  process.env.ESTIMATE_TRIAGE_INTERVAL_MS,
-  300_000,
-  30_000
-);
 export const ESTIMATE_TRIAGE_MAX_ROWS = parsePositiveInt(
   process.env.ESTIMATE_TRIAGE_MAX_ROWS,
   4
@@ -153,13 +116,48 @@ export const ESTIMATE_TRIAGE_PROVIDER = (
   process.env.ESTIMATE_TRIAGE_PROVIDER ?? "glm-ocr"
 ).trim();
 
-export const GEMINI_FAST_MODEL = (
-  process.env.GEMINI_FAST_MODEL ?? "gemini-2.5-flash-lite"
-).trim();
+// -- Mailbox fallback sync --
 
-export const GEMINI_SMART_MODEL = (
-  process.env.GEMINI_SMART_MODEL ?? "gemini-2.5-flash-lite"
-).trim();
+export const MAILBOX_FALLBACK_SYNC_ENABLED = parseBooleanFlag(
+  process.env.MAILBOX_FALLBACK_SYNC_ENABLED,
+  true
+);
+export const MAILBOX_FALLBACK_SYNC_LOOKBACK_HOURS = parsePositiveInt(
+  process.env.MAILBOX_FALLBACK_SYNC_LOOKBACK_HOURS,
+  6
+);
+export const MAILBOX_FALLBACK_SYNC_MAX_PER_MAILBOX = parsePositiveInt(
+  process.env.MAILBOX_FALLBACK_SYNC_MAX_PER_MAILBOX,
+  250
+);
+export const MAILBOX_FALLBACK_SYNC_CONCURRENCY = parsePositiveInt(
+  process.env.MAILBOX_FALLBACK_SYNC_CONCURRENCY,
+  2
+);
+
+// -- Body-link backfill --
+
+export const BODY_LINK_BACKFILL_ENABLED = parseBooleanFlag(
+  process.env.BODY_LINK_BACKFILL_ENABLED,
+  true
+);
+export const BODY_LINK_BACKFILL_LOOKBACK_DAYS = parsePositiveInt(
+  process.env.BODY_LINK_BACKFILL_LOOKBACK_DAYS,
+  365
+);
+export const BODY_LINK_BACKFILL_LIMIT = parsePositiveInt(
+  process.env.BODY_LINK_BACKFILL_LIMIT,
+  200
+);
+export const BODY_LINK_BACKFILL_MAX_LINKS = parsePositiveInt(
+  process.env.BODY_LINK_BACKFILL_MAX_LINKS,
+  12
+);
+export const BODY_LINK_BACKFILL_MAILBOX_FILTER = (
+  process.env.BODY_LINK_BACKFILL_MAILBOX_FILTER ?? ""
+)
+  .trim()
+  .toLowerCase();
 
 // -- Permit sync --
 
@@ -172,6 +170,55 @@ export const PAYMENT_PERMIT_SYNC_TIMEOUT_MS = parsePositiveInt(
   process.env.PAYMENT_PERMIT_SYNC_TIMEOUT_MS,
   180_000,
   10_000
+);
+
+// Scheduled full sync (company + marketing) on a recurring timer
+export const PERMIT_SYNC_ENABLED = parseBooleanFlag(
+  process.env.PERMIT_SYNC_ENABLED,
+  true
+);
+// Timeout for the full sync HTTP request (longer than payment sync since it scrapes marketing too)
+export const PERMIT_SYNC_TIMEOUT_MS = parsePositiveInt(
+  process.env.PERMIT_SYNC_TIMEOUT_MS,
+  5 * 60 * 1000, // 5 minutes
+  30_000
+);
+
+// -- AQData sync --
+
+export const AQDATA_WORKER_URL = (
+  process.env.AQDATA_WORKER_URL ?? "http://aqdata-worker:47823"
+).trim();
+export const AQDATA_SYNC_TIMEOUT_MS = parsePositiveInt(
+  process.env.AQDATA_SYNC_TIMEOUT_MS,
+  5 * 60 * 1000,
+  10_000
+);
+export const AQDATA_SYNC_ENABLED = parseBooleanFlag(
+  process.env.AQDATA_SYNC_ENABLED,
+  true
+);
+export const AQDATA_DETAIL_SCRAPE_ENABLED = parseBooleanFlag(
+  process.env.AQDATA_DETAIL_SCRAPE_ENABLED,
+  true
+);
+export const AQDATA_DETAIL_SCRAPE_BATCH_SIZE = parsePositiveInt(
+  process.env.AQDATA_DETAIL_SCRAPE_BATCH_SIZE,
+  10,
+  1
+);
+
+// Permit detail scrape — enriches individual company permits that have no scraped data yet.
+// Disabled by default until dust_permits_filed_by_desert_services gets a detail_scraped_at
+// column (like marketing_permits) so sync upserts don't clear the "needs scrape" signal.
+export const PERMIT_SCRAPE_ENABLED = parseBooleanFlag(
+  process.env.PERMIT_SCRAPE_ENABLED,
+  false
+);
+export const PERMIT_SCRAPE_BATCH_SIZE = parsePositiveInt(
+  process.env.PERMIT_SCRAPE_BATCH_SIZE,
+  5,
+  1
 );
 
 // -- Estimate file sweep --
@@ -187,11 +234,6 @@ export const ESTIMATE_FILE_SWEEP_CURSOR_KEY = "estimate_file_sweep_offset_v1";
 export const CONTRACT_WON_BRIDGE_ENABLED = parseBooleanFlag(
   process.env.CONTRACT_WON_BRIDGE_ENABLED,
   true
-);
-export const CONTRACT_WON_BRIDGE_INTERVAL_MS = parsePositiveInt(
-  process.env.CONTRACT_WON_BRIDGE_INTERVAL_MS,
-  2 * 60 * 1000, // 2 minutes
-  30_000
 );
 
 // -- Domain constants --

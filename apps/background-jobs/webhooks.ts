@@ -1,38 +1,49 @@
 /**
- * Desert Services Hub - Webhook Receiver + Background Worker
+ * Desert Services Hub - AQData Receiver + Background Worker
  *
- * Separate entrypoint for webhook ingestion (Monday, Outlook) and
- * the background job queue processor. Runs behind Cloudflare Tunnel.
+ * Runs the background job queue consumer and AQData trigger endpoints.
+ * Monday/Outlook/Intake ingress is handled by Supabase Edge Functions.
  *
  * Run with: bun run apps/background-jobs/webhooks.ts
  */
 
 import { serve } from "bun";
+import {
+  handleAQDataCompanySync,
+  handleAQDataDetailScrape,
+  handleAQDataSync,
+} from "./api/aqdata";
 import { healthCheck } from "./api/health";
 import { handleIntakeWebhook } from "./api/webhooks/intake";
-import { handleMondayWebhook } from "./api/webhooks/monday";
-import { handleOutlookWebhook } from "./api/webhooks/outlook";
 import { startWorker } from "./worker";
 
-// Bun.serve route handlers require `(req: Request) => Response | Promise<Response>`
-// but our handlers return `Promise<Response>`. The cast bridges this mismatch.
-const handler = (fn: (req: Request) => Promise<Response>) => fn as never;
+const IDLE_TIMEOUT_SECONDS = Number.parseInt(
+  process.env.WEBHOOK_IDLE_TIMEOUT_S ?? "255",
+  10
+);
 
 const server = serve({
+  idleTimeout:
+    Number.isFinite(IDLE_TIMEOUT_SECONDS) && IDLE_TIMEOUT_SECONDS > 0
+      ? Math.min(255, IDLE_TIMEOUT_SECONDS)
+      : 255,
   port: process.env.WEBHOOK_PORT || 4747,
 
   routes: {
     "/api/health": {
       GET: healthCheck,
     },
-    "/api/webhooks/monday": {
-      POST: handler(handleMondayWebhook),
+    "/api/aqdata/sync": {
+      POST: handleAQDataSync,
     },
-    "/api/webhooks/outlook": {
-      POST: handler(handleOutlookWebhook),
+    "/api/aqdata/sync/company": {
+      POST: handleAQDataCompanySync,
+    },
+    "/api/aqdata/scrape": {
+      POST: ((req: Request) => handleAQDataDetailScrape(req)) as never,
     },
     "/api/webhooks/intake": {
-      POST: handler(handleIntakeWebhook),
+      POST: ((req: Request) => handleIntakeWebhook(req)) as never,
     },
   },
 

@@ -68,6 +68,33 @@ permits-probe:
     fi
     echo "Permit tunnel probe OK"
 
+# AQData
+aqdata-health:
+    @echo "AQData worker:"
+    @curl -fsS --max-time 10 "http://localhost:47823/health"
+    @echo
+    @echo "Background jobs:"
+    @curl -fsS --max-time 10 "http://localhost:4000/api/health"
+    @echo
+
+aqdata-sync-now:
+    @curl -fsS --max-time 30 -X POST "http://localhost:4000/api/aqdata/sync"
+    @echo
+
+aqdata-scrape-now limit="10":
+    @curl -fsS --max-time 30 -X POST "http://localhost:4000/api/aqdata/scrape" \
+      -H "content-type: application/json" \
+      -d '{"limit": {{limit}}}'
+    @echo
+
+aqdata-status:
+    @docker exec supabase_db_desert-services-hub psql -U postgres -d postgres -c "SELECT COUNT(*) AS total_rows, COUNT(*) FILTER (WHERE detail_scraped_at IS NOT NULL) AS detail_scraped_rows FROM aqdata_permits;"
+    @docker exec supabase_db_desert-services-hub psql -U postgres -d postgres -c "SELECT msg_id, message->>'job_type' AS job_type, read_ct, vt FROM pgmq.q_background_jobs WHERE message->>'job_type' LIKE 'aqdata%' ORDER BY msg_id;"
+    @docker exec supabase_db_desert-services-hub psql -U postgres -d postgres -c "SELECT job_type, COUNT(*) AS dead_letters FROM background_job_dead_letters WHERE job_type LIKE 'aqdata%' GROUP BY job_type ORDER BY job_type;"
+
+aqdata-deadletters-clear:
+    @docker exec supabase_db_desert-services-hub psql -U postgres -d postgres -c "DELETE FROM background_job_dead_letters WHERE job_type LIKE 'aqdata%';"
+
 # Code Quality (repo-level)
 lint:
     @{{BUN}} run lint
@@ -120,6 +147,52 @@ contracts-pending-csv out="data/reports/contracts-pending.csv":
 	@mkdir -p $(dirname {{out}})
 	@docker exec -i supabase_db_desert-services-hub psql -U postgres -d postgres -c "\copy (SELECT id, name, contractor, COALESCE(contract_status, 'Pending') AS contract_status FROM projects WHERE contract_status = 'Pending' OR contract_status IS NULL ORDER BY name) TO STDOUT WITH CSV HEADER" > {{out}}
 	@echo "Wrote {{out}}"
+
+# Direct Postgres SQL (fast path, no temp files).
+# Example:
+#   just pg-sql "select now();"
+#   just pg-sql "select id,name from projects order by updated_at desc limit 5;"
+pg-sql sql:
+	@docker exec -i supabase_db_desert-services-hub psql -U postgres -d postgres -v ON_ERROR_STOP=1 -c "{{sql}}"
+
+# Fast DB-first project candidate lookup with safe psql var binding.
+# Example:
+#   just triage-pg-find "dpx8 site surrender"
+triage-pg-find needle:
+	@docker exec -i supabase_db_desert-services-hub psql -U postgres -d postgres -v ON_ERROR_STOP=1 -c "select id, name, project_number, monday_item_id, updated_at from projects where name ilike '%' || \$needle\${{needle}}\$needle\$ || '%' or coalesce(project_number,'') ilike '%' || \$needle\${{needle}}\$needle\$ || '%' order by updated_at desc limit 20;"
+
+# Fast canonical estimate linkage for a project.
+# Example:
+#   just triage-pg-estimates 103
+triage-pg-estimates project_id:
+	@docker exec -i supabase_db_desert-services-hub psql -U postgres -d postgres -v ON_ERROR_STOP=1 -c "select pe.project_id, pe.estimate_id, pe.is_canonical, pe.source, e.name as estimate_name, e.estimate_number, e.monday_item_id, e.bid_status, e.status, e.bid_value, e.awarded_value, e.updated_at from project_estimates pe join estimates e on e.id = pe.estimate_id where pe.project_id = {{project_id}}::int order by pe.is_canonical desc nulls last, pe.created_at desc;"
+
+# Fast contract/subcontract/work-order evidence for a project.
+# Example:
+#   just triage-pg-contracts 103
+triage-pg-contracts project_id:
+	@docker exec -i supabase_db_desert-services-hub psql -U postgres -d postgres -v ON_ERROR_STOP=1 -c "select d.id, d.project_id, d.estimate_id, d.document_type, d.file_name, d.extraction_status, d.updated_at from documents d where d.project_id = {{project_id}}::int and (d.document_type in ('contract','subcontract','work_order') or d.file_name ilike '%contract%' or d.file_name ilike '%subcontract%' or d.file_name ilike '%work order%' or coalesce(d.summary,'') ilike '%contract%' or coalesce(d.summary,'') ilike '%subcontract%' or coalesce(d.summary,'') ilike '%work order%') order by d.updated_at desc nulls last;"
+
+# SSH file transfer wrappers (uses ~/.ssh/config host aliases).
+# Examples:
+#   just ssh-push /abs/local/file.pdf work-mac '~/Downloads/'
+#   just ssh-pull work-mac '~/Downloads/file.pdf' '/abs/local/dir/'
+#   just ssh-sync /abs/local/dir/ work-mac '~/Downloads/dir/'
+ssh-push src host dest:
+	@/home/simon/.codex/skills/ssh-file-transfer/scripts/push-file.sh --src "{{src}}" --host "{{host}}" --dest "{{dest}}"
+
+ssh-pull host src dest:
+	@/home/simon/.codex/skills/ssh-file-transfer/scripts/pull-file.sh --host "{{host}}" --src "{{src}}" --dest "{{dest}}"
+
+ssh-sync src host dest:
+	@/home/simon/.codex/skills/ssh-file-transfer/scripts/sync-dir.sh --src "{{src}}" --host "{{host}}" --dest "{{dest}}"
+
+# Generate internal contact sheet PDF from local contacts table.
+# Example:
+#   just internal-contact-sheet-pdf
+#   just internal-contact-sheet-pdf out=data/exports/contacts/internal-contact-sheet.pdf
+internal-contact-sheet-pdf out="data/exports/contacts/internal-contact-sheet.pdf":
+	@{{BUN}} -e "import { generatePdf } from './packages/documents/pdf-generation/src/safety/internal-contact-sheet/generate'; await generatePdf('{{out}}'); console.log('Wrote PDF: {{out}}');"
 
 [private]
 _health strict:

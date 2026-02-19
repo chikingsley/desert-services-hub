@@ -21,6 +21,7 @@ apps/
   web/                   # Frontend SPA + API
   background-jobs/       # Webhook receiver + queue + polling workers
   dust-permits/          # Permit-worker runtime (Playwright + API)
+  aqdata-worker/         # AQData worker (export sync + detail scrape + PDF enrichment)
   cf-workers/            # Cloudflare Workers
 
 packages/
@@ -42,6 +43,7 @@ lib/
 ## Scoped AGENTS (Use Nearest Scope)
 
 - `apps/dust-permits/AGENTS.md`: permit runtime API, browser automation, E2E/VNC run context.
+- `apps/aqdata-worker/AGENTS.md`: AQData sync/scrape runtime, parser/persistence boundaries.
 - `packages/permits/AGENTS.md`: typed client contract and tests.
 - `apps/background-jobs/AGENTS.md`: webhook jobs, notification triggers, sync/linking worker rules.
 - `apps/web/AGENTS.md`: estimate API guardrails and permit API integration from web.
@@ -54,6 +56,7 @@ lib/
 | `web` | `desert-web` | 3000 | Frontend + API |
 | `background-jobs` | `desert-webhooks` | 4747 | Webhooks + jobs + timers |
 | `permit-worker` | `desert-permit-worker` | 47822 API, 6080 VNC | Permit browser automation |
+| `aqdata-worker` | `desert-aqdata-worker` | 47823 | AQData export sync + detail scrape |
 | `tunnel` | `desert-tunnel` | — | Cloudflare tunnel |
 
 ## Permit Worker Integration (Canonical)
@@ -153,6 +156,6 @@ Build code as thin orchestration + isolated processors. No exceptions unless exp
 
 ### Reference Standards
 
-- Hexagonal Architecture (Ports and Adapters): https://alistair.cockburn.us/hexagonal-architecture
-- Layered Architecture (Presentation-Domain-Data): https://martinfowler.com/bliki/PresentationDomainDataLayering.html
-- Pipes and Filters: https://learn.microsoft.com/en-us/azure/architecture/patterns/pipes-and-filters
+- Hexagonal Architecture (Ports and Adapters): <https://alistair.cockburn.us/hexagonal-architecture>
+- Layered Architecture (Presentation-Domain-Data): <https://martinfowler.com/bliki/PresentationDomainDataLayering.html>
+- Pipes and Filters: <https://learn.microsoft.com/en-us/azure/architecture/patterns/pipes-and-filters>

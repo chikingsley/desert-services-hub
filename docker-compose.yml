@@ -40,6 +40,7 @@ services:
     environment:
       NODE_ENV: production
       WEBHOOK_PORT: 4747
+      WEBHOOK_IDLE_TIMEOUT_S: ${WEBHOOK_IDLE_TIMEOUT_S:-255}
       DATABASE_URL: postgresql://postgres:postgres@host.docker.internal:54322/postgres
       MONDAY_FILES_DIR: /app/data/monday-files
       # LLM — two tiers: fast for classification, smart for routing/extraction
@@ -49,6 +50,7 @@ services:
       PDF_ANALYSIS_URL: http://pdf-analysis:4848
       # Email triage
       EMAIL_TRIAGE_MODE: ${EMAIL_TRIAGE_MODE:-active}
+      EMAIL_TRIAGE_PROVIDER: ${EMAIL_TRIAGE_PROVIDER:-local}
       # Local LLM (Ollama) for triage backfill
       LOCAL_LLM_BASE_URL: http://host.docker.internal:11434/v1
       LOCAL_LLM_MODEL: ${LOCAL_LLM_MODEL:-granite4:latest}
@@ -58,6 +60,17 @@ services:
       # Attachment backfill
       ATTACHMENT_BACKFILL_BATCH_SIZE: ${ATTACHMENT_BACKFILL_BATCH_SIZE:-200}
       ATTACHMENT_BACKFILL_CONCURRENCY: ${ATTACHMENT_BACKFILL_CONCURRENCY:-15}
+      EMAIL_BODY_LINK_PLAYWRIGHT: ${EMAIL_BODY_LINK_PLAYWRIGHT:-1}
+      EMAIL_BODY_LINK_PLAYWRIGHT_HEADLESS: ${EMAIL_BODY_LINK_PLAYWRIGHT_HEADLESS:-1}
+      EMAIL_BODY_LINK_PLAYWRIGHT_STORAGE_STATE_PATH: ${EMAIL_BODY_LINK_PLAYWRIGHT_STORAGE_STATE_PATH:-/app/data/attachments/body-links-auth/state.json}
+      EMAIL_BODY_LINK_PLAYWRIGHT_DEBUG_DIR: ${EMAIL_BODY_LINK_PLAYWRIGHT_DEBUG_DIR:-/app/data/attachments/body-links-debug}
+      BUILDINGCONNECTED_SYNC_ENABLED: ${BUILDINGCONNECTED_SYNC_ENABLED:-1}
+      BUILDINGCONNECTED_SYNC_BATCH_SIZE: ${BUILDINGCONNECTED_SYNC_BATCH_SIZE:-50}
+      BUILDINGCONNECTED_SYNC_DOWNLOAD_TIMEOUT_MS: ${BUILDINGCONNECTED_SYNC_DOWNLOAD_TIMEOUT_MS:-20000}
+      AQDATA_WORKER_URL: ${AQDATA_WORKER_URL:-http://aqdata-worker:47823}
+      AQDATA_SYNC_ENABLED: ${AQDATA_SYNC_ENABLED:-1}
+      AQDATA_DETAIL_SCRAPE_ENABLED: ${AQDATA_DETAIL_SCRAPE_ENABLED:-1}
+      AQDATA_DETAIL_SCRAPE_BATCH_SIZE: ${AQDATA_DETAIL_SCRAPE_BATCH_SIZE:-10}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:
@@ -84,10 +97,11 @@ services:
     env_file: .env
     environment:
       GEMINI_MODEL: ${GEMINI_MODEL:-gemini-3-flash-preview}
-      PDF_ANALYSIS_PROVIDER_ORDER: ${PDF_ANALYSIS_PROVIDER_ORDER:-gemini,local}
+      PDF_ANALYSIS_PROVIDER_ORDER: ${PDF_ANALYSIS_PROVIDER_ORDER:-local,gemini}
       OLLAMA_ENDPOINT: http://host.docker.internal:11434/v1
       OLLAMA_MODEL: glm-ocr:latest
       OLLAMA_CHAT_MODEL: granite4:latest
+      OLLAMA_MANAGER_ENDPOINT: ${OLLAMA_MANAGER_ENDPOINT:-}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:
@@ -99,7 +113,7 @@ services:
       retries: 3
       start_period: 10s
     restart: unless-stopped
-    command: ["uv", "run", "--project", "packages/documents/pdf-analysis-py", "uvicorn", "pdf_analysis.server:app", "--host", "0.0.0.0", "--port", "4848"]
+    command: ["uv", "run", "--project", "packages/documents/intake", "uvicorn", "pdf_analysis.server:app", "--host", "0.0.0.0", "--port", "4848"]
 
   # ==========================================================================
   # Permit Worker — Browser automation for Maricopa County dust permits
@@ -141,9 +155,43 @@ services:
       start_period: 20s
     restart: unless-stopped
 
+  # ==========================================================================
+  # AQData Worker — HTTP sync + continuous AQ data scrape snapshots
+  # ==========================================================================
+  aqdata-worker:
+    build:
+      context: .
+      dockerfile: apps/aqdata-worker/Dockerfile
+    container_name: desert-aqdata-worker
+    ports:
+      - "47823:47823"
+    env_file: .env
+    environment:
+      NODE_ENV: production
+      PORT: 47823
+      DATABASE_URL: postgresql://postgres:postgres@host.docker.internal:54322/postgres
+      AQDATA_HTTP_IDLE_TIMEOUT_S: ${AQDATA_HTTP_IDLE_TIMEOUT_S:-255}
+      AQDATA_OUTPUT_DIR: /app/data/aqdata
+      AQDATA_SCRAPE_INTERVAL_MS: ${AQDATA_SCRAPE_INTERVAL_MS:-900000}
+      AQDATA_DETAIL_SCRAPE_BATCH_SIZE: ${AQDATA_DETAIL_SCRAPE_BATCH_SIZE:-10}
+      AQDATA_COMPANY_NAME: ${AQDATA_COMPANY_NAME:-Desert Services}
+      AQDATA_COORDINATES_API_URL: ${AQDATA_COORDINATES_API_URL:-}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - aqdata-data:/app/data/aqdata
+    healthcheck:
+      test: ["CMD", "bun", "-e", "const r = await fetch('http://localhost:47823/health'); if (!r.ok) process.exit(1);"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    restart: unless-stopped
+
 volumes:
   webhooks-data:
   permit-data:
+  aqdata-data:
 
 # =============================================================================
 # Usage

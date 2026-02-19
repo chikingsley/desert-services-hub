@@ -29,7 +29,7 @@ import {
 } from "node:fs";
 import { join } from "node:path";
 import { parseArgs } from "node:util";
-import { getAppClient } from "@email/commands/config";
+import { getAppClient } from "@email-cli/commands/config";
 import { db } from "@lib/db/client";
 
 import { escapeODataStringLiteral, sanitizeFilename } from "./shared";

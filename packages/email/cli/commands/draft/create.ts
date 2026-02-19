@@ -1,9 +1,9 @@
 import {
   normalizeEmailBody,
   validateEmailBodyOrThrow,
-} from "@email/commands/body-policy";
-import { getAppClient } from "@email/commands/config";
-import { loadFileAttachments } from "@email/commands/helpers";
+} from "@email-cli/commands/body-policy";
+import { getAppClient } from "@email-cli/commands/config";
+import { loadFileAttachments } from "@email-cli/commands/helpers";
 import type { DraftCommandOptions } from "./types";
 
 export async function createDraftCommand(

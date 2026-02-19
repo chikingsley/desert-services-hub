@@ -11,6 +11,16 @@
  * 3. Operator clicks → UI PUTs the response
  * 4. Automation's poll sees the resolution and continues/stops
  */
+import { z } from "zod";
+
+const createCheckpointSchema = z.object({
+  label: z.string().min(1, "label is required"),
+  context: z.record(z.string(), z.unknown()).optional(),
+});
+
+const respondCheckpointSchema = z.object({
+  action: z.enum(["approve", "decline"]),
+});
 
 interface Checkpoint {
   id: string;
@@ -45,26 +55,27 @@ function pruneStale(): void {
 export async function createCheckpoint(req: Request): Promise<Response> {
   pruneStale();
 
-  const body = (await req.json().catch(() => ({}))) as {
-    label?: string;
-    context?: Record<string, unknown>;
-  };
-
-  if (!body.label) {
-    return Response.json({ error: "label is required" }, { status: 400 });
+  const parsed = createCheckpointSchema.safeParse(
+    await req.json().catch(() => ({}))
+  );
+  if (!parsed.success) {
+    return Response.json(
+      { error: parsed.error.issues[0]?.message ?? "Invalid request" },
+      { status: 400 }
+    );
   }
 
   const id = String(nextId++);
   const checkpoint: Checkpoint = {
     id,
-    label: body.label,
-    context: body.context,
+    label: parsed.data.label,
+    context: parsed.data.context,
     status: "pending",
     createdAt: new Date().toISOString(),
   };
 
   checkpoints.set(id, checkpoint);
-  console.log(`[Checkpoint] Created #${id}: ${body.label}`);
+  console.log(`[Checkpoint] Created #${id}: ${parsed.data.label}`);
 
   return Response.json(checkpoint, { status: 201 });
 }
@@ -113,18 +124,18 @@ export async function respondCheckpoint(req: BunRequest): Promise<Response> {
     );
   }
 
-  const body = (await req.json().catch(() => ({}))) as {
-    action?: string;
-  };
-
-  if (body.action !== "approve" && body.action !== "decline") {
+  const parsed = respondCheckpointSchema.safeParse(
+    await req.json().catch(() => ({}))
+  );
+  if (!parsed.success) {
     return Response.json(
       { error: 'action must be "approve" or "decline"' },
       { status: 400 }
     );
   }
 
-  checkpoint.status = body.action === "approve" ? "approved" : "declined";
+  checkpoint.status =
+    parsed.data.action === "approve" ? "approved" : "declined";
   checkpoint.resolvedAt = new Date().toISOString();
 
   console.log(`[Checkpoint] #${id} ${checkpoint.status}: ${checkpoint.label}`);

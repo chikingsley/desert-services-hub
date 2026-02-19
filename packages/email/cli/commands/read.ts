@@ -2,8 +2,8 @@
  * Email read commands: get, thread, download-attachments.
  */
 import { parseArgs } from "node:util";
-import { DEFAULT_USER, getAppClient } from "@email/commands/config";
-import type { CommandHandler } from "@email/commands/types";
+import { DEFAULT_USER, getAppClient } from "@email-cli/commands/config";
+import type { CommandHandler } from "@email-cli/commands/types";
 
 async function getCommand(messageId: string, userId: string) {
   const client = getAppClient();

@@ -7,8 +7,32 @@ import {
   EstimatePayloadValidationError,
   validateCreateEstimatePayload,
 } from "@estimates/estimating/estimate-payload-validation";
+import {
+  multiFilter,
+  paginationSchema,
+  parseQuery,
+  searchParam,
+  sortParam,
+} from "@lib/api/validation";
 import { db } from "@lib/db/client";
 import { generateBaseNumber } from "@lib/utils";
+import { z } from "zod";
+
+const SORT_FIELDS = [
+  "created_at",
+  "job_name",
+  "client_name",
+  "total",
+  "status",
+] as const;
+type SortField = (typeof SORT_FIELDS)[number];
+
+const estimatesQuerySchema = paginationSchema.extend({
+  q: searchParam,
+  source: z.enum(["all", "manual", "takeoff"]).catch("all"),
+  status: multiFilter,
+  sort: sortParam(SORT_FIELDS, "created_at"),
+});
 
 interface EstimateListRow {
   id: string;
@@ -26,13 +50,6 @@ interface EstimateListRow {
   current_version_created_at: string | null;
 }
 
-type SortField = "created_at" | "job_name" | "client_name" | "total" | "status";
-type SortDirection = "asc" | "desc";
-
-const DEFAULT_SORT: `${SortField}.${SortDirection}` = "created_at.desc";
-const DEFAULT_PER_PAGE = 50;
-
-// Generate a unique base number (YYMMDD format with suffix for duplicates)
 async function getNextBaseNumber(): Promise<string> {
   const baseNumber = generateBaseNumber();
 
@@ -57,48 +74,6 @@ async function getNextBaseNumber(): Promise<string> {
   return `${baseNumber}01`;
 }
 
-function parsePositiveInt(value: string | null, fallback: number): number {
-  const parsed = Number(value);
-  if (!Number.isInteger(parsed) || parsed <= 0) {
-    return fallback;
-  }
-  return parsed;
-}
-
-function parseSort(value: string | null): {
-  field: SortField;
-  direction: SortDirection;
-} {
-  const raw = (value || DEFAULT_SORT).trim();
-  const [fieldRaw, directionRaw] = raw.split(".");
-
-  const field =
-    fieldRaw === "created_at" ||
-    fieldRaw === "job_name" ||
-    fieldRaw === "client_name" ||
-    fieldRaw === "total" ||
-    fieldRaw === "status"
-      ? fieldRaw
-      : "created_at";
-
-  const direction = directionRaw === "asc" ? "asc" : "desc";
-
-  return { field, direction };
-}
-
-function parseStatusFilter(value: string | null): string[] {
-  if (!value) {
-    return [];
-  }
-
-  const statuses = value
-    .split(",")
-    .map((s) => s.trim())
-    .filter((s) => s.length > 0);
-
-  return [...new Set(statuses)].slice(0, 20);
-}
-
 function getSortExpression(field: SortField): string {
   switch (field) {
     case "job_name":
@@ -118,21 +93,14 @@ function getSortExpression(field: SortField): string {
 export async function listEstimates(req: Request): Promise<Response> {
   try {
     const url = new URL(req.url);
-    const page = parsePositiveInt(url.searchParams.get("page"), 1);
-    const perPage = Math.min(
-      200,
-      Math.max(
-        1,
-        parsePositiveInt(url.searchParams.get("perPage"), DEFAULT_PER_PAGE)
-      )
-    );
-
-    const query = url.searchParams.get("q")?.trim() || "";
-    const source = (url.searchParams.get("source") || "all").trim();
-    const statuses = parseStatusFilter(url.searchParams.get("status"));
-    const { field: sortField, direction: sortDirection } = parseSort(
-      url.searchParams.get("sort")
-    );
+    const {
+      page,
+      perPage,
+      q: query,
+      source,
+      status: statuses,
+      sort: { field: sortField, direction: sortDirection },
+    } = parseQuery(url, estimatesQuerySchema);
 
     const conditions: string[] = [];
     const params: unknown[] = [];
@@ -336,7 +304,9 @@ async function insertEstimateSections(
     const sectionId = crypto.randomUUID();
     sectionIdMap.set(section.id, sectionId);
     const offset = sectionValues.length;
-    sectionPlaceholders.push(`($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4}, $${offset + 5}, $${offset + 6})`);
+    sectionPlaceholders.push(
+      `($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4}, $${offset + 5}, $${offset + 6})`
+    );
     sectionValues.push(
       sectionId,
       versionId,
@@ -374,7 +344,9 @@ async function insertEstimateLineItems(params: {
   for (const item of lineItems) {
     const lineItemId = crypto.randomUUID();
     const offset = itemValues.length;
-    itemPlaceholders.push(`($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4}, $${offset + 5}, $${offset + 6}, $${offset + 7}, $${offset + 8}, $${offset + 9}, $${offset + 10}, $${offset + 11})`);
+    itemPlaceholders.push(
+      `($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4}, $${offset + 5}, $${offset + 6}, $${offset + 7}, $${offset + 8}, $${offset + 9}, $${offset + 10}, $${offset + 11})`
+    );
     itemValues.push(
       lineItemId,
       versionId,

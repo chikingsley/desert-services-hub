@@ -2,8 +2,8 @@
  * Mailbox listing command — queries Graph API for all tenant mailboxes
  * and cross-references with Supabase Postgres email counts and sync config.
  */
-import { getAppClient } from "@email/commands/config";
-import type { CommandHandler } from "@email/commands/types";
+import { getAppClient } from "@email-cli/commands/config";
+import type { CommandHandler } from "@email-cli/commands/types";
 import { ALL_MAILBOXES } from "@email/sync/config";
 import { db } from "@lib/db/client";
 

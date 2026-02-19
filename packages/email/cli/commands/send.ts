@@ -5,10 +5,10 @@ import { parseArgs } from "node:util";
 import {
   normalizeEmailBody,
   validateEmailBodyOrThrow,
-} from "@email/commands/body-policy";
-import { assertSendEnabled, getAppClient } from "@email/commands/config";
-import { loadFileAttachments } from "@email/commands/helpers";
-import type { CommandHandler } from "@email/commands/types";
+} from "@email-cli/commands/body-policy";
+import { assertSendEnabled, getAppClient } from "@email-cli/commands/config";
+import { loadFileAttachments } from "@email-cli/commands/helpers";
+import type { CommandHandler } from "@email-cli/commands/types";
 
 async function sendCommand(options: {
   to: string;

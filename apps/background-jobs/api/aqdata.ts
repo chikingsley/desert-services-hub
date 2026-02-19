@@ -3,6 +3,11 @@ import {
   runAQDataDetailScrape,
   runAQDataSync,
 } from "@background-jobs/jobs/aqdata-sync";
+import { z } from "zod";
+
+const detailScrapeSchema = z.object({
+  limit: z.coerce.number().int().min(1).optional(),
+});
 
 export function handleAQDataSync(): Response {
   launchAsync("AQData sync", async () => {
@@ -29,12 +34,9 @@ export function handleAQDataCompanySync(): Response {
 export async function handleAQDataDetailScrape(
   req: Request
 ): Promise<Response> {
-  const body = (await req.json().catch(() => ({}))) as { limit?: number };
-
-  const limit =
-    typeof body.limit === "number" && Number.isFinite(body.limit)
-      ? Math.max(1, Math.trunc(body.limit))
-      : undefined;
+  const { limit } = detailScrapeSchema.parse(
+    await req.json().catch(() => ({}))
+  );
 
   launchAsync("AQData detail scrape", async () => {
     const result = await runAQDataDetailScrape({

@@ -1,4 +1,4 @@
-import { assertWritableMailbox, getAppClient } from "@email/commands/config";
+import { assertWritableMailbox, getAppClient } from "@email-cli/commands/config";
 import { getMailboxByUser, updateEmailMessageIdInDb } from "./repository";
 import {
   createFolderLabeler,

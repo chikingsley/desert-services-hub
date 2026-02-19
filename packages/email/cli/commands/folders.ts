@@ -3,8 +3,8 @@
  */
 import { parseArgs } from "node:util";
 import type { MailFolderWithChildren } from "@email/client";
-import { DEFAULT_USER, getAppClient } from "@email/commands/config";
-import type { CommandHandler } from "@email/commands/types";
+import { DEFAULT_USER, getAppClient } from "@email-cli/commands/config";
+import type { CommandHandler } from "@email-cli/commands/types";
 
 interface FlatFolder {
   id: string;

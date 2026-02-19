@@ -1,5 +1,5 @@
 import { parseArgs } from "node:util";
-import type { CommandHandler } from "@email/commands/types";
+import type { CommandHandler } from "@email-cli/commands/types";
 import { createDraftCommand } from "./create";
 import { replyDraftCommand } from "./reply";
 import { replyDraftByIdCommand } from "./reply-by-id";

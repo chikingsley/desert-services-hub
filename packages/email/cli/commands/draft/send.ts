@@ -1,4 +1,4 @@
-import { assertSendEnabled, getAppClient } from "@email/commands/config";
+import { assertSendEnabled, getAppClient } from "@email-cli/commands/config";
 
 export async function sendDraftCommand(
   draftId: string,

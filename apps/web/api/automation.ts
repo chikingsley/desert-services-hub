@@ -6,6 +6,11 @@
  */
 
 import { PermitClient, PermitWorkerError } from "@permits/client";
+import { z } from "zod";
+
+const clipboardPasteSchema = z.object({
+  text: z.string().catch(""),
+});
 
 const client = new PermitClient();
 
@@ -118,8 +123,9 @@ export async function postAutomationClipboardPaste(
   req: Request
 ): Promise<Response> {
   try {
-    const body = (await req.json().catch(() => ({}))) as { text?: unknown };
-    const text = typeof body.text === "string" ? body.text : "";
+    const { text } = clipboardPasteSchema.parse(
+      await req.json().catch(() => ({}))
+    );
     const result = await client.clipboardPaste({ text });
     return Response.json(result);
   } catch (error) {

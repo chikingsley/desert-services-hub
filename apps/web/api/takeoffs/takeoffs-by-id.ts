@@ -4,10 +4,19 @@
  */
 import { db } from "@lib/db/client";
 import { createSharePointClientFromEnv } from "@sharepoint/intake-upload";
+import { z } from "zod";
 import {
   decodeSharePointPdfPath,
   isExternalPdfUrl,
 } from "../../lib/takeoff-pdf-storage";
+
+const updateTakeoffSchema = z.object({
+  name: z.string().optional(),
+  pdf_url: z.string().nullable().optional(),
+  annotations: z.array(z.unknown()).optional(),
+  page_scales: z.record(z.string(), z.unknown()).optional(),
+  status: z.string().optional(),
+});
 
 // Bun extends Request with params from route matching
 type BunRequest = Request & { params: { id: string } };
@@ -36,17 +45,17 @@ export async function getTakeoff(req: BunRequest): Promise<Response> {
 // PUT /api/takeoffs/:id - Update a takeoff
 export async function updateTakeoff(req: BunRequest): Promise<Response> {
   const { id } = req.params;
-  const body = (await req.json()) as Record<string, unknown>;
+  const body = updateTakeoffSchema.parse(await req.json());
 
   const updates: string[] = [];
   const values: (string | number | null)[] = [];
 
   if (body.name !== undefined) {
-    values.push(body.name as string);
+    values.push(body.name);
     updates.push(`name = $${values.length}`);
   }
   if (body.pdf_url !== undefined) {
-    values.push(body.pdf_url as string);
+    values.push(body.pdf_url);
     updates.push(`pdf_url = $${values.length}`);
   }
   if (body.annotations !== undefined) {
@@ -58,7 +67,7 @@ export async function updateTakeoff(req: BunRequest): Promise<Response> {
     updates.push(`page_scales = $${values.length}`);
   }
   if (body.status !== undefined) {
-    values.push(body.status as string);
+    values.push(body.status);
     updates.push(`status = $${values.length}`);
   }
 

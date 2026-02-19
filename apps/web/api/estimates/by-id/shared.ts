@@ -1,6 +1,7 @@
 import { db } from "@lib/db/client";
 import type { EstimateVersionRow } from "@lib/db/types";
 import { generateBaseNumber } from "@lib/utils";
+import { z } from "zod";
 
 // Bun extends Request with params from route matching
 type BunRequest = Request & { params: { id: string } };
@@ -29,40 +30,12 @@ export function parseEstimateId(rawId: string): number | null {
   return id;
 }
 
-export function parseFinalizeProjectId(
-  value: unknown
-): number | null | "invalid" {
-  if (value === undefined || value === null) {
-    return null;
-  }
+export const finalizeRequestSchema = z.object({
+  project_id: z.coerce.number().int().positive().nullable().catch(null),
+  source: z.string().trim().min(1).catch("estimate_editor_finalize"),
+});
 
-  const parsed = Number(value);
-  if (!Number.isInteger(parsed) || parsed <= 0) {
-    return "invalid";
-  }
-
-  return parsed;
-}
-
-export function parseFinalizeRequestBody(rawBody: unknown): {
-  projectId: number | null | "invalid";
-  source: string;
-} {
-  const body =
-    rawBody && typeof rawBody === "object" && !Array.isArray(rawBody)
-      ? (rawBody as Record<string, unknown>)
-      : {};
-
-  const source =
-    typeof body.source === "string" && body.source.trim().length > 0
-      ? body.source.trim()
-      : "estimate_editor_finalize";
-
-  return {
-    projectId: parseFinalizeProjectId(body.project_id),
-    source,
-  };
-}
+export type FinalizeRequestBody = z.infer<typeof finalizeRequestSchema>;
 
 export async function getLinkedProjectIds(
   estimateId: number

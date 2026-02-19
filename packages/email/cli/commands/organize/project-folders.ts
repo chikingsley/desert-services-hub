@@ -1,4 +1,4 @@
-import { assertWritableMailbox, getAppClient } from "@email/commands/config";
+import { assertWritableMailbox, getAppClient } from "@email-cli/commands/config";
 import { db } from "@lib/db/client";
 import {
   getFolderWatcherConfigValue,

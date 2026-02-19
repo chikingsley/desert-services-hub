@@ -1,4 +1,4 @@
-import { getAppClient } from "@email/commands/config";
+import { getAppClient } from "@email-cli/commands/config";
 
 interface FolderMeta {
   id: string;

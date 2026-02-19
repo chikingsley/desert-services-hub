@@ -7,7 +7,7 @@
  *   - @enrichment/types          → CONTACT_ENRICHMENT_PAYLOAD_SCHEMA
  *   - @lib/triage/types          → EMAIL_TRIAGE_BATCH_PAYLOAD_SCHEMA
  *   - @lib/linking/types         → LINK_ESTIMATE_PAYLOAD_SCHEMA
- *   - packages/documents/bc-sync → SYNC_BC_FILE_PAYLOAD_SCHEMA
+ *   - @email/sync/bc-sync/types → SYNC_BC_FILE_PAYLOAD_SCHEMA
  */
 
 import type { ContractsEmailIntakePayload } from "@documents-intake/types";

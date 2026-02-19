@@ -192,8 +192,8 @@ async function handleBodyLinkBackfill(job: WebhookJob): Promise<void> {
     return;
   }
 
-  const { handleBodyLinkBackfill: runBodyLinkBackfill } = await import(
-    "@email/commands/sync/body-link-backfill"
+  const { runBodyLinkBackfill } = await import(
+    "@email/sync/body-link-backfill-job"
   );
 
   const lookbackDays = payload.lookbackDays ?? BODY_LINK_BACKFILL_LOOKBACK_DAYS;
@@ -201,19 +201,14 @@ async function handleBodyLinkBackfill(job: WebhookJob): Promise<void> {
   const maxLinks = payload.maxLinks ?? BODY_LINK_BACKFILL_MAX_LINKS;
   const mailbox = payload.mailbox ?? BODY_LINK_BACKFILL_MAILBOX_FILTER;
 
-  const since = new Date(
-    Date.now() - lookbackDays * 24 * 60 * 60 * 1000
-  ).toISOString();
+  const since = new Date(Date.now() - lookbackDays * 24 * 60 * 60 * 1000);
 
-  const args = ["--since", since, "--limit", String(limit)];
-  if (mailbox) {
-    args.push("--mailbox", mailbox);
-  }
-  if (maxLinks > 0) {
-    args.push("--max-links", String(maxLinks));
-  }
-
-  await runBodyLinkBackfill(args);
+  await runBodyLinkBackfill({
+    limit,
+    mailbox,
+    maxLinks: maxLinks > 0 ? maxLinks : undefined,
+    since,
+  });
 }
 
 async function handleFolderWatcherPoll(): Promise<void> {
@@ -252,11 +247,11 @@ async function handleLinkEstimate(job: WebhookJob): Promise<void> {
 
 async function handleSyncBcFile(job: WebhookJob): Promise<void> {
   const { SYNC_BC_FILE_PAYLOAD_SCHEMA } = await import(
-    "../../../packages/documents/bc-sync/types"
+    "@email/sync/bc-sync/types"
   );
   const payload = parseJobPayload(job, SYNC_BC_FILE_PAYLOAD_SCHEMA);
   const { processBcFilesForEmail } = await import(
-    "../../../packages/documents/bc-sync/processing"
+    "@email/sync/bc-sync/processing"
   );
 
   const result = await processBcFilesForEmail(payload.emailId);
@@ -269,7 +264,7 @@ async function handleSyncBcFile(job: WebhookJob): Promise<void> {
 
 async function handleSwpppMasterSync(): Promise<void> {
   const { syncAll } = await import(
-    "../../../packages/sharepoint/workers/swppp-master-poller/lib/sync"
+    "@sharepoint/swppp-sync/sync"
   );
   const summary = await syncAll();
   console.log(

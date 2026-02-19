@@ -5,9 +5,10 @@
 import { db } from "@lib/db/client";
 import { parseEmailRow } from "@lib/db/repositories/email";
 import { findEstimateCandidatesForEmail } from "@lib/db/repositories/estimate-email";
+import { z } from "zod";
 import { listEmails as listEmailsHandler } from "./list-emails";
 
-const ALLOWED_EMAIL_CLASSIFICATIONS = new Set([
+const EMAIL_CLASSIFICATIONS = [
   "CONTRACT",
   "DUST_PERMIT",
   "SWPPP",
@@ -23,7 +24,32 @@ const ALLOWED_EMAIL_CLASSIFICATIONS = new Set([
   "VENDOR",
   "SPAM",
   "UNKNOWN",
-]);
+] as const;
+
+const classificationEnum = z.enum(EMAIL_CLASSIFICATIONS);
+
+const emailClassificationSchema = z.object({
+  classification: z
+    .string()
+    .transform((v) => v.trim().toUpperCase())
+    .pipe(classificationEnum)
+    .nullable()
+    .optional(),
+  is_excluded: z.boolean().optional(),
+});
+
+const domainRuleSchema = z.object({
+  domain: z
+    .string()
+    .min(1, "domain is required")
+    .transform((v) => v.trim().toLowerCase()),
+  classification: z.string().nullable().optional(),
+  is_excluded: z.boolean().catch(false),
+});
+
+const spamDomainSchema = z.object({
+  domain: z.string().min(1, "domain is required"),
+});
 
 function parseEmailIdFromPath(req: Request): number | null {
   const parts = new URL(req.url).pathname.split("/");
@@ -191,22 +217,16 @@ export async function setEmailClassification(req: Request): Promise<Response> {
       return Response.json({ error: "Invalid email ID" }, { status: 400 });
     }
 
-    const body = (await req.json()) as {
-      classification?: string | null;
-      is_excluded?: boolean;
-    };
-
-    const rawClassification = body.classification;
-    const classification =
-      rawClassification == null ? null : rawClassification.trim().toUpperCase();
-    const method = classification ? "manual" : null;
-
-    if (classification && !ALLOWED_EMAIL_CLASSIFICATIONS.has(classification)) {
+    const parsed = emailClassificationSchema.safeParse(await req.json());
+    if (!parsed.success) {
       return Response.json(
-        { error: `Invalid classification: ${classification}` },
+        { error: parsed.error.issues[0]?.message ?? "Invalid request" },
         { status: 400 }
       );
     }
+
+    const classification = parsed.data.classification ?? null;
+    const method = classification ? "manual" : null;
 
     const row = (await db
       .query("SELECT id FROM emails WHERE id = $1")
@@ -215,7 +235,7 @@ export async function setEmailClassification(req: Request): Promise<Response> {
       return Response.json({ error: "Email not found" }, { status: 404 });
     }
 
-    const isExcluded = body.is_excluded;
+    const isExcluded = parsed.data.is_excluded;
     if (isExcluded === undefined) {
       await db
         .query(
@@ -258,19 +278,17 @@ export async function setEmailClassification(req: Request): Promise<Response> {
 // Body: { domain: string, classification?: string, is_excluded?: boolean }
 export async function setDomainRule(req: Request): Promise<Response> {
   try {
-    const body = (await req.json()) as {
-      domain?: string;
-      classification?: string | null;
-      is_excluded?: boolean;
-    };
-    const domain = body.domain?.trim().toLowerCase();
-
-    if (!domain) {
-      return Response.json({ error: "domain is required" }, { status: 400 });
+    const parsed = domainRuleSchema.safeParse(await req.json());
+    if (!parsed.success) {
+      return Response.json(
+        { error: parsed.error.issues[0]?.message ?? "Invalid request" },
+        { status: 400 }
+      );
     }
 
-    const classification = body.classification ?? null;
-    const isExcluded = body.is_excluded ?? false;
+    const { domain } = parsed.data;
+    const classification = parsed.data.classification ?? null;
+    const isExcluded = parsed.data.is_excluded;
 
     // Upsert the domain rule
     await db.run(
@@ -286,7 +304,7 @@ export async function setDomainRule(req: Request): Promise<Response> {
     if (isExcluded) {
       await db
         .query(
-          `UPDATE emails SET is_excluded = 1 WHERE is_excluded = 0 AND (from_domain = $1 OR from_domain LIKE $2)`
+          "UPDATE emails SET is_excluded = 1 WHERE is_excluded = 0 AND (from_domain = $1 OR from_domain LIKE $2)"
         )
         .run(domain, `%.${domain}`);
     }
@@ -340,11 +358,17 @@ export async function listDomainRules(_req: Request): Promise<Response> {
 
 // POST /api/emails/spam — convenience wrapper for blocking a domain
 export async function markDomainAsSpam(req: Request): Promise<Response> {
-  const body = (await req.json()) as { domain?: string };
+  const parsed = spamDomainSchema.safeParse(await req.json());
+  if (!parsed.success) {
+    return Response.json(
+      { error: parsed.error.issues[0]?.message ?? "domain is required" },
+      { status: 400 }
+    );
+  }
   const spamReq = new Request(req.url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ domain: body.domain, is_excluded: true }),
+    body: JSON.stringify({ domain: parsed.data.domain, is_excluded: true }),
   });
   return setDomainRule(spamReq);
 }

@@ -6,8 +6,8 @@ import {
   DEFAULT_USER,
   getAppClient,
   KNOWN_MAILBOXES,
-} from "@email/commands/config";
-import type { CommandHandler } from "@email/commands/types";
+} from "@email-cli/commands/config";
+import type { CommandHandler } from "@email-cli/commands/types";
 
 type MailFolder = "inbox" | "sentitems" | "drafts" | "deleteditems";
 

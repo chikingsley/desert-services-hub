@@ -2,15 +2,30 @@
  * Projects API handlers
  * Route: GET /api/projects
  */
+import {
+  multiFilter,
+  paginationSchema,
+  parseQuery,
+  searchParam,
+  sortParam,
+} from "@lib/api/validation";
 import { db } from "@lib/db/client";
 
-type SortField =
-  | "last_seen"
-  | "updated_at"
-  | "name"
-  | "awarded_value"
-  | "email_count";
-type SortDirection = "asc" | "desc";
+const SORT_FIELDS = [
+  "last_seen",
+  "updated_at",
+  "name",
+  "awarded_value",
+  "email_count",
+] as const;
+type SortField = (typeof SORT_FIELDS)[number];
+
+const projectsQuerySchema = paginationSchema.extend({
+  q: searchParam,
+  contract_status: multiFilter,
+  dust_status: multiFilter,
+  sort: sortParam(SORT_FIELDS, "last_seen"),
+});
 
 interface ProjectRow {
   id: number;
@@ -39,44 +54,6 @@ interface ProjectRow {
   updated_at: string;
 }
 
-function parsePositiveInt(value: string | null, fallback: number): number {
-  const parsed = Number(value);
-  if (!Number.isInteger(parsed) || parsed <= 0) {
-    return fallback;
-  }
-  return parsed;
-}
-
-function parseSort(value: string | null): {
-  field: SortField;
-  direction: SortDirection;
-} {
-  const [fieldRaw, directionRaw] = (value || "last_seen.desc").split(".");
-  const field: SortField =
-    fieldRaw === "last_seen" ||
-    fieldRaw === "updated_at" ||
-    fieldRaw === "name" ||
-    fieldRaw === "awarded_value" ||
-    fieldRaw === "email_count"
-      ? fieldRaw
-      : "last_seen";
-  const direction: SortDirection = directionRaw === "asc" ? "asc" : "desc";
-  return { field, direction };
-}
-
-function parseMultiFilter(value: string | null): string[] {
-  if (!value) {
-    return [];
-  }
-
-  const values = value
-    .split(",")
-    .map((entry) => entry.trim())
-    .filter((entry) => entry.length > 0 && entry !== "all");
-
-  return [...new Set(values)].slice(0, 50);
-}
-
 function getSortExpression(field: SortField): string {
   switch (field) {
     case "updated_at":
@@ -95,19 +72,14 @@ function getSortExpression(field: SortField): string {
 export async function listProjects(req: Request): Promise<Response> {
   try {
     const url = new URL(req.url);
-    const page = parsePositiveInt(url.searchParams.get("page"), 1);
-    const perPage = Math.min(
-      200,
-      Math.max(1, parsePositiveInt(url.searchParams.get("perPage"), 50))
-    );
-    const query = url.searchParams.get("q")?.trim() || "";
-    const contractStatuses = parseMultiFilter(
-      url.searchParams.get("contract_status")
-    );
-    const dustStatuses = parseMultiFilter(url.searchParams.get("dust_status"));
-    const { field: sortField, direction: sortDirection } = parseSort(
-      url.searchParams.get("sort")
-    );
+    const {
+      page,
+      perPage,
+      q,
+      contract_status: contractStatuses,
+      dust_status: dustStatuses,
+      sort,
+    } = parseQuery(url, projectsQuerySchema);
 
     const conditions: string[] = [];
     const params: unknown[] = [];
@@ -128,8 +100,8 @@ export async function listProjects(req: Request): Promise<Response> {
       params.push(...dustStatuses);
     }
 
-    if (query) {
-      const like = `%${query}%`;
+    if (q) {
+      const like = `%${q}%`;
       const offset = params.length;
       conditions.push(
         `(p.name ILIKE $${offset + 1} OR p.contractor ILIKE $${offset + 2} OR a.name ILIKE $${offset + 3} OR p.address ILIKE $${offset + 4} OR p.project_number ILIKE $${offset + 5})`
@@ -139,7 +111,7 @@ export async function listProjects(req: Request): Promise<Response> {
 
     const where =
       conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
-    const orderBy = getSortExpression(sortField);
+    const orderBy = getSortExpression(sort.field);
     const offset = (page - 1) * perPage;
 
     const limitParam = `$${params.length + 1}`;
@@ -181,7 +153,7 @@ export async function listProjects(req: Request): Promise<Response> {
               WHERE d.project_id = p.id
            ) docs ON true
            ${where}
-           ORDER BY ${orderBy} ${sortDirection.toUpperCase()} NULLS LAST, p.id DESC
+           ORDER BY ${orderBy} ${sort.direction.toUpperCase()} NULLS LAST, p.id DESC
            LIMIT ${limitParam} OFFSET ${offsetParam}`
         )
         .all(...params, perPage, offset) as Promise<ProjectRow[]>,

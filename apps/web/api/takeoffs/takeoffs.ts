@@ -2,10 +2,32 @@
  * Takeoffs API handlers
  * Routes: GET /api/takeoffs, POST /api/takeoffs
  */
+import {
+  multiFilter,
+  paginationSchema,
+  parseQuery,
+  searchParam,
+  sortParam,
+} from "@lib/api/validation";
 import { db } from "@lib/db/client";
+import { z } from "zod";
 
-type SortField = "updated_at" | "created_at" | "name" | "status";
-type SortDirection = "asc" | "desc";
+const SORT_FIELDS = ["updated_at", "created_at", "name", "status"] as const;
+type SortField = (typeof SORT_FIELDS)[number];
+
+const takeoffsQuerySchema = paginationSchema.extend({
+  q: searchParam,
+  status: multiFilter,
+  sort: sortParam(SORT_FIELDS, "updated_at"),
+});
+
+const createTakeoffSchema = z.object({
+  name: z.string().catch("Untitled Takeoff"),
+  pdf_url: z.string().nullable().catch(null),
+  annotations: z.array(z.unknown()).catch([]),
+  page_scales: z.record(z.string(), z.unknown()).catch({}),
+  status: z.string().catch("draft"),
+});
 
 interface TakeoffRow {
   id: string;
@@ -16,43 +38,6 @@ interface TakeoffRow {
   status: string;
   created_at: string;
   updated_at: string;
-}
-
-function parsePositiveInt(value: string | null, fallback: number): number {
-  const parsed = Number(value);
-  if (!Number.isInteger(parsed) || parsed <= 0) {
-    return fallback;
-  }
-  return parsed;
-}
-
-function parseSort(value: string | null): {
-  field: SortField;
-  direction: SortDirection;
-} {
-  const [fieldRaw, directionRaw] = (value || "updated_at.desc").split(".");
-  const field: SortField =
-    fieldRaw === "updated_at" ||
-    fieldRaw === "created_at" ||
-    fieldRaw === "name" ||
-    fieldRaw === "status"
-      ? fieldRaw
-      : "updated_at";
-  const direction: SortDirection = directionRaw === "asc" ? "asc" : "desc";
-  return { field, direction };
-}
-
-function parseMultiFilter(value: string | null): string[] {
-  if (!value) {
-    return [];
-  }
-
-  const values = value
-    .split(",")
-    .map((entry) => entry.trim())
-    .filter((entry) => entry.length > 0 && entry !== "all");
-
-  return [...new Set(values)].slice(0, 50);
 }
 
 function getSortExpression(field: SortField): string {
@@ -72,35 +57,31 @@ function getSortExpression(field: SortField): string {
 export async function listTakeoffs(req: Request): Promise<Response> {
   try {
     const url = new URL(req.url);
-    const page = parsePositiveInt(url.searchParams.get("page"), 1);
-    const perPage = Math.min(
-      200,
-      Math.max(1, parsePositiveInt(url.searchParams.get("perPage"), 50))
-    );
-    const query = url.searchParams.get("q")?.trim() || "";
-    const statuses = parseMultiFilter(url.searchParams.get("status"));
-    const { field: sortField, direction: sortDirection } = parseSort(
-      url.searchParams.get("sort")
+    const { page, perPage, q, status, sort } = parseQuery(
+      url,
+      takeoffsQuerySchema
     );
 
     const conditions: string[] = [];
     const params: unknown[] = [];
 
-    if (statuses.length > 0) {
+    if (status.length > 0) {
       const offset = params.length;
-      conditions.push(`status IN (${statuses.map((_, i) => `$${offset + i + 1}`).join(", ")})`);
-      params.push(...statuses);
+      conditions.push(
+        `status IN (${status.map((_, i) => `$${offset + i + 1}`).join(", ")})`
+      );
+      params.push(...status);
     }
 
-    if (query) {
+    if (q) {
       const offset = params.length;
       conditions.push(`name ILIKE $${offset + 1}`);
-      params.push(`%${query}%`);
+      params.push(`%${q}%`);
     }
 
     const where =
       conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
-    const orderBy = getSortExpression(sortField);
+    const orderBy = getSortExpression(sort.field);
     const offset = (page - 1) * perPage;
 
     const limitParam = `$${params.length + 1}`;
@@ -112,7 +93,7 @@ export async function listTakeoffs(req: Request): Promise<Response> {
           `SELECT *
            FROM takeoffs
            ${where}
-           ORDER BY ${orderBy} ${sortDirection.toUpperCase()}, id DESC
+           ORDER BY ${orderBy} ${sort.direction.toUpperCase()}, id DESC
            LIMIT ${limitParam} OFFSET ${offsetParam}`
         )
         .all(...params, perPage, offset) as Promise<TakeoffRow[]>,
@@ -158,7 +139,7 @@ export async function listTakeoffs(req: Request): Promise<Response> {
 
 // POST /api/takeoffs - Create a new takeoff
 export async function createTakeoff(req: Request): Promise<Response> {
-  const body = (await req.json()) as Record<string, unknown>;
+  const body = createTakeoffSchema.parse(await req.json());
   const id = crypto.randomUUID();
 
   await db
@@ -168,11 +149,11 @@ export async function createTakeoff(req: Request): Promise<Response> {
     )
     .run(
       id,
-      (body.name as string) || "Untitled Takeoff",
-      (body.pdf_url as string) || null,
-      JSON.stringify((body.annotations as unknown[]) || []),
-      JSON.stringify((body.page_scales as Record<string, unknown>) || {}),
-      (body.status as string) || "draft"
+      body.name,
+      body.pdf_url,
+      JSON.stringify(body.annotations),
+      JSON.stringify(body.page_scales),
+      body.status
     );
 
   const takeoff = (await db

@@ -1,5 +1,7 @@
+import { flagParam, multiFilter, searchParam } from "@lib/api/validation";
 import { db } from "@lib/db/client";
 import { parseEmailRow } from "@lib/db/repositories/email";
+import { z } from "zod";
 
 const LIST_COLUMNS = `
   id, message_id, internet_message_id, mailbox_id, conversation_id,
@@ -29,6 +31,19 @@ interface EmailStatsRow {
   with_attachments: number;
   excluded: number;
 }
+
+const emailListQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).catch(1),
+  limit: z.coerce.number().int().min(1).max(100).catch(50),
+  search: searchParam,
+  from: searchParam,
+  classification: searchParam,
+  senders: multiFilter,
+  exclude_classifications: multiFilter,
+  show_excluded: flagParam,
+  only_excluded: flagParam,
+  has_attachments: flagParam,
+});
 
 interface EmailListParams {
   page: number;
@@ -67,43 +82,22 @@ const DEDUP_KEY = `CASE
   ELSE COALESCE(internet_message_id, message_id)::text
 END`;
 
-function asFlag(value: string | null): boolean {
-  return value === "1" || value === "true";
-}
-
 function parseListParams(req: Request): EmailListParams {
   const url = new URL(req.url);
-  const page = Math.max(1, Number(url.searchParams.get("page")) || 1);
-  const limit = Math.min(
-    100,
-    Math.max(1, Number(url.searchParams.get("limit")) || 50)
-  );
-  const search = url.searchParams.get("search")?.trim() || "";
-  const from = url.searchParams.get("from")?.trim() || "";
-  const classification = url.searchParams.get("classification")?.trim() || "";
-  const senders = (url.searchParams.get("senders")?.trim() || "")
-    .split(",")
-    .map((value) => value.trim().toLowerCase())
-    .filter(Boolean);
-  const excludeClassifications = (
-    url.searchParams.get("exclude_classifications")?.trim() || ""
-  )
-    .split(",")
-    .map((value) => value.trim())
-    .filter(Boolean);
+  const raw = emailListQuerySchema.parse(Object.fromEntries(url.searchParams));
 
   return {
-    page,
-    limit,
-    offset: (page - 1) * limit,
-    search,
-    from,
-    classification,
-    senders,
-    excludeClassifications,
-    includeExcluded: asFlag(url.searchParams.get("show_excluded")),
-    onlyExcludedOn: asFlag(url.searchParams.get("only_excluded")),
-    hasAttachmentFilterOn: asFlag(url.searchParams.get("has_attachments")),
+    page: raw.page,
+    limit: raw.limit,
+    offset: (raw.page - 1) * raw.limit,
+    search: raw.search,
+    from: raw.from,
+    classification: raw.classification,
+    senders: raw.senders.map((s) => s.toLowerCase()),
+    excludeClassifications: raw.exclude_classifications,
+    includeExcluded: raw.show_excluded,
+    onlyExcludedOn: raw.only_excluded,
+    hasAttachmentFilterOn: raw.has_attachments,
   };
 }
 
@@ -290,7 +284,9 @@ async function addSearchCondition(
   const hasSearchDocument = await supportsSearchDocument();
   if (hasSearchDocument) {
     const p = values.length + 1;
-    conditions.push(`search_document @@ websearch_to_tsquery('english', $${p})`);
+    conditions.push(
+      `search_document @@ websearch_to_tsquery('english', $${p})`
+    );
     values.push(search);
     return;
   }
@@ -386,8 +382,12 @@ function addSenderCondition(
 
   const offset = values.length;
   const placeholders1 = senders.map((_, i) => `$${offset + i + 1}`).join(", ");
-  const placeholders2 = senders.map((_, i) => `$${offset + senders.length + i + 1}`).join(", ");
-  const placeholders3 = senders.map((_, i) => `$${offset + senders.length * 2 + i + 1}`).join(", ");
+  const placeholders2 = senders
+    .map((_, i) => `$${offset + senders.length + i + 1}`)
+    .join(", ");
+  const placeholders3 = senders
+    .map((_, i) => `$${offset + senders.length * 2 + i + 1}`)
+    .join(", ");
   conditions.push(`(
     lower(from_email) IN (${placeholders1})
     OR lower(real_sender_email) IN (${placeholders2})
@@ -406,7 +406,9 @@ function addExcludeClassificationsCondition(
   }
 
   const offset = values.length;
-  const placeholders = excludeClassifications.map((_, i) => `$${offset + i + 1}`).join(", ");
+  const placeholders = excludeClassifications
+    .map((_, i) => `$${offset + i + 1}`)
+    .join(", ");
   conditions.push(
     `(classification IS NULL OR classification NOT IN (${placeholders}))`
   );

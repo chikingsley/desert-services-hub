@@ -20,6 +20,7 @@ import {
   ensureFilenameExtension,
   sanitizeFilename,
 } from "@lib/downloads/utils";
+import { z } from "zod";
 
 const INTAKE_DIR =
   process.env.INTAKE_DIR?.trim() ||
@@ -27,31 +28,34 @@ const INTAKE_DIR =
 const LOG = "[webhook:intake]";
 
 // =============================================================================
-// Types
+// Schemas
 // =============================================================================
 
-interface IncomingAttachment {
-  filename: string;
-  contentType: string;
-  size: number;
-  content: string; // base64
-}
+const incomingAttachmentSchema = z.object({
+  filename: z.string(),
+  contentType: z.string(),
+  size: z.number(),
+  content: z.string(),
+});
 
-interface FileLink {
-  url: string;
-  source: "onedrive" | "egnyte" | "dropbox";
-}
+const fileLinkSchema = z.object({
+  url: z.string(),
+  source: z.enum(["onedrive", "egnyte", "dropbox"]),
+});
 
-interface IncomingPayload {
-  forwarderEmail: string;
-  forwardedAt: string;
-  originalSubject: string;
-  originalFrom: string;
-  bodyText: string;
-  bodyHasContent?: boolean;
-  attachments: IncomingAttachment[];
-  fileLinks?: FileLink[];
-}
+const intakePayloadSchema = z.object({
+  forwarderEmail: z.string(),
+  forwardedAt: z.string(),
+  originalSubject: z.string(),
+  originalFrom: z.string(),
+  bodyText: z.string(),
+  bodyHasContent: z.boolean().optional(),
+  attachments: z.array(incomingAttachmentSchema).catch([]),
+  fileLinks: z.array(fileLinkSchema).optional(),
+});
+
+type IncomingAttachment = z.infer<typeof incomingAttachmentSchema>;
+type FileLink = z.infer<typeof fileLinkSchema>;
 
 const enqueueStmt = db.query(
   "SELECT public.enqueue_background_job('intake', ($1::text)::jsonb, NULL, 3, FALSE)::bigint AS id"
@@ -134,12 +138,16 @@ async function downloadFileLinks(
 }
 
 export async function handleIntakeWebhook(req: Request): Promise<Response> {
-  let body: IncomingPayload;
-  try {
-    body = (await req.json()) as IncomingPayload;
-  } catch {
-    return new Response("Bad Request", { status: 400 });
+  const parsed = intakePayloadSchema.safeParse(
+    await req.json().catch(() => null)
+  );
+  if (!parsed.success) {
+    return Response.json(
+      { error: parsed.error.issues[0]?.message ?? "Invalid payload" },
+      { status: 400 }
+    );
   }
+  const body = parsed.data;
 
   const hasAttachments = (body.attachments?.length ?? 0) > 0;
   const hasLinks = (body.fileLinks?.length ?? 0) > 0;

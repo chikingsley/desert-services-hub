@@ -7,7 +7,7 @@
 import { existsSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-import { getAppClient } from "@email/commands/config";
+import { getAppClient } from "@email-cli/commands/config";
 import { db } from "@lib/db/client";
 import { escapeODataStringLiteral, sanitizeFilename } from "./shared";
 import type { CandidateType, EmailRow } from "./source-packet-scoring";

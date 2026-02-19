@@ -10,19 +10,19 @@
  *
  * Run with --help for full command list.
  */
-import { DEFAULT_USER } from "@email/commands/config";
-import { draftHandlers } from "@email/commands/draft/handlers";
-import { foldersHandlers } from "@email/commands/folders";
-import { groupHandlers } from "@email/commands/groups";
-import { mailboxHandlers } from "@email/commands/mailboxes";
-import { organizeHandlers } from "@email/commands/organize/handlers";
-import { readHandlers } from "@email/commands/read";
-import { searchHandlers } from "@email/commands/search";
-import { sendHandlers } from "@email/commands/send";
-import { signOrderHandlers } from "@email/commands/sign-orders";
-import { syncHandlers } from "@email/commands/sync";
-import { templateHandlers } from "@email/commands/templates";
-import type { CommandHandler } from "@email/commands/types";
+import { DEFAULT_USER } from "@email-cli/commands/config";
+import { draftHandlers } from "@email-cli/commands/draft/handlers";
+import { foldersHandlers } from "@email-cli/commands/folders";
+import { groupHandlers } from "@email-cli/commands/groups";
+import { mailboxHandlers } from "@email-cli/commands/mailboxes";
+import { organizeHandlers } from "@email-cli/commands/organize/handlers";
+import { readHandlers } from "@email-cli/commands/read";
+import { searchHandlers } from "@email-cli/commands/search";
+import { sendHandlers } from "@email-cli/commands/send";
+import { signOrderHandlers } from "@email-cli/commands/sign-orders";
+import { syncHandlers } from "@email-cli/commands/sync";
+import { templateHandlers } from "@email-cli/commands/templates";
+import type { CommandHandler } from "@email-cli/commands/types";
 
 // ============================================================================
 // Merge all command handlers

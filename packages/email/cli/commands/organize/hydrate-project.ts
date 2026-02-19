@@ -1,4 +1,4 @@
-import { assertWritableMailbox, getAppClient } from "@email/commands/config";
+import { assertWritableMailbox, getAppClient } from "@email-cli/commands/config";
 import type { Project } from "@lib/db/types";
 import { executeHydrateProjectMoves } from "./hydrate-project/executor";
 import {

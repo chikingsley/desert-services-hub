@@ -18,10 +18,10 @@ import { handleDuplicateEstimate } from "@/api/estimates/by-id/duplicate-estimat
 import { handleGetEstimatePdf } from "@/api/estimates/by-id/get-estimate-pdf";
 import {
   type BunRequest,
+  finalizeRequestSchema,
   getLinkedProjectIds,
   getPreferredEstimateVersion,
   parseEstimateId,
-  parseFinalizeRequestBody,
   resolveFinalizeProjectId,
 } from "@/api/estimates/by-id/shared";
 import { handleUpdateEstimate } from "@/api/estimates/by-id/update-estimate";
@@ -115,21 +115,9 @@ export async function finalizeEstimate(req: BunRequest): Promise<Response> {
       return Response.json({ error: "Estimate not found" }, { status: 404 });
     }
 
-    let rawBody: unknown = {};
-    try {
-      rawBody = await req.json();
-    } catch {
-      rawBody = {};
-    }
-
-    const { projectId: parsedProjectId, source } =
-      parseFinalizeRequestBody(rawBody);
-    if (parsedProjectId === "invalid") {
-      return Response.json(
-        { error: "project_id must be a positive integer" },
-        { status: 400 }
-      );
-    }
+    const { project_id: parsedProjectId, source } = finalizeRequestSchema.parse(
+      await req.json().catch(() => ({}))
+    );
 
     const linkedProjectIds = await getLinkedProjectIds(id);
     const projectResolution = resolveFinalizeProjectId(

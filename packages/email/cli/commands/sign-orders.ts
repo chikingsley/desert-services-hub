@@ -11,8 +11,8 @@ import {
   assertWritableMailbox,
   getAppClient,
   resolveMailbox,
-} from "@email/commands/config";
-import type { CommandHandler } from "@email/commands/types";
+} from "@email-cli/commands/config";
+import type { CommandHandler } from "@email-cli/commands/types";
 import { getLogoAttachment, getTemplate } from "@email/email-templates/index";
 import {
   buildSignOrderDetails,

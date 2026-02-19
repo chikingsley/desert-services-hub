@@ -7,9 +7,9 @@ import {
   DEFAULT_USER,
   getUserClient,
   TEMPLATE_TEST_DATA,
-} from "@email/commands/config";
-import { loadFileAttachments } from "@email/commands/helpers";
-import type { CommandHandler } from "@email/commands/types";
+} from "@email-cli/commands/config";
+import { loadFileAttachments } from "@email-cli/commands/helpers";
+import type { CommandHandler } from "@email-cli/commands/types";
 import {
   getLogoAttachment,
   getTemplate,

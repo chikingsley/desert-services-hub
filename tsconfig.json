@@ -18,6 +18,7 @@
       "@monday/*": ["packages/monday/src/*"],
       "@sharepoint/*": ["packages/sharepoint/src/*"],
       "@email/*": ["packages/email/src/*"],
+      "@email-cli/*": ["packages/email/cli/*"],
       "@enrichment/*": ["packages/enrichment/src/*"],
       "@documents/*": ["packages/documents/pdf-generation/src/*"],
       "@documents-intake/*": ["packages/documents/intake/src/*"],

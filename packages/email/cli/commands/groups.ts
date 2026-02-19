@@ -7,8 +7,8 @@ import {
   getGroupsClient,
   KNOWN_GROUPS,
   resolveGroupId,
-} from "@email/commands/config";
-import type { CommandHandler } from "@email/commands/types";
+} from "@email-cli/commands/config";
+import type { CommandHandler } from "@email-cli/commands/types";
 
 async function groupsCommand() {
   const client = getGroupsClient();

@@ -4,16 +4,25 @@ export type SessionState = "disconnected" | "disclaimer_accepted" | "on_page";
 export type PageContext =
   | "home"
   | "applications"
+  | "asbestos_notification_search"
+  | "complaint_search"
   | "dust_application_search"
   | "compliance"
   | "inspection_search"
+  | "invoice_search"
   | "compliance_report_search"
   | "enforcement_search"
   | "settlement_search"
   | "site_visit_search";
 
+/** Oracle ADF uses hex state tokens (1, 2, ..., 9, a, b, ..., f, 10, ...) */
+function incrementHexToken(token: string): string {
+  const num = Number.parseInt(token, 16);
+  return Number.isNaN(num) ? token : (num + 1).toString(16);
+}
+
 const STATE_TOKEN_REGEX =
-  /name="oracle\.adf\.faces\.STATE_TOKEN"\s+value="(\d+)"/;
+  /name="oracle\.adf\.faces\.STATE_TOKEN"\s+value="([^"]+)"/;
 const FORM_NAME_REGEX = /name="(oracle\.adf\.faces\.FORM)"\s+value="([^"]+)"/;
 const FORM_ACTION_REGEX = /<form[^>]+name="([^"]+)"[^>]+action="([^"]+)"/;
 
@@ -27,7 +36,7 @@ export class AQSessionTransport {
   protected state: SessionState = "disconnected";
   protected pageContext: PageContext = "home";
   protected readonly cookies = new Map<string, string>();
-  protected stateToken = 1;
+  protected stateToken = "1";
   protected currentFormName = "";
   protected currentFormAction = "";
   protected lastResponseHtml = "";
@@ -47,7 +56,7 @@ export class AQSessionTransport {
     const postUrl = this.buildPostUrl(PAGES.disclaimer);
     const body = this.buildFormData({
       [DISCLAIMER.formField]: DISCLAIMER.formName,
-      [DISCLAIMER.stateTokenField]: String(this.stateToken),
+      [DISCLAIMER.stateTokenField]: this.stateToken,
       source: DISCLAIMER.agreeBtn,
       event: "",
     });
@@ -62,7 +71,7 @@ export class AQSessionTransport {
       redirect: "manual",
     });
     this.updateCookies(postRes);
-    this.stateToken++;
+    this.stateToken = incrementHexToken(this.stateToken);
 
     const homeUrl = `${BASE_URL}${PAGES.home}`;
     const homeRes = await fetch(homeUrl, {
@@ -140,7 +149,7 @@ export class AQSessionTransport {
     const postUrl = this.buildPostUrl(this.currentFormAction || PAGES.home);
     const body = this.buildFormData({
       [DISCLAIMER.formField]: this.currentFormName || HOME.formName,
-      [DISCLAIMER.stateTokenField]: String(this.stateToken),
+      [DISCLAIMER.stateTokenField]: this.stateToken,
       event: "",
       ...extraFields,
     });
@@ -175,7 +184,7 @@ export class AQSessionTransport {
     const postUrl = this.buildPostUrl(this.currentFormAction);
     const body = this.buildFormData({
       [DISCLAIMER.formField]: this.currentFormName,
-      [DISCLAIMER.stateTokenField]: String(this.stateToken),
+      [DISCLAIMER.stateTokenField]: this.stateToken,
       source: exportBtnSource,
       event: "",
     });
@@ -190,7 +199,7 @@ export class AQSessionTransport {
       redirect: "manual",
     });
     this.updateCookies(res);
-    this.stateToken++;
+    this.stateToken = incrementHexToken(this.stateToken);
 
     const arrayBuf = await res.arrayBuffer();
     return Buffer.from(arrayBuf);
@@ -251,12 +260,12 @@ export class AQSessionTransport {
     }
   }
 
-  private extractStateToken(html: string): number {
+  private extractStateToken(html: string): string {
     const match = STATE_TOKEN_REGEX.exec(html);
     if (match?.[1]) {
-      return Number.parseInt(match[1], 10);
+      return match[1];
     }
-    return this.stateToken + 1;
+    return incrementHexToken(this.stateToken);
   }
 
   private extractFormInfo(html: string): void {

@@ -14,14 +14,14 @@ export interface SyncStats {
   outputPath: string;
   permitsFilePath: string;
   totalRecords: number;
-  withCoordinates: number;
   upsertedToDb: number;
+  withCoordinates: number;
 }
 
 export interface SyncResult {
-  success: boolean;
-  stats: SyncStats;
   error?: string;
+  stats: SyncStats;
+  success: boolean;
 }
 
 export interface DetailScrapeStats {
@@ -32,14 +32,14 @@ export interface DetailScrapeStats {
 }
 
 export interface DetailScrapeResult {
-  success: boolean;
-  stats: DetailScrapeStats;
   error?: string;
+  stats: DetailScrapeStats;
+  success: boolean;
 }
 
 export interface ScrapeLoopStatus {
-  isRunning: boolean;
   intervalMs: number;
+  isRunning: boolean;
   lastRunAt?: string;
   lastRunError?: string;
 }

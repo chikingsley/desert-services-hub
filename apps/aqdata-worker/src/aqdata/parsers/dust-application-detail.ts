@@ -20,9 +20,9 @@ export interface DustApplicationAttachment {
 export interface DustApplicationDetail {
   applicationId: string;
   attachments: DustApplicationAttachment[];
+  coordinates: { latitude: number; longitude: number } | null;
   detailFields: Record<string, string>;
   documentLinks: string[];
-  coordinates: { latitude: number; longitude: number } | null;
   permitDocument: DustApplicationAttachment | null;
   permitPdf: DustPermitPdfExtraction | null;
   structured: DustApplicationStructuredDetail;

@@ -3,28 +3,28 @@
 // ============================================================================
 
 export interface DustApplication {
+  address: string | null;
   applicationId: string;
-  facilityId: string | null;
-  facilityName: string | null;
-  projectName: string | null;
+  city: string | null;
+  closedDate: string | null;
   companyId: string | null;
   companyName: string | null;
-  status: string | null;
-  submittedDate: string | null;
   effectiveDate: string | null;
   expirationDate: string | null;
-  closedDate: string | null;
-  previousAppId: string | null;
-  projectStartDate: string | null;
-  projectCompletionDate: string | null;
-  address: string | null;
-  city: string | null;
-  parcel: string | null;
-  isBlockPermit: boolean;
-  isAccelerated: boolean;
-  invoiceNumber: string | null;
-  invoiceCharges: number | null;
+  facilityId: string | null;
+  facilityName: string | null;
   invoiceBalance: number | null;
+  invoiceCharges: number | null;
+  invoiceNumber: string | null;
+  isAccelerated: boolean;
+  isBlockPermit: boolean;
+  parcel: string | null;
+  previousAppId: string | null;
+  projectCompletionDate: string | null;
+  projectName: string | null;
+  projectStartDate: string | null;
+  status: string | null;
+  submittedDate: string | null;
 }
 
 export type DustAppStatus =
@@ -35,17 +35,17 @@ export type DustAppStatus =
   | "Superseded";
 
 export interface DustAppSearchParams {
-  statuses?: DustAppStatus[];
+  acceleratedOnly?: boolean;
+  address?: string;
   applicationId?: string;
+  blockPermitOnly?: boolean;
+  city?: string;
+  companyName?: string;
   facilityId?: string;
   facilityName?: string;
-  projectName?: string;
-  companyName?: string;
-  address?: string;
-  city?: string;
   parcel?: string;
-  blockPermitOnly?: boolean;
-  acceleratedOnly?: boolean;
+  projectName?: string;
+  statuses?: DustAppStatus[];
 }
 
 // ============================================================================
@@ -53,29 +53,29 @@ export interface DustAppSearchParams {
 // ============================================================================
 
 export interface Inspection {
-  inspectionId: string;
-  facilityId: string | null;
-  facilityName: string | null;
-  facilityClass: string | null;
-  facilityType: string | null;
+  asbestosZone: string | null;
   companyId: string | null;
   companyName: string | null;
-  operatingStatus: string | null;
-  inspectionZone: string | null;
-  asbestosZone: string | null;
-  mapSquare: string | null;
   dateCompleted: string | null;
+  facilityClass: string | null;
+  facilityId: string | null;
+  facilityName: string | null;
+  facilityType: string | null;
+  inspectionId: string;
+  inspectionZone: string | null;
+  mapSquare: string | null;
+  operatingStatus: string | null;
   reportState: string | null;
 }
 
 export interface InspectionSearchParams {
-  facilityId?: string;
-  facilityName?: string;
-  facilityClass?: string;
-  inspectionId?: string;
   companyName?: string;
   dateFrom?: string;
   dateTo?: string;
+  facilityClass?: string;
+  facilityId?: string;
+  facilityName?: string;
+  inspectionId?: string;
 }
 
 // ============================================================================
@@ -83,24 +83,24 @@ export interface InspectionSearchParams {
 // ============================================================================
 
 export interface ComplianceReport {
-  reportId: string;
-  facilityId: string | null;
-  facilityName: string | null;
-  facilityClass: string | null;
-  facilityType: string | null;
-  reportType: string | null;
+  accepted: string | null;
   comments: string | null;
   companyName: string | null;
-  accepted: string | null;
+  facilityClass: string | null;
+  facilityId: string | null;
+  facilityName: string | null;
+  facilityType: string | null;
+  reportId: string;
+  reportType: string | null;
   [key: string]: string | null;
 }
 
 export interface ComplianceReportSearchParams {
+  companyName?: string;
   facilityId?: string;
   facilityName?: string;
   reportId?: string;
   reportType?: string;
-  companyName?: string;
 }
 
 // ============================================================================
@@ -109,20 +109,20 @@ export interface ComplianceReportSearchParams {
 
 export interface EnforcementAction {
   actionId: string;
-  facilityId: string | null;
-  facilityName: string | null;
+  actionType: string | null;
   companyName: string | null;
   docketNumber: string | null;
-  actionType: string | null;
+  facilityId: string | null;
+  facilityName: string | null;
   [key: string]: string | number | null;
 }
 
 export interface EnforcementSearchParams {
+  actionId?: string;
+  actionType?: string;
+  companyName?: string;
   facilityId?: string;
   facilityName?: string;
-  actionId?: string;
-  companyName?: string;
-  actionType?: string;
 }
 
 // ============================================================================
@@ -130,16 +130,16 @@ export interface EnforcementSearchParams {
 // ============================================================================
 
 export interface Settlement {
-  settlementId: string;
   companyName: string | null;
   enforcementActionId: string | null;
+  settlementId: string;
   [key: string]: string | number | null;
 }
 
 export interface SettlementSearchParams {
-  settlementId?: string;
   companyName?: string;
   enforcementActionId?: string;
+  settlementId?: string;
 }
 
 // ============================================================================
@@ -147,25 +147,25 @@ export interface SettlementSearchParams {
 // ============================================================================
 
 export interface SiteVisit {
-  visitId: string;
+  companyName: string | null;
+  complianceIssue: string | null;
+  facilityClass: string | null;
   facilityId: string | null;
   facilityName: string | null;
-  facilityClass: string | null;
   facilityType: string | null;
-  visitType: string | null;
-  complianceIssue: string | null;
-  companyName: string | null;
   visitDate: string | null;
+  visitId: string;
+  visitType: string | null;
   [key: string]: string | null;
 }
 
 export interface SiteVisitSearchParams {
-  facilityId?: string;
-  facilityName?: string;
-  visitType?: string;
   companyName?: string;
   dateFrom?: string;
   dateTo?: string;
+  facilityId?: string;
+  facilityName?: string;
+  visitType?: string;
 }
 
 // ============================================================================

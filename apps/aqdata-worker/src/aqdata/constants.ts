@@ -2,12 +2,15 @@ export const BASE_URL = "https://aqdata.maricopa.gov";
 
 export const PAGES = {
   applicationSearch: "/applications/applicationSearch.jsf",
+  asbestosNotificationSearch: "/applications/asbestosNotificationSearch.jsf",
+  complaintSearch: "/complaints/complaintSearch.jsf",
   complianceReportSearch: "/compliance/compReportSearch.jsf",
   disclaimer: "/disclaimer.jsf",
   dustApplicationSearch: "/applications/dustApplicationSearch.jsf",
   enforcementSearch: "/ceta/enforcementSearch.jsf",
   home: "/home/about.jsf",
   inspectionSearch: "/ceta/fceSearch.jsf",
+  invoiceSearch: "/inv/invSearch.jsf",
   settlementSearch: "/ceta/settlementSearch.jsf",
   siteVisitSearch: "/ceta/siteVisitSearch.jsf",
 } as const;
@@ -51,12 +54,42 @@ export const HOME = {
 
 // Per-page form identifiers (discovered via site exploration)
 export const FORMS = {
+  asbestosNotifications: {
+    formName: "_idJsp5",
+    prefix: "_idJsp6",
+    submitBtn: "_idJsp6:asbestosNotificationSearch_SubmitBtn",
+    resultsTable: "_idJsp6:asbestosNotificationsTbl",
+    exportBtn: "_idJsp6:asbestosNotificationsTbl:_idJsp69",
+    fields: {
+      notificationNumber: "_idJsp6:asbtNumber",
+      status: "_idJsp6:asbtStatusCds",
+      companyName: "_idJsp6:cmpName",
+      facilityId: "_idJsp6:facilityId",
+      facilityName: "_idJsp6:facilityName",
+      dateField: "_idJsp6:dateField",
+      dateFrom: "_idJsp6:From",
+      dateTo: "_idJsp6:To",
+      asbestosZone: "_idJsp6:_idJsp25",
+      county: "_idJsp6:_idJsp27",
+      ranking: "_idJsp6:ranking",
+    },
+  },
+  complaints: {
+    formName: "_idJsp5",
+    prefix: "_idJsp6",
+    submitBtn: "_idJsp6:complaintSearchSubmitBtn",
+    resetBtn: "_idJsp6:resetComplaintSearch",
+    resultsTable: "_idJsp6:_idJsp43",
+    exportBtn: "_idJsp6:_idJsp43:_idJsp75",
+    fields: {},
+  },
   complianceReports: {
     formName: "_idJsp4",
     prefix: "_idJsp7",
     submitBtn: "_idJsp7:compReportSearch_SubmitBtn",
     resetBtn: "_idJsp7:compReportSearch_ResetBtn",
-    exportBtn: "", // discover during spike
+    resultsTable: "_idJsp7:complianceReportsTable",
+    exportBtn: "_idJsp7:complianceReportsTable:_idJsp124",
     fields: {
       facilityId: "_idJsp7:compReportSearch_FacilityID",
       facilityName: "_idJsp7:compReportSearch_FacilityName",
@@ -95,13 +128,23 @@ export const FORMS = {
     prefix: "_idJsp6",
     submitBtn: "_idJsp6:eaSearch_SubmitBtn",
     resetBtn: "_idJsp6:eaSearch_ResetBtn",
-    exportBtn: "", // discover during spike
+    resultsTable: "_idJsp6:_idJsp33",
+    exportBtn: "_idJsp6:_idJsp33:_idJsp86",
     fields: {
       facilityId: "_idJsp6:eaSearch_FacilityID",
       facilityName: "_idJsp6:eaSearch_FacilityName",
       actionId: "_idJsp6:eaSearch_EnforcementActionID",
       companyName: "_idJsp6:cmpName",
     },
+  },
+  invoices: {
+    formName: "_idJsp5",
+    prefix: "_idJsp6",
+    submitBtn: "_idJsp6:invoiceSearchBtn",
+    resetBtn: "_idJsp6:_idJsp46",
+    resultsTable: "_idJsp6:_idJsp51",
+    exportBtn: "_idJsp6:_idJsp51:_idJsp104",
+    fields: {},
   },
   inspections: {
     formName: "_idJsp5",
@@ -127,7 +170,8 @@ export const FORMS = {
     prefix: "_idJsp6",
     submitBtn: "_idJsp6:saSearch_SubmitBtn",
     resetBtn: "_idJsp6:saSearch_ResetBtn",
-    exportBtn: "", // discover during spike
+    resultsTable: "_idJsp6:_idJsp29",
+    exportBtn: "_idJsp6:_idJsp29:_idJsp45",
     fields: {
       settlementId: "_idJsp6:saSearch_SettlementID",
       companyName: "_idJsp6:cmpName",
@@ -139,7 +183,8 @@ export const FORMS = {
     prefix: "_idJsp6",
     submitBtn: "_idJsp6:siteVisitSearchBtn",
     resetBtn: "_idJsp6:_idJsp43",
-    exportBtn: "", // discover during spike
+    resultsTable: "_idJsp6:_idJsp48",
+    exportBtn: "_idJsp6:_idJsp48:_idJsp80",
     fields: {
       facilityId: "_idJsp6:_idJsp21",
       facilityName: "_idJsp6:_idJsp22",
@@ -164,6 +209,7 @@ export const COMPLIANCE_SUBTABS = {
 // Applications sub-tab source IDs (when on applications pages)
 export const APPLICATIONS_SUBTABS = {
   applicationSearch: "_idJsp7:12:_idJsp14",
+  asbestosNotificationSearch: "_idJsp7:14:_idJsp14",
   dustApplicationSearch: "_idJsp7:16:_idJsp14",
 } as const;
 

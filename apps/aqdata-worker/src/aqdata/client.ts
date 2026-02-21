@@ -50,11 +50,26 @@ export class AQDataClient extends AQSessionTransport {
     return html;
   }
 
+  navigateToAsbestosNotificationSearch(): Promise<string> {
+    return this.navigateTo(
+      PAGES.asbestosNotificationSearch,
+      "asbestos_notification_search"
+    );
+  }
+
+  navigateToComplaintSearch(): Promise<string> {
+    return this.navigateTo(PAGES.complaintSearch, "complaint_search");
+  }
+
   navigateToDustApplicationSearch(): Promise<string> {
     return this.navigateTo(
       PAGES.dustApplicationSearch,
       "dust_application_search"
     );
+  }
+
+  navigateToInvoiceSearch(): Promise<string> {
+    return this.navigateTo(PAGES.invoiceSearch, "invoice_search");
   }
 
   navigateToInspectionSearch(): Promise<string> {
@@ -138,6 +153,24 @@ export class AQDataClient extends AQSessionTransport {
     return this.postCurrentForm(fields);
   }
 
+  searchInvoices(): Promise<string> {
+    return this.postCurrentForm({
+      source: FORMS.invoices.submitBtn,
+    });
+  }
+
+  searchComplaints(): Promise<string> {
+    return this.postCurrentForm({
+      source: FORMS.complaints.submitBtn,
+    });
+  }
+
+  searchAsbestosNotifications(): Promise<string> {
+    return this.postCurrentForm({
+      source: FORMS.asbestosNotifications.submitBtn,
+    });
+  }
+
   searchInspections(): Promise<string> {
     return this.postCurrentForm({
       source: FORMS.inspections.submitBtn,
@@ -179,7 +212,7 @@ export class AQDataClient extends AQSessionTransport {
     const postUrl = this.buildPostUrl(this.currentFormAction || PAGES.home);
     const body = new URLSearchParams();
     body.append("oracle.adf.faces.FORM", this.currentFormName);
-    body.append("oracle.adf.faces.STATE_TOKEN", String(this.stateToken));
+    body.append("oracle.adf.faces.STATE_TOKEN", this.stateToken);
     body.append("source", source);
 
     return fetch(postUrl, {

@@ -1,30 +1,93 @@
 [
   {
-    "endpoint": "hazardousWasteManifests",
-    "label": "Hazardous Waste Manifests",
+    "endpoint": "sharepoint",
+    "label": "Records Center Database",
     "sampledRecords": 20,
-    "storedRecords": 8069,
-    "file": "hazardouswastemanifests.json"
+    "storedRecords": 32897,
+    "file": "sharepoint.json"
   },
   {
-    "endpoint": "waterQualityApp",
-    "label": "Water Quality Applications",
+    "endpoint": "hazardousWasteAccounts",
+    "label": "Hazardous Waste Accounts",
     "sampledRecords": 20,
-    "storedRecords": 7653,
-    "file": "waterqualityapp.json"
+    "storedRecords": 30262,
+    "file": "hazardouswasteaccounts.json"
+  },
+  {
+    "endpoint": "undergroundStorage",
+    "label": "Underground Storage Tanks and Leaking USTs",
+    "sampledRecords": 20,
+    "storedRecords": 29977,
+    "file": "undergroundstorage.json"
+  },
+  {
+    "endpoint": "revenueManagementSystem",
+    "label": "Revenue Management System",
+    "sampledRecords": 20,
+    "storedRecords": 25665,
+    "file": "revenuemanagementsystem.json"
+  },
+  {
+    "endpoint": "airPermitCompliance",
+    "label": "Air Permit Compliance",
+    "sampledRecords": 20,
+    "storedRecords": 20616,
+    "file": "airpermitcompliance.json"
+  },
+  {
+    "endpoint": "voluntaryRemediation",
+    "label": "Voluntary Remediation",
+    "sampledRecords": 20,
+    "storedRecords": 20208,
+    "file": "voluntaryremediation.json"
+  },
+  {
+    "endpoint": "waterQualityMonitoring",
+    "label": "Water Quality Monitoring",
+    "sampledRecords": 20,
+    "storedRecords": 18724,
+    "file": "waterqualitymonitoring.json"
   },
   {
     "endpoint": "wastePrograms",
     "label": "Waste Programs Division",
     "sampledRecords": 20,
-    "storedRecords": 6570,
+    "storedRecords": 17281,
     "file": "wasteprograms.json"
+  },
+  {
+    "endpoint": "hazardousWasteManifests",
+    "label": "Hazardous Waste Manifests",
+    "sampledRecords": 20,
+    "storedRecords": 16783,
+    "file": "hazardouswastemanifests.json"
+  },
+  {
+    "endpoint": "stateAssuranceFund",
+    "label": "State Assurance Fund",
+    "sampledRecords": 20,
+    "storedRecords": 14720,
+    "file": "stateassurancefund.json"
+  },
+  {
+    "endpoint": "waterQualityApp",
+    "label": "Water Quality Applications",
+    "sampledRecords": 20,
+    "storedRecords": 9356,
+    "file": "waterqualityapp.json"
+  },
+  {
+    "endpoint": "specialWasteManifests",
+    "label": "Special Waste Manifests",
+    "sampledRecords": 20,
+    "storedRecords": 8268,
+    "file": "specialwastemanifests.json"
   },
   {
     "endpoint": "solidWastePrograms",
     "label": "Solid Waste Programs",
     "sampledRecords": 20,
-    "storedRecords": 6097,
+    "storedRecords": 7228,
     "file": "solidwasteprograms.json"
   },
   {
@@ -42,41 +105,6 @@
     "file": "vehiclesemmisions.json"
   },
   {
-    "endpoint": "voluntaryRemediation",
-    "label": "Voluntary Remediation",
-    "sampledRecords": 20,
-    "storedRecords": 4815,
-    "file": "voluntaryremediation.json"
-  },
-  {
-    "endpoint": "undergroundStorage",
-    "label": "Underground Storage Tanks and Leaking USTs",
-    "sampledRecords": 20,
-    "storedRecords": 4513,
-    "file": "undergroundstorage.json"
-  },
-  {
-    "endpoint": "sharepoint",
-    "label": "Records Center Database",
-    "sampledRecords": 20,
-    "storedRecords": 4508,
-    "file": "sharepoint.json"
-  },
-  {
-    "endpoint": "hazardousWasteAccounts",
-    "label": "Hazardous Waste Accounts",
-    "sampledRecords": 20,
-    "storedRecords": 4193,
-    "file": "hazardouswasteaccounts.json"
-  },
-  {
-    "endpoint": "waterQualityMonitoring",
-    "label": "Water Quality Monitoring",
-    "sampledRecords": 20,
-    "storedRecords": 3923,
-    "file": "waterqualitymonitoring.json"
-  },
-  {
     "endpoint": "superfundRemediation",
     "label": "Superfund Remediation",
     "sampledRecords": 20,
@@ -89,34 +117,6 @@
     "sampledRecords": 20,
     "storedRecords": 3871,
     "file": "solidwaste.json"
-  },
-  {
-    "endpoint": "airPermitCompliance",
-    "label": "Air Permit Compliance",
-    "sampledRecords": 20,
-    "storedRecords": 3857,
-    "file": "airpermitcompliance.json"
-  },
-  {
-    "endpoint": "revenueManagementSystem",
-    "label": "Revenue Management System",
-    "sampledRecords": 20,
-    "storedRecords": 3587,
-    "file": "revenuemanagementsystem.json"
-  },
-  {
-    "endpoint": "specialWasteManifests",
-    "label": "Special Waste Manifests",
-    "sampledRecords": 20,
-    "storedRecords": 3234,
-    "file": "specialwastemanifests.json"
-  },
-  {
-    "endpoint": "stateAssuranceFund",
-    "label": "State Assurance Fund",
-    "sampledRecords": 20,
-    "storedRecords": 2824,
-    "file": "stateassurancefund.json"
   },
   {
     "endpoint": "drywell",
@@ -136,7 +136,7 @@
     "endpoint": "wasteWaterFacilities",
     "label": "Waste Water Facilities",
     "sampledRecords": 20,
-    "storedRecords": 1229,
+    "storedRecords": 1430,
     "file": "wastewaterfacilities.json"
   },
   {

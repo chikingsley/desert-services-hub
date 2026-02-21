@@ -4,12 +4,13 @@ Investigation package for syncing Arizona DEQ CGP/NOI records from the public `d
 
 ## Name
 
-Working name: `azdeq-cgp-sync` (now includes both CGP sync and MegaSearch multi-database sync research tooling).
+Working name: `azdeq-cgp-sync` (now includes CGP sync, MegaSearch sync, and ArcGIS permit/map sync tooling).
 
 ## What This Covers
 
 - Discovers and uses the CGP JSON endpoint used by the public search UI.
 - Discovers and syncs MegaSearch `/list` datasets via Playwright-backed browser fetches (Cloudflare-protected; raw terminal `fetch/curl` gets blocked).
+- Syncs ArcGIS permit/map layers from the ADEQ ArcGIS REST services with paginated extraction and idempotent upserts.
 - Supports two sync modes:
   - county partition sync (`facilitycounty`)
   - exhaustive `ltfid` range sync (recommended for completeness)
@@ -107,6 +108,10 @@ See `packages/azdeq-cgp-sync/research/exhaustive-summary.json` for full counts.
   - `packages/azdeq-cgp-sync/research/arcgis/service-layer-summary.json`
 - Map sync readiness notes and extraction pattern:
   - `packages/azdeq-cgp-sync/research/arcgis/sync-readiness.md`
+- ArcGIS sync run summary:
+  - `packages/azdeq-cgp-sync/research/arcgis/_run-summary.json`
+- ArcGIS per-layer sample exports:
+  - `packages/azdeq-cgp-sync/research/arcgis/samples/*.json`
 
 ## CLI
 
@@ -125,13 +130,19 @@ bun packages/azdeq-cgp-sync/cli.ts megasearch-sync --max-queries 600 --max-split
 # 4) Export MegaSearch endpoint samples + counts
 bun packages/azdeq-cgp-sync/cli.ts megasearch-export --per-endpoint 20
 
-# 5) Show latest CGP records
+# 5) Run ArcGIS permit/map sync
+bun packages/azdeq-cgp-sync/cli.ts arcgis-sync --page-size 1000
+
+# 6) Export ArcGIS layer samples + counts
+bun packages/azdeq-cgp-sync/cli.ts arcgis-export --per-layer 20
+
+# 7) Show latest CGP records
 bun packages/azdeq-cgp-sync/cli.ts latest --limit 15
 
-# 6) Output one full CGP record by ltfId
+# 8) Output one full CGP record by ltfId
 bun packages/azdeq-cgp-sync/cli.ts full --ltf-id 114921
 
-# 7) Generate 20 full CGP records per NOI type/category into files
+# 9) Generate 20 full CGP records per NOI type/category into files
 bun packages/azdeq-cgp-sync/cli.ts sample-types --per-type 20
 
 # Optional: fetch one LTF directly from API without DB
@@ -145,6 +156,10 @@ Default DB path:
 Default sample output path:
 
 - `packages/azdeq-cgp-sync/research/noi-type-samples/`
+
+Default ArcGIS sample output path:
+
+- `packages/azdeq-cgp-sync/research/arcgis/samples/`
 
 ## Next Design Step
 

@@ -1,0 +1,628 @@
+{
+  "key": "AZPDES:3",
+  "layerName": "AZPDES myDEQ CGP",
+  "storedRecords": 27514,
+  "sampledRecords": 20,
+  "records": [
+    {
+      "attributes": {
+        "OBJECTID": 27514,
+        "APPROVAL_DATE": 1676989118000,
+        "RECEIVED_DATE": 1676988978000,
+        "LTF_NUMBER": 97874,
+        "AZNPDES_NUMBER": "AZWV97874",
+        "WQDB_NOI_NUMBER": null,
+        "TERM_CANCEL_DATE": null,
+        "ACTIVITY": "A",
+        "FACILITY_NAME": "Ocotillo-Polk OH Rebuild",
+        "FACILITY_BEGIN_DATE": 1676937600000,
+        "FACILITY_END_DATE": 1688083200000,
+        "ADDRESS": null,
+        "CITY": null,
+        "STATE_CODE": null,
+        "ZIP_CODE": null,
+        "PHONE": "4809401986",
+        "ACRES_DISTURBED_PROJECT": null,
+        "ACRES_DISTURBED_OPERATIONS": 1.5,
+        "LATITUDE_DD": 33.425091,
+        "LONGITUDE_DD": -111.910044,
+        "MONITORING_REQUIRED": null,
+        "WAIVER": "True",
+        "RECEIVING_WATERS": "AZL15060106B-1588, UNK_EPHMRL"
+      },
+      "geometry": {
+        "x": 415396.0773,
+        "y": 3698784.311899999
+      }
+    },
+    {
+      "attributes": {
+        "OBJECTID": 27513,
+        "APPROVAL_DATE": 1676042641000,
+        "RECEIVED_DATE": 1676042195000,
+        "LTF_NUMBER": 97769,
+        "AZNPDES_NUMBER": "AZWV97769",
+        "WQDB_NOI_NUMBER": null,
+        "TERM_CANCEL_DATE": null,
+        "ACTIVITY": "A",
+        "FACILITY_NAME": "Ocotillo-Polk OH Rebuild",
+        "FACILITY_BEGIN_DATE": 1676851200000,
+        "FACILITY_END_DATE": 1688083200000,
+        "ADDRESS": null,
+        "CITY": null,
+        "STATE_CODE": null,
+        "ZIP_CODE": null,
+        "PHONE": "6023716957",
+        "ACRES_DISTURBED_PROJECT": null,
+        "ACRES_DISTURBED_OPERATIONS": 1.5,
+        "LATITUDE_DD": 33.425091,
+        "LONGITUDE_DD": -111.910044,
+        "MONITORING_REQUIRED": null,
+        "WAIVER": "True",
+        "RECEIVING_WATERS": "AZL15060106B-1588, UNK_EPHMRL"
+      },
+      "geometry": {
+        "x": 415396.0773,
+        "y": 3698784.311899999
+      }
+    },
+    {
+      "attributes": {
+        "OBJECTID": 27512,
+        "APPROVAL_DATE": 1676453956000,
+        "RECEIVED_DATE": 1675417482000,
+        "LTF_NUMBER": 97636,
+        "AZNPDES_NUMBER": "AZWV97636",
+        "WQDB_NOI_NUMBER": null,
+        "TERM_CANCEL_DATE": null,
+        "ACTIVITY": "A",
+        "FACILITY_NAME": "H60 Radio Tower Facility",
+        "FACILITY_BEGIN_DATE": 1676937600000,
+        "FACILITY_END_DATE": 1685404800000,
+        "ADDRESS": null,
+        "CITY": null,
+        "STATE_CODE": null,
+        "ZIP_CODE": null,
+        "PHONE": "4808920521",
+        "ACRES_DISTURBED_PROJECT": null,
+        "ACRES_DISTURBED_OPERATIONS": 1.8,
+        "LATITUDE_DD": 33.30046,
+        "LONGITUDE_DD": -111.398143,
+        "MONITORING_REQUIRED": null,
+        "WAIVER": "True",
+        "RECEIVING_WATERS": "UNK_EPHMRL"
+      },
+      "geometry": {
+        "x": 462933.59470000025,
+        "y": 3684667.4800000004
+      }
+    },
+    {
+      "attributes": {
+        "OBJECTID": 27511,
+        "APPROVAL_DATE": 1674148962000,
+        "RECEIVED_DATE": 1674148823000,
+        "LTF_NUMBER": 97454,
+        "AZNPDES_NUMBER": "AZWV97454",
+        "WQDB_NOI_NUMBER": null,
+        "TERM_CANCEL_DATE": null,
+        "ACTIVITY": "A",
+        "FACILITY_NAME": "Sherman St UG FDR ST21",
+        "FACILITY_BEGIN_DATE": 1675036800000,
+        "FACILITY_END_DATE": 1682035200000,
+        "ADDRESS": null,
+        "CITY": null,
+        "STATE_CODE": null,
+        "ZIP_CODE": null,
+        "PHONE": "9286323930",
+        "ACRES_DISTURBED_PROJECT": null,
+        "ACRES_DISTURBED_OPERATIONS": 1.25,
+        "LATITUDE_DD": 33.422517,
+        "LONGITUDE_DD": -112.11698799999999,
+        "MONITORING_REQUIRED": null,
+        "WAIVER": "True",
+        "RECEIVING_WATERS": "AZ15060106B-001D"
+      },
+      "geometry": {
+        "x": 396153.20419999957,
+        "y": 3698686.4102999996
+      }
+    },
+    {
+      "attributes": {
+        "OBJECTID": 27510,
+        "APPROVAL_DATE": 1674146072000,
+        "RECEIVED_DATE": 1674139194000,
+        "LTF_NUMBER": 97444,
+        "AZNPDES_NUMBER": "AZWV97444",
+        "WQDB_NOI_NUMBER": null,
+        "TERM_CANCEL_DATE": null,
+        "ACTIVITY": "A",
+        "FACILITY_NAME": "Sherman St UG FDR ST21",
+        "FACILITY_BEGIN_DATE": 1675036800000,
+        "FACILITY_END_DATE": 1680825600000,
+        "ADDRESS": null,
+        "CITY": null,
+        "STATE_CODE": null,
+        "ZIP_CODE": null,
+        "PHONE": "6023716957",
+        "ACRES_DISTURBED_PROJECT": null,
+        "ACRES_DISTURBED_OPERATIONS": 1.25,
+        "LATITUDE_DD": 33.422517,
+        "LONGITUDE_DD": -112.11698799999999,
+        "MONITORING_REQUIRED": null,
+        "WAIVER": "True",
+        "RECEIVING_WATERS": "AZ15060106B-001D"
+      },
+      "geometry": {
+        "x": 396153.20419999957,
+        "y": 3698686.4102999996
+      }
+    },
+    {
+      "attributes": {
+        "OBJECTID": 27509,
+        "APPROVAL_DATE": 1673969094000,
+        "RECEIVED_DATE": 1673969000000,
+        "LTF_NUMBER": 97408,
+        "AZNPDES_NUMBER": "AZWV97408",
+        "WQDB_NOI_NUMBER": null,
+        "TERM_CANCEL_DATE": null,
+        "ACTIVITY": "A",
+        "FACILITY_NAME": "United Rentals",
+        "FACILITY_BEGIN_DATE": 1674432000000,
+        "FACILITY_END_DATE": 1681516800000,
+        "ADDRESS": "215 E BASELINE RD",
+        "CITY": "GILBERT",
+        "STATE_CODE": "AZ",
+        "ZIP_CODE": "85233",
+        "PHONE": "5202201644",
+        "ACRES_DISTURBED_PROJECT": null,
+        "ACRES_DISTURBED_OPERATIONS": 2,
+        "LATITUDE_DD": 33.377418,
+        "LONGITUDE_DD": -111.828355,
+        "MONITORING_REQUIRED": null,
+        "WAIVER": "True",
+        "RECEIVING_WATERS": "UNK_EPHMRL"
+      },
+      "geometry": {
+        "x": 422948.59609999973,
+        "y": 3693435.248400001
+      }
+    },
+    {
+      "attributes": {
+        "OBJECTID": 27508,
+        "APPROVAL_DATE": 1673257324000,
+        "RECEIVED_DATE": 1673257270000,
+        "LTF_NUMBER": 97321,
+        "AZNPDES_NUMBER": "AZWV97321",
+        "WQDB_NOI_NUMBER": null,
+        "TERM_CANCEL_DATE": null,
+        "ACTIVITY": "A",
+        "FACILITY_NAME": "DG Kingman",
+        "FACILITY_BEGIN_DATE": 1675123200000,
+        "FACILITY_END_DATE": 1685232000000,
+        "ADDRESS": null,
+        "CITY": null,
+        "STATE_CODE": null,
+        "ZIP_CODE": null,
+        "PHONE": "9185144283",
+        "ACRES_DISTURBED_PROJECT": null,
+        "ACRES_DISTURBED_OPERATIONS": 1.03,
+        "LATITUDE_DD": 35.253551,
+        "LONGITUDE_DD": -114.017042,
+        "MONITORING_REQUIRED": null,
+        "WAIVER": "True",
+        "RECEIVING_WATERS": "UNK_EPHMRL"
+      },
+      "geometry": {
+        "x": 225499.1936999997,
+        "y": 3905335.2981000002
+      }
+    },
+    {
+      "attributes": {
+        "OBJECTID": 27507,
+        "APPROVAL_DATE": 1673021337000,
+        "RECEIVED_DATE": 1673021071000,
+        "LTF_NUMBER": 97318,
+        "AZNPDES_NUMBER": "AZWV97318",
+        "WQDB_NOI_NUMBER": null,
+        "TERM_CANCEL_DATE": null,
+        "ACTIVITY": "A",
+        "FACILITY_NAME": "Maverik #726-Bullhead, AZ",
+        "FACILITY_BEGIN_DATE": 1673222400000,
+        "FACILITY_END_DATE": 1688083200000,
+        "ADDRESS": "1885 HIGHWAY 95",
+        "CITY": "BULLHEAD CITY",
+        "STATE_CODE": "AZ",
+        "ZIP_CODE": "86442",
+        "PHONE": "8012683584",
+        "ACRES_DISTURBED_PROJECT": null,
+        "ACRES_DISTURBED_OPERATIONS": 1.44,
+        "LATITUDE_DD": 35.119547,
+        "LONGITUDE_DD": -114.594522,
+        "MONITORING_REQUIRED": null,
+        "WAIVER": "True",
+        "RECEIVING_WATERS": "AZ15030101-560"
+      },
+      "geometry": {
+        "x": 172398.4698999999,
+        "y": 3892216.8444999997
+      }
+    },
+    {
+      "attributes": {
+        "OBJECTID": 27506,
+        "APPROVAL_DATE": 1672927677000,
+        "RECEIVED_DATE": 1672927304000,
+        "LTF_NUMBER": 97310,
+        "AZNPDES_NUMBER": "AZWV97310",
+        "WQDB_NOI_NUMBER": null,
+        "TERM_CANCEL_DATE": null,
+        "ACTIVITY": "A",
+        "FACILITY_NAME": "DG Apache Junction",
+        "FACILITY_BEGIN_DATE": 1677542400000,
+        "FACILITY_END_DATE": 1687651200000,
+        "ADDRESS": null,
+        "CITY": null,
+        "STATE_CODE": null,
+        "ZIP_CODE": null,
+        "PHONE": "9185144283",
+        "ACRES_DISTURBED_PROJECT": null,
+        "ACRES_DISTURBED_OPERATIONS": 1.78,
+        "LATITUDE_DD": 33.398303999999996,
+        "LONGITUDE_DD": -111.519536,
+        "MONITORING_REQUIRED": null,
+        "WAIVER": "True",
+        "RECEIVING_WATERS": "UNK_EPHMRL"
+      },
+      "geometry": {
+        "x": 451686.08889999986,
+        "y": 3695564.9541999996
+      }
+    },
+    {
+      "attributes": {
+        "OBJECTID": 27505,
+        "APPROVAL_DATE": 1672744051000,
+        "RECEIVED_DATE": 1672743161000,
+        "LTF_NUMBER": 97287,
+        "AZNPDES_NUMBER": "AZWV97287",
+        "WQDB_NOI_NUMBER": null,
+        "TERM_CANCEL_DATE": null,
+        "ACTIVITY": "A",
+        "FACILITY_NAME": "DG Sierra Vista",
+        "FACILITY_BEGIN_DATE": 1673308800000,
+        "FACILITY_END_DATE": 1682553600000,
+        "ADDRESS": null,
+        "CITY": null,
+        "STATE_CODE": null,
+        "ZIP_CODE": null,
+        "PHONE": "9185144283",
+        "ACRES_DISTURBED_PROJECT": null,
+        "ACRES_DISTURBED_OPERATIONS": 2.04,
+        "LATITUDE_DD": 31.4675,
+        "LONGITUDE_DD": -110.255833,
+        "MONITORING_REQUIRED": null,
+        "WAIVER": "True",
+        "RECEIVING_WATERS": "AZ15050202-406A, AZ15050202-406B"
+      },
+      "geometry": {
+        "x": 570694.6585999997,
+        "y": 3481654.2224000003
+      }
+    },
+    {
+      "attributes": {
+        "OBJECTID": 27504,
+        "APPROVAL_DATE": 1653469376000,
+        "RECEIVED_DATE": 1653466836000,
+        "LTF_NUMBER": 94619,
+        "AZNPDES_NUMBER": "AZWV94619",
+        "WQDB_NOI_NUMBER": null,
+        "TERM_CANCEL_DATE": null,
+        "ACTIVITY": "A",
+        "FACILITY_NAME": "SI LP(2022) - 18TH ST & 10TH AVE WR# 4345578",
+        "FACILITY_BEGIN_DATE": 1655683200000,
+        "FACILITY_END_DATE": 1665187200000,
+        "ADDRESS": null,
+        "CITY": null,
+        "STATE_CODE": null,
+        "ZIP_CODE": null,
+        "PHONE": "5207946043",
+        "ACRES_DISTURBED_PROJECT": null,
+        "ACRES_DISTURBED_OPERATIONS": 1.26,
+        "LATITUDE_DD": 32.698381999999995,
+        "LONGITUDE_DD": -114.632498,
+        "MONITORING_REQUIRED": null,
+        "WAIVER": "True",
+        "RECEIVING_WATERS": "AZ15030108-005"
+      },
+      "geometry": {
+        "x": 159421.62449999992,
+        "y": 3623687.3939999994
+      }
+    },
+    {
+      "attributes": {
+        "OBJECTID": 27503,
+        "APPROVAL_DATE": 1650376304000,
+        "RECEIVED_DATE": 1650375813000,
+        "LTF_NUMBER": 94108,
+        "AZNPDES_NUMBER": "AZWV94108",
+        "WQDB_NOI_NUMBER": null,
+        "TERM_CANCEL_DATE": null,
+        "ACTIVITY": "A",
+        "FACILITY_NAME": "Dewey UG FDR4",
+        "FACILITY_BEGIN_DATE": 1650585600000,
+        "FACILITY_END_DATE": 1656028800000,
+        "ADDRESS": null,
+        "CITY": null,
+        "STATE_CODE": null,
+        "ZIP_CODE": null,
+        "PHONE": "6023716957",
+        "ACRES_DISTURBED_PROJECT": null,
+        "ACRES_DISTURBED_OPERATIONS": 2,
+        "LATITUDE_DD": 34.550359,
+        "LONGITUDE_DD": -112.248798,
+        "MONITORING_REQUIRED": null,
+        "WAIVER": "True",
+        "RECEIVING_WATERS": "AZ15070102-054, UNK_EPHMRL"
+      },
+      "geometry": {
+        "x": 385422.00879999995,
+        "y": 3823889.6479
+      }
+    },
+    {
+      "attributes": {
+        "OBJECTID": 27502,
+        "APPROVAL_DATE": 1647618129000,
+        "RECEIVED_DATE": 1647618062000,
+        "LTF_NUMBER": 93642,
+        "AZNPDES_NUMBER": "AZWV93642",
+        "WQDB_NOI_NUMBER": null,
+        "TERM_CANCEL_DATE": null,
+        "ACTIVITY": "A",
+        "FACILITY_NAME": "Lake Pleasant 10-Lane Boat Ramp",
+        "FACILITY_BEGIN_DATE": 1647820800000,
+        "FACILITY_END_DATE": 1656547200000,
+        "ADDRESS": "41835 N CASTLE HOT SPRINGS RD",
+        "CITY": "MORRISTOWN",
+        "STATE_CODE": "AZ",
+        "ZIP_CODE": "85342",
+        "PHONE": "4808945500",
+        "ACRES_DISTURBED_PROJECT": null,
+        "ACRES_DISTURBED_OPERATIONS": 1.5,
+        "LATITUDE_DD": 33.861762,
+        "LONGITUDE_DD": -112.61413,
+        "MONITORING_REQUIRED": null,
+        "WAIVER": "True",
+        "RECEIVING_WATERS": "UNK_EPHMRL"
+      },
+      "geometry": {
+        "x": 350690.01690000016,
+        "y": 3748000.6492999997
+      }
+    },
+    {
+      "attributes": {
+        "OBJECTID": 27501,
+        "APPROVAL_DATE": 1639577032000,
+        "RECEIVED_DATE": 1639574956000,
+        "LTF_NUMBER": 92385,
+        "AZNPDES_NUMBER": "AZWV92385",
+        "WQDB_NOI_NUMBER": null,
+        "TERM_CANCEL_DATE": null,
+        "ACTIVITY": "A",
+        "FACILITY_NAME": "Sawmill to 6th St",
+        "FACILITY_BEGIN_DATE": 1640044800000,
+        "FACILITY_END_DATE": 1645833600000,
+        "ADDRESS": null,
+        "CITY": null,
+        "STATE_CODE": null,
+        "ZIP_CODE": null,
+        "PHONE": "5204199684",
+        "ACRES_DISTURBED_PROJECT": null,
+        "ACRES_DISTURBED_OPERATIONS": 1.4000000000000001,
+        "LATITUDE_DD": 35.183084,
+        "LONGITUDE_DD": -114.04527,
+        "MONITORING_REQUIRED": null,
+        "WAIVER": "True",
+        "RECEIVING_WATERS": "UNK_EPHMRL"
+      },
+      "geometry": {
+        "x": 222690.2287999997,
+        "y": 3897595.2918999996
+      }
+    },
+    {
+      "attributes": {
+        "OBJECTID": 27500,
+        "APPROVAL_DATE": 1639391960000,
+        "RECEIVED_DATE": 1639391775000,
+        "LTF_NUMBER": 92306,
+        "AZNPDES_NUMBER": "AZWV92306",
+        "WQDB_NOI_NUMBER": null,
+        "TERM_CANCEL_DATE": null,
+        "ACTIVITY": "A",
+        "FACILITY_NAME": "210250 Rillito Sediment Removal Stockpile",
+        "FACILITY_BEGIN_DATE": 1639958400000,
+        "FACILITY_END_DATE": 1651190400000,
+        "ADDRESS": null,
+        "CITY": null,
+        "STATE_CODE": null,
+        "ZIP_CODE": null,
+        "PHONE": "5207480188",
+        "ACRES_DISTURBED_PROJECT": null,
+        "ACRES_DISTURBED_OPERATIONS": 4,
+        "LATITUDE_DD": 32.311353,
+        "LONGITUDE_DD": -111.041416,
+        "MONITORING_REQUIRED": null,
+        "WAIVER": "True",
+        "RECEIVING_WATERS": "AZ15050302-001"
+      },
+      "geometry": {
+        "x": 496101.3145000003,
+        "y": 3574948.4266999997
+      }
+    },
+    {
+      "attributes": {
+        "OBJECTID": 27499,
+        "APPROVAL_DATE": 1639121213000,
+        "RECEIVED_DATE": 1639047095000,
+        "LTF_NUMBER": 92273,
+        "AZNPDES_NUMBER": "AZWV92273",
+        "WQDB_NOI_NUMBER": null,
+        "TERM_CANCEL_DATE": null,
+        "ACTIVITY": "A",
+        "FACILITY_NAME": "ARIZONA PUBLIC SERV OCOTILLO POWER PLT",
+        "FACILITY_BEGIN_DATE": 1639353600000,
+        "FACILITY_END_DATE": 1640908800000,
+        "ADDRESS": "1500 E UNIVERSITY DR",
+        "CITY": "TEMPE",
+        "STATE_CODE": "AZ",
+        "ZIP_CODE": "85288",
+        "PHONE": "4804460131",
+        "ACRES_DISTURBED_PROJECT": null,
+        "ACRES_DISTURBED_OPERATIONS": 2,
+        "LATITUDE_DD": 33.42521944,
+        "LONGITUDE_DD": -111.91291667,
+        "MONITORING_REQUIRED": null,
+        "WAIVER": "True",
+        "RECEIVING_WATERS": "AZ15060106B-235"
+      },
+      "geometry": {
+        "x": 415129.1303000003,
+        "y": 3698800.892999999
+      }
+    },
+    {
+      "attributes": {
+        "OBJECTID": 27498,
+        "APPROVAL_DATE": 1639121213000,
+        "RECEIVED_DATE": 1639047095000,
+        "LTF_NUMBER": 92273,
+        "AZNPDES_NUMBER": "AZWV92273",
+        "WQDB_NOI_NUMBER": null,
+        "TERM_CANCEL_DATE": null,
+        "ACTIVITY": "A",
+        "FACILITY_NAME": "APS - OCOTILLO POWER PLANT",
+        "FACILITY_BEGIN_DATE": 1639353600000,
+        "FACILITY_END_DATE": 1640908800000,
+        "ADDRESS": "1500 E UNIVERSITY DR",
+        "CITY": "TEMPE",
+        "STATE_CODE": "AZ",
+        "ZIP_CODE": "85288",
+        "PHONE": "4804460131",
+        "ACRES_DISTURBED_PROJECT": null,
+        "ACRES_DISTURBED_OPERATIONS": 2,
+        "LATITUDE_DD": 33.42521944,
+        "LONGITUDE_DD": -111.91291667,
+        "MONITORING_REQUIRED": null,
+        "WAIVER": "True",
+        "RECEIVING_WATERS": "AZ15060106B-235"
+      },
+      "geometry": {
+        "x": 415129.1303000003,
+        "y": 3698800.892999999
+      }
+    },
+    {
+      "attributes": {
+        "OBJECTID": 27497,
+        "APPROVAL_DATE": 1639121213000,
+        "RECEIVED_DATE": 1639047095000,
+        "LTF_NUMBER": 92273,
+        "AZNPDES_NUMBER": "AZWV92273",
+        "WQDB_NOI_NUMBER": null,
+        "TERM_CANCEL_DATE": null,
+        "ACTIVITY": "A",
+        "FACILITY_NAME": "OCOTILLO POWER PLANT",
+        "FACILITY_BEGIN_DATE": 1639353600000,
+        "FACILITY_END_DATE": 1640908800000,
+        "ADDRESS": "1500 E UNIVERSITY DR",
+        "CITY": "TEMPE",
+        "STATE_CODE": "AZ",
+        "ZIP_CODE": "85288",
+        "PHONE": "4804460131",
+        "ACRES_DISTURBED_PROJECT": null,
+        "ACRES_DISTURBED_OPERATIONS": 2,
+        "LATITUDE_DD": 33.42521944,
+        "LONGITUDE_DD": -111.91291667,
+        "MONITORING_REQUIRED": null,
+        "WAIVER": "True",
+        "RECEIVING_WATERS": "AZ15060106B-235"
+      },
+      "geometry": {
+        "x": 415129.1303000003,
+        "y": 3698800.892999999
+      }
+    },
+    {
+      "attributes": {
+        "OBJECTID": 27496,
+        "APPROVAL_DATE": 1639030893000,
+        "RECEIVED_DATE": 1639030806000,
+        "LTF_NUMBER": 92269,
+        "AZNPDES_NUMBER": "AZWV92269",
+        "WQDB_NOI_NUMBER": null,
+        "TERM_CANCEL_DATE": null,
+        "ACTIVITY": "A",
+        "FACILITY_NAME": "ARIZONA PUBLIC SERV OCOTILLO POWER PLT",
+        "FACILITY_BEGIN_DATE": 1639353600000,
+        "FACILITY_END_DATE": 1640908800000,
+        "ADDRESS": "1500 E UNIVERSITY DR",
+        "CITY": "TEMPE",
+        "STATE_CODE": "AZ",
+        "ZIP_CODE": "85288",
+        "PHONE": "6024056006",
+        "ACRES_DISTURBED_PROJECT": null,
+        "ACRES_DISTURBED_OPERATIONS": 2,
+        "LATITUDE_DD": 33.42521944,
+        "LONGITUDE_DD": -111.91291667,
+        "MONITORING_REQUIRED": null,
+        "WAIVER": "True",
+        "RECEIVING_WATERS": "AZ15060106B-235"
+      },
+      "geometry": {
+        "x": 415129.1303000003,
+        "y": 3698800.892999999
+      }
+    },
+    {
+      "attributes": {
+        "OBJECTID": 27495,
+        "APPROVAL_DATE": 1639030893000,
+        "RECEIVED_DATE": 1639030806000,
+        "LTF_NUMBER": 92269,
+        "AZNPDES_NUMBER": "AZWV92269",
+        "WQDB_NOI_NUMBER": null,
+        "TERM_CANCEL_DATE": null,
+        "ACTIVITY": "A",
+        "FACILITY_NAME": "APS - OCOTILLO POWER PLANT",
+        "FACILITY_BEGIN_DATE": 1639353600000,
+        "FACILITY_END_DATE": 1640908800000,
+        "ADDRESS": "1500 E UNIVERSITY DR",
+        "CITY": "TEMPE",
+        "STATE_CODE": "AZ",
+        "ZIP_CODE": "85288",
+        "PHONE": "6024056006",
+        "ACRES_DISTURBED_PROJECT": null,
+        "ACRES_DISTURBED_OPERATIONS": 2,
+        "LATITUDE_DD": 33.42521944,
+        "LONGITUDE_DD": -111.91291667,
+        "MONITORING_REQUIRED": null,
+        "WAIVER": "True",
+        "RECEIVING_WATERS": "AZ15060106B-235"
+      },
+      "geometry": {
+        "x": 415129.1303000003,
+        "y": 3698800.892999999
+      }
+    }
+  ]
+}

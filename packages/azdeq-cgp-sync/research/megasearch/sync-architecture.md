@@ -41,13 +41,13 @@
 
 ## 5) Runtime profile (latest run)
 
-- Run ID: `megasearch-sync-2026-02-21T08-09-02-373Z`
-- Duration: ~15m24s
-- Total queries: `3846`
+- Run ID: `megasearch-sync-2026-02-21T17-54-50-837Z`
+- Duration: ~36m56s
+- Total queries: `11372`
 - Failed queries: `0`
-- Capped queries observed: `714`
-- Rows fetched across all responses: `103,995`
-- Distinct stored rows: `88,496`
+- Capped queries observed: `2884`
+- Rows fetched across all responses: `380,458`
+- Distinct stored rows: `276,839`
 
 See:
 

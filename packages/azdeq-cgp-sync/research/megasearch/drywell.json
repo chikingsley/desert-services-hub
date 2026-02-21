@@ -41,6 +41,15 @@
       "indexVal": "drywell3"
     },
     {
+      "regNo": 24049,
+      "facilityName": "ARIZONA STATE UNIVERSITY",
+      "address": "STAUFFER COMMUNICATION ARTS",
+      "facilityCityState": "950 SOUTH FOREST MALL/TEMPE, AZ",
+      "facilityZip": "     85287",
+      "drywellsNo": "2",
+      "indexVal": "drywell2"
+    },
+    {
       "regNo": 27051,
       "facilityName": "ARIZONA STATE UNIVERSITY",
       "address": "PARKING LOT 11",
@@ -59,21 +68,30 @@
       "indexVal": "drywell5"
     },
     {
-      "regNo": 24049,
-      "facilityName": "ARIZONA STATE UNIVERSITY",
-      "address": "STAUFFER COMMUNICATION ARTS",
-      "facilityCityState": "950 SOUTH FOREST MALL/TEMPE, AZ",
-      "facilityZip": "     85287",
-      "drywellsNo": "2",
-      "indexVal": "drywell2"
-    },
-    {
       "regNo": 26683,
       "facilityName": "ARIZONA STATE UNIVERSITY",
       "address": "ADELPHI COMMONS",
       "facilityCityState": "739 E APACHE BLVD",
       "facilityZip": "     85287",
       "drywellsNo": "1",
+      "indexVal": "drywell1"
+    },
+    {
+      "regNo": 29633,
+      "facilityName": "POLLACK PLAZA",
+      "address": "3002 & 3080 N. ARIZONA AVE",
+      "facilityCityState": "CHANDLER, AZ 85224",
+      "facilityZip": null,
+      "drywellsNo": "1",
+      "indexVal": "drywell8"
+    },
+    {
+      "regNo": 16959,
+      "facilityName": "LEWIS STEVENS DISTINICTIVE CATERING",
+      "address": "811 W. DEER VALLEY",
+      "facilityCityState": "PHOENIX, AZ 85260",
+      "facilityZip": "     85027",
+      "drywellsNo": "2",
       "indexVal": "drywell1"
     },
     {
@@ -93,24 +111,6 @@
       "facilityZip": null,
       "drywellsNo": "1",
       "indexVal": "drywell10"
-    },
-    {
-      "regNo": 29633,
-      "facilityName": "POLLACK PLAZA",
-      "address": "3002 & 3080 N. ARIZONA AVE",
-      "facilityCityState": "CHANDLER, AZ 85224",
-      "facilityZip": null,
-      "drywellsNo": "1",
-      "indexVal": "drywell8"
-    },
-    {
-      "regNo": 16959,
-      "facilityName": "LEWIS STEVENS DISTINICTIVE CATERING",
-      "address": "811 W. DEER VALLEY",
-      "facilityCityState": "PHOENIX, AZ 85260",
-      "facilityZip": "     85027",
-      "drywellsNo": "2",
-      "indexVal": "drywell1"
     },
     {
       "regNo": 26783,
@@ -167,13 +167,13 @@
       "indexVal": "drywell6"
     },
     {
-      "regNo": 27054,
+      "regNo": 26679,
       "facilityName": "ARIZONA STATE UNIVERSITY",
-      "address": "TEMPE CENTER",
-      "facilityCityState": "817-951 S. MILL AVE",
+      "address": "PARKING LOT 40",
+      "facilityCityState": "700 EAST APACHE BLVD",
       "facilityZip": "     85287",
-      "drywellsNo": "1",
-      "indexVal": "drywell5"
+      "drywellsNo": "4",
+      "indexVal": "drywell1"
     },
     {
       "regNo": 26772,

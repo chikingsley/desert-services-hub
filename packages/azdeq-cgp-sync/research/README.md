@@ -22,6 +22,10 @@ This folder contains generated investigation outputs. Use this guide to decide w
   - permit-focused service/layer counts and capabilities.
 - `arcgis/service-layer-summary.json`
   - deep metadata + sample attributes for core AZPDES/dust layers.
+- `arcgis/_run-summary.json`
+  - latest ArcGIS sync run metadata and layer-level fetch stats.
+- `arcgis/samples/`
+  - per-layer ArcGIS sample exports and counts.
 
 ## Optional (Can Be Deleted Anytime)
 
@@ -43,4 +47,3 @@ These are point-in-time inspection snapshots and are not required for sync archi
 
 - Local SQLite crawl DBs live under `packages/azdeq-cgp-sync/.data/` and are intentionally gitignored.
 - If you want to keep the repo lean, remove only the `Optional` files first.
-

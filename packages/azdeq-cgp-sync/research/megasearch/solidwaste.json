@@ -113,24 +113,6 @@
       "comments": "ILLEGAL DUMPING ON STATE LAND"
     },
     {
-      "indexVal": "solidWaste2",
-      "pcsCase": "1733-X",
-      "status": "CLOSED",
-      "lustNumb": null,
-      "facName": "ASLD ENV-042, CALLE TORIM RD DRUM DUMPSITE - BOX 197 IS GONE",
-      "address": "S OF CALLE TORIM RD",
-      "city": "TUCSON",
-      "state": "AZ",
-      "postalCode": "85746",
-      "county": "PIMA",
-      "typeReles": "OIL",
-      "dateRecd": "07/29/1997",
-      "dateAssig": "07/29/1997",
-      "closeDate": "09/30/1997",
-      "vemur": null,
-      "comments": "ILLEGAL DUMPING ON STATE LAND"
-    },
-    {
       "indexVal": "solidWaste10",
       "pcsCase": "1682-H",
       "status": "CLOSED",
@@ -203,6 +185,24 @@
       "comments": "PIMA COUNTY NEEDS TO BE TRANSFERED. INSPECTED 01-28-99, TANK REMOVED 6-7 YEARS AGO. CASE CLOSED"
     },
     {
+      "indexVal": "solidWaste2",
+      "pcsCase": "1733-X",
+      "status": "CLOSED",
+      "lustNumb": null,
+      "facName": "ASLD ENV-042, CALLE TORIM RD DRUM DUMPSITE - BOX 197 IS GONE",
+      "address": "S OF CALLE TORIM RD",
+      "city": "TUCSON",
+      "state": "AZ",
+      "postalCode": "85746",
+      "county": "PIMA",
+      "typeReles": "OIL",
+      "dateRecd": "07/29/1997",
+      "dateAssig": "07/29/1997",
+      "closeDate": "09/30/1997",
+      "vemur": null,
+      "comments": "ILLEGAL DUMPING ON STATE LAND"
+    },
+    {
       "indexVal": "solidWaste1",
       "pcsCase": "1651-X",
       "status": "CLOSED",
@@ -219,24 +219,6 @@
       "closeDate": "06/17/1998",
       "vemur": null,
       "comments": "CASE ARCHIVED IN '96. CASE CLOSED"
-    },
-    {
-      "indexVal": "solidWaste6",
-      "pcsCase": "1884-U",
-      "status": "CLOSED",
-      "lustNumb": "1193.01 TO05",
-      "facName": "ARCO AM/PM #5680/ WHITING #138 UST -VEMUR",
-      "address": "1850 E. PRINCE ROAD",
-      "city": "TUCSON",
-      "state": "AZ",
-      "postalCode": "85719",
-      "county": "PIMA",
-      "typeReles": "DISPENSER/UST GASOLI",
-      "dateRecd": "05/13/1998",
-      "dateAssig": "05/13/1998",
-      "closeDate": "05/17/2000",
-      "vemur": null,
-      "comments": "RELEASE OF GASOLINE FROM DISPENSER/EXTENT OF CONTAMINATION DEFINED. REQUIRES REMEDIATION AND REPORT.  LUST FILE BELOW SRL / NOT REGULATED BY SWS / NOT EXCAVATED SOIL. CASE CLOSED."
     },
     {
       "indexVal": "solidWaste9",
@@ -345,6 +327,24 @@
       "closeDate": "08/07/1998",
       "vemur": null,
       "comments": "THIS IS A SECOND REFERRAL FROM UST. SITE NEEDS TO BE INSPECTED AND VERFIFIED AS TO WHETHER OR NOT PCS EXISITS THERE. INSPECTED 8-5-98, NOTHING AT THIS SITE, CLOSED."
+    },
+    {
+      "indexVal": "solidWaste6",
+      "pcsCase": "1884-U",
+      "status": "CLOSED",
+      "lustNumb": "1193.01 TO05",
+      "facName": "ARCO AM/PM #5680/ WHITING #138 UST -VEMUR",
+      "address": "1850 E. PRINCE ROAD",
+      "city": "TUCSON",
+      "state": "AZ",
+      "postalCode": "85719",
+      "county": "PIMA",
+      "typeReles": "DISPENSER/UST GASOLI",
+      "dateRecd": "05/13/1998",
+      "dateAssig": "05/13/1998",
+      "closeDate": "05/17/2000",
+      "vemur": null,
+      "comments": "RELEASE OF GASOLINE FROM DISPENSER/EXTENT OF CONTAMINATION DEFINED. REQUIRES REMEDIATION AND REPORT.  LUST FILE BELOW SRL / NOT REGULATED BY SWS / NOT EXCAVATED SOIL. CASE CLOSED."
     },
     {
       "indexVal": "solidWaste3",

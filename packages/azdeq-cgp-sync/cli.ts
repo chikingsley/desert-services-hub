@@ -1,6 +1,11 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import {
+  runArcGisExportFromArgv,
+  runArcGisSyncFromArgv,
+} from "./src/cli-arcgis-command";
+import { LTFID_MAX_DISCOVERY_PROBES } from "./src/cli-cgp-constants";
+import {
   runMegaSearchExportCli,
   runMegaSearchSyncCli,
 } from "./src/cli-megasearch";
@@ -16,27 +21,13 @@ const DEFAULT_SAMPLE_OUTPUT_DIR =
   "packages/azdeq-cgp-sync/research/noi-type-samples";
 const DEFAULT_MEGASEARCH_OUTPUT_DIR =
   "packages/azdeq-cgp-sync/research/megasearch";
+const DEFAULT_ARCGIS_OUTPUT_DIR =
+  "packages/azdeq-cgp-sync/research/arcgis/samples";
 const DEFAULT_MEGASEARCH_MAX_SPLIT_LEVELS = MEGASEARCH_SPLIT_PLAN.length;
 const DEFAULT_LTFID_START = 1;
 const DEFAULT_LTFID_FALLBACK_END = 120_000;
 const DEFAULT_TAIL_PADDING = 2000;
 const US_DATE_RE = /^(\d{2})\/(\d{2})\/(\d{4})$/;
-const LTFID_MAX_DISCOVERY_PROBES: ReadonlyArray<{
-  label: string;
-  query: { companyname?: string; facilityname?: string };
-}> = [
-  { label: "company:llc", query: { companyname: "llc" } },
-  { label: "company:arizona", query: { companyname: "arizona" } },
-  { label: "company:district", query: { companyname: "district" } },
-  { label: "company:development", query: { companyname: "development" } },
-  { label: "company:city", query: { companyname: "city" } },
-  { label: "facility:phase", query: { facilityname: "phase" } },
-  { label: "facility:road", query: { facilityname: "road" } },
-  { label: "facility:lot", query: { facilityname: "lot" } },
-  { label: "facility:school", query: { facilityname: "school" } },
-  { label: "facility:solar", query: { facilityname: "solar" } },
-  { label: "facility:station", query: { facilityname: "station" } },
-];
 
 interface ProbeResult {
   maxLtfId: number | null;
@@ -57,7 +48,6 @@ interface ResolvedLtfIdRange {
 function hasFlag(flag: string): boolean {
   return process.argv.includes(flag);
 }
-
 function readFlag(flag: string): string | null {
   const index = process.argv.indexOf(flag);
   if (index < 0) {
@@ -65,7 +55,6 @@ function readFlag(flag: string): string | null {
   }
   return process.argv[index + 1] ?? null;
 }
-
 function readFlags(flag: string): string[] {
   const values: string[] = [];
   for (let index = 0; index < process.argv.length; index += 1) {
@@ -75,7 +64,6 @@ function readFlags(flag: string): string[] {
   }
   return values;
 }
-
 function parseUsDate(input: string | null | undefined): number {
   if (!input) {
     return Number.NEGATIVE_INFINITY;
@@ -89,7 +77,6 @@ function parseUsDate(input: string | null | undefined): number {
   const [, month, day, year] = match;
   return Date.UTC(Number(year), Number(month) - 1, Number(day));
 }
-
 function parsePositiveIntegerFlag(
   flag: string,
   defaultValue: number
@@ -101,16 +88,6 @@ function parsePositiveIntegerFlag(
   return value;
 }
 
-function sanitizeFilename(input: string): string {
-  const normalized = input
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 100);
-
-  return normalized || "unknown";
-}
-
 function printUsage(): void {
   console.log(`
 Usage:
@@ -118,6 +95,8 @@ Usage:
   bun packages/azdeq-cgp-sync/cli.ts sync-ltf-range [--db <path>] [--start-id <n>] [--end-id <n>] [--tail-padding <n>] [--concurrency <n>] [--progress-every <n>]
   bun packages/azdeq-cgp-sync/cli.ts megasearch-sync [--db <path>] [--endpoint <name> ...] [--max-queries <n>] [--max-split-levels <n>] [--delay-ms <n>] [--headful]
   bun packages/azdeq-cgp-sync/cli.ts megasearch-export [--db <path>] [--per-endpoint <n>] [--out-dir <dir>]
+  bun packages/azdeq-cgp-sync/cli.ts arcgis-sync [--db <path>] [--layer <service:layerId> ...] [--page-size <n>] [--delay-ms <n>]
+  bun packages/azdeq-cgp-sync/cli.ts arcgis-export [--db <path>] [--per-layer <n>] [--out-dir <dir>]
   bun packages/azdeq-cgp-sync/cli.ts latest [--db <path>] [--limit <n>] [--out <file>]
   bun packages/azdeq-cgp-sync/cli.ts full --ltf-id <id> [--db <path>] [--out <file>]
   bun packages/azdeq-cgp-sync/cli.ts sample-types [--db <path>] [--per-type <n>] [--out-dir <dir>]
@@ -465,7 +444,13 @@ async function runSampleTypes(): Promise<void> {
         parseUsDate(right.dateSubmitted) - parseUsDate(left.dateSubmitted)
     );
     const sample = list.slice(0, Number.isNaN(perType) ? 20 : perType);
-    const filename = `${String(fileIndex).padStart(2, "0")}-${sanitizeFilename(type)}.json`;
+    const filenameSafeType =
+      type
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "")
+        .slice(0, 100) || "unknown";
+    const filename = `${String(fileIndex).padStart(2, "0")}-${filenameSafeType}.json`;
     const filePath = `${outputDir}/${filename}`;
 
     await writeFile(
@@ -541,6 +526,16 @@ async function main(): Promise<void> {
       break;
     case "megasearch-export":
       await runMegaSearchExport();
+      break;
+    case "arcgis-sync":
+      await runArcGisSyncFromArgv(process.argv, DEFAULT_DB_PATH);
+      break;
+    case "arcgis-export":
+      await runArcGisExportFromArgv(
+        process.argv,
+        DEFAULT_DB_PATH,
+        DEFAULT_ARCGIS_OUTPUT_DIR
+      );
       break;
     case "latest":
       await runLatest();

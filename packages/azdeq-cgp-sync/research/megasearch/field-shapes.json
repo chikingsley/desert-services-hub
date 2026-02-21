@@ -1,7 +1,7 @@
 [
   {
     "endpoint": "airPermitCompliance",
-    "sampledRecords": 20,
+    "keyCount": 10,
     "keys": [
       "address",
       "city",
@@ -17,7 +17,7 @@
   },
   {
     "endpoint": "drywell",
-    "sampledRecords": 20,
+    "keyCount": 7,
     "keys": [
       "address",
       "drywellsNo",
@@ -30,7 +30,7 @@
   },
   {
     "endpoint": "hazardousWasteAccounts",
-    "sampledRecords": 20,
+    "keyCount": 8,
     "keys": [
       "accountNumber",
       "address",
@@ -44,7 +44,7 @@
   },
   {
     "endpoint": "hazardousWasteManifests",
-    "sampledRecords": 20,
+    "keyCount": 10,
     "keys": [
       "address",
       "city",
@@ -60,7 +60,7 @@
   },
   {
     "endpoint": "revenueManagementSystem",
-    "sampledRecords": 20,
+    "keyCount": 11,
     "keys": [
       "acctId",
       "county",
@@ -77,7 +77,7 @@
   },
   {
     "endpoint": "sharepoint",
-    "sampledRecords": 20,
+    "keyCount": 12,
     "keys": [
       "address1",
       "borrower",
@@ -95,7 +95,7 @@
   },
   {
     "endpoint": "solidWaste",
-    "sampledRecords": 20,
+    "keyCount": 16,
     "keys": [
       "address",
       "city",
@@ -117,7 +117,7 @@
   },
   {
     "endpoint": "solidWasteFacilities",
-    "sampledRecords": 20,
+    "keyCount": 10,
     "keys": [
       "address",
       "city",
@@ -133,7 +133,7 @@
   },
   {
     "endpoint": "solidWastePrograms",
-    "sampledRecords": 20,
+    "keyCount": 11,
     "keys": [
       "address",
       "city",
@@ -150,7 +150,7 @@
   },
   {
     "endpoint": "specialWasteManifests",
-    "sampledRecords": 20,
+    "keyCount": 12,
     "keys": [
       "acctNumber",
       "address",
@@ -168,7 +168,7 @@
   },
   {
     "endpoint": "stateAssuranceFund",
-    "sampledRecords": 20,
+    "keyCount": 9,
     "keys": [
       "address",
       "city",
@@ -183,7 +183,7 @@
   },
   {
     "endpoint": "superfundRemediation",
-    "sampledRecords": 20,
+    "keyCount": 13,
     "keys": [
       "address",
       "affilStartDt",
@@ -202,7 +202,7 @@
   },
   {
     "endpoint": "surfaceWater",
-    "sampledRecords": 20,
+    "keyCount": 13,
     "keys": [
       "address",
       "affilStartDt",
@@ -221,7 +221,7 @@
   },
   {
     "endpoint": "undergroundStorage",
-    "sampledRecords": 20,
+    "keyCount": 10,
     "keys": [
       "address",
       "city",
@@ -237,7 +237,7 @@
   },
   {
     "endpoint": "vehiclesEmmisions",
-    "sampledRecords": 20,
+    "keyCount": 13,
     "keys": [
       "address",
       "affilStartDt",
@@ -256,7 +256,7 @@
   },
   {
     "endpoint": "voluntaryRemediation",
-    "sampledRecords": 20,
+    "keyCount": 11,
     "keys": [
       "address",
       "city",
@@ -273,7 +273,7 @@
   },
   {
     "endpoint": "wastePrograms",
-    "sampledRecords": 20,
+    "keyCount": 11,
     "keys": [
       "address",
       "archiveBox",
@@ -290,7 +290,7 @@
   },
   {
     "endpoint": "wasteWaterFacilities",
-    "sampledRecords": 20,
+    "keyCount": 10,
     "keys": [
       "address",
       "city",
@@ -306,7 +306,7 @@
   },
   {
     "endpoint": "waterQualityApp",
-    "sampledRecords": 20,
+    "keyCount": 29,
     "keys": [
       "address",
       "applicationDescription",
@@ -322,11 +322,11 @@
       "email",
       "facAddress",
       "facCity",
-      "facilityDescription",
-      "facilityName",
       "facPhone",
       "facState",
       "facZip",
+      "facilityDescription",
+      "facilityName",
       "firstName",
       "indexVal",
       "invNumber",
@@ -341,14 +341,14 @@
   },
   {
     "endpoint": "waterQualityConstruction",
-    "sampledRecords": 20,
+    "keyCount": 11,
     "keys": [
       "adeqFileNum",
       "countyName",
       "dateReceived",
       "dateReceivedStr",
-      "engineeringCompanyName",
       "engineerName",
+      "engineeringCompanyName",
       "indexVal",
       "projectAddress",
       "projectCity",
@@ -358,7 +358,7 @@
   },
   {
     "endpoint": "waterQualityMonitoring",
-    "sampledRecords": 20,
+    "keyCount": 11,
     "keys": [
       "address",
       "city",
@@ -375,7 +375,7 @@
   },
   {
     "endpoint": "waterQualityPermits",
-    "sampledRecords": 20,
+    "keyCount": 12,
     "keys": [
       "address",
       "businessName",

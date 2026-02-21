@@ -57,19 +57,6 @@
       "indexVal": "waterQualityConstruction1"
     },
     {
-      "adeqFileNum": "19880217",
-      "dateReceived": 581151600000,
-      "dateReceivedStr": "01-Jun-88",
-      "projectName": "PASQUINELLI SEWER",
-      "projectAddress": null,
-      "projectCity": "YUMA",
-      "countyName": "YUMA",
-      "projectReviewerNameCode": null,
-      "engineeringCompanyName": "DON PETERSON ENGRS",
-      "engineerName": null,
-      "indexVal": "waterQualityConstruction100"
-    },
-    {
       "adeqFileNum": "19880453",
       "dateReceived": 593247600000,
       "dateReceivedStr": "19-Oct-88",
@@ -83,19 +70,6 @@
       "indexVal": "waterQualityConstruction99"
     },
     {
-      "adeqFileNum": "19880541",
-      "dateReceived": 598258800000,
-      "dateReceivedStr": "16-Dec-88",
-      "projectName": "24TH STREET PLAZA",
-      "projectAddress": null,
-      "projectCity": "YUMA",
-      "countyName": "YUMA",
-      "projectReviewerNameCode": null,
-      "engineeringCompanyName": null,
-      "engineerName": "FOWLER MALONE",
-      "indexVal": "waterQualityConstruction96"
-    },
-    {
       "adeqFileNum": "19880388",
       "dateReceived": 591519600000,
       "dateReceivedStr": "29-Sep-88",
@@ -107,6 +81,19 @@
       "engineeringCompanyName": "DON PETERSON ENGR, INC",
       "engineerName": null,
       "indexVal": "waterQualityConstruction97"
+    },
+    {
+      "adeqFileNum": "19880217",
+      "dateReceived": 581151600000,
+      "dateReceivedStr": "01-Jun-88",
+      "projectName": "PASQUINELLI SEWER",
+      "projectAddress": null,
+      "projectCity": "YUMA",
+      "countyName": "YUMA",
+      "projectReviewerNameCode": null,
+      "engineeringCompanyName": "DON PETERSON ENGRS",
+      "engineerName": null,
+      "indexVal": "waterQualityConstruction100"
     },
     {
       "adeqFileNum": "19880140",
@@ -187,6 +174,19 @@
       "indexVal": "waterQualityConstruction89"
     },
     {
+      "adeqFileNum": "19900486",
+      "dateReceived": 656060400000,
+      "dateReceivedStr": "16-Oct-90",
+      "projectName": "EMPIRE MACHINERY",
+      "projectAddress": null,
+      "projectCity": "YUMA",
+      "countyName": "YUMA",
+      "projectReviewerNameCode": null,
+      "engineeringCompanyName": "DON PETERSON ENGRS.",
+      "engineerName": null,
+      "indexVal": "waterQualityConstruction88"
+    },
+    {
       "adeqFileNum": "19900444",
       "dateReceived": 659170800000,
       "dateReceivedStr": "21-Nov-90",
@@ -213,19 +213,6 @@
       "indexVal": "waterQualityConstruction92"
     },
     {
-      "adeqFileNum": "19900486",
-      "dateReceived": 656060400000,
-      "dateReceivedStr": "16-Oct-90",
-      "projectName": "EMPIRE MACHINERY",
-      "projectAddress": null,
-      "projectCity": "YUMA",
-      "countyName": "YUMA",
-      "projectReviewerNameCode": null,
-      "engineeringCompanyName": "DON PETERSON ENGRS.",
-      "engineerName": null,
-      "indexVal": "waterQualityConstruction88"
-    },
-    {
       "adeqFileNum": "19900392",
       "dateReceived": 655714800000,
       "dateReceivedStr": "12-Oct-90",
@@ -239,30 +226,43 @@
       "indexVal": "waterQualityConstruction87"
     },
     {
-      "adeqFileNum": "19870507",
-      "dateReceived": 556873200000,
-      "dateReceivedStr": "25-Aug-87",
-      "projectName": "OASIS GARDEN RECREATION",
-      "projectAddress": "3225 W. 8TH ST",
+      "adeqFileNum": "19880617",
+      "dateReceived": 599986800000,
+      "dateReceivedStr": "05-Jan-89",
+      "projectName": "YUMA INTERNATIONAL AIRPORT",
+      "projectAddress": "32ND STREET & PACIFIC AVE.",
       "projectCity": "YUMA",
       "countyName": "YUMA",
       "projectReviewerNameCode": null,
-      "engineeringCompanyName": null,
-      "engineerName": "FOWLER MALONE",
-      "indexVal": "waterQualityConstruction84"
+      "engineeringCompanyName": "DON PETERSON NGNRS, INC.",
+      "engineerName": null,
+      "indexVal": "waterQualityConstruction77"
     },
     {
-      "adeqFileNum": "19870473",
-      "dateReceived": 559551600000,
-      "dateReceivedStr": "25-Sep-87",
-      "projectName": "THE FOOTHILLS NO 5D",
+      "adeqFileNum": "19880541",
+      "dateReceived": 598258800000,
+      "dateReceivedStr": "16-Dec-88",
+      "projectName": "24TH STREET PLAZA",
       "projectAddress": null,
       "projectCity": "YUMA",
       "countyName": "YUMA",
       "projectReviewerNameCode": null,
       "engineeringCompanyName": null,
-      "engineerName": "NORMAN BRUCE JACSONSON",
-      "indexVal": "waterQualityConstruction83"
+      "engineerName": "FOWLER MALONE",
+      "indexVal": "waterQualityConstruction96"
+    },
+    {
+      "adeqFileNum": "19870745",
+      "dateReceived": 564217200000,
+      "dateReceivedStr": "18-Nov-87",
+      "projectName": "WESTERN COUNTRY R.V. PARK",
+      "projectAddress": "6226 S. AVE 9E",
+      "projectCity": "YUMA",
+      "countyName": "YUMA",
+      "projectReviewerNameCode": null,
+      "engineeringCompanyName": "DON PETERSON ENG.",
+      "engineerName": null,
+      "indexVal": "waterQualityConstruction82"
     }
   ]
 }

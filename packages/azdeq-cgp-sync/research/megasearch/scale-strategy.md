@@ -7,13 +7,13 @@ This doc translates observed AZDEQ MegaSearch behavior into a production sync st
 - Endpoint family: `https://megasearch.azdeq.gov/megasearch/*/list`
 - Access requirement: browser context (Cloudflare challenge blocks raw terminal HTTP in this environment).
 - Observed row cap pattern: many broad queries return exactly `100` rows.
-- Observed totals from latest run (`megasearch-sync-2026-02-21T08-09-02-373Z`):
-  - `3846` queries
+- Observed totals from latest run (`megasearch-sync-2026-02-21T17-54-50-837Z`):
+  - `11372` queries
   - `0` failed queries
-  - `714` capped queries
-  - `103,995` fetched rows across responses
-  - `88,496` distinct stored rows
-  - `22` endpoints; `21` hit cap at least once; `16` reached query budget `200`
+  - `2884` capped queries
+  - `380,458` fetched rows across responses
+  - `276,839` distinct stored rows
+  - `22` endpoints; `21` hit cap at least once; `18` reached query budget `600`
 
 ## Constraints That Drive Architecture
 

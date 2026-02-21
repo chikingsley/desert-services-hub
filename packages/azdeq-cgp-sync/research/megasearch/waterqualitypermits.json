@@ -89,20 +89,6 @@
       "indexVal": "waterQualityPermits3"
     },
     {
-      "invNumber": 102619,
-      "permitName": "UNOCAL 76 SVC STA #3888",
-      "description": "FACILITY  (PHYSICAL ADDRESS)",
-      "firstName": null,
-      "lastName": null,
-      "businessName": "UNOCAL SERVICE STATION #3888",
-      "address": "821 EAST BENSON HIGHWAY",
-      "city": "TUCSON",
-      "stateCode": "AZ",
-      "zipCode": "     85713",
-      "phone": null,
-      "indexVal": "waterQualityPermits4"
-    },
-    {
       "invNumber": 102657,
       "permitName": "CONCRETE DESIGNS INC-3650 S. BROADMONT",
       "description": "FACILITY  (PHYSICAL ADDRESS)",
@@ -143,6 +129,20 @@
       "zipCode": "     85704",
       "phone": null,
       "indexVal": "waterQualityPermits3"
+    },
+    {
+      "invNumber": 102619,
+      "permitName": "UNOCAL 76 SVC STA #3888",
+      "description": "FACILITY  (PHYSICAL ADDRESS)",
+      "firstName": null,
+      "lastName": null,
+      "businessName": "UNOCAL SERVICE STATION #3888",
+      "address": "821 EAST BENSON HIGHWAY",
+      "city": "TUCSON",
+      "stateCode": "AZ",
+      "zipCode": "     85713",
+      "phone": null,
+      "indexVal": "waterQualityPermits4"
     },
     {
       "invNumber": 102615,

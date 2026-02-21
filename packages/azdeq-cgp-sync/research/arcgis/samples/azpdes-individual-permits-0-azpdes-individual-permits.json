@@ -1,0 +1,528 @@
+{
+  "key": "AZPDES_Individual_Permits:0",
+  "layerName": "AZPDES Individual Permits",
+  "storedRecords": 129,
+  "sampledRecords": 20,
+  "records": [
+    {
+      "attributes": {
+        "OBJECTID": 129,
+        "PROGRAM_LICENSE_ID": "AZ0025976",
+        "LTF_IDNO": 91557,
+        "PLC_ID": 135551,
+        "PERMIT_STATUS": "I",
+        "PLC_NAME": "WICKENBURG RANCH WRF",
+        "LATITUDE": "34.034330152",
+        "LONGITUDE": -112.79720988700001,
+        "WCT": "Y",
+        "CAT_IDNO": 2420,
+        "CATEGORY_NAME": "AZPDES, Individual Permit, Minor WWTP Facility, No Public hearing",
+        "START_DATE": 1634515200000,
+        "ISSUE_DT": 1645574400000,
+        "EXPIRE_DT": 1803254400000,
+        "APP_DUE_DT": 1787702400000,
+        "DAYS_TO_ISSUE": 128,
+        "FACTSHEET": "https://static.azdeq.gov/gis/azpdes_pdfs/AZ0025976_135551_91557_FS.pdf",
+        "PERMIT": "https://static.azdeq.gov/gis/azpdes_pdfs/AZ0025976_135551_91557_PS.pdf"
+      },
+      "geometry": {
+        "x": 334088.1138000004,
+        "y": 3767419.1007000003
+      }
+    },
+    {
+      "attributes": {
+        "OBJECTID": 128,
+        "PROGRAM_LICENSE_ID": "AZ0023655",
+        "LTF_IDNO": 86942,
+        "PLC_ID": 8865,
+        "PERMIT_STATUS": "I",
+        "PLC_NAME": "VIRGIN RIVER DWID WWTP",
+        "LATITUDE": "36.9014",
+        "LONGITUDE": -113.929,
+        "WCT": "Y",
+        "CAT_IDNO": 2420,
+        "CATEGORY_NAME": "AZPDES, Individual Permit, Minor WWTP Facility, No Public hearing",
+        "START_DATE": 1606867200000,
+        "ISSUE_DT": 1629936000000,
+        "EXPIRE_DT": 1787616000000,
+        "APP_DUE_DT": 1772064000000,
+        "DAYS_TO_ISSUE": 267,
+        "FACTSHEET": "https://static.azdeq.gov/gis/azpdes_pdfs/AZ0023655_8865_86942_FS.pdf",
+        "PERMIT": "https://static.azdeq.gov/gis/azpdes_pdfs/AZ0023655_8865_86942_PS.pdf"
+      },
+      "geometry": {
+        "x": 239020.98919999972,
+        "y": 4087941.810799999
+      }
+    },
+    {
+      "attributes": {
+        "OBJECTID": 127,
+        "PROGRAM_LICENSE_ID": "AZ0024015",
+        "LTF_IDNO": 93151,
+        "PLC_ID": 83,
+        "PERMIT_STATUS": "I",
+        "PLC_NAME": "VALLE AIRPARK  WRF",
+        "LATITUDE": "35.643429453",
+        "LONGITUDE": -112.15571026500001,
+        "WCT": "Y",
+        "CAT_IDNO": 2420,
+        "CATEGORY_NAME": "AZPDES, Individual Permit, Minor WWTP Facility, No Public hearing",
+        "START_DATE": 1644278400000,
+        "ISSUE_DT": 1660867200000,
+        "EXPIRE_DT": 1818547200000,
+        "APP_DUE_DT": 1802995200000,
+        "DAYS_TO_ISSUE": 192,
+        "FACTSHEET": "https://static.azdeq.gov/gis/azpdes_pdfs/AZ0024015_83_93151_FS.pdf",
+        "PERMIT": "https://static.azdeq.gov/gis/azpdes_pdfs/AZ0024015_83_93151_PS.pdf"
+      },
+      "geometry": {
+        "x": 395369.4110000003,
+        "y": 3945015.7279000003
+      }
+    },
+    {
+      "attributes": {
+        "OBJECTID": 126,
+        "PROGRAM_LICENSE_ID": "AZ0023621",
+        "LTF_IDNO": 98484,
+        "PLC_ID": 1922,
+        "PERMIT_STATUS": "I",
+        "PLC_NAME": "USDOI NPS - HAVASUPAI GARDEN POTABLE WATER PUMP STATION",
+        "LATITUDE": "36.079597201",
+        "LONGITUDE": -112.125786436,
+        "WCT": "Y",
+        "CAT_IDNO": 2421,
+        "CATEGORY_NAME": "AZPDES, Individual Permit, Minor Industrial Facility, No Public hearing",
+        "START_DATE": 1681171200000,
+        "ISSUE_DT": 1703116800000,
+        "EXPIRE_DT": 1774137600000,
+        "APP_DUE_DT": 1758585600000,
+        "DAYS_TO_ISSUE": 254,
+        "FACTSHEET": "https://static.azdeq.gov/gis/azpdes_pdfs/AZ0023621_1922_98484_FS.pdf",
+        "PERMIT": "https://static.azdeq.gov/gis/azpdes_pdfs/AZ0023621_1922_98484_PS.pdf"
+      },
+      "geometry": {
+        "x": 398635.5887000002,
+        "y": 3993363.5068999995
+      }
+    },
+    {
+      "attributes": {
+        "OBJECTID": 125,
+        "PROGRAM_LICENSE_ID": "AZ0022152",
+        "LTF_IDNO": 95360,
+        "PLC_ID": 1081,
+        "PERMIT_STATUS": "I",
+        "PLC_NAME": "USDOI NPS - GRAND CANYON NP - SOUTH RIM WWTP",
+        "LATITUDE": "36.049613603",
+        "LONGITUDE": -112.150363467,
+        "WCT": "Y",
+        "CAT_IDNO": 2420,
+        "CATEGORY_NAME": "AZPDES, Individual Permit, Minor WWTP Facility, No Public hearing",
+        "START_DATE": 1657843200000,
+        "ISSUE_DT": 1671667200000,
+        "EXPIRE_DT": 1829347200000,
+        "APP_DUE_DT": 1813795200000,
+        "DAYS_TO_ISSUE": 160,
+        "FACTSHEET": "https://static.azdeq.gov/gis/azpdes_pdfs/AZ0022152_1081_95360_FS.pdf",
+        "PERMIT": "https://static.azdeq.gov/gis/azpdes_pdfs/AZ0022152_1081_95360_PS.pdf"
+      },
+      "geometry": {
+        "x": 396383.2966,
+        "y": 3990063.534
+      }
+    },
+    {
+      "attributes": {
+        "OBJECTID": 124,
+        "PROGRAM_LICENSE_ID": "AZ0110426",
+        "LTF_IDNO": 95339,
+        "PLC_ID": 1065,
+        "PERMIT_STATUS": "I",
+        "PLC_NAME": "USDOI NPS - GRAND CANYON NP - NORTH RIM WWTP",
+        "LATITUDE": "36.217222222",
+        "LONGITUDE": -112.064444444,
+        "WCT": "Y",
+        "CAT_IDNO": 2420,
+        "CATEGORY_NAME": "AZPDES, Individual Permit, Minor WWTP Facility, No Public hearing",
+        "START_DATE": 1657843200000,
+        "ISSUE_DT": 1669075200000,
+        "EXPIRE_DT": 1826755200000,
+        "APP_DUE_DT": 1811203200000,
+        "DAYS_TO_ISSUE": 130,
+        "FACTSHEET": "https://static.azdeq.gov/gis/azpdes_pdfs/AZ0110426_1065_95339_FS.pdf",
+        "PERMIT": "https://static.azdeq.gov/gis/azpdes_pdfs/AZ0110426_1065_95339_PS.pdf"
+      },
+      "geometry": {
+        "x": 404326.2620000001,
+        "y": 4008567.142000001
+      }
+    },
+    {
+      "attributes": {
+        "OBJECTID": 123,
+        "PROGRAM_LICENSE_ID": "AZ0000132",
+        "LTF_IDNO": 86728,
+        "PLC_ID": 9716,
+        "PERMIT_STATUS": "I",
+        "PLC_NAME": "USDOI FW - WILLOW BEACH NATL FISH HATCHERY",
+        "LATITUDE": "35.876106547",
+        "LONGITUDE": -114.664782531,
+        "WCT": "Y",
+        "CAT_IDNO": 2421,
+        "CATEGORY_NAME": "AZPDES, Individual Permit, Minor Industrial Facility, No Public hearing",
+        "START_DATE": 1604016000000,
+        "ISSUE_DT": 1619568000000,
+        "EXPIRE_DT": 1777248000000,
+        "APP_DUE_DT": 1761696000000,
+        "DAYS_TO_ISSUE": 180,
+        "FACTSHEET": "https://static.azdeq.gov/gis/azpdes_pdfs/AZ0000132_9716_86728_FS.pdf",
+        "PERMIT": "https://static.azdeq.gov/gis/azpdes_pdfs/AZ0000132_9716_86728_PS.pdf"
+      },
+      "geometry": {
+        "x": 169114.80250000022,
+        "y": 3976413.4296000004
+      }
+    },
+    {
+      "attributes": {
+        "OBJECTID": 122,
+        "PROGRAM_LICENSE_ID": "AZ0025348",
+        "LTF_IDNO": 86869,
+        "PLC_ID": 811,
+        "PERMIT_STATUS": "I",
+        "PLC_NAME": "USDOI BR - YUMA DESALTING PLANT",
+        "LATITUDE": "32.726113889",
+        "LONGITUDE": -114.704869444,
+        "WCT": "Y",
+        "CAT_IDNO": 2417,
+        "CATEGORY_NAME": "AZPDES, Individual Permit, Major Industrial Facility, No public hearing",
+        "START_DATE": 1606694400000,
+        "ISSUE_DT": 1623888000000,
+        "EXPIRE_DT": 1781568000000,
+        "APP_DUE_DT": 1766016000000,
+        "DAYS_TO_ISSUE": 199,
+        "FACTSHEET": "https://static.azdeq.gov/gis/azpdes_pdfs/AZ0025348_811_86869_FS.pdf",
+        "PERMIT": "https://static.azdeq.gov/gis/azpdes_pdfs/AZ0025348_811_86869_PS.pdf"
+      },
+      "geometry": {
+        "x": 152739.9188000001,
+        "y": 3626999.476399999
+      }
+    },
+    {
+      "attributes": {
+        "OBJECTID": 121,
+        "PROGRAM_LICENSE_ID": "AZ0025160",
+        "LTF_IDNO": 102447,
+        "PLC_ID": 8373,
+        "PERMIT_STATUS": "I",
+        "PLC_NAME": "USDOI BR - HOOVER DAM WWTP",
+        "LATITUDE": "36.013011372",
+        "LONGITUDE": -114.73676952,
+        "WCT": "Y",
+        "CAT_IDNO": 2420,
+        "CATEGORY_NAME": "AZPDES, Individual Permit, Minor WWTP Facility, No Public hearing",
+        "START_DATE": 1706745600000,
+        "ISSUE_DT": 1726704000000,
+        "EXPIRE_DT": 1884384000000,
+        "APP_DUE_DT": 1868832000000,
+        "DAYS_TO_ISSUE": 231,
+        "FACTSHEET": "https://static.azdeq.gov/gis/azpdes_pdfs/AZ0025160_8373_102447_FS.pdf",
+        "PERMIT": "https://static.azdeq.gov/gis/azpdes_pdfs/AZ0025160_8373_102447_PS.pdf"
+      },
+      "geometry": {
+        "x": 163194.9205,
+        "y": 3991854.6248000003
+      }
+    },
+    {
+      "attributes": {
+        "OBJECTID": 120,
+        "PROGRAM_LICENSE_ID": "AZ0026280",
+        "LTF_IDNO": 92471,
+        "PLC_ID": 1494,
+        "PERMIT_STATUS": "I",
+        "PLC_NAME": "USDOI BR - GLEN CANYON DAM & POWERPLANT",
+        "LATITUDE": "36.936360455",
+        "LONGITUDE": -111.48547519600001,
+        "WCT": "Y",
+        "CAT_IDNO": 2421,
+        "CATEGORY_NAME": "AZPDES, Individual Permit, Minor Industrial Facility, No Public hearing",
+        "START_DATE": 1640044800000,
+        "ISSUE_DT": 1651795200000,
+        "EXPIRE_DT": 1809475200000,
+        "APP_DUE_DT": 1793923200000,
+        "DAYS_TO_ISSUE": 136,
+        "FACTSHEET": "https://static.azdeq.gov/gis/azpdes_pdfs/AZ0026280_1494_92471_FS.pdf",
+        "PERMIT": "https://static.azdeq.gov/gis/azpdes_pdfs/AZ0026280_1494_92471_PS.pdf"
+      },
+      "geometry": {
+        "x": 456768.2084999997,
+        "y": 4087922.7310000006
+      }
+    },
+    {
+      "attributes": {
+        "OBJECTID": 119,
+        "PROGRAM_LICENSE_ID": "AZ0026182",
+        "LTF_IDNO": 92513,
+        "PLC_ID": 1494,
+        "PERMIT_STATUS": "I",
+        "PLC_NAME": "USDOI BR - GLEN CANYON DAM & POWERPLANT",
+        "LATITUDE": "36.936360455",
+        "LONGITUDE": -111.48547519600001,
+        "WCT": "Y",
+        "CAT_IDNO": 2420,
+        "CATEGORY_NAME": "AZPDES, Individual Permit, Minor WWTP Facility, No Public hearing",
+        "START_DATE": 1640563200000,
+        "ISSUE_DT": 1654214400000,
+        "EXPIRE_DT": 1811894400000,
+        "APP_DUE_DT": 1796342400000,
+        "DAYS_TO_ISSUE": 158,
+        "FACTSHEET": "https://static.azdeq.gov/gis/azpdes_pdfs/AZ0026182_1494_92513_FS.pdf",
+        "PERMIT": "https://static.azdeq.gov/gis/azpdes_pdfs/AZ0026182_1494_92513_PS.pdf"
+      },
+      "geometry": {
+        "x": 456768.2084999997,
+        "y": 4087922.7310000006
+      }
+    },
+    {
+      "attributes": {
+        "OBJECTID": 118,
+        "PROGRAM_LICENSE_ID": "AZ0026719",
+        "LTF_IDNO": 96553,
+        "PLC_ID": 1090,
+        "PERMIT_STATUS": "I",
+        "PLC_NAME": "TUSAYAN SANITARY DISTRICT",
+        "LATITUDE": "35.974831275",
+        "LONGITUDE": -112.13747093399999,
+        "WCT": "Y",
+        "CAT_IDNO": 2420,
+        "CATEGORY_NAME": "AZPDES, Individual Permit, Minor WWTP Facility, No Public hearing",
+        "START_DATE": 1665532800000,
+        "ISSUE_DT": 1673913600000,
+        "EXPIRE_DT": 1817337600000,
+        "APP_DUE_DT": 1801785600000,
+        "DAYS_TO_ISSUE": 97,
+        "FACTSHEET": "https://static.azdeq.gov/gis/azpdes_pdfs/AZ0026719_1090_96553_FS.pdf",
+        "PERMIT": "https://static.azdeq.gov/gis/azpdes_pdfs/AZ0026719_1090_96553_PS.pdf"
+      },
+      "geometry": {
+        "x": 397447.77749999985,
+        "y": 3981754.908399999
+      }
+    },
+    {
+      "attributes": {
+        "OBJECTID": 117,
+        "PROGRAM_LICENSE_ID": "AZ0024821",
+        "LTF_IDNO": 100044,
+        "PLC_ID": 1259,
+        "PERMIT_STATUS": "I",
+        "PLC_NAME": "TUCSON ELECTRIC POWER - NORTH LOOP",
+        "LATITUDE": "32.399972222",
+        "LONGITUDE": -111.12613611100001,
+        "WCT": "Y",
+        "CAT_IDNO": 2421,
+        "CATEGORY_NAME": "AZPDES, Individual Permit, Minor Industrial Facility, No Public hearing",
+        "START_DATE": 1692662400000,
+        "ISSUE_DT": 1713744000000,
+        "EXPIRE_DT": 1871424000000,
+        "APP_DUE_DT": 1855872000000,
+        "DAYS_TO_ISSUE": 244,
+        "FACTSHEET": "https://static.azdeq.gov/gis/azpdes_pdfs/AZ0024821_1259_100044_FS.pdf",
+        "PERMIT": "https://static.azdeq.gov/gis/azpdes_pdfs/AZ0024821_1259_100044_PS.pdf"
+      },
+      "geometry": {
+        "x": 488137.7767000003,
+        "y": 3584777.995100001
+      }
+    },
+    {
+      "attributes": {
+        "OBJECTID": 116,
+        "PROGRAM_LICENSE_ID": "AZ0026417",
+        "LTF_IDNO": 90113,
+        "PLC_ID": 18788,
+        "PERMIT_STATUS": "I",
+        "PLC_NAME": "TUCSON AIRPORT REMEDIATION PROJECT - CO-MINGLED PLUME",
+        "LATITUDE": "32.145172222",
+        "LONGITUDE": -110.969816667,
+        "WCT": "Y",
+        "CAT_IDNO": 2417,
+        "CATEGORY_NAME": "AZPDES, Individual Permit, Major Industrial Facility, No public hearing",
+        "START_DATE": 1626220800000,
+        "ISSUE_DT": 1635724800000,
+        "EXPIRE_DT": 1793404800000,
+        "APP_DUE_DT": 1777852800000,
+        "DAYS_TO_ISSUE": 110,
+        "FACTSHEET": "https://static.azdeq.gov/gis/azpdes_pdfs/AZ0026417_18788_90113_FS.pdf",
+        "PERMIT": "https://static.azdeq.gov/gis/azpdes_pdfs/AZ0026417_18788_90113_PS.pdf"
+      },
+      "geometry": {
+        "x": 502846.4759999998,
+        "y": 3556527.5221999995
+      }
+    },
+    {
+      "attributes": {
+        "OBJECTID": 115,
+        "PROGRAM_LICENSE_ID": "AZ0020176",
+        "LTF_IDNO": 100612,
+        "PLC_ID": 1685,
+        "PERMIT_STATUS": "I",
+        "PLC_NAME": "TOWN OF WINKELMAN - WWTP",
+        "LATITUDE": "32.985833333",
+        "LONGITUDE": -110.775372,
+        "WCT": "Y",
+        "CAT_IDNO": 2420,
+        "CATEGORY_NAME": "AZPDES, Individual Permit, Minor WWTP Facility, No Public hearing",
+        "START_DATE": 1696464000000,
+        "ISSUE_DT": 1714608000000,
+        "EXPIRE_DT": 1872288000000,
+        "APP_DUE_DT": 1856736000000,
+        "DAYS_TO_ISSUE": 210,
+        "FACTSHEET": "https://static.azdeq.gov/gis/azpdes_pdfs/AZ0020176_1685_100612_FS.pdf",
+        "PERMIT": "https://static.azdeq.gov/gis/azpdes_pdfs/AZ0020176_1685_100612_PS.pdf"
+      },
+      "geometry": {
+        "x": 520987.1867000004,
+        "y": 3649738.8257999998
+      }
+    },
+    {
+      "attributes": {
+        "OBJECTID": 114,
+        "PROGRAM_LICENSE_ID": "AZ0021199",
+        "LTF_IDNO": 96789,
+        "PLC_ID": 1036,
+        "PERMIT_STATUS": "I",
+        "PLC_NAME": "TOWN OF SUPERIOR WWTP",
+        "LATITUDE": "33.279166667",
+        "LONGITUDE": -111.123611111,
+        "WCT": "Y",
+        "CAT_IDNO": 2420,
+        "CATEGORY_NAME": "AZPDES, Individual Permit, Minor WWTP Facility, No Public hearing",
+        "START_DATE": 1667779200000,
+        "ISSUE_DT": 1682380800000,
+        "EXPIRE_DT": 1840147200000,
+        "APP_DUE_DT": 1824595200000,
+        "DAYS_TO_ISSUE": 169,
+        "FACTSHEET": "https://static.azdeq.gov/gis/azpdes_pdfs/AZ0021199_1036_96789_FS.pdf",
+        "PERMIT": "https://static.azdeq.gov/gis/azpdes_pdfs/AZ0021199_1036_96789_PS.pdf"
+      },
+      "geometry": {
+        "x": 488489.26350000035,
+        "y": 3682242.8947
+      }
+    },
+    {
+      "attributes": {
+        "OBJECTID": 113,
+        "PROGRAM_LICENSE_ID": "AZ0023752",
+        "LTF_IDNO": 93387,
+        "PLC_ID": 9552,
+        "PERMIT_STATUS": "I",
+        "PLC_NAME": "TOWN OF QUARTZSITE - WWTP",
+        "LATITUDE": "33.702791667",
+        "LONGITUDE": -114.21858611100001,
+        "WCT": "Y",
+        "CAT_IDNO": 2420,
+        "CATEGORY_NAME": "AZPDES, Individual Permit, Minor WWTP Facility, No Public hearing",
+        "START_DATE": 1646092800000,
+        "ISSUE_DT": 1661731200000,
+        "EXPIRE_DT": 1819411200000,
+        "APP_DUE_DT": 1803859200000,
+        "DAYS_TO_ISSUE": 181,
+        "FACTSHEET": "https://static.azdeq.gov/gis/azpdes_pdfs/AZ0023752_9552_93387_FS.pdf",
+        "PERMIT": "https://static.azdeq.gov/gis/azpdes_pdfs/AZ0023752_9552_93387_PS.pdf"
+      },
+      "geometry": {
+        "x": 201678.6512000002,
+        "y": 3733855.279100001
+      }
+    },
+    {
+      "attributes": {
+        "OBJECTID": 112,
+        "PROGRAM_LICENSE_ID": "AZ0025381",
+        "LTF_IDNO": 91395,
+        "PLC_ID": 4767,
+        "PERMIT_STATUS": "I",
+        "PLC_NAME": "TOWN OF PRESCOTT VALLEY - WWTP",
+        "LATITUDE": "34.587991667",
+        "LONGITUDE": -112.273075,
+        "WCT": "Y",
+        "CAT_IDNO": 2416,
+        "CATEGORY_NAME": "AZPDES, Individual Permit, Major WWTP Facility, No public hearing",
+        "START_DATE": 1633046400000,
+        "ISSUE_DT": 1645574400000,
+        "EXPIRE_DT": 1803254400000,
+        "APP_DUE_DT": 1787702400000,
+        "DAYS_TO_ISSUE": 145,
+        "FACTSHEET": "https://static.azdeq.gov/gis/azpdes_pdfs/AZ0025381_4767_91395_FS.pdf",
+        "PERMIT": "https://static.azdeq.gov/gis/azpdes_pdfs/AZ0025381_4767_91395_PS.pdf"
+      },
+      "geometry": {
+        "x": 383247.0722000003,
+        "y": 3828090.8486
+      }
+    },
+    {
+      "attributes": {
+        "OBJECTID": 99,
+        "PROGRAM_LICENSE_ID": "AZ0024791",
+        "LTF_IDNO": 98201,
+        "PLC_ID": 19811,
+        "PERMIT_STATUS": "I",
+        "PLC_NAME": "SRP - KYRENE GENERATING STATION K-7",
+        "LATITUDE": "33.354229",
+        "LONGITUDE": -111.942019,
+        "WCT": "Y",
+        "CAT_IDNO": 2417,
+        "CATEGORY_NAME": "AZPDES, Individual Permit, Major Industrial Facility, No public hearing",
+        "START_DATE": 1679443200000,
+        "ISSUE_DT": 1701129600000,
+        "EXPIRE_DT": 1858896000000,
+        "APP_DUE_DT": 1843344000000,
+        "DAYS_TO_ISSUE": 251,
+        "FACTSHEET": "https://static.azdeq.gov/gis/azpdes_pdfs/AZ0024791_19811_98201_FS.pdf",
+        "PERMIT": "https://static.azdeq.gov/gis/azpdes_pdfs/AZ0024791_19811_98201_PS.pdf"
+      },
+      "geometry": {
+        "x": 412352.26300000027,
+        "y": 3690954.0974000003
+      }
+    },
+    {
+      "attributes": {
+        "OBJECTID": 98,
+        "PROGRAM_LICENSE_ID": "AZ0024341",
+        "LTF_IDNO": 98920,
+        "PLC_ID": 21715,
+        "PERMIT_STATUS": "I",
+        "PLC_NAME": "SRP - GROUNDWATER WELLS",
+        "LATITUDE": "33.446371709",
+        "LONGITUDE": -111.953056196,
+        "WCT": "Y",
+        "CAT_IDNO": 2430,
+        "CATEGORY_NAME": "AZPDES, Individual Permit Major Modification, Minor Industrial Facility, No Public Hearing",
+        "START_DATE": 1684195200000,
+        "ISSUE_DT": 1695081600000,
+        "EXPIRE_DT": 1825718400000,
+        "APP_DUE_DT": 1810166400000,
+        "DAYS_TO_ISSUE": 126,
+        "FACTSHEET": "https://static.azdeq.gov/gis/azpdes_pdfs/AZ0024341_21715_98920_FS.pdf",
+        "PERMIT": "https://static.azdeq.gov/gis/azpdes_pdfs/AZ0024341_21715_98920_PS.pdf"
+      },
+      "geometry": {
+        "x": 411418.8535000002,
+        "y": 3701179.6050000004
+      }
+    }
+  ]
+}

@@ -5,6 +5,7 @@
 Build a reliable sync engine that ingests CGP/NOI records from AZDEQ into a local/operational datastore with idempotent upserts and change tracking.
 
 This package also includes a second engine for AZDEQ MegaSearch datasets (`megasearch.azdeq.gov`) with the same run/idempotency principles.
+It now also includes an ArcGIS permit/map sync engine for AZDEQ hosted layers.
 
 ## Source Interface
 
@@ -82,6 +83,23 @@ Container cron pattern:
 2. Should `ISSUED` be treated as active and all `CLOSED*`/`EXPIRED` as inactive in a canonical status map?
 3. Is there a separate authenticated endpoint for original filed NOI PDFs, since this CGP endpoint does not expose document URLs directly?
 4. MegaSearch currently appears capped at `100` rows for many broad queries with no usable total-count metadata. Should we accept probabilistic fanout completeness or require a server-backed export source?
+
+## ArcGIS Sync Notes
+
+- Source family: `https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/*/FeatureServer/*`.
+- Target layers include:
+  - AZPDES (`0..5`)
+  - AZPDES Individual Permits (`0`)
+  - Dust Visibility Construction Notification Area (`0`)
+- Full extraction approach:
+  1. Read layer metadata (`objectIdField`, `maxRecordCount`, capabilities).
+  2. Read layer count (`returnCountOnly=true`).
+  3. Page with `resultOffset` + `resultRecordCount`, ordered by object id field.
+  4. Upsert features idempotently with payload hash tracking.
+- Sync run model mirrors CGP/MegaSearch:
+  - `arcgis_sync_runs`
+  - `arcgis_records`
+  - `arcgis_layer_log`
 
 ## Immediate Next Step
 

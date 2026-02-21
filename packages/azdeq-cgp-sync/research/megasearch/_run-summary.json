@@ -1,67 +1,67 @@
 {
-  "dbPath": "packages/azdeq-cgp-sync/.data/azdeq-megasearch-v3.sqlite",
-  "runId": "megasearch-sync-2026-02-21T08-09-02-373Z",
+  "dbPath": "packages/azdeq-cgp-sync/.data/azdeq-megasearch-v4.sqlite",
+  "runId": "megasearch-sync-2026-02-21T17-54-50-837Z",
   "latestRun": {
-    "run_id": "megasearch-sync-2026-02-21T08-09-02-373Z",
-    "started_at": "2026-02-21T08:09:02.373Z",
-    "finished_at": "2026-02-21T08:24:26.111Z",
+    "run_id": "megasearch-sync-2026-02-21T17-54-50-837Z",
+    "started_at": "2026-02-21T17:54:50.837Z",
+    "finished_at": "2026-02-21T18:31:46.940Z",
     "status": "success",
-    "options_json": "{\"endpoints\":[\"sharepoint\",\"drywell\",\"undergroundStorage\",\"wastePrograms\",\"hazardousWasteAccounts\",\"hazardousWasteManifests\",\"specialWasteManifests\",\"waterQualityApp\",\"waterQualityPermits\",\"waterQualityConstruction\",\"wasteWaterFacilities\",\"waterQualityMonitoring\",\"revenueManagementSystem\",\"stateAssuranceFund\",\"solidWaste\",\"solidWasteFacilities\",\"solidWastePrograms\",\"surfaceWater\",\"airPermitCompliance\",\"vehiclesEmmisions\",\"superfundRemediation\",\"voluntaryRemediation\"],\"maxQueriesPerEndpoint\":200,\"maxSplitLevels\":3,\"delayBetweenQueriesMs\":1,\"queryCap\":100}",
-    "queried_count": 3846,
+    "options_json": "{\"endpoints\":[\"sharepoint\",\"drywell\",\"undergroundStorage\",\"wastePrograms\",\"hazardousWasteAccounts\",\"hazardousWasteManifests\",\"specialWasteManifests\",\"waterQualityApp\",\"waterQualityPermits\",\"waterQualityConstruction\",\"wasteWaterFacilities\",\"waterQualityMonitoring\",\"revenueManagementSystem\",\"stateAssuranceFund\",\"solidWaste\",\"solidWasteFacilities\",\"solidWastePrograms\",\"surfaceWater\",\"airPermitCompliance\",\"vehiclesEmmisions\",\"superfundRemediation\",\"voluntaryRemediation\"],\"maxQueriesPerEndpoint\":600,\"maxSplitLevels\":5,\"delayBetweenQueriesMs\":1,\"queryCap\":100}",
+    "queried_count": 11372,
     "failed_queries": 0,
-    "capped_queries": 714,
-    "fetched_rows": 103995,
-    "inserted_records": 88496,
+    "capped_queries": 2884,
+    "fetched_rows": 380458,
+    "inserted_records": 276839,
     "updated_records": 0,
-    "unchanged_records": 15499,
+    "unchanged_records": 103619,
     "error_message": null
   },
   "endpointStats": [
     {
       "endpoint": "airPermitCompliance",
-      "queries": 200,
-      "capped_queries": 37,
+      "queries": 600,
+      "capped_queries": 219,
       "failed_queries": 0,
-      "fetched_rows": 3875
+      "fetched_rows": 28208
     },
     {
       "endpoint": "drywell",
-      "queries": 200,
+      "queries": 287,
       "capped_queries": 26,
       "failed_queries": 0,
       "fetched_rows": 2822
     },
     {
       "endpoint": "hazardousWasteAccounts",
-      "queries": 200,
-      "capped_queries": 34,
+      "queries": 600,
+      "capped_queries": 260,
       "failed_queries": 0,
-      "fetched_rows": 4402
+      "fetched_rows": 34411
     },
     {
       "endpoint": "hazardousWasteManifests",
-      "queries": 200,
-      "capped_queries": 76,
+      "queries": 600,
+      "capped_queries": 278,
       "failed_queries": 0,
-      "fetched_rows": 8525
+      "fetched_rows": 29695
     },
     {
       "endpoint": "revenueManagementSystem",
-      "queries": 200,
-      "capped_queries": 37,
+      "queries": 600,
+      "capped_queries": 226,
       "failed_queries": 0,
-      "fetched_rows": 4982
+      "fetched_rows": 30776
     },
     {
       "endpoint": "sharepoint",
-      "queries": 200,
-      "capped_queries": 37,
+      "queries": 600,
+      "capped_queries": 374,
       "failed_queries": 0,
-      "fetched_rows": 4540
+      "fetched_rows": 39750
     },
     {
       "endpoint": "solidWaste",
-      "queries": 129,
+      "queries": 600,
       "capped_queries": 19,
       "failed_queries": 0,
       "fetched_rows": 4639
@@ -75,28 +75,28 @@
     },
     {
       "endpoint": "solidWastePrograms",
-      "queries": 200,
-      "capped_queries": 29,
+      "queries": 600,
+      "capped_queries": 37,
       "failed_queries": 0,
-      "fetched_rows": 7225
+      "fetched_rows": 8662
     },
     {
       "endpoint": "specialWasteManifests",
-      "queries": 200,
-      "capped_queries": 34,
+      "queries": 600,
+      "capped_queries": 200,
       "failed_queries": 0,
-      "fetched_rows": 3670
+      "fetched_rows": 22203
     },
     {
       "endpoint": "stateAssuranceFund",
-      "queries": 200,
-      "capped_queries": 34,
+      "queries": 600,
+      "capped_queries": 229,
       "failed_queries": 0,
-      "fetched_rows": 3670
+      "fetched_rows": 30514
     },
     {
       "endpoint": "superfundRemediation",
-      "queries": 129,
+      "queries": 600,
       "capped_queries": 25,
       "failed_queries": 0,
       "fetched_rows": 4478
@@ -110,63 +110,63 @@
     },
     {
       "endpoint": "undergroundStorage",
-      "queries": 200,
-      "capped_queries": 37,
+      "queries": 600,
+      "capped_queries": 248,
       "failed_queries": 0,
-      "fetched_rows": 4859
+      "fetched_rows": 34047
     },
     {
       "endpoint": "vehiclesEmmisions",
-      "queries": 175,
+      "queries": 600,
       "capped_queries": 40,
       "failed_queries": 0,
       "fetched_rows": 6341
     },
     {
       "endpoint": "voluntaryRemediation",
-      "queries": 200,
-      "capped_queries": 30,
+      "queries": 600,
+      "capped_queries": 146,
       "failed_queries": 0,
-      "fetched_rows": 5280
+      "fetched_rows": 22933
     },
     {
       "endpoint": "wastePrograms",
-      "queries": 200,
-      "capped_queries": 47,
+      "queries": 600,
+      "capped_queries": 151,
       "failed_queries": 0,
-      "fetched_rows": 7261
+      "fetched_rows": 23954
     },
     {
       "endpoint": "wasteWaterFacilities",
-      "queries": 200,
-      "capped_queries": 18,
+      "queries": 600,
+      "capped_queries": 46,
       "failed_queries": 0,
-      "fetched_rows": 6077
+      "fetched_rows": 11640
     },
     {
       "endpoint": "waterQualityApp",
-      "queries": 200,
-      "capped_queries": 53,
+      "queries": 600,
+      "capped_queries": 63,
       "failed_queries": 0,
-      "fetched_rows": 7699
+      "fetched_rows": 9439
     },
     {
       "endpoint": "waterQualityConstruction",
-      "queries": 200,
+      "queries": 247,
       "capped_queries": 22,
       "failed_queries": 0,
       "fetched_rows": 2255
     },
     {
       "endpoint": "waterQualityMonitoring",
-      "queries": 200,
-      "capped_queries": 38,
+      "queries": 600,
+      "capped_queries": 234,
       "failed_queries": 0,
-      "fetched_rows": 3932
+      "fetched_rows": 26228
     },
     {
       "endpoint": "waterQualityPermits",
-      "queries": 175,
+      "queries": 600,
       "capped_queries": 40,
       "failed_queries": 0,
       "fetched_rows": 6886
@@ -175,7 +175,7 @@
   "recordCounts": [
     {
       "endpoint": "airPermitCompliance",
-      "stored_records": 3857
+      "stored_records": 20616
     },
     {
       "endpoint": "drywell",
@@ -183,19 +183,19 @@
     },
     {
       "endpoint": "hazardousWasteAccounts",
-      "stored_records": 4193
+      "stored_records": 30262
     },
     {
       "endpoint": "hazardousWasteManifests",
-      "stored_records": 8069
+      "stored_records": 16783
     },
     {
       "endpoint": "revenueManagementSystem",
-      "stored_records": 3587
+      "stored_records": 25665
     },
     {
       "endpoint": "sharepoint",
-      "stored_records": 4508
+      "stored_records": 32897
     },
     {
       "endpoint": "solidWaste",
@@ -207,15 +207,15 @@
     },
     {
       "endpoint": "solidWastePrograms",
-      "stored_records": 6097
+      "stored_records": 7228
     },
     {
       "endpoint": "specialWasteManifests",
-      "stored_records": 3234
+      "stored_records": 8268
     },
     {
       "endpoint": "stateAssuranceFund",
-      "stored_records": 2824
+      "stored_records": 14720
     },
     {
       "endpoint": "superfundRemediation",
@@ -227,7 +227,7 @@
     },
     {
       "endpoint": "undergroundStorage",
-      "stored_records": 4513
+      "stored_records": 29977
     },
     {
       "endpoint": "vehiclesEmmisions",
@@ -235,19 +235,19 @@
     },
     {
       "endpoint": "voluntaryRemediation",
-      "stored_records": 4815
+      "stored_records": 20208
     },
     {
       "endpoint": "wastePrograms",
-      "stored_records": 6570
+      "stored_records": 17281
     },
     {
       "endpoint": "wasteWaterFacilities",
-      "stored_records": 1229
+      "stored_records": 1430
     },
     {
       "endpoint": "waterQualityApp",
-      "stored_records": 7653
+      "stored_records": 9356
     },
     {
       "endpoint": "waterQualityConstruction",
@@ -255,7 +255,7 @@
     },
     {
       "endpoint": "waterQualityMonitoring",
-      "stored_records": 3923
+      "stored_records": 18724
     },
     {
       "endpoint": "waterQualityPermits",

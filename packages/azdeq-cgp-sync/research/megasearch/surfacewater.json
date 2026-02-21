@@ -51,21 +51,6 @@
     },
     {
       "plcIdno": 16749,
-      "ltfIdno": 34578,
-      "affilStartDt": null,
-      "systemName": "ICE",
-      "description": "CASE AFFILAITIONS",
-      "category": "SURFACE WATER",
-      "name": "NATURESWEET USA, LLC - WILLCOX FACILITY",
-      "address": "26050 SOUTH NATURESWEET AVENUE",
-      "city": "WILLCOX",
-      "state": "AZ",
-      "postalCode": "85643",
-      "county": "GRAHAM",
-      "indexVal": "surfaceWater2"
-    },
-    {
-      "plcIdno": 16749,
       "ltfIdno": null,
       "affilStartDt": null,
       "systemName": "ICE",
@@ -78,21 +63,6 @@
       "postalCode": "85643",
       "county": "GRAHAM",
       "indexVal": "surfaceWater1"
-    },
-    {
-      "plcIdno": 16749,
-      "ltfIdno": null,
-      "affilStartDt": "11/02/2004",
-      "systemName": "ICE",
-      "description": "INSPECTION AFFILIATIONS",
-      "category": "SURFACE WATER",
-      "name": "NATURESWEET USA, LLC - WILLCOX FACILITY",
-      "address": "26050 SOUTH NATURESWEET AVENUE",
-      "city": "WILLCOX",
-      "state": "AZ",
-      "postalCode": "85643",
-      "county": "GRAHAM",
-      "indexVal": "surfaceWater7"
     },
     {
       "plcIdno": 1063,
@@ -142,6 +112,21 @@
     {
       "plcIdno": 16749,
       "ltfIdno": 34578,
+      "affilStartDt": null,
+      "systemName": "ICE",
+      "description": "CASE AFFILAITIONS",
+      "category": "SURFACE WATER",
+      "name": "NATURESWEET USA, LLC - WILLCOX FACILITY",
+      "address": "26050 SOUTH NATURESWEET AVENUE",
+      "city": "WILLCOX",
+      "state": "AZ",
+      "postalCode": "85643",
+      "county": "GRAHAM",
+      "indexVal": "surfaceWater2"
+    },
+    {
+      "plcIdno": 16749,
+      "ltfIdno": 34578,
       "affilStartDt": "11/17/2004",
       "systemName": "ICE",
       "description": "INSPECTION AFFILIATIONS",
@@ -153,6 +138,21 @@
       "postalCode": "85643",
       "county": "GRAHAM",
       "indexVal": "surfaceWater8"
+    },
+    {
+      "plcIdno": 16749,
+      "ltfIdno": null,
+      "affilStartDt": "11/02/2004",
+      "systemName": "ICE",
+      "description": "INSPECTION AFFILIATIONS",
+      "category": "SURFACE WATER",
+      "name": "NATURESWEET USA, LLC - WILLCOX FACILITY",
+      "address": "26050 SOUTH NATURESWEET AVENUE",
+      "city": "WILLCOX",
+      "state": "AZ",
+      "postalCode": "85643",
+      "county": "GRAHAM",
+      "indexVal": "surfaceWater7"
     },
     {
       "plcIdno": 21945,
@@ -275,19 +275,19 @@
       "indexVal": "surfaceWater11"
     },
     {
-      "plcIdno": 23212,
-      "ltfIdno": null,
-      "affilStartDt": "01/06/2005",
+      "plcIdno": 23327,
+      "ltfIdno": 35167,
+      "affilStartDt": "01/21/2005",
       "systemName": "ICE",
       "description": "INSPECTION AFFILIATIONS",
       "category": "SURFACE WATER",
-      "name": "UNISOURCE PIPELINE EXTENSION",
-      "address": null,
-      "city": "VILLAGE OF OAK CREEK",
-      "state": null,
-      "postalCode": null,
-      "county": "YAVAPAI",
-      "indexVal": "surfaceWater6"
+      "name": "RANCHO DEL LAGO BLOCKS 8, 18, 20",
+      "address": "10801 S FAIRWAY POINT CT",
+      "city": "VAIL",
+      "state": "AZ",
+      "postalCode": "85641",
+      "county": "PIMA",
+      "indexVal": "surfaceWater8"
     },
     {
       "plcIdno": 23212,
@@ -302,7 +302,7 @@
       "state": null,
       "postalCode": null,
       "county": "YAVAPAI",
-      "indexVal": "surfaceWater10"
+      "indexVal": "surfaceWater6"
     }
   ]
 }

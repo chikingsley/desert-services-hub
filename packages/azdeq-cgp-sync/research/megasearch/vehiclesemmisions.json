@@ -65,36 +65,6 @@
       "indexVal": "vehiclesEmmisions3"
     },
     {
-      "idno": 8857,
-      "ltfIdno": 17425,
-      "affilStartDt": "02/18/2003",
-      "systemName": "ICE",
-      "description": "INSPECTION AFFILIATIONS",
-      "category": "VEHICLE EMISSIONS PROGRAMS",
-      "name": "TUCSON UNIFIED SCHOOL DISTRICT #1 - MAINTENANCE YARD #2",
-      "address": "9300 E BROADWAY BLVD",
-      "city": "TUCSON",
-      "state": "AZ",
-      "postalCode": "85710",
-      "county": "PIMA",
-      "indexVal": "vehiclesEmmisions1"
-    },
-    {
-      "idno": 8857,
-      "ltfIdno": 17425,
-      "affilStartDt": "02/11/2005",
-      "systemName": "ICE",
-      "description": "INSPECTION AFFILIATIONS",
-      "category": "VEHICLE EMISSIONS PROGRAMS",
-      "name": "TUCSON UNIFIED SCHOOL DISTRICT #1 - MAINTENANCE YARD #2",
-      "address": "9300 E BROADWAY BLVD",
-      "city": "TUCSON",
-      "state": "AZ",
-      "postalCode": "85710",
-      "county": "PIMA",
-      "indexVal": "vehiclesEmmisions2"
-    },
-    {
       "idno": 5673,
       "ltfIdno": 16348,
       "affilStartDt": "10/29/2003",
@@ -123,6 +93,36 @@
       "postalCode": "85284",
       "county": "MARICOPA",
       "indexVal": "vehiclesEmmisions6"
+    },
+    {
+      "idno": 8857,
+      "ltfIdno": 17425,
+      "affilStartDt": "02/18/2003",
+      "systemName": "ICE",
+      "description": "INSPECTION AFFILIATIONS",
+      "category": "VEHICLE EMISSIONS PROGRAMS",
+      "name": "TUCSON UNIFIED SCHOOL DISTRICT #1 - MAINTENANCE YARD #2",
+      "address": "9300 E BROADWAY BLVD",
+      "city": "TUCSON",
+      "state": "AZ",
+      "postalCode": "85710",
+      "county": "PIMA",
+      "indexVal": "vehiclesEmmisions1"
+    },
+    {
+      "idno": 8857,
+      "ltfIdno": 17425,
+      "affilStartDt": "02/11/2005",
+      "systemName": "ICE",
+      "description": "INSPECTION AFFILIATIONS",
+      "category": "VEHICLE EMISSIONS PROGRAMS",
+      "name": "TUCSON UNIFIED SCHOOL DISTRICT #1 - MAINTENANCE YARD #2",
+      "address": "9300 E BROADWAY BLVD",
+      "city": "TUCSON",
+      "state": "AZ",
+      "postalCode": "85710",
+      "county": "PIMA",
+      "indexVal": "vehiclesEmmisions2"
     },
     {
       "idno": 3682,
@@ -200,6 +200,21 @@
       "indexVal": "vehiclesEmmisions4"
     },
     {
+      "idno": 17586,
+      "ltfIdno": 28374,
+      "affilStartDt": "11/03/2003",
+      "systemName": "ICE",
+      "description": "INSPECTION AFFILIATIONS",
+      "category": "VEHICLE EMISSIONS PROGRAMS",
+      "name": "CHAPMAN CHEVROLET-IZUZU",
+      "address": "1717 E BASELINE RD",
+      "city": "TEMPE",
+      "state": "AZ",
+      "postalCode": "85283",
+      "county": "MARICOPA",
+      "indexVal": "vehiclesEmmisions11"
+    },
+    {
       "idno": 8344,
       "ltfIdno": 16058,
       "affilStartDt": "11/02/2004",
@@ -213,6 +228,21 @@
       "postalCode": "85714",
       "county": "PIMA",
       "indexVal": "vehiclesEmmisions5"
+    },
+    {
+      "idno": 17586,
+      "ltfIdno": 28374,
+      "affilStartDt": "10/01/2004",
+      "systemName": "ICE",
+      "description": "INSPECTION AFFILIATIONS",
+      "category": "VEHICLE EMISSIONS PROGRAMS",
+      "name": "CHAPMAN CHEVROLET-IZUZU",
+      "address": "1717 E BASELINE RD",
+      "city": "TEMPE",
+      "state": "AZ",
+      "postalCode": "85283",
+      "county": "MARICOPA",
+      "indexVal": "vehiclesEmmisions12"
     },
     {
       "idno": 17586,
@@ -245,6 +275,21 @@
       "indexVal": "vehiclesEmmisions1"
     },
     {
+      "idno": 7147,
+      "ltfIdno": 11988,
+      "affilStartDt": "07/21/2003",
+      "systemName": "ICE",
+      "description": "CASE AFFILAITIONS",
+      "category": "VEHICLE EMISSIONS PROGRAMS",
+      "name": "ARIZONA STATE SCHOOL FOR THE DEAF AND BLIND",
+      "address": "1200 W SPEEDWAY BLVD",
+      "city": "TUCSON",
+      "state": "AZ",
+      "postalCode": "85745",
+      "county": "PIMA",
+      "indexVal": "vehiclesEmmisions10"
+    },
+    {
       "idno": 8470,
       "ltfIdno": 27703,
       "affilStartDt": "07/13/2004",
@@ -258,51 +303,6 @@
       "postalCode": "85353",
       "county": "MARICOPA",
       "indexVal": "vehiclesEmmisions3"
-    },
-    {
-      "idno": 8344,
-      "ltfIdno": 33278,
-      "affilStartDt": "05/09/2005",
-      "systemName": "ICE",
-      "description": "INSPECTION AFFILIATIONS",
-      "category": "VEHICLE EMISSIONS PROGRAMS",
-      "name": "LAZY DAYS RV",
-      "address": "3200 E IRVINGTON RD",
-      "city": "TUCSON",
-      "state": "AZ",
-      "postalCode": "85714",
-      "county": "PIMA",
-      "indexVal": "vehiclesEmmisions6"
-    },
-    {
-      "idno": 2720,
-      "ltfIdno": 11167,
-      "affilStartDt": null,
-      "systemName": "ICE",
-      "description": "INSPECTION AFFILIATIONS",
-      "category": "VEHICLE EMISSIONS PROGRAMS",
-      "name": "ARIZONA AIR NATIONAL GUARD",
-      "address": "1500 E VALENCIA RD",
-      "city": "TUCSON",
-      "state": "AZ",
-      "postalCode": "85706",
-      "county": "PIMA",
-      "indexVal": "vehiclesEmmisions19"
-    },
-    {
-      "idno": 17586,
-      "ltfIdno": 28374,
-      "affilStartDt": "11/03/2003",
-      "systemName": "ICE",
-      "description": "INSPECTION AFFILIATIONS",
-      "category": "VEHICLE EMISSIONS PROGRAMS",
-      "name": "CHAPMAN CHEVROLET-IZUZU",
-      "address": "1717 E BASELINE RD",
-      "city": "TEMPE",
-      "state": "AZ",
-      "postalCode": "85283",
-      "county": "MARICOPA",
-      "indexVal": "vehiclesEmmisions11"
     }
   ]
 }

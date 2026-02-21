@@ -154,8 +154,11 @@ apps/dust-permits/emails/
 apps/dust-permits/ca-permit/
 apps/dust-permits/src/testing/failures.jsonl
 apps/dust-permits/docs/page-snapshots/
-apps/dust-permits/tests/fixtures/pdfs/
-apps/dust-permits/tests/output/
+
+# test artifacts (output, screenshots, fixtures with large binaries)
+tests/**/output/
+tests/**/screenshots/
+tests/apps/dust-permits/fixtures/pdfs/
 
 # packages/narratives
 packages/narratives/templates/output/

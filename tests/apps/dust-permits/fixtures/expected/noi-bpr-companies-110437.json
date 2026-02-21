@@ -1,0 +1,32 @@
+{
+  "applicantName": "BPR COMPANIES LLC",
+  "applicantAddress1": "104 W WIGWAM BLVD",
+  "applicantAddress2": null,
+  "applicantCity": "LITCHFIELD PARK",
+  "applicantState": "AZ",
+  "applicantZip": "85340",
+
+  "siteName": "PV Redevelopment Phase 5",
+  "siteAddress": "4568 E CACTUS RD, PHOENIX, AZ 85032",
+  "latitude": 33.6015,
+  "longitude": -111.98444,
+  "acresDisturbed": 2.95,
+
+  "swpppContactFirstName": "Jason",
+  "swpppContactLastName": "Roti",
+  "swpppContactEmail": "jayson@desertservices.com",
+  "swpppContactPhone": "(602) 722-0218",
+
+  "permitId": "AZC110437",
+  "ltfNumber": "110437",
+
+  "_extraction": {
+    "source": "noi",
+    "confidence": "high",
+    "missingFields": [],
+    "warnings": [
+      "Applicant address line 1 contained only street number '104' - combined with line 2",
+      "Site coordinates derived from first outfall (older NOI format)"
+    ]
+  }
+}

@@ -34,6 +34,8 @@
   1. `city` token fanout (`a-z0-9`)
   2. `zip` token fanout (`0-9`)
   3. `facilityName` token fanout (`a-z0-9`)
+  4. `uniqueId` token fanout (`a-z0-9`)
+  5. `address` token fanout (`a-z0-9`)
 - Deduplicate rows across overlapping query partitions.
 - Cap per-endpoint query budget (`maxQueriesPerEndpoint`) to bound runtime.
 

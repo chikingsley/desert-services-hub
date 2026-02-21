@@ -152,6 +152,14 @@ export const MEGASEARCH_SPLIT_PLAN: ReadonlyArray<{
     field: "facilityName",
     tokens: MEGASEARCH_ALPHANUMERIC_SPLIT,
   },
+  {
+    field: "uniqueId",
+    tokens: MEGASEARCH_ALPHANUMERIC_SPLIT,
+  },
+  {
+    field: "address",
+    tokens: MEGASEARCH_ALPHANUMERIC_SPLIT,
+  },
 ];
 
 export const MEGASEARCH_RECORD_ID_PREFERRED_KEYS: readonly string[] = [

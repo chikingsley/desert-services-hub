@@ -35,8 +35,8 @@ export interface MegaSearchQueryResult {
 export interface MegaSearchQueryErrorDetails {
   endpoint: string;
   query: MegaSearchQuery;
-  retryAfterMs?: number | null;
   responseStatus: number;
+  retryAfterMs?: number | null;
 }
 
 export type MegaSearchRow = Record<string, unknown>;

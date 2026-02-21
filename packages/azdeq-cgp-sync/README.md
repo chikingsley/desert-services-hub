@@ -120,7 +120,7 @@ bun packages/azdeq-cgp-sync/cli.ts sync
 bun packages/azdeq-cgp-sync/cli.ts sync-ltf-range --concurrency 12 --progress-every 10000
 
 # 3) Crawl MegaSearch datasets (all endpoints by default)
-bun packages/azdeq-cgp-sync/cli.ts megasearch-sync --max-queries 600 --max-split-levels 3
+bun packages/azdeq-cgp-sync/cli.ts megasearch-sync --max-queries 600 --max-split-levels 5
 
 # 4) Export MegaSearch endpoint samples + counts
 bun packages/azdeq-cgp-sync/cli.ts megasearch-export --per-endpoint 20
@@ -149,3 +149,15 @@ Default sample output path:
 ## Next Design Step
 
 Move this from SQLite play mode into a production cron container that writes to Postgres and emits deltas for downstream jobs.
+
+## Artifact Guide
+
+- `packages/azdeq-cgp-sync/research/README.md`
+
+## Canonical Method Docs
+
+- Package overview and CLI: `packages/azdeq-cgp-sync/README.md`
+- Sync contract and storage model: `packages/azdeq-cgp-sync/SPEC.md`
+- MegaSearch runtime architecture: `packages/azdeq-cgp-sync/research/megasearch/sync-architecture.md`
+- MegaSearch scale + retry policy: `packages/azdeq-cgp-sync/research/megasearch/scale-strategy.md`
+- ArcGIS map/permit sync readiness: `packages/azdeq-cgp-sync/research/arcgis/sync-readiness.md`

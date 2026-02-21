@@ -6,6 +6,7 @@ import {
 } from "./src/cli-megasearch";
 import { AzdeqCgpClient } from "./src/client";
 import { COUNTY_NAME_BY_CODE } from "./src/constants";
+import { MEGASEARCH_SPLIT_PLAN } from "./src/megasearch-constants";
 import { CgpSqliteRepository } from "./src/sqlite-repo";
 import { runCgpCountySync, runCgpLtfIdRangeSync } from "./src/sync";
 import type { CgpPermitRecord } from "./src/types";
@@ -15,6 +16,7 @@ const DEFAULT_SAMPLE_OUTPUT_DIR =
   "packages/azdeq-cgp-sync/research/noi-type-samples";
 const DEFAULT_MEGASEARCH_OUTPUT_DIR =
   "packages/azdeq-cgp-sync/research/megasearch";
+const DEFAULT_MEGASEARCH_MAX_SPLIT_LEVELS = MEGASEARCH_SPLIT_PLAN.length;
 const DEFAULT_LTFID_START = 1;
 const DEFAULT_LTFID_FALLBACK_END = 120_000;
 const DEFAULT_TAIL_PADDING = 2000;
@@ -312,7 +314,10 @@ async function runMegaSearchSyncCommand(): Promise<void> {
   const dbPath = resolve(readFlag("--db") ?? DEFAULT_DB_PATH);
   const endpointNames = readFlags("--endpoint");
   const maxQueries = parsePositiveIntegerFlag("--max-queries", 600);
-  const maxSplitLevels = parsePositiveIntegerFlag("--max-split-levels", 3);
+  const maxSplitLevels = parsePositiveIntegerFlag(
+    "--max-split-levels",
+    DEFAULT_MEGASEARCH_MAX_SPLIT_LEVELS
+  );
   const delayMs = parsePositiveIntegerFlag("--delay-ms", 100);
   const headless = !hasFlag("--headful");
 

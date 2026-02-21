@@ -26,7 +26,7 @@ This doc translates observed AZDEQ MegaSearch behavior into a production sync st
 1. Use one long-lived browser context per run (already implemented) to keep cookies/challenge state stable.
 2. For each endpoint, begin with the empty query.
 3. If `row_count < 100`, persist rows and do not split.
-4. If `row_count >= 100`, enqueue child partitions (`city`, then `zip`, then `facilityName`) with token fanout and dedupe by normalized query key.
+4. If `row_count >= 100`, enqueue child partitions (`city` -> `zip` -> `facilityName` -> `uniqueId` -> `address`) with token fanout and dedupe by normalized query key.
 5. Dedupe records by endpoint-specific identity + payload hash; upsert idempotently.
 6. Persist query-level telemetry for every request (`status`, `row_count`, `was_capped`, `error`).
 7. Bound runtime with per-endpoint query budgets; track unresolved capped partitions as explicit debt.

@@ -63,7 +63,9 @@ export function parseRetryAfterMs(
 }
 
 function isRetryableStatus(responseStatus: number): boolean {
-  return responseStatus === 429 || responseStatus >= 500 || responseStatus === 0;
+  return (
+    responseStatus === 429 || responseStatus >= 500 || responseStatus === 0
+  );
 }
 
 function calculateRetryDelayMs(error: unknown, attempt: number): number {
@@ -82,6 +84,20 @@ function calculateRetryDelayMs(error: unknown, attempt: number): number {
 
   const jitterMs = Math.floor(Math.random() * RETRY_JITTER_MS);
   return RETRY_BACKOFF_MS * Math.max(1, attempt) + jitterMs;
+}
+
+function toUnknownRequestError(
+  endpoint: string,
+  query: MegaSearchQuery,
+  error: unknown
+): AzdeqMegaSearchClientError {
+  const message =
+    error instanceof Error ? error.message : "Unknown MegaSearch error";
+  return new AzdeqMegaSearchClientError(message, {
+    endpoint,
+    query,
+    responseStatus: 0,
+  });
 }
 
 export class AzdeqMegaSearchClient {
@@ -150,74 +166,13 @@ export class AzdeqMegaSearchClient {
 
     for (let attempt = 1; attempt <= this.maxRetries; attempt += 1) {
       try {
-        const browserFetch = (await page.evaluate(
-          async ({ endpoint, requestPayload }) => {
-            const response = await fetch(`${endpoint}/list`, {
-              method: "POST",
-              headers: {
-                accept: "application/json, text/plain, */*",
-                "content-type": "application/json; charset=utf-8",
-              },
-              body: JSON.stringify(requestPayload),
-            });
-
-            const responseText = await response.text();
-            const responseHeaders = Object.fromEntries(
-              Array.from(response.headers.entries()).map(([key, value]) => [
-                key.toLowerCase(),
-                value,
-              ])
-            );
-            return {
-              responseHeaders,
-              responseStatus: response.status,
-              responseText,
-            } satisfies BrowserFetchResult;
-          },
-          {
-            endpoint: endpointConfig.endpoint,
-            requestPayload: payload,
-          }
-        )) as BrowserFetchResult;
-
-        if (browserFetch.responseStatus >= 400) {
-          const retryAfterMs = parseRetryAfterMs(browserFetch.responseHeaders);
-          throw new AzdeqMegaSearchClientError(
-            `MegaSearch HTTP ${browserFetch.responseStatus} for endpoint "${endpointConfig.endpoint}": ${browserFetch.responseText.slice(0, 400)}`,
-            {
-              endpoint: endpointConfig.endpoint,
-              responseStatus: browserFetch.responseStatus,
-              query,
-              retryAfterMs,
-            }
-          );
-        }
-
-        const parsedJson = JSON.parse(browserFetch.responseText) as unknown;
-        const parsed = parseMegaSearchEnvelope(
-          parsedJson,
-          endpointConfig.endpoint
-        );
-
-        return {
-          endpoint: endpointConfig.endpoint,
-          query,
-          responseStatus: browserFetch.responseStatus,
-          rows: parsed.rows,
-          rawEnvelope: parsed.envelope,
-        };
+        return await this.requestEndpoint(page, endpointConfig, payload, query);
       } catch (error) {
         if (attempt >= this.maxRetries) {
           if (error instanceof AzdeqMegaSearchClientError) {
             throw error;
           }
-          const message =
-            error instanceof Error ? error.message : "Unknown MegaSearch error";
-          throw new AzdeqMegaSearchClientError(message, {
-            endpoint: endpointConfig.endpoint,
-            responseStatus: 0,
-            query,
-          });
+          throw toUnknownRequestError(endpointConfig.endpoint, query, error);
         }
 
         const retryDelayMs = calculateRetryDelayMs(error, attempt);
@@ -225,15 +180,8 @@ export class AzdeqMegaSearchClient {
           if (error instanceof AzdeqMegaSearchClientError) {
             throw error;
           }
-          const message =
-            error instanceof Error ? error.message : "Unknown MegaSearch error";
-          throw new AzdeqMegaSearchClientError(message, {
-            endpoint: endpointConfig.endpoint,
-            responseStatus: 0,
-            query,
-          });
+          throw toUnknownRequestError(endpointConfig.endpoint, query, error);
         }
-
         await new Promise((resolve) => setTimeout(resolve, retryDelayMs));
       }
     }
@@ -246,5 +194,65 @@ export class AzdeqMegaSearchClient {
         query,
       }
     );
+  }
+
+  private async requestEndpoint(
+    page: Page,
+    endpointConfig: MegaSearchEndpointConfig,
+    payload: Record<string, string | boolean>,
+    query: MegaSearchQuery
+  ): Promise<MegaSearchQueryResult> {
+    const browserFetch = (await page.evaluate(
+      async ({ endpoint, requestPayload }) => {
+        const response = await fetch(`${endpoint}/list`, {
+          method: "POST",
+          headers: {
+            accept: "application/json, text/plain, */*",
+            "content-type": "application/json; charset=utf-8",
+          },
+          body: JSON.stringify(requestPayload),
+        });
+
+        const responseText = await response.text();
+        const responseHeaders = Object.fromEntries(
+          Array.from(response.headers.entries()).map(([key, value]) => [
+            key.toLowerCase(),
+            value,
+          ])
+        );
+        return {
+          responseHeaders,
+          responseStatus: response.status,
+          responseText,
+        } satisfies BrowserFetchResult;
+      },
+      {
+        endpoint: endpointConfig.endpoint,
+        requestPayload: payload,
+      }
+    )) as BrowserFetchResult;
+
+    if (browserFetch.responseStatus >= 400) {
+      const retryAfterMs = parseRetryAfterMs(browserFetch.responseHeaders);
+      throw new AzdeqMegaSearchClientError(
+        `MegaSearch HTTP ${browserFetch.responseStatus} for endpoint "${endpointConfig.endpoint}": ${browserFetch.responseText.slice(0, 400)}`,
+        {
+          endpoint: endpointConfig.endpoint,
+          query,
+          responseStatus: browserFetch.responseStatus,
+          retryAfterMs,
+        }
+      );
+    }
+
+    const parsedJson = JSON.parse(browserFetch.responseText) as unknown;
+    const parsed = parseMegaSearchEnvelope(parsedJson, endpointConfig.endpoint);
+    return {
+      endpoint: endpointConfig.endpoint,
+      query,
+      responseStatus: browserFetch.responseStatus,
+      rows: parsed.rows,
+      rawEnvelope: parsed.envelope,
+    };
   }
 }

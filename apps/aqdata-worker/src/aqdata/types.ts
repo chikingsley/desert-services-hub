@@ -84,15 +84,20 @@ export interface InspectionSearchParams {
 
 export interface ComplianceReport {
   accepted: string | null;
+  category: string | null;
   comments: string | null;
+  companyId: string | null;
   companyName: string | null;
+  description: string | null;
   facilityClass: string | null;
   facilityId: string | null;
   facilityName: string | null;
   facilityType: string | null;
+  previousReportId: string | null;
+  receivedDate: string | null;
   reportId: string;
   reportType: string | null;
-  [key: string]: string | null;
+  reviewedDate: string | null;
 }
 
 export interface ComplianceReportSearchParams {
@@ -109,12 +114,18 @@ export interface ComplianceReportSearchParams {
 
 export interface EnforcementAction {
   actionId: string;
+  actionState: string | null;
   actionType: string | null;
+  companyId: string | null;
   companyName: string | null;
   docketNumber: string | null;
   facilityId: string | null;
   facilityName: string | null;
-  [key: string]: string | number | null;
+  isSep: boolean;
+  penaltyAmount: number | null;
+  potentialViolationEndDate: string | null;
+  potentialViolationStartDate: string | null;
+  sepOffsetAmount: number | null;
 }
 
 export interface EnforcementSearchParams {
@@ -130,10 +141,12 @@ export interface EnforcementSearchParams {
 // ============================================================================
 
 export interface Settlement {
+  companyId: string | null;
   companyName: string | null;
   enforcementActionId: string | null;
+  settlementAmount: number | null;
   settlementId: string;
-  [key: string]: string | number | null;
+  state: string | null;
 }
 
 export interface SettlementSearchParams {
@@ -143,20 +156,47 @@ export interface SettlementSearchParams {
 }
 
 // ============================================================================
+// Complaints
+// ============================================================================
+
+export interface ComplaintFacility {
+  companyName: string | null;
+  facilityId: string | null;
+  facilityName: string | null;
+}
+
+export interface Complaint {
+  activityDate: string | null;
+  closedDate: string | null;
+  complaintId: string;
+  enteredDate: string | null;
+  facilities: ComplaintFacility[];
+  inspectionZone: string | null;
+  investigationCategory: string | null;
+  investigationSubcategory: string | null;
+  mapSquare: string | null;
+  receivedDate: string | null;
+  state: string | null;
+}
+
+// ============================================================================
 // Site Visits
 // ============================================================================
 
 export interface SiteVisit {
+  companyId: string | null;
   companyName: string | null;
   complianceIssue: string | null;
+  evaluators: string | null;
   facilityClass: string | null;
   facilityId: string | null;
   facilityName: string | null;
   facilityType: string | null;
+  inspectionId: string | null;
+  operatingStatus: string | null;
   visitDate: string | null;
   visitId: string;
   visitType: string | null;
-  [key: string]: string | null;
 }
 
 export interface SiteVisitSearchParams {
@@ -166,6 +206,59 @@ export interface SiteVisitSearchParams {
   facilityId?: string;
   facilityName?: string;
   visitType?: string;
+}
+
+// ============================================================================
+// Asbestos Notifications
+// ============================================================================
+
+export interface AsbestosInvoice {
+  invoiceBalance: number | null;
+  invoiceCharges: number | null;
+  invoiceNumber: string | null;
+}
+
+export interface AsbestosNotification {
+  asbestosZone: string | null;
+  closedDate: string | null;
+  companyId: string | null;
+  companyName: string | null;
+  county: string | null;
+  createdDate: string | null;
+  demolitionEndDate: string | null;
+  demolitionStartDate: string | null;
+  expirationDate: string | null;
+  facilityId: string | null;
+  facilityName: string | null;
+  invoices: AsbestosInvoice[];
+  legacyAsbNumber: string | null;
+  notificationNumber: string;
+  previousNotificationNumber: string | null;
+  removalEndDate: string | null;
+  removalStartDate: string | null;
+  status: string | null;
+  submittedDate: string | null;
+}
+
+// ============================================================================
+// Invoices
+// ============================================================================
+
+export interface Invoice {
+  balance: number | null;
+  companyId: string | null;
+  companyName: string | null;
+  createdDate: string | null;
+  dueDate: string | null;
+  facilityId: string | null;
+  facilityName: string | null;
+  invoiceId: string;
+  invoiceStatus: string | null;
+  invoiceType: string | null;
+  referenceNumber: string | null;
+  totalCharges: number | null;
+  totalCredits: number | null;
+  totalPayments: number | null;
 }
 
 // ============================================================================

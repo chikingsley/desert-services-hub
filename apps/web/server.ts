@@ -72,6 +72,16 @@ import {
   updateEstimate,
 } from "@/api/estimates/estimates-by-id";
 import { healthCheck } from "@/api/health";
+// -- Inbox --
+import {
+  composeEmail,
+  listWritableMailboxes,
+  replyToThread,
+  sendDraftEmail,
+} from "@/api/inbox/compose";
+import { listInbox } from "@/api/inbox/list";
+import { getInboxStats } from "@/api/inbox/stats";
+import { getThread } from "@/api/inbox/thread";
 import { searchMonday } from "@/api/monday";
 import { listPermits } from "@/api/permits";
 // -- Projects --
@@ -251,6 +261,29 @@ const server = serve({
       GET: h(listContractReview),
     },
 
+    // Inbox (thread-based email client)
+    "/api/inbox": {
+      GET: h(listInbox),
+    },
+    "/api/inbox/stats": {
+      GET: h(getInboxStats),
+    },
+    "/api/inbox/compose": {
+      POST: h(composeEmail),
+    },
+    "/api/inbox/reply": {
+      POST: h(replyToThread),
+    },
+    "/api/inbox/send": {
+      POST: h(sendDraftEmail),
+    },
+    "/api/inbox/mailboxes": {
+      GET: h(listWritableMailboxes),
+    },
+    "/api/inbox/thread/:conversationId": {
+      GET: h(getThread),
+    },
+
     // Emails
     "/api/emails": {
       GET: h(listEmails),
@@ -319,6 +352,8 @@ const server = serve({
     "/projects/*": homepage,
     "/permits": homepage,
     "/permits/*": homepage,
+    "/inbox": homepage,
+    "/inbox/*": homepage,
     "/emails": homepage,
     "/emails/*": homepage,
     "/catalog": homepage,

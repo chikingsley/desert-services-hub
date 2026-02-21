@@ -2,6 +2,7 @@ import {
   Building2,
   FileCheck,
   FileText,
+  Inbox,
   Loader2,
   Mail,
   MapPin,
@@ -34,9 +35,9 @@ import { fetcher } from "@/apps/web/frontend/lib/fetcher";
 
 interface AutomationSidebarStatus {
   active: boolean;
-  portalReady: boolean;
   busy: boolean;
   currentOperation: string | null;
+  portalReady: boolean;
 }
 
 // Workflow order: Estimates → Contracts → Project Initiation → Dust Permits
@@ -48,6 +49,7 @@ const mainNavItems = [
 ];
 
 const manageItems = [
+  { title: "Inbox", href: "/inbox", icon: Inbox },
   { title: "Emails", href: "/emails", icon: Mail },
   { title: "Processing", href: "/processing", icon: Loader2 },
   { title: "Catalog", href: "/catalog", icon: Package },

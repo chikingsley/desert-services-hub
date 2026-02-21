@@ -113,7 +113,7 @@ LIMIT 20;
 docker exec supabase_db_desert-services-hub psql -U postgres -c "
 SELECT e.from_email, e.from_name, e.subject, e.body_preview
 FROM emails e
-WHERE e.search_document @@ plainto_tsquery('english', 'PERSON_NAME')
+WHERE e.search_vector @@ plainto_tsquery('english', 'PERSON_NAME')
 ORDER BY e.received_at DESC
 LIMIT 10;
 "
@@ -220,6 +220,6 @@ Contact: "John Rodriguez" at ID 3083
 
 - **Supabase has 339K+ emails** — search there first before any live API calls
 - Use `ILIKE` for case-insensitive matching (PostgreSQL), NOT `LIKE ... COLLATE NOCASE`
-- Use `search_document @@ plainto_tsquery()` for full-text search on emails
+- Use `search_vector @@ plainto_tsquery()` for full-text search on emails
 - When NO_MATCH for the specific contact, still report what OTHER people at that domain were found
 - Email signatures are the best source for phone/title data

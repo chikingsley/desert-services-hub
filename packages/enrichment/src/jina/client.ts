@@ -304,7 +304,7 @@ export async function rerank(
 ): Promise<JinaRerankResponse> {
   const body: Record<string, unknown> = {
     documents,
-    model: options.model ?? "jina-reranker-v2-base-multilingual",
+    model: options.model ?? "jina-reranker-v3",
     query,
   };
 

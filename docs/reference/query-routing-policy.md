@@ -12,8 +12,8 @@ Historical benchmark snapshots live in `docs/_archive/reference/query-performanc
 - Do not add new email list handlers that query `emails` directly for the default list case.
 
 2. Email full-text search:
-- Must use `search_document @@ websearch_to_tsquery(...)`.
-- Do not add `%...%` search across many email columns when `search_document` exists.
+- Must use `search_vector @@ websearch_to_tsquery(...)`.
+- Do not add `%...%` search across many email columns when `search_vector` exists.
 
 3. Estimate fuzzy candidate search:
 - Must use the normalized expression query in `lib/db/repositories/estimate-email.ts`.

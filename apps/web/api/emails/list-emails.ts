@@ -69,7 +69,7 @@ const emailListDedupCountCache = new Map<
   string,
   { expiresAt: number; value: number }
 >();
-let hasSearchDocumentColumn: boolean | null = null;
+let hasSearchVectorColumn: boolean | null = null;
 let hasEmailListDedupMv: boolean | null = null;
 
 const DEDUP_KEY = `CASE
@@ -116,9 +116,9 @@ function hasAnyListFilter(params: EmailListParams): boolean {
   return hasVisibilityFilter || hasSearchFilter;
 }
 
-async function supportsSearchDocument(): Promise<boolean> {
-  if (hasSearchDocumentColumn != null) {
-    return hasSearchDocumentColumn;
+async function supportsSearchVector(): Promise<boolean> {
+  if (hasSearchVectorColumn != null) {
+    return hasSearchVectorColumn;
   }
 
   const row = (await db
@@ -127,13 +127,13 @@ async function supportsSearchDocument(): Promise<boolean> {
        FROM information_schema.columns
        WHERE table_schema = current_schema()
          AND table_name = 'emails'
-         AND column_name = 'search_document'
+         AND column_name = 'search_vector'
        LIMIT 1`
     )
     .get()) as { "?column?": number } | null;
 
-  hasSearchDocumentColumn = Boolean(row);
-  return hasSearchDocumentColumn;
+  hasSearchVectorColumn = Boolean(row);
+  return hasSearchVectorColumn;
 }
 
 async function supportsEmailListDedupMv(): Promise<boolean> {
@@ -281,11 +281,11 @@ async function addSearchCondition(
     return;
   }
 
-  const hasSearchDocument = await supportsSearchDocument();
-  if (hasSearchDocument) {
+  const hasSearchVector = await supportsSearchVector();
+  if (hasSearchVector) {
     const p = values.length + 1;
     conditions.push(
-      `search_document @@ websearch_to_tsquery('english', $${p})`
+      `search_vector @@ websearch_to_tsquery('english', $${p})`
     );
     values.push(search);
     return;

@@ -1,0 +1,873 @@
+{"_id":"D0036582_id","text":"D0036582","metadata":{"type":"permit_id","permit_id":"D0036582"}}
+{"_id":"D0036582_project","text":"MIP Site C","metadata":{"type":"project_name","permit_id":"D0036582"}}
+{"_id":"D0036582_partial","text":"MIP Site","metadata":{"type":"partial_project","permit_id":"D0036582"}}
+{"_id":"D0036582_combo","text":"Nitti MIP","metadata":{"type":"company_project","permit_id":"D0036582"}}
+{"_id":"D0036582_addr","text":"142 W Deer Valley Dr Phoenix","metadata":{"type":"address_city","permit_id":"D0036582"}}
+{"_id":"D0035133_id","text":"D0035133","metadata":{"type":"permit_id","permit_id":"D0035133"}}
+{"_id":"D0035133_project","text":"Maravilla Phase 3","metadata":{"type":"project_name","permit_id":"D0035133"}}
+{"_id":"D0035133_partial","text":"Maravilla Phase","metadata":{"type":"partial_project","permit_id":"D0035133"}}
+{"_id":"D0035133_combo","text":"The Maravilla","metadata":{"type":"company_project","permit_id":"D0035133"}}
+{"_id":"D0035133_addr","text":"7375 E Princess Blvd Scottsdale","metadata":{"type":"address_city","permit_id":"D0035133"}}
+{"_id":"D0063901_id","text":"D0063901","metadata":{"type":"permit_id","permit_id":"D0063901"}}
+{"_id":"D0063901_project","text":"HVG Clinic","metadata":{"type":"project_name","permit_id":"D0063901"}}
+{"_id":"D0063901_combo","text":"Stout HVG","metadata":{"type":"company_project","permit_id":"D0063901"}}
+{"_id":"D0024007_id","text":"D0024007","metadata":{"type":"permit_id","permit_id":"D0024007"}}
+{"_id":"D0024007_project","text":"PMGAA ATCT","metadata":{"type":"project_name","permit_id":"D0024007"}}
+{"_id":"D0024007_combo","text":"Graycor PMGAA","metadata":{"type":"company_project","permit_id":"D0024007"}}
+{"_id":"D0024007_addr","text":"7722 E VELOCITY WY Mesa","metadata":{"type":"address_city","permit_id":"D0024007"}}
+{"_id":"D0024950_id","text":"D0024950","metadata":{"type":"permit_id","permit_id":"D0024950"}}
+{"_id":"D0024950_project","text":"Legacy Traditional School Mesa","metadata":{"type":"project_name","permit_id":"D0024950"}}
+{"_id":"D0024950_partial","text":"Legacy Traditional","metadata":{"type":"partial_project","permit_id":"D0024950"}}
+{"_id":"D0024950_combo","text":"Burke Legacy","metadata":{"type":"company_project","permit_id":"D0024950"}}
+{"_id":"D0024950_addr","text":"1859 N Val Vista Dr Mesa","metadata":{"type":"address_city","permit_id":"D0024950"}}
+{"_id":"D0028875_id","text":"D0028875","metadata":{"type":"permit_id","permit_id":"D0028875"}}
+{"_id":"D0028875_project","text":"FedEx Parking Lot / Exeter Spec Building","metadata":{"type":"project_name","permit_id":"D0028875"}}
+{"_id":"D0028875_partial","text":"FedEx Parking","metadata":{"type":"partial_project","permit_id":"D0028875"}}
+{"_id":"D0028875_combo","text":"Wespac FedEx","metadata":{"type":"company_project","permit_id":"D0028875"}}
+{"_id":"D0028875_addr","text":"3150 S 39th Ave Phoenix","metadata":{"type":"address_city","permit_id":"D0028875"}}
+{"_id":"D0044692_id","text":"D0044692","metadata":{"type":"permit_id","permit_id":"D0044692"}}
+{"_id":"D0044692_project","text":"Peoria Place Lot 7","metadata":{"type":"project_name","permit_id":"D0044692"}}
+{"_id":"D0044692_partial","text":"Peoria Place","metadata":{"type":"partial_project","permit_id":"D0044692"}}
+{"_id":"D0044692_combo","text":"GS Peoria","metadata":{"type":"company_project","permit_id":"D0044692"}}
+{"_id":"D0021219_id","text":"D0021219","metadata":{"type":"permit_id","permit_id":"D0021219"}}
+{"_id":"D0021219_project","text":"6230 S 16TH ST","metadata":{"type":"project_name","permit_id":"D0021219"}}
+{"_id":"D0021219_partial","text":"6230 S","metadata":{"type":"partial_project","permit_id":"D0021219"}}
+{"_id":"D0021219_combo","text":"Curve 6230","metadata":{"type":"company_project","permit_id":"D0021219"}}
+{"_id":"D0021219_addr","text":"6230 S 16th St Phoenix","metadata":{"type":"address_city","permit_id":"D0021219"}}
+{"_id":"D0025002_id","text":"D0025002","metadata":{"type":"permit_id","permit_id":"D0025002"}}
+{"_id":"D0025002_project","text":"Queen Creek Commons","metadata":{"type":"project_name","permit_id":"D0025002"}}
+{"_id":"D0025002_partial","text":"Queen Creek","metadata":{"type":"partial_project","permit_id":"D0025002"}}
+{"_id":"D0025002_combo","text":"A Queen","metadata":{"type":"company_project","permit_id":"D0025002"}}
+{"_id":"D0036844_id","text":"D0036844","metadata":{"type":"permit_id","permit_id":"D0036844"}}
+{"_id":"D0036844_project","text":"PHX 71 Data Center","metadata":{"type":"project_name","permit_id":"D0036844"}}
+{"_id":"D0036844_partial","text":"PHX 71","metadata":{"type":"partial_project","permit_id":"D0036844"}}
+{"_id":"D0036844_combo","text":"The PHX","metadata":{"type":"company_project","permit_id":"D0036844"}}
+{"_id":"D0036844_addr","text":"3875 N Citrus Rd Goodyear","metadata":{"type":"address_city","permit_id":"D0036844"}}
+{"_id":"D0041731_id","text":"D0041731","metadata":{"type":"permit_id","permit_id":"D0041731"}}
+{"_id":"D0041731_project","text":"Adventest North - Chandler","metadata":{"type":"project_name","permit_id":"D0041731"}}
+{"_id":"D0041731_partial","text":"Adventest North","metadata":{"type":"partial_project","permit_id":"D0041731"}}
+{"_id":"D0041731_combo","text":"Diamond Adventest","metadata":{"type":"company_project","permit_id":"D0041731"}}
+{"_id":"D0064026_id","text":"D0064026","metadata":{"type":"permit_id","permit_id":"D0064026"}}
+{"_id":"D0064026_project","text":"Sun Health La Roma Campus: Resident Gathering Space","metadata":{"type":"project_name","permit_id":"D0064026"}}
+{"_id":"D0064026_partial","text":"Sun Health","metadata":{"type":"partial_project","permit_id":"D0064026"}}
+{"_id":"D0064026_combo","text":"Sun Sun","metadata":{"type":"company_project","permit_id":"D0064026"}}
+{"_id":"D0064026_addr","text":"14100 S DENNY WAY LITCHFIELD PARK","metadata":{"type":"address_city","permit_id":"D0064026"}}
+{"_id":"D0039595_id","text":"D0039595","metadata":{"type":"permit_id","permit_id":"D0039595"}}
+{"_id":"D0039595_project","text":"The One at Avondale Station","metadata":{"type":"project_name","permit_id":"D0039595"}}
+{"_id":"D0039595_partial","text":"The One","metadata":{"type":"partial_project","permit_id":"D0039595"}}
+{"_id":"D0039595_combo","text":"EMJ The","metadata":{"type":"company_project","permit_id":"D0039595"}}
+{"_id":"D0034415_id","text":"D0034415","metadata":{"type":"permit_id","permit_id":"D0034415"}}
+{"_id":"D0034415_project","text":"Ala West Foothills Campus","metadata":{"type":"project_name","permit_id":"D0034415"}}
+{"_id":"D0034415_partial","text":"Ala West","metadata":{"type":"partial_project","permit_id":"D0034415"}}
+{"_id":"D0034415_combo","text":"Sandstorm Ala","metadata":{"type":"company_project","permit_id":"D0034415"}}
+{"_id":"D0051056_id","text":"D0051056","metadata":{"type":"permit_id","permit_id":"D0051056"}}
+{"_id":"D0051056_project","text":"Azola At Desert","metadata":{"type":"project_name","permit_id":"D0051056"}}
+{"_id":"D0051056_partial","text":"Azola At","metadata":{"type":"partial_project","permit_id":"D0051056"}}
+{"_id":"D0051056_combo","text":"CSI Azola","metadata":{"type":"company_project","permit_id":"D0051056"}}
+{"_id":"D0050656_id","text":"D0050656","metadata":{"type":"permit_id","permit_id":"D0050656"}}
+{"_id":"D0050656_project","text":"Elux at McQueen","metadata":{"type":"project_name","permit_id":"D0050656"}}
+{"_id":"D0050656_partial","text":"Elux at","metadata":{"type":"partial_project","permit_id":"D0050656"}}
+{"_id":"D0050656_combo","text":"BFL Elux","metadata":{"type":"company_project","permit_id":"D0050656"}}
+{"_id":"D0042840_id","text":"D0042840","metadata":{"type":"permit_id","permit_id":"D0042840"}}
+{"_id":"D0042840_project","text":"Batch Plant - Goodyear Airpark","metadata":{"type":"project_name","permit_id":"D0042840"}}
+{"_id":"D0042840_partial","text":"Batch Plant","metadata":{"type":"partial_project","permit_id":"D0042840"}}
+{"_id":"D0042840_combo","text":"Suntec Batch","metadata":{"type":"company_project","permit_id":"D0042840"}}
+{"_id":"D0046160_id","text":"D0046160","metadata":{"type":"permit_id","permit_id":"D0046160"}}
+{"_id":"D0046160_project","text":"Costco Depot Expansion","metadata":{"type":"project_name","permit_id":"D0046160"}}
+{"_id":"D0046160_partial","text":"Costco Depot","metadata":{"type":"partial_project","permit_id":"D0046160"}}
+{"_id":"D0046160_combo","text":"Jackson Costco","metadata":{"type":"company_project","permit_id":"D0046160"}}
+{"_id":"D0046160_addr","text":"8400 W Sherman St Tolleson","metadata":{"type":"address_city","permit_id":"D0046160"}}
+{"_id":"D0058018_id","text":"D0058018","metadata":{"type":"permit_id","permit_id":"D0058018"}}
+{"_id":"D0058018_project","text":"Desert Truss West","metadata":{"type":"project_name","permit_id":"D0058018"}}
+{"_id":"D0058018_partial","text":"Desert Truss","metadata":{"type":"partial_project","permit_id":"D0058018"}}
+{"_id":"D0058018_combo","text":"Desert Desert","metadata":{"type":"company_project","permit_id":"D0058018"}}
+{"_id":"D0057398_id","text":"D0057398","metadata":{"type":"permit_id","permit_id":"D0057398"}}
+{"_id":"D0057398_project","text":"J. Alexander's","metadata":{"type":"project_name","permit_id":"D0057398"}}
+{"_id":"D0057398_combo","text":"EBS J.","metadata":{"type":"company_project","permit_id":"D0057398"}}
+{"_id":"D0057398_addr","text":"7131 W RAY RD CHANDLER","metadata":{"type":"address_city","permit_id":"D0057398"}}
+{"_id":"D0021099_id","text":"D0021099","metadata":{"type":"permit_id","permit_id":"D0021099"}}
+{"_id":"D0021099_project","text":"9191 W BUCKEYE RD","metadata":{"type":"project_name","permit_id":"D0021099"}}
+{"_id":"D0021099_partial","text":"9191 W","metadata":{"type":"partial_project","permit_id":"D0021099"}}
+{"_id":"D0021099_combo","text":"Willmeng 9191","metadata":{"type":"company_project","permit_id":"D0021099"}}
+{"_id":"D0021099_addr","text":"1500 S 93rd Ave Tolleson","metadata":{"type":"address_city","permit_id":"D0021099"}}
+{"_id":"D0052775_id","text":"D0052775","metadata":{"type":"permit_id","permit_id":"D0052775"}}
+{"_id":"D0052775_project","text":"Higley & Williams Field Self Storage","metadata":{"type":"project_name","permit_id":"D0052775"}}
+{"_id":"D0052775_partial","text":"Higley &","metadata":{"type":"partial_project","permit_id":"D0052775"}}
+{"_id":"D0052775_combo","text":"Abernathey Higley","metadata":{"type":"company_project","permit_id":"D0052775"}}
+{"_id":"D0051051_id","text":"D0051051","metadata":{"type":"permit_id","permit_id":"D0051051"}}
+{"_id":"D0051051_project","text":"Clean Freak Car Wash","metadata":{"type":"project_name","permit_id":"D0051051"}}
+{"_id":"D0051051_partial","text":"Clean Freak","metadata":{"type":"partial_project","permit_id":"D0051051"}}
+{"_id":"D0051051_combo","text":"Madewell Clean","metadata":{"type":"company_project","permit_id":"D0051051"}}
+{"_id":"D0051051_addr","text":"8310 W CAMELBACK RD Glendale","metadata":{"type":"address_city","permit_id":"D0051051"}}
+{"_id":"D0022548_id","text":"D0022548","metadata":{"type":"permit_id","permit_id":"D0022548"}}
+{"_id":"D0022548_project","text":"SunStream 2","metadata":{"type":"project_name","permit_id":"D0022548"}}
+{"_id":"D0022548_combo","text":"McCarthy SunStream","metadata":{"type":"company_project","permit_id":"D0022548"}}
+{"_id":"D0004807_id","text":"D0004807","metadata":{"type":"permit_id","permit_id":"D0004807"}}
+{"_id":"D0004807_project","text":"1690 S SANTAN VILLAGE PKWY","metadata":{"type":"project_name","permit_id":"D0004807"}}
+{"_id":"D0004807_partial","text":"1690 S","metadata":{"type":"partial_project","permit_id":"D0004807"}}
+{"_id":"D0004807_combo","text":"McShane 1690","metadata":{"type":"company_project","permit_id":"D0004807"}}
+{"_id":"D0004807_addr","text":"1690 S Santan Village Pkwy Gilbert","metadata":{"type":"address_city","permit_id":"D0004807"}}
+{"_id":"D0041886_id","text":"D0041886","metadata":{"type":"permit_id","permit_id":"D0041886"}}
+{"_id":"D0041886_project","text":"Borman Elementary Admin Building & Track","metadata":{"type":"project_name","permit_id":"D0041886"}}
+{"_id":"D0041886_partial","text":"Borman Elementary","metadata":{"type":"partial_project","permit_id":"D0041886"}}
+{"_id":"D0041886_combo","text":"Rytan Borman","metadata":{"type":"company_project","permit_id":"D0041886"}}
+{"_id":"D0041886_addr","text":"5401 W Clarendon Ave Phoenix","metadata":{"type":"address_city","permit_id":"D0041886"}}
+{"_id":"D0050154_id","text":"D0050154","metadata":{"type":"permit_id","permit_id":"D0050154"}}
+{"_id":"D0050154_project","text":"SIHI Storage Pile","metadata":{"type":"project_name","permit_id":"D0050154"}}
+{"_id":"D0050154_partial","text":"SIHI Storage","metadata":{"type":"partial_project","permit_id":"D0050154"}}
+{"_id":"D0050154_combo","text":"Stansell SIHI","metadata":{"type":"company_project","permit_id":"D0050154"}}
+{"_id":"D0050154_addr","text":"21250 W Roosevelt St Buckeye","metadata":{"type":"address_city","permit_id":"D0050154"}}
+{"_id":"D0056408_id","text":"D0056408","metadata":{"type":"permit_id","permit_id":"D0056408"}}
+{"_id":"D0056408_project","text":"SRP MET","metadata":{"type":"project_name","permit_id":"D0056408"}}
+{"_id":"D0056408_combo","text":"Agate SRP","metadata":{"type":"company_project","permit_id":"D0056408"}}
+{"_id":"D0056408_addr","text":"1250 E WATERMELON RD GILA BEND","metadata":{"type":"address_city","permit_id":"D0056408"}}
+{"_id":"D0055744_id","text":"D0055744","metadata":{"type":"permit_id","permit_id":"D0055744"}}
+{"_id":"D0055744_project","text":"Maxway Trucking Facility","metadata":{"type":"project_name","permit_id":"D0055744"}}
+{"_id":"D0055744_partial","text":"Maxway Trucking","metadata":{"type":"partial_project","permit_id":"D0055744"}}
+{"_id":"D0055744_combo","text":"Agate Maxway","metadata":{"type":"company_project","permit_id":"D0055744"}}
+{"_id":"D0055744_addr","text":"5926 W MONROE ST PHOENIX","metadata":{"type":"address_city","permit_id":"D0055744"}}
+{"_id":"D0046716_id","text":"D0046716","metadata":{"type":"permit_id","permit_id":"D0046716"}}
+{"_id":"D0046716_project","text":"Cannon Beach","metadata":{"type":"project_name","permit_id":"D0046716"}}
+{"_id":"D0046716_combo","text":"Swell Cannon","metadata":{"type":"company_project","permit_id":"D0046716"}}
+{"_id":"D0027210_id","text":"D0027210","metadata":{"type":"permit_id","permit_id":"D0027210"}}
+{"_id":"D0027210_project","text":"Nevada St & Commonwealth Ave","metadata":{"type":"project_name","permit_id":"D0027210"}}
+{"_id":"D0027210_partial","text":"Nevada St","metadata":{"type":"partial_project","permit_id":"D0027210"}}
+{"_id":"D0027210_combo","text":"EMJ Nevada","metadata":{"type":"company_project","permit_id":"D0027210"}}
+{"_id":"D0027210_addr","text":"200 S Hamilton St Chandler","metadata":{"type":"address_city","permit_id":"D0027210"}}
+{"_id":"D0016634_id","text":"D0016634","metadata":{"type":"permit_id","permit_id":"D0016634"}}
+{"_id":"D0016634_project","text":"16748 N 94TH ST","metadata":{"type":"project_name","permit_id":"D0016634"}}
+{"_id":"D0016634_partial","text":"16748 N","metadata":{"type":"partial_project","permit_id":"D0016634"}}
+{"_id":"D0016634_combo","text":"Chasse 16748","metadata":{"type":"company_project","permit_id":"D0016634"}}
+{"_id":"D0016634_addr","text":"16648 N 94th St Scottsdale","metadata":{"type":"address_city","permit_id":"D0016634"}}
+{"_id":"D0056240_id","text":"D0056240","metadata":{"type":"permit_id","permit_id":"D0056240"}}
+{"_id":"D0056240_project","text":"Levine Self Storage","metadata":{"type":"project_name","permit_id":"D0056240"}}
+{"_id":"D0056240_partial","text":"Levine Self","metadata":{"type":"partial_project","permit_id":"D0056240"}}
+{"_id":"D0056240_combo","text":"Abernathey Levine","metadata":{"type":"company_project","permit_id":"D0056240"}}
+{"_id":"D0056240_addr","text":"7145 S 51ST AVE LAVEEN","metadata":{"type":"address_city","permit_id":"D0056240"}}
+{"_id":"D0043401_id","text":"D0043401","metadata":{"type":"permit_id","permit_id":"D0043401"}}
+{"_id":"D0043401_project","text":"Azola At Desert","metadata":{"type":"project_name","permit_id":"D0043401"}}
+{"_id":"D0043401_partial","text":"Azola At","metadata":{"type":"partial_project","permit_id":"D0043401"}}
+{"_id":"D0043401_combo","text":"CSI Azola","metadata":{"type":"company_project","permit_id":"D0043401"}}
+{"_id":"D0043401_addr","text":"20400 N 56th St Phoenix","metadata":{"type":"address_city","permit_id":"D0043401"}}
+{"_id":"D0045520_id","text":"D0045520","metadata":{"type":"permit_id","permit_id":"D0045520"}}
+{"_id":"D0045520_project","text":"JDA Commerce Center","metadata":{"type":"project_name","permit_id":"D0045520"}}
+{"_id":"D0045520_partial","text":"JDA Commerce","metadata":{"type":"partial_project","permit_id":"D0045520"}}
+{"_id":"D0045520_combo","text":"FCL JDA","metadata":{"type":"company_project","permit_id":"D0045520"}}
+{"_id":"D0045520_addr","text":"490 S Litchfield Rd Goodyear","metadata":{"type":"address_city","permit_id":"D0045520"}}
+{"_id":"D0040725_id","text":"D0040725","metadata":{"type":"permit_id","permit_id":"D0040725"}}
+{"_id":"D0040725_project","text":"Bell Bank - Gilbert","metadata":{"type":"project_name","permit_id":"D0040725"}}
+{"_id":"D0040725_partial","text":"Bell Bank","metadata":{"type":"partial_project","permit_id":"D0040725"}}
+{"_id":"D0040725_combo","text":"M Bell","metadata":{"type":"company_project","permit_id":"D0040725"}}
+{"_id":"D0043026_id","text":"D0043026","metadata":{"type":"permit_id","permit_id":"D0043026"}}
+{"_id":"D0043026_project","text":"Gulfstream Mesa","metadata":{"type":"project_name","permit_id":"D0043026"}}
+{"_id":"D0043026_combo","text":"Alexander Gulfstream","metadata":{"type":"company_project","permit_id":"D0043026"}}
+{"_id":"D0043026_addr","text":"6001 S Power Rd Mesa","metadata":{"type":"address_city","permit_id":"D0043026"}}
+{"_id":"D0044854_id","text":"D0044854","metadata":{"type":"permit_id","permit_id":"D0044854"}}
+{"_id":"D0044854_project","text":"MS1A Centurion","metadata":{"type":"project_name","permit_id":"D0044854"}}
+{"_id":"D0044854_combo","text":"JE MS1A","metadata":{"type":"company_project","permit_id":"D0044854"}}
+{"_id":"D0046044_id","text":"D0046044","metadata":{"type":"permit_id","permit_id":"D0046044"}}
+{"_id":"D0046044_project","text":"Queen Creek Commons","metadata":{"type":"project_name","permit_id":"D0046044"}}
+{"_id":"D0046044_partial","text":"Queen Creek","metadata":{"type":"partial_project","permit_id":"D0046044"}}
+{"_id":"D0046044_combo","text":"Sodella Queen","metadata":{"type":"company_project","permit_id":"D0046044"}}
+{"_id":"D0046044_addr","text":"25105 S Ellsworth Rd Queen Creek","metadata":{"type":"address_city","permit_id":"D0046044"}}
+{"_id":"D0041841_id","text":"D0041841","metadata":{"type":"permit_id","permit_id":"D0041841"}}
+{"_id":"D0041841_project","text":"Copper Ridge Tennis Court Expansion","metadata":{"type":"project_name","permit_id":"D0041841"}}
+{"_id":"D0041841_partial","text":"Copper Ridge","metadata":{"type":"partial_project","permit_id":"D0041841"}}
+{"_id":"D0041841_combo","text":"Adolfson Copper","metadata":{"type":"company_project","permit_id":"D0041841"}}
+{"_id":"D0041841_addr","text":"9800 E Horseshoe Canyon Dr Scottsdale","metadata":{"type":"address_city","permit_id":"D0041841"}}
+{"_id":"D0048201_id","text":"D0048201","metadata":{"type":"permit_id","permit_id":"D0048201"}}
+{"_id":"D0048201_project","text":"Bell Bank - Gilbert","metadata":{"type":"project_name","permit_id":"D0048201"}}
+{"_id":"D0048201_partial","text":"Bell Bank","metadata":{"type":"partial_project","permit_id":"D0048201"}}
+{"_id":"D0048201_combo","text":"M Bell","metadata":{"type":"company_project","permit_id":"D0048201"}}
+{"_id":"D0047371_id","text":"D0047371","metadata":{"type":"permit_id","permit_id":"D0047371"}}
+{"_id":"D0047371_project","text":"AE PHX04","metadata":{"type":"project_name","permit_id":"D0047371"}}
+{"_id":"D0047371_combo","text":"Power AE","metadata":{"type":"company_project","permit_id":"D0047371"}}
+{"_id":"D0047371_addr","text":"2501 S Price Rd Chandler","metadata":{"type":"address_city","permit_id":"D0047371"}}
+{"_id":"D0044361_id","text":"D0044361","metadata":{"type":"permit_id","permit_id":"D0044361"}}
+{"_id":"D0044361_project","text":"Coyote Landing","metadata":{"type":"project_name","permit_id":"D0044361"}}
+{"_id":"D0044361_combo","text":"BG Coyote","metadata":{"type":"company_project","permit_id":"D0044361"}}
+{"_id":"D0031719_id","text":"D0031719","metadata":{"type":"permit_id","permit_id":"D0031719"}}
+{"_id":"D0031719_project","text":"Elliot Gateway","metadata":{"type":"project_name","permit_id":"D0031719"}}
+{"_id":"D0031719_combo","text":"Graycor Elliot","metadata":{"type":"company_project","permit_id":"D0031719"}}
+{"_id":"D0031719_addr","text":"9116 E Elliot Rd Mesa","metadata":{"type":"address_city","permit_id":"D0031719"}}
+{"_id":"D0055870_id","text":"D0055870","metadata":{"type":"permit_id","permit_id":"D0055870"}}
+{"_id":"D0055870_project","text":"TJX Phx Building Expansion","metadata":{"type":"project_name","permit_id":"D0055870"}}
+{"_id":"D0055870_partial","text":"TJX Phx","metadata":{"type":"partial_project","permit_id":"D0055870"}}
+{"_id":"D0055870_combo","text":"Catamount TJX","metadata":{"type":"company_project","permit_id":"D0055870"}}
+{"_id":"D0055870_addr","text":"3000 S 55TH AVE PHOENIX","metadata":{"type":"address_city","permit_id":"D0055870"}}
+{"_id":"D0041206_id","text":"D0041206","metadata":{"type":"permit_id","permit_id":"D0041206"}}
+{"_id":"D0041206_project","text":"Rapacilo Residence","metadata":{"type":"project_name","permit_id":"D0041206"}}
+{"_id":"D0041206_combo","text":"Allen Rapacilo","metadata":{"type":"company_project","permit_id":"D0041206"}}
+{"_id":"D0045899_id","text":"D0045899","metadata":{"type":"permit_id","permit_id":"D0045899"}}
+{"_id":"D0045899_project","text":"Go Industrial","metadata":{"type":"project_name","permit_id":"D0045899"}}
+{"_id":"D0045899_combo","text":"Alston Go","metadata":{"type":"company_project","permit_id":"D0045899"}}
+{"_id":"D0052207_id","text":"D0052207","metadata":{"type":"permit_id","permit_id":"D0052207"}}
+{"_id":"D0052207_project","text":"1646-244 Mesa, AZ","metadata":{"type":"project_name","permit_id":"D0052207"}}
+{"_id":"D0052207_partial","text":"1646-244 Mesa,","metadata":{"type":"partial_project","permit_id":"D0052207"}}
+{"_id":"D0052207_combo","text":"Mycon 1646-244","metadata":{"type":"company_project","permit_id":"D0052207"}}
+{"_id":"D0036437_id","text":"D0036437","metadata":{"type":"permit_id","permit_id":"D0036437"}}
+{"_id":"D0036437_project","text":"Prologis I-17 Logistics Center Phase 2","metadata":{"type":"project_name","permit_id":"D0036437"}}
+{"_id":"D0036437_partial","text":"Prologis I-17","metadata":{"type":"partial_project","permit_id":"D0036437"}}
+{"_id":"D0036437_combo","text":"Derek Prologis","metadata":{"type":"company_project","permit_id":"D0036437"}}
+{"_id":"D0037990_id","text":"D0037990","metadata":{"type":"permit_id","permit_id":"D0037990"}}
+{"_id":"D0037990_project","text":"North Copper Canyon 1.2","metadata":{"type":"project_name","permit_id":"D0037990"}}
+{"_id":"D0037990_partial","text":"North Copper","metadata":{"type":"partial_project","permit_id":"D0037990"}}
+{"_id":"D0037990_combo","text":"Century North","metadata":{"type":"company_project","permit_id":"D0037990"}}
+{"_id":"D0041378_id","text":"D0041378","metadata":{"type":"permit_id","permit_id":"D0041378"}}
+{"_id":"D0041378_project","text":"Lake Pleasant UC/FSED","metadata":{"type":"project_name","permit_id":"D0041378"}}
+{"_id":"D0041378_partial","text":"Lake Pleasant","metadata":{"type":"partial_project","permit_id":"D0041378"}}
+{"_id":"D0041378_combo","text":"JE Lake","metadata":{"type":"company_project","permit_id":"D0041378"}}
+{"_id":"D0042200_id","text":"D0042200","metadata":{"type":"permit_id","permit_id":"D0042200"}}
+{"_id":"D0042200_project","text":"Sossaman Business Campus","metadata":{"type":"project_name","permit_id":"D0042200"}}
+{"_id":"D0042200_partial","text":"Sossaman Business","metadata":{"type":"partial_project","permit_id":"D0042200"}}
+{"_id":"D0042200_combo","text":"ARCO Sossaman","metadata":{"type":"company_project","permit_id":"D0042200"}}
+{"_id":"D0042200_addr","text":"3463 S Sossaman Rd Mesa","metadata":{"type":"address_city","permit_id":"D0042200"}}
+{"_id":"D0044493_id","text":"D0044493","metadata":{"type":"permit_id","permit_id":"D0044493"}}
+{"_id":"D0044493_project","text":"Modera Rio Salado","metadata":{"type":"project_name","permit_id":"D0044493"}}
+{"_id":"D0044493_partial","text":"Modera Rio","metadata":{"type":"partial_project","permit_id":"D0044493"}}
+{"_id":"D0044493_combo","text":"MCRT Modera","metadata":{"type":"company_project","permit_id":"D0044493"}}
+{"_id":"D0044493_addr","text":"936 W 1st St Tempe","metadata":{"type":"address_city","permit_id":"D0044493"}}
+{"_id":"D0046848_id","text":"D0046848","metadata":{"type":"permit_id","permit_id":"D0046848"}}
+{"_id":"D0046848_project","text":"The Ashley","metadata":{"type":"project_name","permit_id":"D0046848"}}
+{"_id":"D0046848_combo","text":"Porter The","metadata":{"type":"company_project","permit_id":"D0046848"}}
+{"_id":"D0048340_id","text":"D0048340","metadata":{"type":"permit_id","permit_id":"D0048340"}}
+{"_id":"D0048340_project","text":"TJX Phx Building Expansion","metadata":{"type":"project_name","permit_id":"D0048340"}}
+{"_id":"D0048340_partial","text":"TJX Phx","metadata":{"type":"partial_project","permit_id":"D0048340"}}
+{"_id":"D0048340_combo","text":"Catamount TJX","metadata":{"type":"company_project","permit_id":"D0048340"}}
+{"_id":"D0048340_addr","text":"3000 S 55th Ave Phoenix","metadata":{"type":"address_city","permit_id":"D0048340"}}
+{"_id":"D0041635_id","text":"D0041635","metadata":{"type":"permit_id","permit_id":"D0041635"}}
+{"_id":"D0041635_project","text":"Patriot Square","metadata":{"type":"project_name","permit_id":"D0041635"}}
+{"_id":"D0041635_combo","text":"Overland Patriot","metadata":{"type":"company_project","permit_id":"D0041635"}}
+{"_id":"D0041635_addr","text":"640 N 32nd St Phoenix","metadata":{"type":"address_city","permit_id":"D0041635"}}
+{"_id":"D0028544_id","text":"D0028544","metadata":{"type":"permit_id","permit_id":"D0028544"}}
+{"_id":"D0028544_project","text":"Tempe Market Station","metadata":{"type":"project_name","permit_id":"D0028544"}}
+{"_id":"D0028544_partial","text":"Tempe Market","metadata":{"type":"partial_project","permit_id":"D0028544"}}
+{"_id":"D0028544_combo","text":"A Tempe","metadata":{"type":"company_project","permit_id":"D0028544"}}
+{"_id":"D0008103_id","text":"D0008103","metadata":{"type":"permit_id","permit_id":"D0008103"}}
+{"_id":"D0008103_project","text":"401 S FARMER AVE","metadata":{"type":"project_name","permit_id":"D0008103"}}
+{"_id":"D0008103_partial","text":"401 S","metadata":{"type":"partial_project","permit_id":"D0008103"}}
+{"_id":"D0008103_combo","text":"MA 401","metadata":{"type":"company_project","permit_id":"D0008103"}}
+{"_id":"D0047679_id","text":"D0047679","metadata":{"type":"permit_id","permit_id":"D0047679"}}
+{"_id":"D0047679_project","text":"Mesa Gateway Logistics","metadata":{"type":"project_name","permit_id":"D0047679"}}
+{"_id":"D0047679_partial","text":"Mesa Gateway","metadata":{"type":"partial_project","permit_id":"D0047679"}}
+{"_id":"D0047679_combo","text":"Alcorn Mesa","metadata":{"type":"company_project","permit_id":"D0047679"}}
+{"_id":"D0045390_id","text":"D0045390","metadata":{"type":"permit_id","permit_id":"D0045390"}}
+{"_id":"D0045390_project","text":"ASU CHILD Building Demolition","metadata":{"type":"project_name","permit_id":"D0045390"}}
+{"_id":"D0045390_partial","text":"ASU CHILD","metadata":{"type":"partial_project","permit_id":"D0045390"}}
+{"_id":"D0045390_combo","text":"Edge ASU","metadata":{"type":"company_project","permit_id":"D0045390"}}
+{"_id":"D0045390_addr","text":"910 S Terrace Rd Tempe","metadata":{"type":"address_city","permit_id":"D0045390"}}
+{"_id":"D0059979_id","text":"D0059979","metadata":{"type":"permit_id","permit_id":"D0059979"}}
+{"_id":"D0059979_project","text":"AAA Fleet Center","metadata":{"type":"project_name","permit_id":"D0059979"}}
+{"_id":"D0059979_partial","text":"AAA Fleet","metadata":{"type":"partial_project","permit_id":"D0059979"}}
+{"_id":"D0059979_combo","text":"Delta AAA","metadata":{"type":"company_project","permit_id":"D0059979"}}
+{"_id":"D0059979_addr","text":"1314 W MAGNOLIA ST PHOENIX","metadata":{"type":"address_city","permit_id":"D0059979"}}
+{"_id":"D0051054_id","text":"D0051054","metadata":{"type":"permit_id","permit_id":"D0051054"}}
+{"_id":"D0051054_project","text":"Mezzo @ Desert Ridge","metadata":{"type":"project_name","permit_id":"D0051054"}}
+{"_id":"D0051054_partial","text":"Mezzo @","metadata":{"type":"partial_project","permit_id":"D0051054"}}
+{"_id":"D0051054_combo","text":"CSI Mezzo","metadata":{"type":"company_project","permit_id":"D0051054"}}
+{"_id":"D0046430_id","text":"D0046430","metadata":{"type":"permit_id","permit_id":"D0046430"}}
+{"_id":"D0046430_project","text":"SRP Howard Substation","metadata":{"type":"project_name","permit_id":"D0046430"}}
+{"_id":"D0046430_partial","text":"SRP Howard","metadata":{"type":"partial_project","permit_id":"D0046430"}}
+{"_id":"D0046430_combo","text":"Reinhausen SRP","metadata":{"type":"company_project","permit_id":"D0046430"}}
+{"_id":"D0046430_addr","text":"3856 S Everton Ter Mesa","metadata":{"type":"address_city","permit_id":"D0046430"}}
+{"_id":"D0053573_id","text":"D0053573","metadata":{"type":"permit_id","permit_id":"D0053573"}}
+{"_id":"D0053573_project","text":"Andretti Karting - Glendale","metadata":{"type":"project_name","permit_id":"D0053573"}}
+{"_id":"D0053573_partial","text":"Andretti Karting","metadata":{"type":"partial_project","permit_id":"D0053573"}}
+{"_id":"D0053573_combo","text":"Parkway Andretti","metadata":{"type":"company_project","permit_id":"D0053573"}}
+{"_id":"D0053573_addr","text":"6151 N 99TH AVE GLENDALE","metadata":{"type":"address_city","permit_id":"D0053573"}}
+{"_id":"D0046006_id","text":"D0046006","metadata":{"type":"permit_id","permit_id":"D0046006"}}
+{"_id":"D0046006_project","text":"Foothills Food Bank","metadata":{"type":"project_name","permit_id":"D0046006"}}
+{"_id":"D0046006_partial","text":"Foothills Food","metadata":{"type":"partial_project","permit_id":"D0046006"}}
+{"_id":"D0046006_combo","text":"Kraus-Anderson Foothills","metadata":{"type":"company_project","permit_id":"D0046006"}}
+{"_id":"D0057957_id","text":"D0057957","metadata":{"type":"permit_id","permit_id":"D0057957"}}
+{"_id":"D0057957_project","text":"Portillo's - Chandler","metadata":{"type":"project_name","permit_id":"D0057957"}}
+{"_id":"D0057957_partial","text":"Portillo's -","metadata":{"type":"partial_project","permit_id":"D0057957"}}
+{"_id":"D0057957_combo","text":"Englewood Portillo's","metadata":{"type":"company_project","permit_id":"D0057957"}}
+{"_id":"D0057957_addr","text":"7230 W RAY RD CHANDLER","metadata":{"type":"address_city","permit_id":"D0057957"}}
+{"_id":"D0028298_id","text":"D0028298","metadata":{"type":"permit_id","permit_id":"D0028298"}}
+{"_id":"D0028298_project","text":"X Phoenix, The Society","metadata":{"type":"project_name","permit_id":"D0028298"}}
+{"_id":"D0028298_partial","text":"X Phoenix,","metadata":{"type":"partial_project","permit_id":"D0028298"}}
+{"_id":"D0028298_combo","text":"Clayco X","metadata":{"type":"company_project","permit_id":"D0028298"}}
+{"_id":"D0032162_id","text":"D0032162","metadata":{"type":"permit_id","permit_id":"D0032162"}}
+{"_id":"D0032162_project","text":"Manuel Vidaure","metadata":{"type":"project_name","permit_id":"D0032162"}}
+{"_id":"D0032162_combo","text":"Adolfson Manuel","metadata":{"type":"company_project","permit_id":"D0032162"}}
+{"_id":"D0065102_id","text":"D0065102","metadata":{"type":"permit_id","permit_id":"D0065102"}}
+{"_id":"D0065102_project","text":"Premier Underground Storage","metadata":{"type":"project_name","permit_id":"D0065102"}}
+{"_id":"D0065102_partial","text":"Premier Underground","metadata":{"type":"partial_project","permit_id":"D0065102"}}
+{"_id":"D0065102_combo","text":"Structr Premier","metadata":{"type":"company_project","permit_id":"D0065102"}}
+{"_id":"D0065102_addr","text":"1050 E RILEY DR AVONDALE","metadata":{"type":"address_city","permit_id":"D0065102"}}
+{"_id":"D0037190_id","text":"D0037190","metadata":{"type":"permit_id","permit_id":"D0037190"}}
+{"_id":"D0037190_project","text":"Sunlad Flat Apartments","metadata":{"type":"project_name","permit_id":"D0037190"}}
+{"_id":"D0037190_partial","text":"Sunlad Flat","metadata":{"type":"partial_project","permit_id":"D0037190"}}
+{"_id":"D0037190_combo","text":"TWG Sunlad","metadata":{"type":"company_project","permit_id":"D0037190"}}
+{"_id":"D0037190_addr","text":"225 W Sunland Ave Phoenix","metadata":{"type":"address_city","permit_id":"D0037190"}}
+{"_id":"D0044850_id","text":"D0044850","metadata":{"type":"permit_id","permit_id":"D0044850"}}
+{"_id":"D0044850_project","text":"BrightPath Kids (Goodyear) Daycare","metadata":{"type":"project_name","permit_id":"D0044850"}}
+{"_id":"D0044850_partial","text":"BrightPath Kids","metadata":{"type":"partial_project","permit_id":"D0044850"}}
+{"_id":"D0044850_combo","text":"Caliente BrightPath","metadata":{"type":"company_project","permit_id":"D0044850"}}
+{"_id":"D0044850_addr","text":"14070 W Van Buren St Goodyear","metadata":{"type":"address_city","permit_id":"D0044850"}}
+{"_id":"D0028829_id","text":"D0028829","metadata":{"type":"permit_id","permit_id":"D0028829"}}
+{"_id":"D0028829_project","text":"Mike Bonkoski","metadata":{"type":"project_name","permit_id":"D0028829"}}
+{"_id":"D0028829_combo","text":"Ryan Mike","metadata":{"type":"company_project","permit_id":"D0028829"}}
+{"_id":"D0028829_addr","text":"10456 N 74th St Scottsdale","metadata":{"type":"address_city","permit_id":"D0028829"}}
+{"_id":"D0050999_id","text":"D0050999","metadata":{"type":"permit_id","permit_id":"D0050999"}}
+{"_id":"D0050999_project","text":"TUHSD Facilities Warehouse","metadata":{"type":"project_name","permit_id":"D0050999"}}
+{"_id":"D0050999_partial","text":"TUHSD Facilities","metadata":{"type":"partial_project","permit_id":"D0050999"}}
+{"_id":"D0050999_combo","text":"Rytan TUHSD","metadata":{"type":"company_project","permit_id":"D0050999"}}
+{"_id":"D0050999_addr","text":"391 S 99th Ave Tolleson","metadata":{"type":"address_city","permit_id":"D0050999"}}
+{"_id":"D0062139_id","text":"D0062139","metadata":{"type":"permit_id","permit_id":"D0062139"}}
+{"_id":"D0062139_project","text":"Scottsdale Transfer Station","metadata":{"type":"project_name","permit_id":"D0062139"}}
+{"_id":"D0062139_partial","text":"Scottsdale Transfer","metadata":{"type":"partial_project","permit_id":"D0062139"}}
+{"_id":"D0062139_combo","text":"Cambridge Scottsdale","metadata":{"type":"company_project","permit_id":"D0062139"}}
+{"_id":"D0032061_id","text":"D0032061","metadata":{"type":"permit_id","permit_id":"D0032061"}}
+{"_id":"D0032061_project","text":"Costco  Phoenix Business Center Remodel","metadata":{"type":"project_name","permit_id":"D0032061"}}
+{"_id":"D0032061_partial","text":"Costco Phoenix","metadata":{"type":"partial_project","permit_id":"D0032061"}}
+{"_id":"D0032061_combo","text":"Jackson Costco","metadata":{"type":"company_project","permit_id":"D0032061"}}
+{"_id":"D0032061_addr","text":"3801 N 33rd Ave Phoenix","metadata":{"type":"address_city","permit_id":"D0032061"}}
+{"_id":"D0043882_id","text":"D0043882","metadata":{"type":"permit_id","permit_id":"D0043882"}}
+{"_id":"D0043882_project","text":"ALA West Foothills Improvements","metadata":{"type":"project_name","permit_id":"D0043882"}}
+{"_id":"D0043882_partial","text":"ALA West","metadata":{"type":"partial_project","permit_id":"D0043882"}}
+{"_id":"D0043882_combo","text":"Sandstorm ALA","metadata":{"type":"company_project","permit_id":"D0043882"}}
+{"_id":"D0043882_addr","text":"17608 W Olive Ave Waddell","metadata":{"type":"address_city","permit_id":"D0043882"}}
+{"_id":"D0041452_id","text":"D0041452","metadata":{"type":"permit_id","permit_id":"D0041452"}}
+{"_id":"D0041452_project","text":"Pecos & Hawes","metadata":{"type":"project_name","permit_id":"D0041452"}}
+{"_id":"D0041452_partial","text":"Pecos &","metadata":{"type":"partial_project","permit_id":"D0041452"}}
+{"_id":"D0041452_combo","text":"Alston Pecos","metadata":{"type":"company_project","permit_id":"D0041452"}}
+{"_id":"D0041452_addr","text":"7417 S Hawes Rd Mesa","metadata":{"type":"address_city","permit_id":"D0041452"}}
+{"_id":"D0055669_id","text":"D0055669","metadata":{"type":"permit_id","permit_id":"D0055669"}}
+{"_id":"D0055669_project","text":"Maxway Trucking Facility","metadata":{"type":"project_name","permit_id":"D0055669"}}
+{"_id":"D0055669_partial","text":"Maxway Trucking","metadata":{"type":"partial_project","permit_id":"D0055669"}}
+{"_id":"D0055669_combo","text":"Agate Maxway","metadata":{"type":"company_project","permit_id":"D0055669"}}
+{"_id":"D0055669_addr","text":"5926 W MONROE ST PHOENIX","metadata":{"type":"address_city","permit_id":"D0055669"}}
+{"_id":"D0058384_id","text":"D0058384","metadata":{"type":"permit_id","permit_id":"D0058384"}}
+{"_id":"D0058384_project","text":"Nammo Defense Contractors","metadata":{"type":"project_name","permit_id":"D0058384"}}
+{"_id":"D0058384_partial","text":"Nammo Defense","metadata":{"type":"partial_project","permit_id":"D0058384"}}
+{"_id":"D0058384_combo","text":"Mycon Nammo","metadata":{"type":"company_project","permit_id":"D0058384"}}
+{"_id":"D0058384_addr","text":"4051 N HIGLEY RD MESA","metadata":{"type":"address_city","permit_id":"D0058384"}}
+{"_id":"D0023265_id","text":"D0023265","metadata":{"type":"permit_id","permit_id":"D0023265"}}
+{"_id":"D0023265_project","text":"Cabana on Encanto","metadata":{"type":"project_name","permit_id":"D0023265"}}
+{"_id":"D0023265_partial","text":"Cabana on","metadata":{"type":"partial_project","permit_id":"D0023265"}}
+{"_id":"D0023265_combo","text":"Greenlight Cabana","metadata":{"type":"company_project","permit_id":"D0023265"}}
+{"_id":"D0033779_id","text":"D0033779","metadata":{"type":"permit_id","permit_id":"D0033779"}}
+{"_id":"D0033779_project","text":"Costco Warehouse Queen Creek","metadata":{"type":"project_name","permit_id":"D0033779"}}
+{"_id":"D0033779_partial","text":"Costco Warehouse","metadata":{"type":"partial_project","permit_id":"D0033779"}}
+{"_id":"D0033779_combo","text":"Jackson Costco","metadata":{"type":"company_project","permit_id":"D0033779"}}
+{"_id":"D0034432_id","text":"D0034432","metadata":{"type":"permit_id","permit_id":"D0034432"}}
+{"_id":"D0034432_project","text":"Bryt Adamson","metadata":{"type":"project_name","permit_id":"D0034432"}}
+{"_id":"D0034432_combo","text":"Sodella Bryt","metadata":{"type":"company_project","permit_id":"D0034432"}}
+{"_id":"D0034432_addr","text":"25105 S Ellsworth Rd Queen Creek","metadata":{"type":"address_city","permit_id":"D0034432"}}
+{"_id":"D0051960_id","text":"D0051960","metadata":{"type":"permit_id","permit_id":"D0051960"}}
+{"_id":"D0051960_project","text":"Burlington Canyon Trails","metadata":{"type":"project_name","permit_id":"D0051960"}}
+{"_id":"D0051960_partial","text":"Burlington Canyon","metadata":{"type":"partial_project","permit_id":"D0051960"}}
+{"_id":"D0051960_combo","text":"Bayley Burlington","metadata":{"type":"company_project","permit_id":"D0051960"}}
+{"_id":"D0051960_addr","text":"745 S Cotton Ln Goodyear","metadata":{"type":"address_city","permit_id":"D0051960"}}
+{"_id":"D0045481_id","text":"D0045481","metadata":{"type":"permit_id","permit_id":"D0045481"}}
+{"_id":"D0045481_project","text":"Maricopa County Buckeye Fueling Station and Equip Svcs","metadata":{"type":"project_name","permit_id":"D0045481"}}
+{"_id":"D0045481_partial","text":"Maricopa County","metadata":{"type":"partial_project","permit_id":"D0045481"}}
+{"_id":"D0045481_combo","text":"FCI Maricopa","metadata":{"type":"company_project","permit_id":"D0045481"}}
+{"_id":"D0041258_id","text":"D0041258","metadata":{"type":"permit_id","permit_id":"D0041258"}}
+{"_id":"D0041258_project","text":"North Copper Canyon","metadata":{"type":"project_name","permit_id":"D0041258"}}
+{"_id":"D0041258_partial","text":"North Copper","metadata":{"type":"partial_project","permit_id":"D0041258"}}
+{"_id":"D0041258_combo","text":"Century North","metadata":{"type":"company_project","permit_id":"D0041258"}}
+{"_id":"D0031904_id","text":"D0031904","metadata":{"type":"permit_id","permit_id":"D0031904"}}
+{"_id":"D0031904_project","text":"Tempe ll","metadata":{"type":"project_name","permit_id":"D0031904"}}
+{"_id":"D0031904_combo","text":"Streetlights Tempe","metadata":{"type":"company_project","permit_id":"D0031904"}}
+{"_id":"D0048601_id","text":"D0048601","metadata":{"type":"permit_id","permit_id":"D0048601"}}
+{"_id":"D0048601_project","text":"Winco Foods #130","metadata":{"type":"project_name","permit_id":"D0048601"}}
+{"_id":"D0048601_partial","text":"Winco Foods","metadata":{"type":"partial_project","permit_id":"D0048601"}}
+{"_id":"D0048601_combo","text":"Eleven Winco","metadata":{"type":"company_project","permit_id":"D0048601"}}
+{"_id":"D0048601_addr","text":"1452 N Pebble Creek Pkwy Goodyear","metadata":{"type":"address_city","permit_id":"D0048601"}}
+{"_id":"D0048540_id","text":"D0048540","metadata":{"type":"permit_id","permit_id":"D0048540"}}
+{"_id":"D0048540_project","text":"Ulta at Canyon Trails","metadata":{"type":"project_name","permit_id":"D0048540"}}
+{"_id":"D0048540_partial","text":"Ulta at","metadata":{"type":"partial_project","permit_id":"D0048540"}}
+{"_id":"D0048540_combo","text":"Bayley Ulta","metadata":{"type":"company_project","permit_id":"D0048540"}}
+{"_id":"D0048540_addr","text":"625 S Cotton Ln Goodyear","metadata":{"type":"address_city","permit_id":"D0048540"}}
+{"_id":"D0002198_id","text":"D0002198","metadata":{"type":"permit_id","permit_id":"D0002198"}}
+{"_id":"D0002198_project","text":"7800 E OLD PRICE RD","metadata":{"type":"project_name","permit_id":"D0002198"}}
+{"_id":"D0002198_partial","text":"7800 E","metadata":{"type":"partial_project","permit_id":"D0002198"}}
+{"_id":"D0002198_combo","text":"Sundt 7800","metadata":{"type":"company_project","permit_id":"D0002198"}}
+{"_id":"D0002198_addr","text":"22841 N Cave Creek Rd Phoenix","metadata":{"type":"address_city","permit_id":"D0002198"}}
+{"_id":"D0051333_id","text":"D0051333","metadata":{"type":"permit_id","permit_id":"D0051333"}}
+{"_id":"D0051333_project","text":"Japanese Auto Pros","metadata":{"type":"project_name","permit_id":"D0051333"}}
+{"_id":"D0051333_partial","text":"Japanese Auto","metadata":{"type":"partial_project","permit_id":"D0051333"}}
+{"_id":"D0051333_combo","text":"CKZ Japanese","metadata":{"type":"company_project","permit_id":"D0051333"}}
+{"_id":"D0018701_id","text":"D0018701","metadata":{"type":"permit_id","permit_id":"D0018701"}}
+{"_id":"D0018701_project","text":"5777 E MAYO BLVD","metadata":{"type":"project_name","permit_id":"D0018701"}}
+{"_id":"D0018701_partial","text":"5777 E","metadata":{"type":"partial_project","permit_id":"D0018701"}}
+{"_id":"D0018701_combo","text":"McCarthy 5777","metadata":{"type":"company_project","permit_id":"D0018701"}}
+{"_id":"D0018701_addr","text":"5811 E Mayo Blvd Phoenix","metadata":{"type":"address_city","permit_id":"D0018701"}}
+{"_id":"D0046568_id","text":"D0046568","metadata":{"type":"permit_id","permit_id":"D0046568"}}
+{"_id":"D0046568_project","text":"MS1A Centurion","metadata":{"type":"project_name","permit_id":"D0046568"}}
+{"_id":"D0046568_combo","text":"JE MS1A","metadata":{"type":"company_project","permit_id":"D0046568"}}
+{"_id":"D0051870_id","text":"D0051870","metadata":{"type":"permit_id","permit_id":"D0051870"}}
+{"_id":"D0051870_project","text":"DPX7 - EV2 Electric Vehicle Charger","metadata":{"type":"project_name","permit_id":"D0051870"}}
+{"_id":"D0051870_partial","text":"DPX7 -","metadata":{"type":"partial_project","permit_id":"D0051870"}}
+{"_id":"D0051870_combo","text":"K2 DPX7","metadata":{"type":"company_project","permit_id":"D0051870"}}
+{"_id":"D0050084_id","text":"D0050084","metadata":{"type":"permit_id","permit_id":"D0050084"}}
+{"_id":"D0050084_project","text":"925 - Northwest Wastewater","metadata":{"type":"project_name","permit_id":"D0050084"}}
+{"_id":"D0050084_partial","text":"925 -","metadata":{"type":"partial_project","permit_id":"D0050084"}}
+{"_id":"D0050084_combo","text":"Redpoint 925","metadata":{"type":"company_project","permit_id":"D0050084"}}
+{"_id":"D0027988_id","text":"D0027988","metadata":{"type":"permit_id","permit_id":"D0027988"}}
+{"_id":"D0027988_project","text":"Falls at Crismon Commons","metadata":{"type":"project_name","permit_id":"D0027988"}}
+{"_id":"D0027988_partial","text":"Falls at","metadata":{"type":"partial_project","permit_id":"D0027988"}}
+{"_id":"D0027988_combo","text":"Overland Falls","metadata":{"type":"company_project","permit_id":"D0027988"}}
+{"_id":"D0023322_id","text":"D0023322","metadata":{"type":"permit_id","permit_id":"D0023322"}}
+{"_id":"D0023322_project","text":"7th Avenue Mass Grading","metadata":{"type":"project_name","permit_id":"D0023322"}}
+{"_id":"D0023322_partial","text":"7th Avenue","metadata":{"type":"partial_project","permit_id":"D0023322"}}
+{"_id":"D0023322_combo","text":"Stevens 7th","metadata":{"type":"company_project","permit_id":"D0023322"}}
+{"_id":"D0023322_addr","text":"302 W Elwood St Phoenix","metadata":{"type":"address_city","permit_id":"D0023322"}}
+{"_id":"D0019527_id","text":"D0019527","metadata":{"type":"permit_id","permit_id":"D0019527"}}
+{"_id":"D0019527_project","text":"18214 W SOLANO CT","metadata":{"type":"project_name","permit_id":"D0019527"}}
+{"_id":"D0019527_partial","text":"18214 W","metadata":{"type":"partial_project","permit_id":"D0019527"}}
+{"_id":"D0019527_combo","text":"Chasse 18214","metadata":{"type":"company_project","permit_id":"D0019527"}}
+{"_id":"D0061391_id","text":"D0061391","metadata":{"type":"permit_id","permit_id":"D0061391"}}
+{"_id":"D0061391_project","text":"The Flats at Ballpark Village","metadata":{"type":"project_name","permit_id":"D0061391"}}
+{"_id":"D0061391_partial","text":"The Flats","metadata":{"type":"partial_project","permit_id":"D0061391"}}
+{"_id":"D0061391_combo","text":"Catamount The","metadata":{"type":"company_project","permit_id":"D0061391"}}
+{"_id":"D0043025_id","text":"D0043025","metadata":{"type":"permit_id","permit_id":"D0043025"}}
+{"_id":"D0043025_project","text":"Acero Hawes 2","metadata":{"type":"project_name","permit_id":"D0043025"}}
+{"_id":"D0043025_partial","text":"Acero Hawes","metadata":{"type":"partial_project","permit_id":"D0043025"}}
+{"_id":"D0043025_combo","text":"IDM Acero","metadata":{"type":"company_project","permit_id":"D0043025"}}
+{"_id":"D0046705_id","text":"D0046705","metadata":{"type":"permit_id","permit_id":"D0046705"}}
+{"_id":"D0046705_project","text":"Queen Creek Commons","metadata":{"type":"project_name","permit_id":"D0046705"}}
+{"_id":"D0046705_partial","text":"Queen Creek","metadata":{"type":"partial_project","permit_id":"D0046705"}}
+{"_id":"D0046705_combo","text":"Sodella Queen","metadata":{"type":"company_project","permit_id":"D0046705"}}
+{"_id":"D0046705_addr","text":"25105 S Ellsworth Rd Queen Creek","metadata":{"type":"address_city","permit_id":"D0046705"}}
+{"_id":"D0054223_id","text":"D0054223","metadata":{"type":"permit_id","permit_id":"D0054223"}}
+{"_id":"D0054223_project","text":"Pencco","metadata":{"type":"project_name","permit_id":"D0054223"}}
+{"_id":"D0054223_combo","text":"Pegasus Pencco","metadata":{"type":"company_project","permit_id":"D0054223"}}
+{"_id":"D0054223_addr","text":"5103 N 51ST AVE GLENDALE","metadata":{"type":"address_city","permit_id":"D0054223"}}
+{"_id":"D0018988_id","text":"D0018988","metadata":{"type":"permit_id","permit_id":"D0018988"}}
+{"_id":"D0018988_project","text":"24602 N 97TH AVE","metadata":{"type":"project_name","permit_id":"D0018988"}}
+{"_id":"D0018988_partial","text":"24602 N","metadata":{"type":"partial_project","permit_id":"D0018988"}}
+{"_id":"D0018988_combo","text":"Thompson 24602","metadata":{"type":"company_project","permit_id":"D0018988"}}
+{"_id":"D0032112_id","text":"D0032112","metadata":{"type":"permit_id","permit_id":"D0032112"}}
+{"_id":"D0032112_project","text":"Nestle Dynasty Project","metadata":{"type":"project_name","permit_id":"D0032112"}}
+{"_id":"D0032112_partial","text":"Nestle Dynasty","metadata":{"type":"partial_project","permit_id":"D0032112"}}
+{"_id":"D0032112_combo","text":"Oscar Nestle","metadata":{"type":"company_project","permit_id":"D0032112"}}
+{"_id":"D0029650_id","text":"D0029650","metadata":{"type":"permit_id","permit_id":"D0029650"}}
+{"_id":"D0029650_project","text":"PV303 W-ll Phase 2-Cotton Lane Offsite","metadata":{"type":"project_name","permit_id":"D0029650"}}
+{"_id":"D0029650_partial","text":"PV303 W-ll","metadata":{"type":"partial_project","permit_id":"D0029650"}}
+{"_id":"D0029650_combo","text":"Stevens PV303","metadata":{"type":"company_project","permit_id":"D0029650"}}
+{"_id":"D0042534_id","text":"D0042534","metadata":{"type":"permit_id","permit_id":"D0042534"}}
+{"_id":"D0042534_project","text":"Elwood Logistics - Additional Parking","metadata":{"type":"project_name","permit_id":"D0042534"}}
+{"_id":"D0042534_partial","text":"Elwood Logistics","metadata":{"type":"partial_project","permit_id":"D0042534"}}
+{"_id":"D0042534_combo","text":"FCL Elwood","metadata":{"type":"company_project","permit_id":"D0042534"}}
+{"_id":"D0042534_addr","text":"15836 W EDDIE ALBERT Goodyear","metadata":{"type":"address_city","permit_id":"D0042534"}}
+{"_id":"D0057870_id","text":"D0057870","metadata":{"type":"permit_id","permit_id":"D0057870"}}
+{"_id":"D0057870_project","text":"Azola Desert Ridge","metadata":{"type":"project_name","permit_id":"D0057870"}}
+{"_id":"D0057870_partial","text":"Azola Desert","metadata":{"type":"partial_project","permit_id":"D0057870"}}
+{"_id":"D0057870_combo","text":"CSI Azola","metadata":{"type":"company_project","permit_id":"D0057870"}}
+{"_id":"D0057870_addr","text":"20400 N 56TH ST PHOENIX","metadata":{"type":"address_city","permit_id":"D0057870"}}
+{"_id":"D0053592_id","text":"D0053592","metadata":{"type":"permit_id","permit_id":"D0053592"}}
+{"_id":"D0053592_project","text":"Album Active Adult","metadata":{"type":"project_name","permit_id":"D0053592"}}
+{"_id":"D0053592_partial","text":"Album Active","metadata":{"type":"partial_project","permit_id":"D0053592"}}
+{"_id":"D0053592_combo","text":"GS Album","metadata":{"type":"company_project","permit_id":"D0053592"}}
+{"_id":"D0046861_id","text":"D0046861","metadata":{"type":"permit_id","permit_id":"D0046861"}}
+{"_id":"D0046861_project","text":"PHX02","metadata":{"type":"project_name","permit_id":"D0046861"}}
+{"_id":"D0046861_combo","text":"Holder PHX02","metadata":{"type":"company_project","permit_id":"D0046861"}}
+{"_id":"D0018698_id","text":"D0018698","metadata":{"type":"permit_id","permit_id":"D0018698"}}
+{"_id":"D0018698_project","text":"3701 E SKY HARBOR BLVD","metadata":{"type":"project_name","permit_id":"D0018698"}}
+{"_id":"D0018698_partial","text":"3701 E","metadata":{"type":"partial_project","permit_id":"D0018698"}}
+{"_id":"D0018698_combo","text":"McCarthy 3701","metadata":{"type":"company_project","permit_id":"D0018698"}}
+{"_id":"D0018698_addr","text":"3701 E Sky Harbor Blvd Phoenix","metadata":{"type":"address_city","permit_id":"D0018698"}}
+{"_id":"D0041460_id","text":"D0041460","metadata":{"type":"permit_id","permit_id":"D0041460"}}
+{"_id":"D0041460_project","text":"Hazelwood","metadata":{"type":"project_name","permit_id":"D0041460"}}
+{"_id":"D0041460_combo","text":"Diamond Hazelwood","metadata":{"type":"company_project","permit_id":"D0041460"}}
+{"_id":"D0041460_addr","text":"848 W HAZELWOOD ST Phoenix","metadata":{"type":"address_city","permit_id":"D0041460"}}
+{"_id":"D0036161_id","text":"D0036161","metadata":{"type":"permit_id","permit_id":"D0036161"}}
+{"_id":"D0036161_project","text":"Elliot 94/METP","metadata":{"type":"project_name","permit_id":"D0036161"}}
+{"_id":"D0036161_combo","text":"Nitti Elliot","metadata":{"type":"company_project","permit_id":"D0036161"}}
+{"_id":"D0036161_addr","text":"3524 S 94th Pl Mesa","metadata":{"type":"address_city","permit_id":"D0036161"}}
+{"_id":"D0027414_id","text":"D0027414","metadata":{"type":"permit_id","permit_id":"D0027414"}}
+{"_id":"D0027414_project","text":"Ala West Foothills Campus","metadata":{"type":"project_name","permit_id":"D0027414"}}
+{"_id":"D0027414_partial","text":"Ala West","metadata":{"type":"partial_project","permit_id":"D0027414"}}
+{"_id":"D0027414_combo","text":"Sandstorm Ala","metadata":{"type":"company_project","permit_id":"D0027414"}}
+{"_id":"D0027375_id","text":"D0027375","metadata":{"type":"permit_id","permit_id":"D0027375"}}
+{"_id":"D0027375_project","text":"HIGLEY BARNS","metadata":{"type":"project_name","permit_id":"D0027375"}}
+{"_id":"D0027375_combo","text":"Caliente HIGLEY","metadata":{"type":"company_project","permit_id":"D0027375"}}
+{"_id":"D0040726_id","text":"D0040726","metadata":{"type":"permit_id","permit_id":"D0040726"}}
+{"_id":"D0040726_project","text":"Summit Business Park - Lot 9","metadata":{"type":"project_name","permit_id":"D0040726"}}
+{"_id":"D0040726_partial","text":"Summit Business","metadata":{"type":"partial_project","permit_id":"D0040726"}}
+{"_id":"D0040726_combo","text":"Nitti Summit","metadata":{"type":"company_project","permit_id":"D0040726"}}
+{"_id":"D0054991_id","text":"D0054991","metadata":{"type":"permit_id","permit_id":"D0054991"}}
+{"_id":"D0054991_project","text":"Joe Foss Shooting Range","metadata":{"type":"project_name","permit_id":"D0054991"}}
+{"_id":"D0054991_partial","text":"Joe Foss","metadata":{"type":"partial_project","permit_id":"D0054991"}}
+{"_id":"D0054991_combo","text":"Metals Joe","metadata":{"type":"company_project","permit_id":"D0054991"}}
+{"_id":"D0054991_addr","text":"26700 W BUCKEYE HILLS DR BUCKEYE","metadata":{"type":"address_city","permit_id":"D0054991"}}
+{"_id":"D0032789_id","text":"D0032789","metadata":{"type":"permit_id","permit_id":"D0032789"}}
+{"_id":"D0032789_project","text":"SRP Sidewinder Substation","metadata":{"type":"project_name","permit_id":"D0032789"}}
+{"_id":"D0032789_partial","text":"SRP Sidewinder","metadata":{"type":"partial_project","permit_id":"D0032789"}}
+{"_id":"D0032789_combo","text":"Reinhausen SRP","metadata":{"type":"company_project","permit_id":"D0032789"}}
+{"_id":"D0045519_id","text":"D0045519","metadata":{"type":"permit_id","permit_id":"D0045519"}}
+{"_id":"D0045519_project","text":"Hopewell PG 202 PH1&PH2","metadata":{"type":"project_name","permit_id":"D0045519"}}
+{"_id":"D0045519_partial","text":"Hopewell PG","metadata":{"type":"partial_project","permit_id":"D0045519"}}
+{"_id":"D0045519_combo","text":"FCL Hopewell","metadata":{"type":"company_project","permit_id":"D0045519"}}
+{"_id":"D0046464_id","text":"D0046464","metadata":{"type":"permit_id","permit_id":"D0046464"}}
+{"_id":"D0046464_project","text":"MIP Site A","metadata":{"type":"project_name","permit_id":"D0046464"}}
+{"_id":"D0046464_partial","text":"MIP Site","metadata":{"type":"partial_project","permit_id":"D0046464"}}
+{"_id":"D0046464_combo","text":"W MIP","metadata":{"type":"company_project","permit_id":"D0046464"}}
+{"_id":"D0019066_id","text":"D0019066","metadata":{"type":"permit_id","permit_id":"D0019066"}}
+{"_id":"D0019066_project","text":"6151 S POWER RD","metadata":{"type":"project_name","permit_id":"D0019066"}}
+{"_id":"D0019066_partial","text":"6151 S","metadata":{"type":"partial_project","permit_id":"D0019066"}}
+{"_id":"D0019066_combo","text":"Bleuwave 6151","metadata":{"type":"company_project","permit_id":"D0019066"}}
+{"_id":"D0048602_id","text":"D0048602","metadata":{"type":"permit_id","permit_id":"D0048602"}}
+{"_id":"D0048602_project","text":"Kia Phoenix Remodel","metadata":{"type":"project_name","permit_id":"D0048602"}}
+{"_id":"D0048602_partial","text":"Kia Phoenix","metadata":{"type":"partial_project","permit_id":"D0048602"}}
+{"_id":"D0048602_combo","text":"United Kia","metadata":{"type":"company_project","permit_id":"D0048602"}}
+{"_id":"D0048602_addr","text":"2141 E Bell Rd Phoenix","metadata":{"type":"address_city","permit_id":"D0048602"}}
+{"_id":"D0024281_id","text":"D0024281","metadata":{"type":"permit_id","permit_id":"D0024281"}}
+{"_id":"D0024281_project","text":"Zanjero 2","metadata":{"type":"project_name","permit_id":"D0024281"}}
+{"_id":"D0024281_combo","text":"Fore Zanjero","metadata":{"type":"company_project","permit_id":"D0024281"}}
+{"_id":"D0007216_id","text":"D0007216","metadata":{"type":"permit_id","permit_id":"D0007216"}}
+{"_id":"D0007216_project","text":"6290 N SARIVAL RD","metadata":{"type":"project_name","permit_id":"D0007216"}}
+{"_id":"D0007216_partial","text":"6290 N","metadata":{"type":"partial_project","permit_id":"D0007216"}}
+{"_id":"D0007216_combo","text":"Nitti 6290","metadata":{"type":"company_project","permit_id":"D0007216"}}
+{"_id":"D0021133_id","text":"D0021133","metadata":{"type":"permit_id","permit_id":"D0021133"}}
+{"_id":"D0021133_project","text":"NEC OF 107TH AVE & W PIERCE ST","metadata":{"type":"project_name","permit_id":"D0021133"}}
+{"_id":"D0021133_partial","text":"NEC OF","metadata":{"type":"partial_project","permit_id":"D0021133"}}
+{"_id":"D0021133_combo","text":"Nitti NEC","metadata":{"type":"company_project","permit_id":"D0021133"}}
+{"_id":"D0004108_id","text":"D0004108","metadata":{"type":"permit_id","permit_id":"D0004108"}}
+{"_id":"D0004108_project","text":"6202 N 24TH ST","metadata":{"type":"project_name","permit_id":"D0004108"}}
+{"_id":"D0004108_partial","text":"6202 N","metadata":{"type":"partial_project","permit_id":"D0004108"}}
+{"_id":"D0004108_combo","text":"FCL 6202","metadata":{"type":"company_project","permit_id":"D0004108"}}
+{"_id":"D0004108_addr","text":"16155 W Elwood St Goodyear","metadata":{"type":"address_city","permit_id":"D0004108"}}
+{"_id":"D0037740_id","text":"D0037740","metadata":{"type":"permit_id","permit_id":"D0037740"}}
+{"_id":"D0037740_project","text":"Marciopa County Buckeye Fueling Station and Equip Svcs","metadata":{"type":"project_name","permit_id":"D0037740"}}
+{"_id":"D0037740_partial","text":"Marciopa County","metadata":{"type":"partial_project","permit_id":"D0037740"}}
+{"_id":"D0037740_combo","text":"FCI Marciopa","metadata":{"type":"company_project","permit_id":"D0037740"}}
+{"_id":"D0051378_id","text":"D0051378","metadata":{"type":"permit_id","permit_id":"D0051378"}}
+{"_id":"D0051378_project","text":"Saddle Creek Logistics","metadata":{"type":"project_name","permit_id":"D0051378"}}
+{"_id":"D0051378_partial","text":"Saddle Creek","metadata":{"type":"partial_project","permit_id":"D0051378"}}
+{"_id":"D0051378_combo","text":"Bjerk Saddle","metadata":{"type":"company_project","permit_id":"D0051378"}}
+{"_id":"D0051378_addr","text":"7151 N Reems Rd Glendale","metadata":{"type":"address_city","permit_id":"D0051378"}}
+{"_id":"D0046407_id","text":"D0046407","metadata":{"type":"permit_id","permit_id":"D0046407"}}
+{"_id":"D0046407_project","text":"Bell Bank - Gilbert","metadata":{"type":"project_name","permit_id":"D0046407"}}
+{"_id":"D0046407_partial","text":"Bell Bank","metadata":{"type":"partial_project","permit_id":"D0046407"}}
+{"_id":"D0046407_combo","text":"M Bell","metadata":{"type":"company_project","permit_id":"D0046407"}}
+{"_id":"D0046407_addr","text":"3745 S Val Vista Dr Gilbert","metadata":{"type":"address_city","permit_id":"D0046407"}}
+{"_id":"D0039089_id","text":"D0039089","metadata":{"type":"permit_id","permit_id":"D0039089"}}
+{"_id":"D0039089_project","text":"Nestle Dynasty Project","metadata":{"type":"project_name","permit_id":"D0039089"}}
+{"_id":"D0039089_partial","text":"Nestle Dynasty","metadata":{"type":"partial_project","permit_id":"D0039089"}}
+{"_id":"D0039089_combo","text":"Oscar Nestle","metadata":{"type":"company_project","permit_id":"D0039089"}}
+{"_id":"D0049439_id","text":"D0049439","metadata":{"type":"permit_id","permit_id":"D0049439"}}
+{"_id":"D0049439_project","text":"SRP EVS Apprentice Training Center","metadata":{"type":"project_name","permit_id":"D0049439"}}
+{"_id":"D0049439_partial","text":"SRP EVS","metadata":{"type":"partial_project","permit_id":"D0049439"}}
+{"_id":"D0049439_combo","text":"SDB SRP","metadata":{"type":"company_project","permit_id":"D0049439"}}
+{"_id":"D0049439_addr","text":"7115 E Adobe St Mesa","metadata":{"type":"address_city","permit_id":"D0049439"}}
+{"_id":"D0057665_id","text":"D0057665","metadata":{"type":"permit_id","permit_id":"D0057665"}}
+{"_id":"D0057665_project","text":"AFCU - Glendale","metadata":{"type":"project_name","permit_id":"D0057665"}}
+{"_id":"D0057665_partial","text":"AFCU -","metadata":{"type":"partial_project","permit_id":"D0057665"}}
+{"_id":"D0057665_combo","text":"Bleuwave AFCU","metadata":{"type":"company_project","permit_id":"D0057665"}}
+{"_id":"D0032547_id","text":"D0032547","metadata":{"type":"permit_id","permit_id":"D0032547"}}
+{"_id":"D0032547_project","text":"Rice Phx BSE Canopy","metadata":{"type":"project_name","permit_id":"D0032547"}}
+{"_id":"D0032547_partial","text":"Rice Phx","metadata":{"type":"partial_project","permit_id":"D0032547"}}
+{"_id":"D0032547_combo","text":"Fleming Rice","metadata":{"type":"company_project","permit_id":"D0032547"}}
+{"_id":"D0032547_addr","text":"424 S 56th St Phoenix","metadata":{"type":"address_city","permit_id":"D0032547"}}
+{"_id":"D0025674_id","text":"D0025674","metadata":{"type":"permit_id","permit_id":"D0025674"}}
+{"_id":"D0025674_project","text":"Royal Oaks Campus Expansion","metadata":{"type":"project_name","permit_id":"D0025674"}}
+{"_id":"D0025674_partial","text":"Royal Oaks","metadata":{"type":"partial_project","permit_id":"D0025674"}}
+{"_id":"D0025674_combo","text":"Sundt Royal","metadata":{"type":"company_project","permit_id":"D0025674"}}
+{"_id":"D0025674_addr","text":"10222 W Santa Fe Dr Sun City","metadata":{"type":"address_city","permit_id":"D0025674"}}
+{"_id":"D0042103_id","text":"D0042103","metadata":{"type":"permit_id","permit_id":"D0042103"}}
+{"_id":"D0042103_project","text":"ACA CIP Avondale Community Center Ph 2 TI","metadata":{"type":"project_name","permit_id":"D0042103"}}
+{"_id":"D0042103_partial","text":"ACA CIP","metadata":{"type":"partial_project","permit_id":"D0042103"}}
+{"_id":"D0042103_combo","text":"Brycon ACA","metadata":{"type":"company_project","permit_id":"D0042103"}}
+{"_id":"D0042103_addr","text":"1007 S 3rd St Avondale","metadata":{"type":"address_city","permit_id":"D0042103"}}
+{"_id":"D0064828_id","text":"D0064828","metadata":{"type":"permit_id","permit_id":"D0064828"}}
+{"_id":"D0064828_project","text":"Sunaire","metadata":{"type":"project_name","permit_id":"D0064828"}}
+{"_id":"D0064828_combo","text":"Blackhawk Sunaire","metadata":{"type":"company_project","permit_id":"D0064828"}}
+{"_id":"D0064828_addr","text":"6733 E APACHE TRL MESA","metadata":{"type":"address_city","permit_id":"D0064828"}}
+{"_id":"D0052114_id","text":"D0052114","metadata":{"type":"permit_id","permit_id":"D0052114"}}
+{"_id":"D0052114_project","text":"Peoria Place Lot 7","metadata":{"type":"project_name","permit_id":"D0052114"}}
+{"_id":"D0052114_partial","text":"Peoria Place","metadata":{"type":"partial_project","permit_id":"D0052114"}}
+{"_id":"D0052114_combo","text":"GS Peoria","metadata":{"type":"company_project","permit_id":"D0052114"}}
+{"_id":"D0041547_id","text":"D0041547","metadata":{"type":"permit_id","permit_id":"D0041547"}}
+{"_id":"D0041547_project","text":"Oasis Behavioral Health","metadata":{"type":"project_name","permit_id":"D0041547"}}
+{"_id":"D0041547_partial","text":"Oasis Behavioral","metadata":{"type":"partial_project","permit_id":"D0041547"}}
+{"_id":"D0041547_combo","text":"Adolfson Oasis","metadata":{"type":"company_project","permit_id":"D0041547"}}
+{"_id":"D0041547_addr","text":"2190 N Grace Blvd Chandler","metadata":{"type":"address_city","permit_id":"D0041547"}}
+{"_id":"D0044222_id","text":"D0044222","metadata":{"type":"permit_id","permit_id":"D0044222"}}
+{"_id":"D0044222_project","text":"The Crack Shack","metadata":{"type":"project_name","permit_id":"D0044222"}}
+{"_id":"D0044222_partial","text":"The Crack","metadata":{"type":"partial_project","permit_id":"D0044222"}}
+{"_id":"D0044222_combo","text":"Embree The","metadata":{"type":"company_project","permit_id":"D0044222"}}
+{"_id":"D0044222_addr","text":"1902 E Camelback Rd Phoenix","metadata":{"type":"address_city","permit_id":"D0044222"}}
+{"_id":"D0045802_id","text":"D0045802","metadata":{"type":"permit_id","permit_id":"D0045802"}}
+{"_id":"D0045802_project","text":"Estrella Spring at Canyon Trails","metadata":{"type":"project_name","permit_id":"D0045802"}}
+{"_id":"D0045802_partial","text":"Estrella Spring","metadata":{"type":"partial_project","permit_id":"D0045802"}}
+{"_id":"D0045802_combo","text":"Weis Estrella","metadata":{"type":"company_project","permit_id":"D0045802"}}
+{"_id":"D0041697_id","text":"D0041697","metadata":{"type":"permit_id","permit_id":"D0041697"}}
+{"_id":"D0041697_project","text":"Dunkin - Arizona Avenue","metadata":{"type":"project_name","permit_id":"D0041697"}}
+{"_id":"D0041697_partial","text":"Dunkin -","metadata":{"type":"partial_project","permit_id":"D0041697"}}
+{"_id":"D0041697_combo","text":"Mitchell Dunkin","metadata":{"type":"company_project","permit_id":"D0041697"}}
+{"_id":"D0041697_addr","text":"3333 S Arizona Ave Chandler","metadata":{"type":"address_city","permit_id":"D0041697"}}
+{"_id":"D0060961_id","text":"D0060961","metadata":{"type":"permit_id","permit_id":"D0060961"}}
+{"_id":"D0060961_project","text":"Goodyear Self Storage","metadata":{"type":"project_name","permit_id":"D0060961"}}
+{"_id":"D0060961_partial","text":"Goodyear Self","metadata":{"type":"partial_project","permit_id":"D0060961"}}
+{"_id":"D0060961_combo","text":"Atlas Goodyear","metadata":{"type":"company_project","permit_id":"D0060961"}}
+{"_id":"D0038910_id","text":"D0038910","metadata":{"type":"permit_id","permit_id":"D0038910"}}
+{"_id":"D0038910_project","text":"Callan Johnson","metadata":{"type":"project_name","permit_id":"D0038910"}}
+{"_id":"D0038910_combo","text":"Madewell Callan","metadata":{"type":"company_project","permit_id":"D0038910"}}
+{"_id":"D0002321_id","text":"D0002321","metadata":{"type":"permit_id","permit_id":"D0002321"}}
+{"_id":"D0002321_project","text":"7191 E ASHLER HILLS DR","metadata":{"type":"project_name","permit_id":"D0002321"}}
+{"_id":"D0002321_partial","text":"7191 E","metadata":{"type":"partial_project","permit_id":"D0002321"}}
+{"_id":"D0002321_combo","text":"Adolfson 7191","metadata":{"type":"company_project","permit_id":"D0002321"}}
+{"_id":"D0002321_addr","text":"7191 E Ashler Hills Dr Scottsdale","metadata":{"type":"address_city","permit_id":"D0002321"}}
+{"_id":"D0053340_id","text":"D0053340","metadata":{"type":"permit_id","permit_id":"D0053340"}}
+{"_id":"D0053340_project","text":"Hawaiian Brothers","metadata":{"type":"project_name","permit_id":"D0053340"}}
+{"_id":"D0053340_combo","text":"41 Hawaiian","metadata":{"type":"company_project","permit_id":"D0053340"}}
+{"_id":"D0053340_addr","text":"8970 E SHEA BLVD SCOTTSDALE","metadata":{"type":"address_city","permit_id":"D0053340"}}
+{"_id":"D0022872_id","text":"D0022872","metadata":{"type":"permit_id","permit_id":"D0022872"}}
+{"_id":"D0022872_project","text":"Project Andele","metadata":{"type":"project_name","permit_id":"D0022872"}}
+{"_id":"D0022872_combo","text":"Layton Project","metadata":{"type":"company_project","permit_id":"D0022872"}}
+{"_id":"D0022872_addr","text":"140 W Pinnacle Peak Rd Phoenix","metadata":{"type":"address_city","permit_id":"D0022872"}}
+{"_id":"D0041273_id","text":"D0041273","metadata":{"type":"permit_id","permit_id":"D0041273"}}
+{"_id":"D0041273_project","text":"Maryland @ 49th Apartments","metadata":{"type":"project_name","permit_id":"D0041273"}}
+{"_id":"D0041273_partial","text":"Maryland @","metadata":{"type":"partial_project","permit_id":"D0041273"}}
+{"_id":"D0041273_combo","text":"US Maryland","metadata":{"type":"company_project","permit_id":"D0041273"}}
+{"_id":"D0041273_addr","text":"6550 N 47th Ave Glendale","metadata":{"type":"address_city","permit_id":"D0041273"}}
+{"_id":"D0041022_id","text":"D0041022","metadata":{"type":"permit_id","permit_id":"D0041022"}}
+{"_id":"D0041022_project","text":"First & Farmer 206","metadata":{"type":"project_name","permit_id":"D0041022"}}
+{"_id":"D0041022_partial","text":"First &","metadata":{"type":"partial_project","permit_id":"D0041022"}}
+{"_id":"D0041022_combo","text":"Adolfson First","metadata":{"type":"company_project","permit_id":"D0041022"}}
+{"_id":"D0041022_addr","text":"204 S Farmer Ave Tempe","metadata":{"type":"address_city","permit_id":"D0041022"}}
+{"_id":"D0050335_id","text":"D0050335","metadata":{"type":"permit_id","permit_id":"D0050335"}}
+{"_id":"D0050335_project","text":"Town of Queen Creek Public Safety Support Services","metadata":{"type":"project_name","permit_id":"D0050335"}}
+{"_id":"D0050335_partial","text":"Town of","metadata":{"type":"partial_project","permit_id":"D0050335"}}
+{"_id":"D0050335_combo","text":"FCI Town","metadata":{"type":"company_project","permit_id":"D0050335"}}
+{"_id":"D0050335_addr","text":"22050 E Queen Creek Rd Queen Creek","metadata":{"type":"address_city","permit_id":"D0050335"}}
+{"_id":"D0047684_id","text":"D0047684","metadata":{"type":"permit_id","permit_id":"D0047684"}}
+{"_id":"D0047684_project","text":"Truck Parking Facility","metadata":{"type":"project_name","permit_id":"D0047684"}}
+{"_id":"D0047684_partial","text":"Truck Parking","metadata":{"type":"partial_project","permit_id":"D0047684"}}
+{"_id":"D0047684_combo","text":"Agate Truck","metadata":{"type":"company_project","permit_id":"D0047684"}}
+{"_id":"D0053103_id","text":"D0053103","metadata":{"type":"permit_id","permit_id":"D0053103"}}
+{"_id":"D0053103_project","text":"Revolve Ballpark Village","metadata":{"type":"project_name","permit_id":"D0053103"}}
+{"_id":"D0053103_partial","text":"Revolve Ballpark","metadata":{"type":"partial_project","permit_id":"D0053103"}}
+{"_id":"D0053103_combo","text":"Sub4 Revolve","metadata":{"type":"company_project","permit_id":"D0053103"}}
+{"_id":"D0044595_id","text":"D0044595","metadata":{"type":"permit_id","permit_id":"D0044595"}}
+{"_id":"D0044595_project","text":"Prasada North","metadata":{"type":"project_name","permit_id":"D0044595"}}
+{"_id":"D0044595_combo","text":"The Prasada","metadata":{"type":"company_project","permit_id":"D0044595"}}
+{"_id":"D0034228_id","text":"D0034228","metadata":{"type":"permit_id","permit_id":"D0034228"}}
+{"_id":"D0034228_project","text":"Alta Verde at Cooley Station","metadata":{"type":"project_name","permit_id":"D0034228"}}
+{"_id":"D0034228_partial","text":"Alta Verde","metadata":{"type":"partial_project","permit_id":"D0034228"}}
+{"_id":"D0034228_combo","text":"WP Alta","metadata":{"type":"company_project","permit_id":"D0034228"}}
+{"_id":"D0034228_addr","text":"2550 S Recker Rd Gilbert","metadata":{"type":"address_city","permit_id":"D0034228"}}
+{"_id":"D0033593_id","text":"D0033593","metadata":{"type":"permit_id","permit_id":"D0033593"}}
+{"_id":"D0033593_project","text":"North Copper Canyon Parcels 2.4, 3, and 4.1","metadata":{"type":"project_name","permit_id":"D0033593"}}
+{"_id":"D0033593_partial","text":"North Copper","metadata":{"type":"partial_project","permit_id":"D0033593"}}
+{"_id":"D0033593_combo","text":"Century North","metadata":{"type":"company_project","permit_id":"D0033593"}}
+{"_id":"D0047555_id","text":"D0047555","metadata":{"type":"permit_id","permit_id":"D0047555"}}
+{"_id":"D0047555_project","text":"Rockpoint Church Phase 4A","metadata":{"type":"project_name","permit_id":"D0047555"}}
+{"_id":"D0047555_partial","text":"Rockpoint Church","metadata":{"type":"partial_project","permit_id":"D0047555"}}
+{"_id":"D0047555_combo","text":"Concord Rockpoint","metadata":{"type":"company_project","permit_id":"D0047555"}}
+{"_id":"D0047555_addr","text":"24759 S Power Rd Queen Creek","metadata":{"type":"address_city","permit_id":"D0047555"}}
+{"_id":"D0039381_id","text":"D0039381","metadata":{"type":"permit_id","permit_id":"D0039381"}}
+{"_id":"D0039381_project","text":"Nevada And Commonwealth Apartments","metadata":{"type":"project_name","permit_id":"D0039381"}}
+{"_id":"D0039381_partial","text":"Nevada And","metadata":{"type":"partial_project","permit_id":"D0039381"}}
+{"_id":"D0039381_combo","text":"EMJ Nevada","metadata":{"type":"company_project","permit_id":"D0039381"}}
+{"_id":"D0048907_id","text":"D0048907","metadata":{"type":"permit_id","permit_id":"D0048907"}}
+{"_id":"D0048907_project","text":"Penske Ground Up","metadata":{"type":"project_name","permit_id":"D0048907"}}
+{"_id":"D0048907_partial","text":"Penske Ground","metadata":{"type":"partial_project","permit_id":"D0048907"}}
+{"_id":"D0048907_combo","text":"Fleming Penske","metadata":{"type":"company_project","permit_id":"D0048907"}}
+{"_id":"D0048742_id","text":"D0048742","metadata":{"type":"permit_id","permit_id":"D0048742"}}
+{"_id":"D0048742_project","text":"99th & McDowell Mixed Use","metadata":{"type":"project_name","permit_id":"D0048742"}}
+{"_id":"D0048742_partial","text":"99th &","metadata":{"type":"partial_project","permit_id":"D0048742"}}
+{"_id":"D0048742_combo","text":"The 99th","metadata":{"type":"company_project","permit_id":"D0048742"}}
+{"_id":"D0045242_id","text":"D0045242","metadata":{"type":"permit_id","permit_id":"D0045242"}}
+{"_id":"D0045242_project","text":"Bond Renovation","metadata":{"type":"project_name","permit_id":"D0045242"}}
+{"_id":"D0045242_combo","text":"RSG Bond","metadata":{"type":"company_project","permit_id":"D0045242"}}
+{"_id":"D0045242_addr","text":"3240 E Camelback Rd Phoenix","metadata":{"type":"address_city","permit_id":"D0045242"}}
+{"_id":"D0038724_id","text":"D0038724","metadata":{"type":"permit_id","permit_id":"D0038724"}}
+{"_id":"D0038724_project","text":"Pursuit Park 21040013","metadata":{"type":"project_name","permit_id":"D0038724"}}
+{"_id":"D0038724_partial","text":"Pursuit Park","metadata":{"type":"partial_project","permit_id":"D0038724"}}
+{"_id":"D0038724_combo","text":"MA Pursuit","metadata":{"type":"company_project","permit_id":"D0038724"}}
+{"_id":"D0038724_addr","text":"3204 S Signal Butte Rd Mesa","metadata":{"type":"address_city","permit_id":"D0038724"}}
+{"_id":"D0038139_id","text":"D0038139","metadata":{"type":"permit_id","permit_id":"D0038139"}}
+{"_id":"D0038139_project","text":"JDA Power 42","metadata":{"type":"project_name","permit_id":"D0038139"}}
+{"_id":"D0038139_partial","text":"JDA Power","metadata":{"type":"partial_project","permit_id":"D0038139"}}
+{"_id":"D0038139_combo","text":"FCL JDA","metadata":{"type":"company_project","permit_id":"D0038139"}}
+{"_id":"D0038139_addr","text":"4011 S Power Rd Mesa","metadata":{"type":"address_city","permit_id":"D0038139"}}
+{"_id":"D0046082_id","text":"D0046082","metadata":{"type":"permit_id","permit_id":"D0046082"}}
+{"_id":"D0046082_project","text":"Andretti Karting - Glendale","metadata":{"type":"project_name","permit_id":"D0046082"}}
+{"_id":"D0046082_partial","text":"Andretti Karting","metadata":{"type":"partial_project","permit_id":"D0046082"}}
+{"_id":"D0046082_combo","text":"Parkway Andretti","metadata":{"type":"company_project","permit_id":"D0046082"}}
+{"_id":"D0027684_id","text":"D0027684","metadata":{"type":"permit_id","permit_id":"D0027684"}}
+{"_id":"D0027684_project","text":"Southern Towne Storage","metadata":{"type":"project_name","permit_id":"D0027684"}}
+{"_id":"D0027684_partial","text":"Southern Towne","metadata":{"type":"partial_project","permit_id":"D0027684"}}
+{"_id":"D0027684_combo","text":"A Southern","metadata":{"type":"company_project","permit_id":"D0027684"}}
+{"_id":"D0024972_id","text":"D0024972","metadata":{"type":"permit_id","permit_id":"D0024972"}}
+{"_id":"D0024972_project","text":"SCOTTSDALE BIBLE CHURCH CACTUS CAMPUS","metadata":{"type":"project_name","permit_id":"D0024972"}}
+{"_id":"D0024972_partial","text":"SCOTTSDALE BIBLE","metadata":{"type":"partial_project","permit_id":"D0024972"}}
+{"_id":"D0024972_combo","text":"Guthrie SCOTTSDALE","metadata":{"type":"company_project","permit_id":"D0024972"}}
+{"_id":"D0024972_addr","text":"17230 N 59th Ave Glendale","metadata":{"type":"address_city","permit_id":"D0024972"}}
+{"_id":"D0020489_id","text":"D0020489","metadata":{"type":"permit_id","permit_id":"D0020489"}}
+{"_id":"D0020489_project","text":"4343 W BASELINE RD","metadata":{"type":"project_name","permit_id":"D0020489"}}
+{"_id":"D0020489_partial","text":"4343 W","metadata":{"type":"partial_project","permit_id":"D0020489"}}
+{"_id":"D0020489_combo","text":"Patten 4343","metadata":{"type":"company_project","permit_id":"D0020489"}}
+{"_id":"D0020489_addr","text":"4343 W Baseline Rd Laveen","metadata":{"type":"address_city","permit_id":"D0020489"}}
+{"_id":"D0017090_id","text":"D0017090","metadata":{"type":"permit_id","permit_id":"D0017090"}}
+{"_id":"D0017090_project","text":"16601 N 75TH AVE","metadata":{"type":"project_name","permit_id":"D0017090"}}
+{"_id":"D0017090_partial","text":"16601 N","metadata":{"type":"partial_project","permit_id":"D0017090"}}
+{"_id":"D0017090_combo","text":"MT 16601","metadata":{"type":"company_project","permit_id":"D0017090"}}
+{"_id":"D0051330_id","text":"D0051330","metadata":{"type":"permit_id","permit_id":"D0051330"}}
+{"_id":"D0051330_project","text":"Sossaman Middle School Parking Lot Renovations Project","metadata":{"type":"project_name","permit_id":"D0051330"}}
+{"_id":"D0051330_partial","text":"Sossaman Middle","metadata":{"type":"partial_project","permit_id":"D0051330"}}
+{"_id":"D0051330_combo","text":"Rytan Sossaman","metadata":{"type":"company_project","permit_id":"D0051330"}}
+{"_id":"D0051330_addr","text":"18612 E Ashridge Dr Queen Creek","metadata":{"type":"address_city","permit_id":"D0051330"}}
+{"_id":"D0047334_id","text":"D0047334","metadata":{"type":"permit_id","permit_id":"D0047334"}}
+{"_id":"D0047334_project","text":"Gateway Airport Commerce Park","metadata":{"type":"project_name","permit_id":"D0047334"}}
+{"_id":"D0047334_partial","text":"Gateway Airport","metadata":{"type":"partial_project","permit_id":"D0047334"}}
+{"_id":"D0047334_combo","text":"RSG Gateway","metadata":{"type":"company_project","permit_id":"D0047334"}}
+{"_id":"D0047334_addr","text":"7421 S 89th Pl Mesa","metadata":{"type":"address_city","permit_id":"D0047334"}}
+{"_id":"D0007487_id","text":"D0007487","metadata":{"type":"permit_id","permit_id":"D0007487"}}
+{"_id":"D0007487_project","text":"150 S BULLARD AVE","metadata":{"type":"project_name","permit_id":"D0007487"}}
+{"_id":"D0007487_partial","text":"150 S","metadata":{"type":"partial_project","permit_id":"D0007487"}}
+{"_id":"D0007487_combo","text":"Sundt 150","metadata":{"type":"company_project","permit_id":"D0007487"}}
+{"_id":"D0007487_addr","text":"150 S Bullard Ave Goodyear","metadata":{"type":"address_city","permit_id":"D0007487"}}
+{"_id":"D0024716_id","text":"D0024716","metadata":{"type":"permit_id","permit_id":"D0024716"}}
+{"_id":"D0024716_project","text":"Zanjero 2","metadata":{"type":"project_name","permit_id":"D0024716"}}
+{"_id":"D0024716_combo","text":"Fore Zanjero","metadata":{"type":"company_project","permit_id":"D0024716"}}
+{"_id":"D0050551_id","text":"D0050551","metadata":{"type":"permit_id","permit_id":"D0050551"}}
+{"_id":"D0050551_project","text":"Silverleaf Auto Garages","metadata":{"type":"project_name","permit_id":"D0050551"}}
+{"_id":"D0050551_partial","text":"Silverleaf Auto","metadata":{"type":"partial_project","permit_id":"D0050551"}}
+{"_id":"D0050551_combo","text":"Alcorn Silverleaf","metadata":{"type":"company_project","permit_id":"D0050551"}}
+{"_id":"D0050551_addr","text":"9390 E Bell Rd Scottsdale","metadata":{"type":"address_city","permit_id":"D0050551"}}
+{"_id":"D0064286_id","text":"D0064286","metadata":{"type":"permit_id","permit_id":"D0064286"}}
+{"_id":"D0064286_project","text":"Desert Sky Apartments","metadata":{"type":"project_name","permit_id":"D0064286"}}
+{"_id":"D0064286_partial","text":"Desert Sky","metadata":{"type":"partial_project","permit_id":"D0064286"}}
+{"_id":"D0064286_combo","text":"NRP Desert","metadata":{"type":"company_project","permit_id":"D0064286"}}
+{"_id":"D0064286_addr","text":"2809 N 70TH AVE PHOENIX","metadata":{"type":"address_city","permit_id":"D0064286"}}
+{"_id":"D0028488_id","text":"D0028488","metadata":{"type":"permit_id","permit_id":"D0028488"}}
+{"_id":"D0028488_project","text":"Crosier Village Priory","metadata":{"type":"project_name","permit_id":"D0028488"}}
+{"_id":"D0028488_partial","text":"Crosier Village","metadata":{"type":"partial_project","permit_id":"D0028488"}}
+{"_id":"D0028488_combo","text":"Concord Crosier","metadata":{"type":"company_project","permit_id":"D0028488"}}
+{"_id":"D0028488_addr","text":"717 E Southern Ave Phoenix","metadata":{"type":"address_city","permit_id":"D0028488"}}
+{"_id":"D0062332_id","text":"D0062332","metadata":{"type":"permit_id","permit_id":"D0062332"}}
+{"_id":"D0062332_project","text":"Higley & Williams Field Self Storage","metadata":{"type":"project_name","permit_id":"D0062332"}}
+{"_id":"D0062332_partial","text":"Higley &","metadata":{"type":"partial_project","permit_id":"D0062332"}}
+{"_id":"D0062332_combo","text":"Abernathey Higley","metadata":{"type":"company_project","permit_id":"D0062332"}}
+{"_id":"D0036388_id","text":"D0036388","metadata":{"type":"permit_id","permit_id":"D0036388"}}
+{"_id":"D0036388_project","text":"TYR III Storage","metadata":{"type":"project_name","permit_id":"D0036388"}}
+{"_id":"D0036388_partial","text":"TYR III","metadata":{"type":"partial_project","permit_id":"D0036388"}}
+{"_id":"D0036388_combo","text":"Derek TYR","metadata":{"type":"company_project","permit_id":"D0036388"}}
+{"_id":"D0044789_id","text":"D0044789","metadata":{"type":"permit_id","permit_id":"D0044789"}}
+{"_id":"D0044789_project","text":"Quick Quack Car Wash - Surprise","metadata":{"type":"project_name","permit_id":"D0044789"}}
+{"_id":"D0044789_partial","text":"Quick Quack","metadata":{"type":"partial_project","permit_id":"D0044789"}}
+{"_id":"D0044789_combo","text":"Eleven Quick","metadata":{"type":"company_project","permit_id":"D0044789"}}
+{"_id":"D0042125_id","text":"D0042125","metadata":{"type":"permit_id","permit_id":"D0042125"}}
+{"_id":"D0042125_project","text":"Talking Stick Golf Club Remodel and Expansion Ph2","metadata":{"type":"project_name","permit_id":"D0042125"}}
+{"_id":"D0042125_partial","text":"Talking Stick","metadata":{"type":"partial_project","permit_id":"D0042125"}}
+{"_id":"D0042125_addr","text":"9998 E Indian Bend Rd Scottsdale","metadata":{"type":"address_city","permit_id":"D0042125"}}
+{"_id":"D0027166_id","text":"D0027166","metadata":{"type":"permit_id","permit_id":"D0027166"}}
+{"_id":"D0027166_project","text":"Stephen  Talbot","metadata":{"type":"project_name","permit_id":"D0027166"}}
+{"_id":"D0027166_combo","text":"Caliente Stephen","metadata":{"type":"company_project","permit_id":"D0027166"}}
+{"_id":"D0027166_addr","text":"512 E Pierce St Phoenix","metadata":{"type":"address_city","permit_id":"D0027166"}}
+{"_id":"D0025812_id","text":"D0025812","metadata":{"type":"permit_id","permit_id":"D0025812"}}
+{"_id":"D0025812_project","text":"Pebble Creek C-19","metadata":{"type":"project_name","permit_id":"D0025812"}}
+{"_id":"D0025812_partial","text":"Pebble Creek","metadata":{"type":"partial_project","permit_id":"D0025812"}}
+{"_id":"D0025812_combo","text":"Stevens Pebble","metadata":{"type":"company_project","permit_id":"D0025812"}}
+{"_id":"D0006526_id","text":"D0006526","metadata":{"type":"permit_id","permit_id":"D0006526"}}
+{"_id":"D0006526_project","text":"7510 W ASPERA BLVD","metadata":{"type":"project_name","permit_id":"D0006526"}}
+{"_id":"D0006526_partial","text":"7510 W","metadata":{"type":"partial_project","permit_id":"D0006526"}}
+{"_id":"D0006526_combo","text":"GCON 7510","metadata":{"type":"company_project","permit_id":"D0006526"}}
+{"_id":"D0006526_addr","text":"1817 S 35th Ave Phoenix","metadata":{"type":"address_city","permit_id":"D0006526"}}
+{"_id":"D0030962_id","text":"D0030962","metadata":{"type":"permit_id","permit_id":"D0030962"}}
+{"_id":"D0030962_project","text":"Pebble Creek C-19","metadata":{"type":"project_name","permit_id":"D0030962"}}
+{"_id":"D0030962_partial","text":"Pebble Creek","metadata":{"type":"partial_project","permit_id":"D0030962"}}
+{"_id":"D0030962_combo","text":"Stevens Pebble","metadata":{"type":"company_project","permit_id":"D0030962"}}
+{"_id":"D0030962_addr","text":"4580 N PebbleCreek Pkwy Goodyear","metadata":{"type":"address_city","permit_id":"D0030962"}}
+{"_id":"D0022939_id","text":"D0022939","metadata":{"type":"permit_id","permit_id":"D0022939"}}
+{"_id":"D0022939_project","text":"23rd Ave WWTP-Grit Replacement","metadata":{"type":"project_name","permit_id":"D0022939"}}
+{"_id":"D0022939_partial","text":"23rd Ave","metadata":{"type":"partial_project","permit_id":"D0022939"}}
+{"_id":"D0022939_combo","text":"McCarthy 23rd","metadata":{"type":"company_project","permit_id":"D0022939"}}
+{"_id":"D0022939_addr","text":"2304 W Lower Buckeye Rd Phoenix","metadata":{"type":"address_city","permit_id":"D0022939"}}
+{"_id":"D0025553_id","text":"D0025553","metadata":{"type":"permit_id","permit_id":"D0025553"}}
+{"_id":"D0025553_project","text":"Matt Newberg","metadata":{"type":"project_name","permit_id":"D0025553"}}
+{"_id":"D0025553_combo","text":"Layton Matt","metadata":{"type":"company_project","permit_id":"D0025553"}}
+{"_id":"D0025553_addr","text":"6495 N Sarival Ave Litchfield Park","metadata":{"type":"address_city","permit_id":"D0025553"}}
+{"_id":"D0026004_id","text":"D0026004","metadata":{"type":"permit_id","permit_id":"D0026004"}}
+{"_id":"D0026004_project","text":"Intel Chandler Campus Lay Down Yard","metadata":{"type":"project_name","permit_id":"D0026004"}}
+{"_id":"D0026004_partial","text":"Intel Chandler","metadata":{"type":"partial_project","permit_id":"D0026004"}}
+{"_id":"D0026004_combo","text":"Brycon Intel","metadata":{"type":"company_project","permit_id":"D0026004"}}
+{"_id":"D0026004_addr","text":"5000 W Chandler Blvd Chandler","metadata":{"type":"address_city","permit_id":"D0026004"}}
+{"_id":"D0039046_id","text":"D0039046","metadata":{"type":"permit_id","permit_id":"D0039046"}}
+{"_id":"D0039046_project","text":"City North","metadata":{"type":"project_name","permit_id":"D0039046"}}
+{"_id":"D0039046_combo","text":"Greystar City","metadata":{"type":"company_project","permit_id":"D0039046"}}
+{"_id":"D0045255_id","text":"D0045255","metadata":{"type":"permit_id","permit_id":"D0045255"}}
+{"_id":"D0045255_project","text":"Coyote Landing","metadata":{"type":"project_name","permit_id":"D0045255"}}
+{"_id":"D0045255_combo","text":"BG Coyote","metadata":{"type":"company_project","permit_id":"D0045255"}}
+{"_id":"D0035676_id","text":"D0035676","metadata":{"type":"permit_id","permit_id":"D0035676"}}
+{"_id":"D0035676_project","text":"SRP Sidewinder Substation","metadata":{"type":"project_name","permit_id":"D0035676"}}
+{"_id":"D0035676_partial","text":"SRP Sidewinder","metadata":{"type":"partial_project","permit_id":"D0035676"}}
+{"_id":"D0035676_combo","text":"Reinhausen SRP","metadata":{"type":"company_project","permit_id":"D0035676"}}
+{"_id":"D0035754_id","text":"D0035754","metadata":{"type":"permit_id","permit_id":"D0035754"}}
+{"_id":"D0035754_project","text":"Acero Hawes 2","metadata":{"type":"project_name","permit_id":"D0035754"}}
+{"_id":"D0035754_partial","text":"Acero Hawes","metadata":{"type":"partial_project","permit_id":"D0035754"}}
+{"_id":"D0035754_combo","text":"IDM Acero","metadata":{"type":"company_project","permit_id":"D0035754"}}
+{"_id":"D0035754_addr","text":"19455 E Elliot Rd Mesa","metadata":{"type":"address_city","permit_id":"D0035754"}}
+{"_id":"D0063234_id","text":"D0063234","metadata":{"type":"permit_id","permit_id":"D0063234"}}
+{"_id":"D0063234_project","text":"Sun Health La Loma Campus � Resident Gathering Space","metadata":{"type":"project_name","permit_id":"D0063234"}}
+{"_id":"D0063234_partial","text":"Sun Health","metadata":{"type":"partial_project","permit_id":"D0063234"}}
+{"_id":"D0063234_combo","text":"Sun Sun","metadata":{"type":"company_project","permit_id":"D0063234"}}
+{"_id":"D0063234_addr","text":"14100 S DENNY WAY LITCHFIELD PARK","metadata":{"type":"address_city","permit_id":"D0063234"}}
+{"_id":"D0036400_id","text":"D0036400","metadata":{"type":"permit_id","permit_id":"D0036400"}}
+{"_id":"D0036400_project","text":"National Indoor RV Center","metadata":{"type":"project_name","permit_id":"D0036400"}}
+{"_id":"D0036400_partial","text":"National Indoor","metadata":{"type":"partial_project","permit_id":"D0036400"}}
+{"_id":"D0036400_combo","text":"Derek National","metadata":{"type":"company_project","permit_id":"D0036400"}}
+{"_id":"D0054809_id","text":"D0054809","metadata":{"type":"permit_id","permit_id":"D0054809"}}
+{"_id":"D0054809_project","text":"Penske Ground Up","metadata":{"type":"project_name","permit_id":"D0054809"}}
+{"_id":"D0054809_partial","text":"Penske Ground","metadata":{"type":"partial_project","permit_id":"D0054809"}}
+{"_id":"D0054809_combo","text":"Straight Penske","metadata":{"type":"company_project","permit_id":"D0054809"}}
+{"_id":"D0054809_addr","text":"18211 W MCDOWELL RD GOODYEAR","metadata":{"type":"address_city","permit_id":"D0054809"}}
+{"_id":"D0048822_id","text":"D0048822","metadata":{"type":"permit_id","permit_id":"D0048822"}}
+{"_id":"D0048822_project","text":"Levine Self Storage","metadata":{"type":"project_name","permit_id":"D0048822"}}
+{"_id":"D0048822_partial","text":"Levine Self","metadata":{"type":"partial_project","permit_id":"D0048822"}}
+{"_id":"D0048822_combo","text":"Abernathey Levine","metadata":{"type":"company_project","permit_id":"D0048822"}}
+{"_id":"D0048822_addr","text":"7171 S 51st Ave Laveen","metadata":{"type":"address_city","permit_id":"D0048822"}}
+{"_id":"D0012292_id","text":"D0012292","metadata":{"type":"permit_id","permit_id":"D0012292"}}
+{"_id":"D0012292_project","text":"2040 N SCOTTSDALE RD","metadata":{"type":"project_name","permit_id":"D0012292"}}
+{"_id":"D0012292_partial","text":"2040 N","metadata":{"type":"partial_project","permit_id":"D0012292"}}
+{"_id":"D0012292_combo","text":"Chasse 2040","metadata":{"type":"company_project","permit_id":"D0012292"}}
+{"_id":"D0012292_addr","text":"2040 N Scottsdale Rd Scottsdale","metadata":{"type":"address_city","permit_id":"D0012292"}}
+{"_id":"D0046355_id","text":"D0046355","metadata":{"type":"permit_id","permit_id":"D0046355"}}
+{"_id":"D0046355_project","text":"The Ashley","metadata":{"type":"project_name","permit_id":"D0046355"}}
+{"_id":"D0046355_combo","text":"Porter The","metadata":{"type":"company_project","permit_id":"D0046355"}}
+{"_id":"D0046355_addr","text":"155 E Appleby Rd Chandler","metadata":{"type":"address_city","permit_id":"D0046355"}}
+{"_id":"D0044038_id","text":"D0044038","metadata":{"type":"permit_id","permit_id":"D0044038"}}
+{"_id":"D0044038_project","text":"Ocotillo Surgery Center Expansion","metadata":{"type":"project_name","permit_id":"D0044038"}}
+{"_id":"D0044038_partial","text":"Ocotillo Surgery","metadata":{"type":"partial_project","permit_id":"D0044038"}}
+{"_id":"D0044038_combo","text":"Integrity Ocotillo","metadata":{"type":"company_project","permit_id":"D0044038"}}
+{"_id":"D0044038_addr","text":"3920 S Rome St Gilbert","metadata":{"type":"address_city","permit_id":"D0044038"}}
+{"_id":"D0041085_id","text":"D0041085","metadata":{"type":"permit_id","permit_id":"D0041085"}}
+{"_id":"D0041085_project","text":"Harkins on Bell, Phoenix","metadata":{"type":"project_name","permit_id":"D0041085"}}
+{"_id":"D0041085_partial","text":"Harkins on","metadata":{"type":"partial_project","permit_id":"D0041085"}}
+{"_id":"D0041085_combo","text":"Colorado Harkins","metadata":{"type":"company_project","permit_id":"D0041085"}}
+{"_id":"D0041085_addr","text":"3420 E Bell Rd Phoenix","metadata":{"type":"address_city","permit_id":"D0041085"}}
+{"_id":"D0054348_id","text":"D0054348","metadata":{"type":"permit_id","permit_id":"D0054348"}}
+{"_id":"D0054348_project","text":"Premier Underground Storage","metadata":{"type":"project_name","permit_id":"D0054348"}}
+{"_id":"D0054348_partial","text":"Premier Underground","metadata":{"type":"partial_project","permit_id":"D0054348"}}
+{"_id":"D0054348_combo","text":"Structr Premier","metadata":{"type":"company_project","permit_id":"D0054348"}}
+{"_id":"D0054348_addr","text":"1050 E RILEY DR AVONDALE","metadata":{"type":"address_city","permit_id":"D0054348"}}
+{"_id":"D0055540_id","text":"D0055540","metadata":{"type":"permit_id","permit_id":"D0055540"}}
+{"_id":"D0055540_project","text":"Starbucks - Northern Ave","metadata":{"type":"project_name","permit_id":"D0055540"}}
+{"_id":"D0055540_partial","text":"Starbucks -","metadata":{"type":"partial_project","permit_id":"D0055540"}}
+{"_id":"D0055540_combo","text":"Bjerk Starbucks","metadata":{"type":"company_project","permit_id":"D0055540"}}
+{"_id":"D0026554_id","text":"D0026554","metadata":{"type":"permit_id","permit_id":"D0026554"}}
+{"_id":"D0026554_project","text":"2 Rivers Church Nursery & Classroom","metadata":{"type":"project_name","permit_id":"D0026554"}}
+{"_id":"D0026554_partial","text":"2 Rivers","metadata":{"type":"partial_project","permit_id":"D0026554"}}
+{"_id":"D0026554_combo","text":"Integrity 2","metadata":{"type":"company_project","permit_id":"D0026554"}}
+{"_id":"D0026554_addr","text":"237 E Scott Ave Gilbert","metadata":{"type":"address_city","permit_id":"D0026554"}}
+{"_id":"D0042635_id","text":"D0042635","metadata":{"type":"permit_id","permit_id":"D0042635"}}
+{"_id":"D0042635_project","text":"Queen Creek AZ Retail Pads","metadata":{"type":"project_name","permit_id":"D0042635"}}
+{"_id":"D0042635_partial","text":"Queen Creek","metadata":{"type":"partial_project","permit_id":"D0042635"}}
+{"_id":"D0042635_combo","text":"Collaborative Queen","metadata":{"type":"company_project","permit_id":"D0042635"}}
+{"_id":"D0038844_id","text":"D0038844","metadata":{"type":"permit_id","permit_id":"D0038844"}}
+{"_id":"D0038844_project","text":"ACPMS Classroom Addition","metadata":{"type":"project_name","permit_id":"D0038844"}}
+{"_id":"D0038844_partial","text":"ACPMS Classroom","metadata":{"type":"partial_project","permit_id":"D0038844"}}
+{"_id":"D0038844_combo","text":"Concord ACPMS","metadata":{"type":"company_project","permit_id":"D0038844"}}
+{"_id":"D0038844_addr","text":"1150 W Erie St Chandler","metadata":{"type":"address_city","permit_id":"D0038844"}}
+{"_id":"D0060519_id","text":"D0060519","metadata":{"type":"permit_id","permit_id":"D0060519"}}
+{"_id":"D0060519_project","text":"OneAZ Credit Union","metadata":{"type":"project_name","permit_id":"D0060519"}}
+{"_id":"D0060519_partial","text":"OneAZ Credit","metadata":{"type":"partial_project","permit_id":"D0060519"}}
+{"_id":"D0060519_combo","text":"41 OneAZ","metadata":{"type":"company_project","permit_id":"D0060519"}}
+{"_id":"D0060519_addr","text":"8010 W HAPPY VALLEY RD PEORIA","metadata":{"type":"address_city","permit_id":"D0060519"}}

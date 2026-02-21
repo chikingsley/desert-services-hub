@@ -92,24 +92,35 @@ export interface JinaEmbeddingsResponse {
 
 // Reranker types
 export type RerankerModel =
+  | "jina-reranker-v3"
   | "jina-reranker-m0"
   | "jina-reranker-v2-base-multilingual"
-  | "jina-colbert-v2";
+  | "jina-colbert-v2"
+  | "jina-colbert-v1-en"
+  | "jina-reranker-v1-base-en"
+  | "jina-reranker-v1-turbo-en"
+  | "jina-reranker-v1-tiny-en";
 
 export interface JinaRerankOptions {
   model?: RerankerModel;
   topN?: number;
   returnDocuments?: boolean;
+  returnEmbeddings?: boolean;
+  truncation?: boolean;
+  maxDocLength?: number;
 }
 
 export interface JinaRerankResult {
   index: number;
   relevance_score: number;
-  document?: { text: string };
+  document?: string | { text: string } | null;
+  embedding?: number[];
 }
 
 export interface JinaRerankResponse {
   model: string;
+  object: "list";
+  usage: { total_tokens: number };
   results: JinaRerankResult[];
 }
 

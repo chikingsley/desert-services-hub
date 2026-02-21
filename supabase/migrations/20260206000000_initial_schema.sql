@@ -758,14 +758,14 @@ CREATE INDEX IF NOT EXISTS idx_estimate_emails_email ON estimate_emails(email_id
 -- ============================================
 -- Full-text search (replaces SQLite FTS5)
 -- ============================================
-ALTER TABLE emails ADD COLUMN IF NOT EXISTS search_document tsvector;
+ALTER TABLE emails ADD COLUMN IF NOT EXISTS search_vector tsvector;
 
-CREATE INDEX IF NOT EXISTS idx_emails_search ON emails USING GIN(search_document);
+CREATE INDEX IF NOT EXISTS idx_emails_search_vector ON emails USING GIN(search_vector);
 
--- Trigger to auto-update search_document on insert/update
+-- Trigger to auto-update search_vector on insert/update
 CREATE OR REPLACE FUNCTION emails_search_update() RETURNS trigger AS $$
 BEGIN
-  NEW.search_document := to_tsvector('english',
+  NEW.search_vector := to_tsvector('english',
     coalesce(NEW.subject, '') || ' ' ||
     coalesce(NEW.from_name, '') || ' ' ||
     coalesce(NEW.from_email, '') || ' ' ||

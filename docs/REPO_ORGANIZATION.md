@@ -52,15 +52,12 @@ desert-services-hub/
 
   apps/
     dust-permits/           # Dust permit browser automation (Playwright, VNC, Maricopa portal)
+    background-jobs/        # Webhook receiver + pgmq worker + scheduled job dispatch
     web/                    # Frontend SPA + API routes (Bun + React)
       api/                  # Domain-grouped API routes (thin data layer)
       frontend/             # React components and pages
       server.ts             # Web server entrypoint
       webhooks.ts           # Webhook receiver entrypoint
-    workers/                # Background worker modules in background-jobs container
-      buildingconnected-file-sync/   # BC attachment sync + SharePoint archival
-      estimate-email-linker/         # Estimate-to-email linking logic
-      outlook-folder-watcher/        # Outlook folder polling + project linking
     cf-workers/             # Cloudflare edge workers
       intake-worker/                 # Email intake processing (Cloudflare Worker)
       inspections-email-worker/      # ComplianceGo inspections (Cloudflare Worker)
@@ -261,8 +258,8 @@ Each Docker service maps to an entrypoint in the codebase.
 | `web` | `desert-web` | 3000 | `apps/web/server.ts` | `apps/web/` |
 | `background-jobs` | `desert-webhooks` | 4747 | `apps/background-jobs/webhooks.ts` | `apps/background-jobs/` |
 | `permit-worker` | `desert-permit-worker` | 47822 | `apps/dust-permits/src/index.ts` | `apps/dust-permits/` |
-| `notifications` | *(domain package)* | -- | Used by background-jobs notifications tick | `packages/email/src/notifications/` |
-| `swppp-sync` | `desert-swppp-sync` | -- | `packages/sharepoint/workers/swppp-master-poller/cli/sync.ts` | `packages/sharepoint/` |
+| `notifications_tick` | `desert-webhooks` | -- | `apps/background-jobs/jobs/dispatch.ts` (`notifications_tick`) | `lib/notifications/` |
+| `swppp_master_sync` | `desert-webhooks` | -- | `apps/background-jobs/jobs/dispatch.ts` (`swppp_master_sync`) | `packages/sharepoint/src/swppp-sync/` |
 | `tunnel` | `desert-tunnel` | -- | Cloudflare tunnel config | -- |
 
 **Cloudflare Workers** (deployed to Cloudflare edge, not Docker):
@@ -278,9 +275,9 @@ Each Docker service maps to an entrypoint in the codebase.
 | Worker | Folder | Trigger |
 |--------|--------|---------|
 | `monday sync pipelines` | `packages/monday/src/sync/` | `sync_full`, `sync_item`, `monday_status_sync` jobs |
-| `estimate-email-linker` | `apps/background-jobs/workers/estimate-email-linker/` | Timer (every 60s) |
-| `outlook-folder-watcher` | `apps/background-jobs/workers/outlook-folder-watcher/` | Timer (every 30s) |
-| `buildingconnected-file-sync` | `apps/background-jobs/workers/buildingconnected-file-sync/` | Attachment backfill |
+| `estimate-email-linker` | `lib/linking/maintenance.ts` | `estimate_linker_maintenance` job (every minute) |
+| `outlook-folder-watcher` | `lib/graph/folder-watcher/` | `folder_watcher_poll` job (every minute) |
+| `buildingconnected-file-sync` | `packages/email/src/sync/bc-sync/` | `sync_bc_file` + `attachment_backfill` jobs |
 
 ---
 
@@ -404,11 +401,11 @@ In-process worker modules and sync pipelines migration status:
 
 | Worker | Current Location | Target Package | Notes |
 |--------|-----------------|---------------|-------|
-| `notifications` | `packages/email/src/notifications/` | In package | Consumed by background-jobs notifications tick |
+| `notifications` | `lib/notifications/` | In shared lib | Consumed by background-jobs notifications tick |
 | `monday sync + project seed` | `packages/monday/src/sync/` | In package | Completed migration from legacy `estimate-poller` / `estimates-sync-worker` |
-| `outlook-folder-watcher` | `apps/background-jobs/workers/` | `packages/email/` | Email domain owns folder watching |
-| `estimate-email-linker` | `apps/background-jobs/workers/` | `packages/email/` or `packages/estimates/` | TBD |
-| `buildingconnected-file-sync` | `apps/background-jobs/workers/` | `packages/buildingconnected/` (future) | Needs own package |
+| `outlook-folder-watcher` | `lib/graph/folder-watcher/` | In shared lib | Uses Graph + project matching repos |
+| `estimate-email-linker` | `lib/linking/` | In shared lib | Shared linking logic used by scheduled maintenance |
+| `buildingconnected-file-sync` | `packages/email/src/sync/bc-sync/` | `packages/email/` | Email domain owns BC email body-link/file sync |
 
 Remaining in `lib/` (genuinely cross-cutting, used by multiple domains):
 

@@ -16,6 +16,7 @@ import {
 } from "@lib/db/repositories/email";
 import { getOrCreateMailbox } from "@lib/db/repositories/mailbox";
 import type { InsertAttachmentData, InsertEmailData } from "@lib/db/types";
+import { processAttachmentsForEmail } from "@documents-intake/attachment-backfill";
 import { linkEmail } from "@lib/linking/link-email";
 
 interface EmailMessageRow {
@@ -230,6 +231,19 @@ export async function processEmailNotification(
     ...bodyLinkAttachments.names,
   ];
   await appendEmailAttachmentNames(emailId, allAttachmentNames);
+
+  // Extract attachment content inline so triage has document text available
+  if (graphAttachments.inserted > 0) {
+    try {
+      await processAttachmentsForEmail(emailId, client);
+    } catch (err) {
+      console.error(
+        `[worker] Inline extraction failed for email ${emailId}:`,
+        err instanceof Error ? err.message : err
+      );
+    }
+  }
+
   await linkEmail(emailId);
 
   console.log(`[worker] Webhook synced: "${email.subject}" in ${mailboxEmail}`);

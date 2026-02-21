@@ -6,7 +6,8 @@
     "paths": {
       "@lib/*": ["lib/*"],
       "@sharepoint/*": ["packages/sharepoint/src/*"]
-    }
+    },
+    "strictNullChecks": true
   },
   "include": ["src/**/*.ts", "cli/**/*.ts", "tests/**/*.ts"],
   "exclude": ["node_modules"]

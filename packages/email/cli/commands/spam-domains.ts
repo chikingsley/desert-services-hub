@@ -2,7 +2,7 @@
  * Spam Domain Management CLI
  *
  * Add domains to exclusion list and backfill all existing emails from those domains.
- * Usage: bun packages/email/src/commands/spam-domains.ts <domain1> [domain2] [domain3] ...
+ * Usage: bun packages/email/cli/commands/spam-domains.ts <domain1> [domain2] [domain3] ...
  */
 
 import { db } from "@lib/db/client";
@@ -49,10 +49,10 @@ async function main(): Promise<void> {
 
   if (args.length === 0) {
     console.log(
-      "Usage: bun spam-domains.ts <domain1> [domain2] ... [--reason '<reason>']"
+      "Usage: bun packages/email/cli/commands/spam-domains.ts <domain1> [domain2] ... [--reason '<reason>']"
     );
     console.log(
-      "Example: bun spam-domains.ts spam.com phishing.net --reason 'political_spam'"
+      "Example: bun packages/email/cli/commands/spam-domains.ts spam.com phishing.net --reason 'political_spam'"
     );
     process.exit(1);
   }

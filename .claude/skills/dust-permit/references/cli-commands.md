@@ -1,44 +1,46 @@
-# Permit Operations Command Reference
+# Permit Operations Reference
 
-Use `bun run permit` for all permit operations. The CLI wraps `PermitClient` and auto-defaults to `http://localhost:47822`.
+## MCP Tools (Primary Interface)
 
-## Commands
+All permit operations are exposed as MCP tools via `apps/dust-permits-mcp/`. Claude Code auto-discovers them from `.mcp.json`.
 
-```bash
-# Health + status
-bun run permit health
-bun run permit browser-status
+### Read-Only Tools
 
-# Read operations
-bun run permit list
-bun run permit get D0061391
+| Tool | Description |
+|------|-------------|
+| `permit_health` | Check permit worker health |
+| `permit_browser_status` | Browser session state |
+| `permit_list` | List all active permits |
+| `permit_get` | Get permit by ID (e.g., D0063827) |
+| `permit_search` | FTS search by company, project, address, or ID |
+| `permit_expiring` | Permits expiring within N days (default 30) |
+| `permit_scrape` | Scrape live data from portal |
+| `permit_scrape_pdf` | Scrape + download PDF |
+| `permit_form_schema` | FormData JSON Schema (200+ fields) |
+| `permit_form_defaults` | Default form values |
 
-# Mutations (auto 5-min timeout for browser automation)
-bun run permit close D0063827 --reason completed
-bun run permit renew D0058823 --company "Weis Builders Inc"
-bun run permit renew-and-pay D0058823 --company "Weis Builders Inc" --dry-run
-bun run permit renew-and-pay D0058823 --company "Weis Builders Inc" --yes
-bun run permit revise D0064070 --type contact --notes "Update contact details"
-bun run permit scrape-pdf D0061391
-bun run permit scrape D0061391
-bun run permit delete D0XXXXXX
-bun run permit delete-drafts
-bun run permit sync
-bun run permit sync-company
-```
+### Write Tools
 
-## Create Permit (via curl — not yet in CLI)
+| Tool | Description |
+|------|-------------|
+| `permit_create` | Create new application (stops at review page) |
+| `permit_renew` | Start renewal (no payment) |
+| `permit_renew_and_pay` | Full renew + submit + pay |
+| `permit_close` | Close/terminate permit |
+| `permit_revise` | Submit revision (boundary/acreage/contact/schedule/bmp/other) |
+| `permit_delete` | Delete draft application |
+| `permit_sync` | Sync from portal |
 
-`/api/permits/create` requires `formDataPath` (in-container file path), so it needs docker cp first:
+## Create Permit (via MCP tool or curl)
+
+For `permit_create`, if using `formDataPath` (in-container file path), docker cp first:
 
 ```bash
 docker exec desert-permit-worker sh -lc 'mkdir -p /app/data/overrides'
 docker cp /tmp/project-overrides.json desert-permit-worker:/app/data/overrides/project-overrides.json
-
-curl -X POST http://localhost:47822/api/permits/create \
-  -H 'Content-Type: application/json' \
-  -d '{"flow":"existing-company","companyName":"Company Name","formDataPath":"/app/data/overrides/project-overrides.json"}'
 ```
+
+Then use `permit_create` tool with `formDataPath: "/app/data/overrides/project-overrides.json"`.
 
 ## E2E Tests (in-container)
 

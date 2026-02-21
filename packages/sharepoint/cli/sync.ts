@@ -11,7 +11,7 @@
  *   bun cli/sync.ts --interval=30000   # Custom interval (ms)
  */
 
-import { syncAll } from "../lib/sync";
+import { syncAll } from "../src/swppp-sync/sync";
 
 const DEFAULT_INTERVAL_MS = 60 * 1000; // 60 seconds
 

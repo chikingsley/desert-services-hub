@@ -20,7 +20,6 @@ const EMAIL_CLASSIFICATIONS = [
   "IT",
   "SCHEDULE",
   "CHANGE_ORDER",
-  "INTERNAL",
   "VENDOR",
   "SPAM",
   "UNKNOWN",

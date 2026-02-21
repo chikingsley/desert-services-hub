@@ -1,20 +1,14 @@
 # Permit Worker API Reference
 
-## CLI (Primary Interface)
+## MCP Tools (Primary Interface for AI Agents)
 
-All permit operations use the CLI at `packages/permits/cli.ts`, which wraps `PermitClient`:
-
-```bash
-bun run permit <command> [args] [flags]
-```
-
-The CLI auto-defaults to `http://localhost:47822` (host port binding). See `bun run permit` for full usage.
+Permit operations are exposed as MCP tools from `apps/dust-permits-mcp/`. Configured in `.mcp.json` at repo root.
 
 ## Base URLs
 
 | Context | URL | When |
 |---------|-----|------|
-| Host shell / CLI | `http://localhost:47822` | CLI default, Claude Code, local dev |
+| MCP server / host shell | `http://localhost:47822` | Claude Code, local dev |
 | Docker container | `http://permit-worker:47822` | App code via `PermitClient` default |
 | Override | `PERMIT_WORKER_URL` env var | Either context |
 
@@ -24,9 +18,12 @@ The CLI auto-defaults to `http://localhost:47822` (host port binding). See `bun 
 |---|---|---|
 | `GET` | `/health` | none |
 | `GET` | `/api/permits` | none |
+| `GET` | `/api/permits/search?q=...&limit=20` | none |
+| `GET` | `/api/permits/expiring?days=30` | none |
 | `GET` | `/api/permits/:id` | none |
-| `POST` | `/api/permits/create` | `{ flow, companyName?, copyFromApp?, formDataPath? }` |
+| `POST` | `/api/permits/create` | `{ flow, companyName?, copyFromApp?, formDataPath?, formData? }` |
 | `POST` | `/api/permits/:id/renew` | `{ companyName? }` |
+| `POST` | `/api/permits/:id/renew-and-pay` | `{ companyName, expedited? }` |
 | `POST` | `/api/permits/:id/revise` | `{ revisionType, notes? }` |
 | `POST` | `/api/permits/:id/close` | `{ reason? }` |
 | `DELETE` | `/api/permits/:id` | none |
@@ -36,6 +33,8 @@ The CLI auto-defaults to `http://localhost:47822` (host port binding). See `bun 
 | `POST` | `/api/sync` | none |
 | `POST` | `/api/sync/company` | none |
 | `POST` | `/api/invoices/pdf` | `{ invoiceNumber, outputDir? }` |
+| `GET` | `/api/form/schema` | none |
+| `GET` | `/api/form/defaults` | none |
 | `GET` | `/api/browser/status` | none |
 | `POST` | `/api/browser/start` | none |
 | `POST` | `/api/browser/ready` | none |
@@ -43,18 +42,3 @@ The CLI auto-defaults to `http://localhost:47822` (host port binding). See `bun 
 | `POST` | `/api/browser/stop` | none |
 | `POST` | `/api/browser/clipboard/paste` | `{ text }` |
 | `POST` | `/api/browser/clipboard/copy` | none |
-
-## Create Permit Notes
-
-`POST /api/permits/create` accepts `formDataPath` (path inside the permit-worker container), not inline `formData`.
-
-```bash
-# 1) put overrides file into container
-docker exec desert-permit-worker sh -lc 'mkdir -p /app/data/overrides'
-docker cp /tmp/project-overrides.json desert-permit-worker:/app/data/overrides/project-overrides.json
-
-# 2) call create endpoint
-curl -X POST http://localhost:47822/api/permits/create \
-  -H 'Content-Type: application/json' \
-  -d '{"flow":"existing-company","companyName":"Company Name","formDataPath":"/app/data/overrides/project-overrides.json"}'
-```

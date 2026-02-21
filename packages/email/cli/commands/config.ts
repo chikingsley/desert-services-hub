@@ -99,7 +99,11 @@ export function assertWritableMailbox(
         `Allowed mailboxes: ${WRITABLE_MAILBOXES.join(", ")}`
     );
   }
-  if (!(WRITABLE_MAILBOXES as readonly string[]).includes(userId.toLowerCase().trim())) {
+  if (
+    !(WRITABLE_MAILBOXES as readonly string[]).includes(
+      userId.toLowerCase().trim()
+    )
+  ) {
     throw new Error(
       `Operation "${operation}" not allowed on mailbox "${userId}". ` +
         `Write operations are restricted to: ${WRITABLE_MAILBOXES.join(", ")}`

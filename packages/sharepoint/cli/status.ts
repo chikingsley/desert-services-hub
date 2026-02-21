@@ -9,7 +9,7 @@
  *   bun cli/status.ts
  */
 
-import { getStatus } from "../lib/sync";
+import { getStatus } from "../src/swppp-sync/sync";
 
 const status = await getStatus();
 

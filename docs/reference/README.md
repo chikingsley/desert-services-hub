@@ -12,6 +12,7 @@ own package/app.
 - `docs/reference/query-routing-policy.md`
 - `docs/reference/testing-methodology.md`
 - `docs/reference/azure-entra-permissions.md`
+- `docs/reference/intent-routing-vector-plan.md`
 
 ## Cross-Domain Context (Active, Non-Authoritative)
 

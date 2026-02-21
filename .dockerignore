@@ -29,6 +29,7 @@
 !packages/takeoff/
 !packages/contracts/
 !packages/aqdata/
+!packages/enrichment/
 
 # Permit worker (browser automation)
 !apps/dust-permits/

@@ -11,26 +11,39 @@ Contracts arrive as email attachments (PDFs) to `contracts@`. The review workspa
 3. **Flag review** — business rule violations surfaced automatically (at-risk language, math discrepancies, missing exhibits, etc.)
 4. **Act** — generate two draft emails: GC response + internal handoff to `internalcontracts@`
 
-## Backend state (already running)
+## Relationship to the Project Operations Dashboard
+
+This workspace is a **focused flow for processing new contract arrivals**. The Project Operations Dashboard (`docs/project-operations-dashboard.md`) is the broader view after contracts are processed — project health, email timelines, permit status, etc.
+
+The contract review workspace feeds into the dashboard: once a contract is reviewed here, the project's contract_status updates and the dashboard reflects it.
+
+When the dashboard's draft engine (Phase 3) is built, the "Act" step here becomes a special case of the general draft generation pipeline — scoped to contract-specific templates rather than general project replies.
+
+## Backend state (running)
 
 The data pipeline is live:
 
 ```text
 contracts@ email arrives
+  → outlook_folder_watch → email persisted, project_id linked
   → intake worker → files_intake job → document extraction (Kreuzberg + OCR)
   → contract_doc_extract job (Pass 1.5) → LLM field extraction + langextract NER
   → documents.raw_extraction.contract_structured_extraction (entities stored)
   → contract_won_bridge (every 2 min) → links to estimates, marks Won/Not Awarded
 ```
 
-Key files:
-- `apps/background-jobs/lib/contracts/contract-email-handler.ts` — ingest
-- `apps/background-jobs/lib/contracts/contract-doc-extract-queue.ts` — Pass 1.5: LLM extraction + langextract
-- `apps/background-jobs/lib/contracts/langextract.ts` — runs `packages/documents/langextract` Python CLI
-- `apps/background-jobs/lib/contracts/contract-won-bridge.ts` — 6-pass linking pipeline
-- `packages/email/src/email-templates/gc-response.hbs` — GC response template
-- `packages/email/src/email-templates/internal-handoff.hbs` — internal handoff template
+Key files (post-refactor):
+- `packages/contracts/src/contract-email-handler.ts` — contract email ingest
+- `packages/contracts/src/contract-doc-extract-queue.ts` — Pass 1.5: LLM extraction + langextract
+- `packages/contracts/src/contract-won-bridge.ts` — 6-pass linking pipeline
+- `packages/contracts/src/contract-won-detector.ts` — award detection from email content
+- `packages/documents/langextract/` — Google langextract Python CLI (NER + visualization)
 - `packages/contracts/ground-truth/PATTERNS.md` — validation rules from ~20 real contracts
+
+### Templates (not yet created)
+
+- GC response template — will go in `packages/email/src/email-templates/gc-response.hbs`
+- Internal handoff template — will go in `packages/email/src/email-templates/internal-handoff.hbs`
 
 ## What the entity viewer looks like
 
@@ -52,6 +65,8 @@ The backend produces the data. What doesn't exist yet:
 - **Flag panel** — business rule check results (from `packages/contracts/ground-truth/validation-policy.md`)
 - **Action buttons** — "Generate GC response" → creates Outlook draft via Graph API; "Generate internal handoff" → same
 - **Review state** — mark a contract reviewed/actioned (needs a `contract_review_status` column or similar)
+- **GC response template** — Handlebars template for GC acknowledgment email
+- **Internal handoff template** — Handlebars template for internal contracts team notification
 
 ## Deduplication logic
 

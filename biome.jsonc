@@ -7,10 +7,17 @@
     "ultracite/biome/react"
   ],
   "javascript": {
-    "globals": ["Bun", "Deno", "HTMLRewriter"]
+    "globals": [
+      "Bun",
+      "Deno",
+      "HTMLRewriter"
+    ]
   },
   "files": {
-    "includes": ["**/*", "!**/*.html"]
+    "includes": [
+      "**/*",
+      "!**/*.html"
+    ]
   },
   "linter": {
     "rules": {
@@ -27,7 +34,9 @@
   },
   "overrides": [
     {
-      "includes": ["apps/dust-permits/**"],
+      "includes": [
+        "apps/dust-permits/**"
+      ],
       "linter": {
         "rules": {
           "complexity": {
@@ -43,7 +52,9 @@
       }
     },
     {
-      "includes": ["apps/web/frontend/components/ui/**"],
+      "includes": [
+        "apps/web/frontend/components/ui/**"
+      ],
       "linter": {
         "rules": {
           "a11y": {
@@ -59,7 +70,9 @@
       }
     },
     {
-      "includes": ["apps/web/frontend/components/takeoffs/**"],
+      "includes": [
+        "apps/web/frontend/components/takeoffs/**"
+      ],
       "linter": {
         "rules": {
           "a11y": {
@@ -72,7 +85,9 @@
       }
     },
     {
-      "includes": ["packages/takeoff/**"],
+      "includes": [
+        "packages/takeoff/**"
+      ],
       "linter": {
         "rules": {
           "a11y": {

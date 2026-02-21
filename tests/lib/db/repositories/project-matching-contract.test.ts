@@ -51,9 +51,12 @@ async function createProject(params: {
 
 afterAll(async () => {
   if (createdProjectIds.length > 0) {
+    const placeholders = createdProjectIds
+      .map((_, index) => `$${index + 1}`)
+      .join(", ");
     await db.run(
       `DELETE FROM projects
-       WHERE id IN (${createdProjectIds.map(() => "$1").join(", ")})`,
+       WHERE id IN (${placeholders})`,
       createdProjectIds
     );
   } else {
@@ -63,9 +66,12 @@ afterAll(async () => {
   }
 
   if (createdAccountIds.length > 0) {
+    const placeholders = createdAccountIds
+      .map((_, index) => `$${index + 1}`)
+      .join(", ");
     await db.run(
       `DELETE FROM accounts
-       WHERE id IN (${createdAccountIds.map(() => "$1").join(", ")})`,
+       WHERE id IN (${placeholders})`,
       createdAccountIds
     );
   } else {
@@ -124,5 +130,66 @@ describe("project matching contract", () => {
     expect(result?.candidates.length).toBeGreaterThanOrEqual(2);
     expect(result?.decision.autoLink).toBe(false);
     expect(result?.decision.reason).toBe("manual_review_required");
+  });
+
+  test("keeps account-scoped candidates when enough matches exist", async () => {
+    const accountA = await createAccount(`${TEST_PREFIX}ACCOUNT_SCOPED_A`);
+    const accountB = await createAccount(`${TEST_PREFIX}ACCOUNT_SCOPED_B`);
+
+    for (let index = 0; index < 5; index++) {
+      await createProject({
+        accountId: accountA,
+        name: `${TEST_PREFIX}IRONWOOD PAD ${index}`,
+        contractor: "Builder Team",
+      });
+    }
+    await createProject({
+      accountId: accountB,
+      name: `${TEST_PREFIX}IRONWOOD PAD OUTSIDE`,
+      contractor: "Builder Team",
+    });
+
+    const result = await findProjectCandidates({
+      primaryText: `${TEST_PREFIX}IRONWOOD PAD`,
+      accountIdHint: accountA,
+      contractorHint: "Builder Team",
+      limit: 5,
+    });
+
+    expect(result).toBeTruthy();
+    expect(result?.candidates).toHaveLength(5);
+    expect(
+      result?.candidates.every((candidate) => candidate.accountId === accountA)
+    ).toBe(true);
+  });
+
+  test("falls back to global candidates when account scope is too narrow", async () => {
+    const accountA = await createAccount(`${TEST_PREFIX}ACCOUNT_FALLBACK_A`);
+    const accountB = await createAccount(`${TEST_PREFIX}ACCOUNT_FALLBACK_B`);
+
+    await createProject({
+      accountId: accountA,
+      name: `${TEST_PREFIX}UNRELATED SITE`,
+      contractor: "Builder Team",
+    });
+    const outsideProjectId = await createProject({
+      accountId: accountB,
+      name: `${TEST_PREFIX}IRONWOOD FALLBACK TARGET`,
+      contractor: "Builder Team",
+    });
+
+    const result = await findProjectCandidates({
+      primaryText: `${TEST_PREFIX}IRONWOOD FALLBACK TARGET`,
+      accountIdHint: accountA,
+      contractorHint: "Builder Team",
+      limit: 5,
+    });
+
+    expect(result).toBeTruthy();
+    expect(
+      result?.candidates.some(
+        (candidate) => candidate.projectId === outsideProjectId
+      )
+    ).toBe(true);
   });
 });

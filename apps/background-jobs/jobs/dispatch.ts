@@ -263,9 +263,7 @@ async function handleSyncBcFile(job: WebhookJob): Promise<void> {
 }
 
 async function handleSwpppMasterSync(): Promise<void> {
-  const { syncAll } = await import(
-    "@sharepoint/swppp-sync/sync"
-  );
+  const { syncAll } = await import("@sharepoint/swppp-sync/sync");
   const summary = await syncAll();
   console.log(
     `[worker] SWPPP master sync: ${summary.totalRows} rows, ${summary.totalLinked} linked, ${summary.totalUnlinked} unlinked (${summary.duration}ms)`
@@ -361,6 +359,9 @@ async function handleAccountLinking(): Promise<void> {
   const stats = await linkEmailsToAccounts();
 
   const totalLinked =
+    stats.linkedByProject +
+    stats.linkedByEstimate +
+    stats.linkedByContact +
     stats.linkedByPlatformDomain +
     stats.linkedByForwardDomain +
     stats.linkedByDirectDomain +
@@ -368,9 +369,13 @@ async function handleAccountLinking(): Promise<void> {
     stats.linkedByAlias +
     stats.linkedByConversation;
 
-  if (totalLinked > 0 || stats.accountsCreated > 0) {
+  if (
+    totalLinked > 0 ||
+    stats.accountsCreated > 0 ||
+    stats.skippedAmbiguous > 0
+  ) {
     console.log(
-      `[worker] Account linking: ${totalLinked} linked (platform=${stats.linkedByPlatformDomain}, forward=${stats.linkedByForwardDomain}, direct=${stats.linkedByDirectDomain}, name=${stats.linkedByNameLookup}, alias=${stats.linkedByAlias}, conversation=${stats.linkedByConversation}), ${stats.accountsCreated} accounts created`
+      `[worker] Account linking: ${totalLinked} linked (project=${stats.linkedByProject}, estimate=${stats.linkedByEstimate}, contact=${stats.linkedByContact}, platform=${stats.linkedByPlatformDomain}, forward=${stats.linkedByForwardDomain}, direct=${stats.linkedByDirectDomain}, name=${stats.linkedByNameLookup}, alias=${stats.linkedByAlias}, conversation=${stats.linkedByConversation}), ${stats.accountsCreated} accounts created, ${stats.skippedAmbiguous} ambiguous skipped`
     );
   }
 }

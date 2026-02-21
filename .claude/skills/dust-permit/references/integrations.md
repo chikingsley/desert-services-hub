@@ -6,25 +6,25 @@ Current integration points for dust permit operations in `desert-services-hub`.
 
 - Permit automation runtime: `apps/dust-permits` (container `desert-permit-worker`)
 - Typed client: `packages/permits/src/client.ts` (`PermitClient`)
-- CLI: `packages/permits/cli.ts` → `bun run permit <command>`
+- MCP server: `apps/dust-permits-mcp/` → auto-discovered via `.mcp.json`
 - API:
-  - Host shell: `http://localhost:47822`
+  - Host shell / MCP: `http://localhost:47822`
   - Container network: `http://permit-worker:47822`
 
 ## Who Uses What
 
 | Caller | Interface | URL |
 |--------|-----------|-----|
-| Claude Code / ops / shell | `bun run permit` CLI | `http://localhost:47822` |
+| Claude Code / AI agents | MCP tools (`apps/dust-permits-mcp/`) | `http://localhost:47822` |
 | `apps/web/api/automation.ts` | `PermitClient` (app code) | `http://permit-worker:47822` |
 | `apps/background-jobs/jobs/permit-sync.ts` | `PermitClient` (app code) | `http://permit-worker:47822` |
-| `packages/email/src/notifications/email-trigger-handlers.ts` | `PermitClient` (app code) | `http://permit-worker:47822` |
+| `lib/notifications/email-trigger-handlers.ts` | `PermitClient` (app code) | `http://permit-worker:47822` |
 
 ## Source of Truth
 
 - Permit records: Postgres table `dust_permits_filed_by_desert_services`
 - Canonical repository access: `lib/db/repositories/dust-permit.ts`
-- Do not use SQLite cache queries for operational decisions.
+- FTS search: `ftsSearchPermits()` using `search_vector` tsvector column with GIN index
 
 Quick Postgres checks:
 
@@ -75,4 +75,4 @@ uv run pdf-analysis ocr /path/to/plans.pdf --output /tmp/plans.md
 - Do not use deleted legacy path `apps/workers/permit-workers/`.
 - Do not use SQLite as source of truth for permit state.
 - App code (web, background-jobs) should use `PermitClient` over raw `fetch()`.
-- Shell / Claude Code should use `bun run permit` CLI, not inline scripts or raw curl.
+- AI agents should use MCP tools, not inline scripts or raw curl.

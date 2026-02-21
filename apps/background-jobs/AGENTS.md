@@ -7,7 +7,7 @@ Webhook receiver, queue handlers, and polling workers.
 - `webhooks.ts` and `api/aqdata.ts`: runtime entry + AQData trigger endpoints.
 - `jobs/*`: queue job handlers (`permit-sync`, email, intake, sync).
 - `worker.ts`: pgmq queue consumer (no domain timers).
-- `workers/*`: folder watcher/linker and other periodic workers.
+- `@lib/graph/folder-watcher/*` and `@lib/linking/*`: folder watcher + estimate linker maintenance logic invoked by scheduled jobs.
 - `@monday/sync/*`: Monday estimate/status/sharepoint/project-seed sync logic (package-owned).
 - `@lib/notifications/*`: email-trigger detection and draft notification delivery.
 
@@ -35,8 +35,8 @@ Trigger types:
 - `maricopa_issued`
 
 Key files:
-- `packages/email/src/notifications/email-triggers.ts`
-- `packages/email/src/notifications/email-trigger-handlers.ts`
+- `lib/notifications/email-triggers.ts`
+- `lib/notifications/email-trigger-handlers.ts`
 - `jobs/permit-sync.ts`
 
 ## Permit Integration Rules

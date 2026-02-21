@@ -3,7 +3,7 @@
 ## Layout
 
 - `cli/` runnable scripts
-- `src/` reusable email modules (client, commands, sync, enrichment, templates)
+- `src/` reusable email modules (client, sync, enrichment, templates)
 - `tests/` test coverage
 - `data/` local runtime artifacts (ignored by git)
 
@@ -14,11 +14,11 @@
 - `bun packages/email/cli/immutable-ids.ts`
 - `bun packages/email/cli/retry-attachment-failed-parse.ts`
 - `bun packages/email/cli/test-deep-search.ts`
-- `bun packages/email/cli/bc-bids-sync.ts`
 - `bun packages/email/cli/enrich-accounts.ts`
 - `bun packages/email/cli/manage-subscriptions.ts`
 - `bun packages/email/cli/cli.ts sync-mailboxes`
 - `bun packages/email/cli/cli.ts sync-groups`
+- `bun packages/email/cli/cli.ts body-link-backfill --since-days=7`
 - `bun packages/email/cli/post-processing.ts`
 
 ## Outlook Webhooks (Real-time Email Sync)

@@ -121,7 +121,7 @@ findProjectByFolder()
 projects table (with outlook_folder set)
 ```
 
-**Key file:** `apps/background-jobs/workers/outlook-folder-watcher/lib/projects.ts`
+**Key file:** `lib/graph/folder-watcher/projects.ts`
 
 ### Example: Redpoint Headquarters
 
@@ -306,7 +306,7 @@ Templates exist in `packages/contracts/templates/` but aren't wired to any autom
 | Intake CF worker | `apps/cf-workers/intake-worker/src/index.ts` |
 | Email processing | `apps/background-jobs/jobs/email-processing.ts` |
 | Project seed sync | `packages/monday/src/sync/project-seed/sync.ts` |
-| Folder watcher projects | `apps/background-jobs/workers/outlook-folder-watcher/lib/projects.ts` |
+| Folder watcher projects | `lib/graph/folder-watcher/projects.ts` |
 | Project matching | `lib/db/repositories/project-matching.ts` |
 | Project SOV | `lib/db/repositories/project-sov.ts` |
 | Canonical estimate | `lib/db/repositories/project-estimate.ts` |

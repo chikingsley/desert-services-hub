@@ -25,14 +25,17 @@
       "@takeoff/*": ["packages/takeoff/src/*"],
       "@estimates/*": ["packages/estimates/src/*"],
       "@permits/*": ["packages/permits/src/*"],
+      "@siteline/*": ["packages/siteline/src/*"],
       "@lib/*": ["lib/*"]
-    }
+    },
+    "strictNullChecks": true
   },
   "include": ["**/*.ts", "**/*.tsx"],
   "exclude": [
     "node_modules",
     "**/build.ts",
     "apps/cf-workers/docusign-file-automation/_reference",
+    "apps/inbox-zero",
     "apps/dust-permits",
     "apps/aqdata-worker"
   ]

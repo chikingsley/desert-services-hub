@@ -69,6 +69,7 @@ COPY packages/monday ./packages/monday
 COPY packages/estimates ./packages/estimates
 COPY packages/permits ./packages/permits
 COPY packages/takeoff ./packages/takeoff
+COPY packages/enrichment ./packages/enrichment
 
 # Shared libraries
 COPY lib ./lib

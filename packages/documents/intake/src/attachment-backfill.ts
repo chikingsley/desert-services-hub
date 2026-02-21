@@ -15,6 +15,7 @@ import {
   findContentHashAttachmentDuplicate,
   findInternetMessageAttachmentDuplicate,
   getIntakeAttachmentRows,
+  getIntakeAttachmentRowsByEmail,
   type IntakeAttachmentRow,
   markAttachmentDeduped,
   markMondayAssetExtractionSuccess,
@@ -409,6 +410,56 @@ export async function processIntakeAttachmentBackfill(
   result.elapsedMs = Date.now() - startedAt;
   result.attachmentsPerMinute =
     result.elapsedMs > 0 ? (total / result.elapsedMs) * 60_000 : total;
+
+  return result;
+}
+
+/**
+ * Process attachments for a single email inline at webhook time.
+ * Reuses the same processOneAttachment pipeline as the batch backfill.
+ */
+export async function processAttachmentsForEmail(
+  emailId: number,
+  client: GraphEmailClient
+): Promise<{ extracted: number; skipped: number; failed: number; deduped: number }> {
+  const result = { extracted: 0, skipped: 0, failed: 0, deduped: 0 };
+
+  const attachments = await getIntakeAttachmentRowsByEmail(emailId);
+  if (attachments.length === 0) {
+    return result;
+  }
+
+  await mkdir(BACKFILL_DIR, { recursive: true });
+  const groupClient = createGroupsClient();
+
+  for (const att of attachments) {
+    try {
+      const outcome = await processOneAttachment(att, client, groupClient);
+      switch (outcome.type) {
+        case "succeeded":
+          result.extracted++;
+          break;
+        case "skipped":
+          result.skipped++;
+          break;
+        case "deduped":
+          result.deduped++;
+          break;
+        case "failed":
+          result.failed++;
+          break;
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      await updateAttachmentExtraction(
+        att.attachment_id_pk,
+        "failed",
+        null,
+        msg.slice(0, 1000)
+      );
+      result.failed++;
+    }
+  }
 
   return result;
 }

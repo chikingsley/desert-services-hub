@@ -6,100 +6,76 @@ description: |
 
 # Dust Permit Operations
 
-## Step 1: ALWAYS check Postgres first
+All permit operations are available as MCP tools (auto-discovered from `.mcp.json`). Use the `permit_*` tools directly — no CLI or shell commands needed for standard operations.
 
-Before any API call, look up the permit in Postgres to get company name, status, expiration:
+## Step 1: Find the permit
+
+Use MCP tools for lookup:
+
+- `permit_search` — FTS search by company name, project, address, or permit ID
+- `permit_get` — Get details for a known permit ID
+- `permit_list` — List all active permits
+- `permit_expiring` — Find permits expiring soon
+
+Or query Postgres directly for complex lookups:
 
 ```bash
-docker exec supabase_db_desert-services-hub psql -U postgres -t -A -c \
-  "SELECT id, company_name, status, expiration_date FROM dust_permits_filed_by_desert_services WHERE id = 'D0XXXXXX'"
+docker exec -i supabase_db_desert-services-hub psql -U postgres <<'EOF'
+SELECT id, company_name, status, expiration_date
+FROM dust_permits_filed_by_desert_services
+WHERE id = 'D0XXXXXX';
+EOF
 ```
 
-## Step 2: Use the permit CLI (`bun run permit`)
+## Step 2: Use MCP tools
 
-All operations go through the typed `PermitClient` via the CLI at `packages/permits/cli.ts`. Browser automation takes 2-3 minutes for mutations — the CLI handles timeouts automatically.
-
-```bash
-# Close a permit
-bun run permit close D0XXXXXX --reason completed
-
-# Renew a permit (--company from DB lookup)
-bun run permit renew D0XXXXXX --company "Company Name"
-
-# Revise a permit (types: boundary | acreage | contact | schedule | bmp | other)
-bun run permit revise D0XXXXXX --type contact --notes "Update contact info"
-
-# Download PDF
-bun run permit scrape-pdf D0XXXXXX
-
-# Health check
-bun run permit health
-
-# List all permits
-bun run permit list
-
-# Get single permit
-bun run permit get D0XXXXXX
-
-# Delete a draft / all drafts
-bun run permit delete D0XXXXXX
-bun run permit delete-drafts
-
-# Sync
-bun run permit sync
-bun run permit sync-company
-
-# Browser session status
-bun run permit browser-status
-```
+| Tool | Operation |
+|------|-----------|
+| `permit_health` | Check permit worker is running |
+| `permit_browser_status` | Browser session state |
+| `permit_search` | FTS search permits |
+| `permit_get` | Get permit details |
+| `permit_expiring` | Permits expiring within N days |
+| `permit_scrape` | Scrape live data from portal |
+| `permit_scrape_pdf` | Scrape + download PDF |
+| `permit_form_schema` | Get FormData JSON Schema (200+ fields) |
+| `permit_form_defaults` | Get default form values |
+| `permit_create` | Create new application |
+| `permit_renew` | Start renewal (no payment) |
+| `permit_renew_and_pay` | Full renew + submit + pay |
+| `permit_close` | Close/terminate permit |
+| `permit_revise` | Submit revision |
+| `permit_delete` | Delete draft |
+| `permit_sync` | Sync from portal |
 
 ## Workflow: Renewal (no payment)
 
-1. DB lookup → get `company_name`, verify `status` is Active, check `expiration_date`
-2. `bun run permit renew D0XXXXXX --company "Company Name"`
-3. Response includes `applicationId` of the renewal draft
+1. `permit_search` or `permit_get` → get company name, verify Active status
+2. `permit_renew` with permitId and companyName
+3. Response includes applicationId of the renewal draft
 
 ## Workflow: Renew + Pay
 
-1. DB lookup → get `company_name`, verify `status` is Active
-2. First do a dry run: `bun run permit renew-and-pay D0XXXXXX --company "Company Name" --dry-run`
-3. Review the amounts in the dry-run response
-4. If approved: `bun run permit renew-and-pay D0XXXXXX --company "Company Name" --yes`
-5. The CLI will show a confirmation prompt (unless `--yes` is passed)
+1. `permit_search` or `permit_get` → get company name, verify Active status
+2. `permit_renew_and_pay` with permitId, companyName
+3. The tool includes operator confirmation checkpoints before submission and payment
 
 **CRITICAL — Expedited Processing:**
-- Expedited is OFF by default. Never pass `--expedited` unless the user explicitly requests accelerated processing.
+- Expedited is OFF by default. Never set `expedited: true` unless the user explicitly requests accelerated processing.
 - Expedited = "Accelerated Processing" checkbox on Maricopa portal. It costs significantly more.
-- Only add `--expedited` when the user says words like "expedited", "accelerated", "rush".
+- Only set expedited when the user says words like "expedited", "accelerated", "rush".
 
 ## Workflow: Close
 
-1. DB lookup → verify `status` is Active
-2. `bun run permit close D0XXXXXX --reason completed`
+1. `permit_get` → verify Active status
+2. `permit_close` with permitId and reason
 
 ## Workflow: New Permit
 
 1. Gather NOI document (required) — search emails in Postgres, download attachments
 2. Extract data: `cd packages/documents/pdf-analysis-py && uv run pdf-analysis noi /path/to/noi.pdf --ocr-fallback`
-3. Check company history in DB — determines `flow: "existing-company"` vs `"new-company"`
-4. Copy overrides into container if needed: `docker cp file.json desert-permit-worker:/app/data/overrides/`
-5. Create permit (currently via curl — CLI create command coming soon):
-   ```bash
-   curl -X POST http://localhost:47822/api/permits/create \
-     -H 'Content-Type: application/json' \
-     -d '{"flow":"existing-company","companyName":"Name","formDataPath":"/app/data/overrides/file.json"}'
-   ```
-
-## Find Permit
-
-```sql
--- By ID
-SELECT id, project_name, company_name, status, expiration_date FROM dust_permits_filed_by_desert_services WHERE id = 'D0XXXXXX';
--- By company
-SELECT id, project_name, company_name, status, expiration_date FROM dust_permits_filed_by_desert_services WHERE company_name ILIKE '%SEARCH%';
--- Expiring soon
-SELECT id, project_name, company_name, expiration_date FROM dust_permits_filed_by_desert_services WHERE status = 'Active' AND expiration_date <= (CURRENT_DATE + INTERVAL '30 days')::text ORDER BY expiration_date;
-```
+3. `permit_form_defaults` → see default values
+4. `permit_create` with flow, companyName, and formData overrides
 
 ## References
 

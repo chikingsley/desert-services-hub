@@ -130,6 +130,7 @@ interface BrowserContextLike {
 interface BrowserLike {
   newContext: (options?: {
     acceptDownloads?: boolean;
+    userAgent?: string;
     viewport?: { width: number; height: number };
     storageState?: string;
   }) => Promise<BrowserContextLike>;
@@ -879,7 +880,7 @@ async function runSingleAttempt(
   };
 
   try {
-    const playwright = (await import("playwright")) as {
+    const playwright = (await import("playwright")) as unknown as {
       chromium: {
         launch: (options?: {
           headless?: boolean;

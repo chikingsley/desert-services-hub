@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { hasBuildingConnectedSignal } from "../../packages/documents/bc-sync/signal";
+import { hasBuildingConnectedSignal } from "../../packages/email/src/sync/bc-sync/signal";
 
 function baseSignalRow() {
   return {

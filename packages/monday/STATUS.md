@@ -1,6 +1,6 @@
 # Monday/Local/SWPPP Sync Status
 
-Snapshot time: `2026-02-18 15:16:49+00`
+Snapshot time: `2026-02-20 04:00:00+00`
 
 ## 1) Local DB vs Monday (Estimates)
 
@@ -41,29 +41,20 @@ Recently linked (high confidence):
 
 ## 3) Local Projects Lifecycle vs SWPPP Active
 
-Local projects lifecycle counts:
-- `seed`: `2165`
-- `active`: `759`
-- `archived`: `278`
-- `lost`: `86`
+Local projects lifecycle counts (post-enrichment 2026-02-20):
+- `seed`: `1972`
+- `active`: `88`
+- `archived`: `1162`
+- `lost`: `67`
 
-SWPPP active overlap:
-- SWPPP active projects: `90`
-- Local active projects: `759`
-- Overlap (`SWPPP active` ∩ `local active`): `83`
-- SWPPP active not local active: `7`
-- Local active not SWPPP active: `676`
+Definition: `active` = has an open SWPPP work order on "Confirmed Schedule" or "Need to Schedule" worksheet. Everything else with completed work (WOs, QB jobs, Won estimates) is `archived`.
 
-SWPPP active but local non-active (`7`):
-- `169` | `ONE SCOTTSDALE APARTMENTS`
-- `23515` | `SUN HEALTH`
-- `23522` | `SRP XCT STEAM PLANT`
-- `23525` | `ECHO CANYON CLUBHOUSE`
-- `23532` | `Good Day Car Wash`
-- `23769` | `SAN CARLOS APACHE HEALTHCARE` (`archived`)
-- `24377` | `MEDINA STATION APARTMENTS`
-
-All linked estimates on these 6 are currently `GC Not Awarded` (no local won signal found).
+Data enrichment pass (2026-02-20) applied:
+- 670 SWPPP work orders linked to projects (90% coverage, up from 68%)
+- 324 QB jobs linked to projects (47% coverage, up from 26%)
+- 92 project address backfills, 331 awarded_value backfills from won estimates
+- 88 projects with active WOs promoted to `active`
+- 857 projects with only completed work (B&V WOs, QB jobs, Won estimates) archived
 
 ## 4) Local Projects vs Monday Projects Board
 
@@ -85,11 +76,25 @@ Interpretation:
 ## 6) Remaining Backlog To Reach 100% Coverage
 
 - Active SWPPP `project_id` linkage backlog: `0` rows.
-- Review the 6 SWPPP-active projects currently marked local `lost` (currently consistent with estimate status, but operationally active in SWPPP).
-- Review `project 23769` (`archived`) which now has active SWPPP worksheet rows.
 - Decide and implement local persistence for Monday Projects item mapping (`projects.monday_item_id`) if 3-way parity at project level is required in DB.
 - Continue contract packet backfill to improve awarded value and Date Awarded quality for older won records.
 - Deduplicate local `accounts` and `contacts` tables (normalize domains/emails, merge malformed Monday-style variants, and preserve canonical `monday_*` IDs + assignment fields).
+
+### Monday Estimate Status Updates Needed (2026-02-20)
+
+**243 Monday estimate items** need their `bid_status` updated to `Won`. These are canonical estimates for projects that have linked SWPPP work orders or QuickBooks jobs (proof of work performed), but Monday still shows a non-won status:
+
+| Current Monday Status | Count | Action |
+|----------------------|-------|--------|
+| Bid Sent | 183 | Mark Won |
+| GC Not Awarded | 53 | Mark Won (Desert subcontracted even though GC wasn't awarded to the bidding GC) |
+| Yet to Bid | 3 | Mark Won |
+| Lost | 3 | Mark Won |
+| Add to Projects | 1 | Mark Won |
+
+These updates should go through the existing `contract-won` pipeline or a bulk Monday API update targeting `deal_stage` on each estimate's `monday_item_id`.
+
+Additionally, **non-canonical estimates** on these 882 won projects should be reviewed — estimates from competing GCs on the same project should be marked `Lost` or `GC Not Awarded` in Monday.
 
 ## 7) Sync Runtime Model (2026-02-19)
 

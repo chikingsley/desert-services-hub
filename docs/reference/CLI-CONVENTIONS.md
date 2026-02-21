@@ -22,7 +22,7 @@ Use this when commands are already grouped by feature and exported as handler ma
 
 Reference:
 - `packages/email/cli/cli.ts`
-- `packages/email/src/commands/*.ts`
+- `packages/email/cli/commands/*.ts`
 
 Pattern:
 - `cli/cli.ts` merges handler maps and dispatches by command name.

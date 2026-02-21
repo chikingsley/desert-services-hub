@@ -67,7 +67,7 @@ Scope boundary:
 2. Edge function enqueues `email_notification` via `public.enqueue_background_job`.
 3. `apps/background-jobs/jobs/dispatch.ts` runs `processEmailNotificationJob`.
 4. Triage may enqueue follow-on jobs (`dust_permit_payment`, `dust_permit_issued_email`, `contract_email_received`).
-5. Periodic email/project enrichment runs through cron-driven jobs (`folder_watcher_poll`, `estimate_linker_poll`, `account_linking`, `contact_linking`, `contact_enrichment`).
+5. Periodic email/project enrichment runs through cron-driven jobs (`folder_watcher_poll`, `estimate_linker_maintenance`, `account_linking`, `contact_linking`, `contact_enrichment`).
 
 ### Monday Sync Flow
 
@@ -86,7 +86,7 @@ Scope boundary:
 
 1. Payment/issued jobs are enqueued by email triage.
 2. Handlers run permit sync orchestration via `@permits/client` (`apps/background-jobs/jobs/permit-sync.ts`).
-3. Notification drafts/events are emitted by `packages/email/src/notifications/*`.
+3. Notification drafts/events are emitted by `lib/notifications/*`.
 
 ## Operational Checks
 

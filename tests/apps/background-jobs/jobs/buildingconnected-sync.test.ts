@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { runBuildingConnectedSync } from "@background-jobs/jobs/buildingconnected-sync";
-import type { BuildingConnectedSyncResult } from "../../../../packages/documents/bc-sync/processing";
+import type { BuildingConnectedSyncResult } from "../../../../packages/email/src/sync/bc-sync/processing";
 
 function sampleSyncResult(): BuildingConnectedSyncResult {
   return {

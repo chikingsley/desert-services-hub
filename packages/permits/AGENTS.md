@@ -6,14 +6,14 @@ Typed HTTP client package for permit-worker (`@permits/client`).
 
 - `src/client.ts`: `PermitClient` transport + `PermitWorkerError`.
 - `src/types.ts`: request/response contracts.
-- `src/index.ts`: package exports.
-- `tests/client.test.ts`: live integration tests against permit-worker container API.
+- `src/intent.ts`: Gemini-based permit email intent extraction.
 
 ## Non-Goals
 
 - No Playwright/browser automation runtime.
 - No portal selector logic.
 - No VNC/debug orchestration.
+- No CLI or MCP server (MCP moved to `apps/dust-permits-mcp/`).
 
 Runtime automation belongs to `apps/dust-permits/`.
 
@@ -24,6 +24,8 @@ Runtime automation belongs to `apps/dust-permits/`.
 - `renewAndPay()` → `POST /api/permits/:id/renew-and-pay`
 - `closePermit()` → `POST /api/permits/:id/close`
 - `revisePermit()` → `POST /api/permits/:id/revise`
+- `searchPermits()` → `GET /api/permits/search?q=...`
+- `expiringPermits()` → `GET /api/permits/expiring?days=30`
 - `scrapePdf()` / `scrape()` / `sync()` / `syncCompany()` / `invoicePdf()`
 - browser endpoints (`browserStatus/start/ready/keepalive/stop`, clipboard)
 
@@ -40,7 +42,8 @@ If you add or change a permit-worker endpoint:
 1. Update `src/types.ts`.
 2. Update `src/client.ts`.
 3. Add/adjust tests in `tests/client.test.ts`.
-4. Update this file’s method matrix if the public contract changed.
+4. Update the corresponding MCP tool in `apps/dust-permits-mcp/src/tools.ts`.
+5. Update this file's method matrix if the public contract changed.
 
 ## Validation
 

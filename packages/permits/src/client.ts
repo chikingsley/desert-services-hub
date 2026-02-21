@@ -16,6 +16,7 @@ import type {
   CreateResponse,
   DashboardPermit,
   DeleteResponse,
+  ExpiringPermitsRequest,
   HealthResponse,
   InvoicePdfRequest,
   InvoicePdfResponse,
@@ -28,6 +29,7 @@ import type {
   ScrapePdfRequest,
   ScrapePdfResponse,
   ScrapeResponse,
+  SearchPermitsRequest,
   SyncResponse,
 } from "./types";
 
@@ -190,6 +192,28 @@ export class PermitClient {
 
   async getPermit(id: string): Promise<DashboardPermit> {
     return await this.request("GET", `/api/permits/${id}`);
+  }
+
+  async searchPermits(req: SearchPermitsRequest): Promise<DashboardPermit[]> {
+    const params = new URLSearchParams({ q: req.query });
+    if (req.limit) {
+      params.set("limit", String(req.limit));
+    }
+    return await this.request("GET", `/api/permits/search?${params}`);
+  }
+
+  async expiringPermits(
+    req?: ExpiringPermitsRequest
+  ): Promise<DashboardPermit[]> {
+    const params = new URLSearchParams();
+    if (req?.days) {
+      params.set("days", String(req.days));
+    }
+    const qs = params.toString();
+    return await this.request(
+      "GET",
+      `/api/permits/expiring${qs ? `?${qs}` : ""}`
+    );
   }
 
   async createPermit(req: CreateRequest): Promise<CreateResponse> {

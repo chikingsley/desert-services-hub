@@ -13,12 +13,12 @@ export interface PermitLocation {
   address: string;
   city: string;
   county: string;
-  state: string;
-  zip: string;
-  parcel: string;
+  isSelected: boolean;
   latitude: string;
   longitude: string;
-  isSelected: boolean;
+  parcel: string;
+  state: string;
+  zip: string;
 }
 
 export interface AccessPoint {
@@ -28,14 +28,7 @@ export interface AccessPoint {
 
 /** Complete scraped permit data from portal detail page. */
 export interface PermitData {
-  applicationId: string;
-  projectName: string;
-  companyName: string;
-  status: string;
-  createdDate: string;
-  issueDate: string;
-  expirationDate: string;
-  contact: { email: string; name: string; phone: string };
+  accessPoints: AccessPoint[];
   applicantCompany: {
     entityType: string;
     name: string;
@@ -58,22 +51,15 @@ export interface PermitData {
     phone: string;
     email: string;
   };
+  applicationId: string;
+  companyName: string;
+  contact: { email: string; name: string; phone: string };
+  createdDate: string;
+  disturbedArea: string;
+  expirationDate: string;
   isOwnerDeveloper: boolean | null;
-  propertyOwnerDeveloper: {
-    entityType: string;
-    name: string;
-    address1: string;
-    address2: string;
-    city: string;
-    state: string;
-    zip: string;
-    phone: string;
-    fax: string;
-    contactFirstName: string;
-    contactLastName: string;
-    contactPhone: string;
-    contactEmail: string;
-  } | null;
+  issueDate: string;
+  locations: PermitLocation[];
   primaryContact: {
     firstName: string;
     lastName: string;
@@ -90,10 +76,23 @@ export interface PermitData {
     startDate: string;
     endDate: string;
   };
-  disturbedArea: string;
-  locations: PermitLocation[];
-  accessPoints: AccessPoint[];
-  trackoutE1Answer: boolean | null;
+  projectName: string;
+  propertyOwnerDeveloper: {
+    entityType: string;
+    name: string;
+    address1: string;
+    address2: string;
+    city: string;
+    state: string;
+    zip: string;
+    phone: string;
+    fax: string;
+    contactFirstName: string;
+    contactLastName: string;
+    contactPhone: string;
+    contactEmail: string;
+  } | null;
+  status: string;
   trackoutDevices: {
     gravelPad: boolean;
     grizzlyRumbleGrate: boolean;
@@ -101,6 +100,7 @@ export interface PermitData {
     pavedArea: boolean;
     other: boolean;
   };
+  trackoutE1Answer: boolean | null;
   waterMethods: {
     hose: boolean;
     waterTruck: boolean;
@@ -115,33 +115,33 @@ export interface PermitData {
 // ============================================================================
 
 export interface PermitApplication {
-  id: string;
+  address?: string;
   applicationNumber: string;
+  company: string;
+  cost?: number;
+  createdAt: string;
+  effectiveAt?: string;
+  error?: string;
+  expiresAt?: string;
+  id: string;
+  invoiceNumber?: string;
   permitNumber?: string;
+  permitStatus: string;
+  projectName: string;
+  requestStatus: "pending" | "running" | "needs_map" | "complete" | "failed";
+  submittedAt?: string;
+  updatedAt: string;
   version: number;
   versionType: "new" | "renewal" | "revision";
-  projectName: string;
-  company: string;
-  address?: string;
-  requestStatus: "pending" | "running" | "needs_map" | "complete" | "failed";
-  permitStatus: string;
-  submittedAt?: string;
-  effectiveAt?: string;
-  expiresAt?: string;
-  createdAt: string;
-  updatedAt: string;
-  error?: string;
-  cost?: number;
-  invoiceNumber?: string;
 }
 
 export interface DashboardPermit {
-  permitNumber: string;
-  company: string;
-  projectName: string;
   address?: string;
+  company: string;
   current: PermitApplication;
   history: PermitApplication[];
+  permitNumber: string;
+  projectName: string;
 }
 
 // ============================================================================
@@ -149,14 +149,17 @@ export interface DashboardPermit {
 // ============================================================================
 
 export interface ScrapePdfRequest {
-  permitId: string;
   outputDir?: string;
+  permitId: string;
 }
 
 export interface CreateRequest {
-  flow: "new-company" | "existing-company";
   companyName?: string;
   copyFromApp?: string;
+  flow: "new-company" | "existing-company";
+  /** Inline form data overrides (alternative to formDataPath). */
+  formData?: Record<string, unknown>;
+  /** Path to overrides JSON on the permit-worker filesystem. */
   formDataPath?: string;
 }
 
@@ -170,8 +173,8 @@ export interface RenewAndPayRequest {
 }
 
 export interface ReviseRequest {
-  revisionType: string;
   notes?: string;
+  revisionType: string;
 }
 
 export interface CloseRequest {
@@ -193,21 +196,21 @@ export interface ClipboardPasteRequest {
 
 /** Base shape shared by most API responses. */
 interface BaseResponse {
+  error?: string;
   success: boolean;
   timestamp: string;
-  error?: string;
 }
 
 export interface ScrapePdfResponse extends BaseResponse {
-  permitId: string;
-  pdfPath?: string;
-  pdfBase64?: string;
   data?: PermitData;
+  pdfBase64?: string;
+  pdfPath?: string;
+  permitId: string;
 }
 
 export interface ScrapeResponse extends BaseResponse {
-  permitId: string;
   data?: PermitData;
+  permitId: string;
 }
 
 export interface CreateResponse extends BaseResponse {
@@ -231,12 +234,12 @@ export type RenewAndPayStage =
   | "paid";
 
 export interface RenewAndPayResponse extends BaseResponse {
-  applicationId?: string;
-  stage?: RenewAndPayStage;
   amount?: string;
-  convenienceFee?: string;
-  totalPaid?: string;
+  applicationId?: string;
   cardLastFour?: string;
+  convenienceFee?: string;
+  stage?: RenewAndPayStage;
+  totalPaid?: string;
 }
 
 export interface CloseResponse extends BaseResponse {
@@ -245,15 +248,15 @@ export interface CloseResponse extends BaseResponse {
 
 export interface ReviseResponse extends BaseResponse {
   applicationId?: string | null;
+  notes?: string | null;
   permitId?: string;
   revisionType?: string;
-  notes?: string | null;
 }
 
 export interface DeleteResponse extends BaseResponse {
-  message?: string;
   deletedAll?: boolean;
   deletedDbCount?: number;
+  message?: string;
 }
 
 export interface SyncStats {
@@ -268,9 +271,9 @@ export interface SyncResponse extends BaseResponse {
 
 export interface InvoicePdfResponse extends BaseResponse {
   invoiceNumber?: string;
+  pdfBase64?: string;
   pdfPath?: string;
   pdfUrl?: string;
-  pdfBase64?: string;
 }
 
 export interface BrowserStatusResponse {
@@ -287,26 +290,39 @@ export interface BrowserStatusResponse {
   lastLoginAt: string | null;
   portalReady: boolean;
   startedAt: string | null;
+  timestamp: string;
   viewportHeight: number;
   viewportWidth: number;
-  timestamp: string;
 }
 
 export interface BrowserActionResponse extends BaseResponse {
   isLoggedIn?: boolean;
-  portalReady?: boolean;
   keepAlive?: Record<string, unknown>;
+  portalReady?: boolean;
   status?: Record<string, unknown>;
 }
 
 export interface ClipboardResponse extends BaseResponse {
   clipboard?: Record<string, unknown>;
-  text?: string;
   status?: Record<string, unknown>;
+  text?: string;
 }
 
 export interface HealthResponse {
   status: string;
   timestamp: string;
   uptime: number;
+}
+
+// ============================================================================
+// Search Types
+// ============================================================================
+
+export interface SearchPermitsRequest {
+  limit?: number;
+  query: string;
+}
+
+export interface ExpiringPermitsRequest {
+  days?: number;
 }

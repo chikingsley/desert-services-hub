@@ -4,7 +4,6 @@
  * CRUD and query operations for dust_permits_filed_by_desert_services.
  */
 import { db } from "@lib/db/client";
-import { likeSearch } from "@lib/db/search";
 import type { Permit, PermitStatus, UpsertPermitData } from "@lib/db/types";
 
 function parsePermitRow(row: Record<string, unknown>): Permit {
@@ -177,13 +176,21 @@ export async function linkPermitToProject(
   );
 }
 
-export async function searchPermits(query: string): Promise<Permit[]> {
-  const rows = await likeSearch<Record<string, unknown>>({
-    table: "dust_permits_filed_by_desert_services",
-    columns: ["project_name", "company_name", "address", "id"],
-    query,
-    orderBy: "submitted_date DESC",
-  });
+export async function ftsSearchPermits(
+  query: string,
+  limit = 20
+): Promise<Permit[]> {
+  const rows = await db
+    .query<Record<string, unknown>>(
+      `SELECT *
+       FROM dust_permits_filed_by_desert_services
+       WHERE search_vector @@ plainto_tsquery('english', $1)
+       ORDER BY ts_rank_cd(search_vector, plainto_tsquery('english', $1)) DESC,
+                (status = 'Active')::int DESC,
+                expiration_date DESC NULLS LAST
+       LIMIT $2`
+    )
+    .all(query, limit);
   return rows.map(parsePermitRow);
 }
 

@@ -5,7 +5,9 @@
  */
 
 import {
+  ftsSearchPermits,
   getActivePermits,
+  getExpiringPermits,
   getPermitById,
 } from "@lib/db/repositories/dust-permit";
 import type { Permit as DbPermit } from "@lib/db/types";
@@ -13,6 +15,7 @@ import { z } from "zod";
 import type { DeepPartial, FormData } from "@/form-data";
 import { buildFormData, DEFAULTS } from "@/form-data";
 import {
+  FormDataOverridesSchema,
   validateBuiltFormData,
   validateFormDataOverrides,
 } from "@/lib/form-data-validation";
@@ -91,10 +94,13 @@ const apiCreateSchema = z.object({
   flow: z
     .enum(["new-company", "existing-company", "renew"])
     .describe("Creation flow type"),
+  formData: FormDataOverridesSchema.optional().describe(
+    "Inline form data overrides (alternative to formDataPath)"
+  ),
   formDataPath: z
     .string()
     .optional()
-    .describe("Path to form data JSON overrides"),
+    .describe("Path to form data JSON overrides on worker filesystem"),
 });
 
 const apiReviseSchema = z.object({
@@ -215,6 +221,30 @@ export async function handleGetPermit(id: string): Promise<Response> {
   return Response.json(transformPermitForDashboard(permit));
 }
 
+/**
+ * GET /api/permits/search?q=...&limit=20
+ */
+export async function handleSearchPermits(req: Request): Promise<Response> {
+  const url = new URL(req.url);
+  const query = url.searchParams.get("q")?.trim();
+  if (!query) {
+    return jsonError("Missing ?q= search query");
+  }
+  const limit = Math.min(Number(url.searchParams.get("limit") ?? 20), 50);
+  const permits = await ftsSearchPermits(query, limit);
+  return Response.json(permits.map(transformPermitForDashboard));
+}
+
+/**
+ * GET /api/permits/expiring?days=30
+ */
+export async function handleExpiringPermits(req: Request): Promise<Response> {
+  const url = new URL(req.url);
+  const days = Math.min(Number(url.searchParams.get("days") ?? 30), 365);
+  const permits = await getExpiringPermits(days);
+  return Response.json(permits.map(transformPermitForDashboard));
+}
+
 /** Load and validate form data overrides from a JSON file path. */
 async function loadOverridesFromFile(
   formDataPath: string
@@ -250,10 +280,19 @@ export async function handleCreatePermit(body: unknown): Promise<Response> {
     return jsonError(parsed.error.issues[0]?.message || "Invalid input");
   }
 
-  const { flow, companyName, copyFromApp, formDataPath } = parsed.data;
+  const {
+    flow,
+    companyName,
+    copyFromApp,
+    formDataPath,
+    formData: inlineFormData,
+  } = parsed.data;
 
   let overrides: DeepPartial<FormData> | undefined;
-  if (formDataPath) {
+  if (inlineFormData) {
+    // Already validated by FormDataOverridesSchema in apiCreateSchema.safeParse
+    overrides = inlineFormData;
+  } else if (formDataPath) {
     const loaded = await loadOverridesFromFile(formDataPath);
     if ("error" in loaded) {
       return loaded.error;

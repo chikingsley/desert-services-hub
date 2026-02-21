@@ -15,18 +15,21 @@ import {
   handleBrowserStatus,
   handleBrowserStop,
 } from "@/api/browser";
+import { handleFormDefaults, handleFormSchema } from "@/api/form-schema";
 import { handleInvoicePdf } from "@/api/invoices";
 import {
   handleClosePermit,
   handleCreatePermit,
   handleDeleteAllDrafts,
   handleDeletePermit,
+  handleExpiringPermits,
   handleGetPermit,
   handleHealthCheck,
   handleListPermits,
   handleRenewAndPay,
   handleRenewPermit,
   handleRevisePermit,
+  handleSearchPermits,
 } from "@/api/permits";
 import { handleScrapePdf, handleScrapePermit } from "@/api/scrape";
 import { handleCompanySync, handleSync } from "@/api/sync";
@@ -49,9 +52,23 @@ serve({
       GET: handleHealthCheck,
     },
 
+    // Form Schema API (for MCP/agent discovery)
+    "/api/form/schema": {
+      GET: handleFormSchema,
+    },
+    "/api/form/defaults": {
+      GET: handleFormDefaults,
+    },
+
     // Permits API
     "/api/permits": {
       GET: handleListPermits,
+    },
+    "/api/permits/search": {
+      GET: handleSearchPermits,
+    },
+    "/api/permits/expiring": {
+      GET: handleExpiringPermits,
     },
     "/api/permits/create": {
       async POST(req) {

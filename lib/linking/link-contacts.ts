@@ -16,23 +16,23 @@ import { db } from "@lib/db/client";
 // ── Types ────────────────────────────────────────────────────────────
 
 export interface ContactLinkStats {
-  linkedFrom: number;
-  linkedTo: number;
-  linkedCc: number;
   contactsCreated: number;
   contactsEnriched: number;
   enrichmentErrors: number;
+  linkedCc: number;
+  linkedFrom: number;
+  linkedTo: number;
 }
 
 interface UnmatchedSender {
+  account_id: number;
   email: string;
   name: string | null;
-  account_id: number;
 }
 
 interface ContactForEnrichment {
-  id: number;
   email: string;
+  id: number;
   name: string;
 }
 
@@ -123,8 +123,8 @@ const LINK_FROM_SQL = `
     INSERT INTO contact_emails (contact_id, email_id, relationship)
     SELECT c.id, e.id, 'from'
     FROM emails e
-    JOIN contacts c ON LOWER(TRIM(e.from_email)) = LOWER(c.email)
-    WHERE e.from_email IS NOT NULL
+    JOIN contacts c ON LOWER(TRIM(COALESCE(e.real_sender_email, e.from_email))) = LOWER(c.email)
+    WHERE COALESCE(e.real_sender_email, e.from_email) IS NOT NULL
       AND c.email IS NOT NULL
       AND NOT EXISTS (
         SELECT 1 FROM contact_emails ce
@@ -189,19 +189,19 @@ async function runCountCte(sql: string): Promise<number> {
 // ── Layer 2: Contact Creation for Unmatched Senders ──────────────────
 
 const UNMATCHED_SENDERS_SQL = `
-  SELECT DISTINCT ON (LOWER(TRIM(e.from_email)))
-    LOWER(TRIM(e.from_email)) AS email,
-    e.from_name AS name,
+  SELECT DISTINCT ON (LOWER(TRIM(COALESCE(e.real_sender_email, e.from_email))))
+    LOWER(TRIM(COALESCE(e.real_sender_email, e.from_email))) AS email,
+    COALESCE(e.real_sender_name, e.from_name) AS name,
     e.account_id
   FROM emails e
-  WHERE e.from_email IS NOT NULL
+  WHERE COALESCE(e.real_sender_email, e.from_email) IS NOT NULL
     AND e.account_id IS NOT NULL AND e.account_id > 0
     AND (e.is_internal = 0 OR e.is_internal IS NULL)
     AND (e.is_excluded = 0 OR e.is_excluded IS NULL)
     AND NOT EXISTS (
-      SELECT 1 FROM contacts c WHERE LOWER(c.email) = LOWER(TRIM(e.from_email))
+      SELECT 1 FROM contacts c WHERE LOWER(c.email) = LOWER(TRIM(COALESCE(e.real_sender_email, e.from_email)))
     )
-  ORDER BY LOWER(TRIM(e.from_email)), e.received_at DESC NULLS LAST
+  ORDER BY LOWER(TRIM(COALESCE(e.real_sender_email, e.from_email))), e.received_at DESC NULLS LAST
   LIMIT $1`;
 
 const INSERT_CONTACT_SQL = `
@@ -276,7 +276,7 @@ const CONTACTS_FOR_ENRICHMENT_SQL = `
 const SIGNATURE_SNIPPETS_SQL = `
   SELECT body_preview
   FROM emails
-  WHERE LOWER(TRIM(from_email)) = $1
+  WHERE LOWER(TRIM(COALESCE(real_sender_email, from_email))) = $1
     AND body_preview IS NOT NULL
     AND LENGTH(body_preview) > 50
   ORDER BY received_at DESC
@@ -356,9 +356,9 @@ Respond with ONLY valid JSON:
 }
 
 interface ParsedEnrichmentFields {
+  company: string | null;
   phone: string | null;
   title: string | null;
-  company: string | null;
 }
 
 function parseEnrichmentFields(

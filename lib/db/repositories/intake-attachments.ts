@@ -93,7 +93,7 @@ const checkInternetMessageIdDupeStmt = db.query<
     AND e2.internet_message_id = $1
     AND d2.file_name = $2
     AND ($3 IS NULL OR d2.file_size = $3)
-    AND d2.extraction_status IN ('success', 'deduped')
+    AND d2.extraction_status = 'success'
     AND d2.id <> $4
   LIMIT 1
 `);
@@ -103,7 +103,7 @@ const checkContentHashDupeStmt = db.query<{ id: number }, [string, number]>(
    FROM documents d2
    WHERE d2.source = 'email_attachment'
      AND d2.content_hash = $1
-     AND d2.extraction_status IN ('success', 'deduped')
+     AND d2.extraction_status = 'success'
      AND d2.id <> $2
    LIMIT 1`
 );
@@ -142,6 +142,46 @@ export async function getIntakeAttachmentRows(
   limit: number
 ): Promise<IntakeAttachmentRow[]> {
   return await getIntakeAttachmentRowsStmt.all(limit);
+}
+
+const getIntakeAttachmentRowsByEmailStmt = db.query<
+  IntakeAttachmentRow,
+  [number]
+>(`
+  SELECT
+    d.id as attachment_id_pk,
+    d.outlook_attachment_id as graph_attachment_id,
+    d.file_name as name,
+    d.content_type,
+    d.file_size as size,
+    d.storage_path,
+    d.source,
+    d.monday_column_id,
+    d.estimate_id,
+    d.local_path,
+    e.id as email_id,
+    e.message_id,
+    e.internet_message_id,
+    e.project_id,
+    e.subject,
+    e.from_email,
+    e.thread_id,
+    e.conversation_id,
+    m.email as mailbox_email
+  FROM documents d
+  LEFT JOIN emails e ON e.id = d.email_id
+  LEFT JOIN mailboxes m ON m.id = e.mailbox_id
+  WHERE d.email_id = $1
+    AND d.source = 'email_attachment'
+    AND (d.extraction_status IS NULL OR d.extraction_status = 'pending')
+    AND d.outlook_attachment_id IS NOT NULL
+  ORDER BY d.created_at ASC
+`);
+
+export async function getIntakeAttachmentRowsByEmail(
+  emailId: number
+): Promise<IntakeAttachmentRow[]> {
+  return await getIntakeAttachmentRowsByEmailStmt.all(emailId);
 }
 
 export async function updateDocumentBackfillLinks(

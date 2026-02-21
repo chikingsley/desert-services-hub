@@ -84,18 +84,19 @@ export function extractEstimateNumbers(text: string): string[] {
 // ── Per-email DB lookups ─────────────────────────────────────────────
 
 interface EmailForLinking {
-  id: number;
-  subject: string | null;
-  normalized_subject: string | null;
-  body_preview: string | null;
   attachment_names: string | null;
-  from_domain: string | null;
-  project_id: number | null;
+  body_full: string | null;
+  body_preview: string | null;
   conversation_id: string | null;
+  from_domain: string | null;
+  id: number;
+  normalized_subject: string | null;
+  project_id: number | null;
+  subject: string | null;
 }
 
 const getEmailForLinking = db.query<EmailForLinking, [number]>(
-  `SELECT id, subject, normalized_subject, body_preview, attachment_names,
+  `SELECT id, subject, normalized_subject, body_preview, body_full, attachment_names,
           from_domain, project_id, conversation_id
    FROM emails WHERE id = $1`
 );
@@ -110,8 +111,8 @@ const getConversationProject = db.query<
 );
 
 interface EstimateLookupRow {
-  id: number;
   account_domain: string | null;
+  id: number;
 }
 
 const getEstimateByMondayItemId = db.query<EstimateLookupRow, [string]>(
@@ -149,14 +150,14 @@ const getEstimateName = db.query<
 // ── Public API ───────────────────────────────────────────────────────
 
 export interface LinkEmailResult {
-  projectLinked: boolean;
   estimateLinked: boolean;
+  projectLinked: boolean;
   signals: string[];
 }
 
 interface LinkState {
-  projectId: number | null;
   hasEstimate: boolean;
+  projectId: number | null;
   signals: string[];
 }
 
@@ -165,6 +166,7 @@ function buildHaystack(email: EmailForLinking): string {
     email.subject ?? "",
     email.normalized_subject ?? "",
     email.body_preview ?? "",
+    email.body_full ?? "",
     ...safeJsonArray(email.attachment_names),
   ]
     .filter(Boolean)

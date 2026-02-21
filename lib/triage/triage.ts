@@ -19,6 +19,11 @@ import type { EmailClassification } from "@lib/db/types";
 import { chat } from "@lib/pdf-analysis";
 import { gatherTriageContext } from "./context";
 import { dispatchTriageResult } from "./dispatch";
+import {
+  evaluateTriageRerankShadow,
+  rerankProjectCandidates,
+  type TriageRerankMode,
+} from "./rerank-shadow";
 import type {
   TriageContext,
   TriageEmailMeta,
@@ -46,23 +51,39 @@ function parseTriageMode(value: string | undefined): TriageMode {
   return "active";
 }
 
+function parseTriageRerankMode(value: string | undefined): TriageRerankMode {
+  const trimmed = (value ?? "disabled").trim().toLowerCase();
+  if (trimmed === "shadow" || trimmed === "project") {
+    return trimmed;
+  }
+  return "disabled";
+}
+
+function parsePositiveInt(value: string | undefined, fallback: number): number {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed < 1) {
+    return fallback;
+  }
+  return Math.floor(parsed);
+}
+
 const EMAIL_TRIAGE_MODE = parseTriageMode(process.env.EMAIL_TRIAGE_MODE);
 const EMAIL_TRIAGE_MODEL = (
   process.env.GEMINI_FAST_MODEL ?? "gemini-2.5-flash-lite"
 ).trim();
 const LOCAL_LLM_MODEL = process.env.LOCAL_LLM_MODEL ?? "granite4:latest";
+const EMAIL_TRIAGE_RERANK_MODE = parseTriageRerankMode(
+  process.env.EMAIL_TRIAGE_RERANK_MODE
+);
+const EMAIL_TRIAGE_RERANK_TOP_N = parsePositiveInt(
+  process.env.EMAIL_TRIAGE_RERANK_TOP_N,
+  3
+);
 const DEFAULT_TRIAGE_PROVIDER =
   (process.env.EMAIL_TRIAGE_PROVIDER ?? "local").trim().toLowerCase() ===
   "local"
     ? "local"
     : "gemini";
-const DEFAULT_INTERNAL_DOMAINS = new Set(
-  (process.env.INTERNAL_DOMAINS ?? "desertservices.net")
-    .split(",")
-    .map((d) => d.trim().toLowerCase())
-    .filter(Boolean)
-);
-
 const TRIAGE_ACTION_CATEGORY_SET = ACTION_CATEGORIES;
 const TRIAGE_CATEGORY_GUIDANCE_MAP = CATEGORY_GUIDANCE;
 const TRIAGE_SUBCATEGORY_GUIDANCE_MAP = SUBCATEGORY_GUIDANCE;
@@ -86,10 +107,7 @@ export async function triageEmail(
     };
   }
 
-  const fastResult = await checkFastPath(
-    emailId,
-    options?.internalDomains ?? DEFAULT_INTERNAL_DOMAINS
-  );
+  const fastResult = await checkFastPath(emailId);
   if (fastResult) {
     return fastResult;
   }
@@ -108,7 +126,29 @@ export async function triageEmail(
   const provider = options?.provider ?? DEFAULT_TRIAGE_PROVIDER;
   const _model = provider === "local" ? LOCAL_LLM_MODEL : EMAIL_TRIAGE_MODEL;
 
-  const prompt = buildTriagePrompt(context);
+  const rerankedProjects = await rerankProjectCandidates(
+    {
+      context,
+      emailId,
+    },
+    {
+      mode: EMAIL_TRIAGE_RERANK_MODE,
+      topN: EMAIL_TRIAGE_RERANK_TOP_N,
+    }
+  );
+
+  const triageContext =
+    rerankedProjects === context.candidates.projects
+      ? context
+      : {
+          ...context,
+          candidates: {
+            ...context.candidates,
+            projects: rerankedProjects,
+          },
+        };
+
+  const prompt = buildTriagePrompt(triageContext);
   let raw: Record<string, unknown> | null = null;
 
   try {
@@ -127,9 +167,11 @@ export async function triageEmail(
     };
   }
 
-  const validProjectIds = new Set(context.candidates.projects.map((p) => p.id));
+  const validProjectIds = new Set(
+    triageContext.candidates.projects.map((p) => p.id)
+  );
   const validEstimateIds = new Set(
-    context.candidates.estimates.map((e) => e.id)
+    triageContext.candidates.estimates.map((e) => e.id)
   );
   const result = parseTriageOutput(raw, validProjectIds, validEstimateIds);
 
@@ -147,6 +189,18 @@ export async function triageEmail(
       error: "parse_failed",
     };
   }
+
+  await evaluateTriageRerankShadow(
+    {
+      context: triageContext,
+      emailId,
+      llmResult: result,
+    },
+    {
+      mode: EMAIL_TRIAGE_RERANK_MODE,
+      topN: EMAIL_TRIAGE_RERANK_TOP_N,
+    }
+  );
 
   if (EMAIL_TRIAGE_MODE === "shadow") {
     console.log(
@@ -181,8 +235,7 @@ export async function triageEmail(
 // ── Fast path ───────────────────────────────────────────────
 
 async function checkFastPath(
-  emailId: number,
-  internalDomains: ReadonlySet<string>
+  emailId: number
 ): Promise<TriageOutcome | null> {
   const email = await getEmailById(emailId);
   if (!email) {
@@ -219,21 +272,6 @@ async function checkFastPath(
       skipReason: "excluded",
       error: null,
     };
-  }
-
-  // Internal email with no attachments — just classify INTERNAL, skip LLM
-  if (email.isInternal && !email.hasAttachments) {
-    const fromDomain = email.fromDomain?.toLowerCase();
-    if (fromDomain && internalDomains.has(fromDomain)) {
-      await updateEmailClassification(emailId, "INTERNAL", 1, "pattern");
-      return {
-        result: null,
-        dispatch: null,
-        skipped: true,
-        skipReason: "internal_no_attachments",
-        error: null,
-      };
-    }
   }
 
   // Empty email — nothing to classify

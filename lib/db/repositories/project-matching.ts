@@ -17,13 +17,13 @@ import type {
 } from "@lib/db/repositories/types";
 
 interface ProjectCandidateRow {
+  account_id: number | null;
+  address: string | null;
+  contractor: string | null;
   id: number;
   name: string;
   normalized_name: string | null;
-  contractor: string | null;
-  address: string | null;
   outlook_folder: string | null;
-  account_id: number | null;
   updated_at: string;
 }
 
@@ -31,6 +31,9 @@ const HARD_MATCH_CODES = new Set<ProjectMatchReasonCode>([
   "normalized_name_exact",
   "outlook_folder_exact",
 ]);
+const ACCOUNT_SCOPED_MIN_ROWS = 5;
+const PROJECT_QUERY_LIMIT = 250;
+const PROJECT_TOKEN_LIMIT = 6;
 
 function scoreFromTokenOverlap(
   hintTokens: Set<string>,
@@ -89,67 +92,101 @@ async function fetchProjectCandidateRows(context: {
   primaryTokens: string[];
   accountIdHint: number | null;
 }): Promise<ProjectCandidateRow[]> {
+  const primaryTokens = context.primaryTokens.slice(0, PROJECT_TOKEN_LIMIT);
   const rowsById = new Map<number, ProjectCandidateRow>();
 
-  if (context.nameKeys.length > 0) {
-    const placeholders = context.nameKeys
-      .map((_, i) => `$${i + 1}`)
-      .join(", ");
-    const rows = await db
+  const addRows = (rows: ProjectCandidateRow[]): void => {
+    for (const row of rows) {
+      rowsById.set(row.id, row);
+    }
+  };
+
+  const fetchRowsByNormalizedName = async (
+    accountId: number | null
+  ): Promise<ProjectCandidateRow[]> => {
+    if (context.nameKeys.length === 0) {
+      return [];
+    }
+
+    const placeholders = context.nameKeys.map((_, i) => `$${i + 1}`).join(", ");
+    const params: unknown[] = [...context.nameKeys];
+    const accountClause =
+      accountId == null ? "" : ` AND account_id = $${params.push(accountId)}`;
+
+    return await db
       .query<ProjectCandidateRow>(
         `SELECT
            id, name, normalized_name, contractor, address, outlook_folder,
            account_id, updated_at
          FROM projects
-         WHERE normalized_name IN (${placeholders})`
+         WHERE normalized_name IN (${placeholders})${accountClause}
+         ORDER BY updated_at DESC
+         LIMIT ${PROJECT_QUERY_LIMIT}`
       )
-      .all(...context.nameKeys);
-    for (const row of rows) {
-      rowsById.set(row.id, row);
-    }
-  }
+      .all(...params);
+  };
 
-  if (context.primaryTokens.length > 0 || context.accountIdHint != null) {
+  const fetchRowsByPrimaryTokens = async (
+    accountId: number | null
+  ): Promise<ProjectCandidateRow[]> => {
+    if (primaryTokens.length === 0 && accountId == null) {
+      return [];
+    }
+
     const whereParts: string[] = [];
     const params: unknown[] = [];
     let paramIndex = 1;
 
-    if (context.accountIdHint != null) {
+    if (accountId != null) {
       whereParts.push(`account_id = $${paramIndex++}`);
-      params.push(context.accountIdHint);
+      params.push(accountId);
     }
 
-    if (context.primaryTokens.length > 0) {
-      const tokenClauses = context.primaryTokens.slice(0, 6).map(() => {
+    if (primaryTokens.length > 0) {
+      const tokenClauses = primaryTokens.map(() => {
         const p1 = paramIndex++;
         const p2 = paramIndex++;
         const p3 = paramIndex++;
         const p4 = paramIndex++;
         return `(name ILIKE $${p1} OR contractor ILIKE $${p2} OR address ILIKE $${p3} OR outlook_folder ILIKE $${p4})`;
       });
-      whereParts.push(tokenClauses.join(" OR "));
-      for (const token of context.primaryTokens.slice(0, 6)) {
+      for (const token of primaryTokens) {
         const pattern = `%${token}%`;
         params.push(pattern, pattern, pattern, pattern);
       }
+      whereParts.push(`(${tokenClauses.join(" OR ")})`);
     }
 
-    const rows = await db
+    if (whereParts.length === 0) {
+      return [];
+    }
+
+    return await db
       .query<ProjectCandidateRow>(
         `SELECT
            id, name, normalized_name, contractor, address, outlook_folder,
            account_id, updated_at
          FROM projects
-         WHERE ${whereParts.join(" OR ")}
+         WHERE ${whereParts.join(" AND ")}
          ORDER BY updated_at DESC
-         LIMIT 250`
+         LIMIT ${PROJECT_QUERY_LIMIT}`
       )
       .all(...params);
+  };
 
-    for (const row of rows) {
-      rowsById.set(row.id, row);
+  if (context.accountIdHint != null) {
+    addRows(await fetchRowsByNormalizedName(context.accountIdHint));
+    addRows(await fetchRowsByPrimaryTokens(context.accountIdHint));
+
+    if (rowsById.size < ACCOUNT_SCOPED_MIN_ROWS) {
+      addRows(await fetchRowsByNormalizedName(null));
+      addRows(await fetchRowsByPrimaryTokens(null));
     }
+    return [...rowsById.values()];
   }
+
+  addRows(await fetchRowsByNormalizedName(null));
+  addRows(await fetchRowsByPrimaryTokens(null));
 
   return [...rowsById.values()];
 }
@@ -178,12 +215,12 @@ export async function findProjectCandidates(
 }
 
 interface ProjectRankingContext {
-  rawTexts: Set<string>;
+  accountIdHint: number | null;
+  addressTokens: Set<string>;
+  contractorTokens: Set<string>;
   nameKeys: Set<string>;
   primaryTokens: Set<string>;
-  contractorTokens: Set<string>;
-  addressTokens: Set<string>;
-  accountIdHint: number | null;
+  rawTexts: Set<string>;
 }
 
 function buildProjectMatchContext(

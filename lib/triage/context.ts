@@ -9,7 +9,7 @@
 import { db } from "@lib/db/client";
 import { getEmailById } from "@lib/db/repositories/email";
 import { findEstimateCandidatesForEmail } from "@lib/db/repositories/estimate-email-matching";
-import { findProjectCandidates } from "@lib/db/repositories/project-matching";
+import { findProjectCandidatesFts } from "@lib/db/repositories/project-matching-fts";
 import type {
   AttachmentRow,
   DocumentRow,
@@ -35,6 +35,12 @@ const MAX_ATTACHMENTS = 3;
 const MAX_ATTACHMENT_TEXT_CHARS = 2000;
 const MAX_PROJECT_CANDIDATES = 5;
 const MAX_ESTIMATE_CANDIDATES = 5;
+const MAX_PROJECT_PRIMARY_TEXT_CHARS = 400;
+const MAX_PROJECT_BODY_HINT_CHARS = 2000;
+const MAX_PROJECT_HINT_CHARS = 220;
+const MAX_PROJECT_ALIAS_HINTS = 12;
+const MAX_PROJECT_ADDRESS_HINT_CHARS = 300;
+const FILE_EXTENSION_RE = /\.[^.]+$/;
 
 // ── Main ────────────────────────────────────────────────────
 
@@ -67,15 +73,29 @@ export async function gatherTriageContext(
     existingProjectId: email.projectId,
   };
 
-  // Fetch thread, documents, attachments, and candidates concurrently
-  const [thread, documents, attachments, projectResult, estimateResult] =
-    await Promise.all([
-      fetchThreadEmails(email.conversationId, email.id),
-      fetchDocuments(email.conversationId, email.projectId),
-      fetchAttachments(email.conversationId),
-      gatherProjectCandidates(email.subject, email.fromDomain, email.accountId),
-      gatherEstimateCandidates(emailId),
-    ]);
+  // Fetch broad context first, then derive the strongest project matching hints.
+  const [thread, documents, attachments, estimateResult] = await Promise.all([
+    fetchThreadEmails(email.conversationId, email.id),
+    fetchDocuments(email.conversationId, email.projectId),
+    fetchAttachments(email.conversationId),
+    gatherEstimateCandidates(emailId),
+  ]);
+  const accountIdHint = await resolveAccountIdHint(
+    email.accountId,
+    email.projectId,
+    estimateResult
+  );
+  const projectResult = await gatherProjectCandidates({
+    accountId: accountIdHint,
+    attachmentNames: email.attachmentNames,
+    attachments,
+    body: email.bodyFull,
+    documents,
+    estimateCandidates: estimateResult,
+    fromDomain: email.fromDomain,
+    subject: email.subject,
+    thread,
+  });
 
   return {
     email: emailCtx,
@@ -227,20 +247,35 @@ async function fetchAttachments(
 
 // ── Project Candidates ──────────────────────────────────────
 
+interface ProjectCandidateHintInput {
+  accountId: number | null;
+  attachmentNames: string[];
+  attachments: TriageAttachment[];
+  body: string | null;
+  documents: TriageDocument[];
+  estimateCandidates: TriageEstimateCandidate[];
+  fromDomain: string | null;
+  subject: string | null;
+  thread: TriageThreadEmail[];
+}
+
 async function gatherProjectCandidates(
-  subject: string | null,
-  fromDomain: string | null,
-  accountId: number | null
+  input: ProjectCandidateHintInput
 ): Promise<TriageProjectCandidate[]> {
-  const primaryText = subject ?? "";
-  if (!primaryText.trim()) {
+  const primaryText = pickProjectPrimaryText(input.subject, input.body);
+  if (!primaryText) {
     return [];
   }
 
-  const result = await findProjectCandidates({
+  const aliasHints = collectProjectAliasHints(input);
+  const addressHint = collectProjectAddressHint(input);
+
+  const result = await findProjectCandidatesFts({
+    accountIdHint: input.accountId,
+    addressHint,
+    aliasHints,
+    contractorHint: input.fromDomain,
     primaryText,
-    contractorHint: fromDomain,
-    accountIdHint: accountId,
     limit: MAX_PROJECT_CANDIDATES,
   });
 
@@ -260,6 +295,16 @@ async function gatherProjectCandidates(
 
 // ── Estimate Candidates ─────────────────────────────────────
 
+interface EstimateProjectRow {
+  estimate_id: number;
+  project_count: number;
+  project_id: number | null;
+}
+
+interface ProjectAccountRow {
+  account_id: number | null;
+}
+
 async function gatherEstimateCandidates(
   emailId: number
 ): Promise<TriageEstimateCandidate[]> {
@@ -271,13 +316,18 @@ async function gatherEstimateCandidates(
     return [];
   }
 
+  const estimateIds = result.candidates.map(
+    (candidate) => candidate.estimateId
+  );
+  const projectMap = await fetchEstimateProjectMap(estimateIds);
+
   return result.candidates.map((candidate) => ({
     id: candidate.estimateId,
     estimateNumber: candidate.estimateNumber,
     jobName: candidate.name ?? candidate.jobName ?? "",
     contractor: candidate.contractor,
     jobAddress: candidate.jobAddress,
-    projectId: null, // not returned by matching, available via join if needed
+    projectId: projectMap.get(candidate.estimateId) ?? null,
     score: candidate.score,
   }));
 }
@@ -295,6 +345,213 @@ function truncate(
     return text;
   }
   return `${text.slice(0, maxChars)}…`;
+}
+
+function truncateForHint(
+  text: string | null | undefined,
+  maxChars: number
+): string | null {
+  return truncate(text, maxChars);
+}
+
+function pushHint(hints: string[], value: string | null | undefined): void {
+  const trimmed = truncateForHint(value?.trim(), MAX_PROJECT_HINT_CHARS);
+  if (trimmed) {
+    hints.push(trimmed);
+  }
+}
+
+function uniqueHints(values: string[], limit: number): string[] {
+  const seen = new Set<string>();
+  const deduped: string[] = [];
+  for (const value of values) {
+    const key = value.toLowerCase();
+    if (seen.has(key)) {
+      continue;
+    }
+    seen.add(key);
+    deduped.push(value);
+    if (deduped.length >= limit) {
+      break;
+    }
+  }
+  return deduped;
+}
+
+function stripFileExtension(name: string): string {
+  return name.replace(FILE_EXTENSION_RE, "").trim();
+}
+
+function pickProjectPrimaryText(
+  subject: string | null,
+  body: string | null
+): string | null {
+  const primarySubject = truncateForHint(
+    subject?.trim(),
+    MAX_PROJECT_PRIMARY_TEXT_CHARS
+  );
+  if (primarySubject) {
+    return primarySubject;
+  }
+  return truncateForHint(body?.trim(), MAX_PROJECT_PRIMARY_TEXT_CHARS);
+}
+
+function keyLooksLikeAddressHint(key: string): boolean {
+  const lower = key.toLowerCase();
+  return (
+    lower.includes("address") ||
+    lower.includes("location") ||
+    lower.includes("site")
+  );
+}
+
+function keyLooksLikeProjectHint(key: string): boolean {
+  const lower = key.toLowerCase();
+  return (
+    lower.includes("project") ||
+    lower.includes("job") ||
+    lower.includes("site") ||
+    lower.includes("name")
+  );
+}
+
+function collectProjectAliasHints(input: ProjectCandidateHintInput): string[] {
+  const hints: string[] = [];
+
+  pushHint(hints, input.subject);
+  pushHint(
+    hints,
+    truncateForHint(input.body?.trim(), MAX_PROJECT_BODY_HINT_CHARS)
+  );
+
+  for (const threadEmail of input.thread) {
+    pushHint(hints, threadEmail.subject);
+  }
+
+  for (const name of input.attachmentNames) {
+    pushHint(hints, stripFileExtension(name));
+  }
+  for (const attachment of input.attachments) {
+    pushHint(hints, stripFileExtension(attachment.name));
+  }
+
+  for (const document of input.documents) {
+    pushHint(hints, document.summary);
+    pushHint(hints, document.fileName);
+    for (const [key, value] of Object.entries(document.keyFields)) {
+      if (!(typeof value === "string" && keyLooksLikeProjectHint(key))) {
+        continue;
+      }
+      pushHint(hints, value);
+    }
+  }
+
+  for (const estimate of input.estimateCandidates) {
+    pushHint(hints, estimate.jobName);
+  }
+
+  return uniqueHints(hints, MAX_PROJECT_ALIAS_HINTS);
+}
+
+function collectProjectAddressHint(
+  input: ProjectCandidateHintInput
+): string | null {
+  const hints: string[] = [];
+
+  for (const document of input.documents) {
+    for (const [key, value] of Object.entries(document.keyFields)) {
+      if (!(typeof value === "string" && keyLooksLikeAddressHint(key))) {
+        continue;
+      }
+      pushHint(hints, value);
+    }
+  }
+
+  for (const estimate of input.estimateCandidates) {
+    pushHint(hints, estimate.jobAddress);
+  }
+
+  const first = uniqueHints(hints, 1)[0];
+  return truncateForHint(first, MAX_PROJECT_ADDRESS_HINT_CHARS);
+}
+
+async function fetchEstimateProjectMap(
+  estimateIds: number[]
+): Promise<Map<number, number | null>> {
+  const uniqueIds = [...new Set(estimateIds)].filter(
+    (id) => Number.isInteger(id) && id > 0
+  );
+  if (uniqueIds.length === 0) {
+    return new Map();
+  }
+
+  const placeholders = uniqueIds.map((_, idx) => `$${idx + 1}`).join(", ");
+  const rows = await db
+    .query<EstimateProjectRow>(
+      `SELECT estimate_id,
+              MIN(project_id) AS project_id,
+              COUNT(DISTINCT project_id)::int AS project_count
+       FROM project_estimates
+       WHERE estimate_id IN (${placeholders})
+       GROUP BY estimate_id`
+    )
+    .all(...uniqueIds);
+
+  const map = new Map<number, number | null>();
+  for (const row of rows) {
+    map.set(
+      row.estimate_id,
+      row.project_count === 1 ? (row.project_id ?? null) : null
+    );
+  }
+  return map;
+}
+
+async function resolveAccountIdHint(
+  accountId: number | null,
+  projectId: number | null,
+  estimateCandidates: TriageEstimateCandidate[]
+): Promise<number | null> {
+  if (typeof accountId === "number" && accountId > 0) {
+    return accountId;
+  }
+
+  if (typeof projectId === "number" && projectId > 0) {
+    const row = await db
+      .query<ProjectAccountRow>(
+        "SELECT account_id FROM projects WHERE id = $1 LIMIT 1"
+      )
+      .get(projectId);
+    if (typeof row?.account_id === "number" && row.account_id > 0) {
+      return row.account_id;
+    }
+  }
+
+  const estimateIds = estimateCandidates
+    .map((candidate) => candidate.id)
+    .filter((id) => Number.isInteger(id) && id > 0);
+  const uniqueEstimateIds = [...new Set(estimateIds)];
+  if (uniqueEstimateIds.length === 0) {
+    return null;
+  }
+
+  const placeholders = uniqueEstimateIds
+    .map((_, idx) => `$${idx + 1}`)
+    .join(", ");
+  const rows = await db
+    .query<ProjectAccountRow>(
+      `SELECT DISTINCT account_id
+       FROM estimates
+       WHERE id IN (${placeholders})
+         AND account_id IS NOT NULL
+         AND account_id > 0`
+    )
+    .all(...uniqueEstimateIds);
+
+  const accountIds = rows
+    .map((row) => row.account_id)
+    .filter((id): id is number => typeof id === "number" && id > 0);
+  return accountIds.length === 1 ? accountIds[0] : null;
 }
 
 function formatSender(

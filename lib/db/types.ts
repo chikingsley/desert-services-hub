@@ -39,7 +39,6 @@ export type EmailClassification =
   | "IT"
   | "SCHEDULE"
   | "CHANGE_ORDER"
-  | "INTERNAL"
   | "VENDOR"
   | "SPAM"
   | "UNKNOWN";

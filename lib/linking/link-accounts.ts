@@ -84,6 +84,120 @@ async function updateEmailAccount(
   await updateStmt.run(accountId, emailId, accountId);
 }
 
+async function linkAccountsByProject(stats: LinkStats): Promise<void> {
+  console.log("Signal 0a: Project inheritance...");
+  const result = await db
+    .query<{ updated: number }>(
+      `WITH to_update AS (
+         SELECT e.id, p.account_id
+         FROM emails e
+         JOIN projects p ON p.id = e.project_id
+         WHERE e.account_id IS NULL AND p.account_id IS NOT NULL
+       ),
+       updated AS (
+         UPDATE emails
+         SET account_id = tu.account_id
+         FROM to_update tu
+         WHERE emails.id = tu.id
+         RETURNING 1
+       )
+       SELECT COUNT(*)::int AS updated FROM updated`
+    )
+    .get();
+
+  stats.processed += result?.updated ?? 0;
+  stats.linkedByProject += result?.updated ?? 0;
+}
+
+async function linkAccountsByEstimate(stats: LinkStats): Promise<void> {
+  console.log("Signal 0b: Estimate inheritance...");
+  const result = await db
+    .query<{ updated: number; ambiguous: number }>(
+      `WITH candidate AS (
+         SELECT DISTINCT ee.email_id, e.account_id
+         FROM estimate_emails ee
+         JOIN estimates e ON e.id = ee.estimate_id
+         JOIN emails mail ON mail.id = ee.email_id
+         WHERE (mail.account_id IS NULL OR mail.account_id <= 0)
+           AND e.account_id IS NOT NULL
+           AND e.account_id > 0
+       ),
+       grouped AS (
+         SELECT
+           email_id,
+           MIN(account_id) AS account_id,
+           COUNT(DISTINCT account_id)::int AS account_count
+         FROM candidate
+         GROUP BY email_id
+       ),
+       to_update AS (
+         SELECT email_id AS id, account_id
+         FROM grouped
+         WHERE account_count = 1
+       ),
+       updated AS (
+         UPDATE emails
+         SET account_id = tu.account_id
+         FROM to_update tu
+         WHERE emails.id = tu.id
+           AND (emails.account_id IS NULL OR emails.account_id <= 0)
+         RETURNING 1
+       )
+       SELECT
+         (SELECT COUNT(*)::int FROM updated) AS updated,
+         (SELECT COUNT(*)::int FROM grouped WHERE account_count > 1) AS ambiguous`
+    )
+    .get();
+
+  stats.processed += result?.updated ?? 0;
+  stats.linkedByEstimate += result?.updated ?? 0;
+  stats.skippedAmbiguous += result?.ambiguous ?? 0;
+}
+
+async function linkAccountsByContact(stats: LinkStats): Promise<void> {
+  console.log("Signal 0c: Contact inheritance...");
+  const result = await db
+    .query<{ updated: number; ambiguous: number }>(
+      `WITH from_contacts AS (
+         SELECT DISTINCT ce.email_id, c.account_id
+         FROM contact_emails ce
+         JOIN contacts c ON c.id = ce.contact_id
+         WHERE ce.relationship = 'from' AND c.account_id IS NOT NULL AND c.account_id > 0
+       ),
+       grouped AS (
+         SELECT
+           email_id,
+           MIN(account_id) AS account_id,
+           COUNT(DISTINCT account_id)::int AS account_count
+         FROM from_contacts
+         GROUP BY email_id
+       ),
+       to_update AS (
+         SELECT g.email_id AS id, g.account_id
+         FROM grouped g
+         JOIN emails e ON e.id = g.email_id
+         WHERE g.account_count = 1
+           AND (e.account_id IS NULL OR e.account_id <= 0)
+       ),
+       updated AS (
+         UPDATE emails
+         SET account_id = tu.account_id
+         FROM to_update tu
+         WHERE emails.id = tu.id
+           AND (emails.account_id IS NULL OR emails.account_id <= 0)
+         RETURNING 1
+       )
+       SELECT
+         (SELECT COUNT(*)::int FROM updated) AS updated,
+         (SELECT COUNT(*)::int FROM grouped WHERE account_count > 1) AS ambiguous`
+    )
+    .get();
+
+  stats.processed += result?.updated ?? 0;
+  stats.linkedByContact += result?.updated ?? 0;
+  stats.skippedAmbiguous += result?.ambiguous ?? 0;
+}
+
 async function linkPlatformEmailsByDomain(
   updateStmt: AccountUpdateStmt,
   stats: LinkStats
@@ -327,23 +441,36 @@ async function propagateConversationAccountLinks(
 }
 
 export interface LinkStats {
-  processed: number;
-  linkedByPlatformDomain: number;
-  linkedByForwardDomain: number;
-  linkedByDirectDomain: number;
-  linkedByNameLookup: number;
-  linkedByAlias: number;
-  linkedByConversation: number;
   accountsCreated: number;
+  errors: number;
+  linkedByAlias: number;
+  linkedByContact: number;
+  linkedByConversation: number;
+  linkedByDirectDomain: number;
+  linkedByEstimate: number;
+  linkedByForwardDomain: number;
+  linkedByNameLookup: number;
+  linkedByPlatformDomain: number;
+  linkedByProject: number;
+  processed: number;
+  skippedAmbiguous: number;
   skippedIgnoredDomain: number;
   skippedNoDomain: number;
-  errors: number;
 }
 
-export async function linkEmailsToAccounts(): Promise<LinkStats> {
+interface LinkEmailsToAccountsOptions {
+  useTransaction?: boolean;
+}
+
+export async function linkEmailsToAccounts(
+  options: LinkEmailsToAccountsOptions = {}
+): Promise<LinkStats> {
   const stats: LinkStats = {
     accountsCreated: 0,
     errors: 0,
+    linkedByProject: 0,
+    linkedByEstimate: 0,
+    linkedByContact: 0,
     linkedByAlias: 0,
     linkedByConversation: 0,
     linkedByDirectDomain: 0,
@@ -351,6 +478,7 @@ export async function linkEmailsToAccounts(): Promise<LinkStats> {
     linkedByNameLookup: 0,
     linkedByPlatformDomain: 0,
     processed: 0,
+    skippedAmbiguous: 0,
     skippedIgnoredDomain: 0,
     skippedNoDomain: 0,
   };
@@ -364,14 +492,23 @@ export async function linkEmailsToAccounts(): Promise<LinkStats> {
   );
 
   try {
-    await db.transaction(async () => {
+    const runSignals = async () => {
+      await linkAccountsByProject(stats);
+      await linkAccountsByEstimate(stats);
+      await linkAccountsByContact(stats);
       await linkPlatformEmailsByDomain(updateStmt, stats);
       await linkForwardedEmailsByDomain(updateStmt, stats);
       await linkDirectExternalEmailsByDomain(updateStmt, stats);
       await linkPlatformEmailsByNameLookup(updateStmt, stats);
       await linkPlatformEmailsByCompanyAlias(updateStmt, stats);
       await propagateConversationAccountLinks(updateStmt, stats);
-    });
+    };
+
+    if (options.useTransaction === false) {
+      await runSignals();
+    } else {
+      await db.transaction(runSignals);
+    }
 
     const accountsAfter =
       (
@@ -392,6 +529,9 @@ if (import.meta.main) {
   linkEmailsToAccounts()
     .then((stats) => {
       const totalLinked =
+        stats.linkedByProject +
+        stats.linkedByEstimate +
+        stats.linkedByContact +
         stats.linkedByPlatformDomain +
         stats.linkedByForwardDomain +
         stats.linkedByDirectDomain +

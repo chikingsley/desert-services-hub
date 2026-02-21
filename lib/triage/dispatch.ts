@@ -212,13 +212,8 @@ export async function dispatchTriageResult(
     //    linkEmail() didn't already create an estimate_emails link)
     outcome.estimateLinked = await tryLinkEstimateFallback(result, meta);
 
-    // 4. Enqueue job if this classification triggers an action
-    const jobType = resolveDispatchAction(result, meta);
-    if (jobType && enqueueJobFn) {
-      const payload = JOB_PAYLOAD_BUILDERS[jobType](meta);
-      await enqueueJobFn(jobType, payload);
-      outcome.jobEnqueued = jobType;
-    }
+    // 4. Job dispatch disabled — categories/subcategories are being finalized.
+    //    Re-enable once action mappings are confirmed.
 
     return outcome;
   });

@@ -51,7 +51,6 @@ export const CATEGORY_GUIDANCE: Record<EmailClassification, string> = {
   HR: "Human resources, payroll, benefits, employee matters",
   IT: "Technology, systems, account access, tools",
   SCHEDULE: "Scheduling, calendar, meeting coordination",
-  INTERNAL: "Internal Desert Services team communications, administrative",
   VENDOR: "Vendor/supplier correspondence, material orders",
   SPAM: "Marketing, unsolicited, junk mail",
   UNKNOWN: "Cannot determine category",

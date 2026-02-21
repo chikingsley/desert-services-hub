@@ -1,0 +1,920 @@
+{
+  "currentVersion": 11.5,
+  "services": [
+    {
+      "name": "2024 County Demographics full",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/2024 County Demographics full/FeatureServer"
+    },
+    {
+      "name": "2024 Legislative Demographics full",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/2024 Legislative Demographics full/FeatureServer"
+    },
+    {
+      "name": "40_Acre_Spacing_Unit",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/40_Acre_Spacing_Unit/FeatureServer"
+    },
+    {
+      "name": "ADEQ_Community_Liaisons",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/ADEQ_Community_Liaisons/FeatureServer"
+    },
+    {
+      "name": "ADEQ_Upper_Agua_Fria_TMDL_Layers",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/ADEQ_Upper_Agua_Fria_TMDL_Layers/FeatureServer"
+    },
+    {
+      "name": "ADEQ_Wells",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/ADEQ_Wells/FeatureServer"
+    },
+    {
+      "name": "ADOT_Pullouts",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/ADOT_Pullouts/FeatureServer"
+    },
+    {
+      "name": "AIR_COMPLIANCE_PERMITS_AGOL",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/AIR_COMPLIANCE_PERMITS_AGOL/FeatureServer"
+    },
+    {
+      "name": "Air_Quality_Nonattainment",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/Air_Quality_Nonattainment/FeatureServer"
+    },
+    {
+      "name": "Airports",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/Airports/FeatureServer"
+    },
+    {
+      "name": "AIRSHEDS_AGOL",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/AIRSHEDS_AGOL/FeatureServer"
+    },
+    {
+      "name": "Alluvium",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/Alluvium/FeatureServer"
+    },
+    {
+      "name": "Area",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/Area/FeatureServer"
+    },
+    {
+      "name": "Arizona_Recycling_Data",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/Arizona_Recycling_Data/FeatureServer"
+    },
+    {
+      "name": "Arizona_Recycling_View",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/Arizona_Recycling_View/FeatureServer"
+    },
+    {
+      "name": "Arizona_State_Legislative_Districts",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/Arizona_State_Legislative_Districts/FeatureServer"
+    },
+    {
+      "name": "ArizonaAtRiskCommunities",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/ArizonaAtRiskCommunities/FeatureServer"
+    },
+    {
+      "name": "Assessed",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/Assessed/FeatureServer"
+    },
+    {
+      "name": "AZ_5000_FT",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/AZ_5000_FT/FeatureServer"
+    },
+    {
+      "name": "AZ_border_50_mile_buffer",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/AZ_border_50_mile_buffer/FeatureServer"
+    },
+    {
+      "name": "AZ_Title_V_AQ_Permits",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/AZ_Title_V_AQ_Permits/FeatureServer"
+    },
+    {
+      "name": "BLM_Land_Ownership_OFFLINE",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/BLM_Land_Ownership_OFFLINE/FeatureServer"
+    },
+    {
+      "name": "BROWNFIELDS_AGOL",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/BROWNFIELDS_AGOL/FeatureServer"
+    },
+    {
+      "name": "CAP",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/CAP/FeatureServer"
+    },
+    {
+      "name": "CENSUS_URBAN_2000_AGOL",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/CENSUS_URBAN_2000_AGOL/FeatureServer"
+    },
+    {
+      "name": "CENSUS_URBAN_2010_AGOL",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/CENSUS_URBAN_2010_AGOL/FeatureServer"
+    },
+    {
+      "name": "CENSUS_URBAN_2020_AGOL",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/CENSUS_URBAN_2020_AGOL/FeatureServer"
+    },
+    {
+      "name": "CITIES_AGOL",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/CITIES_AGOL/FeatureServer"
+    },
+    {
+      "name": "Cities_with_Recycling1",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/Cities_with_Recycling1/FeatureServer"
+    },
+    {
+      "name": "CitieswithHHW",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/CitieswithHHW/FeatureServer"
+    },
+    {
+      "name": "CitizenScienceArchive",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/CitizenScienceArchive/FeatureServer"
+    },
+    {
+      "name": "Class_I",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/Class_I/FeatureServer"
+    },
+    {
+      "name": "CO",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/CO/FeatureServer"
+    },
+    {
+      "name": "Composting_Facilities",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/Composting_Facilities/FeatureServer"
+    },
+    {
+      "name": "Congressional",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/Congressional/FeatureServer"
+    },
+    {
+      "name": "Counties___Voter_Registration",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/Counties___Voter_Registration/FeatureServer"
+    },
+    {
+      "name": "COUNTIES_AGOL",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/COUNTIES_AGOL/FeatureServer"
+    },
+    {
+      "name": "CountieswithHHW",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/CountieswithHHW/FeatureServer"
+    },
+    {
+      "name": "County",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/County/FeatureServer"
+    },
+    {
+      "name": "County_ImpairedWater_WFL1",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/County_ImpairedWater_WFL1/FeatureServer"
+    },
+    {
+      "name": "County_Seats",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/County_Seats/FeatureServer"
+    },
+    {
+      "name": "DEMA_Fish",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/DEMA_Fish/FeatureServer"
+    },
+    {
+      "name": "DEMA_HazMatResponse",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/DEMA_HazMatResponse/FeatureServer"
+    },
+    {
+      "name": "DEMA_PrescribedBurns",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/DEMA_PrescribedBurns/FeatureServer"
+    },
+    {
+      "name": "Demographics___Counties_2021",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/Demographics___Counties_2021/FeatureServer"
+    },
+    {
+      "name": "Demographics___LD_2021",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/Demographics___LD_2021/FeatureServer"
+    },
+    {
+      "name": "Designated_Use",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/Designated_Use/FeatureServer"
+    },
+    {
+      "name": "DEUR",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/DEUR/FeatureServer"
+    },
+    {
+      "name": "DEUR_VEMUR_AGOL",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/DEUR_VEMUR_AGOL/FeatureServer"
+    },
+    {
+      "name": "Draft_Assessed",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/Draft_Assessed/FeatureServer"
+    },
+    {
+      "name": "Draft_Impaired",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/Draft_Impaired/FeatureServer"
+    },
+    {
+      "name": "Drive time WM shops",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/Drive time WM shops/FeatureServer"
+    },
+    {
+      "name": "Dust_Visibility_Construction_Notification_Area",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/Dust_Visibility_Construction_Notification_Area/FeatureServer"
+    },
+    {
+      "name": "EPA_AIR_MONITORING_SITES_AGOL",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/EPA_AIR_MONITORING_SITES_AGOL/FeatureServer"
+    },
+    {
+      "name": "Fish_Advisory",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/Fish_Advisory/FeatureServer"
+    },
+    {
+      "name": "Flow_Regimes",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/Flow_Regimes/FeatureServer"
+    },
+    {
+      "name": "GIS_Day_Scavanger_Hunt",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/GIS_Day_Scavanger_Hunt/FeatureServer"
+    },
+    {
+      "name": "Hazardous_Waste",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/Hazardous_Waste/FeatureServer"
+    },
+    {
+      "name": "Heavy_Duty_Zero_Emission_Vehicle_Travel_Zones",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/Heavy_Duty_Zero_Emission_Vehicle_Travel_Zones/FeatureServer"
+    },
+    {
+      "name": "Impaired",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/Impaired/FeatureServer"
+    },
+    {
+      "name": "Improved_Trail",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/Improved_Trail/FeatureServer"
+    },
+    {
+      "name": "LAKES_ASSESSED_2026_AGOL",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/LAKES_ASSESSED_2026_AGOL/FeatureServer"
+    },
+    {
+      "name": "LAKES_IMPAIRED_2026_AGOL",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/LAKES_IMPAIRED_2026_AGOL/FeatureServer"
+    },
+    {
+      "name": "LAKES_WBID_AGOL",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/LAKES_WBID_AGOL/FeatureServer"
+    },
+    {
+      "name": "Land_Ownership",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/Land_Ownership/FeatureServer"
+    },
+    {
+      "name": "Landfills",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/Landfills/FeatureServer"
+    },
+    {
+      "name": "LaPaz_1983",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/LaPaz_1983/FeatureServer"
+    },
+    {
+      "name": "Legislative",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/Legislative/FeatureServer"
+    },
+    {
+      "name": "Legislative_2022_Demographics",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/Legislative_2022_Demographics/FeatureServer"
+    },
+    {
+      "name": "Legislative_Representatives",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/Legislative_Representatives/FeatureServer"
+    },
+    {
+      "name": "LegislativeDistrict",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/LegislativeDistrict/FeatureServer"
+    },
+    {
+      "name": "Legislators",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/Legislators/FeatureServer"
+    },
+    {
+      "name": "Lines_",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/Lines_/FeatureServer"
+    },
+    {
+      "name": "Log_Worm_Fence",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/Log_Worm_Fence/FeatureServer"
+    },
+    {
+      "name": "LUST_Soils",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/LUST_Soils/FeatureServer"
+    },
+    {
+      "name": "Maricopa_VEC_VVRP",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/Maricopa_VEC_VVRP/FeatureServer"
+    },
+    {
+      "name": "Mile_Posts",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/Mile_Posts/FeatureServer"
+    },
+    {
+      "name": "Monitors",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/Monitors/FeatureServer"
+    },
+    {
+      "name": "MRF",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/MRF/FeatureServer"
+    },
+    {
+      "name": "NacoSampling",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/NacoSampling/FeatureServer"
+    },
+    {
+      "name": "Native_American",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/Native_American/FeatureServer"
+    },
+    {
+      "name": "O3",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/O3/FeatureServer"
+    },
+    {
+      "name": "Oak_Creek_July_Inventory",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/Oak_Creek_July_Inventory/FeatureServer"
+    },
+    {
+      "name": "OAW",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/OAW/FeatureServer"
+    },
+    {
+      "name": "Outside_State_Fill",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/Outside_State_Fill/FeatureServer"
+    },
+    {
+      "name": "PartyRegistration",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/PartyRegistration/FeatureServer"
+    },
+    {
+      "name": "Pb",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/Pb/FeatureServer"
+    },
+    {
+      "name": "PFAS_DATA_PUBLIC_view",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/PFAS_DATA_PUBLIC_view/FeatureServer"
+    },
+    {
+      "name": "Pima_VEC_VVRP",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/Pima_VEC_VVRP/FeatureServer"
+    },
+    {
+      "name": "Pinal_Prohibited",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/Pinal_Prohibited/FeatureServer"
+    },
+    {
+      "name": "PM10",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/PM10/FeatureServer"
+    },
+    {
+      "name": "PM2pt5",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/PM2pt5/FeatureServer"
+    },
+    {
+      "name": "Potash_Wells",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/Potash_Wells/FeatureServer"
+    },
+    {
+      "name": "PRIORITY_SITES_AGOL",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/PRIORITY_SITES_AGOL/FeatureServer"
+    },
+    {
+      "name": "Project_Area",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/Project_Area/FeatureServer"
+    },
+    {
+      "name": "R18_11_Appendix_B",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/R18_11_Appendix_B/FeatureServer"
+    },
+    {
+      "name": "REM",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/REM/FeatureServer"
+    },
+    {
+      "name": "REM_channels",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/REM_channels/FeatureServer"
+    },
+    {
+      "name": "Roadside_Parking",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/Roadside_Parking/FeatureServer"
+    },
+    {
+      "name": "S123_68a290e9a20749d3981582a3931c80f5_FGDB_(2)",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/S123_68a290e9a20749d3981582a3931c80f5_FGDB_(2)/FeatureServer"
+    },
+    {
+      "name": "S123JSDataTest",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/S123JSDataTest/FeatureServer"
+    },
+    {
+      "name": "San_Pedro_Watershed_WFL1",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/San_Pedro_Watershed_WFL1/FeatureServer"
+    },
+    {
+      "name": "SCHOOLS_AGOL",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/SCHOOLS_AGOL/FeatureServer"
+    },
+    {
+      "name": "service_097131e43f1348bd8adc1e1acdcd76df",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/service_097131e43f1348bd8adc1e1acdcd76df/FeatureServer"
+    },
+    {
+      "name": "service_1ab7ac12a0c7467b8ed2e28fa67ab30e",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/service_1ab7ac12a0c7467b8ed2e28fa67ab30e/FeatureServer"
+    },
+    {
+      "name": "service_27fe4718f436476c9cc70b94499dbabd",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/service_27fe4718f436476c9cc70b94499dbabd/FeatureServer"
+    },
+    {
+      "name": "service_531491dde70649a999c6de35a1c6b281",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/service_531491dde70649a999c6de35a1c6b281/FeatureServer"
+    },
+    {
+      "name": "service_6dcdbfacd62c4986b0d768e838c17e43",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/service_6dcdbfacd62c4986b0d768e838c17e43/FeatureServer"
+    },
+    {
+      "name": "service_70e5145084184438bc9804f037f7befb",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/service_70e5145084184438bc9804f037f7befb/FeatureServer"
+    },
+    {
+      "name": "service_74b3e3bf315543ef90cc97a2e2bb6087",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/service_74b3e3bf315543ef90cc97a2e2bb6087/FeatureServer"
+    },
+    {
+      "name": "service_7ee969c46d6540b1b61319ad3ee8c03e_form",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/service_7ee969c46d6540b1b61319ad3ee8c03e_form/FeatureServer"
+    },
+    {
+      "name": "service_8658c8575a15492a9eb3f36e2979e2c9",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/service_8658c8575a15492a9eb3f36e2979e2c9/FeatureServer"
+    },
+    {
+      "name": "service_97befddeea5045928eb5bf063b9d2e1f",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/service_97befddeea5045928eb5bf063b9d2e1f/FeatureServer"
+    },
+    {
+      "name": "service_a4bed7cbaed9430c81896cf5a919bce7",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/service_a4bed7cbaed9430c81896cf5a919bce7/FeatureServer"
+    },
+    {
+      "name": "service_abc05c4556bd4d1bb5fd0b634d829fcc",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/service_abc05c4556bd4d1bb5fd0b634d829fcc/FeatureServer"
+    },
+    {
+      "name": "service_c3c7e3c67c4340efa047414423765b02",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/service_c3c7e3c67c4340efa047414423765b02/FeatureServer"
+    },
+    {
+      "name": "service_c46c72ce5edc435baf50115f6e545414",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/service_c46c72ce5edc435baf50115f6e545414/FeatureServer"
+    },
+    {
+      "name": "service_cc1f69f9c1c84593aab2e7edca829a42",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/service_cc1f69f9c1c84593aab2e7edca829a42/FeatureServer"
+    },
+    {
+      "name": "service_cf6a873bd95e408aad4b833752e2a7f3",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/service_cf6a873bd95e408aad4b833752e2a7f3/FeatureServer"
+    },
+    {
+      "name": "service_d6590d25ffa84060b2fd906ead383b00",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/service_d6590d25ffa84060b2fd906ead383b00/FeatureServer"
+    },
+    {
+      "name": "service_d7bcca57571b48c2918896b06442a13c",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/service_d7bcca57571b48c2918896b06442a13c/FeatureServer"
+    },
+    {
+      "name": "service_dd159a3287434760affdf2d08a357d9c",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/service_dd159a3287434760affdf2d08a357d9c/FeatureServer"
+    },
+    {
+      "name": "service_f37926cc38cd4ccea019b0337a19583e",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/service_f37926cc38cd4ccea019b0337a19583e/FeatureServer"
+    },
+    {
+      "name": "service_f3d8fe7cb0fa4de4a83992849179e06e",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/service_f3d8fe7cb0fa4de4a83992849179e06e/FeatureServer"
+    },
+    {
+      "name": "service_fa377732854b4a97858b29f52b1a280f",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/service_fa377732854b4a97858b29f52b1a280f/FeatureServer"
+    },
+    {
+      "name": "Signs_Final_(View)",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/Signs_Final_(View)/FeatureServer"
+    },
+    {
+      "name": "SO2",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/SO2/FeatureServer"
+    },
+    {
+      "name": "STREAMS_ASSESSED_2026_AGOL",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/STREAMS_ASSESSED_2026_AGOL/FeatureServer"
+    },
+    {
+      "name": "STREAMS_IMPAIRED_2026_AGOL",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/STREAMS_IMPAIRED_2026_AGOL/FeatureServer"
+    },
+    {
+      "name": "STREAMS_WBID_AGOL",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/STREAMS_WBID_AGOL/FeatureServer"
+    },
+    {
+      "name": "Superfund",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/Superfund/FeatureServer"
+    },
+    {
+      "name": "SUPERFUND_AGOL",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/SUPERFUND_AGOL/FeatureServer"
+    },
+    {
+      "name": "Surface_Water",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/Surface_Water/FeatureServer"
+    },
+    {
+      "name": "survey123_22ddb52f0c9448b683f4ef01f29a49dd",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/survey123_22ddb52f0c9448b683f4ef01f29a49dd/FeatureServer"
+    },
+    {
+      "name": "survey123_22ddb52f0c9448b683f4ef01f29a49dd_fieldworker",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/survey123_22ddb52f0c9448b683f4ef01f29a49dd_fieldworker/FeatureServer"
+    },
+    {
+      "name": "survey123_22ddb52f0c9448b683f4ef01f29a49dd_stakeholder",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/survey123_22ddb52f0c9448b683f4ef01f29a49dd_stakeholder/FeatureServer"
+    },
+    {
+      "name": "survey123_68a290e9a20749d3981582a3931c80f5_stakeholder",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/survey123_68a290e9a20749d3981582a3931c80f5_stakeholder/FeatureServer"
+    },
+    {
+      "name": "survey123_8549bb47b8eb4524ae290110eb69ced1_stakeholder",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/survey123_8549bb47b8eb4524ae290110eb69ced1_stakeholder/FeatureServer"
+    },
+    {
+      "name": "survey123_865475107fdc48caa8b16e0994253b3b_results",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/survey123_865475107fdc48caa8b16e0994253b3b_results/FeatureServer"
+    },
+    {
+      "name": "survey123_91234a993b704b9a8588efefee4b36e4_results",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/survey123_91234a993b704b9a8588efefee4b36e4_results/FeatureServer"
+    },
+    {
+      "name": "survey123_bc6ab25aa55b454da472e2e63e66f34b_stakeholder",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/survey123_bc6ab25aa55b454da472e2e63e66f34b_stakeholder/FeatureServer"
+    },
+    {
+      "name": "survey123_cd1960513f43409f9e76094b8fe95c90_results",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/survey123_cd1960513f43409f9e76094b8fe95c90_results/FeatureServer"
+    },
+    {
+      "name": "survey123_e0595c041c3c4067878f0c3a44584ae8_stakeholder",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/survey123_e0595c041c3c4067878f0c3a44584ae8_stakeholder/FeatureServer"
+    },
+    {
+      "name": "survey123_e97ada3e488e42eea5246e5d43cd2c8c_results",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/survey123_e97ada3e488e42eea5246e5d43cd2c8c_results/FeatureServer"
+    },
+    {
+      "name": "SWPP",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/SWPP/FeatureServer"
+    },
+    {
+      "name": "TMDL",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/TMDL/FeatureServer"
+    },
+    {
+      "name": "TNW",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/TNW/FeatureServer"
+    },
+    {
+      "name": "Towns",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/Towns/FeatureServer"
+    },
+    {
+      "name": "Townships",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/Townships/FeatureServer"
+    },
+    {
+      "name": "Transfer_Stations",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/Transfer_Stations/FeatureServer"
+    },
+    {
+      "name": "USASSURGOFloodFreqHigh_AZ",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/USASSURGOFloodFreqHigh_AZ/FeatureServer"
+    },
+    {
+      "name": "USFS_Restoration_Projects",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/USFS_Restoration_Projects/FeatureServer"
+    },
+    {
+      "name": "UST_Fac_Sums",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/UST_Fac_Sums/FeatureServer"
+    },
+    {
+      "name": "VEC",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/VEC/FeatureServer"
+    },
+    {
+      "name": "Voluntary_Remediation",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/Voluntary_Remediation/FeatureServer"
+    },
+    {
+      "name": "VOLUNTARY_REMEDIATION_AGOL",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/VOLUNTARY_REMEDIATION_AGOL/FeatureServer"
+    },
+    {
+      "name": "Waste_Tires",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/Waste_Tires/FeatureServer"
+    },
+    {
+      "name": "Watersheds",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/Watersheds/FeatureServer"
+    },
+    {
+      "name": "WEATHER_STATIONS_AGOL",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/WEATHER_STATIONS_AGOL/FeatureServer"
+    },
+    {
+      "name": "WET DRY MEASUREMENTS DETAILS AGOL",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/WET DRY MEASUREMENTS DETAILS AGOL/FeatureServer"
+    },
+    {
+      "name": "WET DRY MEASUREMENTS SUMMARY AGOL",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/WET DRY MEASUREMENTS SUMMARY AGOL/FeatureServer"
+    },
+    {
+      "name": "WMHauling",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/WMHauling/FeatureServer"
+    },
+    {
+      "name": "WQ_Grants",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/WQ_Grants/FeatureServer"
+    },
+    {
+      "name": "WWTP",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/WWTP/FeatureServer"
+    },
+    {
+      "name": "ZIP_Codes",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/ZIP_Codes/FeatureServer"
+    },
+    {
+      "name": "Surface_Water_AGOL",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/Surface_Water_AGOL/FeatureServer"
+    },
+    {
+      "name": "Drinking_Water_AGOL",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/Drinking_Water_AGOL/FeatureServer"
+    },
+    {
+      "name": "Groundwater_AGOL",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/Groundwater_AGOL/FeatureServer"
+    },
+    {
+      "name": "UST_AGOL",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/UST_AGOL/FeatureServer"
+    },
+    {
+      "name": "LD_daily",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/LD_daily/FeatureServer"
+    },
+    {
+      "name": "CD_daily",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/CD_daily/FeatureServer"
+    },
+    {
+      "name": "County_daily",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/County_daily/FeatureServer"
+    },
+    {
+      "name": "AZPDES_Individual_Permits",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/AZPDES_Individual_Permits/FeatureServer"
+    },
+    {
+      "name": "AZPDES",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/AZPDES/FeatureServer"
+    },
+    {
+      "name": "UST",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/UST/FeatureServer"
+    },
+    {
+      "name": "AQD_Permits",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/AQD_Permits/FeatureServer"
+    },
+    {
+      "name": "AZURITE_Places",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/AZURITE_Places/FeatureServer"
+    },
+    {
+      "name": "Drywells",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/Drywells/FeatureServer"
+    },
+    {
+      "name": "Permits",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/Permits/FeatureServer"
+    },
+    {
+      "name": "Permits_Title_V",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/Permits_Title_V/FeatureServer"
+    },
+    {
+      "name": "Solid_Waste",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/Solid_Waste/FeatureServer"
+    },
+    {
+      "name": "APIP",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/APIP/FeatureServer"
+    },
+    {
+      "name": "All_Permits_in_Process",
+      "type": "FeatureServer",
+      "url": "https://services.arcgis.com/SzoH1oFM2apCSkx3/ArcGIS/rest/services/All_Permits_in_Process/FeatureServer"
+    }
+  ]
+}

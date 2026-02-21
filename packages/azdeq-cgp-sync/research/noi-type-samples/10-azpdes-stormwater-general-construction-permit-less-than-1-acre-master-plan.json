@@ -1,0 +1,1090 @@
+{
+  "type": "AZPDES Stormwater General Construction Permit Less than 1 Acre Master Plan",
+  "totalRecords": 613,
+  "sampledRecords": 20,
+  "records": [
+    {
+      "ltfIdno": "109945",
+      "permitType": "CGP",
+      "dateApplied": "06/30/2025",
+      "dateSubmitted": "06/30/2025",
+      "projType": "Residence",
+      "facilityName": "PARCEL #105-10-526",
+      "companyName": "2 HAWKS DESIGNS LLC DBA TWO HAWKS DESIGNS",
+      "rcoName": "ARASH HOSS",
+      "ltfFacilityDetails": {
+        "placeAddress": null,
+        "facilityCounty": {
+          "countyCode": "04005"
+        },
+        "ltfCatName": "AZPDES Stormwater General Construction Permit Less than 1 Acre Master Plan",
+        "issuedDate": "06/30/2025",
+        "ltfStatus": "EXPIRED",
+        "latLongDetails": {
+          "latitude": "35.15336",
+          "longitude": "-111.635931"
+        }
+      },
+      "companyAddress": {
+        "address": {
+          "address": "3050 N 44TH ST",
+          "aptSuite": "STE 200",
+          "city": "PHOENIX",
+          "state": "AZ",
+          "zip": "85018",
+          "countyCode": null
+        }
+      },
+      "swpppDetails": {
+        "fname": "Hugh",
+        "lname": "McMahon",
+        "email": "hugh@twohawksdesigns.com",
+        "phone": "9288536648",
+        "ext": null
+      },
+      "permitAuthCode": "AZC109945",
+      "totalProjectArea": "20",
+      "permitProjectArea": "0.15",
+      "conStartDate": "08/12/2025",
+      "conEndDate": "08/12/2027",
+      "commonAreaInd": "Y",
+      "outfalls": []
+    },
+    {
+      "ltfIdno": "109902",
+      "permitType": "CGP",
+      "dateApplied": "06/25/2025",
+      "dateSubmitted": "06/25/2025",
+      "projType": "Commercial",
+      "facilityName": "PV LOT 14",
+      "companyName": "BPR COMPANIES LLC",
+      "rcoName": "ROBERT COPELAND",
+      "ltfFacilityDetails": {
+        "placeAddress": null,
+        "facilityCounty": {
+          "countyCode": "04013"
+        },
+        "ltfCatName": "AZPDES Stormwater General Construction Permit Less than 1 Acre Master Plan",
+        "issuedDate": "06/25/2025",
+        "ltfStatus": "CLOSED - SUPERSEDED",
+        "latLongDetails": {
+          "latitude": "33.60292",
+          "longitude": "-111.981181"
+        }
+      },
+      "companyAddress": {
+        "address": {
+          "address": "104",
+          "aptSuite": "104 W WIGWAM BLVD",
+          "city": "LITCHFIELD PARK",
+          "state": "AZ",
+          "zip": "85340",
+          "countyCode": null
+        }
+      },
+      "swpppDetails": {
+        "fname": "Jayson",
+        "lname": "Roti",
+        "email": "jayson@desertservices.com",
+        "phone": "6027220218",
+        "ext": null
+      },
+      "permitAuthCode": "AZC109902",
+      "totalProjectArea": "1",
+      "permitProjectArea": "0.3",
+      "conStartDate": "07/07/2025",
+      "conEndDate": "01/08/2026",
+      "commonAreaInd": "Y",
+      "outfalls": [
+        {
+          "elevation": "424.95",
+          "latLongDetails": {
+            "latitude": "33.602689",
+            "longitude": "-111.982568"
+          }
+        }
+      ]
+    },
+    {
+      "ltfIdno": "109631",
+      "permitType": "CGP",
+      "dateApplied": "06/03/2025",
+      "dateSubmitted": "06/03/2025",
+      "projType": "Residence",
+      "facilityName": "PARCEL # 173-09-008",
+      "companyName": "NORTON LUXURY HOMES, LLC",
+      "rcoName": "BOB NORTON",
+      "ltfFacilityDetails": {
+        "placeAddress": {
+          "address": {
+            "address": "5823 N INVERGORDON RD",
+            "aptSuite": null,
+            "city": "PARADISE VALLEY",
+            "state": "AZ",
+            "zip": "85253",
+            "countyCode": "04013"
+          }
+        },
+        "facilityCounty": {
+          "countyCode": null
+        },
+        "ltfCatName": "AZPDES Stormwater General Construction Permit Less than 1 Acre Master Plan",
+        "issuedDate": "06/03/2025",
+        "ltfStatus": "EXPIRED",
+        "latLongDetails": {
+          "latitude": "33.522424",
+          "longitude": "-111.942629"
+        }
+      },
+      "companyAddress": {
+        "address": {
+          "address": "6929 N HAYDEN RD",
+          "aptSuite": null,
+          "city": "SCOTTSDALE",
+          "state": "AZ",
+          "zip": "85250",
+          "countyCode": "04013"
+        }
+      },
+      "swpppDetails": {
+        "fname": "Jacob",
+        "lname": "Norton",
+        "email": "Jake@nortonluxury.com",
+        "phone": "4352388246",
+        "ext": null
+      },
+      "permitAuthCode": "AZC109631",
+      "totalProjectArea": "2",
+      "permitProjectArea": "0.5",
+      "conStartDate": "06/03/2025",
+      "conEndDate": "06/03/2027",
+      "commonAreaInd": "Y",
+      "outfalls": []
+    },
+    {
+      "ltfIdno": "108625",
+      "permitType": "CGP",
+      "dateApplied": "04/09/2025",
+      "dateSubmitted": "04/09/2025",
+      "projType": "Roads",
+      "facilityName": "THE HENRY",
+      "companyName": "GANEM CONSTRUCTION, LLC",
+      "rcoName": "PARKER GANEM",
+      "ltfFacilityDetails": {
+        "placeAddress": null,
+        "facilityCounty": {
+          "countyCode": "04013"
+        },
+        "ltfCatName": "AZPDES Stormwater General Construction Permit Less than 1 Acre Master Plan",
+        "issuedDate": "04/18/2025",
+        "ltfStatus": "CLOSED - SUPERSEDED",
+        "latLongDetails": {
+          "latitude": "33.655703",
+          "longitude": "-111.930063"
+        }
+      },
+      "companyAddress": {
+        "address": {
+          "address": "900 E LONE CACTUS DR",
+          "aptSuite": null,
+          "city": "PHOENIX",
+          "state": "AZ",
+          "zip": "85024",
+          "countyCode": "04013"
+        }
+      },
+      "swpppDetails": {
+        "fname": "Jake",
+        "lname": "Skaggs",
+        "email": "Jake.skaggs@ganemcompanies.com",
+        "phone": "6232042511",
+        "ext": null
+      },
+      "permitAuthCode": "AZC108625",
+      "totalProjectArea": "1",
+      "permitProjectArea": "0.73",
+      "conStartDate": "04/21/2025",
+      "conEndDate": "02/16/2026",
+      "commonAreaInd": "Y",
+      "outfalls": [
+        {
+          "elevation": "481.99",
+          "latLongDetails": {
+            "latitude": "33.655449",
+            "longitude": "-111.930099"
+          }
+        },
+        {
+          "elevation": "481.69",
+          "latLongDetails": {
+            "latitude": "33.655447",
+            "longitude": "-111.930853"
+          }
+        }
+      ]
+    },
+    {
+      "ltfIdno": "108528",
+      "permitType": "CGP",
+      "dateApplied": "04/07/2025",
+      "dateSubmitted": "04/07/2025",
+      "projType": "Municipal/Public",
+      "facilityName": "SCHNEPF ROAD WATER MAIN PH.3, JOY DR – PIMA RD",
+      "companyName": "ACHEN-GARDNER CONSTRUCTION, L.L.C.",
+      "rcoName": "KEVIN NUNEZ",
+      "ltfFacilityDetails": {
+        "placeAddress": null,
+        "facilityCounty": {
+          "countyCode": "04021"
+        },
+        "ltfCatName": "AZPDES Stormwater General Construction Permit Less than 1 Acre Master Plan",
+        "issuedDate": "04/07/2025",
+        "ltfStatus": "EXPIRED",
+        "latLongDetails": {
+          "latitude": "33.254296",
+          "longitude": "-111.528809"
+        }
+      },
+      "companyAddress": {
+        "address": {
+          "address": "2195 W CHANDLER BLVD",
+          "aptSuite": "STE 200",
+          "city": "CHANDLER",
+          "state": "AZ",
+          "zip": "85224",
+          "countyCode": "04013"
+        }
+      },
+      "swpppDetails": {
+        "fname": "Jacob",
+        "lname": "Gamboa",
+        "email": "jgamboa@achen.com",
+        "phone": "6029805338",
+        "ext": null
+      },
+      "permitAuthCode": "AZC108528",
+      "totalProjectArea": "1",
+      "permitProjectArea": "0.5",
+      "conStartDate": "04/14/2025",
+      "conEndDate": "06/30/2025",
+      "commonAreaInd": "Y",
+      "outfalls": []
+    },
+    {
+      "ltfIdno": "108392",
+      "permitType": "CGP",
+      "dateApplied": "04/01/2025",
+      "dateSubmitted": "04/01/2025",
+      "projType": "Commercial",
+      "facilityName": "HARRY & IZZY'S",
+      "companyName": "HARRY & IZZY'S PARADISE VALLEY, LLC",
+      "rcoName": "JAMES BLAKE",
+      "ltfFacilityDetails": {
+        "placeAddress": null,
+        "facilityCounty": {
+          "countyCode": "04013"
+        },
+        "ltfCatName": "AZPDES Stormwater General Construction Permit Less than 1 Acre Master Plan",
+        "issuedDate": "04/01/2025",
+        "ltfStatus": "EXPIRED",
+        "latLongDetails": {
+          "latitude": "33.6027",
+          "longitude": "-111.981373"
+        }
+      },
+      "companyAddress": {
+        "address": {
+          "address": "101 W WASHINGTON ST",
+          "aptSuite": "STE 1250E",
+          "city": "INDIANAPOLIS",
+          "state": "IN",
+          "zip": "46204",
+          "countyCode": null
+        }
+      },
+      "swpppDetails": {
+        "fname": "PATRICIA",
+        "lname": "QUINTANA",
+        "email": "patricia.r.quintana@imegcorp.com",
+        "phone": "4803716116",
+        "ext": null
+      },
+      "permitAuthCode": "AZC108392",
+      "totalProjectArea": "71",
+      "permitProjectArea": "0.47",
+      "conStartDate": "05/01/2025",
+      "conEndDate": "03/31/2026",
+      "commonAreaInd": "Y",
+      "outfalls": []
+    },
+    {
+      "ltfIdno": "108264",
+      "permitType": "CGP",
+      "dateApplied": "03/19/2025",
+      "dateSubmitted": "03/27/2025",
+      "projType": "Commercial",
+      "facilityName": "O'REILLY AUTO PARTS MARICOPA",
+      "companyName": "O'REILLY AUTO ENTERPRISES, LLC DBA O'REILLY AUTO PARTS",
+      "rcoName": "PHILLIP HOPPER",
+      "ltfFacilityDetails": {
+        "placeAddress": {
+          "address": {
+            "address": "17516 N SHEA WAY",
+            "aptSuite": null,
+            "city": "MARICOPA",
+            "state": "AZ",
+            "zip": "85138",
+            "countyCode": "04021"
+          }
+        },
+        "facilityCounty": {
+          "countyCode": null
+        },
+        "ltfCatName": "AZPDES Stormwater General Construction Permit Less than 1 Acre Master Plan",
+        "issuedDate": "03/27/2025",
+        "ltfStatus": "EXPIRED",
+        "latLongDetails": {
+          "latitude": "33.039332",
+          "longitude": "-112.017097"
+        }
+      },
+      "companyAddress": {
+        "address": {
+          "address": "233 S PATTERSON AVE",
+          "aptSuite": null,
+          "city": "SPRINGFIELD",
+          "state": "MO",
+          "zip": "65802",
+          "countyCode": "29077"
+        }
+      },
+      "swpppDetails": {
+        "fname": "Brandon",
+        "lname": "Humann",
+        "email": "bhumann@tait.com",
+        "phone": "9706125458",
+        "ext": null
+      },
+      "permitAuthCode": "AZC108264",
+      "totalProjectArea": "31",
+      "permitProjectArea": "0.7",
+      "conStartDate": "03/20/2025",
+      "conEndDate": "10/28/2025",
+      "commonAreaInd": null,
+      "outfalls": []
+    },
+    {
+      "ltfIdno": "108184",
+      "permitType": "CGP",
+      "dateApplied": "03/21/2025",
+      "dateSubmitted": "03/21/2025",
+      "projType": "Commercial",
+      "facilityName": "VALVOLINE",
+      "companyName": "THE HAWORTH CORPORATION",
+      "rcoName": "BRIAN CIHA",
+      "ltfFacilityDetails": {
+        "placeAddress": null,
+        "facilityCounty": {
+          "countyCode": "04013"
+        },
+        "ltfCatName": "AZPDES Stormwater General Construction Permit Less than 1 Acre Master Plan",
+        "issuedDate": "03/21/2025",
+        "ltfStatus": "CLOSED - TERMINATED BY COMPANY",
+        "latLongDetails": {
+          "latitude": "33.461658",
+          "longitude": "-112.341545"
+        }
+      },
+      "companyAddress": {
+        "address": {
+          "address": "1110 E MISSOURI AVE",
+          "aptSuite": "STE 200",
+          "city": "PHOENIX",
+          "state": "AZ",
+          "zip": "85014",
+          "countyCode": "04013"
+        }
+      },
+      "swpppDetails": {
+        "fname": "David",
+        "lname": "Coberly",
+        "email": "david@haworthcorp.com",
+        "phone": "6023320004",
+        "ext": null
+      },
+      "permitAuthCode": "AZC108184",
+      "totalProjectArea": "82.12",
+      "permitProjectArea": "0.59",
+      "conStartDate": "04/21/2025",
+      "conEndDate": "10/31/2025",
+      "commonAreaInd": "Y",
+      "outfalls": [
+        {
+          "elevation": "302.56",
+          "latLongDetails": {
+            "latitude": "33.46158",
+            "longitude": "-112.341392"
+          }
+        }
+      ]
+    },
+    {
+      "ltfIdno": "107705",
+      "permitType": "CGP",
+      "dateApplied": "02/25/2025",
+      "dateSubmitted": "02/26/2025",
+      "projType": "Commercial",
+      "facilityName": "CHILI'S LAVEEN #1689",
+      "companyName": "VENTURE CONSTRUCTION COMPANY",
+      "rcoName": "BRANT LATHEM",
+      "ltfFacilityDetails": {
+        "placeAddress": {
+          "address": {
+            "address": "5990 W BASELINE RD",
+            "aptSuite": null,
+            "city": "LAVEEN",
+            "state": "AZ",
+            "zip": "85339",
+            "countyCode": "04013"
+          }
+        },
+        "facilityCounty": {
+          "countyCode": null
+        },
+        "ltfCatName": "AZPDES Stormwater General Construction Permit Less than 1 Acre Master Plan",
+        "issuedDate": "02/26/2025",
+        "ltfStatus": "CLOSED - SUPERSEDED",
+        "latLongDetails": {
+          "latitude": "33.377878",
+          "longitude": "-112.188255"
+        }
+      },
+      "companyAddress": {
+        "address": {
+          "address": "204 MILLERSPRINGS CT",
+          "aptSuite": "STE 100",
+          "city": "FRANKLIN",
+          "state": "TN",
+          "zip": "37064",
+          "countyCode": null
+        }
+      },
+      "swpppDetails": {
+        "fname": "Jarod",
+        "lname": "Johnson",
+        "email": "jjohnson@enviroserve.co",
+        "phone": "2144333102",
+        "ext": null
+      },
+      "permitAuthCode": "AZC107705",
+      "totalProjectArea": "13.5",
+      "permitProjectArea": "0.5",
+      "conStartDate": "03/04/2025",
+      "conEndDate": "02/28/2026",
+      "commonAreaInd": "Y",
+      "outfalls": [
+        {
+          "elevation": "304.78",
+          "latLongDetails": {
+            "latitude": "33.378139",
+            "longitude": "-112.188167"
+          }
+        }
+      ]
+    },
+    {
+      "ltfIdno": "107332",
+      "permitType": "CGP",
+      "dateApplied": "01/28/2025",
+      "dateSubmitted": "02/04/2025",
+      "projType": "Commercial",
+      "facilityName": "MCDONALD'S VERRADO & ROOSEVELT",
+      "companyName": "MCDONALD'S CORPORATION",
+      "rcoName": "SAVAN VAGHANI",
+      "ltfFacilityDetails": {
+        "placeAddress": null,
+        "facilityCounty": {
+          "countyCode": "04013"
+        },
+        "ltfCatName": "AZPDES Stormwater General Construction Permit Less than 1 Acre Master Plan",
+        "issuedDate": "02/05/2025",
+        "ltfStatus": "CLOSED - SUPERSEDED",
+        "latLongDetails": {
+          "latitude": "33.455901",
+          "longitude": "-112.50507"
+        }
+      },
+      "companyAddress": {
+        "address": {
+          "address": "110 N CARPENTER ST",
+          "aptSuite": null,
+          "city": "CHICAGO",
+          "state": "IL",
+          "zip": "60607",
+          "countyCode": "17031"
+        }
+      },
+      "swpppDetails": {
+        "fname": "Scott",
+        "lname": "Audsley",
+        "email": "scott.audsley@us.mcd.com",
+        "phone": "4803415344",
+        "ext": null
+      },
+      "permitAuthCode": "AZC107332",
+      "totalProjectArea": "1",
+      "permitProjectArea": "0.63",
+      "conStartDate": "04/01/2025",
+      "conEndDate": "10/01/2025",
+      "commonAreaInd": "Y",
+      "outfalls": [
+        {
+          "elevation": "327.761",
+          "latLongDetails": {
+            "latitude": "33.455844",
+            "longitude": "-112.504818"
+          }
+        }
+      ]
+    },
+    {
+      "ltfIdno": "107329",
+      "permitType": "CGP",
+      "dateApplied": "02/04/2025",
+      "dateSubmitted": "02/04/2025",
+      "projType": "Commercial",
+      "facilityName": "MCDONALD'S POWER & ELLIOT",
+      "companyName": "MCDONALD'S CORPORATION",
+      "rcoName": "SAVAN VAGHANI",
+      "ltfFacilityDetails": {
+        "placeAddress": {
+          "address": {
+            "address": "3635 POWER RD",
+            "aptSuite": null,
+            "city": "MESA",
+            "state": "AZ",
+            "zip": "85212",
+            "countyCode": "04013"
+          }
+        },
+        "facilityCounty": {
+          "countyCode": null
+        },
+        "ltfCatName": "AZPDES Stormwater General Construction Permit Less than 1 Acre Master Plan",
+        "issuedDate": "02/05/2025",
+        "ltfStatus": "CLOSED - SUPERSEDED",
+        "latLongDetails": {
+          "latitude": "33.349043",
+          "longitude": "-111.686909"
+        }
+      },
+      "companyAddress": {
+        "address": {
+          "address": "110 N CARPENTER ST",
+          "aptSuite": null,
+          "city": "CHICAGO",
+          "state": "IL",
+          "zip": "60607",
+          "countyCode": "17031"
+        }
+      },
+      "swpppDetails": {
+        "fname": "Scott",
+        "lname": "Audsley",
+        "email": "scott.audsley@us.mcd.com",
+        "phone": "4803415344",
+        "ext": null
+      },
+      "permitAuthCode": "AZC107329",
+      "totalProjectArea": "1",
+      "permitProjectArea": "0.82",
+      "conStartDate": "06/02/2025",
+      "conEndDate": "12/01/2025",
+      "commonAreaInd": "Y",
+      "outfalls": [
+        {
+          "elevation": "403.821",
+          "latLongDetails": {
+            "latitude": "33.349628",
+            "longitude": "-111.687195"
+          }
+        }
+      ]
+    },
+    {
+      "ltfIdno": "106759",
+      "permitType": "CGP",
+      "dateApplied": "12/05/2024",
+      "dateSubmitted": "01/06/2025",
+      "projType": "Utilities",
+      "facilityName": "TEP GLOBAL WATER CONSTRUCTION PROJECT",
+      "companyName": "TUCSON ELECTRIC POWER COMPANY",
+      "rcoName": "ANA BUSTAMANTE",
+      "ltfFacilityDetails": {
+        "placeAddress": null,
+        "facilityCounty": {
+          "countyCode": "04019"
+        },
+        "ltfCatName": "AZPDES Stormwater General Construction Permit Less than 1 Acre Master Plan",
+        "issuedDate": "01/06/2025",
+        "ltfStatus": "EXPIRED",
+        "latLongDetails": {
+          "latitude": "32.044933",
+          "longitude": "-110.884662"
+        }
+      },
+      "companyAddress": {
+        "address": {
+          "address": "3950 E IRVINGTON RD",
+          "aptSuite": "# RC-131",
+          "city": "TUCSON",
+          "state": "AZ",
+          "zip": "85714",
+          "countyCode": "04019"
+        }
+      },
+      "swpppDetails": {
+        "fname": "Clay",
+        "lname": "Jerald",
+        "email": "cjerald@westlandresources.com",
+        "phone": "5204198644",
+        "ext": null
+      },
+      "permitAuthCode": "AZC106759",
+      "totalProjectArea": "3.5",
+      "permitProjectArea": "0.33",
+      "conStartDate": "03/03/2025",
+      "conEndDate": "06/06/2025",
+      "commonAreaInd": "Y",
+      "outfalls": []
+    },
+    {
+      "ltfIdno": "106254",
+      "permitType": "CGP",
+      "dateApplied": "12/02/2024",
+      "dateSubmitted": "12/02/2024",
+      "projType": "Commercial",
+      "facilityName": "TAKE 5 OIL CHANGE",
+      "companyName": "PATE CONTRACTORS LLC",
+      "rcoName": "NATALIE  ARZAGA",
+      "ltfFacilityDetails": {
+        "placeAddress": {
+          "address": {
+            "address": "3201 S PARK AVE",
+            "aptSuite": null,
+            "city": "TUCSON",
+            "state": "AZ",
+            "zip": "85713",
+            "countyCode": "04019"
+          }
+        },
+        "facilityCounty": {
+          "countyCode": null
+        },
+        "ltfCatName": "AZPDES Stormwater General Construction Permit Less than 1 Acre Master Plan",
+        "issuedDate": "12/02/2024",
+        "ltfStatus": "CLOSED - TERMINATED BY COMPANY",
+        "latLongDetails": {
+          "latitude": "32.18842",
+          "longitude": "-110.956072"
+        }
+      },
+      "companyAddress": {
+        "address": {
+          "address": "1129 N WINSTEL BLVD",
+          "aptSuite": null,
+          "city": "TUCSON",
+          "state": "AZ",
+          "zip": "85716",
+          "countyCode": "04019"
+        }
+      },
+      "swpppDetails": {
+        "fname": "Natalie",
+        "lname": "Arzaga",
+        "email": "natalie@patecontractors.com",
+        "phone": "5208855500",
+        "ext": null
+      },
+      "permitAuthCode": "AZC106254",
+      "totalProjectArea": "25.28",
+      "permitProjectArea": "0.74",
+      "conStartDate": "12/02/2024",
+      "conEndDate": "08/01/2025",
+      "commonAreaInd": "Y",
+      "outfalls": [
+        {
+          "elevation": "751.517",
+          "latLongDetails": {
+            "latitude": "32.188429",
+            "longitude": "-110.955742"
+          }
+        }
+      ]
+    },
+    {
+      "ltfIdno": "106019",
+      "permitType": "CGP",
+      "dateApplied": "11/07/2024",
+      "dateSubmitted": "11/07/2024",
+      "projType": "Utilities",
+      "facilityName": "COMMERCE SUB EXPANSION",
+      "companyName": "POWER CONTRACTING, LLC",
+      "rcoName": "BILL KRUKOVSKY",
+      "ltfFacilityDetails": {
+        "placeAddress": null,
+        "facilityCounty": {
+          "countyCode": "04013"
+        },
+        "ltfCatName": "AZPDES Stormwater General Construction Permit Less than 1 Acre Master Plan",
+        "issuedDate": "11/07/2024",
+        "ltfStatus": "EXPIRED",
+        "latLongDetails": {
+          "latitude": "33.65956",
+          "longitude": "-112.108747"
+        }
+      },
+      "companyAddress": {
+        "address": {
+          "address": "2640 W LONE CACTUS DR ",
+          "aptSuite": null,
+          "city": "PHOENIX ",
+          "state": "AZ",
+          "zip": "85027",
+          "countyCode": null
+        }
+      },
+      "swpppDetails": {
+        "fname": "Luke",
+        "lname": "Davis",
+        "email": "ludavis@powerllc.com",
+        "phone": "6236333920",
+        "ext": null
+      },
+      "permitAuthCode": "AZC106019",
+      "totalProjectArea": "51",
+      "permitProjectArea": "0.55",
+      "conStartDate": "11/12/2024",
+      "conEndDate": "05/30/2025",
+      "commonAreaInd": "Y",
+      "outfalls": []
+    },
+    {
+      "ltfIdno": "106015",
+      "permitType": "CGP",
+      "dateApplied": "11/06/2024",
+      "dateSubmitted": "11/06/2024",
+      "projType": "Utilities",
+      "facilityName": "APS COMMERCE SUBSTATION",
+      "companyName": "ARIZONA PUBLIC SERVICE - T&D",
+      "rcoName": "MONICA TELLES",
+      "ltfFacilityDetails": {
+        "placeAddress": null,
+        "facilityCounty": {
+          "countyCode": "04013"
+        },
+        "ltfCatName": "AZPDES Stormwater General Construction Permit Less than 1 Acre Master Plan",
+        "issuedDate": "11/07/2024",
+        "ltfStatus": "CLOSED - TERMINATED BY COMPANY",
+        "latLongDetails": {
+          "latitude": "33.659724",
+          "longitude": "-112.109296"
+        }
+      },
+      "companyAddress": {
+        "address": {
+          "address": "PO BOX 53933",
+          "aptSuite": null,
+          "city": "PHOENIX",
+          "state": "AZ",
+          "zip": "85072",
+          "countyCode": "04013"
+        }
+      },
+      "swpppDetails": {
+        "fname": "Kristina",
+        "lname": "DaSilva",
+        "email": "kristina.dasilva@aps.com",
+        "phone": "6023001617",
+        "ext": null
+      },
+      "permitAuthCode": "AZC106015",
+      "totalProjectArea": "51",
+      "permitProjectArea": "0.55",
+      "conStartDate": "11/12/2024",
+      "conEndDate": "05/16/2025",
+      "commonAreaInd": "Y",
+      "outfalls": [
+        {
+          "elevation": "416.992",
+          "latLongDetails": {
+            "latitude": "33.654983",
+            "longitude": "-112.108516"
+          }
+        }
+      ]
+    },
+    {
+      "ltfIdno": "105947",
+      "permitType": "CGP",
+      "dateApplied": "10/30/2024",
+      "dateSubmitted": "10/30/2024",
+      "projType": "Residence",
+      "facilityName": "PARCEL # 218-40-5280",
+      "companyName": "A. F. STERLING HOME BUILDERS, LTD.",
+      "rcoName": "ROBERT BRACK",
+      "ltfFacilityDetails": {
+        "placeAddress": {
+          "address": {
+            "address": "13718 N NESTING QUAIL PL",
+            "aptSuite": null,
+            "city": "MARANA",
+            "state": "AZ",
+            "zip": "85658",
+            "countyCode": "04019"
+          }
+        },
+        "facilityCounty": {
+          "countyCode": null
+        },
+        "ltfCatName": "AZPDES Stormwater General Construction Permit Less than 1 Acre Master Plan",
+        "issuedDate": "10/30/2024",
+        "ltfStatus": "EXPIRED",
+        "latLongDetails": {
+          "latitude": "32.455564",
+          "longitude": "-111.056995"
+        }
+      },
+      "companyAddress": {
+        "address": {
+          "address": "6340 N CAMPBELL AVE",
+          "aptSuite": "STE 240",
+          "city": "TUCSON",
+          "state": "AZ",
+          "zip": "85718",
+          "countyCode": "04019"
+        }
+      },
+      "swpppDetails": {
+        "fname": "Rob",
+        "lname": "Brack",
+        "email": "rob@afsterling.com",
+        "phone": "5209551150",
+        "ext": null
+      },
+      "permitAuthCode": "AZC105947",
+      "totalProjectArea": "100",
+      "permitProjectArea": "0.41",
+      "conStartDate": "01/01/2025",
+      "conEndDate": "01/01/2027",
+      "commonAreaInd": "Y",
+      "outfalls": []
+    },
+    {
+      "ltfIdno": "105832",
+      "permitType": "CGP",
+      "dateApplied": "10/22/2024",
+      "dateSubmitted": "10/22/2024",
+      "projType": "Residence",
+      "facilityName": "PARCEL #105-10-521",
+      "companyName": "BRIDGER ENGINEERING, LLC",
+      "rcoName": "DIANE BRIDGER",
+      "ltfFacilityDetails": {
+        "placeAddress": {
+          "address": {
+            "address": "3674 S WOODLAND HILLS DR",
+            "aptSuite": null,
+            "city": "FLAGSTAFF",
+            "state": "AZ",
+            "zip": "86005",
+            "countyCode": "04005"
+          }
+        },
+        "facilityCounty": {
+          "countyCode": null
+        },
+        "ltfCatName": "AZPDES Stormwater General Construction Permit Less than 1 Acre Master Plan",
+        "issuedDate": "10/22/2024",
+        "ltfStatus": "EXPIRED",
+        "latLongDetails": {
+          "latitude": "35.154584",
+          "longitude": "-111.63485"
+        }
+      },
+      "companyAddress": {
+        "address": {
+          "address": "1460 W COX AVE",
+          "aptSuite": null,
+          "city": "FLAGSTAFF",
+          "state": "AZ",
+          "zip": "86005",
+          "countyCode": null
+        }
+      },
+      "swpppDetails": {
+        "fname": "Diane",
+        "lname": "Bridger",
+        "email": "bridger.engineering.llc@gmail.com",
+        "phone": "9286995082",
+        "ext": null
+      },
+      "permitAuthCode": "AZC105832",
+      "totalProjectArea": "600",
+      "permitProjectArea": "0.27",
+      "conStartDate": "01/01/2025",
+      "conEndDate": "12/01/2026",
+      "commonAreaInd": "Y",
+      "outfalls": []
+    },
+    {
+      "ltfIdno": "105806",
+      "permitType": "CGP",
+      "dateApplied": "10/09/2024",
+      "dateSubmitted": "10/18/2024",
+      "projType": "Commercial",
+      "facilityName": "DOVE VALLEY & 29TH AVE",
+      "companyName": "JOMAX BUILDERS, LLC",
+      "rcoName": "JOE MAX",
+      "ltfFacilityDetails": {
+        "placeAddress": null,
+        "facilityCounty": {
+          "countyCode": "04013"
+        },
+        "ltfCatName": "AZPDES Stormwater General Construction Permit Less than 1 Acre Master Plan",
+        "issuedDate": "10/18/2024",
+        "ltfStatus": "EXPIRED",
+        "latLongDetails": {
+          "latitude": "33.783292",
+          "longitude": "-112.121257"
+        }
+      },
+      "companyAddress": {
+        "address": {
+          "address": "PO BOX 1573",
+          "aptSuite": null,
+          "city": "FLAGSTAFF",
+          "state": "AZ",
+          "zip": "86002",
+          "countyCode": null
+        }
+      },
+      "swpppDetails": {
+        "fname": "Joe",
+        "lname": "Max",
+        "email": "joe@jomaxbuilders.com",
+        "phone": "6022957361",
+        "ext": null
+      },
+      "permitAuthCode": "AZC105806",
+      "totalProjectArea": "6.43",
+      "permitProjectArea": "0.21",
+      "conStartDate": "12/10/2024",
+      "conEndDate": "07/10/2025",
+      "commonAreaInd": "Y",
+      "outfalls": []
+    },
+    {
+      "ltfIdno": "105643",
+      "permitType": "CGP",
+      "dateApplied": "10/07/2024",
+      "dateSubmitted": "10/07/2024",
+      "projType": "Residence",
+      "facilityName": "PARCEL #105-10-501",
+      "companyName": "BRIDGER ENGINEERING, LLC",
+      "rcoName": "DIANE BRIDGER",
+      "ltfFacilityDetails": {
+        "placeAddress": null,
+        "facilityCounty": {
+          "countyCode": "04005"
+        },
+        "ltfCatName": "AZPDES Stormwater General Construction Permit Less than 1 Acre Master Plan",
+        "issuedDate": "10/07/2024",
+        "ltfStatus": "EXPIRED",
+        "latLongDetails": {
+          "latitude": "35.153798",
+          "longitude": "-111.636033"
+        }
+      },
+      "companyAddress": {
+        "address": {
+          "address": "1460 W COX AVE",
+          "aptSuite": null,
+          "city": "FLAGSTAFF",
+          "state": "AZ",
+          "zip": "86005",
+          "countyCode": null
+        }
+      },
+      "swpppDetails": {
+        "fname": "Diane",
+        "lname": "Bridger",
+        "email": "bridger.engineering.llc@gmail.com",
+        "phone": "9286995082",
+        "ext": null
+      },
+      "permitAuthCode": "AZC105643",
+      "totalProjectArea": "600",
+      "permitProjectArea": "0.24",
+      "conStartDate": "12/01/2024",
+      "conEndDate": "03/01/2026",
+      "commonAreaInd": "Y",
+      "outfalls": []
+    },
+    {
+      "ltfIdno": "105359",
+      "permitType": "CGP",
+      "dateApplied": "09/19/2024",
+      "dateSubmitted": "09/20/2024",
+      "projType": "Residence",
+      "facilityName": "PARCEL #105-10-469",
+      "companyName": "BRIDGER ENGINEERING, LLC",
+      "rcoName": "DIANE BRIDGER",
+      "ltfFacilityDetails": {
+        "placeAddress": {
+          "address": {
+            "address": "2961 SOLITAIRES CANYON DR",
+            "aptSuite": null,
+            "city": "FLAGSTAFF",
+            "state": "AZ",
+            "zip": "86005",
+            "countyCode": "04005"
+          }
+        },
+        "facilityCounty": {
+          "countyCode": null
+        },
+        "ltfCatName": "AZPDES Stormwater General Construction Permit Less than 1 Acre Master Plan",
+        "issuedDate": "09/20/2024",
+        "ltfStatus": "EXPIRED",
+        "latLongDetails": {
+          "latitude": "35.161297",
+          "longitude": "-111.631358"
+        }
+      },
+      "companyAddress": {
+        "address": {
+          "address": "1460 W COX AVE",
+          "aptSuite": null,
+          "city": "FLAGSTAFF",
+          "state": "AZ",
+          "zip": "86005",
+          "countyCode": null
+        }
+      },
+      "swpppDetails": {
+        "fname": "Diane",
+        "lname": "Bridger",
+        "email": "bridger.engineering.llc@gmail.com",
+        "phone": "9286995082",
+        "ext": null
+      },
+      "permitAuthCode": "AZC105359",
+      "totalProjectArea": "600",
+      "permitProjectArea": "0.21",
+      "conStartDate": "10/01/2024",
+      "conEndDate": "12/01/2025",
+      "commonAreaInd": "Y",
+      "outfalls": []
+    }
+  ]
+}

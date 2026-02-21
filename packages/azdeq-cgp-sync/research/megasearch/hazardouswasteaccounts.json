@@ -1,0 +1,208 @@
+{
+  "endpoint": "hazardousWasteAccounts",
+  "label": "Hazardous Waste Accounts",
+  "storedRecords": 4193,
+  "sampledRecords": 20,
+  "records": [
+    {
+      "plcIdnoFkfld": 128957,
+      "accountNumber": "19141",
+      "name": "WELL 6 ARSENIC TREATMENT FACILITY",
+      "address": "575 E BASELINE AVE",
+      "city": "APACHE JUNCTION",
+      "zipcode": "85119",
+      "epaid": "AZR000505081",
+      "indexVal": "hazardousWasteAccounts44"
+    },
+    {
+      "plcIdnoFkfld": 119555,
+      "accountNumber": "15439",
+      "name": "WALMART SUPERCENTER #1381",
+      "address": "2555 W APACHE TRL",
+      "city": "APACHE JUNCTION",
+      "zipcode": "85120",
+      "epaid": "AZR000043166",
+      "indexVal": "hazardousWasteAccounts38"
+    },
+    {
+      "plcIdnoFkfld": 117863,
+      "accountNumber": "13147",
+      "name": "WALMART SUPERCENTER #2554",
+      "address": "13055 W RANCHO SANTA FE BLVD",
+      "city": "AVONDALE",
+      "zipcode": "85392",
+      "epaid": "AZR000030965",
+      "indexVal": "hazardousWasteAccounts35"
+    },
+    {
+      "plcIdnoFkfld": 32085,
+      "accountNumber": "395",
+      "name": "STOTZ EQUIPMENT",
+      "address": "11111 W MCDOWELL RD",
+      "city": "AVONDALE",
+      "zipcode": "85392",
+      "epaid": "AZD981675366",
+      "indexVal": "hazardousWasteAccounts63"
+    },
+    {
+      "plcIdnoFkfld": 124652,
+      "accountNumber": "3042",
+      "name": "TRIPLE S MINING",
+      "address": "5450 E APACHE TRL",
+      "city": "APACHE JUNCTION",
+      "zipcode": "85119",
+      "epaid": "AZD982035669",
+      "indexVal": "hazardousWasteAccounts41"
+    },
+    {
+      "plcIdnoFkfld": 1888,
+      "accountNumber": "2862",
+      "name": "SUPERSTITION DRUM CO",
+      "address": "1245 S TOMAHAWK RD",
+      "city": "APACHE JUNCTION",
+      "zipcode": "85119",
+      "epaid": "AZD073551236",
+      "indexVal": "hazardousWasteAccounts15"
+    },
+    {
+      "plcIdnoFkfld": 32906,
+      "accountNumber": "2610",
+      "name": "SRP - MORMON FLAT DAM",
+      "address": "29600 E APACHE TRL",
+      "city": "APACHE JUNCTION",
+      "zipcode": "85119",
+      "epaid": "AZD981631435",
+      "indexVal": "hazardousWasteAccounts25"
+    },
+    {
+      "plcIdnoFkfld": 7817,
+      "accountNumber": "24346",
+      "name": "RICK MURPHY'S SHELL",
+      "address": "1198 W OLD HIGHWAY 66",
+      "city": "ASH FORK",
+      "zipcode": "86320",
+      "epaid": "AZR000520627",
+      "indexVal": "hazardousWasteAccounts24"
+    },
+    {
+      "plcIdnoFkfld": 133457,
+      "accountNumber": "21804",
+      "name": "USHSA - CUSTOMS & BORDER PROTECTION",
+      "address": "850 N HIGHWAY 85",
+      "city": "AJO",
+      "zipcode": "85321",
+      "epaid": null,
+      "indexVal": "hazardousWasteAccounts52"
+    },
+    {
+      "plcIdnoFkfld": 18679,
+      "accountNumber": "18161",
+      "name": "VULCAN MATERIALS COMPANY - AVONDALE FACILITY",
+      "address": "5301 S DYSART RD",
+      "city": "AVONDALE",
+      "zipcode": "85323",
+      "epaid": "AZR000042903",
+      "indexVal": "hazardousWasteAccounts48"
+    },
+    {
+      "plcIdnoFkfld": 111208,
+      "accountNumber": "18026",
+      "name": "STATEWIDE ENVIRONMENTAL OIL SERVICES",
+      "address": "2475 W DALLAS AVE",
+      "city": "APACHE JUNCTION",
+      "zipcode": "85120",
+      "epaid": "AZR000500769",
+      "indexVal": "hazardousWasteAccounts14"
+    },
+    {
+      "plcIdnoFkfld": 32729,
+      "accountNumber": "17939",
+      "name": "SAM'S CLUB #4830",
+      "address": "1459 N DYSART RD",
+      "city": "AVONDALE",
+      "zipcode": "85323",
+      "epaid": "AZR000500678",
+      "indexVal": "hazardousWasteAccounts8"
+    },
+    {
+      "plcIdnoFkfld": 30455,
+      "accountNumber": "17404",
+      "name": "VOLKSWAGEN OF AMERICA INC",
+      "address": "7602 S 115TH AVE",
+      "city": "AVONDALE",
+      "zipcode": "85392",
+      "epaid": "AZR000047316",
+      "indexVal": "hazardousWasteAccounts10"
+    },
+    {
+      "plcIdnoFkfld": 111168,
+      "accountNumber": "17107",
+      "name": "TOP DRAWER COMPONENTS APACHE JUNCTION",
+      "address": "5154 S DELAWARE DR",
+      "city": "APACHE JUNCTION",
+      "zipcode": "85120",
+      "epaid": "AZR000046987",
+      "indexVal": "hazardousWasteAccounts21"
+    },
+    {
+      "plcIdnoFkfld": 12947,
+      "accountNumber": "17042",
+      "name": "SALT RIVER PROJECT (SRP) - MESQUITE GENERATING STATION",
+      "address": "37625 W ELLIOT RD",
+      "city": "ARLINGTON",
+      "zipcode": "85322",
+      "epaid": "AZE031125001",
+      "indexVal": "hazardousWasteAccounts2"
+    },
+    {
+      "plcIdnoFkfld": 15839,
+      "accountNumber": "16730",
+      "name": "SMITHSONIAN INST II",
+      "address": "670 MT HOPKINS RD",
+      "city": "AMADO",
+      "zipcode": "85645",
+      "epaid": "CESQG",
+      "indexVal": "hazardousWasteAccounts23"
+    },
+    {
+      "plcIdnoFkfld": 12947,
+      "accountNumber": "15530",
+      "name": "SALT RIVER PROJECT (SRP) - MESQUITE GENERATING STATION",
+      "address": "37625 W ELLIOT RD",
+      "city": "ARLINGTON",
+      "zipcode": "85322",
+      "epaid": "AZR000043331",
+      "indexVal": "hazardousWasteAccounts1"
+    },
+    {
+      "plcIdnoFkfld": 18679,
+      "accountNumber": "15404",
+      "name": "VULCAN MATERIALS COMPANY - AVONDALE FACILITY",
+      "address": "5301 S DYSART RD",
+      "city": "AVONDALE",
+      "zipcode": "85323",
+      "epaid": "AZR000042903",
+      "indexVal": "hazardousWasteAccounts47"
+    },
+    {
+      "plcIdnoFkfld": 111291,
+      "accountNumber": "15196",
+      "name": "SOLVENTS SYSTEMS INC",
+      "address": "4793 S DESERT VIEW DR",
+      "city": "APACHE JUNCTION",
+      "zipcode": "85120",
+      "epaid": "AZR000042374",
+      "indexVal": "hazardousWasteAccounts13"
+    },
+    {
+      "plcIdnoFkfld": 119555,
+      "accountNumber": "14610",
+      "name": "WALMART SUPERCENTER #1381",
+      "address": "2555 W APACHE TRL",
+      "city": "APACHE JUNCTION",
+      "zipcode": "85120",
+      "epaid": "AZR000040303",
+      "indexVal": "hazardousWasteAccounts39"
+    }
+  ]
+}

@@ -1,0 +1,1337 @@
+{
+  "type": "AZPDES Stormwater CGP waiver",
+  "totalRecords": 118,
+  "sampledRecords": 20,
+  "records": [
+    {
+      "ltfIdno": "114448",
+      "permitType": "CGP",
+      "dateApplied": "01/28/2026",
+      "dateSubmitted": "01/28/2026",
+      "projType": "Commercial",
+      "facilityName": "KEN GARFF HYUNDAI",
+      "companyName": "SAUERS LOPEZ CONSTRUCTION, INC.",
+      "rcoName": "RYAN SAUERS",
+      "ltfFacilityDetails": {
+        "placeAddress": {
+          "address": {
+            "address": "12925 N AUTOSHOW AVE",
+            "aptSuite": null,
+            "city": "SURPRISE",
+            "state": "AZ",
+            "zip": "85388",
+            "countyCode": "04013"
+          }
+        },
+        "facilityCounty": {
+          "countyCode": null
+        },
+        "ltfCatName": "AZPDES Stormwater CGP waiver",
+        "issuedDate": "01/28/2026",
+        "ltfStatus": "ISSUED",
+        "latLongDetails": {
+          "latitude": "33.601679",
+          "longitude": "-112.420329"
+        }
+      },
+      "companyAddress": {
+        "address": {
+          "address": "26072 MERIT CIR",
+          "aptSuite": "STE 112",
+          "city": "LAGUNA HILLS",
+          "state": "CA",
+          "zip": "92653",
+          "countyCode": null
+        }
+      },
+      "swpppDetails": null,
+      "permitAuthCode": "AZC114448",
+      "totalProjectArea": null,
+      "permitProjectArea": "1",
+      "conStartDate": "02/28/2026",
+      "conEndDate": "06/28/2026",
+      "commonAreaInd": "N",
+      "outfalls": [
+        {
+          "elevation": "373.06",
+          "latLongDetails": {
+            "latitude": "33.601627",
+            "longitude": "-112.420981"
+          }
+        }
+      ]
+    },
+    {
+      "ltfIdno": "113423",
+      "permitType": "CGP",
+      "dateApplied": "11/06/2025",
+      "dateSubmitted": "11/07/2025",
+      "projType": "Utilities",
+      "facilityName": "24422R03 - PID-31 LATERAL B PHASE B LAYDOWN YARD",
+      "companyName": "HUNTER CONTRACTING CO",
+      "rcoName": "CHUCK ENGLISH",
+      "ltfFacilityDetails": {
+        "placeAddress": null,
+        "facilityCounty": {
+          "countyCode": "04013"
+        },
+        "ltfCatName": "AZPDES Stormwater CGP waiver",
+        "issuedDate": "11/07/2025",
+        "ltfStatus": "ISSUED",
+        "latLongDetails": {
+          "latitude": "32.948157",
+          "longitude": "-112.924923"
+        }
+      },
+      "companyAddress": {
+        "address": {
+          "address": "701 N COOPER RD",
+          "aptSuite": null,
+          "city": "GILBERT",
+          "state": "AZ",
+          "zip": "85233",
+          "countyCode": "04013"
+        }
+      },
+      "swpppDetails": null,
+      "permitAuthCode": "AZC113423",
+      "totalProjectArea": null,
+      "permitProjectArea": "1.4",
+      "conStartDate": "11/17/2025",
+      "conEndDate": "12/31/2025",
+      "commonAreaInd": "N",
+      "outfalls": [
+        {
+          "elevation": "221.46",
+          "latLongDetails": {
+            "latitude": "32.948157",
+            "longitude": "-112.924923"
+          }
+        },
+        {
+          "elevation": "220.59",
+          "latLongDetails": {
+            "latitude": "32.947911",
+            "longitude": "-112.925091"
+          }
+        }
+      ]
+    },
+    {
+      "ltfIdno": "112070",
+      "permitType": "CGP",
+      "dateApplied": "09/26/2025",
+      "dateSubmitted": "09/26/2025",
+      "projType": "Commercial",
+      "facilityName": "HALO VISTA TEMPORARY PARKING",
+      "companyName": "WILLMENG CONSTRUCTION, INC.",
+      "rcoName": "CAMERON FLOWER",
+      "ltfFacilityDetails": {
+        "placeAddress": null,
+        "facilityCounty": {
+          "countyCode": "04013"
+        },
+        "ltfCatName": "AZPDES Stormwater CGP waiver",
+        "issuedDate": "09/26/2025",
+        "ltfStatus": "ISSUED",
+        "latLongDetails": {
+          "latitude": "33.785859",
+          "longitude": "-112.151349"
+        }
+      },
+      "companyAddress": {
+        "address": {
+          "address": "1702 E HIGHLAND AVE",
+          "aptSuite": "STE 450",
+          "city": "PHOENIX",
+          "state": "AZ",
+          "zip": "85016",
+          "countyCode": null
+        }
+      },
+      "swpppDetails": null,
+      "permitAuthCode": "AZC112070",
+      "totalProjectArea": null,
+      "permitProjectArea": "1.95",
+      "conStartDate": "10/02/2025",
+      "conEndDate": "10/31/2025",
+      "commonAreaInd": "N",
+      "outfalls": [
+        {
+          "elevation": "492.03",
+          "latLongDetails": {
+            "latitude": "33.785817",
+            "longitude": "-112.151332"
+          }
+        }
+      ]
+    },
+    {
+      "ltfIdno": "110530",
+      "permitType": "CGP",
+      "dateApplied": "08/13/2025",
+      "dateSubmitted": "08/14/2025",
+      "projType": "Utilities",
+      "facilityName": "MOHAVE VALLEY LANDFILL",
+      "companyName": "TUCSON ELECTRIC POWER COMPANY",
+      "rcoName": "ANA BUSTAMANTE",
+      "ltfFacilityDetails": {
+        "placeAddress": {
+          "address": {
+            "address": "3999 EL RODEO RD",
+            "aptSuite": null,
+            "city": "MOHAVE VALLEY",
+            "state": "AZ",
+            "zip": "86426",
+            "countyCode": "04015"
+          }
+        },
+        "facilityCounty": {
+          "countyCode": null
+        },
+        "ltfCatName": "AZPDES Stormwater CGP waiver",
+        "issuedDate": "08/14/2025",
+        "ltfStatus": "ISSUED",
+        "latLongDetails": {
+          "latitude": "35.022419444",
+          "longitude": "-114.513697222"
+        }
+      },
+      "companyAddress": {
+        "address": {
+          "address": "3950 E IRVINGTON RD",
+          "aptSuite": "# RC-131",
+          "city": "TUCSON",
+          "state": "AZ",
+          "zip": "85714",
+          "countyCode": "04019"
+        }
+      },
+      "swpppDetails": null,
+      "permitAuthCode": "AZC110530",
+      "totalProjectArea": null,
+      "permitProjectArea": "1.89",
+      "conStartDate": "09/15/2025",
+      "conEndDate": "12/29/2025",
+      "commonAreaInd": "N",
+      "outfalls": [
+        {
+          "elevation": "361.47",
+          "latLongDetails": {
+            "latitude": "35.018366",
+            "longitude": "-114.509678"
+          }
+        },
+        {
+          "elevation": "360.81",
+          "latLongDetails": {
+            "latitude": "35.018017",
+            "longitude": "-114.509765"
+          }
+        },
+        {
+          "elevation": "360.43",
+          "latLongDetails": {
+            "latitude": "35.017684",
+            "longitude": "-114.50976"
+          }
+        },
+        {
+          "elevation": "360.06",
+          "latLongDetails": {
+            "latitude": "35.01717",
+            "longitude": "-114.509765"
+          }
+        },
+        {
+          "elevation": "359.76",
+          "latLongDetails": {
+            "latitude": "35.016902",
+            "longitude": "-114.509786"
+          }
+        },
+        {
+          "elevation": "359.38",
+          "latLongDetails": {
+            "latitude": "35.016572",
+            "longitude": "-114.509765"
+          }
+        },
+        {
+          "elevation": "358.49",
+          "latLongDetails": {
+            "latitude": "35.015827",
+            "longitude": "-114.509749"
+          }
+        },
+        {
+          "elevation": "357.99",
+          "latLongDetails": {
+            "latitude": "35.015546",
+            "longitude": "-114.509757"
+          }
+        },
+        {
+          "elevation": "355.98",
+          "latLongDetails": {
+            "latitude": "35.014806",
+            "longitude": "-114.509752"
+          }
+        },
+        {
+          "elevation": "353.7",
+          "latLongDetails": {
+            "latitude": "35.013883",
+            "longitude": "-114.509754"
+          }
+        },
+        {
+          "elevation": "352.94",
+          "latLongDetails": {
+            "latitude": "35.01313",
+            "longitude": "-114.50976"
+          }
+        },
+        {
+          "elevation": "352.26",
+          "latLongDetails": {
+            "latitude": "35.012473",
+            "longitude": "-114.50977"
+          }
+        },
+        {
+          "elevation": "352.4",
+          "latLongDetails": {
+            "latitude": "35.012712",
+            "longitude": "-114.509765"
+          }
+        },
+        {
+          "elevation": "351.91",
+          "latLongDetails": {
+            "latitude": "35.011972",
+            "longitude": "-114.509768"
+          }
+        },
+        {
+          "elevation": "351.57",
+          "latLongDetails": {
+            "latitude": "35.011592",
+            "longitude": "-114.509741"
+          }
+        },
+        {
+          "elevation": "347.82",
+          "latLongDetails": {
+            "latitude": "35.011375",
+            "longitude": "-114.510865"
+          }
+        },
+        {
+          "elevation": "341.28",
+          "latLongDetails": {
+            "latitude": "35.011295",
+            "longitude": "-114.512887"
+          }
+        },
+        {
+          "elevation": "339.22",
+          "latLongDetails": {
+            "latitude": "35.011344",
+            "longitude": "-114.513858"
+          }
+        },
+        {
+          "elevation": "335.09",
+          "latLongDetails": {
+            "latitude": "35.011339",
+            "longitude": "-114.515188"
+          }
+        },
+        {
+          "elevation": "329.37",
+          "latLongDetails": {
+            "latitude": "35.011348",
+            "longitude": "-114.517356"
+          }
+        },
+        {
+          "elevation": "321.03",
+          "latLongDetails": {
+            "latitude": "35.011322",
+            "longitude": "-114.51955"
+          }
+        },
+        {
+          "elevation": "314.62",
+          "latLongDetails": {
+            "latitude": "35.011361",
+            "longitude": "-114.522039"
+          }
+        },
+        {
+          "elevation": "300.01",
+          "latLongDetails": {
+            "latitude": "35.011375",
+            "longitude": "-114.52729"
+          }
+        },
+        {
+          "elevation": "289.3",
+          "latLongDetails": {
+            "latitude": "35.011309",
+            "longitude": "-114.530659"
+          }
+        },
+        {
+          "elevation": "281.64",
+          "latLongDetails": {
+            "latitude": "35.011313",
+            "longitude": "-114.533063"
+          }
+        },
+        {
+          "elevation": "271.29",
+          "latLongDetails": {
+            "latitude": "35.011313",
+            "longitude": "-114.537853"
+          }
+        },
+        {
+          "elevation": "265.06",
+          "latLongDetails": {
+            "latitude": "35.011357",
+            "longitude": "-114.541098"
+          }
+        },
+        {
+          "elevation": "259.1",
+          "latLongDetails": {
+            "latitude": "35.0113",
+            "longitude": "-114.544135"
+          }
+        },
+        {
+          "elevation": "257.66",
+          "latLongDetails": {
+            "latitude": "35.011361",
+            "longitude": "-114.544961"
+          }
+        }
+      ]
+    },
+    {
+      "ltfIdno": "110027",
+      "permitType": "CGP",
+      "dateApplied": "07/07/2025",
+      "dateSubmitted": "07/07/2025",
+      "projType": "Utilities",
+      "facilityName": "APS LAYDOWN YARD  PADRE TO WINSLOW",
+      "companyName": "ARIZONA PUBLIC SERVICE - T&D",
+      "rcoName": "MONICA TELLES",
+      "ltfFacilityDetails": {
+        "placeAddress": null,
+        "facilityCounty": {
+          "countyCode": "04017"
+        },
+        "ltfCatName": "AZPDES Stormwater CGP waiver",
+        "issuedDate": "07/07/2025",
+        "ltfStatus": "ISSUED",
+        "latLongDetails": {
+          "latitude": "35.039735",
+          "longitude": "-110.712998"
+        }
+      },
+      "companyAddress": {
+        "address": {
+          "address": "PO BOX 53933",
+          "aptSuite": null,
+          "city": "PHOENIX",
+          "state": "AZ",
+          "zip": "85072",
+          "countyCode": "04013"
+        }
+      },
+      "swpppDetails": null,
+      "permitAuthCode": "AZC110027",
+      "totalProjectArea": null,
+      "permitProjectArea": "4.5",
+      "conStartDate": "07/08/2025",
+      "conEndDate": "07/15/2025",
+      "commonAreaInd": "N",
+      "outfalls": [
+        {
+          "elevation": "1484.4",
+          "latLongDetails": {
+            "latitude": "35.038952",
+            "longitude": "-110.715701"
+          }
+        }
+      ]
+    },
+    {
+      "ltfIdno": "107979",
+      "permitType": "CGP",
+      "dateApplied": "03/11/2025",
+      "dateSubmitted": "03/12/2025",
+      "projType": "Utilities",
+      "facilityName": "JPAR WATERLINE PHASE 2",
+      "companyName": "DAY'S EXCAVATING, INC.",
+      "rcoName": "RODNEY DAY",
+      "ltfFacilityDetails": {
+        "placeAddress": null,
+        "facilityCounty": {
+          "countyCode": "04019"
+        },
+        "ltfCatName": "AZPDES Stormwater CGP waiver",
+        "issuedDate": "03/12/2025",
+        "ltfStatus": "ISSUED",
+        "latLongDetails": {
+          "latitude": "31.913772",
+          "longitude": "-110.967001"
+        }
+      },
+      "companyAddress": {
+        "address": {
+          "address": "4295 E DAWSON RD",
+          "aptSuite": null,
+          "city": "SAHUARITA",
+          "state": "AZ",
+          "zip": "85629",
+          "countyCode": null
+        }
+      },
+      "swpppDetails": null,
+      "permitAuthCode": "AZC107979",
+      "totalProjectArea": null,
+      "permitProjectArea": "3.5",
+      "conStartDate": "03/15/2025",
+      "conEndDate": "07/04/2025",
+      "commonAreaInd": "N",
+      "outfalls": [
+        {
+          "elevation": "841.84",
+          "latLongDetails": {
+            "latitude": "31.913887",
+            "longitude": "-110.966401"
+          }
+        },
+        {
+          "elevation": "841.47",
+          "latLongDetails": {
+            "latitude": "31.914098",
+            "longitude": "-110.964951"
+          }
+        }
+      ]
+    },
+    {
+      "ltfIdno": "107488",
+      "permitType": "CGP",
+      "dateApplied": "02/13/2025",
+      "dateSubmitted": "02/14/2025",
+      "projType": "Utilities",
+      "facilityName": "TUCSON SUBSTATION STAGE 2",
+      "companyName": "TUCSON ELECTRIC POWER COMPANY",
+      "rcoName": "ANA BUSTAMANTE",
+      "ltfFacilityDetails": {
+        "placeAddress": null,
+        "facilityCounty": {
+          "countyCode": "04019"
+        },
+        "ltfCatName": "AZPDES Stormwater CGP waiver",
+        "issuedDate": "02/14/2025",
+        "ltfStatus": "ISSUED",
+        "latLongDetails": {
+          "latitude": "32.253055556",
+          "longitude": "-110.989444444"
+        }
+      },
+      "companyAddress": {
+        "address": {
+          "address": "3950 E IRVINGTON RD",
+          "aptSuite": "# RC-131",
+          "city": "TUCSON",
+          "state": "AZ",
+          "zip": "85714",
+          "countyCode": "04019"
+        }
+      },
+      "swpppDetails": null,
+      "permitAuthCode": "AZC107488",
+      "totalProjectArea": null,
+      "permitProjectArea": "4.05",
+      "conStartDate": "02/19/2025",
+      "conEndDate": "03/19/2025",
+      "commonAreaInd": "N",
+      "outfalls": [
+        {
+          "elevation": "706.57",
+          "latLongDetails": {
+            "latitude": "32.253496",
+            "longitude": "-110.992124"
+          }
+        }
+      ]
+    },
+    {
+      "ltfIdno": "107392",
+      "permitType": "CGP",
+      "dateApplied": "02/06/2025",
+      "dateSubmitted": "02/07/2025",
+      "projType": "Other",
+      "facilityName": "ALORAVITA 3",
+      "companyName": "PULTE HOME COMPANY, LLC",
+      "rcoName": "TODD  KNAPE",
+      "ltfFacilityDetails": {
+        "placeAddress": null,
+        "facilityCounty": {
+          "countyCode": "04013"
+        },
+        "ltfCatName": "AZPDES Stormwater CGP waiver",
+        "issuedDate": "02/07/2025",
+        "ltfStatus": "ISSUED",
+        "latLongDetails": {
+          "latitude": "33.717946",
+          "longitude": "-112.229187"
+        }
+      },
+      "companyAddress": {
+        "address": {
+          "address": "8605 E RAINTREE DR",
+          "aptSuite": "STE 300",
+          "city": "SCOTTSDALE",
+          "state": "AZ",
+          "zip": "85260",
+          "countyCode": null
+        }
+      },
+      "swpppDetails": null,
+      "permitAuthCode": "AZC107392",
+      "totalProjectArea": null,
+      "permitProjectArea": "1.5",
+      "conStartDate": "02/10/2025",
+      "conEndDate": "02/28/2025",
+      "commonAreaInd": "N",
+      "outfalls": [
+        {
+          "elevation": "413.148",
+          "latLongDetails": {
+            "latitude": "33.717529",
+            "longitude": "-112.229589"
+          }
+        }
+      ]
+    },
+    {
+      "ltfIdno": "107345",
+      "permitType": "CGP",
+      "dateApplied": "02/04/2025",
+      "dateSubmitted": "02/04/2025",
+      "projType": "Utilities",
+      "facilityName": "8TH AVENUE SEWER EXTENSION: PHASE I",
+      "companyName": " RODNEY ELLWOOD SCHLESENER DBA HT4",
+      "rcoName": "RODNEY SCHLESENER",
+      "ltfFacilityDetails": {
+        "placeAddress": null,
+        "facilityCounty": {
+          "countyCode": "04009"
+        },
+        "ltfCatName": "AZPDES Stormwater CGP waiver",
+        "issuedDate": "02/04/2025",
+        "ltfStatus": "ISSUED",
+        "latLongDetails": {
+          "latitude": "32.807097",
+          "longitude": "-109.716526"
+        }
+      },
+      "companyAddress": {
+        "address": {
+          "address": "PO BOX 552",
+          "aptSuite": null,
+          "city": "SAFFORD",
+          "state": "AZ",
+          "zip": "85548",
+          "countyCode": null
+        }
+      },
+      "swpppDetails": null,
+      "permitAuthCode": "AZC107345",
+      "totalProjectArea": null,
+      "permitProjectArea": "1",
+      "conStartDate": "02/04/2025",
+      "conEndDate": "05/30/2025",
+      "commonAreaInd": "N",
+      "outfalls": [
+        {
+          "elevation": "881.34",
+          "latLongDetails": {
+            "latitude": "32.845248",
+            "longitude": "-109.70777"
+          }
+        }
+      ]
+    },
+    {
+      "ltfIdno": "107237",
+      "permitType": "CGP",
+      "dateApplied": "01/29/2025",
+      "dateSubmitted": "01/29/2025",
+      "projType": "Municipal/Public",
+      "facilityName": "E SHEA BLVD IMPROVEMENTS",
+      "companyName": "AJP ELECTRIC, INC.",
+      "rcoName": "MICHAEL PAGANIK",
+      "ltfFacilityDetails": {
+        "placeAddress": null,
+        "facilityCounty": {
+          "countyCode": "04013"
+        },
+        "ltfCatName": "AZPDES Stormwater CGP waiver",
+        "issuedDate": "01/29/2025",
+        "ltfStatus": "ISSUED",
+        "latLongDetails": {
+          "latitude": "33.582375",
+          "longitude": "-111.843697"
+        }
+      },
+      "companyAddress": {
+        "address": {
+          "address": "1920 W CHERYL DR",
+          "aptSuite": null,
+          "city": "PHOENIX",
+          "state": "AZ",
+          "zip": "85021",
+          "countyCode": "04013"
+        }
+      },
+      "swpppDetails": null,
+      "permitAuthCode": "AZC107237",
+      "totalProjectArea": null,
+      "permitProjectArea": "1.55",
+      "conStartDate": "01/31/2025",
+      "conEndDate": "05/31/2025",
+      "commonAreaInd": "N",
+      "outfalls": [
+        {
+          "elevation": "423.394",
+          "latLongDetails": {
+            "latitude": "33.582193",
+            "longitude": "-111.852373"
+          }
+        },
+        {
+          "elevation": "423.592",
+          "latLongDetails": {
+            "latitude": "33.58222",
+            "longitude": "-111.852147"
+          }
+        },
+        {
+          "elevation": "431.514",
+          "latLongDetails": {
+            "latitude": "33.582322",
+            "longitude": "-111.843505"
+          }
+        },
+        {
+          "elevation": "431.552",
+          "latLongDetails": {
+            "latitude": "33.582653",
+            "longitude": "-111.843634"
+          }
+        },
+        {
+          "elevation": "431.591",
+          "latLongDetails": {
+            "latitude": "33.582604",
+            "longitude": "-111.843548"
+          }
+        },
+        {
+          "elevation": "438.132",
+          "latLongDetails": {
+            "latitude": "33.582273",
+            "longitude": "-111.836236"
+          }
+        },
+        {
+          "elevation": "435.153",
+          "latLongDetails": {
+            "latitude": "33.582314",
+            "longitude": "-111.838602"
+          }
+        },
+        {
+          "elevation": "438.572",
+          "latLongDetails": {
+            "latitude": "33.582269",
+            "longitude": "-111.834375"
+          }
+        },
+        {
+          "elevation": "505.64",
+          "latLongDetails": {
+            "latitude": "33.582292",
+            "longitude": "-111.787124"
+          }
+        }
+      ]
+    },
+    {
+      "ltfIdno": "106136",
+      "permitType": "CGP",
+      "dateApplied": "11/19/2024",
+      "dateSubmitted": "11/19/2024",
+      "projType": "Municipal/Public",
+      "facilityName": "JOE FOSS RANGE",
+      "companyName": "MT2, LLC",
+      "rcoName": "MICHAEL BURKETT",
+      "ltfFacilityDetails": {
+        "placeAddress": null,
+        "facilityCounty": {
+          "countyCode": "04013"
+        },
+        "ltfCatName": "AZPDES Stormwater CGP waiver",
+        "issuedDate": "11/19/2024",
+        "ltfStatus": "ISSUED",
+        "latLongDetails": {
+          "latitude": "33.273244",
+          "longitude": "-112.638227"
+        }
+      },
+      "companyAddress": {
+        "address": {
+          "address": "14045 W 66TH AVE",
+          "aptSuite": null,
+          "city": "ARVADA",
+          "state": "CO",
+          "zip": "80004",
+          "countyCode": "08059"
+        }
+      },
+      "swpppDetails": null,
+      "permitAuthCode": "AZC106136",
+      "totalProjectArea": null,
+      "permitProjectArea": "3.4",
+      "conStartDate": "11/25/2024",
+      "conEndDate": "01/30/2025",
+      "commonAreaInd": "N",
+      "outfalls": [
+        {
+          "elevation": "284.764",
+          "latLongDetails": {
+            "latitude": "33.276114",
+            "longitude": "-112.634418"
+          }
+        },
+        {
+          "elevation": "286.939",
+          "latLongDetails": {
+            "latitude": "33.276501",
+            "longitude": "-112.636897"
+          }
+        }
+      ]
+    },
+    {
+      "ltfIdno": "106066",
+      "permitType": "CGP",
+      "dateApplied": "11/13/2024",
+      "dateSubmitted": "11/13/2024",
+      "projType": "Utilities",
+      "facilityName": "APS DEER VALLEY SERVICE COMPANY",
+      "companyName": "SUNLAND ASPHALT AND CONSTRUCTION, INC.",
+      "rcoName": "IMMANUEL MARTINEZ ",
+      "ltfFacilityDetails": {
+        "placeAddress": {
+          "address": {
+            "address": "2121 W CHERYL DR",
+            "aptSuite": null,
+            "city": "PHOENIX",
+            "state": "AZ",
+            "zip": "85021",
+            "countyCode": "04013"
+          }
+        },
+        "facilityCounty": {
+          "countyCode": null
+        },
+        "ltfCatName": "AZPDES Stormwater CGP waiver",
+        "issuedDate": "11/13/2024",
+        "ltfStatus": "ISSUED",
+        "latLongDetails": {
+          "latitude": "33.578064918",
+          "longitude": "-112.105130094"
+        }
+      },
+      "companyAddress": {
+        "address": {
+          "address": "1625 E NORTHERN AVE",
+          "aptSuite": "STE 100",
+          "city": "PHOENIX",
+          "state": "AZ",
+          "zip": "85020",
+          "countyCode": "04013"
+        }
+      },
+      "swpppDetails": null,
+      "permitAuthCode": "AZC106066",
+      "totalProjectArea": null,
+      "permitProjectArea": "1.5",
+      "conStartDate": "12/01/2024",
+      "conEndDate": "12/31/2024",
+      "commonAreaInd": "N",
+      "outfalls": [
+        {
+          "elevation": "368.593",
+          "latLongDetails": {
+            "latitude": "33.574681",
+            "longitude": "-112.108892"
+          }
+        }
+      ]
+    },
+    {
+      "ltfIdno": "105971",
+      "permitType": "CGP",
+      "dateApplied": "11/01/2024",
+      "dateSubmitted": "11/01/2024",
+      "projType": "Utilities",
+      "facilityName": "APS DEER VALLEY SERVICE COMPANY",
+      "companyName": "ARIZONA PUBLIC SERVICE - T&D",
+      "rcoName": "MONICA TELLES",
+      "ltfFacilityDetails": {
+        "placeAddress": {
+          "address": {
+            "address": "2121 W CHERYL DR",
+            "aptSuite": null,
+            "city": "PHOENIX",
+            "state": "AZ",
+            "zip": "85021",
+            "countyCode": "04013"
+          }
+        },
+        "facilityCounty": {
+          "countyCode": null
+        },
+        "ltfCatName": "AZPDES Stormwater CGP waiver",
+        "issuedDate": "11/01/2024",
+        "ltfStatus": "ISSUED",
+        "latLongDetails": {
+          "latitude": "33.578064918",
+          "longitude": "-112.105130094"
+        }
+      },
+      "companyAddress": {
+        "address": {
+          "address": "PO BOX 53933",
+          "aptSuite": null,
+          "city": "PHOENIX",
+          "state": "AZ",
+          "zip": "85072",
+          "countyCode": "04013"
+        }
+      },
+      "swpppDetails": null,
+      "permitAuthCode": "AZC105971",
+      "totalProjectArea": null,
+      "permitProjectArea": "1.5",
+      "conStartDate": "12/01/2024",
+      "conEndDate": "12/31/2024",
+      "commonAreaInd": "N",
+      "outfalls": [
+        {
+          "elevation": "368.613",
+          "latLongDetails": {
+            "latitude": "33.574681",
+            "longitude": "-112.108892"
+          }
+        }
+      ]
+    },
+    {
+      "ltfIdno": "105903",
+      "permitType": "CGP",
+      "dateApplied": "10/28/2024",
+      "dateSubmitted": "10/28/2024",
+      "projType": "Utilities",
+      "facilityName": "APS DOWNING SUBSTATION",
+      "companyName": "SOUTHWEST CABLE SERVICES, LLC",
+      "rcoName": "MICHAEL SAWCHUK",
+      "ltfFacilityDetails": {
+        "placeAddress": null,
+        "facilityCounty": {
+          "countyCode": "04013"
+        },
+        "ltfCatName": "AZPDES Stormwater CGP waiver",
+        "issuedDate": "10/28/2024",
+        "ltfStatus": "ISSUED",
+        "latLongDetails": {
+          "latitude": "33.652102",
+          "longitude": "-111.892645"
+        }
+      },
+      "companyAddress": {
+        "address": {
+          "address": "PO BOX 1179",
+          "aptSuite": null,
+          "city": "DEWEY",
+          "state": "AZ",
+          "zip": "86327",
+          "countyCode": "04025"
+        }
+      },
+      "swpppDetails": null,
+      "permitAuthCode": "AZC105903",
+      "totalProjectArea": null,
+      "permitProjectArea": "1.7",
+      "conStartDate": "10/25/2024",
+      "conEndDate": "11/27/2024",
+      "commonAreaInd": "N",
+      "outfalls": [
+        {
+          "elevation": "480.944",
+          "latLongDetails": {
+            "latitude": "33.643169",
+            "longitude": "-111.890225"
+          }
+        }
+      ]
+    },
+    {
+      "ltfIdno": "105887",
+      "permitType": "CGP",
+      "dateApplied": "10/24/2024",
+      "dateSubmitted": "10/24/2024",
+      "projType": "Utilities",
+      "facilityName": "APS DOWNING SUBSTATION",
+      "companyName": "ARIZONA PUBLIC SERVICE - T&D",
+      "rcoName": "MONICA TELLES",
+      "ltfFacilityDetails": {
+        "placeAddress": null,
+        "facilityCounty": {
+          "countyCode": "04013"
+        },
+        "ltfCatName": "AZPDES Stormwater CGP waiver",
+        "issuedDate": "10/24/2024",
+        "ltfStatus": "ISSUED",
+        "latLongDetails": {
+          "latitude": "33.652102",
+          "longitude": "-111.892645"
+        }
+      },
+      "companyAddress": {
+        "address": {
+          "address": "PO BOX 53933",
+          "aptSuite": null,
+          "city": "PHOENIX",
+          "state": "AZ",
+          "zip": "85072",
+          "countyCode": "04013"
+        }
+      },
+      "swpppDetails": null,
+      "permitAuthCode": "AZC105887",
+      "totalProjectArea": null,
+      "permitProjectArea": "1.7",
+      "conStartDate": "10/25/2024",
+      "conEndDate": "11/27/2024",
+      "commonAreaInd": "N",
+      "outfalls": [
+        {
+          "elevation": "480.944",
+          "latLongDetails": {
+            "latitude": "33.643169",
+            "longitude": "-111.890225"
+          }
+        }
+      ]
+    },
+    {
+      "ltfIdno": "105672",
+      "permitType": "CGP",
+      "dateApplied": "10/08/2024",
+      "dateSubmitted": "10/08/2024",
+      "projType": "ADOT",
+      "facilityName": "ADOT - PAGE ROUND ABOUT",
+      "companyName": "ARIZONA DEPARTMENT OF TRANSPORTATION - NORTHCENTRAL DISTRICT",
+      "rcoName": "BRENDEN FOLEY",
+      "ltfFacilityDetails": {
+        "placeAddress": null,
+        "facilityCounty": {
+          "countyCode": "04005"
+        },
+        "ltfCatName": "AZPDES Stormwater CGP waiver",
+        "issuedDate": "10/08/2024",
+        "ltfStatus": "ISSUED",
+        "latLongDetails": {
+          "latitude": "36.925571",
+          "longitude": "-111.472107"
+        }
+      },
+      "companyAddress": {
+        "address": {
+          "address": "1959 S WOODLANDS VILLAGE BLVD",
+          "aptSuite": "STE B",
+          "city": "FLAGSTAFF",
+          "state": "AZ",
+          "zip": "86001",
+          "countyCode": null
+        }
+      },
+      "swpppDetails": null,
+      "permitAuthCode": "AZC105672",
+      "totalProjectArea": null,
+      "permitProjectArea": "1",
+      "conStartDate": "10/08/2024",
+      "conEndDate": "03/30/2025",
+      "commonAreaInd": "N",
+      "outfalls": [
+        {
+          "elevation": "1219.21",
+          "latLongDetails": {
+            "latitude": "36.925429",
+            "longitude": "-111.472229"
+          }
+        }
+      ]
+    },
+    {
+      "ltfIdno": "105528",
+      "permitType": "CGP",
+      "dateApplied": "09/30/2024",
+      "dateSubmitted": "09/30/2024",
+      "projType": "ADOT",
+      "facilityName": "BITTER SPRINGS - UTAH STATE LINE HWY (US 89)",
+      "companyName": "HAUSER ENGINEERING GROUP, LLC",
+      "rcoName": "CHRIS HAUSER",
+      "ltfFacilityDetails": {
+        "placeAddress": null,
+        "facilityCounty": {
+          "countyCode": "04005"
+        },
+        "ltfCatName": "AZPDES Stormwater CGP waiver",
+        "issuedDate": "09/30/2024",
+        "ltfStatus": "ISSUED",
+        "latLongDetails": {
+          "latitude": "36.925571",
+          "longitude": "-111.472107"
+        }
+      },
+      "companyAddress": {
+        "address": {
+          "address": "PO BOX 6207",
+          "aptSuite": null,
+          "city": "GLENDALE",
+          "state": "AZ",
+          "zip": "85312",
+          "countyCode": "04013"
+        }
+      },
+      "swpppDetails": null,
+      "permitAuthCode": "AZC105528",
+      "totalProjectArea": null,
+      "permitProjectArea": "1",
+      "conStartDate": "10/07/2024",
+      "conEndDate": "05/24/2025",
+      "commonAreaInd": "N",
+      "outfalls": [
+        {
+          "elevation": "1219.21",
+          "latLongDetails": {
+            "latitude": "36.925429",
+            "longitude": "-111.472229"
+          }
+        }
+      ]
+    },
+    {
+      "ltfIdno": "104454",
+      "permitType": "CGP",
+      "dateApplied": "07/17/2024",
+      "dateSubmitted": "07/18/2024",
+      "projType": "Utilities",
+      "facilityName": "MULBERRY FEEDER",
+      "companyName": "TUCSON ELECTRIC POWER COMPANY",
+      "rcoName": "ANA BUSTAMANTE",
+      "ltfFacilityDetails": {
+        "placeAddress": null,
+        "facilityCounty": {
+          "countyCode": "04015"
+        },
+        "ltfCatName": "AZPDES Stormwater CGP waiver",
+        "issuedDate": "07/18/2024",
+        "ltfStatus": "ISSUED",
+        "latLongDetails": {
+          "latitude": "34.457506",
+          "longitude": "-114.330314"
+        }
+      },
+      "companyAddress": {
+        "address": {
+          "address": "3950 E IRVINGTON RD",
+          "aptSuite": "# RC-131",
+          "city": "TUCSON",
+          "state": "AZ",
+          "zip": "85714",
+          "countyCode": "04019"
+        }
+      },
+      "swpppDetails": null,
+      "permitAuthCode": "AZC104454",
+      "totalProjectArea": null,
+      "permitProjectArea": "1.2",
+      "conStartDate": "07/30/2024",
+      "conEndDate": "09/27/2024",
+      "commonAreaInd": "N",
+      "outfalls": [
+        {
+          "elevation": "141.736",
+          "latLongDetails": {
+            "latitude": "34.460052",
+            "longitude": "-114.332634"
+          }
+        },
+        {
+          "elevation": "142.446",
+          "latLongDetails": {
+            "latitude": "34.45419",
+            "longitude": "-114.326114"
+          }
+        },
+        {
+          "elevation": "143.793",
+          "latLongDetails": {
+            "latitude": "34.453439",
+            "longitude": "-114.32457"
+          }
+        },
+        {
+          "elevation": "140.988",
+          "latLongDetails": {
+            "latitude": "34.457391",
+            "longitude": "-114.330372"
+          }
+        }
+      ]
+    },
+    {
+      "ltfIdno": "102659",
+      "permitType": "CGP",
+      "dateApplied": "02/22/2024",
+      "dateSubmitted": "02/22/2024",
+      "projType": "Utilities",
+      "facilityName": "APS BUNKER PEAK FEEDER UG",
+      "companyName": "ARIZONA PUBLIC SERVICE - T&D",
+      "rcoName": "MONICA TELLES",
+      "ltfFacilityDetails": {
+        "placeAddress": null,
+        "facilityCounty": {
+          "countyCode": "04013"
+        },
+        "ltfCatName": "AZPDES Stormwater CGP waiver",
+        "issuedDate": "02/23/2024",
+        "ltfStatus": "ISSUED",
+        "latLongDetails": {
+          "latitude": "33.724737",
+          "longitude": "-112.377459"
+        }
+      },
+      "companyAddress": {
+        "address": {
+          "address": "PO BOX 53933",
+          "aptSuite": null,
+          "city": "PHOENIX",
+          "state": "AZ",
+          "zip": "85072",
+          "countyCode": "04013"
+        }
+      },
+      "swpppDetails": null,
+      "permitAuthCode": "AZC102659",
+      "totalProjectArea": null,
+      "permitProjectArea": "1.4",
+      "conStartDate": "02/22/2024",
+      "conEndDate": "06/30/2024",
+      "commonAreaInd": "N",
+      "outfalls": [
+        {
+          "elevation": "412.87",
+          "latLongDetails": {
+            "latitude": "33.711071",
+            "longitude": "-112.381009"
+          }
+        },
+        {
+          "elevation": "419.352",
+          "latLongDetails": {
+            "latitude": "33.718362",
+            "longitude": "-112.377258"
+          }
+        }
+      ]
+    },
+    {
+      "ltfIdno": "102558",
+      "permitType": "CGP",
+      "dateApplied": "02/13/2024",
+      "dateSubmitted": "02/13/2024",
+      "projType": "Utilities",
+      "facilityName": "WINDMILL SUBSTATION ROAD WORK",
+      "companyName": "S & A EXCAVATION, LLC",
+      "rcoName": "NEIL ANDERSEN",
+      "ltfFacilityDetails": {
+        "placeAddress": null,
+        "facilityCounty": {
+          "countyCode": "04025"
+        },
+        "ltfCatName": "AZPDES Stormwater CGP waiver",
+        "issuedDate": "02/13/2024",
+        "ltfStatus": "ISSUED",
+        "latLongDetails": {
+          "latitude": "34.83879",
+          "longitude": "-111.929161"
+        }
+      },
+      "companyAddress": {
+        "address": {
+          "address": "PO BOX 12468",
+          "aptSuite": null,
+          "city": "PRESCOTT",
+          "state": "AZ",
+          "zip": "86304",
+          "countyCode": null
+        }
+      },
+      "swpppDetails": {
+        "fname": "Neil",
+        "lname": "Andersen",
+        "email": "Neil@saexcavation.net",
+        "phone": "7074863469",
+        "ext": null
+      },
+      "permitAuthCode": "AZC102558",
+      "totalProjectArea": null,
+      "permitProjectArea": "1.42",
+      "conStartDate": "03/01/2024",
+      "conEndDate": "04/15/2024",
+      "commonAreaInd": "N",
+      "outfalls": [
+        {
+          "elevation": "1250.08",
+          "latLongDetails": {
+            "latitude": "34.848251",
+            "longitude": "-111.926274"
+          }
+        },
+        {
+          "elevation": "1232.1",
+          "latLongDetails": {
+            "latitude": "34.84158",
+            "longitude": "-111.928876"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "ltfIdno": "114955",
+  "permitType": "CGP",
+  "dateApplied": "02/20/2026",
+  "dateSubmitted": "02/20/2026",
+  "projType": "Commercial",
+  "facilityName": "FIRE N ICE",
+  "companyName": "CANYON BUILDING AND DESIGN LLC",
+  "rcoName": "TERRY JENNI",
+  "ltfFacilityDetails": {
+    "placeAddress": {
+      "address": {
+        "address": "2727 W BRONCO BUTTE TRL",
+        "aptSuite": null,
+        "city": "PHOENIX",
+        "state": "AZ",
+        "zip": "85085",
+        "countyCode": "04013"
+      }
+    },
+    "facilityCounty": {
+      "countyCode": null
+    },
+    "ltfCatName": "AZPDES Stormwater CGP No Discharge Certificate",
+    "issuedDate": "02/20/2026",
+    "ltfStatus": "ISSUED",
+    "latLongDetails": {
+      "latitude": "33.77607",
+      "longitude": "-112.118103"
+    }
+  },
+  "companyAddress": {
+    "address": {
+      "address": "4750 N LA CHOLLA BLVD",
+      "aptSuite": "# 135",
+      "city": "TUCSON",
+      "state": "AZ",
+      "zip": "85705",
+      "countyCode": "04019"
+    }
+  },
+  "swpppDetails": null,
+  "permitAuthCode": "114955",
+  "totalProjectArea": null,
+  "permitProjectArea": "17",
+  "conStartDate": "02/20/2026",
+  "conEndDate": "10/10/2026",
+  "commonAreaInd": "N",
+  "outfalls": []
+}

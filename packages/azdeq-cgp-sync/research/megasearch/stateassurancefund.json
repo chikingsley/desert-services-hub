@@ -1,0 +1,228 @@
+{
+  "endpoint": "stateAssuranceFund",
+  "label": "State Assurance Fund",
+  "storedRecords": 2824,
+  "sampledRecords": 20,
+  "records": [
+    {
+      "lustNum": 2140,
+      "plcId": 3730,
+      "name": "WILLCOX TRUCK PLAZA",
+      "address": "1190 W REX ALLEN DR",
+      "city": "WILLCOX",
+      "state": "AZ",
+      "postalCode": "85643",
+      "county": "COCHISE",
+      "indexVal": "stateAssuranceFund84"
+    },
+    {
+      "lustNum": 2140,
+      "plcId": 3730,
+      "name": "WILLCOX TRUCK PLAZA",
+      "address": "1190 W REX ALLEN DR",
+      "city": "WILLCOX",
+      "state": "AZ",
+      "postalCode": "85643",
+      "county": "COCHISE",
+      "indexVal": "stateAssuranceFund73"
+    },
+    {
+      "lustNum": 2140,
+      "plcId": 3730,
+      "name": "WILLCOX TRUCK PLAZA",
+      "address": "1190 W REX ALLEN DR",
+      "city": "WILLCOX",
+      "state": "AZ",
+      "postalCode": "85643",
+      "county": "COCHISE",
+      "indexVal": "stateAssuranceFund64"
+    },
+    {
+      "lustNum": 4822,
+      "plcId": 921,
+      "name": "TOWN OF WICKENBURG - WWTP",
+      "address": "1006 SOUTH TEGNER STREET, STE A",
+      "city": "WICKENBURG",
+      "state": "AZ",
+      "postalCode": "85390",
+      "county": "MARICOPA",
+      "indexVal": "stateAssuranceFund48"
+    },
+    {
+      "lustNum": 2613,
+      "plcId": 512,
+      "name": "WELLTON SCALE - LOS ANGELES WAY",
+      "address": "28509 E LOS ANGELES AVE",
+      "city": "WELLTON",
+      "state": "AZ",
+      "postalCode": "85356",
+      "county": "YUMA",
+      "indexVal": "stateAssuranceFund44"
+    },
+    {
+      "lustNum": 2613,
+      "plcId": 512,
+      "name": "WELLTON SCALE - LOS ANGELES WAY",
+      "address": "28509 E LOS ANGELES AVE",
+      "city": "WELLTON",
+      "state": "AZ",
+      "postalCode": "85356",
+      "county": "YUMA",
+      "indexVal": "stateAssuranceFund37"
+    },
+    {
+      "lustNum": 2613,
+      "plcId": 512,
+      "name": "WELLTON SCALE - LOS ANGELES WAY",
+      "address": "28509 E LOS ANGELES AVE",
+      "city": "WELLTON",
+      "state": "AZ",
+      "postalCode": "85356",
+      "county": "YUMA",
+      "indexVal": "stateAssuranceFund33"
+    },
+    {
+      "lustNum": 2613,
+      "plcId": 512,
+      "name": "WELLTON SCALE - LOS ANGELES WAY",
+      "address": "28509 E LOS ANGELES AVE",
+      "city": "WELLTON",
+      "state": "AZ",
+      "postalCode": "85356",
+      "county": "YUMA",
+      "indexVal": "stateAssuranceFund17"
+    },
+    {
+      "lustNum": 2140,
+      "plcId": 3730,
+      "name": "WILLCOX TRUCK PLAZA",
+      "address": "1190 W REX ALLEN DR",
+      "city": "WILLCOX",
+      "state": "AZ",
+      "postalCode": "85643",
+      "county": "COCHISE",
+      "indexVal": "stateAssuranceFund99"
+    },
+    {
+      "lustNum": 2140,
+      "plcId": 3730,
+      "name": "WILLCOX TRUCK PLAZA",
+      "address": "1190 W REX ALLEN DR",
+      "city": "WILLCOX",
+      "state": "AZ",
+      "postalCode": "85643",
+      "county": "COCHISE",
+      "indexVal": "stateAssuranceFund96"
+    },
+    {
+      "lustNum": 2140,
+      "plcId": 3730,
+      "name": "WILLCOX TRUCK PLAZA",
+      "address": "1190 W REX ALLEN DR",
+      "city": "WILLCOX",
+      "state": "AZ",
+      "postalCode": "85643",
+      "county": "COCHISE",
+      "indexVal": "stateAssuranceFund92"
+    },
+    {
+      "lustNum": 2140,
+      "plcId": 3730,
+      "name": "WILLCOX TRUCK PLAZA",
+      "address": "1190 W REX ALLEN DR",
+      "city": "WILLCOX",
+      "state": "AZ",
+      "postalCode": "85643",
+      "county": "COCHISE",
+      "indexVal": "stateAssuranceFund86"
+    },
+    {
+      "lustNum": 2140,
+      "plcId": 3730,
+      "name": "WILLCOX TRUCK PLAZA",
+      "address": "1190 W REX ALLEN DR",
+      "city": "WILLCOX",
+      "state": "AZ",
+      "postalCode": "85643",
+      "county": "COCHISE",
+      "indexVal": "stateAssuranceFund82"
+    },
+    {
+      "lustNum": 2140,
+      "plcId": 3730,
+      "name": "WILLCOX TRUCK PLAZA",
+      "address": "1190 W REX ALLEN DR",
+      "city": "WILLCOX",
+      "state": "AZ",
+      "postalCode": "85643",
+      "county": "COCHISE",
+      "indexVal": "stateAssuranceFund81"
+    },
+    {
+      "lustNum": 2140,
+      "plcId": 3730,
+      "name": "WILLCOX TRUCK PLAZA",
+      "address": "1190 W REX ALLEN DR",
+      "city": "WILLCOX",
+      "state": "AZ",
+      "postalCode": "85643",
+      "county": "COCHISE",
+      "indexVal": "stateAssuranceFund71"
+    },
+    {
+      "lustNum": 2140,
+      "plcId": 3730,
+      "name": "WILLCOX TRUCK PLAZA",
+      "address": "1190 W REX ALLEN DR",
+      "city": "WILLCOX",
+      "state": "AZ",
+      "postalCode": "85643",
+      "county": "COCHISE",
+      "indexVal": "stateAssuranceFund60"
+    },
+    {
+      "lustNum": 2140,
+      "plcId": 3730,
+      "name": "WILLCOX TRUCK PLAZA",
+      "address": "1190 W REX ALLEN DR",
+      "city": "WILLCOX",
+      "state": "AZ",
+      "postalCode": "85643",
+      "county": "COCHISE",
+      "indexVal": "stateAssuranceFund54"
+    },
+    {
+      "lustNum": 2140,
+      "plcId": 3730,
+      "name": "WILLCOX TRUCK PLAZA",
+      "address": "1190 W REX ALLEN DR",
+      "city": "WILLCOX",
+      "state": "AZ",
+      "postalCode": "85643",
+      "county": "COCHISE",
+      "indexVal": "stateAssuranceFund51"
+    },
+    {
+      "lustNum": 2043,
+      "plcId": 3695,
+      "name": "MOTEL 6 PREMIER",
+      "address": "831 W ROUTE 66",
+      "city": "WILLIAMS",
+      "state": "AZ",
+      "postalCode": "86046",
+      "county": "COCONINO",
+      "indexVal": "stateAssuranceFund49"
+    },
+    {
+      "lustNum": 4822,
+      "plcId": 921,
+      "name": "TOWN OF WICKENBURG - WWTP",
+      "address": "1006 SOUTH TEGNER STREET, STE A",
+      "city": "WICKENBURG",
+      "state": "AZ",
+      "postalCode": "85390",
+      "county": "MARICOPA",
+      "indexVal": "stateAssuranceFund47"
+    }
+  ]
+}

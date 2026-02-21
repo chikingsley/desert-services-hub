@@ -1,0 +1,1288 @@
+{
+  "type": "AZPDES Stormwater Construction General Permit Greater than 5 Acres",
+  "totalRecords": 8658,
+  "sampledRecords": 20,
+  "records": [
+    {
+      "ltfIdno": "110710",
+      "permitType": "CGP",
+      "dateApplied": "08/28/2025",
+      "dateSubmitted": "08/28/2025",
+      "projType": "Roads",
+      "facilityName": "VAL VISTA DRIVE IMPROVEMENTS: US60 TO PUEBLO AVE.",
+      "companyName": "GRANITE CONSTRUCTION COMPANY",
+      "rcoName": "DEREK BETTS",
+      "ltfFacilityDetails": {
+        "placeAddress": null,
+        "facilityCounty": {
+          "countyCode": "04013"
+        },
+        "ltfCatName": "AZPDES Stormwater Construction General Permit Greater than 5 Acres",
+        "issuedDate": "08/28/2025",
+        "ltfStatus": "CLOSED - SUPERSEDED",
+        "latLongDetails": {
+          "latitude": "33.391613",
+          "longitude": "-111.753854"
+        }
+      },
+      "companyAddress": {
+        "address": {
+          "address": "PO BOX 27557",
+          "aptSuite": null,
+          "city": "TUCSON",
+          "state": "AZ",
+          "zip": "85726",
+          "countyCode": "04019"
+        }
+      },
+      "swpppDetails": {
+        "fname": "Braeden",
+        "lname": "Miller",
+        "email": "Braeden.miller@gcinc.com",
+        "phone": "6023201317",
+        "ext": null
+      },
+      "permitAuthCode": "AZC110710",
+      "totalProjectArea": null,
+      "permitProjectArea": "11.88",
+      "conStartDate": "09/09/2025",
+      "conEndDate": "12/11/2026",
+      "commonAreaInd": "N",
+      "outfalls": [
+        {
+          "elevation": "385.39",
+          "latLongDetails": {
+            "latitude": "33.393545",
+            "longitude": "-111.754145"
+          }
+        }
+      ]
+    },
+    {
+      "ltfIdno": "110703",
+      "permitType": "CGP",
+      "dateApplied": "08/28/2025",
+      "dateSubmitted": "08/28/2025",
+      "projType": "Subdivision",
+      "facilityName": "RANCHO SAHUARITA REGION 9B SOUTH LOTS 625-661",
+      "companyName": "LENNAR ARIZONA LLC",
+      "rcoName": "THOMAS GANSHEIMER",
+      "ltfFacilityDetails": {
+        "placeAddress": null,
+        "facilityCounty": {
+          "countyCode": "04019"
+        },
+        "ltfCatName": "AZPDES Stormwater Construction General Permit Greater than 5 Acres",
+        "issuedDate": "08/28/2025",
+        "ltfStatus": "CLOSED - SUPERSEDED",
+        "latLongDetails": {
+          "latitude": "31.933865",
+          "longitude": "-110.980604"
+        }
+      },
+      "companyAddress": {
+        "address": {
+          "address": "7464 N LA CHOLLA BLVD",
+          "aptSuite": null,
+          "city": "TUCSON",
+          "state": "AZ",
+          "zip": "85741",
+          "countyCode": "04019"
+        }
+      },
+      "swpppDetails": {
+        "fname": "John",
+        "lname": "Struthers",
+        "email": "John.Struthers@Lennar.com",
+        "phone": "5202704209",
+        "ext": null
+      },
+      "permitAuthCode": "AZC110703",
+      "totalProjectArea": null,
+      "permitProjectArea": "12.39",
+      "conStartDate": "08/29/2025",
+      "conEndDate": "08/29/2028",
+      "commonAreaInd": "N",
+      "outfalls": [
+        {
+          "elevation": "861.57",
+          "latLongDetails": {
+            "latitude": "31.935077",
+            "longitude": "-110.98307"
+          }
+        }
+      ]
+    },
+    {
+      "ltfIdno": "110686",
+      "permitType": "CGP",
+      "dateApplied": "08/27/2025",
+      "dateSubmitted": "08/28/2025",
+      "projType": "Flood Control",
+      "facilityName": "BATTAGLIA DR/HENNESS RD FLOOD MITIGATION PHASE 1",
+      "companyName": "PINAL COUNTY FLOOD CONTROL DISTRICT",
+      "rcoName": "JOSHUA PLUMB",
+      "ltfFacilityDetails": {
+        "placeAddress": null,
+        "facilityCounty": {
+          "countyCode": "04021"
+        },
+        "ltfCatName": "AZPDES Stormwater Construction General Permit Greater than 5 Acres",
+        "issuedDate": "08/28/2025",
+        "ltfStatus": "CLOSED - SUPERSEDED",
+        "latLongDetails": {
+          "latitude": "32.759577",
+          "longitude": "-111.705448"
+        }
+      },
+      "companyAddress": {
+        "address": {
+          "address": "PO BOX 727",
+          "aptSuite": null,
+          "city": "FLORENCE",
+          "state": "AZ",
+          "zip": "85132",
+          "countyCode": "04021"
+        }
+      },
+      "swpppDetails": {
+        "fname": "John",
+        "lname": "Rogala",
+        "email": "john.rogala@pinal.gov",
+        "phone": "6025411514",
+        "ext": null
+      },
+      "permitAuthCode": "AZC110686",
+      "totalProjectArea": null,
+      "permitProjectArea": "9.2",
+      "conStartDate": "08/21/2025",
+      "conEndDate": "12/31/2025",
+      "commonAreaInd": "N",
+      "outfalls": [
+        {
+          "elevation": "449.78",
+          "latLongDetails": {
+            "latitude": "32.762672",
+            "longitude": "-111.709809"
+          }
+        },
+        {
+          "elevation": "449.93",
+          "latLongDetails": {
+            "latitude": "32.759791",
+            "longitude": "-111.705885"
+          }
+        }
+      ]
+    },
+    {
+      "ltfIdno": "110683",
+      "permitType": "CGP",
+      "dateApplied": "08/27/2025",
+      "dateSubmitted": "08/27/2025",
+      "projType": "Municipal/Public",
+      "facilityName": "GSQ OVERFLOW",
+      "companyName": "VALLEY RAIN CONSTRUCTION CORP",
+      "rcoName": "TONY VIOLA",
+      "ltfFacilityDetails": {
+        "placeAddress": null,
+        "facilityCounty": {
+          "countyCode": "04013"
+        },
+        "ltfCatName": "AZPDES Stormwater Construction General Permit Greater than 5 Acres",
+        "issuedDate": "08/27/2025",
+        "ltfStatus": "CLOSED - SUPERSEDED",
+        "latLongDetails": {
+          "latitude": "33.469751",
+          "longitude": "-112.387491"
+        }
+      },
+      "companyAddress": {
+        "address": {
+          "address": "1614 E CURRY RD",
+          "aptSuite": null,
+          "city": "TEMPE",
+          "state": "AZ",
+          "zip": "85288",
+          "countyCode": "04013"
+        }
+      },
+      "swpppDetails": {
+        "fname": "Mike",
+        "lname": "Rojas",
+        "email": "mrojas@valleyrain.com",
+        "phone": "4802964019",
+        "ext": null
+      },
+      "permitAuthCode": "AZC110683",
+      "totalProjectArea": null,
+      "permitProjectArea": "12.29",
+      "conStartDate": "09/28/2025",
+      "conEndDate": "09/28/2026",
+      "commonAreaInd": "N",
+      "outfalls": [
+        {
+          "elevation": "303.95",
+          "latLongDetails": {
+            "latitude": "33.468234",
+            "longitude": "-112.386287"
+          }
+        }
+      ]
+    },
+    {
+      "ltfIdno": "110701",
+      "permitType": "CGP",
+      "dateApplied": "08/27/2025",
+      "dateSubmitted": "08/27/2025",
+      "projType": "Commercial",
+      "facilityName": "PROJECT HOPE",
+      "companyName": "OKLAND CONSTRUCTION COMPANY, INC.",
+      "rcoName": "JAMIE OKLAND",
+      "ltfFacilityDetails": {
+        "placeAddress": null,
+        "facilityCounty": {
+          "countyCode": "04013"
+        },
+        "ltfCatName": "AZPDES Stormwater Construction General Permit Greater than 5 Acres",
+        "issuedDate": "08/27/2025",
+        "ltfStatus": "EXPIRED",
+        "latLongDetails": {
+          "latitude": "33.773442",
+          "longitude": "-112.259383"
+        }
+      },
+      "companyAddress": {
+        "address": {
+          "address": "1700 N MCCLINTOCK DR",
+          "aptSuite": null,
+          "city": "TEMPE",
+          "state": "AZ",
+          "zip": "85288",
+          "countyCode": "04013"
+        }
+      },
+      "swpppDetails": {
+        "fname": "Mike",
+        "lname": "Ming",
+        "email": "mike@arguscs.com",
+        "phone": "6022375967",
+        "ext": null
+      },
+      "permitAuthCode": "AZC110701",
+      "totalProjectArea": null,
+      "permitProjectArea": "108.25",
+      "conStartDate": "09/02/2025",
+      "conEndDate": "10/01/2026",
+      "commonAreaInd": "N",
+      "outfalls": []
+    },
+    {
+      "ltfIdno": "110601",
+      "permitType": "CGP",
+      "dateApplied": "08/20/2025",
+      "dateSubmitted": "08/27/2025",
+      "projType": "ADOT",
+      "facilityName": "COUNTRY CLUB WATERLINE",
+      "companyName": "K E & G CONSTRUCTION, INC.",
+      "rcoName": "ED ANDERSON",
+      "ltfFacilityDetails": {
+        "placeAddress": null,
+        "facilityCounty": {
+          "countyCode": "04019"
+        },
+        "ltfCatName": "AZPDES Stormwater Construction General Permit Greater than 5 Acres",
+        "issuedDate": "08/27/2025",
+        "ltfStatus": "CLOSED - SUPERSEDED",
+        "latLongDetails": {
+          "latitude": "32.167055",
+          "longitude": "-110.926358"
+        }
+      },
+      "companyAddress": {
+        "address": {
+          "address": "1601 PASEO SAN LUIS",
+          "aptSuite": "STE 202",
+          "city": "SIERRA VISTA",
+          "state": "AZ",
+          "zip": "85635",
+          "countyCode": "04003"
+        }
+      },
+      "swpppDetails": {
+        "fname": "Antonio",
+        "lname": "Moreno",
+        "email": "amoreno@kegtus.com",
+        "phone": "5206339927",
+        "ext": null
+      },
+      "permitAuthCode": "AZC110601",
+      "totalProjectArea": null,
+      "permitProjectArea": "6.36",
+      "conStartDate": "08/25/2025",
+      "conEndDate": "12/20/2025",
+      "commonAreaInd": "N",
+      "outfalls": [
+        {
+          "elevation": "779.8",
+          "latLongDetails": {
+            "latitude": "32.164268",
+            "longitude": "-110.926328"
+          }
+        },
+        {
+          "elevation": "778.06",
+          "latLongDetails": {
+            "latitude": "32.168348",
+            "longitude": "-110.926346"
+          }
+        },
+        {
+          "elevation": "777.71",
+          "latLongDetails": {
+            "latitude": "32.169466",
+            "longitude": "-110.926449"
+          }
+        },
+        {
+          "elevation": "777.87",
+          "latLongDetails": {
+            "latitude": "32.16911",
+            "longitude": "-110.9262"
+          }
+        },
+        {
+          "elevation": "779.79",
+          "latLongDetails": {
+            "latitude": "32.166474",
+            "longitude": "-110.926189"
+          }
+        }
+      ]
+    },
+    {
+      "ltfIdno": "110678",
+      "permitType": "CGP",
+      "dateApplied": "08/26/2025",
+      "dateSubmitted": "08/26/2025",
+      "projType": "Municipal/Public",
+      "facilityName": "CITY OF APACHE JUNCTION - RODEO EVENT CENTER",
+      "companyName": "CHASSE BUILDING TEAM, INC",
+      "rcoName": "KOREY LOGAN",
+      "ltfFacilityDetails": {
+        "placeAddress": null,
+        "facilityCounty": {
+          "countyCode": "04021"
+        },
+        "ltfCatName": "AZPDES Stormwater Construction General Permit Greater than 5 Acres",
+        "issuedDate": "08/26/2025",
+        "ltfStatus": "EXPIRED",
+        "latLongDetails": {
+          "latitude": "33.437632",
+          "longitude": "-111.530612"
+        }
+      },
+      "companyAddress": {
+        "address": {
+          "address": "230 S SIESTA LN",
+          "aptSuite": null,
+          "city": "TEMPE",
+          "state": "AZ",
+          "zip": "85288",
+          "countyCode": "04013"
+        }
+      },
+      "swpppDetails": {
+        "fname": "Arturo",
+        "lname": "Zuniga",
+        "email": "azuniga@chasse.us",
+        "phone": "6025782041",
+        "ext": null
+      },
+      "permitAuthCode": "AZC110678",
+      "totalProjectArea": "19.56",
+      "permitProjectArea": "15",
+      "conStartDate": "09/23/2025",
+      "conEndDate": "08/22/2026",
+      "commonAreaInd": "Y",
+      "outfalls": []
+    },
+    {
+      "ltfIdno": "110660",
+      "permitType": "CGP",
+      "dateApplied": "08/25/2025",
+      "dateSubmitted": "08/25/2025",
+      "projType": "Subdivision",
+      "facilityName": "ENTRADA DEL TORO LOTS 332-494",
+      "companyName": "RICHMOND AMERICAN HOMES OF ARIZONA, INC.",
+      "rcoName": "MICHAEL  DEL CASTILLO",
+      "ltfFacilityDetails": {
+        "placeAddress": null,
+        "facilityCounty": {
+          "countyCode": "04019"
+        },
+        "ltfCatName": "AZPDES Stormwater Construction General Permit Greater than 5 Acres",
+        "issuedDate": "08/25/2025",
+        "ltfStatus": "CLOSED - SUPERSEDED",
+        "latLongDetails": {
+          "latitude": "31.937128",
+          "longitude": "-110.982565"
+        }
+      },
+      "companyAddress": {
+        "address": {
+          "address": "3091 W INA RD",
+          "aptSuite": null,
+          "city": "TUCSON",
+          "state": "AZ",
+          "zip": "85741",
+          "countyCode": "04019"
+        }
+      },
+      "swpppDetails": {
+        "fname": "Mike",
+        "lname": "Klinger",
+        "email": "Mike.Klinger@mdch.com",
+        "phone": "5209045015",
+        "ext": null
+      },
+      "permitAuthCode": "AZC110660",
+      "totalProjectArea": "233",
+      "permitProjectArea": "10.28",
+      "conStartDate": "08/27/2025",
+      "conEndDate": "12/31/2028",
+      "commonAreaInd": "Y",
+      "outfalls": [
+        {
+          "elevation": "863.2",
+          "latLongDetails": {
+            "latitude": "31.933672",
+            "longitude": "-110.98375"
+          }
+        },
+        {
+          "elevation": "860.24",
+          "latLongDetails": {
+            "latitude": "31.938006",
+            "longitude": "-110.982827"
+          }
+        }
+      ]
+    },
+    {
+      "ltfIdno": "110663",
+      "permitType": "CGP",
+      "dateApplied": "08/25/2025",
+      "dateSubmitted": "08/25/2025",
+      "projType": "Subdivision",
+      "facilityName": "MONARCH BLOCK 1 LOTS 1-53 & 125-193",
+      "companyName": "RICHMOND AMERICAN HOMES OF ARIZONA, INC.",
+      "rcoName": "MICHAEL  DEL CASTILLO",
+      "ltfFacilityDetails": {
+        "placeAddress": null,
+        "facilityCounty": {
+          "countyCode": "04019"
+        },
+        "ltfCatName": "AZPDES Stormwater Construction General Permit Greater than 5 Acres",
+        "issuedDate": "08/25/2025",
+        "ltfStatus": "CLOSED - SUPERSEDED",
+        "latLongDetails": {
+          "latitude": "32.440292",
+          "longitude": "-111.204234"
+        }
+      },
+      "companyAddress": {
+        "address": {
+          "address": "3091 W INA RD",
+          "aptSuite": null,
+          "city": "TUCSON",
+          "state": "AZ",
+          "zip": "85741",
+          "countyCode": "04019"
+        }
+      },
+      "swpppDetails": {
+        "fname": "Mike",
+        "lname": "Kliner",
+        "email": "Mike.Klinger@mdch.com",
+        "phone": "5209045015",
+        "ext": null
+      },
+      "permitAuthCode": "AZC110663",
+      "totalProjectArea": "73.17",
+      "permitProjectArea": "18.7",
+      "conStartDate": "09/02/2025",
+      "conEndDate": "12/31/2028",
+      "commonAreaInd": "Y",
+      "outfalls": [
+        {
+          "elevation": "610.05",
+          "latLongDetails": {
+            "latitude": "32.440406",
+            "longitude": "-111.203936"
+          }
+        },
+        {
+          "elevation": "609.48",
+          "latLongDetails": {
+            "latitude": "32.439202",
+            "longitude": "-111.207938"
+          }
+        }
+      ]
+    },
+    {
+      "ltfIdno": "110658",
+      "permitType": "CGP",
+      "dateApplied": "08/25/2025",
+      "dateSubmitted": "08/25/2025",
+      "projType": "Commercial",
+      "facilityName": "SANCTUARY GOLD COURSE AT WESTWORLD",
+      "companyName": "ERIE AND ASSOCIATES, INC.",
+      "rcoName": "LEN ERIE",
+      "ltfFacilityDetails": {
+        "placeAddress": {
+          "address": {
+            "address": "10690 E SHEENA DR",
+            "aptSuite": null,
+            "city": "SCOTTSDALE",
+            "state": "AZ",
+            "zip": "85255",
+            "countyCode": "04013"
+          }
+        },
+        "facilityCounty": {
+          "countyCode": null
+        },
+        "ltfCatName": "AZPDES Stormwater Construction General Permit Greater than 5 Acres",
+        "issuedDate": "08/25/2025",
+        "ltfStatus": "CLOSED - SUPERSEDED",
+        "latLongDetails": {
+          "latitude": "33.617004444",
+          "longitude": "-111.8529905"
+        }
+      },
+      "companyAddress": {
+        "address": {
+          "address": "3120 N 24TH ST",
+          "aptSuite": null,
+          "city": "PHOENIX",
+          "state": "AZ",
+          "zip": "85016",
+          "countyCode": "04013"
+        }
+      },
+      "swpppDetails": {
+        "fname": "Frank",
+        "lname": "Di Fiore",
+        "email": "frank@erieandassociatesinc.com",
+        "phone": "6029546399",
+        "ext": null
+      },
+      "permitAuthCode": "AZC110658",
+      "totalProjectArea": null,
+      "permitProjectArea": "6.27",
+      "conStartDate": "07/01/2026",
+      "conEndDate": "07/01/2027",
+      "commonAreaInd": "N",
+      "outfalls": [
+        {
+          "elevation": "472.6",
+          "latLongDetails": {
+            "latitude": "33.61701",
+            "longitude": "-111.857088"
+          }
+        }
+      ]
+    },
+    {
+      "ltfIdno": "110249",
+      "permitType": "CGP",
+      "dateApplied": "07/25/2025",
+      "dateSubmitted": "08/21/2025",
+      "projType": "Other",
+      "facilityName": "USBP TUCSON SECTOR VERTICAL BARRIER (SONOITA)",
+      "companyName": "FISHER SAND & GRAVEL CO.",
+      "rcoName": "TOMMY FISHER",
+      "ltfFacilityDetails": {
+        "placeAddress": null,
+        "facilityCounty": {
+          "countyCode": "04023"
+        },
+        "ltfCatName": "AZPDES Stormwater Construction General Permit Greater than 5 Acres",
+        "issuedDate": "08/21/2025",
+        "ltfStatus": "CLOSED - SUPERSEDED",
+        "latLongDetails": {
+          "latitude": "31.332907",
+          "longitude": "-110.478962"
+        }
+      },
+      "companyAddress": {
+        "address": {
+          "address": "1302 W DRIVERS WAY",
+          "aptSuite": null,
+          "city": "TEMPE",
+          "state": "AZ",
+          "zip": "85284",
+          "countyCode": "04013"
+        }
+      },
+      "swpppDetails": {
+        "fname": "Chris",
+        "lname": "Smith",
+        "email": "csmith@fisherind.com",
+        "phone": "4802265731",
+        "ext": null
+      },
+      "permitAuthCode": "AZC110249",
+      "totalProjectArea": null,
+      "permitProjectArea": "265",
+      "conStartDate": "08/05/2025",
+      "conEndDate": "08/05/2027",
+      "commonAreaInd": "N",
+      "outfalls": [
+        {
+          "elevation": "1557.07",
+          "latLongDetails": {
+            "latitude": "31.332888",
+            "longitude": "-110.473804"
+          }
+        },
+        {
+          "elevation": "1571.99",
+          "latLongDetails": {
+            "latitude": "31.332915",
+            "longitude": "-110.466047"
+          }
+        },
+        {
+          "elevation": "1572.83",
+          "latLongDetails": {
+            "latitude": "31.33289",
+            "longitude": "-110.462314"
+          }
+        },
+        {
+          "elevation": "1578.24",
+          "latLongDetails": {
+            "latitude": "31.332973",
+            "longitude": "-110.438587"
+          }
+        },
+        {
+          "elevation": "1589.55",
+          "latLongDetails": {
+            "latitude": "31.332913",
+            "longitude": "-110.455171"
+          }
+        },
+        {
+          "elevation": "1590.4",
+          "latLongDetails": {
+            "latitude": "31.332921",
+            "longitude": "-110.453596"
+          }
+        },
+        {
+          "elevation": "1582.14",
+          "latLongDetails": {
+            "latitude": "31.332939",
+            "longitude": "-110.449187"
+          }
+        },
+        {
+          "elevation": "1583.25",
+          "latLongDetails": {
+            "latitude": "31.332953",
+            "longitude": "-110.445142"
+          }
+        },
+        {
+          "elevation": "1580.7",
+          "latLongDetails": {
+            "latitude": "31.333003",
+            "longitude": "-110.433167"
+          }
+        }
+      ]
+    },
+    {
+      "ltfIdno": "110597",
+      "permitType": "CGP",
+      "dateApplied": "08/20/2025",
+      "dateSubmitted": "08/20/2025",
+      "projType": "Subdivision",
+      "facilityName": "WILLOWS AT BELLA VISTA FARMS",
+      "companyName": "BEAZER HOMES HOLDINGS LLC",
+      "rcoName": "GABE BELTRAN",
+      "ltfFacilityDetails": {
+        "placeAddress": null,
+        "facilityCounty": {
+          "countyCode": "04021"
+        },
+        "ltfCatName": "AZPDES Stormwater Construction General Permit Greater than 5 Acres",
+        "issuedDate": "08/20/2025",
+        "ltfStatus": "CLOSED - SUPERSEDED",
+        "latLongDetails": {
+          "latitude": "33.184467",
+          "longitude": "-111.533037"
+        }
+      },
+      "companyAddress": {
+        "address": {
+          "address": "1130 N ALMA SCHOOL RD",
+          "aptSuite": "STE 110",
+          "city": "MESA",
+          "state": "AZ",
+          "zip": "85201",
+          "countyCode": "04013"
+        }
+      },
+      "swpppDetails": {
+        "fname": "Cherie",
+        "lname": "Koester",
+        "email": "earthworksarizona@earthworksenv.com",
+        "phone": "4804360041",
+        "ext": null
+      },
+      "permitAuthCode": "AZC110597",
+      "totalProjectArea": null,
+      "permitProjectArea": "27.45",
+      "conStartDate": "08/27/2025",
+      "conEndDate": "08/27/2030",
+      "commonAreaInd": "N",
+      "outfalls": [
+        {
+          "elevation": "459.39",
+          "latLongDetails": {
+            "latitude": "33.18274",
+            "longitude": "-111.533152"
+          }
+        }
+      ]
+    },
+    {
+      "ltfIdno": "110488",
+      "permitType": "CGP",
+      "dateApplied": "07/08/2025",
+      "dateSubmitted": "08/19/2025",
+      "projType": "Other",
+      "facilityName": "SANTA CRUZ COPPER PROJECT",
+      "companyName": "MESA COBRE HOLDING CORPORATION",
+      "rcoName": "GLEN KUNTZ",
+      "ltfFacilityDetails": {
+        "placeAddress": null,
+        "facilityCounty": {
+          "countyCode": "04021"
+        },
+        "ltfCatName": "AZPDES Stormwater Construction General Permit Greater than 5 Acres",
+        "issuedDate": "08/19/2025",
+        "ltfStatus": "CLOSED - SUPERSEDED",
+        "latLongDetails": {
+          "latitude": "32.894362",
+          "longitude": "-111.877632"
+        }
+      },
+      "companyAddress": {
+        "address": {
+          "address": "99 N SACATON ST",
+          "aptSuite": null,
+          "city": "CASA GRANDE",
+          "state": "AZ",
+          "zip": "85122",
+          "countyCode": null
+        }
+      },
+      "swpppDetails": {
+        "fname": "Adam",
+        "lname": "Hatch",
+        "email": "adam.hatch@ivanhoeelectric.com",
+        "phone": "7209901625",
+        "ext": null
+      },
+      "permitAuthCode": "AZC110488",
+      "totalProjectArea": null,
+      "permitProjectArea": "285",
+      "conStartDate": "01/01/2026",
+      "conEndDate": "12/31/2031",
+      "commonAreaInd": "N",
+      "outfalls": [
+        {
+          "elevation": "403.98",
+          "latLongDetails": {
+            "latitude": "32.894175",
+            "longitude": "-111.877587"
+          }
+        },
+        {
+          "elevation": "401.85",
+          "latLongDetails": {
+            "latitude": "32.889495",
+            "longitude": "-111.893181"
+          }
+        },
+        {
+          "elevation": "399.94",
+          "latLongDetails": {
+            "latitude": "32.922111",
+            "longitude": "-111.870774"
+          }
+        }
+      ]
+    },
+    {
+      "ltfIdno": "110577",
+      "permitType": "CGP",
+      "dateApplied": "08/19/2025",
+      "dateSubmitted": "08/19/2025",
+      "projType": "Commercial",
+      "facilityName": "DESERT WEST STORAGE - BROADWAY",
+      "companyName": "DESERT WEST STORAGE LLC",
+      "rcoName": "DOUGLAS SCHREIBER",
+      "ltfFacilityDetails": {
+        "placeAddress": {
+          "address": {
+            "address": "9475 W. BROADWAY RD",
+            "aptSuite": null,
+            "city": "TOLLESON",
+            "state": "AZ",
+            "zip": "85353",
+            "countyCode": "04013"
+          }
+        },
+        "facilityCounty": {
+          "countyCode": null
+        },
+        "ltfCatName": "AZPDES Stormwater Construction General Permit Greater than 5 Acres",
+        "issuedDate": "08/19/2025",
+        "ltfStatus": "CLOSED - SUPERSEDED",
+        "latLongDetails": {
+          "latitude": "33.406296",
+          "longitude": "-112.262738"
+        }
+      },
+      "companyAddress": {
+        "address": {
+          "address": "PO BOX 8570",
+          "aptSuite": null,
+          "city": "SURPRISE",
+          "state": "AZ",
+          "zip": "85374",
+          "countyCode": null
+        }
+      },
+      "swpppDetails": {
+        "fname": "Doug",
+        "lname": "Schreiber",
+        "email": "desertweststorage@gmail.com",
+        "phone": "6235212199",
+        "ext": null
+      },
+      "permitAuthCode": "AZC110577",
+      "totalProjectArea": null,
+      "permitProjectArea": "9.6",
+      "conStartDate": "01/15/2026",
+      "conEndDate": "01/15/2027",
+      "commonAreaInd": "N",
+      "outfalls": [
+        {
+          "elevation": "299.99",
+          "latLongDetails": {
+            "latitude": "33.403389",
+            "longitude": "-112.263519"
+          }
+        }
+      ]
+    },
+    {
+      "ltfIdno": "110544",
+      "permitType": "CGP",
+      "dateApplied": "08/14/2025",
+      "dateSubmitted": "08/15/2025",
+      "projType": "Municipal/Public",
+      "facilityName": "K-MART",
+      "companyName": "CHASSE BUILDING TEAM, INC",
+      "rcoName": "KOREY LOGAN",
+      "ltfFacilityDetails": {
+        "placeAddress": {
+          "address": {
+            "address": "2526 W NORTHERN AVE",
+            "aptSuite": null,
+            "city": "PHOENIX",
+            "state": "AZ",
+            "zip": "85051",
+            "countyCode": "04013"
+          }
+        },
+        "facilityCounty": {
+          "countyCode": null
+        },
+        "ltfCatName": "AZPDES Stormwater Construction General Permit Greater than 5 Acres",
+        "issuedDate": "08/15/2025",
+        "ltfStatus": "CLOSED - SUPERSEDED",
+        "latLongDetails": {
+          "latitude": "33.554209677",
+          "longitude": "-112.114173296"
+        }
+      },
+      "companyAddress": {
+        "address": {
+          "address": "230 S SIESTA LN",
+          "aptSuite": null,
+          "city": "TEMPE",
+          "state": "AZ",
+          "zip": "85288",
+          "countyCode": "04013"
+        }
+      },
+      "swpppDetails": {
+        "fname": "Steve",
+        "lname": "Martin",
+        "email": "smartin@chasse.us",
+        "phone": "4806280681",
+        "ext": null
+      },
+      "permitAuthCode": "AZC110544",
+      "totalProjectArea": null,
+      "permitProjectArea": "8.2",
+      "conStartDate": "09/15/2025",
+      "conEndDate": "01/31/2027",
+      "commonAreaInd": "N",
+      "outfalls": [
+        {
+          "elevation": "366.78",
+          "latLongDetails": {
+            "latitude": "33.553244",
+            "longitude": "-112.113913"
+          }
+        },
+        {
+          "elevation": "367.56",
+          "latLongDetails": {
+            "latitude": "33.553821",
+            "longitude": "-112.112932"
+          }
+        }
+      ]
+    },
+    {
+      "ltfIdno": "110541",
+      "permitType": "CGP",
+      "dateApplied": "08/11/2025",
+      "dateSubmitted": "08/15/2025",
+      "projType": "Recreational Area",
+      "facilityName": "USDOI NPS - SAGUARO NATIONAL PARK EAST",
+      "companyName": "SEALASKA CONSTRUCTORS, LLC",
+      "rcoName": "CHAD JACKSON",
+      "ltfFacilityDetails": {
+        "placeAddress": {
+          "address": {
+            "address": "3693 S OLD SPANISH TRL",
+            "aptSuite": null,
+            "city": "TUCSON",
+            "state": "AZ",
+            "zip": "85730",
+            "countyCode": "04019"
+          }
+        },
+        "facilityCounty": {
+          "countyCode": null
+        },
+        "ltfCatName": "AZPDES Stormwater Construction General Permit Greater than 5 Acres",
+        "issuedDate": "08/25/2025",
+        "ltfStatus": "CLOSED - SUPERSEDED",
+        "latLongDetails": {
+          "latitude": "32.179637256",
+          "longitude": "-110.737357097"
+        }
+      },
+      "companyAddress": {
+        "address": {
+          "address": "1200 6TH AVE",
+          "aptSuite": "STE 800",
+          "city": "SEATTLE",
+          "state": "WA",
+          "zip": "98101",
+          "countyCode": null
+        }
+      },
+      "swpppDetails": {
+        "fname": "Jeremy",
+        "lname": "Whatley",
+        "email": "jeremy.whatley@sealaska.com",
+        "phone": "8053423028",
+        "ext": null
+      },
+      "permitAuthCode": "AZC110541",
+      "totalProjectArea": null,
+      "permitProjectArea": "10",
+      "conStartDate": "09/01/2025",
+      "conEndDate": "12/01/2026",
+      "commonAreaInd": "N",
+      "outfalls": [
+        {
+          "elevation": "937.83",
+          "latLongDetails": {
+            "latitude": "32.180565",
+            "longitude": "-110.736428"
+          }
+        }
+      ]
+    },
+    {
+      "ltfIdno": "110525",
+      "permitType": "CGP",
+      "dateApplied": "08/13/2025",
+      "dateSubmitted": "08/14/2025",
+      "projType": "Commercial",
+      "facilityName": "THE VERGE AT BALLPARK",
+      "companyName": "WD CONSTRUCTION, LLC",
+      "rcoName": "KYLE DILLON",
+      "ltfFacilityDetails": {
+        "placeAddress": null,
+        "facilityCounty": {
+          "countyCode": "04013"
+        },
+        "ltfCatName": "AZPDES Stormwater Construction General Permit Greater than 5 Acres",
+        "issuedDate": "08/14/2025",
+        "ltfStatus": "CLOSED - SUPERSEDED",
+        "latLongDetails": {
+          "latitude": "33.425458",
+          "longitude": "-112.38604"
+        }
+      },
+      "companyAddress": {
+        "address": {
+          "address": "3020 E CAMELBACK RD",
+          "aptSuite": "APT 340",
+          "city": "PHOENIX",
+          "state": "AZ",
+          "zip": "85016",
+          "countyCode": "04013"
+        }
+      },
+      "swpppDetails": {
+        "fname": "CHAD",
+        "lname": "ANDRIST",
+        "email": "CHADANDRIST@WEISBUILDERS.COM",
+        "phone": "5078844199",
+        "ext": null
+      },
+      "permitAuthCode": "AZC110525",
+      "totalProjectArea": null,
+      "permitProjectArea": "16.95",
+      "conStartDate": "09/01/2025",
+      "conEndDate": "09/30/2027",
+      "commonAreaInd": "N",
+      "outfalls": [
+        {
+          "elevation": "287.65",
+          "latLongDetails": {
+            "latitude": "33.424538",
+            "longitude": "-112.384436"
+          }
+        }
+      ]
+    },
+    {
+      "ltfIdno": "110534",
+      "permitType": "CGP",
+      "dateApplied": "08/14/2025",
+      "dateSubmitted": "08/14/2025",
+      "projType": "ADOT",
+      "facilityName": "SR LOOP 101 TO SR 51 RAMP",
+      "companyName": "COMBS CONSTRUCTION COMPANY INC",
+      "rcoName": "MICHAEL  STEG",
+      "ltfFacilityDetails": {
+        "placeAddress": null,
+        "facilityCounty": {
+          "countyCode": "04013"
+        },
+        "ltfCatName": "AZPDES Stormwater Construction General Permit Greater than 5 Acres",
+        "issuedDate": "08/14/2025",
+        "ltfStatus": "CLOSED - SUPERSEDED",
+        "latLongDetails": {
+          "latitude": "33.672223",
+          "longitude": "-112.005301"
+        }
+      },
+      "companyAddress": {
+        "address": {
+          "address": "PO BOX 10789",
+          "aptSuite": null,
+          "city": "GLENDALE",
+          "state": "AZ",
+          "zip": "85318",
+          "countyCode": "04013"
+        }
+      },
+      "swpppDetails": {
+        "fname": "Bobby",
+        "lname": "Lall",
+        "email": "bobby@sblaz.com",
+        "phone": "6232037643",
+        "ext": null
+      },
+      "permitAuthCode": "AZC110534",
+      "totalProjectArea": null,
+      "permitProjectArea": "8.5",
+      "conStartDate": "08/20/2025",
+      "conEndDate": "08/04/2026",
+      "commonAreaInd": "N",
+      "outfalls": [
+        {
+          "elevation": "470.23",
+          "latLongDetails": {
+            "latitude": "33.672223",
+            "longitude": "-112.005301"
+          }
+        },
+        {
+          "elevation": "469.26",
+          "latLongDetails": {
+            "latitude": "33.672038",
+            "longitude": "-112.004472"
+          }
+        },
+        {
+          "elevation": "469.6",
+          "latLongDetails": {
+            "latitude": "33.671843",
+            "longitude": "-112.00386"
+          }
+        },
+        {
+          "elevation": "470.35",
+          "latLongDetails": {
+            "latitude": "33.670919",
+            "longitude": "-112.002252"
+          }
+        },
+        {
+          "elevation": "471.86",
+          "latLongDetails": {
+            "latitude": "33.669461",
+            "longitude": "-112.001089"
+          }
+        },
+        {
+          "elevation": "469.77",
+          "latLongDetails": {
+            "latitude": "33.671665",
+            "longitude": "-112.003436"
+          }
+        }
+      ]
+    },
+    {
+      "ltfIdno": "110491",
+      "permitType": "CGP",
+      "dateApplied": "08/11/2025",
+      "dateSubmitted": "08/13/2025",
+      "projType": "Subdivision",
+      "facilityName": "PRESTIGE ON 64TH",
+      "companyName": "K. HOVNANIAN PHOENIX DIVISION, INC.",
+      "rcoName": "LAVAUGHN WRIGHT",
+      "ltfFacilityDetails": {
+        "placeAddress": null,
+        "facilityCounty": {
+          "countyCode": "04013"
+        },
+        "ltfCatName": "AZPDES Stormwater Construction General Permit Greater than 5 Acres",
+        "issuedDate": "08/13/2025",
+        "ltfStatus": "CLOSED - SUPERSEDED",
+        "latLongDetails": {
+          "latitude": "33.655492",
+          "longitude": "-111.941961"
+        }
+      },
+      "companyAddress": {
+        "address": {
+          "address": "8800 E RAINTREE DR",
+          "aptSuite": "STE 300",
+          "city": "SCOTTSDALE",
+          "state": "AZ",
+          "zip": "85260",
+          "countyCode": null
+        }
+      },
+      "swpppDetails": {
+        "fname": "Mike",
+        "lname": "Ming",
+        "email": "mike@arguscs.com",
+        "phone": "6022375967",
+        "ext": null
+      },
+      "permitAuthCode": "AZC110491",
+      "totalProjectArea": null,
+      "permitProjectArea": "35.76",
+      "conStartDate": "08/13/2025",
+      "conEndDate": "08/13/2028",
+      "commonAreaInd": "N",
+      "outfalls": [
+        {
+          "elevation": "471",
+          "latLongDetails": {
+            "latitude": "33.648996",
+            "longitude": "-111.941087"
+          }
+        }
+      ]
+    },
+    {
+      "ltfIdno": "110483",
+      "permitType": "CGP",
+      "dateApplied": "08/11/2025",
+      "dateSubmitted": "08/12/2025",
+      "projType": "Subdivision",
+      "facilityName": "VISARA",
+      "companyName": "ASHTON WOODS ARIZONA, LLC - AWPHX",
+      "rcoName": "MATT LINAMAN",
+      "ltfFacilityDetails": {
+        "placeAddress": null,
+        "facilityCounty": {
+          "countyCode": "04013"
+        },
+        "ltfCatName": "AZPDES Stormwater Construction General Permit Greater than 5 Acres",
+        "issuedDate": "08/12/2025",
+        "ltfStatus": "CLOSED - SUPERSEDED",
+        "latLongDetails": {
+          "latitude": "33.73007",
+          "longitude": "-112.409255"
+        }
+      },
+      "companyAddress": {
+        "address": {
+          "address": "15333 N PIMA RD",
+          "aptSuite": "STE 205",
+          "city": "SCOTTSDALE",
+          "state": "AZ",
+          "zip": "85260",
+          "countyCode": "04013"
+        }
+      },
+      "swpppDetails": {
+        "fname": "Cherie",
+        "lname": "Koester",
+        "email": "earthworksarizona@earthworksenv.com",
+        "phone": "4804360041",
+        "ext": null
+      },
+      "permitAuthCode": "AZC110483",
+      "totalProjectArea": null,
+      "permitProjectArea": "7.47",
+      "conStartDate": "08/13/2025",
+      "conEndDate": "03/11/2028",
+      "commonAreaInd": "N",
+      "outfalls": [
+        {
+          "elevation": "436.74",
+          "latLongDetails": {
+            "latitude": "33.727747",
+            "longitude": "-112.411292"
+          }
+        }
+      ]
+    }
+  ]
+}

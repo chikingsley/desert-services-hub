@@ -1,0 +1,394 @@
+[
+  {
+    "endpoint": "airPermitCompliance",
+    "sampledRecords": 20,
+    "keys": [
+      "address",
+      "city",
+      "description",
+      "equipId",
+      "indexVal",
+      "locComments",
+      "ltfIdno",
+      "plcIdno",
+      "plcName",
+      "postalCode"
+    ]
+  },
+  {
+    "endpoint": "drywell",
+    "sampledRecords": 20,
+    "keys": [
+      "address",
+      "drywellsNo",
+      "facilityCityState",
+      "facilityName",
+      "facilityZip",
+      "indexVal",
+      "regNo"
+    ]
+  },
+  {
+    "endpoint": "hazardousWasteAccounts",
+    "sampledRecords": 20,
+    "keys": [
+      "accountNumber",
+      "address",
+      "city",
+      "epaid",
+      "indexVal",
+      "name",
+      "plcIdnoFkfld",
+      "zipcode"
+    ]
+  },
+  {
+    "endpoint": "hazardousWasteManifests",
+    "sampledRecords": 20,
+    "keys": [
+      "address",
+      "city",
+      "discEpaId",
+      "documentNumber",
+      "handlerType",
+      "idno",
+      "indexVal",
+      "name",
+      "plcIdNo",
+      "postalCode"
+    ]
+  },
+  {
+    "endpoint": "revenueManagementSystem",
+    "sampledRecords": 20,
+    "keys": [
+      "acctId",
+      "county",
+      "epaId",
+      "indexVal",
+      "lastInsp",
+      "name",
+      "name2",
+      "siteAdd",
+      "siteCity",
+      "siteZip",
+      "state"
+    ]
+  },
+  {
+    "endpoint": "sharepoint",
+    "sampledRecords": 20,
+    "keys": [
+      "address1",
+      "borrower",
+      "category",
+      "city",
+      "description",
+      "fileName",
+      "indexVal",
+      "location",
+      "partStatus",
+      "rimsNo",
+      "storageNotes",
+      "zip"
+    ]
+  },
+  {
+    "endpoint": "solidWaste",
+    "sampledRecords": 20,
+    "keys": [
+      "address",
+      "city",
+      "closeDate",
+      "comments",
+      "county",
+      "dateAssig",
+      "dateRecd",
+      "facName",
+      "indexVal",
+      "lustNumb",
+      "pcsCase",
+      "postalCode",
+      "state",
+      "status",
+      "typeReles",
+      "vemur"
+    ]
+  },
+  {
+    "endpoint": "solidWasteFacilities",
+    "sampledRecords": 20,
+    "keys": [
+      "address",
+      "city",
+      "county",
+      "facilityType",
+      "indexVal",
+      "invNum",
+      "name",
+      "plcIdno",
+      "state",
+      "zip"
+    ]
+  },
+  {
+    "endpoint": "solidWastePrograms",
+    "sampledRecords": 20,
+    "keys": [
+      "address",
+      "city",
+      "county",
+      "description",
+      "endDt",
+      "indexVal",
+      "name",
+      "plcIdno",
+      "postalCode",
+      "startDt",
+      "state"
+    ]
+  },
+  {
+    "endpoint": "specialWasteManifests",
+    "sampledRecords": 20,
+    "keys": [
+      "acctNumber",
+      "address",
+      "city",
+      "county",
+      "handlerType",
+      "indexVal",
+      "mnfstDocNum",
+      "name",
+      "plcIdnoFkfld",
+      "postalCode",
+      "reportYr",
+      "state"
+    ]
+  },
+  {
+    "endpoint": "stateAssuranceFund",
+    "sampledRecords": 20,
+    "keys": [
+      "address",
+      "city",
+      "county",
+      "indexVal",
+      "lustNum",
+      "name",
+      "plcId",
+      "postalCode",
+      "state"
+    ]
+  },
+  {
+    "endpoint": "superfundRemediation",
+    "sampledRecords": 20,
+    "keys": [
+      "address",
+      "affilStartDt",
+      "category",
+      "city",
+      "county",
+      "description",
+      "indexVal",
+      "name",
+      "plcIdno",
+      "postalCode",
+      "siteCode",
+      "state",
+      "systemName"
+    ]
+  },
+  {
+    "endpoint": "surfaceWater",
+    "sampledRecords": 20,
+    "keys": [
+      "address",
+      "affilStartDt",
+      "category",
+      "city",
+      "county",
+      "description",
+      "indexVal",
+      "ltfIdno",
+      "name",
+      "plcIdno",
+      "postalCode",
+      "state",
+      "systemName"
+    ]
+  },
+  {
+    "endpoint": "undergroundStorage",
+    "sampledRecords": 20,
+    "keys": [
+      "address",
+      "city",
+      "comments",
+      "idno",
+      "indexVal",
+      "lustNum",
+      "name",
+      "postalCode",
+      "state",
+      "ustFacilityId"
+    ]
+  },
+  {
+    "endpoint": "vehiclesEmmisions",
+    "sampledRecords": 20,
+    "keys": [
+      "address",
+      "affilStartDt",
+      "category",
+      "city",
+      "county",
+      "description",
+      "idno",
+      "indexVal",
+      "ltfIdno",
+      "name",
+      "postalCode",
+      "state",
+      "systemName"
+    ]
+  },
+  {
+    "endpoint": "voluntaryRemediation",
+    "sampledRecords": 20,
+    "keys": [
+      "address",
+      "city",
+      "closeDt",
+      "county",
+      "idno",
+      "indexVal",
+      "name",
+      "postalCode",
+      "programFileNumber",
+      "startDt",
+      "state"
+    ]
+  },
+  {
+    "endpoint": "wastePrograms",
+    "sampledRecords": 20,
+    "keys": [
+      "address",
+      "archiveBox",
+      "cityState",
+      "closureDate",
+      "comments",
+      "epaId",
+      "facilityName",
+      "indexVal",
+      "inspectionDate",
+      "rmcNumber",
+      "zipCode"
+    ]
+  },
+  {
+    "endpoint": "wasteWaterFacilities",
+    "sampledRecords": 20,
+    "keys": [
+      "address",
+      "city",
+      "county",
+      "facility",
+      "facilityType",
+      "indexVal",
+      "invNum",
+      "plcIdno",
+      "postalCode",
+      "state"
+    ]
+  },
+  {
+    "endpoint": "waterQualityApp",
+    "sampledRecords": 20,
+    "keys": [
+      "address",
+      "applicationDescription",
+      "applicationId",
+      "applicationName",
+      "applicationType",
+      "approvalDate",
+      "aznpdesNumber",
+      "businessName",
+      "category",
+      "city",
+      "description",
+      "email",
+      "facAddress",
+      "facCity",
+      "facilityDescription",
+      "facilityName",
+      "facPhone",
+      "facState",
+      "facZip",
+      "firstName",
+      "indexVal",
+      "invNumber",
+      "lastName",
+      "ltfNumber",
+      "phone",
+      "postalCode",
+      "reviewUnitName",
+      "stage",
+      "state"
+    ]
+  },
+  {
+    "endpoint": "waterQualityConstruction",
+    "sampledRecords": 20,
+    "keys": [
+      "adeqFileNum",
+      "countyName",
+      "dateReceived",
+      "dateReceivedStr",
+      "engineeringCompanyName",
+      "engineerName",
+      "indexVal",
+      "projectAddress",
+      "projectCity",
+      "projectName",
+      "projectReviewerNameCode"
+    ]
+  },
+  {
+    "endpoint": "waterQualityMonitoring",
+    "sampledRecords": 20,
+    "keys": [
+      "address",
+      "city",
+      "county",
+      "indexVal",
+      "invNumber",
+      "monPoint",
+      "name",
+      "permitNo",
+      "plcIdno",
+      "postalCode",
+      "state"
+    ]
+  },
+  {
+    "endpoint": "waterQualityPermits",
+    "sampledRecords": 20,
+    "keys": [
+      "address",
+      "businessName",
+      "city",
+      "description",
+      "firstName",
+      "indexVal",
+      "invNumber",
+      "lastName",
+      "permitName",
+      "phone",
+      "stateCode",
+      "zipCode"
+    ]
+  }
+]

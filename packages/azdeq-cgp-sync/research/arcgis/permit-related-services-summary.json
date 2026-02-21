@@ -1,0 +1,621 @@
+{
+  "fetchedAt": "2026-02-21T09:18:25.488Z",
+  "services": [
+    {
+      "name": "AIR_COMPLIANCE_PERMITS_AGOL",
+      "type": "FeatureServer",
+      "serviceDescription": "This dataset displays general air compliance permits that have been issued in the last 32 days only. It is used in the public facing Recently Issued Air General Permits application that was created to fulfill Arizona Revised Statutes (ARS) 49-426.H.4. The dataset is owned by the Air Permits and Compliance Section and is updated daily.",
+      "layers": [
+        {
+          "id": 0,
+          "name": "AIR COMPLIANCE PERMITS AGOL",
+          "geometryType": "esriGeometryPoint",
+          "objectIdField": "OBJECTID",
+          "maxRecordCount": 2000,
+          "supportsPagination": true,
+          "count": 29
+        }
+      ]
+    },
+    {
+      "name": "AZ_Title_V_AQ_Permits",
+      "type": "FeatureServer",
+      "serviceDescription": "Arizona Title V Air Quality permits within 50 miles of border",
+      "layers": [
+        {
+          "id": 0,
+          "name": "AZ Title V AQ permits",
+          "geometryType": "esriGeometryPoint",
+          "objectIdField": "OBJECTID",
+          "maxRecordCount": 2000,
+          "supportsPagination": true,
+          "count": 59
+        },
+        {
+          "id": 1,
+          "name": "AZ border 50-mile buffer",
+          "geometryType": "esriGeometryPolygon",
+          "objectIdField": "OBJECTID",
+          "maxRecordCount": 2000,
+          "supportsPagination": true,
+          "count": 1
+        },
+        {
+          "id": 2,
+          "name": "Clark County NV",
+          "geometryType": "esriGeometryPolygon",
+          "objectIdField": "FID",
+          "maxRecordCount": 2000,
+          "supportsPagination": true,
+          "count": 1
+        }
+      ]
+    },
+    {
+      "name": "County_ImpairedWater_WFL1",
+      "type": "FeatureServer",
+      "serviceDescription": "Impaired water by county ",
+      "layers": [
+        {
+          "id": 0,
+          "name": "Counties_ImpairedWater2018_List",
+          "geometryType": "esriGeometryPolygon",
+          "objectIdField": "OBJECTID",
+          "maxRecordCount": 2000,
+          "supportsPagination": true,
+          "count": 156
+        },
+        {
+          "id": 1,
+          "name": "Counties_ImpairedWater2018_Indicator",
+          "geometryType": "esriGeometryPolygon",
+          "objectIdField": "OBJECTID",
+          "maxRecordCount": 2000,
+          "supportsPagination": true,
+          "count": 16
+        }
+      ]
+    },
+    {
+      "name": "Dust_Visibility_Construction_Notification_Area",
+      "type": "FeatureServer",
+      "serviceDescription": "The dust visibility construction notification area defines the regulatory boundary for fugitive dust control rules under the regional haze program. The rule and layer are owned by the Air Quality Improvement Planning Unit.",
+      "layers": [
+        {
+          "id": 0,
+          "name": "Dust Visibility Construction Notification Area",
+          "geometryType": "esriGeometryPolygon",
+          "objectIdField": "OBJECTID",
+          "maxRecordCount": 2000,
+          "supportsPagination": true,
+          "count": 407
+        }
+      ]
+    },
+    {
+      "name": "San_Pedro_Watershed_WFL1",
+      "type": "FeatureServer",
+      "serviceDescription": "San Pedro Watershed",
+      "layers": [
+        {
+          "id": 1,
+          "name": "MST_GT_1000",
+          "geometryType": "esriGeometryPoint",
+          "objectIdField": "FID",
+          "maxRecordCount": 2000,
+          "supportsPagination": true,
+          "count": 39
+        },
+        {
+          "id": 2,
+          "name": "MST_Export",
+          "geometryType": "esriGeometryPoint",
+          "objectIdField": "FID",
+          "maxRecordCount": 2000,
+          "supportsPagination": true,
+          "count": 36
+        },
+        {
+          "id": 3,
+          "name": "volunteers",
+          "geometryType": "esriGeometryPoint",
+          "objectIdField": "FID",
+          "maxRecordCount": 2000,
+          "supportsPagination": true,
+          "count": 3
+        },
+        {
+          "id": 4,
+          "name": "WQD_SamplingSites (2018)",
+          "geometryType": "esriGeometryPoint",
+          "objectIdField": "FID",
+          "maxRecordCount": 2000,
+          "supportsPagination": true,
+          "count": 143
+        },
+        {
+          "id": 5,
+          "name": "sampleCandidates_190711",
+          "geometryType": "esriGeometryPoint",
+          "objectIdField": "FID",
+          "maxRecordCount": 2000,
+          "supportsPagination": true,
+          "count": 18
+        },
+        {
+          "id": 6,
+          "name": "SPR_Sonora",
+          "geometryType": "esriGeometryPolyline",
+          "objectIdField": "FID",
+          "maxRecordCount": 2000,
+          "supportsPagination": true,
+          "count": 187
+        },
+        {
+          "id": 7,
+          "name": "Impaired",
+          "geometryType": "esriGeometryPolyline",
+          "objectIdField": "FID",
+          "maxRecordCount": 2000,
+          "supportsPagination": true,
+          "count": 2
+        },
+        {
+          "id": 9,
+          "name": "baboPriority",
+          "geometryType": "esriGeometryPolygon",
+          "objectIdField": "FID",
+          "maxRecordCount": 2000,
+          "supportsPagination": true,
+          "count": 1
+        },
+        {
+          "id": 10,
+          "name": "herefordPriority",
+          "geometryType": "esriGeometryPolygon",
+          "objectIdField": "FID",
+          "maxRecordCount": 2000,
+          "supportsPagination": true,
+          "count": 1
+        },
+        {
+          "id": 12,
+          "name": "ADWR_selected",
+          "geometryType": "esriGeometryPoint",
+          "objectIdField": "FID",
+          "maxRecordCount": 2000,
+          "supportsPagination": true,
+          "count": 7
+        },
+        {
+          "id": 13,
+          "name": "USGS_Gages",
+          "geometryType": "esriGeometryPoint",
+          "objectIdField": "FID",
+          "maxRecordCount": 2000,
+          "supportsPagination": true,
+          "count": 25
+        },
+        {
+          "id": 15,
+          "name": "subwatersheds",
+          "geometryType": "esriGeometryPolygon",
+          "objectIdField": "FID",
+          "maxRecordCount": 2000,
+          "supportsPagination": true,
+          "count": 43
+        },
+        {
+          "id": 16,
+          "name": "boundary",
+          "geometryType": "esriGeometryPolygon",
+          "objectIdField": "FID",
+          "maxRecordCount": 2000,
+          "supportsPagination": true,
+          "count": 1
+        },
+        {
+          "id": 18,
+          "name": "CCRN Recharge Sites",
+          "geometryType": "esriGeometryPolygon",
+          "objectIdField": "FID",
+          "maxRecordCount": 2000,
+          "supportsPagination": true,
+          "count": 6
+        },
+        {
+          "id": 19,
+          "name": "Initial Inventory from Liz (2018)",
+          "geometryType": "esriGeometryPoint",
+          "objectIdField": "FID",
+          "maxRecordCount": 2000,
+          "supportsPagination": true,
+          "count": 24
+        },
+        {
+          "id": 20,
+          "name": "landOwnership",
+          "geometryType": "esriGeometryPolygon",
+          "objectIdField": "FID",
+          "maxRecordCount": 2000,
+          "supportsPagination": true,
+          "count": 14
+        },
+        {
+          "id": 22,
+          "name": "SPR_polyline",
+          "geometryType": "esriGeometryPolyline",
+          "objectIdField": "FID",
+          "maxRecordCount": 2000,
+          "supportsPagination": true,
+          "count": 1
+        },
+        {
+          "id": 24,
+          "name": "SPR_parcel",
+          "geometryType": "esriGeometryPolygon",
+          "objectIdField": "FID",
+          "maxRecordCount": 2000,
+          "supportsPagination": true,
+          "count": 305
+        },
+        {
+          "id": 25,
+          "name": "SPR_parcel_priority",
+          "geometryType": "esriGeometryPolygon",
+          "objectIdField": "FID",
+          "maxRecordCount": 2000,
+          "supportsPagination": true,
+          "count": 15
+        },
+        {
+          "id": 26,
+          "name": "SPR_parcel_priority_HIGH",
+          "geometryType": "esriGeometryPolygon",
+          "objectIdField": "FID",
+          "maxRecordCount": 2000,
+          "supportsPagination": true,
+          "count": 27
+        },
+        {
+          "id": 28,
+          "name": "Watershed Divide",
+          "geometryType": "esriGeometryPolygon",
+          "objectIdField": "FID",
+          "maxRecordCount": 2000,
+          "supportsPagination": true,
+          "count": 1
+        },
+        {
+          "id": 30,
+          "name": "Border Influences",
+          "geometryType": "esriGeometryPoint",
+          "objectIdField": "FID",
+          "maxRecordCount": 2000,
+          "supportsPagination": true,
+          "count": 2
+        },
+        {
+          "id": 31,
+          "name": "Cities",
+          "geometryType": "esriGeometryPolygon",
+          "objectIdField": "FID",
+          "maxRecordCount": 2000,
+          "supportsPagination": true,
+          "count": 90
+        },
+        {
+          "id": 32,
+          "name": "Counties",
+          "geometryType": "esriGeometryPolygon",
+          "objectIdField": "FID",
+          "maxRecordCount": 2000,
+          "supportsPagination": true,
+          "count": 15
+        },
+        {
+          "id": 33,
+          "name": "Highways",
+          "geometryType": "esriGeometryPolyline",
+          "objectIdField": "FID",
+          "maxRecordCount": 2000,
+          "supportsPagination": true,
+          "count": 20229
+        },
+        {
+          "id": 34,
+          "name": "100km_border_AZ",
+          "geometryType": "esriGeometryPolygon",
+          "objectIdField": "FID",
+          "maxRecordCount": 2000,
+          "supportsPagination": true,
+          "count": 3
+        },
+        {
+          "id": 35,
+          "name": "100km_border",
+          "geometryType": "esriGeometryPolygon",
+          "objectIdField": "FID",
+          "maxRecordCount": 2000,
+          "supportsPagination": true,
+          "count": 4
+        },
+        {
+          "id": 36,
+          "name": "RR_clip",
+          "geometryType": "esriGeometryPolyline",
+          "objectIdField": "FID",
+          "maxRecordCount": 2000,
+          "supportsPagination": true,
+          "count": 25
+        },
+        {
+          "id": 37,
+          "name": "HUCS_south",
+          "geometryType": "esriGeometryPolygon",
+          "objectIdField": "FID",
+          "maxRecordCount": 2000,
+          "supportsPagination": true,
+          "count": 20
+        },
+        {
+          "id": 38,
+          "name": "AZ State Line",
+          "geometryType": "esriGeometryPolygon",
+          "objectIdField": "FID",
+          "maxRecordCount": 2000,
+          "supportsPagination": true,
+          "count": 1
+        }
+      ]
+    },
+    {
+      "name": "Surface_Water",
+      "type": "FeatureServer",
+      "serviceDescription": "This dataset consists of the surface water sampling sites in Arizona.",
+      "layers": [
+        {
+          "id": 0,
+          "name": "Surface Water Sampling Sites",
+          "geometryType": "esriGeometryPoint",
+          "objectIdField": "OBJECTID",
+          "maxRecordCount": 2000,
+          "supportsPagination": true,
+          "count": 3239
+        }
+      ]
+    },
+    {
+      "name": "Watersheds",
+      "type": "FeatureServer",
+      "serviceDescription": "The intention with which the data set was developed is for general reference only. It is representative only presenting a single point in time for the topic Arizona Watersheds, Data was updated and compiled in 2018, the bases of the layer was to a general reference for larger general watersheds across the state to encompass major water systems and point to a general area.",
+      "layers": [
+        {
+          "id": 0,
+          "name": "Watersheds",
+          "geometryType": "esriGeometryPolygon",
+          "objectIdField": "FID",
+          "maxRecordCount": 2000,
+          "supportsPagination": true,
+          "count": 10
+        }
+      ]
+    },
+    {
+      "name": "Surface_Water_AGOL",
+      "type": "FeatureServer",
+      "serviceDescription": "This dataset shows AZPDES Individual Permits exceeding permit limits, Priority Sites, Impaired Streams (2024), and Impaired Lakes (2024) in Arizona for use in the My Community applications. Owned by the Surface Water Protection section, this dataset is updated monthly by BIT and is for general reference only in My Community.",
+      "layers": [
+        {
+          "id": 0,
+          "name": "Sites",
+          "geometryType": "esriGeometryPoint",
+          "objectIdField": "FID",
+          "maxRecordCount": 2000,
+          "supportsPagination": true,
+          "count": 18
+        },
+        {
+          "id": 1,
+          "name": "Streams - Impaired",
+          "geometryType": "esriGeometryPolyline",
+          "objectIdField": "OBJECTID",
+          "maxRecordCount": 2000,
+          "supportsPagination": true,
+          "count": 144
+        },
+        {
+          "id": 2,
+          "name": "Lakes - Impaired",
+          "geometryType": "esriGeometryPolygon",
+          "objectIdField": "OBJECTID",
+          "maxRecordCount": 2000,
+          "supportsPagination": true,
+          "count": 34
+        }
+      ]
+    },
+    {
+      "name": "Drinking_Water_AGOL",
+      "type": "FeatureServer",
+      "serviceDescription": "This dataset represents Public Water Systems (PWS) in Arizona that have active Public Notices for use in the My Community applications. Owned by the Safe Drinking Water section, this dataset is updated monthly by BIT and is for general reference only in My Community.",
+      "layers": [
+        {
+          "id": 0,
+          "name": "Public Water System (PWS)",
+          "geometryType": "esriGeometryPoint",
+          "objectIdField": "FID",
+          "maxRecordCount": 2000,
+          "supportsPagination": true,
+          "count": 34
+        }
+      ]
+    },
+    {
+      "name": "Groundwater_AGOL",
+      "type": "FeatureServer",
+      "serviceDescription": "This dataset shows Aquifer Protection Permits exceeding either the Discharge Limit (DL) or Aquifer Quality Limit (AQL) according to Self Mornitoring Reporting Form (SMRF)  data in Arizona for use in the My Community applications. Owned by the Groundwater Protection Mining/Industrial section, this dataset is updated monthly by BIT and is for general reference only in My Community.",
+      "layers": [
+        {
+          "id": 0,
+          "name": "Groundwater Site",
+          "geometryType": "esriGeometryPoint",
+          "objectIdField": "FID",
+          "maxRecordCount": 2000,
+          "supportsPagination": true,
+          "count": 94
+        }
+      ]
+    },
+    {
+      "name": "AZPDES_Individual_Permits",
+      "type": "FeatureServer",
+      "serviceDescription": "This dataset provides location and permit information for AZPDES individual permitted facilities. It is provided to ensure transparency and accessibility for the public and is owned by the Water Quality Divisions AZPDES Program.",
+      "layers": [
+        {
+          "id": 0,
+          "name": "AZPDES Individual Permits",
+          "geometryType": "esriGeometryPoint",
+          "objectIdField": "OBJECTID",
+          "maxRecordCount": 2000,
+          "supportsPagination": true,
+          "count": 129
+        }
+      ]
+    },
+    {
+      "name": "AZPDES",
+      "type": "FeatureServer",
+      "serviceDescription": "These datasets consist of Arizona Pollution Discharge Elimination System Construction General Permit (CGP) and De Minimus General Permit (DMGP) and Multi-Sector General Permit (MSGP) stormwater permit locations in Arizona.",
+      "layers": [
+        {
+          "id": 0,
+          "name": "AZPDES Construction",
+          "geometryType": "esriGeometryPoint",
+          "objectIdField": "OBJECTID",
+          "maxRecordCount": 2000,
+          "supportsPagination": true,
+          "count": 10429
+        },
+        {
+          "id": 1,
+          "name": "AZPDES De Minimus",
+          "geometryType": "esriGeometryPoint",
+          "objectIdField": "OBJECTID",
+          "maxRecordCount": 2000,
+          "supportsPagination": true,
+          "count": 319
+        },
+        {
+          "id": 2,
+          "name": "AZPDES Multi-Sector",
+          "geometryType": "esriGeometryPoint",
+          "objectIdField": "OBJECTID",
+          "maxRecordCount": 2000,
+          "supportsPagination": true,
+          "count": 1503
+        },
+        {
+          "id": 3,
+          "name": "AZPDES myDEQ CGP",
+          "geometryType": "esriGeometryPoint",
+          "objectIdField": "OBJECTID",
+          "maxRecordCount": 2000,
+          "supportsPagination": true,
+          "count": 27506
+        },
+        {
+          "id": 4,
+          "name": "AZPDES myDEQ DMGP",
+          "geometryType": "esriGeometryPoint",
+          "objectIdField": "OBJECTID",
+          "maxRecordCount": 2000,
+          "supportsPagination": true,
+          "count": 481
+        },
+        {
+          "id": 5,
+          "name": "AZPDES myDEQ MSGP",
+          "geometryType": "esriGeometryPoint",
+          "objectIdField": "OBJECTID",
+          "maxRecordCount": 2000,
+          "supportsPagination": true,
+          "count": 4015
+        }
+      ]
+    },
+    {
+      "name": "AQD_Permits",
+      "type": "FeatureServer",
+      "serviceDescription": "Air Quality Permits",
+      "layers": [
+        {
+          "id": 0,
+          "name": "PLACE",
+          "geometryType": "esriGeometryPoint",
+          "objectIdField": "OBJECTID",
+          "maxRecordCount": 2000,
+          "supportsPagination": true,
+          "count": 373
+        },
+        {
+          "id": 1,
+          "name": "myDEQ",
+          "geometryType": "esriGeometryPoint",
+          "objectIdField": "OBJECTID",
+          "maxRecordCount": 2000,
+          "supportsPagination": true,
+          "count": 134
+        }
+      ]
+    },
+    {
+      "name": "Permits",
+      "type": "FeatureServer",
+      "serviceDescription": "Air/Waste/Water Permits",
+      "layers": [
+        {
+          "id": 0,
+          "name": "Air/Waste/Water Permits",
+          "geometryType": "esriGeometryPoint",
+          "objectIdField": "OBJECTID",
+          "maxRecordCount": 2000,
+          "supportsPagination": true,
+          "count": 32312
+        }
+      ]
+    },
+    {
+      "name": "Permits_Title_V",
+      "type": "FeatureServer",
+      "serviceDescription": "Title V Air Quality Permits",
+      "layers": [
+        {
+          "id": 0,
+          "name": "Permits - Title V",
+          "geometryType": "esriGeometryPoint",
+          "objectIdField": "OBJECTID",
+          "maxRecordCount": 2000,
+          "supportsPagination": true,
+          "count": 194
+        }
+      ]
+    },
+    {
+      "name": "All_Permits_in_Process",
+      "type": "FeatureServer",
+      "serviceDescription": "All permits in process for water, air, and waste",
+      "layers": [
+        {
+          "id": 0,
+          "name": "All Permits in Process",
+          "geometryType": "esriGeometryPoint",
+          "objectIdField": "OBJECTID",
+          "maxRecordCount": 2000,
+          "supportsPagination": true,
+          "count": 198
+        }
+      ]
+    }
+  ]
+}

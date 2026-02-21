@@ -41,11 +41,16 @@ describe("chat inbox tools", () => {
       logger,
     });
 
-    const result = await toolInstance.execute({
-      to: "recipient@example.com",
-      subject: "Hello",
-      messageHtml: "<p>Hi there</p>",
-    });
+    if (!toolInstance.execute) throw new Error("sendEmailTool execute missing");
+
+    const result = await toolInstance.execute(
+      {
+        to: "recipient@example.com",
+        subject: "Hello",
+        messageHtml: "<p>Hi there</p>",
+      },
+      {} as any,
+    );
 
     expect(sendEmailWithHtml).toHaveBeenCalledWith({
       to: "recipient@example.com",
@@ -97,10 +102,16 @@ describe("chat inbox tools", () => {
       logger,
     });
 
-    const result = await toolInstance.execute({
-      messageId: "message-1",
-      content: "Thanks for the update.",
-    });
+    if (!toolInstance.execute)
+      throw new Error("replyEmailTool execute missing");
+
+    const result = await toolInstance.execute(
+      {
+        messageId: "message-1",
+        content: "Thanks for the update.",
+      },
+      {} as any,
+    );
 
     expect(getMessage).toHaveBeenCalledWith("message-1");
     expect(replyToEmail).toHaveBeenCalledWith(

@@ -364,25 +364,25 @@ function buildCacheOptimizedMessages({
     content: system,
   };
 
+  // All system messages must come before any user/assistant messages
+  // (Google Gemini requires system messages only at the beginning)
+  const allSystemMessages = [systemMessage, ...contextMessages];
+
   if (!conversationMessages.length) {
     return {
-      messages: [systemMessage, ...contextMessages],
+      messages: allSystemMessages,
       stablePrefixEndIndex: 0,
     };
   }
 
-  const historyMessages = conversationMessages.slice(0, -1);
-  const latestMessage = conversationMessages.at(-1)!;
+  const messages = [...allSystemMessages, ...conversationMessages];
 
-  return {
-    messages: [
-      systemMessage,
-      ...historyMessages,
-      ...contextMessages,
-      latestMessage,
-    ],
-    stablePrefixEndIndex: historyMessages.length,
-  };
+  // Cache breakpoint: mark the last stable message (everything before the
+  // latest user input). For Anthropic caching, this means the prefix up to
+  // this index gets cached across turns.
+  const stablePrefixEndIndex = Math.max(0, messages.length - 2);
+
+  return { messages, stablePrefixEndIndex };
 }
 
 function addAnthropicCacheControl(

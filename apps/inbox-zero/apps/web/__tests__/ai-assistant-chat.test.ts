@@ -210,7 +210,7 @@ describe("aiProcessAssistantChat", () => {
     expect(args.providerOptions).toBeUndefined();
   });
 
-  it("places context between history and latest message for cache-friendly ordering", async () => {
+  it("places all system messages before conversation history (Google Gemini compat)", async () => {
     const { aiProcessAssistantChat } = await loadAssistantChatModule({
       emailSend: true,
     });
@@ -232,19 +232,27 @@ describe("aiProcessAssistantChat", () => {
     });
 
     const args = mockToolCallAgentStream.mock.calls[0][0];
-    expect(args.messages[1]).toMatchObject({
+
+    // All system messages come first
+    expect(args.messages[0].role).toBe("system");
+    expect(args.messages[1].role).toBe("system");
+    expect(args.messages[1].content).toContain(
+      "Memories from previous conversations:",
+    );
+
+    // Then conversation history in order
+    const nonSystemMessages = args.messages.filter(
+      (m: { role: string }) => m.role !== "system",
+    );
+    expect(nonSystemMessages[0]).toMatchObject({
       role: "user",
       content: "first user message",
     });
-    expect(args.messages[2]).toMatchObject({
+    expect(nonSystemMessages[1]).toMatchObject({
       role: "assistant",
       content: "assistant response",
     });
-    expect(args.messages[3].role).toBe("system");
-    expect(args.messages[3].content).toContain(
-      "Memories from previous conversations:",
-    );
-    expect(args.messages.at(-1)).toEqual({
+    expect(nonSystemMessages.at(-1)).toEqual({
       role: "user",
       content: "latest user message",
     });

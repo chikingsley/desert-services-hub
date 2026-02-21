@@ -16,6 +16,7 @@ function createMockAction(overrides: Partial<Action> = {}): Action {
     to: null,
     subject: null,
     label: null,
+    labelId: null,
     content: null,
     cc: null,
     bcc: null,

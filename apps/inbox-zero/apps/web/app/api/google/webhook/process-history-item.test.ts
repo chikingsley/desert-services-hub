@@ -226,6 +226,7 @@ describe("processHistoryItem", () => {
     const mockPrisma = await import("@/utils/prisma");
     vi.mocked(mockPrisma.default.newsletter.findFirst).mockResolvedValueOnce({
       id: "newsletter-123",
+      name: null,
       email: "sender@example.com",
       status: NewsletterStatus.UNSUBSCRIBED,
       emailAccountId: "email-account-id",

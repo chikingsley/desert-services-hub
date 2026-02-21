@@ -13,6 +13,17 @@ vi.mock("@/utils/redis/usage", () => ({
   saveUsage: vi.fn().mockResolvedValue(undefined),
 }));
 
+const emptyInputTokenDetails = {
+  noCacheTokens: undefined,
+  cacheReadTokens: undefined,
+  cacheWriteTokens: undefined,
+};
+
+const emptyOutputTokenDetails = {
+  textTokens: undefined,
+  reasoningTokens: undefined,
+};
+
 describe("calculateUsageCost", () => {
   it("applies cached input pricing when cached tokens are present", () => {
     const provider = "openrouter";
@@ -27,6 +38,8 @@ describe("calculateUsageCost", () => {
       cachedInputTokens: 400,
       outputTokens: 200,
       totalTokens: 1200,
+      inputTokenDetails: emptyInputTokenDetails,
+      outputTokenDetails: emptyOutputTokenDetails,
     };
 
     const expected =
@@ -44,6 +57,8 @@ describe("calculateUsageCost", () => {
       inputTokens: 100,
       outputTokens: 50,
       totalTokens: 150,
+      inputTokenDetails: emptyInputTokenDetails,
+      outputTokenDetails: emptyOutputTokenDetails,
     };
 
     // Fallback map values in supported-model-pricing.ts for gpt-4o
@@ -66,6 +81,8 @@ describe("calculateUsageCost", () => {
       cachedInputTokens: 100,
       outputTokens: 75,
       totalTokens: 575,
+      inputTokenDetails: emptyInputTokenDetails,
+      outputTokenDetails: emptyOutputTokenDetails,
     };
 
     const expected =
@@ -87,6 +104,8 @@ describe("calculateUsageCost", () => {
       cachedInputTokens: 300,
       outputTokens: 20,
       totalTokens: 120,
+      inputTokenDetails: emptyInputTokenDetails,
+      outputTokenDetails: emptyOutputTokenDetails,
     };
 
     const expected = 100 * pricing.cachedInput + 20 * pricing.output;
@@ -101,9 +120,12 @@ describe("calculateUsageCost", () => {
     if (!pricing) throw new Error("Expected pricing for gpt-5.1");
 
     const usage: LanguageModelUsage = {
+      inputTokens: undefined as unknown as number,
       cachedInputTokens: 120,
       outputTokens: 30,
       totalTokens: 150,
+      inputTokenDetails: emptyInputTokenDetails,
+      outputTokenDetails: emptyOutputTokenDetails,
     };
 
     const expected =
@@ -118,6 +140,8 @@ describe("calculateUsageCost", () => {
       inputTokens: 100,
       outputTokens: 50,
       totalTokens: 150,
+      inputTokenDetails: emptyInputTokenDetails,
+      outputTokenDetails: emptyOutputTokenDetails,
     };
 
     expect(
@@ -142,6 +166,8 @@ describe("saveAiUsage", () => {
       outputTokens: 150,
       reasoningTokens: 25,
       totalTokens: 850,
+      inputTokenDetails: emptyInputTokenDetails,
+      outputTokenDetails: emptyOutputTokenDetails,
     };
 
     await saveAiUsage({

@@ -107,7 +107,7 @@ const CANDIDATE_1 = {
   botUserId: "U-BOT",
   emailAccountId: "email-1",
   channelId: "C-PRIVATE-1",
-};
+} as any;
 
 const CANDIDATE_2 = {
   id: "mc-2",
@@ -115,7 +115,7 @@ const CANDIDATE_2 = {
   botUserId: "U-BOT",
   emailAccountId: "email-2",
   channelId: "C-PRIVATE-2",
-};
+} as any;
 
 describe("processSlackEvent", () => {
   beforeEach(() => {
@@ -327,7 +327,11 @@ describe("processSlackEvent", () => {
       );
 
       const callArgs = vi.mocked(aiProcessAssistantChat).mock.calls[0]?.[0];
-      expect(callArgs?.messages.map((message) => message.id)).toEqual([
+      expect(
+        callArgs?.messages.map(
+          (message) => (message as unknown as { id: string }).id,
+        ),
+      ).toEqual([
         "assistant-1",
         "user-1",
         "assistant-2",
@@ -506,9 +510,6 @@ describe("processSlackEvent", () => {
 
   describe("bot mention stripping", () => {
     it("strips bot mention from app_mention text", async () => {
-      const { aiProcessAssistantChat } = await import(
-        "@/utils/ai/assistant/chat"
-      );
       prisma.messagingChannel.findMany.mockResolvedValue([CANDIDATE_1]);
       prisma.chat.upsert.mockResolvedValue({
         id: "slack-C-PRIVATE-1",

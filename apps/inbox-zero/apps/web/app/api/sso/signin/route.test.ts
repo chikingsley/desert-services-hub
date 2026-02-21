@@ -26,6 +26,8 @@ import prisma from "@/utils/prisma";
 import { GET } from "./route";
 
 const mockBetterAuthConfig = vi.mocked(betterAuthConfig);
+const signInSSOMock = () =>
+  mockBetterAuthConfig.api.signInSSO as unknown as ReturnType<typeof vi.fn>;
 
 describe("SSO Signin Route", () => {
   const mockContext = { params: Promise.resolve({}) };
@@ -79,9 +81,7 @@ describe("SSO Signin Route", () => {
   describe("Organization-based provider lookup", () => {
     test("should find provider by organization slug", async () => {
       const mockSignInSSOResponse = { url: "https://sso.example.com/signin" };
-      mockBetterAuthConfig.api.signInSSO.mockResolvedValue(
-        mockSignInSSOResponse,
-      );
+      signInSSOMock().mockResolvedValue(mockSignInSSOResponse);
 
       // Mock the Prisma call to return a provider
       vi.mocked(prisma.ssoProvider.findFirst).mockResolvedValue({
@@ -167,9 +167,7 @@ describe("SSO Signin Route", () => {
       } as any);
 
       // Mock betterAuth to throw an error
-      mockBetterAuthConfig.api.signInSSO.mockRejectedValue(
-        new Error("SSO service unavailable"),
-      );
+      signInSSOMock().mockRejectedValue(new Error("SSO service unavailable"));
 
       const response = await GET(request, mockContext);
       const responseBody = await response.json();
@@ -186,9 +184,7 @@ describe("SSO Signin Route", () => {
       const mockSignInSSOResponse = {
         url: "https://sso.example.com/signin?token=abc123",
       };
-      mockBetterAuthConfig.api.signInSSO.mockResolvedValue(
-        mockSignInSSOResponse,
-      );
+      signInSSOMock().mockResolvedValue(mockSignInSSOResponse);
 
       // Mock Prisma to return a provider
       vi.mocked(prisma.ssoProvider.findFirst).mockResolvedValue({
@@ -212,9 +208,7 @@ describe("SSO Signin Route", () => {
 
     test("should log SSO sign-in request", async () => {
       const mockSignInSSOResponse = { url: "https://sso.example.com/signin" };
-      mockBetterAuthConfig.api.signInSSO.mockResolvedValue(
-        mockSignInSSOResponse,
-      );
+      signInSSOMock().mockResolvedValue(mockSignInSSOResponse);
 
       // Mock Prisma to return a provider
       vi.mocked(prisma.ssoProvider.findFirst).mockResolvedValue({
@@ -261,9 +255,7 @@ describe("SSO Signin Route", () => {
   describe("betterAuthConfig integration", () => {
     test("should call betterAuthConfig.api.signInSSO with correct parameters", async () => {
       const mockSignInSSOResponse = { url: "https://sso.example.com/signin" };
-      mockBetterAuthConfig.api.signInSSO.mockResolvedValue(
-        mockSignInSSOResponse,
-      );
+      signInSSOMock().mockResolvedValue(mockSignInSSOResponse);
 
       // Mock Prisma to return a provider
       vi.mocked(prisma.ssoProvider.findFirst).mockResolvedValue({
@@ -297,9 +289,7 @@ describe("SSO Signin Route", () => {
       } as any);
 
       // Mock betterAuth to throw an error
-      mockBetterAuthConfig.api.signInSSO.mockRejectedValue(
-        new Error("SSO service unavailable"),
-      );
+      signInSSOMock().mockRejectedValue(new Error("SSO service unavailable"));
 
       const response = await GET(request, mockContext);
       const responseBody = await response.json();

@@ -26,8 +26,14 @@ type AccountWithEmailAccount = {
 };
 
 export function getEmailAccount(
-  overrides: Partial<EmailAccountWithAI> = {},
-): EmailAccountWithAI {
+  overrides: Partial<EmailAccountWithAI> & {
+    filingEnabled?: boolean;
+    filingPrompt?: string | null;
+  } = {},
+): EmailAccountWithAI & {
+  filingEnabled: boolean;
+  filingPrompt: string | null;
+} {
   return {
     id: "email-account-id",
     userId: "user1",
@@ -36,6 +42,8 @@ export function getEmailAccount(
     multiRuleSelectionEnabled: overrides.multiRuleSelectionEnabled ?? false,
     timezone: null,
     calendarBookingLink: null,
+    filingEnabled: overrides.filingEnabled ?? false,
+    filingPrompt: overrides.filingPrompt ?? null,
     user: {
       aiModel: null,
       aiProvider: null,

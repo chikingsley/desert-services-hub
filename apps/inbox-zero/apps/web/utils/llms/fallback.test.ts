@@ -69,13 +69,13 @@ describe("createGenerateText fallback chain", () => {
     const modelOptions: SelectModel = {
       provider: "bedrock",
       modelName: "primary",
-      model: primaryModel as SelectModel["model"],
+      model: primaryModel as unknown as SelectModel["model"],
       providerOptions: undefined,
       fallbackModels: [
         {
           provider: "openrouter",
           modelName: "fallback",
-          model: fallbackModel as SelectModel["model"],
+          model: fallbackModel as unknown as SelectModel["model"],
           providerOptions: undefined,
         },
       ],
@@ -109,7 +109,7 @@ describe("createGenerateText fallback chain", () => {
 
     const result = await generateText({
       prompt: "hello",
-      model: primaryModel as SelectModel["model"],
+      model: primaryModel as unknown as SelectModel["model"],
     });
 
     expect(result.text).toBe("fallback success");

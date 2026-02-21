@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { validateWebhookAccount } from "./validate-webhook-account";
-import type { ValidatedWebhookAccountData } from "./validate-webhook-account";
 import { PremiumTier } from "@/generated/prisma/enums";
 import { createScopedLogger } from "@/utils/logger";
 
@@ -26,9 +25,7 @@ describe("validateWebhookAccount", () => {
     vi.mocked(unwatchEmails).mockResolvedValue(undefined);
   });
 
-  function createMockEmailAccount(
-    overrides: Partial<ValidatedWebhookAccountData> = {},
-  ): ValidatedWebhookAccountData {
+  function createMockEmailAccount(overrides: any = {}): any {
     return {
       id: "account-id",
       email: "user@test.com",
@@ -246,7 +243,7 @@ describe("validateWebhookAccount", () => {
       const emailAccount = {
         ...createMockEmailAccount(),
         account: null,
-      } as any as ValidatedWebhookAccountData;
+      } as any;
 
       vi.mocked(isPremium).mockReturnValue(true);
       vi.mocked(hasAiAccess).mockReturnValue(true);

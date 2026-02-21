@@ -201,29 +201,30 @@ export class AQDataClient extends AQSessionTransport {
     });
   }
 
-  openDustApplicationDetail(applicationId: string): Promise<string> {
-    const source = this.findDustApplicationRowSource(applicationId);
+  // ---------------------------------------------------------------------------
+  // Detail Pages
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Open a record's detail page by clicking its link in the current search
+   * results. Works for any section — the source parameter is extracted from
+   * the `onclick` handler of the `<a>` tag whose text matches the record ID.
+   */
+  openRecordDetail(recordId: string): Promise<string> {
+    const source = this.findRowSource(recordId);
     if (!source) {
       throw new Error(
-        `Could not find detail link source for application ${applicationId}`
+        `Could not find detail link source for record ${recordId}`
       );
     }
+    return this.postCurrentForm({ source });
+  }
 
-    const postUrl = this.buildPostUrl(this.currentFormAction || PAGES.home);
-    const body = new URLSearchParams();
-    body.append("oracle.adf.faces.FORM", this.currentFormName);
-    body.append("oracle.adf.faces.STATE_TOKEN", this.stateToken);
-    body.append("source", source);
-
-    return fetch(postUrl, {
-      body,
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-        Cookie: this.getCookieHeader(),
-      },
-      method: "POST",
-      redirect: "manual",
-    }).then((res) => this.followResponse(res));
+  /**
+   * @deprecated Use `openRecordDetail(applicationId)` instead.
+   */
+  openDustApplicationDetail(applicationId: string): Promise<string> {
+    return this.openRecordDetail(applicationId);
   }
 
   resolveAbsoluteUrl(url: string): string {
@@ -276,15 +277,34 @@ export class AQDataClient extends AQSessionTransport {
     return super.exportCurrentResults(exportBtnSource);
   }
 
-  private findDustApplicationRowSource(
-    applicationId: string
-  ): string | undefined {
-    const escapedId = applicationId.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const rowPattern = new RegExp(
-      `<a[^>]*onclick="[^"]*source:'([^']+)'[^"]*"[^>]*>\\s*${escapedId}\\s*<\\/a>`,
-      "i"
-    );
-    const match = this.lastResponseHtml.match(rowPattern);
-    return match?.[1];
+  /**
+   * Find the Oracle ADF `source` parameter for a record's clickable link in
+   * the current search results HTML.
+   *
+   * Pattern: `<a onclick="...source:'SOURCE_VALUE'...">RECORD_ID</a>`
+   *
+   * Also handles Oracle ADF escaped quotes (`source:\'VALUE\'`).
+   */
+  private findRowSource(recordId: string): string | undefined {
+    const escapedId = recordId.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    // Try standard quotes first, then ADF-escaped quotes
+    const patterns = [
+      new RegExp(
+        `<a[^>]*onclick="[^"]*source:'([^']+)'[^"]*"[^>]*>\\s*${escapedId}\\s*<\\/a>`,
+        "i"
+      ),
+      new RegExp(
+        `<a[^>]*onclick="[^"]*source:\\\\'([^\\\\']+)\\\\'[^"]*"[^>]*>\\s*${escapedId}\\s*<\\/a>`,
+        "i"
+      ),
+    ];
+
+    for (const pattern of patterns) {
+      const match = this.lastResponseHtml.match(pattern);
+      if (match?.[1]) {
+        return match[1];
+      }
+    }
+    return undefined;
   }
 }

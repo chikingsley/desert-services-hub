@@ -4,7 +4,7 @@ set -e
 echo "Starting permit-worker container..."
 
 # Start VNC stack (sets VNC_PID)
-source /infra/vnc/start-vnc.sh
+source /app/lib/vnc/start-vnc.sh
 
 # Start the API Server
 echo "Starting Server..."

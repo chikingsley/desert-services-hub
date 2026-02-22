@@ -62,9 +62,8 @@ COPY apps/dust-permits/tests ./apps/dust-permits/tests
 # Shared libraries (needed for @lib/* imports)
 COPY lib ./lib
 
-# Shared VNC startup
-COPY infra/vnc/start-vnc.sh /infra/vnc/start-vnc.sh
-RUN chmod +x /infra/vnc/start-vnc.sh
+# Shared VNC startup (already in lib/ from COPY lib above)
+RUN chmod +x /app/lib/vnc/start-vnc.sh
 
 # Startup script
 COPY apps/dust-permits/start-stack.sh /start-stack.sh

@@ -11,7 +11,7 @@ from typing import Optional, Dict, Any, List
 
 import google.generativeai as genai
 import google.generativeai.types as types
-from app.models.swppp_variables import (
+from swppp.models.swppp_variables import (
     EstimateExtraction,
     StormPlanExtraction,
     NOIExtraction

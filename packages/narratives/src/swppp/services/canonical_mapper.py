@@ -6,8 +6,8 @@ from datetime import timedelta
 import re
 from typing import Optional
 
-from app.models.canonical_swppp import CanonicalSWPPPPayload
-from app.models.swppp import ContactInfo, PermitInfo, ProjectInfo, SWPPPData, SiteDetails
+from swppp.models.canonical_swppp import CanonicalSWPPPPayload
+from swppp.models.swppp import ContactInfo, PermitInfo, ProjectInfo, SWPPPData, SiteDetails
 
 
 _CITY_STATE_ZIP_RE = re.compile(

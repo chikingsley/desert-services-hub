@@ -11,11 +11,11 @@ import subprocess
 import tempfile
 from typing import Any, Optional
 
-from app.models.canonical_swppp import CanonicalSWPPPPayload
-from app.models.swppp import SWPPPData
-from app.services.canonical_builder import CanonicalPayloadBuilder
-from app.services.canonical_mapper import CanonicalSWPPPMapper
-from app.services.document_generator import DocumentGenerator
+from swppp.models.canonical_swppp import CanonicalSWPPPPayload
+from swppp.models.swppp import SWPPPData
+from swppp.services.canonical_builder import CanonicalPayloadBuilder
+from swppp.services.canonical_mapper import CanonicalSWPPPMapper
+from swppp.services.document_generator import DocumentGenerator
 
 
 _ISSUED_DATE_RE = re.compile(r"Issued:\s*(\d{1,2}/\d{1,2}/\d{4})", re.IGNORECASE)

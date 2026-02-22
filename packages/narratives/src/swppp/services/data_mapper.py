@@ -9,14 +9,14 @@ import re
 from datetime import date, datetime
 from typing import Optional, Dict, Any
 
-from app.models.swppp import (
+from swppp.models.swppp import (
     SWPPPData,
     ProjectInfo,
     PermitInfo,
     ContactInfo,
     SiteDetails
 )
-from app.models.swppp_variables import (
+from swppp.models.swppp_variables import (
     EstimateExtraction,
     StormPlanExtraction,
     NOIExtraction

@@ -6,7 +6,7 @@ from datetime import date, timedelta
 import re
 from typing import Any, Optional
 
-from app.models.canonical_swppp import (
+from swppp.models.canonical_swppp import (
     CanonicalBMP,
     CanonicalBMPec7,
     CanonicalDates,
@@ -18,7 +18,7 @@ from app.models.canonical_swppp import (
     CanonicalSWPPPPayload,
     CanonicalSWPPPContact,
 )
-from app.models.swppp_variables import EstimateExtraction, NOIExtraction, StormPlanExtraction
+from swppp.models.swppp_variables import EstimateExtraction, NOIExtraction, StormPlanExtraction
 
 
 _CITY_STATE_ZIP_RE = re.compile(

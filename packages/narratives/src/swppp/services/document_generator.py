@@ -5,7 +5,7 @@ from typing import Dict, Any
 
 from docxtpl import DocxTemplate
 
-from app.models.swppp import SWPPPData
+from swppp.models.swppp import SWPPPData
 
 
 class DocumentGenerator:

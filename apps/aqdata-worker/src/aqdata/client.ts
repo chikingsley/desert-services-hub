@@ -157,52 +157,89 @@ export class AQDataClient extends AQSessionTransport {
     return this.postCurrentForm(fields);
   }
 
-  searchInvoices(): Promise<string> {
-    return this.postCurrentForm({
+  searchInvoices(params: { invoiceNumber?: string } = {}): Promise<string> {
+    const fields: Record<string, string> = {
       source: FORMS.invoices.submitBtn,
-    });
+    };
+    if (params.invoiceNumber) {
+      fields[FORMS.invoices.fields.invoiceNumber] = params.invoiceNumber;
+    }
+    return this.postCurrentForm(fields);
   }
 
-  searchComplaints(): Promise<string> {
-    return this.postCurrentForm({
+  searchComplaints(params: { complaintId?: string } = {}): Promise<string> {
+    const fields: Record<string, string> = {
       source: FORMS.complaints.submitBtn,
-    });
+    };
+    if (params.complaintId) {
+      fields[FORMS.complaints.fields.complaintId] = params.complaintId;
+    }
+    return this.postCurrentForm(fields);
   }
 
-  searchAsbestosNotifications(): Promise<string> {
-    return this.postCurrentForm({
+  searchAsbestosNotifications(
+    params: { notificationNumber?: string } = {}
+  ): Promise<string> {
+    const fields: Record<string, string> = {
       source: FORMS.asbestosNotifications.submitBtn,
-    });
+    };
+    if (params.notificationNumber) {
+      fields[FORMS.asbestosNotifications.fields.notificationNumber] =
+        params.notificationNumber;
+    }
+    return this.postCurrentForm(fields);
   }
 
-  searchInspections(): Promise<string> {
-    return this.postCurrentForm({
+  searchInspections(params: { inspectionId?: string } = {}): Promise<string> {
+    const fields: Record<string, string> = {
       source: FORMS.inspections.submitBtn,
-    });
+    };
+    if (params.inspectionId) {
+      fields[FORMS.inspections.fields.inspectionId] = params.inspectionId;
+    }
+    return this.postCurrentForm(fields);
   }
 
-  searchEnforcementActions(): Promise<string> {
-    return this.postCurrentForm({
+  searchEnforcementActions(
+    params: { actionId?: string } = {}
+  ): Promise<string> {
+    const fields: Record<string, string> = {
       source: FORMS.enforcementActions.submitBtn,
-    });
+    };
+    if (params.actionId) {
+      fields[FORMS.enforcementActions.fields.actionId] = params.actionId;
+    }
+    return this.postCurrentForm(fields);
   }
 
-  searchSettlements(): Promise<string> {
-    return this.postCurrentForm({
+  searchSettlements(params: { settlementId?: string } = {}): Promise<string> {
+    const fields: Record<string, string> = {
       source: FORMS.settlements.submitBtn,
-    });
+    };
+    if (params.settlementId) {
+      fields[FORMS.settlements.fields.settlementId] = params.settlementId;
+    }
+    return this.postCurrentForm(fields);
   }
 
-  searchSiteVisits(): Promise<string> {
-    return this.postCurrentForm({
+  searchSiteVisits(params: { siteVisitId?: string } = {}): Promise<string> {
+    const fields: Record<string, string> = {
       source: FORMS.siteVisits.submitBtn,
-    });
+    };
+    if (params.siteVisitId) {
+      fields[FORMS.siteVisits.fields.siteVisitId] = params.siteVisitId;
+    }
+    return this.postCurrentForm(fields);
   }
 
-  searchComplianceReports(): Promise<string> {
-    return this.postCurrentForm({
+  searchComplianceReports(params: { reportId?: string } = {}): Promise<string> {
+    const fields: Record<string, string> = {
       source: FORMS.complianceReports.submitBtn,
-    });
+    };
+    if (params.reportId) {
+      fields[FORMS.complianceReports.fields.reportId] = params.reportId;
+    }
+    return this.postCurrentForm(fields);
   }
 
   // ---------------------------------------------------------------------------

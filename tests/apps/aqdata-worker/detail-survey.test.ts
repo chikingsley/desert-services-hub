@@ -13,6 +13,7 @@ import { AQDataClient } from "../../../apps/aqdata-worker/src/aqdata/client";
 const RUN_SURVEY = process.env.RUN_AQ_DETAIL_SURVEY === "true";
 const describeSuite = RUN_SURVEY ? describe : describe.skip;
 const FIXTURES_DIR = "tests/apps/aqdata-worker/fixtures/detail-pages";
+const CRPT_ID_PATTERN = /^CRPT\d+$/;
 
 // ID patterns for extracting the first record from search results
 const FIRST_ID_PATTERNS: Record<string, RegExp> = {
@@ -65,12 +66,18 @@ describeSuite("AQData Detail Page Survey — all sections", () => {
 
   test("compliance report: search + open detail", async () => {
     await client.navigateToComplianceReportSearch();
-    const searchHtml = await client.searchComplianceReports();
-    const id = extractFirstId(searchHtml, FIRST_ID_PATTERNS.complianceReport);
-    console.log(`  Compliance Report ID: ${id}`);
-    expect(id).toBeTruthy();
+    await client.searchComplianceReports();
 
-    const detailHtml = await client.openRecordDetail(id as string);
+    const allIds = client.findAllIds(CRPT_ID_PATTERN);
+    const clickableIds = client.findClickableIds(CRPT_ID_PATTERN);
+    console.log(
+      `  Compliance Reports: ${allIds.length} total, ${clickableIds.length} clickable`
+    );
+    expect(clickableIds.length).toBeGreaterThan(0);
+
+    const id = clickableIds[0];
+    console.log(`  Opening clickable CRPT: ${id}`);
+    const detailHtml = await client.openRecordDetail(id);
     expect(detailHtml.length).toBeGreaterThan(1000);
     console.log(`  Detail HTML: ${detailHtml.length} bytes`);
 

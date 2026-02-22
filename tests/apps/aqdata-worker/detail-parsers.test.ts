@@ -1,5 +1,5 @@
 /**
- * Detail Page Parser Tests — parse all 6 captured detail page fixtures.
+ * Detail Page Parser Tests — parse all 7 captured detail page fixtures.
  *
  * Verifies the generic detail parser extracts fields, tables, attachments,
  * and coordinates from each section's detail page HTML.
@@ -79,6 +79,35 @@ describeSuite("parseDetailPage — enforcement action", () => {
     // ENF000090 is a legacy 2005 record — sub-tables exist but contain no data rows
     expect(result.tables.length).toBeGreaterThanOrEqual(0);
     console.log(`  Enforcement tables (${result.tables.length}):`);
+    for (const table of result.tables) {
+      console.log(
+        `    ${table.name}: ${table.rows.length} rows [${table.headers.slice(0, 4).join(", ")}]`
+      );
+    }
+  });
+});
+
+// =============================================================================
+// Compliance Report Detail
+// =============================================================================
+
+describeSuite("parseDetailPage — compliance report", () => {
+  const html = loadFixture("compliance-report-detail.html");
+  const result = parseDetailPage(html, "CRPT011820");
+
+  test("extracts compliance report fields", () => {
+    expect(Object.keys(result.fields).length).toBeGreaterThan(5);
+    console.log(
+      `  Compliance Report fields (${Object.keys(result.fields).length}):`
+    );
+    for (const [key, value] of Object.entries(result.fields).slice(0, 12)) {
+      console.log(`    ${key}: ${value.slice(0, 80)}`);
+    }
+  });
+
+  test("extracts sub-tables", () => {
+    expect(result.tables.length).toBeGreaterThanOrEqual(0);
+    console.log(`  Compliance Report tables (${result.tables.length}):`);
     for (const table of result.tables) {
       console.log(
         `    ${table.name}: ${table.rows.length} rows [${table.headers.slice(0, 4).join(", ")}]`

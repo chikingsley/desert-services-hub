@@ -1,5 +1,9 @@
 import { BASE_URL, DUST_APP_STATUS_VALUES, FORMS, PAGES } from "./constants";
 
+const CLICKABLE_LINK_REGEX =
+  /<a[^>]*onclick="[^"]*source:[\\']?'?[^"]*"[^>]*>\s*([A-Z]+\d+)\s*<\/a>/gi;
+const ANY_LINK_ID_REGEX = /<a[^>]*>\s*([A-Z]+\d+)\s*<\/a>/gi;
+
 export type { PageContext, SessionState } from "./transport";
 
 import type { PageContext, SessionState } from "./transport";
@@ -275,6 +279,39 @@ export class AQDataClient extends AQSessionTransport {
 
   override exportCurrentResults(exportBtnSource: string): Promise<Buffer> {
     return super.exportCurrentResults(exportBtnSource);
+  }
+
+  /**
+   * Find all record IDs in the current search results that have clickable
+   * `onclick` handlers. Returns IDs matching the given pattern (e.g. /CRPT\d+/)
+   * that actually have a `source` parameter in their onclick.
+   */
+  findClickableIds(idPattern: RegExp): string[] {
+    const matches = this.lastResponseHtml.matchAll(CLICKABLE_LINK_REGEX);
+    const ids: string[] = [];
+    for (const match of matches) {
+      const id = match[1];
+      if (id && idPattern.test(id) && !ids.includes(id)) {
+        ids.push(id);
+      }
+    }
+    return ids;
+  }
+
+  /**
+   * Find all record IDs in the current search results (clickable or not).
+   * Returns all IDs matching the pattern found in `<a>` tags.
+   */
+  findAllIds(idPattern: RegExp): string[] {
+    const matches = this.lastResponseHtml.matchAll(ANY_LINK_ID_REGEX);
+    const ids: string[] = [];
+    for (const match of matches) {
+      const id = match[1];
+      if (id && idPattern.test(id) && !ids.includes(id)) {
+        ids.push(id);
+      }
+    }
+    return ids;
   }
 
   /**

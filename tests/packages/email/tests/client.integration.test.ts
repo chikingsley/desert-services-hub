@@ -1,15 +1,25 @@
 /**
  * Email Service Integration Tests
  *
- * These tests use the real Microsoft Graph API.
- * They follow the Arrange-Act-Assert (AAA) pattern with cleanup (teardown).
+ * !! DISABLED — DO NOT RUN !!
  *
- * Run: bun test tests/packages/email/tests/client.integration.test.ts
+ * These tests create REAL resources in Microsoft Outlook via Graph API:
+ * - Mail folders named _TEST_DELETE_ME_*
+ * - Draft emails with _TEST_DELETE_ME_* subjects
+ * - Sent emails (reply tests send real mail)
  *
- * Prerequisites:
- * - AZURE_TENANT_ID, AZURE_CLIENT_ID, AZURE_CLIENT_SECRET env vars set
- * - Mail.ReadWrite application permission granted
- * - For reply/send tests: delegated Mail.Send is required via user auth
+ * If the test crashes, times out, or is interrupted, those resources are
+ * NEVER cleaned up and stay in the production Outlook mailbox permanently.
+ * The afterAll cleanup only runs on graceful completion — it is NOT a safety
+ * net for crashes.
+ *
+ * Before re-enabling, the test MUST implement cleanup-first pattern:
+ * beforeAll should sweep and delete all _TEST_DELETE_ME_* folders/drafts
+ * from previous runs BEFORE creating new ones. Until that's done, this
+ * test suite stays off.
+ *
+ * See also: Monday.com sync tests were disabled for the same reason —
+ * creating real board items that pollute production data on crash.
  */
 import { afterAll, beforeAll, describe, expect, it } from "bun:test";
 import { GraphEmailClient } from "@email/client";
@@ -17,13 +27,10 @@ import { GraphEmailClient } from "@email/client";
 // Test configuration
 const TEST_USER_ID = process.env.TEST_EMAIL_USER ?? "chi@desertservices.net";
 const TEST_PREFIX = "_TEST_DELETE_ME_";
-const EMAIL_TESTS_ENABLED = process.env.ENABLE_EMAIL_TESTS === "1";
-const hasCredentials =
-  process.env.AZURE_TENANT_ID &&
-  process.env.AZURE_CLIENT_ID &&
-  process.env.AZURE_CLIENT_SECRET;
-const describeEmailTests =
-  hasCredentials && EMAIL_TESTS_ENABLED ? describe : describe.skip;
+
+// HARD DISABLED — see file header for why.
+// Do NOT change this to `describe` or gate behind an env var.
+const describeEmailTests = describe.skip;
 
 // Helper to wait for email delivery
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));

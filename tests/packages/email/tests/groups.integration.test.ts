@@ -1,8 +1,15 @@
 /**
  * M365 Groups Integration Tests
  *
- * Tests the GraphGroupsClient against real Microsoft Graph API.
- * Requires AZURE_* credentials in environment.
+ * !! DISABLED — DO NOT RUN !!
+ *
+ * These tests hit the real Microsoft Graph API. While this particular
+ * suite is read-only, it shares the ENABLE_EMAIL_TESTS gate with the
+ * client integration tests which create real Outlook resources that
+ * are never cleaned up on crash. All Graph integration tests are
+ * disabled until the cleanup-first pattern is implemented.
+ *
+ * See client.integration.test.ts header for full rationale.
  */
 import { beforeAll, describe, expect, it } from "bun:test";
 import { GraphGroupsClient } from "@email/groups";
@@ -17,12 +24,8 @@ const config = {
   azureTenantId: process.env.AZURE_TENANT_ID ?? "",
 };
 
-const hasCredentials = Boolean(
-  config.azureTenantId && config.azureClientId && config.azureClientSecret
-);
-const EMAIL_TESTS_ENABLED = process.env.ENABLE_EMAIL_TESTS === "1";
-const describeEmailTests =
-  hasCredentials && EMAIL_TESTS_ENABLED ? describe : describe.skip;
+// HARD DISABLED — see file header for why.
+const describeEmailTests = describe.skip;
 
 // Known group for testing
 const INTERNAL_CONTRACTS_GROUP_ID = "962f9440-9bde-4178-b538-edc7f8d3ecce";

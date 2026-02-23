@@ -2,8 +2,15 @@
  * Email Sync — Trigger.dev event-driven task
  *
  * Replaces the pgmq `email_notification` job. Triggered by Outlook webhooks
- * when a new email arrives. Fetches the email from Graph API, stores it in
- * Postgres, then fetches thread siblings we haven't seen yet.
+ * when a new email arrives. Pipeline:
+ *
+ *   1. Fetch email from Graph API
+ *   2. Store in Postgres via insertEmail()
+ *   3. Domain enrichment (from_domain, is_internal, forward detection)
+ *   4. Platform extraction (BuildingConnected, Procore, DocuSign, etc.)
+ *   5. Account find-or-create by effective domain
+ *   6. Contact find-or-create + link to email
+ *   7. Fetch thread siblings we haven't seen
  *
  * Downstream effects are handled by Postgres cascade triggers:
  *   - trg_email_project_changed → propagates project_id to conversation siblings
@@ -16,6 +23,14 @@ import { getOrCreateMailbox } from "@lib/db/repositories/mailbox";
 import type { InsertEmailData } from "@lib/db/types";
 import { logger, schemaTask } from "@trigger.dev/sdk/v3";
 import { z } from "zod";
+import {
+  computeDomainEnrichment,
+  extractRealSender,
+  findOrCreateAccount,
+  findOrCreateContact,
+  linkContactToEmail,
+  updateEmailEnrichment,
+} from "./email-enrichment";
 
 // ── Graph API constants ─────────────────────────────────────────
 
@@ -23,22 +38,7 @@ const GRAPH_API_BASE = "https://graph.microsoft.com/v1.0";
 const TOKEN_URL_TEMPLATE =
   "https://login.microsoftonline.com/{tenantId}/oauth2/v2.0/token";
 
-const EMAIL_DETAIL_FIELDS = [
-  "id",
-  "conversationId",
-  "subject",
-  "from",
-  "toRecipients",
-  "ccRecipients",
-  "receivedDateTime",
-  "bodyPreview",
-  "body",
-  "hasAttachments",
-  "internetMessageHeaders",
-  "webLink",
-].join(",");
-
-const EMAIL_LIST_FIELDS = [
+const EMAIL_FIELDS = [
   "id",
   "conversationId",
   "subject",
@@ -233,10 +233,10 @@ export const emailSync = schemaTask({
 
     // 2. Fetch email from Graph API
     const email = await graphGet<GraphEmail>(
-      `users/${encodeURIComponent(mailboxEmail)}/messages/${encodeURIComponent(messageId)}?$select=${EMAIL_DETAIL_FIELDS}`
+      `users/${encodeURIComponent(mailboxEmail)}/messages/${encodeURIComponent(messageId)}?$select=${EMAIL_FIELDS}`
     );
 
-    // 3. Store in Postgres (triggers cascade automatically)
+    // 3. Store in Postgres (cascade triggers fire automatically)
     const data = graphEmailToInsertData(email, mailbox.id);
     const emailId = await insertEmail(data);
 
@@ -247,7 +247,68 @@ export const emailSync = schemaTask({
       conversationId: email.conversationId,
     });
 
-    // 4. Fetch thread siblings we haven't seen
+    // 4. Domain enrichment
+    const domainData = computeDomainEnrichment(
+      data.fromEmail,
+      email.subject,
+      data.bodyFull,
+      data.bodyPreview
+    );
+
+    // 5. Platform extraction
+    const platform = extractRealSender(
+      domainData.fromDomain,
+      data.fromName,
+      data.bodyFull,
+      email.subject
+    );
+
+    // 6. Account find-or-create by effective domain
+    const effectiveDomain =
+      platform?.realSenderDomain ??
+      domainData.originalSenderDomain ??
+      domainData.fromDomain;
+    let accountId: number | null = null;
+    if (effectiveDomain) {
+      accountId = await findOrCreateAccount(
+        effectiveDomain,
+        platform?.realSenderCompany
+      );
+    }
+
+    // 7. Persist enrichment to email row
+    await updateEmailEnrichment(emailId, domainData, platform, accountId);
+
+    // 8. Contact find-or-create + link
+    const effectiveEmail =
+      platform?.realSenderEmail ??
+      domainData.originalSenderEmail ??
+      data.fromEmail;
+    const effectiveName = platform?.realSenderName ?? data.fromName;
+    let contactId: number | null = null;
+    if (effectiveEmail) {
+      contactId = await findOrCreateContact(
+        effectiveEmail,
+        effectiveName,
+        accountId
+      );
+      if (contactId && emailId) {
+        await linkContactToEmail(contactId, emailId, "from");
+      }
+    }
+
+    logger.info("Email enriched", {
+      emailId,
+      fromDomain: domainData.fromDomain,
+      isInternal: domainData.isInternal,
+      isForwarded: domainData.isForwarded,
+      isPlatform: Boolean(platform),
+      platformName: platform?.platformName ?? null,
+      accountId,
+      contactId,
+    });
+
+    // 9. Fetch thread siblings we haven't seen
     let siblingsSynced = 0;
     if (email.conversationId) {
       siblingsSynced = await syncThreadSiblings(
@@ -263,6 +324,9 @@ export const emailSync = schemaTask({
       subject: email.subject,
       conversationId: email.conversationId ?? null,
       siblingsSynced,
+      accountId,
+      contactId,
+      isPlatform: Boolean(platform),
     };
   },
 });
@@ -277,7 +341,6 @@ async function syncThreadSiblings(
 ): Promise<number> {
   const { db } = await import("@lib/db/client");
 
-  // Get all message_ids we already have for this conversation
   const existingRows = await db
     .query<{ message_id: string }, [string]>(
       "SELECT message_id FROM emails WHERE conversation_id = $1"
@@ -286,10 +349,9 @@ async function syncThreadSiblings(
 
   const existingIds = new Set(existingRows.map((r) => r.message_id));
 
-  // Fetch thread from Graph API
   const filter = encodeURIComponent(`conversationId eq '${conversationId}'`);
   const response = await graphGet<GraphListResponse>(
-    `users/${encodeURIComponent(mailboxEmail)}/messages?$filter=${filter}&$select=${EMAIL_LIST_FIELDS}&$orderby=receivedDateTime asc&$top=50`
+    `users/${encodeURIComponent(mailboxEmail)}/messages?$filter=${filter}&$select=${EMAIL_FIELDS}&$orderby=receivedDateTime asc&$top=50`
   );
 
   const siblings = response.value.filter(

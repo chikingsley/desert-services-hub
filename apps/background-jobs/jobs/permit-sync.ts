@@ -15,8 +15,8 @@ import {
   getPermitsNeedingScrape,
   markPermitScraped,
 } from "@lib/db/repositories/dust-permit";
-import { PermitClient, PermitWorkerError } from "@permits/client";
-import type { SyncResponse } from "@permits/types";
+import { PermitClient, PermitWorkerError } from "@/apps/dust-permits-mcp/client";
+import type { SyncResponse } from "@/apps/dust-permits-mcp/types";
 import {
   PAYMENT_PERMIT_SYNC_COOLDOWN_MS,
   PAYMENT_PERMIT_SYNC_TIMEOUT_MS,

@@ -1,7 +1,6 @@
 import { searchByColumnValue, searchItems } from "@monday/client/search";
-import { resolveBoardId } from "../config";
 import { getBoardNameArg } from "./args";
-import { formatItem } from "./shared";
+import { formatItem, resolveBoardId } from "./shared";
 import type { CommandHandler } from "./types";
 
 export const searchHandlers: Record<string, CommandHandler> = {

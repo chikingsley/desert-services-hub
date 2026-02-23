@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { listEstimates } from "@estimates/estimating/estimate-read-service";
+import { listEstimates } from "@/packages/estimates/estimating/estimate-read-service";
 
 const BUN_BIN = Bun.which("bun") ?? `${process.env.HOME}/.bun/bin/bun`;
 const CLI_PATH = "packages/documents/pdf-generation/cli/cli.ts";

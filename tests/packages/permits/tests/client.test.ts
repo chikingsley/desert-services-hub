@@ -3,7 +3,7 @@ import {
   PermitClient,
   PermitWorkerError,
   type RenewAndPayRequest,
-} from "@permits/client";
+} from "@/apps/dust-permits-mcp/client";
 
 const TEST_BASE_URL = "https://web.desertservices.app";
 

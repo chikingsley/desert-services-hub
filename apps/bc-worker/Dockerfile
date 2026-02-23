@@ -55,13 +55,8 @@ COPY package.json tsconfig.json tsconfig.base.json bunfig.toml ./
 # BC worker source
 COPY apps/bc-worker/src ./apps/bc-worker/src
 
-# packages/email — needed for body-link-auth-bootstrap CLI
-COPY packages/email ./packages/email
-
-# Shared libraries (needed for @lib/* and @email/* imports)
-COPY lib ./lib
-
-# Shared VNC startup (already in lib/ from COPY lib above)
+# VNC startup script
+COPY lib/vnc ./lib/vnc
 RUN chmod +x /app/lib/vnc/start-vnc.sh
 
 # Startup script

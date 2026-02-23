@@ -17,6 +17,10 @@
 # CF Workers — shared modules referenced by background-jobs
 !apps/cf-workers/
 
+# Dust permit MCP — client + types used by background-jobs permit-sync
+!apps/dust-permits-mcp/client.ts
+!apps/dust-permits-mcp/types.ts
+
 # Document processing
 !packages/documents/
 

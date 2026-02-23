@@ -1,13 +1,14 @@
 import { getBoard, getBoardColumns } from "@monday/client/boards";
-import { BOARDS, resolveBoardId } from "../config";
+import { BOARD_IDS } from "@monday/types/schema";
 import { getBoardNameArg } from "./args";
+import { resolveBoardId } from "./shared";
 import type { CommandHandler } from "./types";
 
 export const metadataHandlers: Record<string, CommandHandler> = {
   boards: () => {
     console.log("Known boards:");
-    for (const [name, id] of Object.entries(BOARDS)) {
-      console.log(`  ${name}: ${id}`);
+    for (const [name, id] of Object.entries(BOARD_IDS)) {
+      console.log(`  ${name.toLowerCase()}: ${id}`);
     }
   },
 

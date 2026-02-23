@@ -27,21 +27,21 @@ export interface ProjectSeedSyncOptions {
 }
 
 export interface ProjectSeedSyncStats {
+  canonicalized: number;
   estimatesScanned: number;
-  seedGroups: number;
+  linkConflicts: number;
+  linksInserted: number;
+  movedToLost: number;
   projectsCreated: number;
   projectsUpdated: number;
-  linksInserted: number;
-  canonicalized: number;
   promotedToActive: number;
-  movedToLost: number;
-  linkConflicts: number;
+  seedGroups: number;
 }
 
 export interface ProjectSeedStaleOptions {
   dryRun?: boolean;
-  staleDays?: number;
   limit?: number;
+  staleDays?: number;
 }
 
 export interface ProjectSeedStaleStats {
@@ -52,15 +52,15 @@ export interface ProjectSeedStaleStats {
 // ── Mutable state for the sync transaction ────────────────────────────
 
 interface SeedSyncState {
-  stats: ProjectSeedSyncStats;
+  canonicalByProject: Map<number, { estimateId: number; priority: number }>;
   dryRun: boolean;
   estimateLinkedProjects: Map<number, Set<number>>;
+  linkRowsToInsert: Array<{ projectId: number; estimateId: number }>;
   projectLinkedEstimateIds: Map<number, Set<number>>;
   projectsById: Map<number, ProjectSeedRow>;
-  projectsBySeedKey: Map<string, ProjectSeedRow>;
   projectsByNormalizedName: Map<string, ProjectSeedRow[]>;
-  linkRowsToInsert: Array<{ projectId: number; estimateId: number }>;
-  canonicalByProject: Map<number, { estimateId: number; priority: number }>;
+  projectsBySeedKey: Map<string, ProjectSeedRow>;
+  stats: ProjectSeedSyncStats;
 }
 
 // ── Per-group sub-functions ───────────────────────────────────────────

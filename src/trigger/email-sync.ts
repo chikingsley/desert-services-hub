@@ -6,21 +6,24 @@
  *
  *   1. Fetch email from Graph API
  *   2. Store in Postgres via insertEmail()
- *   3. Domain enrichment (from_domain, is_internal, forward detection)
- *   4. Platform extraction (BuildingConnected, Procore, DocuSign, etc.)
- *   5. Account find-or-create by effective domain
- *   6. Contact find-or-create + link to email
- *   7. Fetch thread siblings we haven't seen
+ *   3. Create attachment stubs (documents table, source='email_attachment')
+ *   4. Domain enrichment (from_domain, is_internal, forward detection)
+ *   5. Platform extraction (BuildingConnected, Procore, DocuSign, etc.)
+ *   6. Account find-or-create by effective domain
+ *   7. Contact find-or-create + link to email
+ *   8. Fetch thread siblings we haven't seen
  *
  * Downstream effects are handled by Postgres cascade triggers:
  *   - trg_email_project_changed → propagates project_id to conversation siblings
  *   - trg_estimate_email_linked → cascades estimate↔email links
  *   - trg_project_estimate_linked → cascades project↔estimate links
+ *
+ * Attachment content download + extraction is handled by the separate
+ * `attachment-intake` scheduled task (src/trigger/attachment-intake.ts).
  */
 
 import { insertEmail } from "@lib/db/repositories/email";
 import { getOrCreateMailbox } from "@lib/db/repositories/mailbox";
-import type { InsertEmailData } from "@lib/db/types";
 import { logger, schemaTask } from "@trigger.dev/sdk/v3";
 import { z } from "zod";
 import {
@@ -31,189 +34,50 @@ import {
   linkContactToEmail,
   updateEmailEnrichment,
 } from "./email-enrichment";
+import { graphGet } from "./graph";
+import {
+  EMAIL_FIELDS,
+  type GraphAttachment,
+  type GraphEmail,
+  type GraphListResponse,
+  graphEmailToInsertData,
+} from "./graph-email";
 
-// ── Graph API constants ─────────────────────────────────────────
+// ── Attachment stub creation ────────────────────────────────────
 
-const GRAPH_API_BASE = "https://graph.microsoft.com/v1.0";
-const TOKEN_URL_TEMPLATE =
-  "https://login.microsoftonline.com/{tenantId}/oauth2/v2.0/token";
+async function syncAttachmentStubs(
+  mailboxEmail: string,
+  messageId: string,
+  emailId: number
+): Promise<number> {
+  const { insertAttachment } = await import("@lib/db/repositories/attachment");
 
-const EMAIL_FIELDS = [
-  "id",
-  "conversationId",
-  "subject",
-  "from",
-  "toRecipients",
-  "ccRecipients",
-  "receivedDateTime",
-  "bodyPreview",
-  "body",
-  "hasAttachments",
-  "internetMessageHeaders",
-  "webLink",
-].join(",");
+  const userPath = encodeURIComponent(mailboxEmail);
+  const msgPath = encodeURIComponent(messageId);
+  const response = await graphGet<{ value: GraphAttachment[] }>(
+    `users/${userPath}/messages/${msgPath}/attachments?$select=id,name,contentType,size,isInline`
+  );
 
-// ── Graph API types ─────────────────────────────────────────────
-
-interface GraphEmailAddress {
-  address: string;
-  name: string;
-}
-
-interface GraphRecipient {
-  emailAddress: GraphEmailAddress;
-}
-
-interface GraphEmailBody {
-  content: string;
-  contentType: "html" | "text";
-}
-
-interface GraphInternetHeader {
-  name: string;
-  value: string;
-}
-
-interface GraphEmail {
-  body?: GraphEmailBody;
-  bodyPreview?: string;
-  ccRecipients?: GraphRecipient[];
-  conversationId?: string;
-  from?: { emailAddress: GraphEmailAddress };
-  hasAttachments?: boolean;
-  id: string;
-  internetMessageHeaders?: GraphInternetHeader[];
-  receivedDateTime: string;
-  subject: string;
-  toRecipients?: GraphRecipient[];
-  webLink?: string;
-}
-
-interface GraphListResponse {
-  "@odata.nextLink"?: string;
-  value: GraphEmail[];
-}
-
-// ── Graph API helpers ───────────────────────────────────────────
-
-let cachedToken: { accessToken: string; expiresAt: number } | null = null;
-
-async function getGraphToken(): Promise<string> {
-  if (cachedToken && Date.now() < cachedToken.expiresAt) {
-    return cachedToken.accessToken;
+  let created = 0;
+  for (const att of response.value) {
+    if (att.isInline) {
+      continue;
+    }
+    await insertAttachment({
+      emailId,
+      attachmentId: att.id,
+      name: att.name,
+      contentType: att.contentType,
+      size: att.size,
+    });
+    created++;
   }
 
-  const tenantId = process.env.AZURE_TENANT_ID;
-  const clientId = process.env.AZURE_CLIENT_ID;
-  const clientSecret = process.env.AZURE_CLIENT_SECRET;
-
-  if (!(tenantId && clientId && clientSecret)) {
-    throw new Error(
-      "Missing Azure credentials (AZURE_TENANT_ID, AZURE_CLIENT_ID, AZURE_CLIENT_SECRET)"
-    );
+  if (created > 0) {
+    logger.info("Attachment stubs created", { emailId, count: created });
   }
 
-  const url = TOKEN_URL_TEMPLATE.replace("{tenantId}", tenantId);
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      client_id: clientId,
-      client_secret: clientSecret,
-      scope: "https://graph.microsoft.com/.default",
-      grant_type: "client_credentials",
-    }),
-  });
-
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`Token fetch failed: ${res.status} ${text}`);
-  }
-
-  const data = (await res.json()) as {
-    access_token: string;
-    expires_in: number;
-  };
-
-  cachedToken = {
-    accessToken: data.access_token,
-    expiresAt: Date.now() + data.expires_in * 1000 - 60_000,
-  };
-
-  return cachedToken.accessToken;
-}
-
-async function graphGet<T>(path: string): Promise<T> {
-  const token = await getGraphToken();
-  const url = path.startsWith("https://") ? path : `${GRAPH_API_BASE}/${path}`;
-
-  const res = await fetch(url, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`Graph API ${res.status}: ${text}`);
-  }
-
-  return (await res.json()) as T;
-}
-
-// ── Conversion helpers ──────────────────────────────────────────
-
-const HTML_TAG_RE = /<[^>]*>/g;
-
-function htmlToText(html: string): string {
-  return html.replace(HTML_TAG_RE, "").trim();
-}
-
-function extractRecipients(recipients: GraphRecipient[] | undefined): string[] {
-  if (!recipients) {
-    return [];
-  }
-  return recipients.map((r) => r.emailAddress.address);
-}
-
-function extractInternetMessageId(
-  headers: GraphInternetHeader[] | undefined
-): string | null {
-  if (!headers) {
-    return null;
-  }
-  const header = headers.find((h) => h.name.toLowerCase() === "message-id");
-  return header?.value ?? null;
-}
-
-function graphEmailToInsertData(
-  email: GraphEmail,
-  mailboxId: number
-): InsertEmailData {
-  const bodyHtml =
-    email.body?.contentType === "html" ? email.body.content : null;
-  let bodyText: string | null = null;
-  if (email.body?.contentType === "text") {
-    bodyText = email.body.content;
-  } else if (bodyHtml) {
-    bodyText = htmlToText(bodyHtml);
-  }
-
-  return {
-    messageId: email.id,
-    internetMessageId: extractInternetMessageId(email.internetMessageHeaders),
-    mailboxId,
-    conversationId: email.conversationId ?? null,
-    subject: email.subject,
-    fromEmail: email.from?.emailAddress.address ?? null,
-    fromName: email.from?.emailAddress.name ?? null,
-    toEmails: extractRecipients(email.toRecipients),
-    ccEmails: extractRecipients(email.ccRecipients),
-    receivedAt: email.receivedDateTime,
-    hasAttachments: email.hasAttachments ?? false,
-    bodyPreview: email.bodyPreview ?? null,
-    bodyFull: bodyText,
-    bodyHtml,
-    webUrl: email.webLink ?? null,
-  };
+  return created;
 }
 
 // ── Task ────────────────────────────────────────────────────────
@@ -247,7 +111,17 @@ export const emailSync = schemaTask({
       conversationId: email.conversationId,
     });
 
-    // 4. Domain enrichment
+    // 4. Create attachment stubs (download handled by attachment-intake task)
+    let attachmentStubs = 0;
+    if (email.hasAttachments && emailId) {
+      attachmentStubs = await syncAttachmentStubs(
+        mailboxEmail,
+        messageId,
+        emailId
+      );
+    }
+
+    // 5. Domain enrichment
     const domainData = computeDomainEnrichment(
       data.fromEmail,
       email.subject,
@@ -255,7 +129,7 @@ export const emailSync = schemaTask({
       data.bodyPreview
     );
 
-    // 5. Platform extraction
+    // 6. Platform extraction
     const platform = extractRealSender(
       domainData.fromDomain,
       data.fromName,
@@ -263,7 +137,7 @@ export const emailSync = schemaTask({
       email.subject
     );
 
-    // 6. Account find-or-create by effective domain
+    // 7. Account find-or-create by effective domain
     const effectiveDomain =
       platform?.realSenderDomain ??
       domainData.originalSenderDomain ??
@@ -276,10 +150,10 @@ export const emailSync = schemaTask({
       );
     }
 
-    // 7. Persist enrichment to email row
+    // 8. Persist enrichment to email row
     await updateEmailEnrichment(emailId, domainData, platform, accountId);
 
-    // 8. Contact find-or-create + link
+    // 9. Contact find-or-create + link
     const effectiveEmail =
       platform?.realSenderEmail ??
       domainData.originalSenderEmail ??
@@ -306,9 +180,10 @@ export const emailSync = schemaTask({
       platformName: platform?.platformName ?? null,
       accountId,
       contactId,
+      attachmentStubs,
     });
 
-    // 9. Fetch thread siblings we haven't seen
+    // 10. Fetch thread siblings we haven't seen
     let siblingsSynced = 0;
     if (email.conversationId) {
       siblingsSynced = await syncThreadSiblings(
@@ -324,6 +199,7 @@ export const emailSync = schemaTask({
       subject: email.subject,
       conversationId: email.conversationId ?? null,
       siblingsSynced,
+      attachmentStubs,
       accountId,
       contactId,
       isPlatform: Boolean(platform),

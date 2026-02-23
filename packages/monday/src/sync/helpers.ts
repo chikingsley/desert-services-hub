@@ -1,12 +1,12 @@
 /**
  * Monday-specific constants for estimate folder sync.
  */
-import { ESTIMATING_COLUMNS } from "@monday/types/schema";
+import {
+  ESTIMATING_COLUMNS,
+  ESTIMATING_SKIP_GROUPS,
+} from "@monday/types/schema";
 
-export const SKIP_GROUPS = [
-  "Shell Estimates ( Do Not Move)",
-  "Sales Team Estimates",
-];
+export const SKIP_GROUPS: readonly string[] = ESTIMATING_SKIP_GROUPS;
 
 export const FILE_COLUMNS = [
   { column: ESTIMATING_COLUMNS.ESTIMATE, subfolder: "Estimates" },

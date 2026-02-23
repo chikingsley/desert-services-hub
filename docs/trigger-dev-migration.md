@@ -11,6 +11,8 @@ Dashboard: <https://trigger.desertservices.app>
 | `permit_sync` | `permit-sync` | `src/trigger/permit-sync.ts` | `schedules.task` `*/30 * * * *` |
 | `permit_detail_scrape` | `permit-detail-scrape` | `src/trigger/permit-detail-scrape.ts` | `schedules.task` `*/10 * * * *` |
 | `email_notification` | `email-sync` | `src/trigger/email-sync.ts` | `schemaTask` (webhook) |
+| `sync_full` + `monday_status_sync` | `monday-sync` | `src/trigger/monday-sync.ts` | `schedules.task` `*/10 * * * *` |
+| `sync_item` + `download_files` | `monday-sync-item` | `src/trigger/monday-sync-item.ts` | `schemaTask` (webhook) |
 
 ## Remaining — Scheduled Jobs
 
@@ -18,8 +20,8 @@ These run on cron via pg_cron today. Each becomes a `schedules.task()`.
 
 | Old Job | What It Does | Priority |
 |---------|-------------|----------|
-| `monday_status_sync` | Sync Monday.com board statuses | Medium |
-| `sync_full` | Monday.com full board sync | Medium |
+| ~~`monday_status_sync`~~ | ~~Sync Monday.com board statuses~~ | **Done** → `monday-sync` |
+| ~~`sync_full`~~ | ~~Monday.com full board sync~~ | **Done** → `monday-sync` |
 | `folder_watcher_poll` | Watch Outlook folders for new project folders | Medium |
 | `estimate_linker_maintenance` | Link estimates to emails | Medium |
 | `mailbox_fallback_sync` | Fallback mailbox sync | Low |
@@ -43,8 +45,8 @@ These fire from webhooks or queue events. Each becomes a `task()` triggered via 
 |---------|---------------|----------|
 | ~~`email_notification`~~ | ~~Outlook webhook~~ | **Done** → `email-sync` |
 | `intake` | Document intake | **High** |
-| `sync_item` | Monday webhook | Medium |
-| `download_files` | Monday webhook | Medium |
+| ~~`sync_item`~~ | ~~Monday webhook~~ | **Done** → `monday-sync-item` |
+| ~~`download_files`~~ | ~~Monday webhook~~ | **Done** → `monday-sync-item` |
 | `dust_permit_payment` | Payment email detected | Medium |
 | `dust_permit_issued_email` | Permit issued email detected | Medium |
 | `contract_email_received` | Contract email detected | Medium |

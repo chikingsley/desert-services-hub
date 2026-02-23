@@ -9,10 +9,10 @@ Monorepo for Desert Services operations: estimating, permits, contracts, notific
 - External traffic is Cloudflare Tunnel to Docker services.
 - Lint/format policy: never run `biome`; use `ultracite` only.
 - Test placement policy: keep tests in top-level `tests/` only, mirrored by domain path (for example `tests/apps/web/...`, `tests/lib/...`, `tests/packages/...`). Do not place new tests inside `apps/*`, `lib/*`, or `packages/*`.
-- For permit-worker API calls from app code, use `@permits/client` (`PermitClient`), not ad-hoc `fetch()`.
-- Permit runtime and permit client are separate concerns:
+- AI agents (Claude Code): Use MCP tools from `apps/dust-permits-mcp/` for permit operations — auto-discovered via `.mcp.json`.
+- Permit architecture:
   - `apps/dust-permits/` = Playwright runtime + API server.
-  - `packages/permits/` = typed HTTP client contract.
+  - `apps/dust-permits-mcp/` = MCP server for AI agent permit operations.
 
 ## Monorepo Map
 
@@ -26,7 +26,6 @@ apps/
   cf-workers/            # Cloudflare Workers
 
 packages/
-  permits/               # @permits/client typed permit-worker client
   siteline/              # Siteline GraphQL client + MCP tools + schema refs
   monday/                # Monday.com API operations
   email/                 # Graph + email templates
@@ -68,7 +67,6 @@ lib/
 ## Permit Worker Integration
 
 - **AI agents (Claude Code)**: Use MCP tools from `apps/dust-permits-mcp/` — auto-discovered via `.mcp.json`.
-- **App code** (web, background-jobs): Use `PermitClient` from `@permits/client` (defaults to `http://permit-worker:47822`).
 - **Never** write inline bun scripts or raw curl for permit operations.
 
 ## Canonical Commands

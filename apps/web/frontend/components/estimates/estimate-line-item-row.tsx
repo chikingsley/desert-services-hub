@@ -1,4 +1,4 @@
-import type { Catalog } from "@estimates/catalog/types";
+import type { Catalog } from "@/packages/estimates/catalog/types";
 import type { EditorLineItem } from "@lib/db/types";
 import { ItemCombobox } from "@/apps/web/frontend/components/estimates/item-combobox";
 import { Button } from "@/apps/web/frontend/components/ui/button";

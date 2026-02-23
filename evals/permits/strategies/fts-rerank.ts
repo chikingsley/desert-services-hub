@@ -4,7 +4,7 @@
  * Step 2: Jina reranker reorders by semantic relevance
  */
 import { db } from "@lib/db/client";
-import { rerank } from "@enrichment/jina/client";
+import { rerank } from "@/packages/enrichment/jina/client";
 import type { PermitRetrievalStrategy } from "./types";
 
 interface PermitRow {

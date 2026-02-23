@@ -1,6 +1,6 @@
 "use client";
 
-import type { Catalog } from "@estimates/catalog/types";
+import type { Catalog } from "@/packages/estimates/catalog/types";
 import { ChevronsUpDown } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Button } from "@/apps/web/frontend/components/ui/button";

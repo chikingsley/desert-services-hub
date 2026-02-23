@@ -4,8 +4,8 @@
  * Run: bun test tests/packages/email/tests/client.unit.test.ts
  */
 import { describe, expect, it } from "bun:test";
-import { GraphEmailClient } from "@email/client";
-import type { EmailConfig } from "@email/types";
+import { GraphEmailClient } from "@/packages/archive/email/client";
+import type { EmailConfig } from "@/packages/archive/email/types";
 
 const EMAIL_TESTS_ENABLED = process.env.ENABLE_EMAIL_TESTS === "1";
 const describeEmailTests = EMAIL_TESTS_ENABLED ? describe : describe.skip;
@@ -65,7 +65,7 @@ describeEmailTests("email service", () => {
         isInline: false,
         name: "file.pdf",
         size: 1024,
-      } as unknown as import("@email/types").TrackedEmailAttachment;
+      } as unknown as import("@/packages/archive/email/types").TrackedEmailAttachment;
 
       try {
         await client.safeDownloadAttachment(untrackedAttachment);
@@ -91,7 +91,7 @@ describeEmailTests("email service", () => {
         size: 1024,
         sourceMessageId: "msg-456",
         // sourceMailbox is missing
-      } as unknown as import("@email/types").TrackedEmailAttachment;
+      } as unknown as import("@/packages/archive/email/types").TrackedEmailAttachment;
 
       try {
         await client.safeDownloadAttachment(partialAttachment);
@@ -117,7 +117,7 @@ describeEmailTests("email service", () => {
         size: 1024,
         sourceMailbox: "user@example.com",
         // sourceMessageId is missing
-      } as unknown as import("@email/types").TrackedEmailAttachment;
+      } as unknown as import("@/packages/archive/email/types").TrackedEmailAttachment;
 
       try {
         await client.safeDownloadAttachment(partialAttachment);

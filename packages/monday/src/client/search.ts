@@ -8,10 +8,10 @@ import { query } from "./query";
 const DEFAULT_EXCLUDED_GROUPS = ["shell estimates"];
 
 interface RawItem {
+  column_values: { id: string; text: string }[];
+  group: { id: string; title: string };
   id: string;
   name: string;
-  group: { id: string; title: string };
-  column_values: { id: string; text: string }[];
 }
 
 interface ColumnValueSearchResponse {

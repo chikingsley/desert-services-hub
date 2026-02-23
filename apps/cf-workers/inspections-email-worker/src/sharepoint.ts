@@ -4,7 +4,7 @@
  * Uploads inspection PDFs to the DataDrive site's Shared Documents library.
  */
 
-import { getGraphToken } from "@lib/graph/token";
+import { getGraphToken } from "@/packages/archive/email/sync/graph/token";
 
 export interface SharePointResult {
   success: boolean;

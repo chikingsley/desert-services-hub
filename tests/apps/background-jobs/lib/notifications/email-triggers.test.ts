@@ -10,7 +10,7 @@ import {
   detectDustPermitEmailTrigger,
   parseMaricopaIssuedEmail,
   parsePointAndPayEmail,
-} from "@lib/notifications/email-triggers";
+} from "@/packages/archive/email/email-templates/notifications/email-triggers";
 
 function expectCostBreakdownValue(
   result: ReturnType<typeof computeCostBreakdown>

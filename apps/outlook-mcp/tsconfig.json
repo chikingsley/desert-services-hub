@@ -1,0 +1,19 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@outlook/*": ["./*"],
+      "@outlook/auth/*": ["./auth/*"],
+      "@outlook/email/*": ["./email/*"],
+      "@outlook/folder/*": ["./folder/*"],
+      "@outlook/rules/*": ["./rules/*"],
+      "@outlook/utils/*": ["./utils/*"],
+      "@outlook/config": ["./config"],
+      "@outlook/config/*": ["./config/*"],
+      "@outlook/types": ["./types"]
+    }
+  },
+  "include": ["**/*.ts"],
+  "exclude": ["node_modules"]
+}

@@ -3,7 +3,7 @@ import {
   buildSignOrderDetails,
   buildSignOrderSubject,
   formatSignOrderDate,
-} from "@email/sign-orders";
+} from "@/packages/archive/email/email-templates/sign-orders";
 
 const EMAIL_TESTS_ENABLED = process.env.ENABLE_EMAIL_TESTS === "1";
 const describeEmailTests = EMAIL_TESTS_ENABLED ? describe : describe.skip;

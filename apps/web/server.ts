@@ -14,8 +14,6 @@ import { file, serve } from "bun";
 // -- Flat (single-concern) --
 import {
   getAutomationStatus,
-  postAutomationClipboardCopy,
-  postAutomationClipboardPaste,
   postAutomationKeepAlive,
   postAutomationReady,
   postAutomationStart,
@@ -24,8 +22,6 @@ import {
 } from "@/api/automation";
 import {
   getBuildingConnectedAuthStatus,
-  postBuildingConnectedAuthClipboardCopy,
-  postBuildingConnectedAuthClipboardPaste,
   postBuildingConnectedAuthStart,
   postBuildingConnectedAuthStop,
 } from "@/api/buildingconnected-auth";
@@ -216,12 +212,6 @@ const server = serve({
     "/api/automation/stop": {
       POST: h(postAutomationStop),
     },
-    "/api/automation/clipboard/paste": {
-      POST: h(postAutomationClipboardPaste),
-    },
-    "/api/automation/clipboard/copy": {
-      POST: h(postAutomationClipboardCopy),
-    },
     "/api/buildingconnected/auth/status": {
       GET: h(getBuildingConnectedAuthStatus),
     },
@@ -230,12 +220,6 @@ const server = serve({
     },
     "/api/buildingconnected/auth/stop": {
       POST: h(postBuildingConnectedAuthStop),
-    },
-    "/api/buildingconnected/auth/clipboard/paste": {
-      POST: h(postBuildingConnectedAuthClipboardPaste),
-    },
-    "/api/buildingconnected/auth/clipboard/copy": {
-      POST: h(postBuildingConnectedAuthClipboardCopy),
     },
     "/api/permits/:id/renew-and-pay": {
       POST(req) {

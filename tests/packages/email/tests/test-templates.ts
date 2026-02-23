@@ -9,12 +9,12 @@
  *   bun packages/email/tests/test-templates.ts dust-permit-issued # Send test email
  */
 
-import { GraphEmailClient } from "@email/client";
+import { GraphEmailClient } from "@/packages/archive/email/client";
 import {
   getLogoAttachment,
   getTemplate,
   listTemplates,
-} from "@email/email-templates";
+} from "@/packages/archive/email/email-templates";
 
 const EMAIL_TESTS_ENABLED = process.env.ENABLE_EMAIL_TESTS === "1";
 

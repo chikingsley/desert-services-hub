@@ -7,7 +7,7 @@
  * Tests whether semantic reranking improves on FTS ordering.
  */
 import { db } from "@lib/db/client";
-import { rerank } from "@enrichment/jina/client";
+import { rerank } from "@/packages/enrichment/jina/client";
 import type { RetrievalStrategy } from "./types";
 
 interface FTSRow {

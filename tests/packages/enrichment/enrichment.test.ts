@@ -4,9 +4,9 @@
  * Run: bun test tests/packages/enrichment/enrichment.test.ts
  */
 import { describe, expect, it } from "bun:test";
-import { getGravatarUrl, getUIAvatarUrl } from "@enrichment/avatars";
-import { getLogoUrl } from "@enrichment/clearbit";
-import { extractContactInfo } from "@enrichment/pdl/person";
+import { getGravatarUrl, getUIAvatarUrl } from "@/packages/enrichment/avatars";
+import { getLogoUrl } from "@/packages/enrichment/clearbit";
+import { extractContactInfo } from "@/packages/enrichment/pdl/person";
 
 describe("enrichment service", () => {
   describe("clearbit", () => {

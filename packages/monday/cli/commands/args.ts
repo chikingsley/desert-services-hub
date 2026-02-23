@@ -1,5 +1,5 @@
 import { AUDIT_CHAINS } from "../audit/chains";
-import { getBoardKeys } from "../config";
+import { getBoardKeys } from "./shared";
 
 export function getItemIdArg(args: string[]): string {
   const itemId = args[1];

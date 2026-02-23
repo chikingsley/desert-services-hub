@@ -31,9 +31,10 @@ Regression coverage:
 
 ## Permit Integration Rules
 
-- Call permit-worker via `PermitClient` (`@permits/client`).
+- Permit-worker API is available at `permit-worker:47822` (Docker internal).
 - Do not add direct permit-worker `fetch()` calls in web API handlers.
 - Automation proxy endpoints live in `api/automation.ts`.
+- For manual testing/debugging: use MCP tools from Claude Code (`apps/dust-permits-mcp/`).
 
 ## Runtime Notes
 

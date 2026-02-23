@@ -6,7 +6,7 @@
  */
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { PermitClient } from "@permits/client";
+import { PermitClient } from "@/apps/dust-permits-mcp/client";
 import { registerPermitTools } from "./tools";
 
 export function createServer(): McpServer {

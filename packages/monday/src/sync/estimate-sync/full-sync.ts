@@ -36,19 +36,19 @@ interface ContactIdRow {
 }
 
 export interface SyncResult {
-  fetched: number;
-  upserted: number;
-  errors: number;
   changes: StatusChange[];
+  errors: number;
   estimateFileItemIds: string[];
+  fetched: number;
   linkStats: LinkStats;
+  upserted: number;
 }
 
 export interface StatusChange {
   mondayItemId: string;
   name: string;
-  oldStatus: string | null;
   newStatus: string | null;
+  oldStatus: string | null;
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────

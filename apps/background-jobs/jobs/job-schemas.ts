@@ -67,3 +67,20 @@ export const BODY_LINK_BACKFILL_PAYLOAD_SCHEMA = z.object({
 export const AQDATA_DETAIL_SCRAPE_PAYLOAD_SCHEMA = z.object({
   limit: z.number().int().positive().max(500).optional(),
 });
+
+export const PAYMENT_PAYLOAD_SCHEMA = z.object({
+  emailId: z.number().int().positive(),
+  messageId: NON_EMPTY_STRING_SCHEMA,
+  mailboxEmail: NON_EMPTY_STRING_SCHEMA,
+  bodyText: z.string(),
+});
+export type PaymentJobPayload = z.infer<typeof PAYMENT_PAYLOAD_SCHEMA>;
+
+export const ISSUED_PAYLOAD_SCHEMA = z.object({
+  emailId: z.number().int().positive(),
+  messageId: NON_EMPTY_STRING_SCHEMA,
+  mailboxEmail: NON_EMPTY_STRING_SCHEMA,
+  bodyText: z.string(),
+  subject: NON_EMPTY_STRING_SCHEMA,
+});
+export type IssuedJobPayload = z.infer<typeof ISSUED_PAYLOAD_SCHEMA>;

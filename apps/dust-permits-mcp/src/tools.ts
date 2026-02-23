@@ -10,8 +10,8 @@
 
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import type { PermitClient } from "@permits/client";
-import { PermitWorkerError } from "@permits/client";
+import type { PermitClient } from "@/apps/dust-permits-mcp/client";
+import { PermitWorkerError } from "@/apps/dust-permits-mcp/client";
 
 const PERMIT_ID_DESC =
   "Maricopa County dust permit number in D0XXXXXX format (e.g., D0063827)";

@@ -29,6 +29,7 @@ export const BOARD_IDS = {
   DUST_PERMITS: "9850624269",
   INSPECTION_REPORTS: "8791849123",
   SWPPP_PLANS: "9778304069",
+  SERVICE_LINES: "8686470518",
   INCOMING_CALLS: "9707280603",
   FIELD_OPPORTUNITIES: "9812137726",
 
@@ -181,6 +182,12 @@ export const ESTIMATING_GROUPS = {
   SENT: "group_mkt5fv3a",
 } as const;
 
+/** Groups to exclude from production syncs and audits. */
+export const ESTIMATING_SKIP_GROUPS = [
+  "Shell Estimates ( Do Not Move)",
+  "Sales Team Estimates",
+] as const;
+
 export const BOARD_COLUMNS = {
   CONTACTS: CONTACTS_COLUMNS,
   CONTRACTORS: CONTRACTORS_COLUMNS,
@@ -223,18 +230,18 @@ export function getColumnType(
 }
 
 export interface MondayItem {
-  id: string;
-  name: string;
+  columns: Record<string, string>;
   groupId: string;
   groupTitle: string;
+  id: string;
+  name: string;
   url: string;
-  columns: Record<string, string>;
 }
 
 export interface MondayBoard {
+  groups: { id: string; title: string }[];
   id: string;
   name: string;
-  groups: { id: string; title: string }[];
 }
 
 export interface MondayGroup {
@@ -249,13 +256,13 @@ export interface MondayColumn {
 }
 
 export interface MondayAsset {
-  id: string;
-  name: string;
-  url: string;
-  public_url: string;
+  created_at: string;
   file_extension: string;
   file_size: number;
-  created_at: string;
+  id: string;
+  name: string;
+  public_url: string;
+  url: string;
 }
 
 export interface GraphQLResponse<T> {

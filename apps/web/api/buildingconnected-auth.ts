@@ -1,53 +1,24 @@
-const DEFAULT_VNC_QUERY =
-  "autoconnect=true&resize=scale&reconnect=true&reconnect_delay=2000&view_only=false&shared=true";
-const REQUIRED_VNC_PARAMS = {
-  autoconnect: "true",
-  reconnect: "true",
-  reconnect_delay: "2000",
-  resize: "scale",
-  shared: "true",
-  view_only: "false",
-} as const;
-
-function normalizeVncUrl(rawUrl: string): string {
-  const trimmed = rawUrl.trim();
-  if (!trimmed.length) {
-    return trimmed;
-  }
-
-  try {
-    const parsed = new URL(trimmed);
-    if (parsed.pathname === "/") {
-      parsed.pathname = "/vnc.html";
-    }
-
-    for (const [key, value] of Object.entries(REQUIRED_VNC_PARAMS)) {
-      parsed.searchParams.set(key, value);
-    }
-    return parsed.toString();
-  } catch {
-    return trimmed;
-  }
-}
+/**
+ * BuildingConnected auth proxy handlers
+ *
+ * Proxies browser-session endpoints from the bc-worker service into
+ * the main web app API so frontend can consume a single origin.
+ */
 
 function getBcWorkerBaseUrl(): string {
-  return (
-    process.env.BC_WORKER_BASE_URL?.trim() ||
-    "http://bc-worker:47824"
-  );
+  return process.env.BC_WORKER_BASE_URL?.trim() || "http://bc-worker:47824";
 }
 
-function getBuildingConnectedVncUrl(req: Request): string {
-  const configured = process.env.BUILDINGCONNECTED_AUTH_VNC_URL?.trim();
+function getBuildingConnectedVncWsUrl(req: Request): string {
+  const configured = process.env.BUILDINGCONNECTED_AUTH_VNC_WS_URL?.trim();
   if (configured) {
-    return normalizeVncUrl(configured);
+    return configured;
   }
 
   const requestUrl = new URL(req.url);
+  const wsProtocol = requestUrl.protocol === "https:" ? "wss:" : "ws:";
   const port = process.env.BUILDINGCONNECTED_AUTH_VNC_PORT || "6081";
-  return normalizeVncUrl(
-    `${requestUrl.protocol}//${requestUrl.hostname}:${port}/vnc.html?${DEFAULT_VNC_QUERY}`
-  );
+  return `${wsProtocol}//${requestUrl.hostname}:${port}`;
 }
 
 function proxyFailure(error: unknown): Response {
@@ -88,7 +59,7 @@ export async function getBuildingConnectedAuthStatus(
     return Response.json(
       {
         ...(payload ?? {}),
-        vncUrl: getBuildingConnectedVncUrl(req),
+        vncWsUrl: getBuildingConnectedVncWsUrl(req),
       },
       { status: upstream.status }
     );
@@ -117,37 +88,6 @@ export async function postBuildingConnectedAuthStop(): Promise<Response> {
     return await proxyBackgroundJobs("/api/buildingconnected/auth/stop", {
       method: "POST",
     });
-  } catch (error) {
-    return proxyFailure(error);
-  }
-}
-
-export async function postBuildingConnectedAuthClipboardPaste(
-  req: Request
-): Promise<Response> {
-  try {
-    const body = await req.json().catch(() => ({}));
-    return await proxyBackgroundJobs(
-      "/api/buildingconnected/auth/clipboard/paste",
-      {
-        body: JSON.stringify(body),
-        headers: { "content-type": "application/json" },
-        method: "POST",
-      }
-    );
-  } catch (error) {
-    return proxyFailure(error);
-  }
-}
-
-export async function postBuildingConnectedAuthClipboardCopy(): Promise<Response> {
-  try {
-    return await proxyBackgroundJobs(
-      "/api/buildingconnected/auth/clipboard/copy",
-      {
-        method: "POST",
-      }
-    );
   } catch (error) {
     return proxyFailure(error);
   }

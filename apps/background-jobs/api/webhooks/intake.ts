@@ -4,22 +4,15 @@
  * Route: POST /api/webhooks/intake
  *
  * Receives forwarded email data from the Cloudflare intake-worker.
- * Saves attachments to disk, downloads files from sharing links
- * (OneDrive, Egnyte, Dropbox), and enqueues an intake job for processing.
+ * Saves attachments to disk and enqueues an intake job for processing.
+ *
+ * File-sharing links (OneDrive, Egnyte, Dropbox) in email bodies are
+ * now handled by the Trigger.dev body-link-intake task, which scans
+ * email bodies for URLs and downloads them separately.
  */
 import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import { db } from "@lib/db/client";
-import {
-  downloadDropboxFile,
-  downloadEgnyteFile,
-  downloadOneDriveFile,
-} from "@lib/downloads/providers";
-import type { BodyFileLink, BodyLinkSource } from "@lib/downloads/types";
-import {
-  ensureFilenameExtension,
-  sanitizeFilename,
-} from "@lib/downloads/utils";
 import { z } from "zod";
 
 const INTAKE_DIR =
@@ -27,20 +20,50 @@ const INTAKE_DIR =
   join(import.meta.dir, "../../../../data/intake");
 const LOG = "[webhook:intake]";
 
-// =============================================================================
-// Schemas
-// =============================================================================
+const INVALID_FILENAME_CHARS_RE = /[/\\?%*:|"<>]/g;
+const LEADING_DOTS_RE = /^\.+/;
+
+function sanitizeFilename(name: string, replacer = "_"): string {
+  const clean = name
+    .replace(INVALID_FILENAME_CHARS_RE, replacer)
+    .replace(LEADING_DOTS_RE, "")
+    .trim()
+    .slice(0, 255);
+  return clean.length > 0 ? clean : "file";
+}
+
+function extensionFromContentType(contentType: string | null): string {
+  const ct = (contentType ?? "").toLowerCase();
+  if (ct.includes("pdf")) return ".pdf";
+  if (ct.includes("zip")) return ".zip";
+  if (ct.includes("csv")) return ".csv";
+  if (ct.includes("plain")) return ".txt";
+  if (ct.includes("png")) return ".png";
+  if (ct.includes("jpeg") || ct.includes("jpg")) return ".jpg";
+  if (ct.includes("sheet")) return ".xlsx";
+  if (ct.includes("wordprocessingml")) return ".docx";
+  if (ct.includes("presentationml")) return ".pptx";
+  return "";
+}
+
+function ensureFilenameExtension(
+  filename: string,
+  contentType: string | null
+): string {
+  if (filename.includes(".")) {
+    return filename;
+  }
+  const ext = extensionFromContentType(contentType);
+  return ext ? `${filename}${ext}` : filename;
+}
+
+// ── Schemas ─────────────────────────────────────────────────────
 
 const incomingAttachmentSchema = z.object({
   filename: z.string(),
   contentType: z.string(),
   size: z.number(),
   content: z.string(),
-});
-
-const fileLinkSchema = z.object({
-  url: z.string(),
-  source: z.enum(["onedrive", "egnyte", "dropbox"]),
 });
 
 const intakePayloadSchema = z.object({
@@ -51,59 +74,18 @@ const intakePayloadSchema = z.object({
   bodyText: z.string(),
   bodyHasContent: z.boolean().optional(),
   attachments: z.array(incomingAttachmentSchema).catch([]),
-  fileLinks: z.array(fileLinkSchema).optional(),
+  fileLinks: z
+    .array(z.object({ url: z.string(), source: z.string() }))
+    .optional(),
 });
 
 type IncomingAttachment = z.infer<typeof incomingAttachmentSchema>;
-type FileLink = z.infer<typeof fileLinkSchema>;
 
 const enqueueStmt = db.query(
   "SELECT public.enqueue_background_job('intake', ($1::text)::jsonb, NULL, 3, FALSE)::bigint AS id"
 );
 
-// =============================================================================
-// File Download Handlers
-// =============================================================================
-
-function toBodyFileLink(link: FileLink): BodyFileLink {
-  return { source: link.source as BodyLinkSource, url: link.url };
-}
-
-async function downloadFileLink(
-  link: FileLink,
-  destDir: string
-): Promise<{ path: string; filename: string } | null> {
-  try {
-    const bodyLink = toBodyFileLink(link);
-    let downloaded: Awaited<ReturnType<typeof downloadOneDriveFile>>;
-    switch (link.source) {
-      case "onedrive":
-        downloaded = await downloadOneDriveFile(bodyLink, destDir);
-        break;
-      case "egnyte":
-        downloaded = await downloadEgnyteFile(bodyLink, destDir);
-        break;
-      case "dropbox":
-        downloaded = await downloadDropboxFile(bodyLink, destDir);
-        break;
-      default:
-        return null;
-    }
-    console.log(
-      `${LOG}   Downloaded ${downloaded.name} (${(downloaded.size / 1024 / 1024).toFixed(1)}MB) from ${link.source}`
-    );
-    return { path: downloaded.storagePath, filename: downloaded.name };
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    console.error(`${LOG}   Failed to download ${link.source} file: ${msg}`);
-    console.error(`${LOG}     URL: ${link.url}`);
-    return null;
-  }
-}
-
-// =============================================================================
-// Main Handler
-// =============================================================================
+// ── Helpers ─────────────────────────────────────────────────────
 
 async function saveAttachmentsToDisk(
   attachments: IncomingAttachment[],
@@ -123,19 +105,7 @@ async function saveAttachmentsToDisk(
   return paths;
 }
 
-async function downloadFileLinks(
-  links: FileLink[],
-  jobDir: string
-): Promise<string[]> {
-  const paths: string[] = [];
-  for (const link of links) {
-    const result = await downloadFileLink(link, jobDir);
-    if (result) {
-      paths.push(result.path);
-    }
-  }
-  return paths;
-}
+// ── Handler ─────────────────────────────────────────────────────
 
 export async function handleIntakeWebhook(req: Request): Promise<Response> {
   const parsed = intakePayloadSchema.safeParse(
@@ -170,12 +140,11 @@ export async function handleIntakeWebhook(req: Request): Promise<Response> {
     jobDir
   );
 
-  const downloadedPaths = await downloadFileLinks(body.fileLinks ?? [], jobDir);
-  attachmentPaths.push(...downloadedPaths);
-
+  // File links (OneDrive, Egnyte, Dropbox) are now handled by
+  // the Trigger.dev body-link-intake task after email sync.
   if (hasLinks) {
     console.log(
-      `${LOG} Downloaded ${downloadedPaths.length}/${body.fileLinks?.length ?? 0} linked file(s)`
+      `${LOG} ${body.fileLinks?.length ?? 0} file link(s) detected — will be processed by body-link-intake task`
     );
   }
 

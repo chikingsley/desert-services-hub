@@ -3,7 +3,7 @@
  *
  * Provides attachment listing and download for a specific email.
  */
-import { createGraphClient } from "@email/sync/config";
+import { createGraphClient } from "@lib/graph/client";
 import { db } from "@lib/db/client";
 import {
   getAttachmentById,

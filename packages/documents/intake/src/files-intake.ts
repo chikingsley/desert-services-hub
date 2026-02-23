@@ -1,4 +1,3 @@
-import { existsSync } from "node:fs";
 import {
   INTAKE_LOG_PREFIX,
   insertIntakeDocumentFailure,
@@ -9,26 +8,7 @@ import type {
   ContractsEmailIntakePayload,
   EmailMeta,
   ParseIntakeResult,
-} from "./types";
-
-export type { ContractsEmailIntakePayload, ParseIntakeResult } from "./types";
-
-function resolveAttachmentPath(filePath: string): string {
-  if (existsSync(filePath)) {
-    return filePath;
-  }
-
-  // Legacy bad path produced by older intake webhook code.
-  const legacyPrefix = "/app/apps/data/";
-  if (filePath.startsWith(legacyPrefix)) {
-    const normalized = `/app/data/${filePath.slice(legacyPrefix.length)}`;
-    if (existsSync(normalized)) {
-      return normalized;
-    }
-  }
-
-  return filePath;
-}
+} from "@documents-intake/types";
 
 export async function processFilesIntake(
   payload: ContractsEmailIntakePayload
@@ -48,8 +28,7 @@ export async function processFilesIntake(
 
   const results: ParseIntakeResult[] = [];
 
-  for (const rawPath of attachmentPaths) {
-    const filePath = resolveAttachmentPath(rawPath);
+  for (const filePath of attachmentPaths) {
     const fileName = filePath.split("/").pop() ?? filePath;
     const started = performance.now();
 

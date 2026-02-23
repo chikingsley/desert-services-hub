@@ -10,9 +10,9 @@ import type { Asset } from "@monday/sync/types";
 import { CONTACTS_COLUMNS, ESTIMATING_COLUMNS } from "@monday/types/schema";
 
 interface SyncItem {
-  id: string;
   columns: Record<string, string | null>;
   columnValues: MondayColumnValue[];
+  id: string;
 }
 
 /**
@@ -84,8 +84,8 @@ export function getLinkedIds(
 }
 
 interface LookupBuckets {
-  directAccountIds: Set<string>;
   contactIds: Set<string>;
+  directAccountIds: Set<string>;
 }
 
 function classifyItemsForLookup(items: SyncItem[]): LookupBuckets {
@@ -238,11 +238,11 @@ export async function resolveAccountNames(
 }
 
 interface ContactQueryItem {
-  id: string;
   column_values: Array<{
     id: string;
     linked_item_ids?: string[];
   }>;
+  id: string;
 }
 
 /**

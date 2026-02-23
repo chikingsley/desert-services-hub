@@ -1,7 +1,7 @@
 // Shared test data for PDF generation tests
 // Uses max catalog items to test multipage layouts
 
-import { createLineItems } from "@estimates/catalog/catalog";
+import { createLineItems } from "@/packages/estimates/catalog/catalog";
 import type { EditorEstimate, EditorSection } from "@lib/db/types";
 
 // Create line items using actual catalog codes (max coverage)

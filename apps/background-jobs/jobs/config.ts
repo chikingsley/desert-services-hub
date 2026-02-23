@@ -45,10 +45,6 @@ export const CONTACT_ENRICHMENT_BATCH_SIZE = parsePositiveInt(
   process.env.CONTACT_ENRICHMENT_BATCH_SIZE,
   50
 );
-export const MONDAY_STATUS_SYNC_ENABLED = parseBooleanFlag(
-  process.env.MONDAY_STATUS_SYNC_ENABLED,
-  true
-);
 export const NOTIFICATIONS_MAX_EVENTS = parsePositiveInt(
   process.env.NOTIFICATIONS_MAX_EVENTS,
   100
@@ -60,13 +56,6 @@ export const NOTIFICATIONS_MAILBOX = (
   process.env.NOTIFICATIONS_MAILBOX ?? "chi@desertservices.net"
 ).trim();
 export const STALE_JOB_MINUTES = 5;
-
-// -- Project seed lifecycle --
-
-export const PROJECT_SEED_STALE_DAYS = parsePositiveInt(
-  process.env.PROJECT_SEED_STALE_DAYS,
-  45
-);
 
 // -- Attachment backfill --
 
@@ -220,14 +209,6 @@ export const PERMIT_SCRAPE_BATCH_SIZE = parsePositiveInt(
   5,
   1
 );
-
-// -- Estimate file sweep --
-
-export const ESTIMATE_FILE_SWEEP_BATCH_SIZE = parsePositiveInt(
-  process.env.ESTIMATE_FILE_SWEEP_BATCH_SIZE,
-  150
-);
-export const ESTIMATE_FILE_SWEEP_CURSOR_KEY = "estimate_file_sweep_offset_v1";
 
 // -- Contract won bridge --
 

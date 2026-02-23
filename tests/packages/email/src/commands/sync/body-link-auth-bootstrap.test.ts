@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { parseBodyLinkAuthBootstrapArgs } from "@email-cli/commands/sync/body-link-auth-bootstrap";
+import { parseBodyLinkAuthBootstrapArgs } from "@/packages/archive/email/downloads/body-link/body-link-auth-bootstrap";
 
 const KEYS = [
   "EMAIL_BODY_LINK_PLAYWRIGHT_HEADLESS",

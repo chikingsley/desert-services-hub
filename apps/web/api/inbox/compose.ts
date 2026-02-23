@@ -9,23 +9,22 @@
  * Only writable mailboxes (chi@, contracts@, dustpermits@) are permitted.
  */
 
-import { GraphEmailClient, WRITABLE_MAILBOXES } from "@email/client";
+import {
+  createComposeClient,
+  type GraphComposeClient,
+  WRITABLE_MAILBOXES,
+} from "@lib/graph/client";
 import { db } from "@lib/db/client";
 import { z } from "zod";
 
 // Singleton Graph client (app auth, reused across requests)
-let graphClient: GraphEmailClient | null = null;
+let composeClient: GraphComposeClient | null = null;
 
-function getGraphClient(): GraphEmailClient {
-  if (!graphClient) {
-    graphClient = new GraphEmailClient({
-      azureClientId: process.env.AZURE_CLIENT_ID ?? "",
-      azureClientSecret: process.env.AZURE_CLIENT_SECRET ?? "",
-      azureTenantId: process.env.AZURE_TENANT_ID ?? "",
-    });
-    graphClient.initAppAuth();
+function getComposeClient(): GraphComposeClient {
+  if (!composeClient) {
+    composeClient = createComposeClient();
   }
-  return graphClient;
+  return composeClient;
 }
 
 const recipientSchema = z.object({
@@ -60,7 +59,7 @@ const sendSchema = z.object({
 function zodErrorResponse(error: z.ZodError): Response {
   return Response.json(
     { error: "Invalid request", details: error.flatten() },
-    { status: 400 }
+    { status: 400 },
   );
 }
 
@@ -74,7 +73,7 @@ export async function composeEmail(req: Request): Promise<Response> {
   try {
     const json = await req.json();
     const params = composeSchema.parse(json);
-    const client = getGraphClient();
+    const client = getComposeClient();
 
     const draft = await client.createDraft({
       body: params.body,
@@ -110,7 +109,7 @@ export async function replyToThread(req: Request): Promise<Response> {
   try {
     const json = await req.json();
     const params = replySchema.parse(json);
-    const client = getGraphClient();
+    const client = getComposeClient();
 
     // Look up the Graph message_id from our database
     const emailRow = (await db
@@ -123,7 +122,7 @@ export async function replyToThread(req: Request): Promise<Response> {
     if (!emailRow?.message_id) {
       return Response.json(
         { error: "Email not found or missing Graph message ID" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -148,7 +147,7 @@ export async function replyToThread(req: Request): Promise<Response> {
     console.error("Failed to create reply draft:", error);
     return Response.json(
       { error: "Failed to create reply draft" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -163,7 +162,7 @@ export async function sendDraftEmail(req: Request): Promise<Response> {
   try {
     const json = await req.json();
     const params = sendSchema.parse(json);
-    const client = getGraphClient();
+    const client = getComposeClient();
 
     await client.sendDraft(params.draftId, params.mailbox);
 

@@ -7,11 +7,35 @@
  * Usage:
  *   bun packages/monday/cli/cli.ts <command> [options]
  */
-import { runMondayCli } from "./runner";
+import { commandHandlers } from "./commands";
+import { showHelp } from "./commands/args";
 
-const args = process.argv.slice(2);
+async function main(): Promise<void> {
+  const args = process.argv.slice(2);
+  const command = args[0];
 
-runMondayCli(args).catch((error) => {
+  if (!command || command === "--help" || command === "-h") {
+    showHelp();
+    return;
+  }
+
+  const handler = commandHandlers[command];
+  if (!handler) {
+    throw new Error(`Unknown command: ${command}`);
+  }
+
+  try {
+    await handler(args);
+  } catch (error) {
+    if (error instanceof Error && error.message.startsWith("Usage:")) {
+      console.error(error.message);
+      process.exit(1);
+    }
+    throw error;
+  }
+}
+
+main().catch((error) => {
   if (error instanceof Error) {
     console.error(error.message);
     console.error("Use `--help` for usage");

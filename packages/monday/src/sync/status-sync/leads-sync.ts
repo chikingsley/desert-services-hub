@@ -6,9 +6,9 @@
  *   - Lost/GC Not Awarded/Duplicates → Lost
  */
 
-import { query } from "../../client/query";
-import { updateItem } from "../../client/search";
-import { BOARD_IDS, LEADS_COLUMNS } from "../../types/schema";
+import { query } from "@monday/client/query";
+import { updateItem } from "@monday/client/search";
+import { BOARD_IDS, LEADS_COLUMNS } from "@monday/types/schema";
 import type {
   ItemColumnValue,
   LeadFetchOptions,

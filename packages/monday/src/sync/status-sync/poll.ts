@@ -8,11 +8,11 @@ import type {
 } from "@monday/sync/status-sync/types";
 
 export interface MondayStatusSyncPollResult {
-  skipped: boolean;
-  reason?: string;
   gc?: CleanupResult;
   leads?: LeadsSyncResult;
   projectLinks?: ProjectLinkSyncResult;
+  reason?: string;
+  skipped: boolean;
 }
 
 function hasMondayApiKey(): boolean {

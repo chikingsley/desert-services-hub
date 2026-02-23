@@ -1,6 +1,6 @@
 import { updateItem } from "@monday/client/search";
-import { resolveBoardId } from "../config";
 import { getBoardNameArg, getJsonArg } from "./args";
+import { resolveBoardId } from "./shared";
 import type { CommandHandler } from "./types";
 
 export const updateHandlers: Record<string, CommandHandler> = {

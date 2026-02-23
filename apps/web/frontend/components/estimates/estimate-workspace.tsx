@@ -1,6 +1,6 @@
 import type { EstimatePDFOptions } from "@documents/pdf/estimate/build-estimate-doc-definition";
 import { generateEstimatePDFBlob } from "@documents/pdf/estimate/generate-estimate-pdf.client";
-import { catalog } from "@estimates/catalog/catalog";
+import { catalog } from "@/packages/estimates/catalog/catalog";
 import type { EditorEstimate } from "@lib/db/types";
 import {
   ChevronDown,

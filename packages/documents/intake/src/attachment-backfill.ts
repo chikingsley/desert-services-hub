@@ -4,10 +4,12 @@ import { join } from "node:path";
 import { shouldSkipByContentType } from "@documents-intake/attachment-policy";
 import { processFilesIntake } from "@documents-intake/files-intake";
 import { processMondayAssetDocument } from "@documents-intake/processors/monday-asset";
-import type { GraphEmailClient } from "@email/client";
-import type { GraphGroupsClient } from "@email/groups";
-import { createGraphClient } from "@email/sync/config";
-import { createGroupsClient } from "@email/sync/groups-core/sync-group";
+import {
+  createGraphClient,
+  createGroupsClient,
+  type GraphEmailClient,
+  type GraphGroupsClient,
+} from "@lib/graph/client";
 import { updateAttachmentExtraction } from "@lib/db/repositories/attachment";
 import {
   clearAttachmentLocalPath,

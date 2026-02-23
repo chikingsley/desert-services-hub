@@ -9,7 +9,7 @@
  * instead of the tiny 15-token summaries from the basic fts-rerank strategy.
  */
 import { db } from "@lib/db/client";
-import { rerank } from "@enrichment/jina/client";
+import { rerank } from "@/packages/enrichment/jina/client";
 import type { RetrievalStrategy } from "./types";
 
 const strategy: RetrievalStrategy = {

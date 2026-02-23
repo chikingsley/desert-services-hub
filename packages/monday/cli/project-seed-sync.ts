@@ -8,9 +8,9 @@ import {
 interface Args {
   dryRun: boolean;
   limit?: number;
-  staleDays: number;
-  skipStale: boolean;
   onlyStale: boolean;
+  skipStale: boolean;
+  staleDays: number;
 }
 
 function usage(): void {

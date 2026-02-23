@@ -5,12 +5,12 @@ import type { MondayItem } from "@monday/types/schema";
 import { query } from "./query";
 
 export interface MondayColumnValue {
-  id: string;
-  type: string;
-  text: string | null;
-  value: string | null;
-  linkedItemIds?: string[];
   displayValue?: string;
+  id: string;
+  linkedItemIds?: string[];
+  text: string | null;
+  type: string;
+  value: string | null;
 }
 
 export type MondayItemRich = Omit<MondayItem, "columns"> & {
@@ -19,19 +19,19 @@ export type MondayItemRich = Omit<MondayItem, "columns"> & {
 };
 
 interface RawRichColumnValue {
-  id: string;
-  type: string;
-  text: string | null;
-  value: string | null;
-  linked_item_ids?: string[];
   display_value?: string;
+  id: string;
+  linked_item_ids?: string[];
+  text: string | null;
+  type: string;
+  value: string | null;
 }
 
 interface RawRichItem {
+  column_values: RawRichColumnValue[];
+  group: { id: string; title: string };
   id: string;
   name: string;
-  group: { id: string; title: string };
-  column_values: RawRichColumnValue[];
 }
 
 interface ItemsPageRichResponse {

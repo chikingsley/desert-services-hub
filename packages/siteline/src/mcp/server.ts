@@ -1,5 +1,5 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { SitelineClient } from "../client";
+import { SitelineClient } from "@siteline/client";
 import { registerSitelineTools } from "./tools";
 
 export function createServer(): McpServer {

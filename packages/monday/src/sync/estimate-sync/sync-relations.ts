@@ -25,55 +25,55 @@ function buildTuplePlaceholders(width: number, tupleIndex: number): string {
 // ── Types ──────────────────────────────────────────────────────────────
 
 export interface MondayAccountSnapshot {
+  domain: string | null;
   mondayItemId: string;
   name: string;
-  domain: string | null;
 }
 
 export interface MondayContactSnapshot {
-  mondayItemId: string;
-  name: string;
-  email: string | null;
-  phone: string | null;
-  mobilePhone: string | null;
-  officePhone: string | null;
-  companyPhone: string | null;
   companyFax: string | null;
-  title: string | null;
-  priority: string | null;
+  companyPhone: string | null;
   contractorMondayId: string | null;
+  email: string | null;
   groupId: string;
   groupTitle: string;
+  mobilePhone: string | null;
+  mondayItemId: string;
+  name: string;
+  officePhone: string | null;
+  phone: string | null;
+  priority: string | null;
+  title: string | null;
 }
 
 export interface EstimateContactPair {
-  estimateMondayId: string;
   contactMondayId: string;
+  estimateMondayId: string;
   source: typeof RELATION_SOURCE_DIRECT | typeof RELATION_SOURCE_LEGACY;
 }
 
 export interface RelationPairCollection {
-  pairs: EstimateContactPair[];
   mondayPairsDirect: number;
   mondayPairsLegacy: number;
+  pairs: EstimateContactPair[];
 }
 
 export interface LinkStats {
+  accountsSynced: number;
+  contactsSynced: number;
+  estimateContactsResolved: number;
+  missingContact: number;
+  missingEstimate: number;
   mondayPairsDirect: number;
   mondayPairsLegacy: number;
   mondayPairsUnique: number;
-  estimateContactsResolved: number;
-  missingEstimate: number;
-  missingContact: number;
   touchedEstimates: number;
-  contactsSynced: number;
-  accountsSynced: number;
 }
 
 interface SqlAccountRow {
+  domain: string | null;
   id: number;
   monday_account_id: string | null;
-  domain: string | null;
 }
 
 interface SqlContactIdRow {
@@ -188,6 +188,40 @@ export function collectEstimateContactPairs(
 
 // ── DB sync: accounts ──────────────────────────────────────────────────
 
+/** Resolve a single account snapshot: match by monday_id, then domain, then insert. */
+async function resolveAccountRow(
+  row: MondayAccountSnapshot,
+  existingByMondayId: Map<string, SqlAccountRow>,
+  existingByDomain: Map<string, SqlAccountRow>
+): Promise<{ id: number; inserted: boolean } | null> {
+  const byMonday = existingByMondayId.get(row.mondayItemId);
+  if (byMonday) {
+    return { id: byMonday.id, inserted: false };
+  }
+
+  const byDomain = row.domain ? existingByDomain.get(row.domain) : undefined;
+  if (byDomain) {
+    if (!byDomain.monday_account_id) {
+      await db.run("UPDATE accounts SET monday_account_id = $1 WHERE id = $2", [
+        row.mondayItemId,
+        byDomain.id,
+      ]);
+    }
+    return { id: byDomain.id, inserted: false };
+  }
+
+  const inserted = (await db.run(
+    `INSERT INTO accounts (
+       domain, name, type, monday_account_id, monday_name, updated_at
+     ) VALUES ($1, $2, 'contractor', $3, $4, now())
+     RETURNING id`,
+    [row.domain, row.name, row.mondayItemId, row.name]
+  )) as Array<{ id: number }>;
+
+  const insertedId = inserted[0]?.id;
+  return insertedId ? { id: insertedId, inserted: true } : null;
+}
+
 export async function syncAccountsToDb(
   accountSnapshots: Map<string, MondayAccountSnapshot>
 ): Promise<{ accountIdByMondayId: Map<string, number>; synced: number }> {
@@ -248,53 +282,16 @@ export async function syncAccountsToDb(
 
   let synced = 0;
   for (const row of rows) {
-    const byMonday = existingByMondayId.get(row.mondayItemId);
-    if (byMonday) {
-      await db.run(
-        `UPDATE accounts
-         SET monday_name = $1,
-             name = $2,
-             domain = COALESCE($3, domain),
-             type = 'contractor',
-             updated_at = now()
-         WHERE id = $4`,
-        [row.name, row.name, row.domain, byMonday.id]
-      );
-      accountIdByMondayId.set(row.mondayItemId, byMonday.id);
-      synced++;
-      continue;
-    }
-
-    const byDomain = row.domain ? existingByDomain.get(row.domain) : undefined;
-    if (byDomain) {
-      await db.run(
-        `UPDATE accounts
-         SET monday_account_id = $1,
-             monday_name = $2,
-             name = $3,
-             domain = COALESCE($4, domain),
-             type = 'contractor',
-             updated_at = now()
-         WHERE id = $5`,
-        [row.mondayItemId, row.name, row.name, row.domain, byDomain.id]
-      );
-      accountIdByMondayId.set(row.mondayItemId, byDomain.id);
-      synced++;
-      continue;
-    }
-
-    const inserted = (await db.run(
-      `INSERT INTO accounts (
-         domain, name, type, monday_account_id, monday_name, updated_at
-       ) VALUES ($1, $2, 'contractor', $3, $4, now())
-       RETURNING id`,
-      [row.domain, row.name, row.mondayItemId, row.name]
-    )) as Array<{ id: number }>;
-
-    const insertedId = inserted[0]?.id;
-    if (insertedId) {
-      accountIdByMondayId.set(row.mondayItemId, insertedId);
-      synced++;
+    const resolved = await resolveAccountRow(
+      row,
+      existingByMondayId,
+      existingByDomain
+    );
+    if (resolved) {
+      accountIdByMondayId.set(row.mondayItemId, resolved.id);
+      if (resolved.inserted) {
+        synced++;
+      }
     }
   }
 
@@ -347,6 +344,7 @@ export async function syncContactsToDb(
       );
     }
 
+    // Add-only: insert new contacts, skip existing ones
     await db.run(
       `INSERT INTO contacts (
          monday_item_id, name, email, phone, title, priority,
@@ -355,22 +353,7 @@ export async function syncContactsToDb(
          mobile_phone, office_phone, company_phone, company_fax,
          synced_at, updated_at
        ) VALUES ${valuesSql}
-       ON CONFLICT (monday_item_id) DO UPDATE SET
-         name = excluded.name,
-         email = excluded.email,
-         phone = excluded.phone,
-         title = excluded.title,
-         priority = excluded.priority,
-         account_id = excluded.account_id,
-         contractor_monday_id = excluded.contractor_monday_id,
-         group_id = excluded.group_id,
-         group_title = excluded.group_title,
-         mobile_phone = excluded.mobile_phone,
-         office_phone = excluded.office_phone,
-         company_phone = excluded.company_phone,
-         company_fax = excluded.company_fax,
-         synced_at = now(),
-         updated_at = now()`,
+       ON CONFLICT (monday_item_id) DO NOTHING`,
       args
     );
   }

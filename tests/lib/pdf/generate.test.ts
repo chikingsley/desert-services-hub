@@ -4,7 +4,7 @@ import {
   generateEstimatePDF,
   getEstimatePDFFilename,
 } from "@documents/pdf/estimate/generate-estimate-pdf.server";
-import { createLineItems } from "@estimates/catalog/catalog";
+import { createLineItems } from "@/packages/estimates/catalog/catalog";
 import { getPdfTestOutputPath } from "./output-path";
 
 const CATALOG_NAME_ERROR_RE = /catalog code or exact catalog name/i;

@@ -8,20 +8,20 @@
  * from process.env, includes retry + rate-limit handling).
  */
 
-import { query } from "../../client/query";
-import { updateItem } from "../../client/search";
+import { query } from "@monday/client/query";
+import { updateItem } from "@monday/client/search";
 import {
   BOARD_IDS,
   ESTIMATING_COLUMNS,
   ESTIMATING_GROUPS,
-} from "../../types/schema";
+} from "@monday/types/schema";
 import type { CleanupResult } from "./types";
 import { GC_NOT_AWARDED, getBaseName, sleep } from "./utils";
 
 interface GroupItem {
+  bidStatus: string | null;
   id: string;
   name: string;
-  bidStatus: string | null;
 }
 
 interface GroupItemsPageResponse {

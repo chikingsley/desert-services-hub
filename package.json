@@ -73,6 +73,8 @@
     "@radix-ui/react-tabs": "^1.1.13",
     "@radix-ui/react-tooltip": "1.2.8",
     "@sentry/bun": "^10.39.0",
+    "@simonpeacocks/react-vnc": "^3.3.0",
+    "@trigger.dev/sdk": "^4.4.1",
     "bun-plugin-tailwind": "^0.1.2",
     "cheerio": "^1.2.0",
     "chokidar": "^5.0.0",

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { extractBodyFileLinks } from "@lib/downloads/extract-links";
+import { extractBodyFileLinks } from "@/packages/archive/email/downloads/extract-links";
 
 describe("extractBodyFileLinks", () => {
   test("extracts OneDrive, Egnyte, Dropbox, and BuildingConnected links", () => {

@@ -1,4 +1,4 @@
-import { BOARDS, ESTIMATING_NON_PROD_GROUPS } from "../config";
+import { BOARD_IDS, ESTIMATING_SKIP_GROUPS } from "@monday/types/schema";
 
 export type BucketKey =
   | "direct"
@@ -22,47 +22,47 @@ export type FallbackSpec =
     };
 
 export interface AuditChainSpec {
-  key: string;
-  label: string;
   boardAlias: string;
   boardId: string;
   directColumnId: string;
   directLabel: string;
-  fallback?: FallbackSpec;
   displayFallbackColumnIds: string[];
   displayFallbackLabel: string;
+  fallback?: FallbackSpec;
+  key: string;
+  label: string;
   skipGroupsWhenActiveOnly?: string[];
 }
 
 export interface RichColumnValue {
-  id: string;
-  type: string;
-  text: string | null;
-  value: string | null;
-  linked_item_ids?: string[];
   display_value?: string | null;
+  id: string;
+  linked_item_ids?: string[];
+  text: string | null;
+  type: string;
+  value: string | null;
 }
 
 export interface AuditItem {
-  id: string;
-  name: string;
+  columnValues: RichColumnValue[];
   groupId: string;
   groupTitle: string;
-  columnValues: RichColumnValue[];
+  id: string;
+  name: string;
 }
 
 export interface AuditResult {
+  counts: Record<BucketKey, number>;
+  filteredOut: number;
+  samples: Record<BucketKey, string[]>;
   spec: AuditChainSpec;
   totalItems: number;
-  filteredOut: number;
-  counts: Record<BucketKey, number>;
-  samples: Record<BucketKey, string[]>;
 }
 
 export const AUDIT_CHAINS: AuditChainSpec[] = [
   {
     boardAlias: "estimating",
-    boardId: BOARDS.estimating,
+    boardId: BOARD_IDS.ESTIMATING,
     directColumnId: "board_relation_mkzdd0r4",
     directLabel: "Contractors - Direct",
     displayFallbackColumnIds: ["deal_account"],
@@ -70,17 +70,17 @@ export const AUDIT_CHAINS: AuditChainSpec[] = [
     fallback: {
       kind: "contact_to_contractors",
       contactRelationColumnId: "deal_contact",
-      contactBoardId: BOARDS.contacts,
+      contactBoardId: BOARD_IDS.CONTACTS,
       contactToContractorColumnId: "contact_account",
       label: "Legacy Contacts relation -> Contacts.contact_account",
     },
     key: "estimating-account",
     label: "Estimating: Contractor/Account Resolution",
-    skipGroupsWhenActiveOnly: ESTIMATING_NON_PROD_GROUPS,
+    skipGroupsWhenActiveOnly: [...ESTIMATING_SKIP_GROUPS],
   },
   {
     boardAlias: "estimating",
-    boardId: BOARDS.estimating,
+    boardId: BOARD_IDS.ESTIMATING,
     directColumnId: "board_relation_mm065k5n",
     directLabel: "Contacts - Direct",
     displayFallbackColumnIds: [],
@@ -92,11 +92,11 @@ export const AUDIT_CHAINS: AuditChainSpec[] = [
     },
     key: "estimating-contacts",
     label: "Estimating: Contacts Resolution",
-    skipGroupsWhenActiveOnly: ESTIMATING_NON_PROD_GROUPS,
+    skipGroupsWhenActiveOnly: [...ESTIMATING_SKIP_GROUPS],
   },
   {
     boardAlias: "leads",
-    boardId: BOARDS.leads,
+    boardId: BOARD_IDS.LEADS,
     directColumnId: "board_relation_mktg3z60",
     directLabel: "Estimate Name relation",
     displayFallbackColumnIds: ["lookup_mktg8b1z", "lookup_mktgymd0"],
@@ -106,7 +106,7 @@ export const AUDIT_CHAINS: AuditChainSpec[] = [
   },
   {
     boardAlias: "projects",
-    boardId: BOARDS.projects,
+    boardId: BOARD_IDS.PROJECTS,
     directColumnId: "board_relation_mkp8pr9e",
     directLabel: "Service Lines (direct)",
     displayFallbackColumnIds: ["lookup_mktg3b6w"],
@@ -122,7 +122,7 @@ export const AUDIT_CHAINS: AuditChainSpec[] = [
   },
   {
     boardAlias: "dust_permits",
-    boardId: BOARDS.dust_permits,
+    boardId: BOARD_IDS.DUST_PERMITS,
     directColumnId: "board_relation_mkxfk8ky",
     directLabel: "Contractors (direct)",
     displayFallbackColumnIds: ["lookup_mkxp5f5n", "lookup_mkxmqvqk"],
@@ -138,7 +138,7 @@ export const AUDIT_CHAINS: AuditChainSpec[] = [
   },
   {
     boardAlias: "dust_permits",
-    boardId: BOARDS.dust_permits,
+    boardId: BOARD_IDS.DUST_PERMITS,
     directColumnId: "board_relation_mkxmh6zg",
     directLabel: "Contacts (direct)",
     displayFallbackColumnIds: ["lookup_mkxpsgqk"],
@@ -154,7 +154,7 @@ export const AUDIT_CHAINS: AuditChainSpec[] = [
   },
   {
     boardAlias: "swppp_plans",
-    boardId: BOARDS.swppp_plans,
+    boardId: BOARD_IDS.SWPPP_PLANS,
     directColumnId: "board_relation_mktmfqzj",
     directLabel: "Estimating relation",
     displayFallbackColumnIds: ["lookup_mktmqf1r"],
@@ -164,7 +164,7 @@ export const AUDIT_CHAINS: AuditChainSpec[] = [
   },
   {
     boardAlias: "inspection_reports",
-    boardId: BOARDS.inspection_reports,
+    boardId: BOARD_IDS.INSPECTION_REPORTS,
     directColumnId: "board_relation_mkpfq0mk",
     directLabel: "Project relation",
     displayFallbackColumnIds: ["lookup_mkrws4a7", "lookup_mkqy8nyj"],
@@ -174,7 +174,7 @@ export const AUDIT_CHAINS: AuditChainSpec[] = [
   },
   {
     boardAlias: "contractors",
-    boardId: BOARDS.contractors,
+    boardId: BOARD_IDS.CONTRACTORS,
     directColumnId: "account_contact",
     directLabel: "Contacts relation",
     displayFallbackColumnIds: [],
@@ -184,7 +184,7 @@ export const AUDIT_CHAINS: AuditChainSpec[] = [
   },
   {
     boardAlias: "contacts",
-    boardId: BOARDS.contacts,
+    boardId: BOARD_IDS.CONTACTS,
     directColumnId: "contact_account",
     directLabel: "Contractor relation",
     displayFallbackColumnIds: [],
@@ -194,7 +194,7 @@ export const AUDIT_CHAINS: AuditChainSpec[] = [
   },
   {
     boardAlias: "service_lines",
-    boardId: BOARDS.service_lines,
+    boardId: BOARD_IDS.SERVICE_LINES,
     directColumnId: "board_relation_mkp8rqas",
     directLabel: "Projects relation",
     displayFallbackColumnIds: [],

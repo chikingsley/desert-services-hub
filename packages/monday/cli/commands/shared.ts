@@ -1,4 +1,17 @@
+import { BOARD_IDS } from "@monday/types/schema";
 import type { CommandItem } from "./types";
+
+const boardIdByAlias = Object.fromEntries(
+  Object.entries(BOARD_IDS).map(([k, v]) => [k.toLowerCase(), v])
+);
+
+export function resolveBoardId(nameOrId: string): string {
+  return boardIdByAlias[nameOrId.toLowerCase()] ?? nameOrId;
+}
+
+export function getBoardKeys(): string[] {
+  return Object.keys(boardIdByAlias);
+}
 
 export function formatItem(item: CommandItem): void {
   console.log(`\n${item.name} (${item.id})`);

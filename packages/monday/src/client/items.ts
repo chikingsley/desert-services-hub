@@ -13,10 +13,10 @@ interface RawColumnValue {
 }
 
 interface RawItem {
+  column_values: RawColumnValue[];
+  group: { id: string; title: string };
   id: string;
   name: string;
-  group: { id: string; title: string };
-  column_values: RawColumnValue[];
 }
 
 interface ItemsPageResponse {

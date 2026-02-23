@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, mock, test } from "bun:test";
-import type { TriageContext, TriageResult } from "@lib/triage/types";
+import type { TriageContext, TriageResult } from "@/packages/archive/email/sync/triage/types";
 
 interface MockRerankState {
   calls: Array<{
@@ -39,7 +39,7 @@ mock.module("@enrichment/jina/client", () => ({
 }));
 
 const { evaluateTriageRerankShadow, rerankProjectCandidates } = await import(
-  "@lib/triage/rerank-shadow"
+  "@/packages/archive/email/sync/triage/rerank-shadow"
 );
 
 function buildContext(): TriageContext {

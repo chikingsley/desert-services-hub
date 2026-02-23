@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { db } from "@lib/db/client";
-import { linkEmailsToContacts } from "@lib/linking/link-contacts";
+import { linkEmailsToContacts } from "@/packages/archive/email/sync/linking/link-contacts";
 
 const ROLLBACK = new Error("ROLLBACK_TEST_TRANSACTION");
 

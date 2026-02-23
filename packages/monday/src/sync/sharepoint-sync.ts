@@ -38,12 +38,12 @@ const VARIANT_FOLDER_PATH_RE =
   /Customer Projects\/([^/]+\/[^/]+\/[^/]+\/[^/]+)/i;
 
 export interface SharePointSyncResult {
-  processed: number;
   created: number;
-  moved: number;
-  skipped: number;
-  filesUploaded: number;
   errors: string[];
+  filesUploaded: number;
+  moved: number;
+  processed: number;
+  skipped: number;
 }
 
 function requireEnv(

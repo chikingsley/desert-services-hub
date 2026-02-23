@@ -1,6 +1,10 @@
 #!/usr/bin/env bun
+import {
+  type SharePointSyncResult,
+  syncSharePointFoldersWithClient,
+} from "@monday/sync/sharepoint-sync";
+import type { SyncOptions } from "@monday/sync/types";
 import { SharePointClient } from "@sharepoint/client";
-import { syncEstimateFolders } from "./core";
 
 const DEFAULT_CONCURRENCY = 15;
 const ICON_CREATED = "\u2713";
@@ -16,9 +20,9 @@ const STATUS_ICONS: Record<string, string> = {
 };
 
 interface CliArgs {
-  limit?: number;
   concurrency?: number;
   dryRun: boolean;
+  limit?: number;
 }
 
 function parseCliArgs(): CliArgs {
@@ -158,13 +162,13 @@ export function main(): void {
 
   const total = (limit && limit > 0 ? limit : 0) ?? 0;
 
-  syncEstimateFolders(sp, {
+  syncSharePointFoldersWithClient(sp, {
     concurrency,
     dryRun,
     limit,
     onProgress: logProgress(total, dryRun),
-  })
-    .then((result) => {
+  } satisfies SyncOptions)
+    .then((result: SharePointSyncResult) => {
       console.log(`\n${"=".repeat(50)}`);
       console.log("SYNC COMPLETE");
       console.log("=".repeat(50));

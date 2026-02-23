@@ -2,7 +2,7 @@
  * Email Repository
  */
 
-import { isSpam } from "@email/spam-filter";
+import { isSpam } from "@lib/email/spam-filter";
 import { db } from "@lib/db/client";
 import type {
   BodyLinkScanStatus,

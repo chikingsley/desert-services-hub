@@ -1,6 +1,6 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { type SitelineClient, SitelineError } from "../client";
+import { type SitelineClient, SitelineError } from "@siteline/client";
 
 const CURRENT_COMPANY_OUTPUT_SCHEMA = z.object({
   currentCompany: z.object({

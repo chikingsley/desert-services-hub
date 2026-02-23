@@ -1,22 +1,22 @@
 export interface EstimateUpsertRow {
-  mondayItemId: string;
-  name: string;
-  estimateNumber: string | null;
-  contractor: string | null;
-  groupId: string;
-  groupTitle: string;
-  mondayUrl: string;
+  accountDomain: string | null;
   accountId: number | null;
   accountMondayId: string | null;
-  accountDomain: string | null;
-  bidStatus: string | null;
-  bidValue: number | null;
+  awarded: boolean;
   awardedValue: number | null;
   bidSource: string | null;
-  awarded: boolean;
+  bidStatus: string | null;
+  bidValue: number | null;
+  contractor: string | null;
   dueDate: string | null;
-  location: string | null;
+  estimateNumber: string | null;
+  groupId: string;
+  groupTitle: string;
   lat: number | null;
   lng: number | null;
+  location: string | null;
+  mondayItemId: string;
+  mondayUrl: string;
+  name: string;
   sharepointUrl: string | null;
 }

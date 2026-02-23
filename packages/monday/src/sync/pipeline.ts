@@ -26,8 +26,8 @@ interface FileColumnValue {
 }
 
 interface NewAssetDownload {
-  columnId: string;
   assetId: number;
+  columnId: string;
   fileName: string;
 }
 

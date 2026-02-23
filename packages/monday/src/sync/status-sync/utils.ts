@@ -2,7 +2,7 @@
  * Shared utilities for Monday status sync jobs.
  */
 
-import { BOARD_IDS, ESTIMATING_COLUMNS } from "../../types/schema";
+import { BOARD_IDS, ESTIMATING_COLUMNS } from "@monday/types/schema";
 import type { ProjectLinkSyncConfig } from "./types";
 
 /** Prefixes to strip when matching project names for GC cleanup. */

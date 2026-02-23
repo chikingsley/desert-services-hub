@@ -1,85 +1,92 @@
 /**
  * Automation portal page
  *
- * Embedded noVNC views for Maricopa portal automation and BuildingConnected auth bootstrap.
+ * Embedded VNC views for Maricopa portal automation and BuildingConnected auth bootstrap.
+ * Uses @simonpeacocks/react-vnc for direct WebSocket VNC connections (no iframe).
  */
 
 // biome-ignore lint/nursery/noExcessiveLinesPerFile: Maricopa and BuildingConnected views intentionally share one automation shell.
 import { CheckCircle2, Loader2, Play, RefreshCw, Square } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  type RefObject,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { useLocation, useNavigate } from "react-router";
 import { toast } from "sonner";
 import useSWR from "swr";
 import { CheckpointBanner } from "@/apps/web/frontend/components/checkpoint-banner";
 import { PageHeader } from "@/apps/web/frontend/components/page-header";
 import { Button } from "@/apps/web/frontend/components/ui/button";
+import {
+  VncPanel,
+  type VncPanelHandle,
+} from "@/apps/web/frontend/components/vnc-panel";
 import { fetcher } from "@/apps/web/frontend/lib/fetcher";
 
 interface AutomationStatus {
   active: boolean;
-  isLoggedIn: boolean;
-  portalReady: boolean;
   busy: boolean;
   currentOperation: string | null;
-  startedAt: string | null;
+  isLoggedIn: boolean;
+  keepAliveEnabled: boolean;
+  keepAliveIntervalMs: number;
   lastActivityAt: string | null;
+  lastError: string | null;
   lastKeepAliveAt: string | null;
   lastLoginAt: string | null;
   lastPortalPinAt?: string | null;
-  lastError: string | null;
-  keepAliveEnabled: boolean;
-  keepAliveIntervalMs: number;
   portalHomePinEnabled?: boolean;
   portalHomePinIntervalMs?: number;
-  viewportWidth: number;
+  portalReady: boolean;
+  startedAt: string | null;
   viewportHeight: number;
+  viewportWidth: number;
   vncUrl: string;
+  vncWsUrl: string;
 }
 
 interface BuildingConnectedAuthStatus {
-  running: boolean;
-  pid: number | null;
-  startedAt: string | null;
   finishedAt: string | null;
+  lastError: string | null;
   lastExitCode: number | null;
   lastSignal: string | null;
-  lastError: string | null;
+  lastValidateUrl: string | null;
   logTail: string[];
-  statePath: string;
+  manualAuthTimeoutMs: number;
+  pid: number | null;
+  running: boolean;
+  startedAt: string | null;
+  startUrl: string;
   stateExists: boolean;
   stateFileSize: number | null;
   stateLastModifiedAt: string | null;
-  startUrl: string;
-  lastValidateUrl: string | null;
-  manualAuthTimeoutMs: number;
-  viewportWidth: number;
+  statePath: string;
   viewportHeight: number;
-  vncUrl: string;
+  viewportWidth: number;
+  vncWsUrl: string;
 }
 
 type AutomationActionEndpoint =
   | "/api/automation/start"
   | "/api/automation/ready"
   | "/api/automation/keepalive"
-  | "/api/automation/stop"
-  | "/api/automation/clipboard/paste"
-  | "/api/automation/clipboard/copy";
+  | "/api/automation/stop";
 
 type BuildingConnectedActionEndpoint =
   | "/api/buildingconnected/auth/start"
-  | "/api/buildingconnected/auth/stop"
-  | "/api/buildingconnected/auth/clipboard/paste"
-  | "/api/buildingconnected/auth/clipboard/copy";
+  | "/api/buildingconnected/auth/stop";
 
 interface RunActionOptions {
-  silentSuccess?: boolean;
   body?: unknown;
+  silentSuccess?: boolean;
 }
 
 interface AutomationActionPayload {
-  success?: boolean;
   error?: string;
-  text?: string;
+  success?: boolean;
 }
 
 type AutomationPortal = "maricopa" | "buildingconnected";
@@ -93,7 +100,7 @@ function getPortalFromPath(pathname: string): AutomationPortal {
 
 function formatTimestamp(value: string | null): string {
   if (!value) {
-    return "—";
+    return "\u2014";
   }
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) {
@@ -104,7 +111,7 @@ function formatTimestamp(value: string | null): string {
 
 function formatByteSize(value: number | null): string {
   if (!(typeof value === "number" && Number.isFinite(value) && value >= 0)) {
-    return "—";
+    return "\u2014";
   }
   if (value < 1024) {
     return `${value} B`;
@@ -113,6 +120,11 @@ function formatByteSize(value: number | null): string {
     return `${(value / 1024).toFixed(1)} KB`;
   }
   return `${(value / (1024 * 1024)).toFixed(2)} MB`;
+}
+
+function getWsFallbackUrl(port: number): string {
+  const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+  return `${protocol}//${window.location.hostname}:${port}`;
 }
 
 function getSessionDisplay(data: AutomationStatus | undefined): {
@@ -198,8 +210,8 @@ function usePortalStatusToasts(data: AutomationStatus | undefined): void {
   }, [data]);
 }
 
-async function postAutomation(
-  endpoint: AutomationActionEndpoint,
+async function postAction<E extends string>(
+  endpoint: E,
   options?: RunActionOptions
 ): Promise<AutomationActionPayload> {
   const headers =
@@ -223,83 +235,32 @@ async function postAutomation(
   return payload ?? {};
 }
 
-async function postBuildingConnectedAuth(
-  endpoint: BuildingConnectedActionEndpoint,
-  options?: RunActionOptions
-): Promise<AutomationActionPayload> {
-  const headers =
-    options?.body === undefined
-      ? undefined
-      : { "content-type": "application/json" };
-  const response = await fetch(endpoint, {
-    method: "POST",
-    headers,
-    body:
-      options?.body === undefined ? undefined : JSON.stringify(options.body),
-  });
-  const payload = (await response.json().catch(() => ({}))) as
-    | AutomationActionPayload
-    | undefined;
-  if (!response.ok || payload?.success === false) {
-    throw new Error(
-      payload?.error || `Request failed with status ${response.status}`
-    );
-  }
-  return payload ?? {};
-}
-
-function useClipboardBridge(
+/**
+ * Clipboard bridge via VNC protocol.
+ * Ctrl/Cmd+V reads local clipboard and sends it into the VNC session.
+ * Copy direction is handled by onClipboard callback on VncPanel.
+ */
+function useVncClipboardBridge(
   visible: boolean,
-  mutate: () => Promise<unknown>,
-  setAction: (action: AutomationActionEndpoint | null) => void
+  vncRef: RefObject<VncPanelHandle | null>
 ): void {
-  const pasteFromLocalClipboard = useCallback(async (): Promise<void> => {
-    setAction("/api/automation/clipboard/paste");
+  const pasteIntoVnc = useCallback(async (): Promise<void> => {
+    if (!navigator.clipboard?.readText) {
+      return;
+    }
     try {
-      if (!navigator.clipboard?.readText) {
-        throw new Error("Clipboard read is not available in this browser");
-      }
       const text = await navigator.clipboard.readText();
       if (!text.length) {
         toast.message("Clipboard is empty");
         return;
       }
-
-      await postAutomation("/api/automation/clipboard/paste", {
-        body: { text },
-      });
-      toast.success("Pasted local clipboard into portal");
-      await mutate();
+      vncRef.current?.clipboardPaste(text);
+      toast.success("Pasted clipboard into VNC session");
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       toast.error(message);
-    } finally {
-      setAction(null);
     }
-  }, [mutate, setAction]);
-
-  const copySelectionToLocalClipboard = useCallback(async (): Promise<void> => {
-    setAction("/api/automation/clipboard/copy");
-    try {
-      if (!navigator.clipboard?.writeText) {
-        throw new Error("Clipboard write is not available in this browser");
-      }
-      const payload = await postAutomation("/api/automation/clipboard/copy");
-      const text = payload.text ?? "";
-      if (!text.length) {
-        toast.message("No selected portal text to copy");
-        return;
-      }
-
-      await navigator.clipboard.writeText(text);
-      toast.success("Copied portal selection to local clipboard");
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      toast.error(message);
-    } finally {
-      setAction(null);
-    }
-  }, [setAction]);
+  }, [vncRef]);
 
   useEffect(() => {
     if (!visible) {
@@ -310,109 +271,15 @@ function useClipboardBridge(
       if (!(event.ctrlKey || event.metaKey) || event.altKey) {
         return;
       }
-
-      const key = event.key.toLowerCase();
-      if (key === "v") {
+      if (event.key.toLowerCase() === "v") {
         event.preventDefault();
-        pasteFromLocalClipboard().catch(() => undefined);
-        return;
-      }
-
-      if (key === "c") {
-        event.preventDefault();
-        copySelectionToLocalClipboard().catch(() => undefined);
+        pasteIntoVnc().catch(() => undefined);
       }
     };
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [copySelectionToLocalClipboard, pasteFromLocalClipboard, visible]);
-}
-
-function useBuildingConnectedClipboardBridge(
-  visible: boolean,
-  mutate: () => Promise<unknown>,
-  setAction: (action: BuildingConnectedActionEndpoint | null) => void
-): void {
-  const pasteFromLocalClipboard = useCallback(async (): Promise<void> => {
-    setAction("/api/buildingconnected/auth/clipboard/paste");
-    try {
-      if (!navigator.clipboard?.readText) {
-        throw new Error("Clipboard read is not available in this browser");
-      }
-      const text = await navigator.clipboard.readText();
-      if (!text.length) {
-        toast.message("Clipboard is empty");
-        return;
-      }
-
-      await postBuildingConnectedAuth(
-        "/api/buildingconnected/auth/clipboard/paste",
-        {
-          body: { text },
-        }
-      );
-      toast.success("Pasted local clipboard into BuildingConnected auth");
-      await mutate();
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      toast.error(message);
-    } finally {
-      setAction(null);
-    }
-  }, [mutate, setAction]);
-
-  const copySelectionToLocalClipboard = useCallback(async (): Promise<void> => {
-    setAction("/api/buildingconnected/auth/clipboard/copy");
-    try {
-      if (!navigator.clipboard?.writeText) {
-        throw new Error("Clipboard write is not available in this browser");
-      }
-      const payload = await postBuildingConnectedAuth(
-        "/api/buildingconnected/auth/clipboard/copy"
-      );
-      const text = payload.text ?? "";
-      if (!text.length) {
-        toast.message("No selected text to copy from BuildingConnected auth");
-        return;
-      }
-
-      await navigator.clipboard.writeText(text);
-      toast.success("Copied BuildingConnected selection to local clipboard");
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      toast.error(message);
-    } finally {
-      setAction(null);
-    }
-  }, [setAction]);
-
-  useEffect(() => {
-    if (!visible) {
-      return;
-    }
-
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (!(event.ctrlKey || event.metaKey) || event.altKey) {
-        return;
-      }
-
-      const key = event.key.toLowerCase();
-      if (key === "v") {
-        event.preventDefault();
-        pasteFromLocalClipboard().catch(() => undefined);
-        return;
-      }
-
-      if (key === "c") {
-        event.preventDefault();
-        copySelectionToLocalClipboard().catch(() => undefined);
-      }
-    };
-
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [copySelectionToLocalClipboard, pasteFromLocalClipboard, visible]);
+  }, [pasteIntoVnc, visible]);
 }
 
 function ActionButtons({
@@ -472,32 +339,6 @@ function ActionButtons({
   );
 }
 
-function VncStatusOverlay({
-  label,
-  healthy,
-}: {
-  label: string;
-  healthy: boolean;
-}) {
-  return (
-    <div className="absolute bottom-3 left-3 flex items-center gap-2 rounded-full border border-border bg-black/80 px-3 py-1.5 font-mono text-xs backdrop-blur-sm">
-      <span className="relative flex h-2 w-2">
-        <span
-          className={`absolute inline-flex h-full w-full animate-ping rounded-full ${
-            healthy ? "bg-green-400" : "bg-amber-400"
-          } opacity-75`}
-        />
-        <span
-          className={`relative inline-flex h-2 w-2 rounded-full ${
-            healthy ? "bg-green-500" : "bg-amber-500"
-          }`}
-        />
-      </span>
-      <span className="text-muted-foreground">{label}</span>
-    </div>
-  );
-}
-
 /** Derive all display labels from automation status to reduce component complexity. */
 function deriveDisplayState(
   data: AutomationStatus | undefined,
@@ -542,11 +383,15 @@ function deriveDisplayState(
   };
 }
 
+function writeToClipboard(text: string): void {
+  navigator.clipboard.writeText(text).catch(() => undefined);
+}
+
 interface AutomationPageProps {
   visible?: boolean;
 }
 
-// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: This component coordinates two automation portals with shared polling/actions.
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Two automation portals share one component shell.
 export function AutomationPage({ visible = true }: AutomationPageProps) {
   const location = useLocation();
   const navigate = useNavigate();
@@ -558,6 +403,8 @@ export function AutomationPage({ visible = true }: AutomationPageProps) {
   const [validateUrl, setValidateUrl] = useState("");
 
   const autoEnsureAttempted = useRef(false);
+  const maricopaVncRef = useRef<VncPanelHandle>(null);
+  const buildingConnectedVncRef = useRef<VncPanelHandle>(null);
 
   const { data, error, isLoading, mutate } = useSWR<AutomationStatus>(
     visible && activePortal === "maricopa" ? "/api/automation/status" : null,
@@ -589,20 +436,16 @@ export function AutomationPage({ visible = true }: AutomationPageProps) {
 
   usePortalStatusToasts(activePortal === "maricopa" ? data : undefined);
 
-  const maricopaFallbackVncUrl = useMemo(
-    () =>
-      `${window.location.protocol}//${window.location.hostname}:47821/vnc.html?autoconnect=true&resize=scale&reconnect=true&reconnect_delay=2000&view_only=false&shared=true`,
-    []
-  );
-  const buildingConnectedFallbackVncUrl = useMemo(
-    () =>
-      `${window.location.protocol}//${window.location.hostname}:6081/vnc.html?autoconnect=true&resize=scale&reconnect=true&reconnect_delay=2000&view_only=false&shared=true`,
-    []
+  // VNC clipboard bridges — paste via Ctrl/Cmd+V, copy via onClipboard callback
+  useVncClipboardBridge(visible && activePortal === "maricopa", maricopaVncRef);
+  useVncClipboardBridge(
+    visible && activePortal === "buildingconnected",
+    buildingConnectedVncRef
   );
 
-  const maricopaVncUrl = data?.vncUrl || maricopaFallbackVncUrl;
-  const buildingConnectedVncUrl =
-    buildingConnectedStatus?.vncUrl || buildingConnectedFallbackVncUrl;
+  const maricopaWsUrl = data?.vncWsUrl || getWsFallbackUrl(6080);
+  const buildingConnectedWsUrl =
+    buildingConnectedStatus?.vncWsUrl || getWsFallbackUrl(6081);
   const buildingConnectedVncAspectRatio = `${
     buildingConnectedStatus?.viewportWidth || 1920
   } / ${buildingConnectedStatus?.viewportHeight || 1080}`;
@@ -615,7 +458,7 @@ export function AutomationPage({ visible = true }: AutomationPageProps) {
     ): Promise<void> => {
       setAction(endpoint);
       try {
-        await postAutomation(endpoint, options);
+        await postAction(endpoint, options);
         if (!options?.silentSuccess) {
           toast.success(successMessage);
         }
@@ -641,7 +484,7 @@ export function AutomationPage({ visible = true }: AutomationPageProps) {
     ): Promise<void> => {
       setBuildingConnectedAction(endpoint);
       try {
-        await postBuildingConnectedAuth(endpoint, options);
+        await postAction(endpoint, options);
         if (!options?.silentSuccess) {
           toast.success(successMessage);
         }
@@ -657,13 +500,6 @@ export function AutomationPage({ visible = true }: AutomationPageProps) {
       }
     },
     [mutateBuildingConnected]
-  );
-
-  useClipboardBridge(visible && activePortal === "maricopa", mutate, setAction);
-  useBuildingConnectedClipboardBridge(
-    visible && activePortal === "buildingconnected",
-    mutateBuildingConnected,
-    setBuildingConnectedAction
   );
 
   useEffect(() => {
@@ -764,8 +600,8 @@ export function AutomationPage({ visible = true }: AutomationPageProps) {
               </div>
 
               <div className="mt-3 text-muted-foreground text-xs">
-                Clipboard shortcuts: Cmd/Ctrl+C copies portal selection,
-                Cmd/Ctrl+V pastes local clipboard into the active portal field.
+                Cmd/Ctrl+V pastes local clipboard into VNC session. VNC
+                clipboard changes auto-sync to your local clipboard.
               </div>
 
               {error && (
@@ -782,36 +618,20 @@ export function AutomationPage({ visible = true }: AutomationPageProps) {
 
             <CheckpointBanner />
 
-            <div
-              className="relative w-full overflow-hidden rounded-2xl border border-border bg-black"
-              style={{ aspectRatio: displayState.vncAspectRatio }}
-            >
-              <iframe
-                allow="clipboard-read; clipboard-write; fullscreen"
-                className="absolute inset-0 h-full w-full border-0"
-                src={maricopaVncUrl}
-                title="Maricopa County Dust Portal"
-              />
-
-              <div className="pointer-events-none absolute inset-0 z-10 opacity-[0.03]">
-                <div
-                  className="h-full w-full"
-                  style={{
-                    backgroundImage:
-                      "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.3) 2px, rgba(0,0,0,0.3) 4px)",
-                  }}
-                />
-              </div>
-
-              <VncStatusOverlay
-                healthy={data?.portalReady ?? false}
-                label={data?.portalReady ? "Portal ready" : "Portal not ready"}
-              />
-            </div>
+            <VncPanel
+              aspectRatio={displayState.vncAspectRatio}
+              healthy={data?.portalReady ?? false}
+              onClipboard={writeToClipboard}
+              ref={maricopaVncRef}
+              statusLabel={
+                data?.portalReady ? "Portal ready" : "Portal not ready"
+              }
+              wsUrl={maricopaWsUrl}
+            />
 
             {isLoading && (
               <div className="mt-2 text-muted-foreground text-xs">
-                Loading status…
+                Loading status...
               </div>
             )}
           </>
@@ -894,7 +714,7 @@ export function AutomationPage({ visible = true }: AutomationPageProps) {
                 <div>
                   Running: {buildingConnectedStatus?.running ? "Yes" : "No"}
                 </div>
-                <div>PID: {buildingConnectedStatus?.pid ?? "—"}</div>
+                <div>PID: {buildingConnectedStatus?.pid ?? "\u2014"}</div>
                 <div>
                   State saved:{" "}
                   {buildingConnectedStatus?.stateExists ? "Yes" : "No"}
@@ -912,7 +732,7 @@ export function AutomationPage({ visible = true }: AutomationPageProps) {
                   )}
                 </div>
                 <div>
-                  Last exit: {buildingConnectedStatus?.lastExitCode ?? "—"}
+                  Last exit: {buildingConnectedStatus?.lastExitCode ?? "\u2014"}
                 </div>
                 <div>
                   Started:{" "}
@@ -928,14 +748,13 @@ export function AutomationPage({ visible = true }: AutomationPageProps) {
                 Flow: click Start Auth Session, open VNC, complete
                 CAPTCHA/OTP/login, then wait for state save at{" "}
                 <span className="font-mono">
-                  {buildingConnectedStatus?.statePath ?? "—"}
+                  {buildingConnectedStatus?.statePath ?? "\u2014"}
                 </span>
                 .
               </div>
               <div className="mt-1 text-muted-foreground text-xs">
-                Clipboard shortcuts: Cmd/Ctrl+V pastes local clipboard into the
-                active BuildingConnected field; Cmd/Ctrl+C copies the current
-                selection.
+                Cmd/Ctrl+V pastes local clipboard into VNC session. VNC
+                clipboard changes auto-sync to your local clipboard.
               </div>
 
               {buildingConnectedError && (
@@ -950,34 +769,16 @@ export function AutomationPage({ visible = true }: AutomationPageProps) {
               )}
             </div>
 
-            <div
-              className="relative w-full overflow-hidden rounded-2xl border border-border bg-black"
-              style={{ aspectRatio: buildingConnectedVncAspectRatio }}
-            >
-              <iframe
-                allow="clipboard-read; clipboard-write; fullscreen"
-                className="absolute inset-0 h-full w-full border-0"
-                src={buildingConnectedVncUrl}
-                title="BuildingConnected Auth Browser"
-              />
-
-              <div className="pointer-events-none absolute inset-0 z-10 opacity-[0.03]">
-                <div
-                  className="h-full w-full"
-                  style={{
-                    backgroundImage:
-                      "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.3) 2px, rgba(0,0,0,0.3) 4px)",
-                  }}
-                />
-              </div>
-
-              <VncStatusOverlay
-                healthy={Boolean(buildingConnectedStatus?.stateExists)}
-                label={getBuildingConnectedOverlayLabel(
-                  buildingConnectedStatus
-                )}
-              />
-            </div>
+            <VncPanel
+              aspectRatio={buildingConnectedVncAspectRatio}
+              healthy={Boolean(buildingConnectedStatus?.stateExists)}
+              onClipboard={writeToClipboard}
+              ref={buildingConnectedVncRef}
+              statusLabel={getBuildingConnectedOverlayLabel(
+                buildingConnectedStatus
+              )}
+              wsUrl={buildingConnectedWsUrl}
+            />
 
             <div className="mt-4 rounded-2xl border border-border bg-card p-4">
               <div className="mb-2 font-medium text-sm">Bootstrap Log</div>
@@ -994,7 +795,7 @@ export function AutomationPage({ visible = true }: AutomationPageProps) {
 
             {buildingConnectedLoading && (
               <div className="mt-2 text-muted-foreground text-xs">
-                Loading BuildingConnected status…
+                Loading BuildingConnected status...
               </div>
             )}
           </>

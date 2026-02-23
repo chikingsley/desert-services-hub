@@ -9,13 +9,15 @@ Claude Code  ←—stdio—→  MCP Server (bun)  ←—HTTP—→  permit-worke
                           apps/dust-permits-mcp/            apps/dust-permits/
 ```
 
-Thin stdio process wrapping `PermitClient` from `@permits/client`. No business logic — just tool registrations that map 1:1 to client methods.
+Self-contained stdio process with embedded permit client. No business logic — just tool registrations that map 1:1 to client methods.
 
-## Entry Points
+## Files
 
 - `index.ts`: Entry point (stdio transport)
 - `src/server.ts`: McpServer setup + PermitClient instantiation
 - `src/tools.ts`: All tool registrations
+- `client.ts`: PermitClient HTTP transport
+- `types.ts`: Request/response contracts
 
 ## Configuration
 

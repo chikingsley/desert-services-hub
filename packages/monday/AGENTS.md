@@ -23,14 +23,18 @@ Monday.com API client, board schema, CLI utilities, and status/link sync jobs.
   - `runCleanup()` (GC Not Awarded cleanup)
   - `runLeadsSync()` (lead overall status mirror)
   - `runProjectLinkSync()` (Estimate/Lead/Project relation enforcement)
-- Project seed sync now lives in:
-  - `src/sync/project-seed/sync.ts` (seed lifecycle + canonical linking)
+- Project seed sync: `src/sync/project-seed/sync.ts` (seed lifecycle + canonical linking)
+- Standalone runner scripts:
   - `cli/project-seed-sync.ts` (manual seed/stale runs)
   - `cli/backfill-files.ts` (manual Monday asset re-download/backfill)
+  - `cli/sync-estimates/cli.ts` (SharePoint folder sync)
+  - `cli/setup-webhooks.ts` (register/list/delete Monday webhooks)
+  - `cli/extract-procurement/main.ts` (export archived procurement data)
 - CLI examples:
   - `bun packages/monday/cli/cli.ts boards`
   - `bun packages/monday/cli/cli.ts columns estimating`
   - `bun packages/monday/cli/cli.ts update estimating <itemId> '{"deal_stage":{"label":"Won"}}'`
+  - `bun packages/monday/cli/cli.ts audit-rel all`
 
 ## Testing / Validation
 

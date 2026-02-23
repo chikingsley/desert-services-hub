@@ -60,14 +60,15 @@ RUN chmod +x /app/apps/background-jobs/start-stack.sh
 # CF Workers — shared modules referenced by background-jobs workers
 COPY apps/cf-workers ./apps/cf-workers
 
+# Dust permit MCP — client + types used by background-jobs permit-sync
+COPY apps/dust-permits-mcp/client.ts apps/dust-permits-mcp/types.ts ./apps/dust-permits-mcp/
+
 # Packages
 COPY packages/sharepoint ./packages/sharepoint
-COPY packages/email ./packages/email
 COPY packages/documents ./packages/documents
 COPY packages/contracts ./packages/contracts
 COPY packages/monday ./packages/monday
 COPY packages/estimates ./packages/estimates
-COPY packages/permits ./packages/permits
 COPY packages/takeoff ./packages/takeoff
 COPY packages/enrichment ./packages/enrichment
 

@@ -4,11 +4,7 @@
 
 import { db } from "@lib/db/client";
 import type { z } from "zod";
-import {
-  ESTIMATE_FILE_SWEEP_BATCH_SIZE,
-  ESTIMATE_FILE_SWEEP_CURSOR_KEY,
-  STALE_JOB_MINUTES,
-} from "./config";
+import { STALE_JOB_MINUTES } from "./config";
 import type { WebhookJob } from "./types";
 
 const QUEUE_TABLE = "pgmq.q_background_jobs";
@@ -16,8 +12,6 @@ const DEFAULT_MAX_ATTEMPTS = 3;
 const VISIBILITY_TIMEOUT_SECONDS = STALE_JOB_MINUTES * 60;
 
 interface QueueRow {
-  msg_id: number;
-  read_ct: number;
   message:
     | {
         job_type?: string;
@@ -26,15 +20,9 @@ interface QueueRow {
         max_attempts?: number;
       }
     | string;
+  msg_id: number;
+  read_ct: number;
 }
-
-const getBackgroundWorkerConfigValue = db.query<{ value: string }>(
-  "SELECT value FROM background_worker_config WHERE key = $1"
-);
-
-const setBackgroundWorkerConfigValue = db.query(
-  "INSERT INTO background_worker_config (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value"
-);
 
 const enqueueBackgroundJob = db.query<{ id: number }>(
   "SELECT public.enqueue_background_job($1, ($2::text)::jsonb, $3, $4, $5)::bigint AS id"
@@ -100,22 +88,6 @@ const insertDeadLetter = db.query(`
     ($1, $2, $3, $4::jsonb, $5, $6, $7)
 `);
 
-const countVisibleByType = db.query<{ count: number }>(`
-  SELECT COUNT(*)::int AS count
-  FROM ${QUEUE_TABLE}
-  WHERE message->>'job_type' = $1
-`);
-
-const enqueueDownloadFilesIfNotQueued = db.query<{ id: number | null }>(`
-  SELECT public.enqueue_background_job(
-    'download_files',
-    '{}'::jsonb,
-    $1,
-    ${DEFAULT_MAX_ATTEMPTS},
-    TRUE
-  )::bigint AS id
-`);
-
 function normalizePayload(payload: unknown): string {
   if (typeof payload === "string") {
     return payload;
@@ -164,14 +136,6 @@ export async function enqueueJob(
     options?.dedupe ?? false
   );
   return row?.id ?? null;
-}
-
-export async function enqueueFullSyncIfMissing(reason: string): Promise<void> {
-  const pending = await countVisibleByType.get("sync_full");
-  if (Number(pending?.count ?? 0) === 0) {
-    await enqueueJob("sync_full", { payload: {}, dedupe: true });
-    console.log(`[worker] Queued full sync (${reason})`);
-  }
 }
 
 export async function dequeue(options?: {
@@ -242,46 +206,4 @@ export function parseJobPayload<T>(job: WebhookJob, schema: z.ZodType<T>): T {
   }
 
   return parsed.data;
-}
-
-export async function enqueueEstimateFileSweep(
-  mondayItemIds: string[]
-): Promise<{ queued: number; batched: number; total: number }> {
-  const ids = [...new Set(mondayItemIds)];
-  if (ids.length === 0) {
-    return { queued: 0, batched: 0, total: 0 };
-  }
-
-  const batchSize = Math.min(ESTIMATE_FILE_SWEEP_BATCH_SIZE, ids.length);
-  const offsetRow = await getBackgroundWorkerConfigValue.get(
-    ESTIMATE_FILE_SWEEP_CURSOR_KEY
-  );
-  let offset = Number.parseInt(offsetRow?.value ?? "0", 10);
-  if (!Number.isFinite(offset) || offset < 0) {
-    offset = 0;
-  }
-  if (offset >= ids.length) {
-    offset = 0;
-  }
-
-  const batch: string[] = [];
-  for (let i = 0; i < batchSize; i++) {
-    batch.push(ids[(offset + i) % ids.length] as string);
-  }
-
-  let queued = 0;
-  for (const itemId of batch) {
-    const result = await enqueueDownloadFilesIfNotQueued.get(itemId);
-    if (result?.id) {
-      queued++;
-    }
-  }
-
-  const nextOffset = (offset + batchSize) % ids.length;
-  await setBackgroundWorkerConfigValue.run(
-    ESTIMATE_FILE_SWEEP_CURSOR_KEY,
-    String(nextOffset)
-  );
-
-  return { queued, batched: batch.length, total: ids.length };
 }

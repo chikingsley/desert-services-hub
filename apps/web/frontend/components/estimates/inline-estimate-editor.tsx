@@ -1,6 +1,6 @@
 "use client";
 
-import type { Catalog } from "@estimates/catalog/types";
+import type { Catalog } from "@/packages/estimates/catalog/types";
 import type { EditorEstimate, EditorLineItem } from "@lib/db/types";
 import { Plus } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";

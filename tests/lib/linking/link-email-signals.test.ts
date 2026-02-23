@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import {
   extractEstimateNumbers,
   extractMondayPulseIds,
-} from "@lib/linking/link-email";
+} from "@/packages/archive/email/sync/linking/link-email";
 
 describe("link-email signal extractors", () => {
   test("extractMondayPulseIds finds and deduplicates pulse/item ids", () => {

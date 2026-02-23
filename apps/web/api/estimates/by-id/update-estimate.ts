@@ -1,7 +1,7 @@
 import {
   EstimatePayloadValidationError,
   validateUpdateEstimatePayload,
-} from "@estimates/estimating/estimate-payload-validation";
+} from "@/packages/estimates/estimating/estimate-payload-validation";
 import { db } from "@lib/db/client";
 import type { EstimateRow, EstimateVersionRow } from "@lib/db/types";
 import {

@@ -22,7 +22,7 @@
  * creating real board items that pollute production data on crash.
  */
 import { afterAll, beforeAll, describe, expect, it } from "bun:test";
-import { GraphEmailClient } from "@email/client";
+import { GraphEmailClient } from "@/packages/archive/email/client";
 
 // Test configuration
 const TEST_USER_ID = process.env.TEST_EMAIL_USER ?? "chi@desertservices.net";
@@ -770,7 +770,7 @@ describeEmailTests("email service integration", () => {
   describe("template integration (drafts)", () => {
     it("createDraft using dust-permit-billing template", async () => {
       const { getTemplate, getLogoAttachment } = await import(
-        "@email/email-templates/index"
+        "@/packages/archive/email/email-templates/index"
       );
 
       // Generate template HTML
@@ -841,7 +841,7 @@ describeEmailTests("email service integration", () => {
 
     it("createDraft using dust-permit-issued template", async () => {
       const { getTemplate, getLogoAttachment } = await import(
-        "@email/email-templates/index"
+        "@/packages/archive/email/email-templates/index"
       );
 
       // Generate template HTML
@@ -900,7 +900,7 @@ describeEmailTests("email service integration", () => {
 
 describe("email templates", () => {
   it("loadTemplate loads existing template files", async () => {
-    const { loadTemplate } = await import("@email/email-templates/index");
+    const { loadTemplate } = await import("@/packages/archive/email/email-templates/index");
     const template = await loadTemplate("dust-permit-issued");
     expect(template).toBeDefined();
     expect(template.length).toBeGreaterThan(0);
@@ -908,7 +908,7 @@ describe("email templates", () => {
   });
 
   it("fillTemplate replaces variables correctly", async () => {
-    const { fillTemplate } = await import("@email/email-templates/index");
+    const { fillTemplate } = await import("@/packages/archive/email/email-templates/index");
     const template = "Hello {{name}}, your project is {{projectName}}.";
     const result = fillTemplate(template, {
       name: "LeAnn",
@@ -918,7 +918,7 @@ describe("email templates", () => {
   });
 
   it("fillTemplate handles triple braces for raw HTML", async () => {
-    const { fillTemplate } = await import("@email/email-templates/index");
+    const { fillTemplate } = await import("@/packages/archive/email/email-templates/index");
     const template = "Content: {{{htmlContent}}}";
     const result = fillTemplate(template, {
       htmlContent: "<strong>Bold</strong>",
@@ -927,7 +927,7 @@ describe("email templates", () => {
   });
 
   it("fillTemplate handles {{#if}} conditionals", async () => {
-    const { fillTemplate } = await import("@email/email-templates/index");
+    const { fillTemplate } = await import("@/packages/archive/email/email-templates/index");
     const template =
       "Hello {{name}}.{{#if showExtra}} Extra content here.{{/if}}";
     const resultTrue = fillTemplate(template, {
@@ -944,7 +944,7 @@ describe("email templates", () => {
   });
 
   it("getTemplate loads and fills dust-permit-issued template", async () => {
-    const { getTemplate } = await import("@email/email-templates/index");
+    const { getTemplate } = await import("@/packages/archive/email/email-templates/index");
     const html = await getTemplate("dust-permit-issued", {
       accountName: "Caliente Construction",
       acreage: "1.2",
@@ -977,7 +977,7 @@ describe("email templates", () => {
   });
 
   it("getTemplate handles dust-permit-billing template with all variables", async () => {
-    const { getTemplate } = await import("@email/email-templates/index");
+    const { getTemplate } = await import("@/packages/archive/email/email-templates/index");
     const html = await getTemplate("dust-permit-billing", {
       acceleratedProcessing: "No",
       accountName: "Caliente Construction",
@@ -1011,7 +1011,7 @@ describe("email templates", () => {
   });
 
   it("getTemplate handles optional variables in dust-permit-billing", async () => {
-    const { getTemplate } = await import("@email/email-templates/index");
+    const { getTemplate } = await import("@/packages/archive/email/email-templates/index");
     // Test with optional variables (acceleratedFee, paymentDate, etc.)
     const html = await getTemplate("dust-permit-billing", {
       recipientName: "Team",
@@ -1040,7 +1040,7 @@ describe("email templates", () => {
   });
 
   it("getTemplate handles dust-permit-billing-revised with changesHtml", async () => {
-    const { getTemplate } = await import("@email/email-templates/index");
+    const { getTemplate } = await import("@/packages/archive/email/email-templates/index");
     const html = await getTemplate("dust-permit-billing-revised", {
       acceleratedProcessing: "No",
       accountName: "Caliente Construction",
@@ -1068,7 +1068,7 @@ describe("email templates", () => {
   });
 
   it("listTemplates returns all available templates", async () => {
-    const { listTemplates } = await import("@email/email-templates/index");
+    const { listTemplates } = await import("@/packages/archive/email/email-templates/index");
     const templates = await listTemplates();
     expect(templates.length).toBeGreaterThan(0);
     expect(templates).toContain("dust-permit-issued");

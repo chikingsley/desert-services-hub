@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
-import { findItem } from "@estimates/catalog/catalog";
+import { findItem } from "@/packages/estimates/catalog/catalog";
 import { db } from "@lib/db/client";
 import {
   linkEstimateToProject,

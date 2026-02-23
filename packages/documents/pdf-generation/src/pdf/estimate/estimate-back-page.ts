@@ -1,4 +1,4 @@
-import { findItem } from "@estimates/catalog/catalog";
+import { findItem } from "@/packages/estimates/catalog/catalog";
 import type { Content, TableCell } from "pdfmake/interfaces";
 import { COMPANY } from "../shared/brand";
 import { borderedLayout, noBordersLayout } from "../shared/layouts";

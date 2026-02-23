@@ -4,10 +4,10 @@
 import type { MondayBoard } from "./schema";
 
 export interface MondayWebhook {
-  id: string;
   board_id: string;
-  event: WebhookEventType;
   config: string | null;
+  event: WebhookEventType;
+  id: string;
 }
 
 export type WebhookEventType =
@@ -37,22 +37,12 @@ export type WebhookEventType =
  * Payload sent by Monday when a status column changes.
  */
 export interface StatusChangeEvent {
-  userId: number;
   boardId: number;
-  groupId: string;
-  pulseId: number;
-  pulseName: string;
+  changedAt: number;
   columnId: string;
-  columnType: string;
   columnTitle: string;
-  value: {
-    label: {
-      index: number;
-      text: string;
-      style: { color: string; border: string; var_name: string };
-    };
-    post_id: string | null;
-  };
+  columnType: string;
+  groupId: string;
   previousValue: {
     label: {
       index: number;
@@ -61,47 +51,57 @@ export interface StatusChangeEvent {
     };
     post_id: string | null;
   } | null;
-  changedAt: number;
-  type: string;
-  triggerTime: string;
+  pulseId: number;
+  pulseName: string;
   subscriptionId: number;
+  triggerTime: string;
+  type: string;
+  userId: number;
+  value: {
+    label: {
+      index: number;
+      text: string;
+      style: { color: string; border: string; var_name: string };
+    };
+    post_id: string | null;
+  };
 }
 
 /**
  * Payload sent by Monday when a new item is created.
  */
 export interface CreateItemEvent {
-  userId: number;
   boardId: number;
-  pulseId: number;
-  pulseName: string;
+  columnValues: Record<string, unknown>;
+  groupColor: string;
   groupId: string;
   groupName: string;
-  groupColor: string;
   isTopGroup: boolean;
-  columnValues: Record<string, unknown>;
-  type: string;
-  triggerTime: string;
+  pulseId: number;
+  pulseName: string;
   subscriptionId: number;
+  triggerTime: string;
+  type: string;
+  userId: number;
 }
 
 /**
  * Payload sent by Monday when any column value changes.
  */
 export interface ColumnChangeEvent {
-  userId: number;
+  board?: MondayBoard;
   boardId: number;
+  changedAt: number;
+  columnId: string;
+  columnTitle: string;
+  columnType: string;
   groupId: string;
+  previousValue: unknown;
   pulseId: number;
   pulseName: string;
-  columnId: string;
-  columnType: string;
-  columnTitle: string;
-  value: unknown;
-  previousValue: unknown;
-  changedAt: number;
-  type: string;
-  triggerTime: string;
   subscriptionId: number;
-  board?: MondayBoard;
+  triggerTime: string;
+  type: string;
+  userId: number;
+  value: unknown;
 }

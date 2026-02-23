@@ -5,17 +5,12 @@
  * the main web app API so frontend can consume a single origin.
  */
 
-import { PermitClient, PermitWorkerError } from "@permits/client";
-import { z } from "zod";
-
-const clipboardPasteSchema = z.object({
-  text: z.string().catch(""),
-});
+import {
+  PermitClient,
+  PermitWorkerError,
+} from "@/apps/dust-permits-mcp/client";
 
 const client = new PermitClient();
-
-const DEFAULT_VNC_QUERY =
-  "autoconnect=true&resize=scale&reconnect=true&reconnect_delay=2000&view_only=false&shared=true";
 
 function getVncUrl(req: Request): string {
   const configured = process.env.PERMIT_WORKER_VNC_URL?.trim();
@@ -25,7 +20,19 @@ function getVncUrl(req: Request): string {
 
   const requestUrl = new URL(req.url);
   const port = process.env.PERMIT_WORKER_VNC_PORT || "6080";
-  return `${requestUrl.protocol}//${requestUrl.hostname}:${port}/vnc.html?${DEFAULT_VNC_QUERY}`;
+  return `${requestUrl.protocol}//${requestUrl.hostname}:${port}/vnc.html?autoconnect=true&resize=scale&reconnect=true&reconnect_delay=2000&view_only=false&shared=true`;
+}
+
+function getVncWsUrl(req: Request): string {
+  const configured = process.env.PERMIT_WORKER_VNC_WS_URL?.trim();
+  if (configured) {
+    return configured;
+  }
+
+  const requestUrl = new URL(req.url);
+  const wsProtocol = requestUrl.protocol === "https:" ? "wss:" : "ws:";
+  const port = process.env.PERMIT_WORKER_VNC_PORT || "6080";
+  return `${wsProtocol}//${requestUrl.hostname}:${port}`;
 }
 
 function proxyError(error: unknown): Response {
@@ -62,7 +69,11 @@ function proxyError(error: unknown): Response {
 export async function getAutomationStatus(req: Request): Promise<Response> {
   try {
     const status = await client.browserStatus();
-    return Response.json({ ...status, vncUrl: getVncUrl(req) });
+    return Response.json({
+      ...status,
+      vncUrl: getVncUrl(req),
+      vncWsUrl: getVncWsUrl(req),
+    });
   } catch (error) {
     return proxyError(error);
   }
@@ -110,35 +121,6 @@ export async function postAutomationKeepAlive(): Promise<Response> {
 export async function postAutomationStop(): Promise<Response> {
   try {
     const result = await client.browserStop();
-    return Response.json(result);
-  } catch (error) {
-    return proxyError(error);
-  }
-}
-
-/**
- * POST /api/automation/clipboard/paste
- */
-export async function postAutomationClipboardPaste(
-  req: Request
-): Promise<Response> {
-  try {
-    const { text } = clipboardPasteSchema.parse(
-      await req.json().catch(() => ({}))
-    );
-    const result = await client.clipboardPaste({ text });
-    return Response.json(result);
-  } catch (error) {
-    return proxyError(error);
-  }
-}
-
-/**
- * POST /api/automation/clipboard/copy
- */
-export async function postAutomationClipboardCopy(): Promise<Response> {
-  try {
-    const result = await client.clipboardCopy();
     return Response.json(result);
   } catch (error) {
     return proxyError(error);

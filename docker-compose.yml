@@ -19,6 +19,8 @@ services:
       BC_WORKER_BASE_URL: ${BC_WORKER_BASE_URL:-http://bc-worker:47824}
       BUILDINGCONNECTED_AUTH_VNC_PORT: ${BUILDINGCONNECTED_AUTH_VNC_PORT:-6081}
       BUILDINGCONNECTED_AUTH_VNC_URL: ${BUILDINGCONNECTED_AUTH_VNC_URL:-https://buildingconnected-vnc.desertservices.app/vnc.html?autoconnect=true&resize=scale&reconnect=true&reconnect_delay=2000&view_only=false&shared=true}
+      PERMIT_WORKER_VNC_WS_URL: ${PERMIT_WORKER_VNC_WS_URL:-wss://maricopa-vnc.desertservices.app}
+      BUILDINGCONNECTED_AUTH_VNC_WS_URL: ${BUILDINGCONNECTED_AUTH_VNC_WS_URL:-wss://buildingconnected-vnc.desertservices.app}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     healthcheck:

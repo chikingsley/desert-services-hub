@@ -27,13 +27,13 @@ interface EstimateRow {
 }
 
 interface FailedAssetRow {
-  monday_item_id: string;
   monday_asset_id: string;
+  monday_item_id: string;
 }
 
 interface CliOptions {
-  forceFailed: boolean;
   dryRun: boolean;
+  forceFailed: boolean;
   itemId: string | null;
   limit: number | null;
 }

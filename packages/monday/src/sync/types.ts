@@ -9,43 +9,43 @@ export interface Asset {
 }
 
 export interface EstimateProject {
-  mondayId: string;
-  itemName: string;
   accountName: string;
+  action: "create" | "move" | "skip";
+  existingUrl: string | null;
+  folderPath: string;
+  isVariant: boolean;
+  itemName: string;
+  letterFolder: string;
+  mondayId: string;
+  oldStatusFolder?: string;
+  oldVariantFolderPath?: string;
   projectName: string;
   statusFolder: string;
-  letterFolder: string;
-  folderPath: string;
-  existingUrl: string | null;
-  action: "create" | "move" | "skip";
-  oldStatusFolder?: string;
-  isVariant: boolean;
   variantSuffix: string | null;
-  oldVariantFolderPath?: string;
 }
 
 export interface SyncOptions {
-  limit?: number;
   concurrency?: number;
   dryRun?: boolean;
+  limit?: number;
   onProgress?: (progress: SyncProgress) => void;
 }
 
 export interface SyncProgress {
-  phase: "fetching" | "syncing" | "complete";
-  current?: number;
-  total?: number;
-  itemName?: string;
-  status?: "created" | "moved" | "skipped" | "error";
   action?: string;
-  filesUploaded?: number;
+  current?: number;
   errorMessage?: string;
+  filesUploaded?: number;
+  itemName?: string;
+  phase: "fetching" | "syncing" | "complete";
+  status?: "created" | "moved" | "skipped" | "error";
+  total?: number;
 }
 
 export interface SyncResult {
   created: number;
+  errors: string[];
+  filesUploaded: number;
   moved: number;
   skipped: number;
-  filesUploaded: number;
-  errors: string[];
 }

@@ -2,7 +2,7 @@ import { describe, expect, it } from "bun:test";
 import {
   deriveBodyLinkScanStatus,
   toManualFollowupPayloads,
-} from "@email/sync/body-link-sync";
+} from "@/packages/archive/email/downloads/body-link/body-link-sync";
 
 describe("deriveBodyLinkScanStatus", () => {
   it("returns no_links when nothing matched", () => {

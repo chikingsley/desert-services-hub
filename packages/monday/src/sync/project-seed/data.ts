@@ -30,28 +30,28 @@ export const SQL_BATCH_SIZE = 250;
 // ── Types ─────────────────────────────────────────────────────────────
 
 export interface EstimateSeedRow {
-  id: number;
-  name: string;
-  job_name: string | null;
-  contractor: string | null;
   account_id: number | null;
-  location: string | null;
-  job_address: string | null;
-  bid_status: string | null;
   awarded: number | null;
+  bid_status: string | null;
+  contractor: string | null;
+  id: number;
+  job_address: string | null;
+  job_name: string | null;
+  location: string | null;
+  name: string;
   updated_at: string;
 }
 
 export interface ProjectSeedRow {
+  account_id: number | null;
+  address: string | null;
+  contractor: string | null;
   id: number;
   lifecycle_state: string | null;
-  seed_key: string | null;
-  seed_source: string | null;
   name: string;
   normalized_name: string | null;
-  address: string | null;
-  account_id: number | null;
-  contractor: string | null;
+  seed_key: string | null;
+  seed_source: string | null;
 }
 
 export interface ExistingEstimateProjectLink {
@@ -60,25 +60,25 @@ export interface ExistingEstimateProjectLink {
 }
 
 export interface SeedDescriptor {
-  seedKey: string;
-  normalizedName: string;
+  addressHint: string | null;
   displayName: string;
   hasLocationKey: boolean;
-  addressHint: string | null;
+  normalizedName: string;
+  seedKey: string;
 }
 
 export interface SeedGroup {
-  seedKey: string;
-  normalizedName: string;
-  hasLocationKey: boolean;
-  estimates: EstimateSeedRow[];
-  representativeName: string;
-  representativeAddress: string | null;
-  representativeAccountId: number | null;
-  representativeContractor: string | null;
-  latestEvidenceAt: string;
   activeSignal: boolean;
   allLostSignal: boolean;
+  estimates: EstimateSeedRow[];
+  hasLocationKey: boolean;
+  latestEvidenceAt: string;
+  normalizedName: string;
+  representativeAccountId: number | null;
+  representativeAddress: string | null;
+  representativeContractor: string | null;
+  representativeName: string;
+  seedKey: string;
 }
 
 // ── Helper functions ──────────────────────────────────────────────────

@@ -12,7 +12,7 @@
  * See client.integration.test.ts header for full rationale.
  */
 import { beforeAll, describe, expect, it } from "bun:test";
-import { GraphGroupsClient } from "@email/groups";
+import { GraphGroupsClient } from "@/packages/archive/email/groups";
 
 // ============================================================================
 // Test Configuration

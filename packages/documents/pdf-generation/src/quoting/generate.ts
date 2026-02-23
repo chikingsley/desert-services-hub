@@ -6,7 +6,7 @@ import {
 import {
   getEstimateNumber,
   getEstimateWithDetails,
-} from "@estimates/estimating/estimate-read-service";
+} from "@/packages/estimates/estimating/estimate-read-service";
 import type { EditorEstimate } from "@lib/db/types";
 
 export interface GenerateEstimatePdfOptions {

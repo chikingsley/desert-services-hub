@@ -4,7 +4,7 @@ import type {
   Catalog,
   CatalogItem,
   CatalogSubcategory,
-} from "@estimates/catalog/types";
+} from "@/packages/estimates/catalog/types";
 import type {
   EditorEstimate,
   EditorLineItem,

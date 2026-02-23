@@ -11,9 +11,19 @@ Webhook receiver, queue handlers, and polling workers.
 - `@monday/sync/*`: Monday estimate/status/sharepoint/project-seed sync logic (package-owned).
 - `@lib/notifications/*`: email-trigger detection and draft notification delivery.
 
+## Trigger.dev Migration (In Progress)
+
+Jobs are being migrated from pgmq/pg_cron to Trigger.dev (`src/trigger/`). Already migrated:
+- `permit_sync` → `src/trigger/permit-sync.ts` (scheduled every 30 min)
+- `permit_detail_scrape` → `src/trigger/permit-detail-scrape.ts` (scheduled every 10 min)
+- `sync_full` + `monday_status_sync` → `src/trigger/monday-sync.ts` (scheduled every 10 min)
+- `sync_item` + `download_files` → `src/trigger/monday-sync-item.ts` (webhook-triggered)
+
+Dashboard: <https://trigger.desertservices.app>
+
 ## Runtime Rules
 
-- Canonical runtime is `pg_cron` (scheduler) + `pgmq` (queue) with `worker.ts` as queue consumer.
+- Legacy runtime is `pg_cron` (scheduler) + `pgmq` (queue) with `worker.ts` as queue consumer. New jobs go to Trigger.dev.
 - Do not run parallel `systemd` services for folder watcher or estimate-email-linker.
 - Persistent state belongs in Postgres via `@lib/db/client` and repository modules.
 - Lint/format policy: never run `biome`; use `ultracite` only.
@@ -41,8 +51,9 @@ Key files:
 
 ## Permit Integration Rules
 
-- Use `PermitClient` from `@permits/client` for permit-worker calls.
-- Do not inline ad-hoc permit-worker HTTP calls.
+- Permit operations are handled via the permit-worker API (`permit-worker:47822`).
+- For manual testing/debugging: use MCP tools from Claude Code (`apps/dust-permits-mcp/`).
+- Do not inline ad-hoc permit-worker HTTP calls in background jobs.
 - Permit sync cooldown/timeouts live in `jobs/config.ts` and `jobs/permit-sync.ts`.
 
 ## Email Linking Rules

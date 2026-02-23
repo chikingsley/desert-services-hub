@@ -5,9 +5,9 @@
  * plus project number propagation when columns are configured.
  */
 
-import { query } from "../../client/query";
-import { updateItem } from "../../client/search";
-import { BOARD_IDS } from "../../types/schema";
+import { query } from "@monday/client/query";
+import { updateItem } from "@monday/client/search";
+import { BOARD_IDS } from "@monday/types/schema";
 import { getLeadsWithEstimates } from "./leads-sync";
 import type {
   EstimateSnapshot,
@@ -211,12 +211,12 @@ async function syncLeadLinks(
 
 interface EnsureRelationParams {
   boardId: string;
-  itemId: string;
   columnId: string;
   currentIds: string[];
-  targetId: string;
-  label: string;
   dryRun: boolean;
+  itemId: string;
+  label: string;
+  targetId: string;
 }
 
 async function ensureRelation(params: EnsureRelationParams): Promise<boolean> {
@@ -247,8 +247,8 @@ async function ensureRelation(params: EnsureRelationParams): Promise<boolean> {
 // =============================================================================
 
 interface PropagationContext {
-  lead: LeadWithEstimate;
   estimate: EstimateSnapshot;
+  lead: LeadWithEstimate;
   project: ProjectSnapshot | undefined;
 }
 

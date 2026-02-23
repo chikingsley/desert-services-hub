@@ -10,7 +10,7 @@
 # -----------------------------------------------------------------------------
 # Stage 1: Install JS dependencies
 # -----------------------------------------------------------------------------
-FROM oven/bun:1 AS deps
+FROM oven/bun:1.3 AS deps
 WORKDIR /app
 
 # Copy root package files
@@ -37,7 +37,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   && ln -sf /usr/share/novnc/vnc.html /usr/share/novnc/index.html
 
 # Install Bun
-COPY --from=oven/bun:1.2 /usr/local/bin/bun /usr/local/bin/bun
+COPY --from=oven/bun:1.3 /usr/local/bin/bun /usr/local/bin/bun
 ENV PATH="/usr/local/bin:${PATH}"
 
 # Configure openbox to start automatically with VNC
@@ -55,9 +55,8 @@ COPY package.json tsconfig.json tsconfig.base.json ./
 COPY apps/dust-permits/package.json ./apps/dust-permits/
 COPY apps/dust-permits/tsconfig.json ./apps/dust-permits/
 
-# Permit worker source + tests
+# Permit worker source
 COPY apps/dust-permits/src ./apps/dust-permits/src
-COPY apps/dust-permits/tests ./apps/dust-permits/tests
 
 # Shared libraries (needed for @lib/* imports)
 COPY lib ./lib

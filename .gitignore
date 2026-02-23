@@ -99,7 +99,6 @@ ENV/
 .ruff_cache/
 .mypy_cache/
 develop-eggs/
-downloads/
 eggs/
 .eggs/
 sdist/
@@ -172,3 +171,5 @@ packages/documents/pdf-analysis-py/scripts/dont_stop.py
 packages/contracts/langextract/
 opencode-gemini-session-2026-02-19.md
 packages/monday/lib/db/monday-files/
+# Trigger.dev build artifacts
+.trigger/

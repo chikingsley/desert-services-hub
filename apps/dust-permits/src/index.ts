@@ -36,12 +36,12 @@ import { handleCompanySync, handleSync } from "@/api/sync";
 
 const PORT = Number(process.env.PORT) || 47_822;
 const parsedIdleTimeoutSeconds = Number.parseInt(
-  process.env.PERMIT_WORKER_IDLE_TIMEOUT_SECONDS ?? "180",
+  process.env.PERMIT_WORKER_IDLE_TIMEOUT_SECONDS ?? "255",
   10
 );
 const IDLE_TIMEOUT_SECONDS = Number.isFinite(parsedIdleTimeoutSeconds)
-  ? Math.max(10, parsedIdleTimeoutSeconds)
-  : 180;
+  ? Math.min(255, Math.max(10, parsedIdleTimeoutSeconds))
+  : 255;
 
 serve({
   hostname: "0.0.0.0",

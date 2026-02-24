@@ -26,7 +26,7 @@ import {
   setAttachmentContentHash,
   updateDocumentBackfillLinks,
 } from "@lib/db/repositories/intake-attachments";
-import { logger, schedules } from "@trigger.dev/sdk/v3";
+import { logger, schedules } from "@trigger.dev/sdk";
 import { graphGet, graphGetBinary } from "./graph";
 
 const BATCH_SIZE = 50;

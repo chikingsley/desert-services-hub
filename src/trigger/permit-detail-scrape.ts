@@ -10,7 +10,7 @@ import {
   getPermitsNeedingScrape,
   markPermitScraped,
 } from "@lib/db/repositories/dust-permit";
-import { logger, schedules } from "@trigger.dev/sdk/v3";
+import { logger, schedules } from "@trigger.dev/sdk";
 import { PermitClient } from "@/apps/dust-permits-mcp/client";
 
 const DEFAULT_BATCH_SIZE = 5;

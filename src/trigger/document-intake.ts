@@ -21,7 +21,7 @@
 import { mkdir, unlink } from "node:fs/promises";
 import { join } from "node:path";
 import { processFilesIntake } from "@documents-intake/files-intake";
-import { logger, schemaTask } from "@trigger.dev/sdk/v3";
+import { logger, schemaTask } from "@trigger.dev/sdk";
 import { z } from "zod";
 
 const fileSchema = z.object({

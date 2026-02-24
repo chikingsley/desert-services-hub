@@ -26,7 +26,7 @@ import {
   recordBodyLinkScanResult,
 } from "@lib/db/repositories/email";
 import type { BodyLinkScanStatus } from "@lib/db/types";
-import { logger, schedules } from "@trigger.dev/sdk/v3";
+import { logger, schedules } from "@trigger.dev/sdk";
 import { graphGet } from "./graph";
 
 const BATCH_SIZE = 500;

@@ -11,7 +11,7 @@
  * then verify the DB was updated.
  */
 
-import { logger, schedules } from "@trigger.dev/sdk/v3";
+import { logger, schedules } from "@trigger.dev/sdk";
 
 const PERMIT_WORKER_URL =
   process.env.PERMIT_WORKER_URL?.trim() || "http://permit-worker:47822";
@@ -45,19 +45,24 @@ export const permitSync = schedules.task({
     }
 
     // Verify permits were synced by checking the DB
-    const { sql } = await import("bun");
-    const [row] = await sql`
-      SELECT COUNT(*)::int AS total,
+    const { db } = await import("@lib/db/client");
+    const row = await db
+      .query<{ total: number; active: number }>(
+        `SELECT COUNT(*)::int AS total,
              COUNT(*) FILTER (WHERE status = 'Active')::int AS active
-      FROM dust_permits_filed_by_desert_services
-    `;
+       FROM dust_permits_filed_by_desert_services`
+      )
+      .get();
+
+    const total = row?.total ?? 0;
+    const active = row?.active ?? 0;
 
     logger.info("Permit sync complete", {
-      total: row.total,
-      active: row.active,
+      total,
+      active,
       gotResponse: response !== undefined,
     });
 
-    return { total: row.total, active: row.active };
+    return { total, active };
   },
 });

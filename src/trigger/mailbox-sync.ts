@@ -1,32 +1,22 @@
-/**
- * Mailbox Sync — Trigger.dev scheduled task
- *
- * Pulls recent emails from Microsoft Graph API across all mailboxes.
- * Replaces the pgmq `mailbox_fallback_sync` job. This is the primary
- * way emails enter the system — the webhook (email-sync) handles
- * real-time notifications, while this task catches anything missed.
- *
- * Pipeline per email:
- *   1. Fetch from Graph API with receivedDateTime filter
- *   2. Skip if already in Postgres (by message_id)
- *   3. Insert via insertEmail()
- *   4. Create attachment stubs
- *   5. Domain enrichment + platform extraction
- *   6. Account/contact find-or-create
- *
- * Downstream: attachment-intake and body-link-intake are triggered
- * immediately after sync when new emails are stored, with cron
- * schedules as a safety net.
- */
+// Email Sync — all Graph API email tasks in one file:
+//   emailSync          — webhook-driven single email
+//   syncOneMailboxTask — child task for bulk sync
+//   mailboxSync        — cron every 15 min, fans out via batchTriggerAndWait
+//   mailboxBackfill    — on-demand fan-out with configurable params
+//
+// https://trigger.dev/docs/triggering (batchTriggerAndWait, max 500 items)
+// https://trigger.dev/docs/queue-concurrency (concurrencyLimit on child task)
 
 import { db } from "@lib/db/client";
 import { insertAttachment } from "@lib/db/repositories/attachment";
 import { insertEmail } from "@lib/db/repositories/email";
 import {
   getAllMailboxes,
+  getOrCreateMailbox,
   updateMailboxSyncState,
 } from "@lib/db/repositories/mailbox";
-import { logger, schedules } from "@trigger.dev/sdk/v3";
+import { logger, schedules, schemaTask } from "@trigger.dev/sdk";
+import { z } from "zod";
 import {
   computeDomainEnrichment,
   extractRealSender,
@@ -46,9 +36,10 @@ import {
 
 export const LOOKBACK_HOURS = 6;
 export const MAX_EMAILS_PER_MAILBOX = 200;
-const PAGE_SIZE = 50;
 
-// ── Helpers ─────────────────────────────────────────────────────
+// Graph API $top range 1–1000 per page. 250 reduces API calls 5x vs 50.
+// https://learn.microsoft.com/en-us/graph/api/user-list-messages
+const PAGE_SIZE = 250;
 
 export function buildSinceFilter(hoursAgo: number): string {
   const since = new Date(Date.now() - hoursAgo * 60 * 60 * 1000);
@@ -68,31 +59,32 @@ async function getExistingMessageIds(
   return new Set(rows.map((r) => r.message_id));
 }
 
-/** Fetch email pages from Graph API, following @odata.nextLink pagination. */
-async function fetchRecentEmails(
+/** Yield email pages from Graph API one at a time via @odata.nextLink pagination.
+ *  Each page holds up to PAGE_SIZE (250) emails — we never buffer the full result set.
+ *  This keeps memory flat at ~250 emails regardless of maxEmails. */
+async function* fetchEmailPages(
   mailboxEmail: string,
   sinceIso: string,
   maxEmails: number
-): Promise<GraphEmail[]> {
+): AsyncGenerator<GraphEmail[]> {
   const filter = encodeURIComponent(`receivedDateTime ge ${sinceIso}`);
   const userPath = encodeURIComponent(mailboxEmail);
   let url = `users/${userPath}/messages?$filter=${filter}&$select=${EMAIL_FIELDS}&$orderby=receivedDateTime desc&$top=${PAGE_SIZE}`;
 
-  const emails: GraphEmail[] = [];
+  let yielded = 0;
 
-  while (url && emails.length < maxEmails) {
+  while (url && yielded < maxEmails) {
     const response = await graphGet<GraphListResponse>(url);
-    for (const email of response.value) {
-      emails.push(email);
-      if (emails.length >= maxEmails) {
-        break;
-      }
-    }
+    const remaining = maxEmails - yielded;
+    const page =
+      response.value.length <= remaining
+        ? response.value
+        : response.value.slice(0, remaining);
+    yield page;
+    yielded += page.length;
     url = response["@odata.nextLink"] ?? "";
     // nextLink is a full URL — graphGet handles both full URLs and relative paths
   }
-
-  return emails;
 }
 
 /** Create attachment stubs for a single email. */
@@ -124,7 +116,7 @@ async function syncAttachmentStubs(
   return created;
 }
 
-/** Run enrichment pipeline on a single email (same as email-sync). */
+/** Run enrichment pipeline on a single email: domain, platform, account, contact. */
 async function enrichEmail(
   emailId: number,
   fromEmail: string | null,
@@ -181,8 +173,6 @@ async function enrichEmail(
   return { accountId, contactId };
 }
 
-// ── Per-email processing ────────────────────────────────────────
-
 type EmailOutcome = "stored" | "skipped" | "duplicate";
 
 interface EmailProcessResult {
@@ -191,7 +181,7 @@ interface EmailProcessResult {
   outcome: EmailOutcome;
 }
 
-/** Insert one email + stubs + enrichment. Extracted to reduce nesting in syncOneMailbox. */
+/** Insert one email + stubs + enrichment. Used by syncOneMailbox bulk loop. */
 async function processOneEmail(
   email: GraphEmail,
   mailboxEmail: string,
@@ -237,8 +227,6 @@ async function processOneEmail(
   return { attachments, enriched, outcome: "stored" };
 }
 
-// ── Per-mailbox sync ────────────────────────────────────────────
-
 export interface MailboxSyncResult {
   attachments: number;
   email: string;
@@ -247,6 +235,41 @@ export interface MailboxSyncResult {
   fetched: number;
   skipped: number;
   stored: number;
+}
+
+/** Process a page of emails, updating result counters. Separated to keep syncOneMailbox flat. */
+async function processPage(
+  page: GraphEmail[],
+  existing: Set<string>,
+  mailboxEmail: string,
+  mailboxId: number,
+  result: MailboxSyncResult
+): Promise<void> {
+  for (const email of page) {
+    if (existing.has(email.id)) {
+      result.skipped++;
+      continue;
+    }
+    try {
+      const r = await processOneEmail(email, mailboxEmail, mailboxId);
+      if (r.outcome === "stored") {
+        result.stored++;
+        result.attachments += r.attachments;
+        if (r.enriched) {
+          result.enriched++;
+        }
+      } else {
+        result.skipped++;
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (msg.includes("duplicate key") || msg.includes("unique_violation")) {
+        result.skipped++;
+      } else {
+        logger.warn("Email insert failed", { messageId: email.id, error: msg });
+      }
+    }
+  }
 }
 
 export async function syncOneMailbox(
@@ -266,43 +289,16 @@ export async function syncOneMailbox(
   };
 
   try {
-    const emails = await fetchRecentEmails(mailboxEmail, sinceIso, maxEmails);
-    result.fetched = emails.length;
-
-    if (emails.length === 0) {
-      return result;
-    }
-
     const existing = await getExistingMessageIds(mailboxId, sinceIso);
 
-    for (const email of emails) {
-      if (existing.has(email.id)) {
-        result.skipped++;
-        continue;
-      }
-
-      try {
-        const r = await processOneEmail(email, mailboxEmail, mailboxId);
-        if (r.outcome === "stored") {
-          result.stored++;
-          result.attachments += r.attachments;
-          if (r.enriched) {
-            result.enriched++;
-          }
-        } else {
-          result.skipped++;
-        }
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
-        if (msg.includes("duplicate key") || msg.includes("unique_violation")) {
-          result.skipped++;
-        } else {
-          logger.warn("Email insert failed", {
-            messageId: email.id,
-            error: msg,
-          });
-        }
-      }
+    // Stream page-by-page — never more than PAGE_SIZE emails in memory
+    for await (const page of fetchEmailPages(
+      mailboxEmail,
+      sinceIso,
+      maxEmails
+    )) {
+      result.fetched += page.length;
+      await processPage(page, existing, mailboxEmail, mailboxId, result);
     }
 
     await updateMailboxSyncState(mailboxId, result.stored);
@@ -317,74 +313,260 @@ export async function syncOneMailbox(
   return result;
 }
 
-// ── Task ────────────────────────────────────────────────────────
+async function syncThreadSiblings(
+  mailboxEmail: string,
+  mailboxId: number,
+  conversationId: string,
+  excludeMessageId: string
+): Promise<number> {
+  const existingRows = await db
+    .query<{ message_id: string }, [string]>(
+      "SELECT message_id FROM emails WHERE conversation_id = $1"
+    )
+    .all(conversationId);
 
+  const existingIds = new Set(existingRows.map((r) => r.message_id));
+
+  const filter = encodeURIComponent(`conversationId eq '${conversationId}'`);
+  const response = await graphGet<GraphListResponse>(
+    `users/${encodeURIComponent(mailboxEmail)}/messages?$filter=${filter}&$select=${EMAIL_FIELDS}&$orderby=receivedDateTime asc&$top=50`
+  );
+
+  const siblings = response.value.filter(
+    (msg) => msg.id !== excludeMessageId && !existingIds.has(msg.id)
+  );
+
+  if (siblings.length === 0) {
+    return 0;
+  }
+
+  logger.info("Syncing thread siblings", {
+    conversationId,
+    total: response.value.length,
+    newSiblings: siblings.length,
+  });
+
+  let synced = 0;
+  for (const sibling of siblings) {
+    try {
+      const siblingData = graphEmailToInsertData(sibling, mailboxId);
+      await insertEmail(siblingData);
+      synced++;
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      logger.warn("Failed to sync sibling", {
+        siblingId: sibling.id,
+        error: msg,
+      });
+    }
+  }
+
+  logger.info("Thread siblings synced", {
+    conversationId,
+    synced,
+    skipped: siblings.length - synced,
+  });
+
+  return synced;
+}
+
+interface AggregatedResults {
+  errors: number;
+  mailboxCount: number;
+  totalAttachments: number;
+  totalEnriched: number;
+  totalFetched: number;
+  totalStored: number;
+}
+
+// Infer the actual SDK return type so we don't fight BatchResult generics
+type SyncBatchResult = Awaited<
+  ReturnType<typeof syncOneMailboxTask.batchTriggerAndWait>
+>;
+
+function aggregateBatchResults(
+  batchResult: SyncBatchResult,
+  mailboxCount: number
+): AggregatedResults {
+  let totalStored = 0;
+  let totalFetched = 0;
+  let totalAttachments = 0;
+  let totalEnriched = 0;
+  let errors = 0;
+
+  for (const run of batchResult.runs) {
+    if (!run.ok) {
+      errors++;
+      continue;
+    }
+    const r = run.output;
+    totalStored += r.stored;
+    totalFetched += r.fetched;
+    totalAttachments += r.attachments;
+    totalEnriched += r.enriched;
+    if (r.error) {
+      errors++;
+    }
+  }
+
+  return {
+    errors,
+    mailboxCount,
+    totalAttachments,
+    totalEnriched,
+    totalFetched,
+    totalStored,
+  };
+}
+
+// Webhook-driven: triggered by Outlook webhook via REST API when
+// a new email arrives. Processes one email + its thread siblings.
+export const emailSync = schemaTask({
+  id: "email-sync",
+  schema: z.object({
+    messageId: z.string().min(1),
+    mailboxEmail: z.string().min(1),
+    changeType: z.string().default("created"),
+  }),
+  maxDuration: 120,
+  retry: { maxAttempts: 3 },
+  run: async ({ messageId, mailboxEmail }) => {
+    const mailbox = await getOrCreateMailbox(mailboxEmail);
+
+    const email = await graphGet<GraphEmail>(
+      `users/${encodeURIComponent(mailboxEmail)}/messages/${encodeURIComponent(messageId)}?$select=${EMAIL_FIELDS}`
+    );
+
+    const data = graphEmailToInsertData(email, mailbox.id);
+    const emailId = await insertEmail(data);
+
+    logger.info("Email synced", {
+      emailId,
+      subject: email.subject,
+      from: email.from?.emailAddress.address,
+      conversationId: email.conversationId,
+    });
+
+    let attachmentStubs = 0;
+    if (email.hasAttachments && emailId) {
+      attachmentStubs = await syncAttachmentStubs(
+        mailboxEmail,
+        messageId,
+        emailId
+      );
+    }
+
+    const { accountId, contactId } = await enrichEmail(
+      emailId,
+      data.fromEmail ?? null,
+      data.fromName ?? null,
+      data.subject ?? null,
+      data.bodyFull ?? null,
+      data.bodyPreview ?? null
+    );
+
+    let siblingsSynced = 0;
+    if (email.conversationId) {
+      siblingsSynced = await syncThreadSiblings(
+        mailboxEmail,
+        mailbox.id,
+        email.conversationId,
+        messageId
+      );
+    }
+
+    return {
+      emailId,
+      subject: email.subject,
+      conversationId: email.conversationId ?? null,
+      siblingsSynced,
+      attachmentStubs,
+      accountId,
+      contactId,
+    };
+  },
+});
+
+// Child task — syncs a single mailbox. Runs in its own container.
+// concurrencyLimit: 10 — max 10 mailboxes synced in parallel.
+// https://trigger.dev/docs/queue-concurrency
+export const syncOneMailboxTask = schemaTask({
+  id: "sync-one-mailbox",
+  schema: z.object({
+    email: z.string().email(),
+    mailboxId: z.number(),
+    sinceIso: z.string(),
+    maxEmails: z.number().default(MAX_EMAILS_PER_MAILBOX),
+  }),
+  queue: { concurrencyLimit: 10 },
+  maxDuration: 1800, // 30 min per mailbox
+  retry: { maxAttempts: 2 },
+  run: async ({ email, mailboxId, sinceIso, maxEmails }) => {
+    return await syncOneMailbox(email, mailboxId, sinceIso, maxEmails);
+  },
+});
+
+/** Fan out to syncOneMailboxTask for all mailboxes, aggregate results. */
+async function fanOutSync(label: string, sinceIso: string, maxEmails: number) {
+  const mailboxes = await getAllMailboxes();
+  if (mailboxes.length === 0) {
+    logger.warn("No mailboxes found");
+    return { mailboxes: 0, totalStored: 0, totalAttachments: 0, errors: 0 };
+  }
+
+  logger.info(`Starting ${label}`, {
+    mailboxes: mailboxes.length,
+    since: sinceIso,
+  });
+
+  const batchResults = await syncOneMailboxTask.batchTriggerAndWait(
+    mailboxes.map((m) => ({
+      payload: { email: m.email, mailboxId: m.id, sinceIso, maxEmails },
+    }))
+  );
+
+  const agg = aggregateBatchResults(batchResults, mailboxes.length);
+  logger.info(`${label} complete`, { ...agg });
+
+  return {
+    mailboxes: agg.mailboxCount,
+    totalFetched: agg.totalFetched,
+    totalStored: agg.totalStored,
+    totalAttachments: agg.totalAttachments,
+    totalEnriched: agg.totalEnriched,
+    errors: agg.errors,
+  };
+}
+
+// Cron — every 15 min, fans out to syncOneMailboxTask per mailbox.
+// Wait time in batchTriggerAndWait does NOT count toward maxDuration.
 export const mailboxSync = schedules.task({
   id: "mailbox-sync",
   cron: "*/15 * * * *",
-  maxDuration: 600,
-  run: async () => {
-    const mailboxes = await getAllMailboxes();
-    if (mailboxes.length === 0) {
-      logger.warn("No mailboxes found");
-      return { mailboxes: 0, totalStored: 0, totalAttachments: 0, errors: 0 };
-    }
+  maxDuration: 300,
+  run: () =>
+    fanOutSync(
+      "mailbox sync",
+      buildSinceFilter(LOOKBACK_HOURS),
+      MAX_EMAILS_PER_MAILBOX
+    ),
+});
 
-    const sinceIso = buildSinceFilter(LOOKBACK_HOURS);
-
-    logger.info("Starting mailbox sync", {
-      mailboxes: mailboxes.length,
-      since: sinceIso,
-    });
-
-    const results: MailboxSyncResult[] = [];
-
-    for (const mailbox of mailboxes) {
-      const result = await syncOneMailbox(mailbox.email, mailbox.id, sinceIso);
-      results.push(result);
-
-      if (result.stored > 0) {
-        logger.info("Mailbox synced", {
-          email: mailbox.email,
-          fetched: result.fetched,
-          stored: result.stored,
-          skipped: result.skipped,
-          attachments: result.attachments,
-          enriched: result.enriched,
-        });
-      }
-    }
-
-    const totalStored = results.reduce((sum, r) => sum + r.stored, 0);
-    const totalAttachments = results.reduce((sum, r) => sum + r.attachments, 0);
-    const totalEnriched = results.reduce((sum, r) => sum + r.enriched, 0);
-    const errors = results.filter((r) => r.error !== null).length;
-
-    // Trigger downstream intake tasks immediately when new emails arrived
-    if (totalStored > 0) {
-      const { attachmentIntake } = await import("./attachment-intake");
-      const { bodyLinkIntake } = await import("./body-link-intake");
-      await Promise.all([attachmentIntake.trigger(), bodyLinkIntake.trigger()]);
-      logger.info("Triggered downstream intake tasks", {
-        totalStored,
-        totalAttachments,
-      });
-    }
-
-    logger.info("Mailbox sync complete", {
-      mailboxes: mailboxes.length,
-      totalStored,
-      totalAttachments,
-      totalEnriched,
-      errors,
-    });
-
-    return {
-      mailboxes: mailboxes.length,
-      totalStored,
-      totalAttachments,
-      totalEnriched,
-      errors,
-    };
-  },
+// On-demand backfill — configurable lookback and per-mailbox limit.
+// POST /api/v1/tasks/mailbox-backfill/trigger
+// {"payload":{"lookbackHours":40000,"maxEmailsPerMailbox":100000}}
+export const mailboxBackfill = schemaTask({
+  id: "mailbox-backfill",
+  schema: z.object({
+    lookbackHours: z.number().min(1).max(50_000).default(96),
+    maxEmailsPerMailbox: z.number().min(1).max(100_000).default(1000),
+  }),
+  maxDuration: 3600,
+  retry: { maxAttempts: 1 },
+  run: ({ lookbackHours, maxEmailsPerMailbox }) =>
+    fanOutSync(
+      "mailbox backfill",
+      buildSinceFilter(lookbackHours),
+      maxEmailsPerMailbox
+    ),
 });

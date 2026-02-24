@@ -1,32 +1,29 @@
 /**
- * Monday Sync — Trigger.dev scheduled task
+ * Monday Sync — Trigger.dev tasks
+ *
+ * Four tasks, one file:
+ *   - mondaySyncItem: webhook-driven single item (id: "monday-sync-item")
+ *   - mondaySyncTargeted: on-demand item or full sync (id: "monday-sync-targeted")
+ *   - mondaySyncIncremental: cron every 10 min via activity log
+ *   - mondaySync: cron every 6h full board dump
  *
  * Two-tier sync strategy:
- *   - **Every 10 min**: Incremental sync via activity log (only changed items)
- *   - **Every 6 hours**: Full sync (all items, contacts, accounts, status, files)
- *
- * The incremental sync typically processes 0-20 items in seconds.
- * The full sync processes ~4,780 items and takes 5-15 minutes.
- *
- * If the activity log returns too many changes (>500), the incremental
- * sync falls back to a full sync automatically.
- *
- * Pipeline stages (full sync only):
- *   1. Estimate sync (ESTIMATING board → Postgres estimates table)
- *   2. Project seed (group estimates → projects)
- *   3. Status sync (GC cleanup, leads, project links)
- *   4. File download sweep (new Monday assets only)
- *   5. SharePoint folder sync
- *   6. Document project propagation
+ *   - Every 10 min: Incremental sync via activity log (only changed items)
+ *   - Every 6 hours: Full sync (all items, contacts, accounts, status, files)
  *
  * Contacts and accounts are add-only — new records are inserted but existing
  * ones are never overwritten, preserving manual edits and enrichment data.
- *
- * The full pipeline is exported as `runFullMondaySync()` for reuse by the
- * on-demand monday-sync-targeted task.
  */
 
-import { logger, schedules } from "@trigger.dev/sdk/v3";
+import { propagateMissingDocumentProjectIds } from "@lib/db/repositories/intake-document";
+import { syncEstimateItem } from "@monday/sync/estimate-sync/item-sync";
+import { processItemFiles } from "@monday/sync/pipeline";
+import {
+  markStaleProjectSeeds,
+  syncProjectSeedsFromEstimates,
+} from "@monday/sync/project-seed/sync";
+import { logger, schedules, schemaTask } from "@trigger.dev/sdk";
+import { z } from "zod";
 
 const PROJECT_SEED_STALE_DAYS = 45;
 
@@ -44,10 +41,59 @@ async function safeStage<T>(
   }
 }
 
+/** Sync one estimate item and download any new file assets. */
+async function syncAndDownloadItem(itemId: string): Promise<number> {
+  const shouldDownload = await syncEstimateItem(itemId);
+  if (!shouldDownload) {
+    return 0;
+  }
+  return processItemFiles(itemId);
+}
+
+/** Download new file assets for a batch of item IDs. */
+async function downloadFilesForItems(itemIds: string[]): Promise<number> {
+  let count = 0;
+  for (const itemId of itemIds) {
+    count += await processItemFiles(itemId);
+  }
+  return count;
+}
+
+/** Project seed sync + document project propagation (cheap DB-only). */
+async function runSeedAndPropagation() {
+  const seedResult = await safeStage("Project seed sync", async () => {
+    const seedStats = await syncProjectSeedsFromEstimates();
+    const staleStats = await markStaleProjectSeeds({
+      staleDays: PROJECT_SEED_STALE_DAYS,
+    });
+    logger.info("Project seed sync", {
+      groups: seedStats.seedGroups,
+      estimates: seedStats.estimatesScanned,
+      created: seedStats.projectsCreated,
+      updated: seedStats.projectsUpdated,
+      promoted: seedStats.promotedToActive,
+      movedToLost: seedStats.movedToLost,
+      staleToLost: staleStats.movedToLost,
+    });
+    return {
+      created: seedStats.projectsCreated,
+      updated: seedStats.projectsUpdated,
+      staleToLost: staleStats.movedToLost,
+    };
+  });
+
+  await safeStage(
+    "Document project propagation",
+    propagateMissingDocumentProjectIds
+  );
+
+  return seedResult;
+}
+
 export interface MondayFullSyncResult {
   estimates: { fetched: number; upserted: number; changes: number };
   filesDownloaded: number;
-  seed: { created: number; updated: number } | null;
+  seed: { created: number; updated: number; staleToLost: number } | null;
   sharepoint: {
     created: number;
     moved: number;
@@ -58,7 +104,6 @@ export interface MondayFullSyncResult {
 
 /** Full Monday sync pipeline — shared between scheduled and on-demand tasks. */
 export async function runFullMondaySync(): Promise<MondayFullSyncResult> {
-  // 1. Estimate sync — no safeStage; failure here should halt the pipeline
   const { syncEstimates } = await import(
     "@monday/sync/estimate-sync/full-sync"
   );
@@ -82,32 +127,8 @@ export async function runFullMondaySync(): Promise<MondayFullSyncResult> {
     });
   }
 
-  // 2. Project seed (group estimates → projects)
-  const seedResult = await safeStage("Project seed sync", async () => {
-    const { syncProjectSeedsFromEstimates, markStaleProjectSeeds } =
-      await import("@monday/sync/project-seed/sync");
-    const seedStats = await syncProjectSeedsFromEstimates();
-    const staleStats = await markStaleProjectSeeds({
-      staleDays: PROJECT_SEED_STALE_DAYS,
-    });
+  const seedResult = await runSeedAndPropagation();
 
-    logger.info("Project seed sync", {
-      groups: seedStats.seedGroups,
-      estimates: seedStats.estimatesScanned,
-      created: seedStats.projectsCreated,
-      updated: seedStats.projectsUpdated,
-      promoted: seedStats.promotedToActive,
-      movedToLost: seedStats.movedToLost,
-      staleToLost: staleStats.movedToLost,
-    });
-
-    return {
-      created: seedStats.projectsCreated,
-      updated: seedStats.projectsUpdated,
-    };
-  });
-
-  // 3. Status sync (GC cleanup + leads + project links)
   const statusResult = await safeStage("Status sync", async () => {
     const { pollMondayStatusSync } = await import(
       "@monday/sync/status-sync/poll"
@@ -133,25 +154,17 @@ export async function runFullMondaySync(): Promise<MondayFullSyncResult> {
     };
   });
 
-  // 4. File download sweep (only new assets)
   const filesDownloaded = await safeStage("File download sweep", async () => {
-    const { processItemFiles } = await import("@monday/sync/pipeline");
-    let count = 0;
-    for (const itemId of syncResult.estimateFileItemIds) {
-      count += await processItemFiles(itemId);
-    }
-
+    const count = await downloadFilesForItems(syncResult.estimateFileItemIds);
     if (count > 0) {
       logger.info("File download sweep", {
         itemsChecked: syncResult.estimateFileItemIds.length,
         filesDownloaded: count,
       });
     }
-
     return count;
   });
 
-  // 5. SharePoint folder sync
   const spResult = await safeStage("SharePoint sync", async () => {
     const { syncSharePointFolders } = await import(
       "@monday/sync/sharepoint-sync"
@@ -173,14 +186,6 @@ export async function runFullMondaySync(): Promise<MondayFullSyncResult> {
     };
   });
 
-  // 6. Document project propagation
-  await safeStage("Document project propagation", async () => {
-    const { propagateMissingDocumentProjectIds } = await import(
-      "@lib/db/repositories/intake-document"
-    );
-    await propagateMissingDocumentProjectIds();
-  });
-
   return {
     estimates: {
       fetched: syncResult.fetched,
@@ -194,16 +199,65 @@ export async function runFullMondaySync(): Promise<MondayFullSyncResult> {
   };
 }
 
-/**
- * Incremental sync — runs every 10 minutes.
- *
- * Queries the Monday.com activity log for items changed since the last sync,
- * then syncs only those items. If the activity log indicates too many changes
- * (>500 items), falls back to a full sync.
- *
- * Also runs project seed and document propagation (cheap DB-only operations)
- * on every cycle to keep projects up to date.
- */
+/** Webhook-driven: sync a single Monday item when it changes. */
+export const mondaySyncItem = schemaTask({
+  id: "monday-sync-item",
+  schema: z.object({ mondayItemId: z.string().min(1) }),
+  maxDuration: 120,
+  retry: { maxAttempts: 3 },
+  run: async ({ mondayItemId }) => {
+    const filesDownloaded = await syncAndDownloadItem(mondayItemId);
+    logger.info("Item synced", { mondayItemId, filesDownloaded });
+    return { mondayItemId, filesDownloaded };
+  },
+});
+
+/** On-demand: sync specific items or run the full pipeline. */
+export const mondaySyncTargeted = schemaTask({
+  id: "monday-sync-targeted",
+  schema: z.object({
+    itemIds: z
+      .array(z.string().min(1))
+      .optional()
+      .describe("Specific Monday item IDs to sync. Omit for full pipeline."),
+  }),
+  maxDuration: 600,
+  retry: { maxAttempts: 1 },
+  run: async ({ itemIds }) => {
+    if (itemIds && itemIds.length > 0) {
+      logger.info("Starting targeted item sync", { count: itemIds.length });
+
+      let synced = 0;
+      let failed = 0;
+      let filesDownloaded = 0;
+
+      for (const itemId of itemIds) {
+        try {
+          filesDownloaded += await syncAndDownloadItem(itemId);
+          synced++;
+        } catch (err) {
+          failed++;
+          const msg = err instanceof Error ? err.message : String(err);
+          logger.warn("Item sync failed", { itemId, error: msg });
+        }
+      }
+
+      logger.info("Targeted item sync complete", {
+        requested: itemIds.length,
+        synced,
+        failed,
+        filesDownloaded,
+      });
+
+      return { mode: "items" as const, synced, failed, filesDownloaded };
+    }
+
+    logger.info("Starting full pipeline sync (on-demand)");
+    return runFullMondaySync();
+  },
+});
+
+/** Incremental sync — every 10 minutes via activity log. */
 export const mondaySyncIncremental = schedules.task({
   id: "monday-sync-incremental",
   cron: "*/10 * * * *",
@@ -224,7 +278,6 @@ export const mondaySyncIncremental = schedules.task({
       filesDetected: result.filesDetected,
     });
 
-    // If activity log had too many changes, the full sync will handle it
     if (result.mode === "full_recommended") {
       logger.warn(
         `Activity log returned ${result.changedItemIds} changed items — deferring to full sync`
@@ -232,58 +285,24 @@ export const mondaySyncIncremental = schedules.task({
       return { ...result, filesDownloaded: 0, seed: null };
     }
 
-    // Download files for changed items that have new assets
-    let filesDownloaded = 0;
-    if (estimateFileItemIds.length > 0) {
-      const downloaded = await safeStage("File downloads", async () => {
-        const { processItemFiles } = await import("@monday/sync/pipeline");
-        let count = 0;
-        for (const itemId of estimateFileItemIds) {
-          count += await processItemFiles(itemId);
-        }
-        return count;
-      });
-      filesDownloaded = downloaded ?? 0;
-    }
+    const filesDownloaded =
+      estimateFileItemIds.length > 0
+        ? ((await safeStage("File downloads", () =>
+            downloadFilesForItems(estimateFileItemIds)
+          )) ?? 0)
+        : 0;
 
-    // Run project seed (cheap, DB-only) to keep projects current
-    const seedResult = await safeStage("Project seed sync", async () => {
-      const { syncProjectSeedsFromEstimates, markStaleProjectSeeds } =
-        await import("@monday/sync/project-seed/sync");
-      const seedStats = await syncProjectSeedsFromEstimates();
-      const staleStats = await markStaleProjectSeeds({
-        staleDays: PROJECT_SEED_STALE_DAYS,
-      });
-      return {
-        created: seedStats.projectsCreated,
-        updated: seedStats.projectsUpdated,
-        staleToLost: staleStats.movedToLost,
-      };
-    });
+    const seed = await runSeedAndPropagation();
 
-    // Document project propagation (1 SQL query)
-    await safeStage("Document project propagation", async () => {
-      const { propagateMissingDocumentProjectIds } = await import(
-        "@lib/db/repositories/intake-document"
-      );
-      await propagateMissingDocumentProjectIds();
-    });
-
-    return { ...result, filesDownloaded, seed: seedResult };
+    return { ...result, filesDownloaded, seed };
   },
 });
 
-/**
- * Full sync — runs every 6 hours as a safety net.
- *
- * Does the complete board dump: all estimates, contacts, accounts,
- * status sync, file downloads, SharePoint sync. This catches anything
- * the incremental sync or webhooks might have missed.
- */
+/** Full sync — every 6 hours as a safety net. */
 export const mondaySync = schedules.task({
   id: "monday-sync",
   cron: "0 */6 * * *",
   maxDuration: 1200,
   retry: { maxAttempts: 1 },
-  run: async () => runFullMondaySync(),
+  run: () => runFullMondaySync(),
 });

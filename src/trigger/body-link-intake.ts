@@ -29,7 +29,7 @@ import type { BodyLinkScanStatus } from "@lib/db/types";
 import { logger, schedules } from "@trigger.dev/sdk/v3";
 import { graphGet } from "./graph";
 
-const BATCH_SIZE = 30;
+const BATCH_SIZE = 500;
 const SCAN_VERSION = 1;
 const MAX_LINKS_PER_EMAIL = 12;
 const DOWNLOAD_TIMEOUT_MS = 120_000;
@@ -482,7 +482,7 @@ async function processEmail(email: EmailRow): Promise<ProcessResult> {
 export const bodyLinkIntake = schedules.task({
   id: "body-link-intake",
   cron: "*/10 * * * *",
-  maxDuration: 300,
+  maxDuration: 480,
   run: async () => {
     const emails = await getUnscannedEmails(BATCH_SIZE);
     if (emails.length === 0) {

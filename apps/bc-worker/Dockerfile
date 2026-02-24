@@ -55,8 +55,9 @@ COPY package.json tsconfig.json tsconfig.base.json bunfig.toml ./
 # BC worker source
 COPY apps/bc-worker/src ./apps/bc-worker/src
 
-# VNC startup script
+# Shared libraries
 COPY lib/vnc ./lib/vnc
+COPY lib/browser-session ./lib/browser-session
 RUN chmod +x /app/lib/vnc/start-vnc.sh
 
 # Startup script

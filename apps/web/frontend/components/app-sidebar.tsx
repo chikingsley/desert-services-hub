@@ -1,5 +1,4 @@
 import {
-  Building2,
   FileCheck,
   FileText,
   Inbox,
@@ -54,8 +53,12 @@ const manageItems = [
   { title: "Processing", href: "/processing", icon: Loader2 },
   { title: "Catalog", href: "/catalog", icon: Package },
   { title: "Map", href: "/map", icon: MapPin },
-  { title: "Maricopa Portal", href: "/maricopa", icon: Monitor },
-  { title: "BuildingConnected", href: "/buildingconnected", icon: Building2 },
+  {
+    title: "Automation",
+    href: "/automation",
+    icon: Monitor,
+    alsoActive: ["/maricopa", "/buildingconnected"],
+  },
 ];
 
 const utilityItems = [
@@ -176,7 +179,10 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {manageItems.map((item) => {
-                const isActive = pathname.startsWith(item.href);
+                const isActive =
+                  pathname.startsWith(item.href) ||
+                  ("alsoActive" in item &&
+                    item.alsoActive?.some((p) => pathname.startsWith(p)));
                 return (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton

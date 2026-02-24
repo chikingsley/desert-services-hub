@@ -448,7 +448,7 @@ export function AutomationPage({ visible = true }: AutomationPageProps) {
     activePortal === "maricopa" ? maricopaVncRef : buildingConnectedVncRef;
 
   const rootClassName = visible
-    ? "relative h-full w-full"
+    ? "absolute inset-0"
     : "pointer-events-none fixed inset-0 -z-10 opacity-0";
 
   const activeError =

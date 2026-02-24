@@ -539,7 +539,12 @@ export class BrowserSessionManager {
   }
 
   getStatus(): SessionStatus {
-    const currentUrl = this.session?.instance.page.url() ?? null;
+    let currentUrl: string | null = null;
+    try {
+      currentUrl = this.session?.instance.page.url() ?? null;
+    } catch {
+      /* browser may have disconnected */
+    }
     return {
       active: this.session !== null,
       busy: (this.session?.operationDepth ?? 0) > 0,
@@ -586,9 +591,19 @@ export class BrowserSessionManager {
   /**
    * Reload storageState from disk into a fresh context.
    * Used after manual bootstrap saves state externally.
+   *
+   * WARNING: This swaps the context and page on the existing BrowserInstance.
+   * Any code that cached `instance.page` or `instance.context` directly will
+   * hold stale references after this call. Always access via getPage()/getContext().
    */
   async reloadStateFromDisk(): Promise<boolean> {
     if (!this.session) {
+      return false;
+    }
+    if (this.session.operationDepth > 0) {
+      console.warn(
+        `${this.log} Cannot reload state while operation in progress`
+      );
       return false;
     }
     if (!existsSync(this.config.statePath)) {

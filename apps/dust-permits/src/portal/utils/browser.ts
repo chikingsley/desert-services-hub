@@ -210,6 +210,9 @@ export async function ensureBrowserSessionReady(options?: {
 }): Promise<BrowserSession> {
   const session = await sessionManager.getOrCreateSession();
   if (options?.forceRelogin || !session.isLoggedIn) {
+    if (session.operationDepth > 0) {
+      return session; // Don't relogin while another operation is using the page
+    }
     const succeeded = await login(session.instance.page);
     if (succeeded) {
       session.isLoggedIn = true;

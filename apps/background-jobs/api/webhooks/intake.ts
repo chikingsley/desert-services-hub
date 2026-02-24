@@ -4,21 +4,25 @@
  * Route: POST /api/webhooks/intake
  *
  * Receives forwarded email data from the Cloudflare intake-worker.
- * Saves attachments to disk and enqueues an intake job for processing.
+ * Saves attachments to disk (audit trail) and triggers the Trigger.dev
+ * document-intake task for processing.
  *
  * File-sharing links (OneDrive, Egnyte, Dropbox) in email bodies are
- * now handled by the Trigger.dev body-link-intake task, which scans
+ * handled by the Trigger.dev body-link-intake task, which scans
  * email bodies for URLs and downloads them separately.
  */
 import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
-import { db } from "@lib/db/client";
 import { z } from "zod";
 
 const INTAKE_DIR =
   process.env.INTAKE_DIR?.trim() ||
   join(import.meta.dir, "../../../../data/intake");
 const LOG = "[webhook:intake]";
+
+const TRIGGER_API_URL =
+  process.env.TRIGGER_API_URL?.trim() || "http://localhost:8030";
+const TRIGGER_SECRET_KEY = process.env.TRIGGER_SECRET_KEY?.trim() || "";
 
 const INVALID_FILENAME_CHARS_RE = /[/\\?%*:|"<>]/g;
 const LEADING_DOTS_RE = /^\.+/;
@@ -34,15 +38,33 @@ function sanitizeFilename(name: string, replacer = "_"): string {
 
 function extensionFromContentType(contentType: string | null): string {
   const ct = (contentType ?? "").toLowerCase();
-  if (ct.includes("pdf")) return ".pdf";
-  if (ct.includes("zip")) return ".zip";
-  if (ct.includes("csv")) return ".csv";
-  if (ct.includes("plain")) return ".txt";
-  if (ct.includes("png")) return ".png";
-  if (ct.includes("jpeg") || ct.includes("jpg")) return ".jpg";
-  if (ct.includes("sheet")) return ".xlsx";
-  if (ct.includes("wordprocessingml")) return ".docx";
-  if (ct.includes("presentationml")) return ".pptx";
+  if (ct.includes("pdf")) {
+    return ".pdf";
+  }
+  if (ct.includes("zip")) {
+    return ".zip";
+  }
+  if (ct.includes("csv")) {
+    return ".csv";
+  }
+  if (ct.includes("plain")) {
+    return ".txt";
+  }
+  if (ct.includes("png")) {
+    return ".png";
+  }
+  if (ct.includes("jpeg") || ct.includes("jpg")) {
+    return ".jpg";
+  }
+  if (ct.includes("sheet")) {
+    return ".xlsx";
+  }
+  if (ct.includes("wordprocessingml")) {
+    return ".docx";
+  }
+  if (ct.includes("presentationml")) {
+    return ".pptx";
+  }
   return "";
 }
 
@@ -81,17 +103,49 @@ const intakePayloadSchema = z.object({
 
 type IncomingAttachment = z.infer<typeof incomingAttachmentSchema>;
 
-const enqueueStmt = db.query(
-  "SELECT public.enqueue_background_job('intake', ($1::text)::jsonb, NULL, 3, FALSE)::bigint AS id"
-);
+// ── Trigger.dev API helper ──────────────────────────────────────
+
+interface TriggerFile {
+  contentBase64: string;
+  filename: string;
+}
+
+async function triggerDocumentIntake(payload: {
+  originalSubject: string;
+  originalFrom: string;
+  bodyText: string;
+  forwarderEmail: string;
+  files: TriggerFile[];
+}): Promise<string | null> {
+  const response = await fetch(
+    `${TRIGGER_API_URL}/api/v1/tasks/document-intake/trigger`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${TRIGGER_SECRET_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ payload, options: {} }),
+    }
+  );
+
+  if (!response.ok) {
+    const text = await response.text().catch(() => "");
+    throw new Error(
+      `Trigger.dev API ${response.status}: ${text.slice(0, 200)}`
+    );
+  }
+
+  const result = (await response.json()) as { id?: string };
+  return result.id ?? null;
+}
 
 // ── Helpers ─────────────────────────────────────────────────────
 
 async function saveAttachmentsToDisk(
   attachments: IncomingAttachment[],
   jobDir: string
-): Promise<string[]> {
-  const paths: string[] = [];
+): Promise<void> {
   for (const att of attachments) {
     const filename = sanitizeFilename(
       ensureFilenameExtension(att.filename || "attachment", att.contentType),
@@ -100,9 +154,32 @@ async function saveAttachmentsToDisk(
     const filePath = join(jobDir, filename);
     const buffer = Buffer.from(att.content, "base64");
     await Bun.write(filePath, buffer);
-    paths.push(filePath);
   }
-  return paths;
+}
+
+function buildTriggerFiles(
+  attachments: IncomingAttachment[],
+  bodyText: string | null
+): TriggerFile[] {
+  const files: TriggerFile[] = [];
+
+  for (const att of attachments) {
+    const filename = sanitizeFilename(
+      ensureFilenameExtension(att.filename || "attachment", att.contentType),
+      "-"
+    );
+    files.push({ filename, contentBase64: att.content });
+  }
+
+  // Include body text as a file if it has meaningful content
+  if (bodyText && bodyText.trim().length > 0) {
+    files.push({
+      filename: "email-body.txt",
+      contentBase64: Buffer.from(bodyText).toString("base64"),
+    });
+  }
+
+  return files;
 }
 
 // ── Handler ─────────────────────────────────────────────────────
@@ -130,17 +207,17 @@ export async function handleIntakeWebhook(req: Request): Promise<Response> {
     );
   }
 
-  // Create job directory
+  // Save to disk for audit trail
   const jobId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   const jobDir = join(INTAKE_DIR, jobId);
   await mkdir(jobDir, { recursive: true });
+  await saveAttachmentsToDisk(body.attachments ?? [], jobDir);
 
-  const attachmentPaths = await saveAttachmentsToDisk(
-    body.attachments ?? [],
-    jobDir
-  );
+  if (hasBody && body.bodyText.trim().length > 0) {
+    await Bun.write(join(jobDir, "email-body.txt"), body.bodyText);
+  }
 
-  // File links (OneDrive, Egnyte, Dropbox) are now handled by
+  // File links (OneDrive, Egnyte, Dropbox) are handled by
   // the Trigger.dev body-link-intake task after email sync.
   if (hasLinks) {
     console.log(
@@ -148,31 +225,31 @@ export async function handleIntakeWebhook(req: Request): Promise<Response> {
     );
   }
 
-  // Save body text as a file if it has meaningful content
-  if (hasBody && body.bodyText.trim().length > 0) {
-    const bodyPath = join(jobDir, "email-body.txt");
-    await Bun.write(bodyPath, body.bodyText);
-    attachmentPaths.push(bodyPath);
+  // Build file list and trigger Trigger.dev task
+  const files = buildTriggerFiles(
+    body.attachments ?? [],
+    hasBody ? body.bodyText : null
+  );
+
+  if (files.length === 0) {
+    console.log(`${LOG} No processable files — skipping task trigger`);
+    return Response.json({ ok: true, files: 0 }, { status: 200 });
   }
 
-  // Enqueue job
-  const payload = JSON.stringify({
+  const runId = await triggerDocumentIntake({
     originalSubject: body.originalSubject ?? "",
     originalFrom: body.originalFrom ?? "",
     bodyText: body.bodyText ?? "",
-    attachmentPaths,
     forwarderEmail: body.forwarderEmail ?? "",
+    files,
   });
 
-  const row = (await enqueueStmt.get(payload)) as { id: number } | null;
-  const jobDbId = row?.id ?? null;
-
   console.log(
-    `${LOG} Enqueued job #${jobDbId}: ${attachmentPaths.length} file(s) from "${body.originalSubject}"`
+    `${LOG} Triggered document-intake run ${runId}: ${files.length} file(s) from "${body.originalSubject}"`
   );
 
   return Response.json(
-    { ok: true, jobId: jobDbId, files: attachmentPaths.length },
+    { ok: true, runId, files: files.length },
     { status: 202 }
   );
 }

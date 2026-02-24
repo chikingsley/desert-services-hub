@@ -8,6 +8,7 @@
  *   - permit_sync → permit-sync
  *   - permit_detail_scrape → permit-detail-scrape
  *   - sync_full, sync_item, download_files, monday_status_sync → monday-sync / monday-sync-item
+ *   - intake → document-intake
  *
  * Jobs removed because their dependencies were deleted:
  *   - contact_enrichment, email_triage_batch, folder_watcher_poll,
@@ -32,7 +33,6 @@ import {
   processContractEmailReceivedJob,
   processDustPermitIssuedEmailJob,
   processDustPermitPaymentJob,
-  processIntakeJob,
 } from "./event-jobs";
 import { completeJob, dequeue, failJob, parseJobPayload } from "./queue";
 import type { WebhookJob } from "./types";
@@ -126,8 +126,7 @@ async function handleContractWonBridge(): Promise<void> {
 }
 
 const JOB_HANDLERS: Record<string, (job: WebhookJob) => Promise<void>> = {
-  // Document intake + contracts
-  intake: processIntakeJob,
+  // Contracts
   contract_doc_extract: handleContractDocExtract,
   contract_email_received: processContractEmailReceivedJob,
   contract_won_bridge: async () => handleContractWonBridge(),

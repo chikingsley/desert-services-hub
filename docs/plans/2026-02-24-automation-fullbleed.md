@@ -61,11 +61,17 @@ This component replaces the status card + tab buttons + action buttons. It float
 /**
  * Floating toolbar for the automation page.
  * Renders on top of the full-bleed VNC panel.
+ * Uses shadcn/ui components (Button, Popover, DropdownMenu).
  */
 
 import { CheckCircle2, ChevronDown, Info, Loader2, RefreshCw, Square } from "lucide-react";
-import { useState } from "react";
 import { Button } from "@/apps/web/frontend/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/apps/web/frontend/components/ui/dropdown-menu";
 import {
   Popover,
   PopoverContent,
@@ -75,26 +81,17 @@ import {
 type AutomationPortal = "maricopa" | "buildingconnected";
 
 interface AutomationToolbarProps {
-  /** Currently active portal view */
   activePortal: AutomationPortal;
-  /** Whether any action button request is in flight */
   actionPending: boolean;
-  /** The specific action currently running, if any */
   activeAction: string | null;
-  /** Whether the automation status API returned an error */
   error: Error | null;
-  /** Last error string from the automation status response */
   lastError: string | null;
-  /** Callback to switch portal view */
   onPortalChange: (portal: AutomationPortal) => void;
-  /** Callbacks for the three action buttons */
   onEnsureReady: () => void;
   onKeepAlive: () => void;
   onStop: () => void;
-  /** Session display state */
   sessionLabel: string;
   sessionDotClass: string;
-  /** Telemetry fields for the popover */
   telemetry: {
     busy: string;
     lastLogin: string;
@@ -103,7 +100,6 @@ interface AutomationToolbarProps {
     keepAlive: string;
     homePin: string;
   };
-  /** BuildingConnected-specific display when that portal is active */
   buildingConnectedLabel?: string;
   buildingConnectedDotClass?: string;
 }
@@ -128,7 +124,6 @@ export function AutomationToolbar({
   buildingConnectedLabel,
   buildingConnectedDotClass,
 }: AutomationToolbarProps) {
-  const [portalMenuOpen, setPortalMenuOpen] = useState(false);
   const otherPortal: AutomationPortal =
     activePortal === "maricopa" ? "buildingconnected" : "maricopa";
 
@@ -145,17 +140,18 @@ export function AutomationToolbar({
     <div className="pointer-events-none absolute inset-x-3 top-3 z-20 flex flex-col gap-2">
       {/* Main toolbar */}
       <div className="pointer-events-auto flex items-center gap-2 rounded-xl border border-white/10 bg-black/70 px-3 py-2 backdrop-blur-sm">
-        {/* Left: status + portal switcher */}
+        {/* Left: status indicator with telemetry popover */}
         <Popover>
           <PopoverTrigger asChild>
-            <button
-              className="inline-flex items-center gap-2 rounded-lg px-2 py-1 text-sm text-white/90 transition-colors hover:bg-white/10"
-              type="button"
+            <Button
+              className="gap-2 border-0 bg-transparent text-white/90 text-sm hover:bg-white/10"
+              size="sm"
+              variant="ghost"
             >
               <span className={`h-2 w-2 rounded-full ${displayDotClass}`} />
               <span className="font-medium">{displayLabel}</span>
               <Info className="h-3.5 w-3.5 text-white/40" />
-            </button>
+            </Button>
           </PopoverTrigger>
           <PopoverContent
             align="start"
@@ -175,31 +171,27 @@ export function AutomationToolbar({
           </PopoverContent>
         </Popover>
 
-        {/* Portal switcher */}
-        <div className="relative">
-          <button
-            className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 px-2.5 py-1 text-white/70 text-xs transition-colors hover:bg-white/10 hover:text-white"
-            onClick={() => setPortalMenuOpen(!portalMenuOpen)}
-            type="button"
+        {/* Portal switcher — shadcn DropdownMenu */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              className="h-7 gap-1.5 border-white/10 bg-transparent text-white/70 text-xs hover:bg-white/10 hover:text-white"
+              size="sm"
+              variant="outline"
+            >
+              {formatPortalLabel(activePortal)}
+              <ChevronDown className="h-3 w-3" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            align="start"
+            className="border-white/10 bg-black/90 text-white/80 backdrop-blur-md"
           >
-            {formatPortalLabel(activePortal)}
-            <ChevronDown className="h-3 w-3" />
-          </button>
-          {portalMenuOpen && (
-            <div className="absolute top-full left-0 z-30 mt-1 rounded-lg border border-white/10 bg-black/90 py-1 backdrop-blur-md">
-              <button
-                className="block w-full px-3 py-1.5 text-left text-white/80 text-xs transition-colors hover:bg-white/10"
-                onClick={() => {
-                  onPortalChange(otherPortal);
-                  setPortalMenuOpen(false);
-                }}
-                type="button"
-              >
-                {formatPortalLabel(otherPortal)}
-              </button>
-            </div>
-          )}
-        </div>
+            <DropdownMenuItem onClick={() => onPortalChange(otherPortal)}>
+              {formatPortalLabel(otherPortal)}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
 
         {/* Spacer */}
         <div className="flex-1" />
@@ -209,7 +201,7 @@ export function AutomationToolbar({
           {navigator.platform?.includes("Mac") ? "⌘" : "Ctrl"}+V to paste
         </span>
 
-        {/* Action buttons */}
+        {/* Action buttons (Maricopa only) */}
         {activePortal === "maricopa" && (
           <div className="flex items-center gap-1.5">
             <Button

@@ -1,6 +1,7 @@
 // BuildingConnected auth process control and VNC clipboard bridge.
 import { type ChildProcessWithoutNullStreams, spawn } from "node:child_process";
 import { stat } from "node:fs/promises";
+import { bcSession } from "../lib/browser";
 
 const LOG = "[bc-worker-auth-api]";
 const DEFAULT_START_URL = "https://app.buildingconnected.com/";
@@ -46,6 +47,7 @@ export interface BuildingConnectedAuthStatusResponse {
   manualAuthTimeoutMs: number;
   pid: number | null;
   running: boolean;
+  session: import("@/lib/browser-session").SessionStatus;
   startedAt: string | null;
   startUrl: string;
   stateExists: boolean;
@@ -211,9 +213,10 @@ async function getStatusPayload(
     process.env.VNC_RESOLUTION
   );
   const stateFile = await readStateFileMetadata();
+  const session = bcSession.getStatus();
   return {
     finishedAt: runState.finishedAt,
-    lastError: runState.lastError,
+    lastError: session.lastError ?? runState.lastError,
     lastExitCode: runState.lastExitCode,
     lastSignal: runState.lastSignal,
     lastValidateUrl: runState.lastValidateUrl,
@@ -222,6 +225,7 @@ async function getStatusPayload(
       currentOptions?.manualAuthTimeoutMs ?? getDefaultManualAuthTimeoutMs(),
     pid: runState.pid,
     running: runState.running,
+    session,
     startUrl: currentOptions?.startUrl ?? getDefaultStartUrl(),
     startedAt: runState.startedAt,
     stateExists: stateFile.exists,
@@ -277,6 +281,16 @@ function markRunFinished(code: number | null, signal: string | null): void {
 
   if (code !== 0 && !runState.lastError) {
     runState.lastError = `Auth bootstrap exited with code ${code ?? "unknown"}`;
+  }
+
+  // Bootstrap saved storageState — reload the persistent session
+  if (code === 0) {
+    bcSession.reloadStateFromDisk().catch((error) => {
+      const msg = error instanceof Error ? error.message : String(error);
+      console.error(
+        `[bc-auth] Failed to reload session after bootstrap: ${msg}`
+      );
+    });
   }
 }
 
@@ -554,7 +568,7 @@ export async function handleBuildingConnectedAuthStop(): Promise<Response> {
 export async function handleBuildingConnectedAuthClipboardPaste(
   req: Request
 ): Promise<Response> {
-  if (!runState.running) {
+  if (!(runState.running || bcSession.getStatus().active)) {
     return runningConflictResponse(
       "BuildingConnected auth session is not running"
     );
@@ -594,7 +608,7 @@ export async function handleBuildingConnectedAuthClipboardPaste(
 }
 
 export async function handleBuildingConnectedAuthClipboardCopy(): Promise<Response> {
-  if (!runState.running) {
+  if (!(runState.running || bcSession.getStatus().active)) {
     return runningConflictResponse(
       "BuildingConnected auth session is not running"
     );

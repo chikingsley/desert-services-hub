@@ -261,7 +261,7 @@ export class BrowserSessionManager {
       active: true,
       isLoggedIn: false,
       portalReady: false,
-      reason: session.lastError,
+      reason: session.lastError ?? undefined,
       reloginAttempted: Boolean(this.config.relogin),
       reloginSucceeded: false,
       skipped: false,
@@ -349,7 +349,7 @@ export class BrowserSessionManager {
       active: true,
       isLoggedIn: false,
       portalReady: false,
-      reason: session.lastError,
+      reason: session.lastError ?? undefined,
       skipped: false,
       success: false,
     };

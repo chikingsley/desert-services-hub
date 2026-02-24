@@ -18,8 +18,8 @@
  *   - trg_estimate_email_linked → cascades estimate↔email links
  *   - trg_project_estimate_linked → cascades project↔estimate links
  *
- * Attachment content download + extraction is handled by the separate
- * `attachment-intake` scheduled task (src/trigger/attachment-intake.ts).
+ * After storing, downstream intake tasks (attachment-intake, body-link-intake)
+ * are triggered immediately. Cron schedules serve as a safety net.
  */
 
 import { insertEmail } from "@lib/db/repositories/email";
@@ -42,6 +42,13 @@ import {
   type GraphListResponse,
   graphEmailToInsertData,
 } from "./graph-email";
+
+/** Fire attachment-intake and body-link-intake to process new email immediately. */
+async function triggerDownstreamIntake(): Promise<void> {
+  const { attachmentIntake } = await import("./attachment-intake");
+  const { bodyLinkIntake } = await import("./body-link-intake");
+  await Promise.all([attachmentIntake.trigger(), bodyLinkIntake.trigger()]);
+}
 
 // ── Attachment stub creation ────────────────────────────────────
 
@@ -193,6 +200,9 @@ export const emailSync = schemaTask({
         messageId
       );
     }
+
+    // 11. Trigger downstream intake immediately
+    await triggerDownstreamIntake();
 
     return {
       emailId,

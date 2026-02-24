@@ -14,7 +14,9 @@
  *   5. Domain enrichment + platform extraction
  *   6. Account/contact find-or-create
  *
- * Downstream: attachment-intake and body-link-intake pick up from here.
+ * Downstream: attachment-intake and body-link-intake are triggered
+ * immediately after sync when new emails are stored, with cron
+ * schedules as a safety net.
  */
 
 import { db } from "@lib/db/client";
@@ -357,6 +359,17 @@ export const mailboxSync = schedules.task({
     const totalAttachments = results.reduce((sum, r) => sum + r.attachments, 0);
     const totalEnriched = results.reduce((sum, r) => sum + r.enriched, 0);
     const errors = results.filter((r) => r.error !== null).length;
+
+    // Trigger downstream intake tasks immediately when new emails arrived
+    if (totalStored > 0) {
+      const { attachmentIntake } = await import("./attachment-intake");
+      const { bodyLinkIntake } = await import("./body-link-intake");
+      await Promise.all([attachmentIntake.trigger(), bodyLinkIntake.trigger()]);
+      logger.info("Triggered downstream intake tasks", {
+        totalStored,
+        totalAttachments,
+      });
+    }
 
     logger.info("Mailbox sync complete", {
       mailboxes: mailboxes.length,

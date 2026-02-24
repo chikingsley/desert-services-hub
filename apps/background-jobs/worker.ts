@@ -10,18 +10,14 @@
 
 import { MAX_CONCURRENT_JOBS, POLL_INTERVAL_MS } from "./jobs/config";
 import { getActiveJobCount, processNextJob } from "./jobs/dispatch";
-import { enqueueFullSyncIfMissing } from "./jobs/queue";
 
 let pollTimer: ReturnType<typeof setInterval> | null = null;
 
-export async function startWorker(): Promise<void> {
+export function startWorker(): void {
   console.log("[worker] Starting pgmq consumer");
   console.log(
     `[worker] Poll interval: ${POLL_INTERVAL_MS}ms, max concurrency: ${MAX_CONCURRENT_JOBS}`
   );
-
-  // One-time startup: ensure a full sync exists (idempotent, no-op if already queued)
-  await enqueueFullSyncIfMissing("startup");
 
   pollTimer = setInterval(() => {
     const availableSlots = Math.max(

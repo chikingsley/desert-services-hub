@@ -123,18 +123,18 @@ export const emailSync = schemaTask({
 
     // 5. Domain enrichment
     const domainData = computeDomainEnrichment(
-      data.fromEmail,
-      email.subject,
-      data.bodyFull,
-      data.bodyPreview
+      data.fromEmail ?? null,
+      email.subject ?? null,
+      data.bodyFull ?? null,
+      data.bodyPreview ?? null
     );
 
     // 6. Platform extraction
     const platform = extractRealSender(
       domainData.fromDomain,
-      data.fromName,
-      data.bodyFull,
-      email.subject
+      data.fromName ?? null,
+      data.bodyFull ?? null,
+      email.subject ?? null
     );
 
     // 7. Account find-or-create by effective domain
@@ -158,7 +158,7 @@ export const emailSync = schemaTask({
       platform?.realSenderEmail ??
       domainData.originalSenderEmail ??
       data.fromEmail;
-    const effectiveName = platform?.realSenderName ?? data.fromName;
+    const effectiveName = platform?.realSenderName ?? data.fromName ?? null;
     let contactId: number | null = null;
     if (effectiveEmail) {
       contactId = await findOrCreateContact(

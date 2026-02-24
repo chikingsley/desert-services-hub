@@ -42,13 +42,13 @@ import {
   graphEmailToInsertData,
 } from "./graph-email";
 
-const LOOKBACK_HOURS = 6;
-const MAX_EMAILS_PER_MAILBOX = 200;
+export const LOOKBACK_HOURS = 6;
+export const MAX_EMAILS_PER_MAILBOX = 200;
 const PAGE_SIZE = 50;
 
 // ── Helpers ─────────────────────────────────────────────────────
 
-function buildSinceFilter(hoursAgo: number): string {
+export function buildSinceFilter(hoursAgo: number): string {
   const since = new Date(Date.now() - hoursAgo * 60 * 60 * 1000);
   return since.toISOString();
 }
@@ -237,7 +237,7 @@ async function processOneEmail(
 
 // ── Per-mailbox sync ────────────────────────────────────────────
 
-interface MailboxSyncResult {
+export interface MailboxSyncResult {
   attachments: number;
   email: string;
   enriched: number;
@@ -247,10 +247,11 @@ interface MailboxSyncResult {
   stored: number;
 }
 
-async function syncOneMailbox(
+export async function syncOneMailbox(
   mailboxEmail: string,
   mailboxId: number,
-  sinceIso: string
+  sinceIso: string,
+  maxEmails = MAX_EMAILS_PER_MAILBOX
 ): Promise<MailboxSyncResult> {
   const result: MailboxSyncResult = {
     attachments: 0,
@@ -263,11 +264,7 @@ async function syncOneMailbox(
   };
 
   try {
-    const emails = await fetchRecentEmails(
-      mailboxEmail,
-      sinceIso,
-      MAX_EMAILS_PER_MAILBOX
-    );
+    const emails = await fetchRecentEmails(mailboxEmail, sinceIso, maxEmails);
     result.fetched = emails.length;
 
     if (emails.length === 0) {

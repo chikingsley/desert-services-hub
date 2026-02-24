@@ -1,12 +1,10 @@
 /**
- * Automation portal page
+ * Automation portal page — Full-bleed VNC layout
  *
- * Embedded VNC views for Maricopa portal automation and BuildingConnected auth bootstrap.
- * Uses @simonpeacocks/react-vnc for direct WebSocket VNC connections (no iframe).
+ * VNC panel fills 100% of the viewport. All controls float on top.
+ * Uses @simonpeacocks/react-vnc for direct WebSocket VNC connections.
  */
 
-// biome-ignore lint/nursery/noExcessiveLinesPerFile: Maricopa and BuildingConnected views intentionally share one automation shell.
-import { CheckCircle2, Loader2, Play, RefreshCw, Square } from "lucide-react";
 import {
   type RefObject,
   useCallback,
@@ -14,17 +12,20 @@ import {
   useRef,
   useState,
 } from "react";
-import { useLocation, useNavigate } from "react-router";
+import { useLocation } from "react-router";
 import { toast } from "sonner";
 import useSWR from "swr";
+import { AutomationToolbar } from "@/apps/web/frontend/components/automation-toolbar";
 import { CheckpointBanner } from "@/apps/web/frontend/components/checkpoint-banner";
-import { PageHeader } from "@/apps/web/frontend/components/page-header";
-import { Button } from "@/apps/web/frontend/components/ui/button";
 import {
   VncPanel,
   type VncPanelHandle,
 } from "@/apps/web/frontend/components/vnc-panel";
 import { fetcher } from "@/apps/web/frontend/lib/fetcher";
+
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
 
 interface AutomationStatus {
   active: boolean;
@@ -69,34 +70,17 @@ interface BuildingConnectedAuthStatus {
   vncWsUrl: string;
 }
 
+type AutomationPortal = "maricopa" | "buildingconnected";
+
 type AutomationActionEndpoint =
   | "/api/automation/start"
   | "/api/automation/ready"
   | "/api/automation/keepalive"
   | "/api/automation/stop";
 
-type BuildingConnectedActionEndpoint =
-  | "/api/buildingconnected/auth/start"
-  | "/api/buildingconnected/auth/stop";
-
-interface RunActionOptions {
-  body?: unknown;
-  silentSuccess?: boolean;
-}
-
-interface AutomationActionPayload {
-  error?: string;
-  success?: boolean;
-}
-
-type AutomationPortal = "maricopa" | "buildingconnected";
-
-function getPortalFromPath(pathname: string): AutomationPortal {
-  if (pathname === "/buildingconnected") {
-    return "buildingconnected";
-  }
-  return "maricopa";
-}
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
 
 function formatTimestamp(value: string | null): string {
   if (!value) {
@@ -109,22 +93,16 @@ function formatTimestamp(value: string | null): string {
   return date.toLocaleString();
 }
 
-function formatByteSize(value: number | null): string {
-  if (!(typeof value === "number" && Number.isFinite(value) && value >= 0)) {
-    return "\u2014";
-  }
-  if (value < 1024) {
-    return `${value} B`;
-  }
-  if (value < 1024 * 1024) {
-    return `${(value / 1024).toFixed(1)} KB`;
-  }
-  return `${(value / (1024 * 1024)).toFixed(2)} MB`;
-}
-
 function getWsFallbackUrl(port: number): string {
   const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
   return `${protocol}//${window.location.hostname}:${port}`;
+}
+
+function getPortalFromPath(pathname: string): AutomationPortal {
+  if (pathname === "/buildingconnected") {
+    return "buildingconnected";
+  }
+  return "maricopa";
 }
 
 function getSessionDisplay(data: AutomationStatus | undefined): {
@@ -145,10 +123,7 @@ function getSessionDisplay(data: AutomationStatus | undefined): {
 
 function getBuildingConnectedSessionDisplay(
   data: BuildingConnectedAuthStatus | undefined
-): {
-  label: string;
-  dotClass: string;
-} {
+): { label: string; dotClass: string } {
   if (!data) {
     return { label: "Checking", dotClass: "bg-red-500" };
   }
@@ -161,17 +136,78 @@ function getBuildingConnectedSessionDisplay(
   return { label: "Idle", dotClass: "bg-red-500" };
 }
 
-function getBuildingConnectedOverlayLabel(
-  data: BuildingConnectedAuthStatus | undefined
+function getVncStatusLabel(
+  portal: AutomationPortal,
+  maricopa: AutomationStatus | undefined,
+  bc: BuildingConnectedAuthStatus | undefined
 ): string {
-  if (data?.running) {
+  if (portal === "maricopa") {
+    return maricopa?.portalReady ? "Portal ready" : "Portal not ready";
+  }
+  if (bc?.running) {
     return "Auth run in progress";
   }
-  if (data?.stateExists) {
+  if (bc?.stateExists) {
     return "State file ready";
   }
   return "Auth session idle";
 }
+
+function deriveVncState(
+  portal: AutomationPortal,
+  maricopaWsUrl: string,
+  bcWsUrl: string,
+  maricopa: AutomationStatus | undefined,
+  bc: BuildingConnectedAuthStatus | undefined
+): { wsUrl: string; healthy: boolean; statusLabel: string } {
+  const isMaricopa = portal === "maricopa";
+  return {
+    wsUrl: isMaricopa ? maricopaWsUrl : bcWsUrl,
+    healthy: isMaricopa
+      ? (maricopa?.portalReady ?? false)
+      : Boolean(bc?.stateExists),
+    statusLabel: getVncStatusLabel(portal, maricopa, bc),
+  };
+}
+
+interface TelemetryData {
+  busy: string;
+  homePin: string;
+  keepAlive: string;
+  lastKeepAlive: string;
+  lastLogin: string;
+  lastPinnedHome: string;
+}
+
+function deriveTelemetry(data: AutomationStatus | undefined): TelemetryData {
+  const homePinAvailable =
+    (data?.lastPortalPinAt ?? null) !== null ||
+    typeof data?.portalHomePinEnabled === "boolean";
+
+  let homePinLabel = "N/A";
+  if (homePinAvailable && data?.portalHomePinEnabled) {
+    homePinLabel = `On (${Math.round((data.portalHomePinIntervalMs || 0) / 1000)}s)`;
+  } else if (homePinAvailable) {
+    homePinLabel = "Off";
+  }
+
+  return {
+    busy: data?.busy ? data.currentOperation || "Running" : "Idle",
+    lastLogin: formatTimestamp(data?.lastLoginAt ?? null),
+    lastKeepAlive: formatTimestamp(data?.lastKeepAliveAt ?? null),
+    lastPinnedHome: homePinAvailable
+      ? formatTimestamp(data?.lastPortalPinAt ?? null)
+      : "N/A",
+    keepAlive: data?.keepAliveEnabled
+      ? `On (${Math.round((data.keepAliveIntervalMs || 0) / 1000)}s)`
+      : "Off",
+    homePin: homePinLabel,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Hooks
+// ---------------------------------------------------------------------------
 
 function usePortalStatusToasts(data: AutomationStatus | undefined): void {
   const previousPortalReady = useRef<boolean | null>(null);
@@ -210,36 +246,6 @@ function usePortalStatusToasts(data: AutomationStatus | undefined): void {
   }, [data]);
 }
 
-async function postAction<E extends string>(
-  endpoint: E,
-  options?: RunActionOptions
-): Promise<AutomationActionPayload> {
-  const headers =
-    options?.body === undefined
-      ? undefined
-      : { "content-type": "application/json" };
-  const response = await fetch(endpoint, {
-    method: "POST",
-    headers,
-    body:
-      options?.body === undefined ? undefined : JSON.stringify(options.body),
-  });
-  const payload = (await response.json().catch(() => ({}))) as
-    | AutomationActionPayload
-    | undefined;
-  if (!response.ok || payload?.success === false) {
-    throw new Error(
-      payload?.error || `Request failed with status ${response.status}`
-    );
-  }
-  return payload ?? {};
-}
-
-/**
- * Clipboard bridge via VNC protocol.
- * Ctrl/Cmd+V reads local clipboard and sends it into the VNC session.
- * Copy direction is handled by onClipboard callback on VncPanel.
- */
 function useVncClipboardBridge(
   visible: boolean,
   vncRef: RefObject<VncPanelHandle | null>
@@ -256,8 +262,9 @@ function useVncClipboardBridge(
       }
       vncRef.current?.clipboardPaste(text);
       toast.success("Pasted clipboard into VNC session");
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
+    } catch (clipError) {
+      const message =
+        clipError instanceof Error ? clipError.message : String(clipError);
       toast.error(message);
     }
   }, [vncRef]);
@@ -266,7 +273,6 @@ function useVncClipboardBridge(
     if (!visible) {
       return;
     }
-
     const onKeyDown = (event: KeyboardEvent) => {
       if (!(event.ctrlKey || event.metaKey) || event.altKey) {
         return;
@@ -276,185 +282,108 @@ function useVncClipboardBridge(
         pasteIntoVnc().catch(() => undefined);
       }
     };
-
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [pasteIntoVnc, visible]);
 }
 
-function ActionButtons({
-  action,
-  disabled,
-  runAction,
-}: {
-  action: AutomationActionEndpoint | null;
-  disabled: boolean;
-  runAction: (endpoint: AutomationActionEndpoint, msg: string) => Promise<void>;
-}) {
-  return (
-    <div className="flex flex-wrap gap-2">
-      <Button
-        className="gap-2"
-        disabled={disabled}
-        onClick={() =>
-          runAction("/api/automation/ready", "Portal session is ready")
-        }
-      >
-        {action === "/api/automation/ready" ? (
-          <Loader2 className="h-4 w-4 animate-spin" />
-        ) : (
-          <CheckCircle2 className="h-4 w-4" />
-        )}
-        Ensure Bot Ready
-      </Button>
-      <Button
-        className="gap-2"
-        disabled={disabled}
-        onClick={() =>
-          runAction("/api/automation/keepalive", "Keepalive ping completed")
-        }
-        variant="outline"
-      >
-        {action === "/api/automation/keepalive" ? (
-          <Loader2 className="h-4 w-4 animate-spin" />
-        ) : (
-          <RefreshCw className="h-4 w-4" />
-        )}
-        Keep Alive Ping
-      </Button>
-      <Button
-        className="gap-2"
-        disabled={disabled}
-        onClick={() => runAction("/api/automation/stop", "Session stopped")}
-        variant="outline"
-      >
-        {action === "/api/automation/stop" ? (
-          <Loader2 className="h-4 w-4 animate-spin" />
-        ) : (
-          <Square className="h-4 w-4" />
-        )}
-        Stop Session
-      </Button>
-    </div>
-  );
+// ---------------------------------------------------------------------------
+// Action helpers
+// ---------------------------------------------------------------------------
+
+async function postAction(
+  endpoint: string,
+  options?: { body?: unknown; silentSuccess?: boolean }
+): Promise<{ error?: string; success?: boolean }> {
+  const headers =
+    options?.body === undefined
+      ? undefined
+      : { "content-type": "application/json" };
+  const response = await fetch(endpoint, {
+    method: "POST",
+    headers,
+    body:
+      options?.body === undefined ? undefined : JSON.stringify(options.body),
+  });
+  const payload = (await response.json().catch(() => ({}))) as
+    | { error?: string; success?: boolean }
+    | undefined;
+  if (!response.ok || payload?.success === false) {
+    throw new Error(
+      payload?.error || `Request failed with status ${response.status}`
+    );
+  }
+  return payload ?? {};
 }
 
-/** Derive all display labels from automation status to reduce component complexity. */
-function deriveDisplayState(
-  data: AutomationStatus | undefined,
-  visible: boolean
-): {
-  busyLabel: string;
-  homePinLabel: string;
-  lastPinnedHomeLabel: string;
-  rootClassName: string;
-  vncAspectRatio: string;
-} {
-  const busyLabel = data?.busy ? data.currentOperation || "Running" : "Idle";
-  const viewportWidth = data?.viewportWidth || 1280;
-  const viewportHeight = data?.viewportHeight || 1024;
-  const vncAspectRatio = `${viewportWidth} / ${viewportHeight}`;
+// ---------------------------------------------------------------------------
+// Component
+// ---------------------------------------------------------------------------
 
-  const homePinTelemetryAvailable =
-    (data?.lastPortalPinAt ?? null) !== null ||
-    typeof data?.portalHomePinEnabled === "boolean";
-
-  const lastPinnedHomeLabel = homePinTelemetryAvailable
-    ? formatTimestamp(data?.lastPortalPinAt ?? null)
-    : "N/A";
-
-  let homePinLabel = "N/A";
-  if (homePinTelemetryAvailable && data?.portalHomePinEnabled) {
-    homePinLabel = `On (${Math.round((data.portalHomePinIntervalMs || 0) / 1000)}s)`;
-  } else if (homePinTelemetryAvailable) {
-    homePinLabel = "Off";
-  }
-
-  const rootClassName = visible
-    ? "flex flex-col"
-    : "pointer-events-none fixed inset-0 -z-10 opacity-0";
-
-  return {
-    busyLabel,
-    homePinLabel,
-    lastPinnedHomeLabel,
-    rootClassName,
-    vncAspectRatio,
-  };
+interface AutomationPageProps {
+  visible?: boolean;
 }
 
 function writeToClipboard(text: string): void {
   navigator.clipboard.writeText(text).catch(() => undefined);
 }
 
-interface AutomationPageProps {
-  visible?: boolean;
-}
-
-// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Two automation portals share one component shell.
 export function AutomationPage({ visible = true }: AutomationPageProps) {
   const location = useLocation();
-  const navigate = useNavigate();
-  const activePortal = getPortalFromPath(location.pathname);
+  const [activePortal, setActivePortal] = useState<AutomationPortal>(
+    getPortalFromPath(location.pathname)
+  );
 
   const [action, setAction] = useState<AutomationActionEndpoint | null>(null);
-  const [buildingConnectedAction, setBuildingConnectedAction] =
-    useState<BuildingConnectedActionEndpoint | null>(null);
-  const [validateUrl, setValidateUrl] = useState("");
-
   const autoEnsureAttempted = useRef(false);
   const maricopaVncRef = useRef<VncPanelHandle>(null);
   const buildingConnectedVncRef = useRef<VncPanelHandle>(null);
 
-  const { data, error, isLoading, mutate } = useSWR<AutomationStatus>(
+  // --- SWR: Maricopa status ---
+  const { data, error, mutate } = useSWR<AutomationStatus>(
     visible && activePortal === "maricopa" ? "/api/automation/status" : null,
     fetcher,
     {
-      refreshInterval: visible && activePortal === "maricopa" ? 5000 : 0,
+      refreshInterval: visible ? 5000 : 0,
       dedupingInterval: 2000,
       shouldRetryOnError: true,
     }
   );
 
-  const {
-    data: buildingConnectedStatus,
-    error: buildingConnectedError,
-    isLoading: buildingConnectedLoading,
-    mutate: mutateBuildingConnected,
-  } = useSWR<BuildingConnectedAuthStatus>(
-    visible && activePortal === "buildingconnected"
-      ? "/api/buildingconnected/auth/status"
-      : null,
-    fetcher,
-    {
-      refreshInterval:
-        visible && activePortal === "buildingconnected" ? 3000 : 0,
-      dedupingInterval: 1500,
-      shouldRetryOnError: true,
-    }
-  );
+  // --- SWR: BuildingConnected status ---
+  const { data: bcStatus, error: bcError } =
+    useSWR<BuildingConnectedAuthStatus>(
+      visible && activePortal === "buildingconnected"
+        ? "/api/buildingconnected/auth/status"
+        : null,
+      fetcher,
+      {
+        refreshInterval: visible ? 3000 : 0,
+        dedupingInterval: 1500,
+        shouldRetryOnError: true,
+      }
+    );
 
+  // --- Toasts ---
   usePortalStatusToasts(activePortal === "maricopa" ? data : undefined);
 
-  // VNC clipboard bridges — paste via Ctrl/Cmd+V, copy via onClipboard callback
+  // --- VNC clipboard bridges ---
   useVncClipboardBridge(visible && activePortal === "maricopa", maricopaVncRef);
   useVncClipboardBridge(
     visible && activePortal === "buildingconnected",
     buildingConnectedVncRef
   );
 
+  // --- WS URLs ---
   const maricopaWsUrl = data?.vncWsUrl || getWsFallbackUrl(6080);
-  const buildingConnectedWsUrl =
-    buildingConnectedStatus?.vncWsUrl || getWsFallbackUrl(6081);
-  const buildingConnectedVncAspectRatio = `${
-    buildingConnectedStatus?.viewportWidth || 1920
-  } / ${buildingConnectedStatus?.viewportHeight || 1080}`;
+  const buildingConnectedWsUrl = bcStatus?.vncWsUrl || getWsFallbackUrl(6081);
 
+  // --- Action handler ---
   const runAction = useCallback(
     async (
       endpoint: AutomationActionEndpoint,
       successMessage: string,
-      options?: RunActionOptions
+      options?: { body?: unknown; silentSuccess?: boolean }
     ): Promise<void> => {
       setAction(endpoint);
       try {
@@ -476,32 +405,7 @@ export function AutomationPage({ visible = true }: AutomationPageProps) {
     [mutate]
   );
 
-  const runBuildingConnectedAction = useCallback(
-    async (
-      endpoint: BuildingConnectedActionEndpoint,
-      successMessage: string,
-      options?: RunActionOptions
-    ): Promise<void> => {
-      setBuildingConnectedAction(endpoint);
-      try {
-        await postAction(endpoint, options);
-        if (!options?.silentSuccess) {
-          toast.success(successMessage);
-        }
-        await mutateBuildingConnected();
-      } catch (actionError) {
-        const message =
-          actionError instanceof Error
-            ? actionError.message
-            : String(actionError);
-        toast.error(message);
-      } finally {
-        setBuildingConnectedAction(null);
-      }
-    },
-    [mutateBuildingConnected]
-  );
-
+  // --- Auto-ensure on first visible ---
   useEffect(() => {
     if (
       !visible ||
@@ -516,290 +420,81 @@ export function AutomationPage({ visible = true }: AutomationPageProps) {
     }).catch(() => undefined);
   }, [activePortal, runAction, visible]);
 
-  const displayState = deriveDisplayState(data, visible);
-  const { label: sessionState, dotClass: sessionDotClass } =
+  // --- Sync activePortal with location (deep links) ---
+  useEffect(() => {
+    setActivePortal(getPortalFromPath(location.pathname));
+  }, [location.pathname]);
+
+  // --- Derived display state ---
+  const { label: sessionLabel, dotClass: sessionDotClass } =
     getSessionDisplay(data);
-  const {
-    label: buildingConnectedSessionState,
-    dotClass: buildingConnectedSessionDotClass,
-  } = getBuildingConnectedSessionDisplay(buildingConnectedStatus);
+  const { label: bcSessionLabel, dotClass: bcSessionDotClass } =
+    getBuildingConnectedSessionDisplay(bcStatus);
 
-  const maricopaActionPending = action !== null;
-  const buildingConnectedActionPending = buildingConnectedAction !== null;
+  const telemetry = deriveTelemetry(data);
 
-  const headerTitle =
-    activePortal === "buildingconnected"
-      ? "BuildingConnected Auth Browser"
-      : "Maricopa County Dust Portal";
-  const breadcrumbLabel =
-    activePortal === "buildingconnected"
-      ? "BuildingConnected"
-      : "Maricopa Portal";
+  const actionPending = action !== null;
+  const activeActionKey = action?.split("/").pop() ?? null;
+
+  // --- Determine active VNC state ---
+  const vncState = deriveVncState(
+    activePortal,
+    maricopaWsUrl,
+    buildingConnectedWsUrl,
+    data,
+    bcStatus
+  );
+  const activeVncRef =
+    activePortal === "maricopa" ? maricopaVncRef : buildingConnectedVncRef;
+
+  const rootClassName = visible
+    ? "relative h-full w-full"
+    : "pointer-events-none fixed inset-0 -z-10 opacity-0";
+
+  const activeError =
+    activePortal === "maricopa" ? (error ?? null) : (bcError ?? null);
+  const activeLastError =
+    activePortal === "maricopa"
+      ? (data?.lastError ?? null)
+      : (bcStatus?.lastError ?? null);
 
   return (
-    <div aria-hidden={!visible} className={displayState.rootClassName}>
-      <PageHeader
-        breadcrumbs={[{ label: breadcrumbLabel }]}
-        title={headerTitle}
+    <div aria-hidden={!visible} className={rootClassName}>
+      {/* VNC fills entire surface */}
+      <VncPanel
+        aspectRatio="auto"
+        healthy={vncState.healthy}
+        onClipboard={writeToClipboard}
+        ref={activeVncRef}
+        statusLabel={vncState.statusLabel}
+        wsUrl={vncState.wsUrl}
       />
 
-      <div className="p-6 lg:p-8">
-        <div className="mb-4 flex flex-wrap items-center gap-2 rounded-2xl border border-border bg-card p-3">
-          <Button
-            onClick={() => navigate("/maricopa")}
-            size="sm"
-            variant={activePortal === "maricopa" ? "default" : "outline"}
-          >
-            Maricopa
-          </Button>
-          <Button
-            onClick={() => navigate("/buildingconnected")}
-            size="sm"
-            variant={
-              activePortal === "buildingconnected" ? "default" : "outline"
-            }
-          >
-            BuildingConnected
-          </Button>
-        </div>
+      {/* Floating toolbar */}
+      <AutomationToolbar
+        actionPending={actionPending}
+        activeAction={activeActionKey}
+        activePortal={activePortal}
+        buildingConnectedDotClass={bcSessionDotClass}
+        buildingConnectedLabel={bcSessionLabel}
+        error={activeError}
+        lastError={activeLastError}
+        onEnsureReady={() =>
+          runAction("/api/automation/ready", "Portal session is ready")
+        }
+        onKeepAlive={() =>
+          runAction("/api/automation/keepalive", "Keepalive ping completed")
+        }
+        onPortalChange={setActivePortal}
+        onStop={() => runAction("/api/automation/stop", "Session stopped")}
+        sessionDotClass={sessionDotClass}
+        sessionLabel={sessionLabel}
+        telemetry={telemetry}
+      />
 
-        {activePortal === "maricopa" && (
-          <>
-            <div className="mb-4 rounded-2xl border border-border bg-card p-4">
-              <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-                <div className="inline-flex items-center gap-2 rounded-full border border-border px-3 py-1.5 font-medium text-sm">
-                  <span
-                    className={`h-2.5 w-2.5 rounded-full ${sessionDotClass}`}
-                  />
-                  <span>{sessionState}</span>
-                </div>
-                <ActionButtons
-                  action={action}
-                  disabled={maricopaActionPending}
-                  runAction={runAction}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-2 text-muted-foreground text-sm lg:grid-cols-6">
-                <div>Busy: {displayState.busyLabel}</div>
-                <div>
-                  Last login: {formatTimestamp(data?.lastLoginAt ?? null)}
-                </div>
-                <div>
-                  Last keepalive:{" "}
-                  {formatTimestamp(data?.lastKeepAliveAt ?? null)}
-                </div>
-                <div>Last pinned home: {displayState.lastPinnedHomeLabel}</div>
-                <div>
-                  Keepalive:{" "}
-                  {data?.keepAliveEnabled
-                    ? `On (${Math.round((data.keepAliveIntervalMs || 0) / 1000)}s)`
-                    : "Off"}
-                </div>
-                <div>Home pin: {displayState.homePinLabel}</div>
-              </div>
-
-              <div className="mt-3 text-muted-foreground text-xs">
-                Cmd/Ctrl+V pastes local clipboard into VNC session. VNC
-                clipboard changes auto-sync to your local clipboard.
-              </div>
-
-              {error && (
-                <div className="mt-3 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-red-500 text-sm">
-                  Status check failed: {error.message}
-                </div>
-              )}
-              {data?.lastError && (
-                <div className="mt-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-amber-500 text-sm">
-                  {data.lastError}
-                </div>
-              )}
-            </div>
-
-            <CheckpointBanner />
-
-            <VncPanel
-              aspectRatio={displayState.vncAspectRatio}
-              healthy={data?.portalReady ?? false}
-              onClipboard={writeToClipboard}
-              ref={maricopaVncRef}
-              statusLabel={
-                data?.portalReady ? "Portal ready" : "Portal not ready"
-              }
-              wsUrl={maricopaWsUrl}
-            />
-
-            {isLoading && (
-              <div className="mt-2 text-muted-foreground text-xs">
-                Loading status...
-              </div>
-            )}
-          </>
-        )}
-
-        {activePortal === "buildingconnected" && (
-          <>
-            <div className="mb-4 rounded-2xl border border-border bg-card p-4">
-              <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-                <div className="inline-flex items-center gap-2 rounded-full border border-border px-3 py-1.5 font-medium text-sm">
-                  <span
-                    className={`h-2.5 w-2.5 rounded-full ${buildingConnectedSessionDotClass}`}
-                  />
-                  <span>{buildingConnectedSessionState}</span>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <Button
-                    className="gap-2"
-                    disabled={buildingConnectedActionPending}
-                    onClick={() =>
-                      runBuildingConnectedAction(
-                        "/api/buildingconnected/auth/start",
-                        "BuildingConnected auth session started",
-                        {
-                          body: validateUrl.trim()
-                            ? { validateUrl: validateUrl.trim() }
-                            : {},
-                        }
-                      )
-                    }
-                  >
-                    {buildingConnectedAction ===
-                    "/api/buildingconnected/auth/start" ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Play className="h-4 w-4" />
-                    )}
-                    Start Auth Session
-                  </Button>
-                  <Button
-                    className="gap-2"
-                    disabled={buildingConnectedActionPending}
-                    onClick={() =>
-                      runBuildingConnectedAction(
-                        "/api/buildingconnected/auth/stop",
-                        "BuildingConnected auth session stopped"
-                      )
-                    }
-                    variant="outline"
-                  >
-                    {buildingConnectedAction ===
-                    "/api/buildingconnected/auth/stop" ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Square className="h-4 w-4" />
-                    )}
-                    Stop Session
-                  </Button>
-                </div>
-              </div>
-
-              <div className="mb-3 grid gap-2 lg:grid-cols-2">
-                <label
-                  className="text-muted-foreground text-xs"
-                  htmlFor="bc-validate-url"
-                >
-                  Optional validation goto URL (downloads one file after auth)
-                </label>
-                <input
-                  className="h-9 rounded-md border border-input bg-background px-3 text-sm"
-                  id="bc-validate-url"
-                  onChange={(event) => setValidateUrl(event.target.value)}
-                  placeholder="https://app.buildingconnected.com/goto/..."
-                  type="url"
-                  value={validateUrl}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-2 text-muted-foreground text-sm lg:grid-cols-4">
-                <div>
-                  Running: {buildingConnectedStatus?.running ? "Yes" : "No"}
-                </div>
-                <div>PID: {buildingConnectedStatus?.pid ?? "\u2014"}</div>
-                <div>
-                  State saved:{" "}
-                  {buildingConnectedStatus?.stateExists ? "Yes" : "No"}
-                </div>
-                <div>
-                  State updated:{" "}
-                  {formatTimestamp(
-                    buildingConnectedStatus?.stateLastModifiedAt ?? null
-                  )}
-                </div>
-                <div>
-                  State size:{" "}
-                  {formatByteSize(
-                    buildingConnectedStatus?.stateFileSize ?? null
-                  )}
-                </div>
-                <div>
-                  Last exit: {buildingConnectedStatus?.lastExitCode ?? "\u2014"}
-                </div>
-                <div>
-                  Started:{" "}
-                  {formatTimestamp(buildingConnectedStatus?.startedAt ?? null)}
-                </div>
-                <div>
-                  Finished:{" "}
-                  {formatTimestamp(buildingConnectedStatus?.finishedAt ?? null)}
-                </div>
-              </div>
-
-              <div className="mt-3 text-muted-foreground text-xs">
-                Flow: click Start Auth Session, open VNC, complete
-                CAPTCHA/OTP/login, then wait for state save at{" "}
-                <span className="font-mono">
-                  {buildingConnectedStatus?.statePath ?? "\u2014"}
-                </span>
-                .
-              </div>
-              <div className="mt-1 text-muted-foreground text-xs">
-                Cmd/Ctrl+V pastes local clipboard into VNC session. VNC
-                clipboard changes auto-sync to your local clipboard.
-              </div>
-
-              {buildingConnectedError && (
-                <div className="mt-3 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-red-500 text-sm">
-                  Status check failed: {buildingConnectedError.message}
-                </div>
-              )}
-              {buildingConnectedStatus?.lastError && (
-                <div className="mt-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-amber-500 text-sm">
-                  {buildingConnectedStatus.lastError}
-                </div>
-              )}
-            </div>
-
-            <VncPanel
-              aspectRatio={buildingConnectedVncAspectRatio}
-              healthy={Boolean(buildingConnectedStatus?.stateExists)}
-              onClipboard={writeToClipboard}
-              ref={buildingConnectedVncRef}
-              statusLabel={getBuildingConnectedOverlayLabel(
-                buildingConnectedStatus
-              )}
-              wsUrl={buildingConnectedWsUrl}
-            />
-
-            <div className="mt-4 rounded-2xl border border-border bg-card p-4">
-              <div className="mb-2 font-medium text-sm">Bootstrap Log</div>
-              {buildingConnectedStatus?.logTail?.length ? (
-                <pre className="max-h-56 overflow-auto rounded-lg bg-black/80 p-3 font-mono text-xs text-zinc-100">
-                  {buildingConnectedStatus.logTail.slice(-60).join("\n")}
-                </pre>
-              ) : (
-                <div className="text-muted-foreground text-xs">
-                  No log output yet.
-                </div>
-              )}
-            </div>
-
-            {buildingConnectedLoading && (
-              <div className="mt-2 text-muted-foreground text-xs">
-                Loading BuildingConnected status...
-              </div>
-            )}
-          </>
-        )}
+      {/* Checkpoint banner — floating above VNC status badge */}
+      <div className="absolute inset-x-3 bottom-16 z-30">
+        <CheckpointBanner />
       </div>
     </div>
   );

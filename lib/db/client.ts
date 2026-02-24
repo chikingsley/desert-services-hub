@@ -1,10 +1,16 @@
 import { AsyncLocalStorage } from "node:async_hooks";
-import { type SQL, sql } from "bun";
+import { SQL as BunSQL, type SQL } from "bun";
+
+// Explicit connection with prepare: false for Supavisor transaction-mode pooling.
+// Named prepared statements are connection-specific but Supavisor rotates backend
+// connections between requests, causing "prepared statement already exists" errors.
+const databaseUrl = process.env.DATABASE_URL ?? "";
+const pool = new BunSQL(databaseUrl, { prepare: false });
 
 const txStore = new AsyncLocalStorage<SQL>();
 
 function conn(): SQL {
-  return txStore.getStore() ?? sql;
+  return txStore.getStore() ?? pool;
 }
 
 export const db = {
@@ -28,7 +34,7 @@ export const db = {
   },
 
   async transaction<T>(fn: () => T | Promise<T>): Promise<T> {
-    return await sql.begin(async (tx) => {
+    return await pool.begin(async (tx) => {
       return await txStore.run(tx as unknown as SQL, async () => await fn());
     });
   },

@@ -50,8 +50,12 @@ export function VncPanel({
 
   return (
     <div
-      className="relative w-full overflow-hidden rounded-2xl border border-border bg-black"
-      style={{ aspectRatio }}
+      className={`relative overflow-hidden bg-black ${
+        aspectRatio === "auto"
+          ? "h-full w-full"
+          : "w-full rounded-2xl border border-border"
+      }`}
+      style={aspectRatio === "auto" ? undefined : { aspectRatio }}
     >
       <VncScreen
         autoConnect

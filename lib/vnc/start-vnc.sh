@@ -23,6 +23,9 @@ fi
 VNC_TCP_PORT=$((5900 + DISPLAY_NUM))
 NOVNC_PORT="${NOVNC_PORT:-6080}"
 
+# Clean stale lock files from previous container restarts
+rm -f "/tmp/.X${DISPLAY_NUM}-lock" "/tmp/.X11-unix/X${DISPLAY_NUM}"
+
 echo "[vnc] Starting Xvnc on ${DISPLAY} (${VNC_RESOLUTION:-1280x720})..."
 Xvnc "${DISPLAY}" \
   -geometry "${VNC_RESOLUTION:-1280x720}" \

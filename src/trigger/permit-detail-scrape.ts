@@ -25,7 +25,9 @@ export const permitDetailScrape = schedules.task({
 
     let scraped = 0;
     let failed = 0;
-    let skipped = 0;
+    const skipped = 0;
+
+    const errors: string[] = [];
 
     for (const permit of permits) {
       try {
@@ -47,17 +49,27 @@ export const permitDetailScrape = schedules.task({
           });
           scraped++;
         } else {
-          await markPermitScraped(permit.id);
-          skipped++;
+          // Don't mark as scraped — leave it for retry next run
+          const reason = resp.error || "No data returned";
+          logger.warn(`Scrape returned no data for ${permit.id}: ${reason}`);
+          failed++;
+          errors.push(`${permit.id}: ${reason}`);
         }
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
         logger.warn(`Scrape failed for ${permit.id}: ${msg}`);
         failed++;
+        errors.push(`${permit.id}: ${msg}`);
       }
     }
 
     logger.info("Permit detail scrape complete", { scraped, failed, skipped });
+
+    // If every permit in the batch failed, throw so Trigger.dev marks the run as failed
+    if (failed > 0 && scraped === 0) {
+      throw new Error(`All ${failed} scrapes failed: ${errors.join("; ")}`);
+    }
+
     return { scraped, failed, skipped };
   },
 });

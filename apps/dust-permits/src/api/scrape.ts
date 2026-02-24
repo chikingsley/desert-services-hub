@@ -8,7 +8,11 @@
 import { existsSync, mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { z } from "zod";
-import { extractPermitData, selectFiltersAndSubmit } from "@/portal/scrape";
+import {
+  ALL_STATUSES,
+  extractPermitData,
+  setStatusFilters,
+} from "@/portal/scrape";
 import type { PermitData } from "@/portal/types";
 import {
   getOrCreateBrowserSession,
@@ -29,9 +33,6 @@ const log = (msg: string) => process.stderr.write(`${msg}\n`);
 // Schemas
 // ============================================
 
-/**
- * Scrape and PDF request schema
- */
 export const scrapePdfSchema = z.object({
   outputDir: z
     .string()
@@ -43,11 +44,11 @@ export const scrapePdfSchema = z.object({
 export type ScrapePdfInput = z.infer<typeof scrapePdfSchema>;
 
 export interface ScrapePdfResult {
-  success: boolean;
-  permitId: string;
-  pdfPath?: string;
   data?: PermitData;
   error?: string;
+  pdfPath?: string;
+  permitId: string;
+  success: boolean;
 }
 
 // ============================================
@@ -95,14 +96,67 @@ async function ensureBrowserSession(): Promise<
   return { page: ctx, success: true };
 }
 
+/**
+ * Navigate to the search page, set all status filters, type the permit ID,
+ * submit ONCE, open the detail page, and extract structured data.
+ */
+async function navigateAndExtract(
+  page: import("playwright").Page,
+  permitId: string
+): Promise<
+  | { success: true; data: PermitData }
+  | { success: false; error: string; status: number }
+> {
+  // Navigate to search page
+  await navigateToMyDustApps(page);
+  await navigateToDustSearch(page);
+
+  // Set all status filters (no submit yet)
+  await setStatusFilters(page, ALL_STATUSES);
+
+  // Type permit ID and submit — single form submission
+  const searchResult = await searchPermits(page, { permitId });
+  if (!(searchResult.success && searchResult.permitIds.includes(permitId))) {
+    return {
+      success: false,
+      error: `Permit ${permitId} not found`,
+      status: 404,
+    };
+  }
+
+  // Click to open detail page
+  const clicked = await clickDustApplicationLinkById(page, permitId);
+  if (!clicked) {
+    return {
+      success: false,
+      error: `Could not open permit ${permitId}`,
+      status: 500,
+    };
+  }
+
+  // Wait for detail page
+  const loaded = await waitForDustApplicationDetailPage(page, {
+    midwayFallbackAppNum: permitId,
+    timeout: 30_000,
+  });
+  if (!loaded) {
+    return { success: false, error: "Detail page did not load", status: 500 };
+  }
+
+  // Extract permit data
+  log("   Extracting permit data...");
+  const data = await extractPermitData(page);
+  log(`   ✓ Extracted: ${data.applicationId} - ${data.projectName}`);
+
+  return { success: true, data };
+}
+
 // ============================================
 // Handlers
 // ============================================
 
 /**
  * POST /api/scrape/pdf - Scrape permit data and generate PDF
- *
- * Opens a permit by ID, extracts structured data, and generates a full-page PDF.
  */
 export async function handleScrapePdf(body: unknown): Promise<Response> {
   log("\n📄 SCRAPE + PDF request");
@@ -123,43 +177,10 @@ export async function handleScrapePdf(body: unknown): Promise<Response> {
 
     const { page } = sessionResult.page;
 
-    // Navigate to search page
-    await navigateToMyDustApps(page);
-    await navigateToDustSearch(page);
-
-    // Apply filters to show all statuses
-    await selectFiltersAndSubmit(page, [
-      "Active",
-      "Closed",
-      "Submitted",
-      "Rejected",
-    ]);
-
-    // Search for the permit
-    const searchResult = await searchPermits(page, { permitId });
-    if (!(searchResult.success && searchResult.permitIds.includes(permitId))) {
-      return jsonError(`Permit ${permitId} not found`, 404);
+    const result = await navigateAndExtract(page, permitId);
+    if (!result.success) {
+      return jsonError(result.error, result.status);
     }
-
-    // Click to open detail page
-    const clicked = await clickDustApplicationLinkById(page, permitId);
-    if (!clicked) {
-      return jsonError(`Could not open permit ${permitId}`, 500);
-    }
-
-    // Wait for detail page
-    const loaded = await waitForDustApplicationDetailPage(page, {
-      midwayFallbackAppNum: permitId,
-      timeout: 30_000,
-    });
-    if (!loaded) {
-      return jsonError("Detail page did not load", 500);
-    }
-
-    // Extract permit data
-    log("   Extracting permit data...");
-    const data = await extractPermitData(page);
-    log(`   ✓ Extracted: ${data.applicationId} - ${data.projectName}`);
 
     // Generate PDF
     const pdfDir = outputDir || join(process.cwd(), "tests", "output", "pdfs");
@@ -168,7 +189,6 @@ export async function handleScrapePdf(body: unknown): Promise<Response> {
     }
     const pdfPath = join(pdfDir, `${permitId}.pdf`);
 
-    // Ensure parent directory exists
     const parentDir = dirname(pdfPath);
     if (!existsSync(parentDir)) {
       mkdirSync(parentDir, { recursive: true });
@@ -186,12 +206,11 @@ export async function handleScrapePdf(body: unknown): Promise<Response> {
       printBackground: true,
     });
 
-    // Save to disk
     await Bun.write(pdfPath, pdfBuffer);
     log(`   ✓ PDF generated: ${pdfPath}`);
 
     return jsonSuccess({
-      data,
+      data: result.data,
       pdfBase64: Buffer.from(pdfBuffer).toString("base64"),
       pdfPath,
       permitId,
@@ -217,46 +236,13 @@ export async function handleScrapePermit(id: string): Promise<Response> {
 
     const { page } = sessionResult.page;
 
-    // Navigate to search page
-    await navigateToMyDustApps(page);
-    await navigateToDustSearch(page);
-
-    // Apply filters
-    await selectFiltersAndSubmit(page, [
-      "Active",
-      "Closed",
-      "Submitted",
-      "Rejected",
-    ]);
-
-    // Search for the permit
-    const searchResult = await searchPermits(page, { permitId: id });
-    if (!(searchResult.success && searchResult.permitIds.includes(id))) {
-      return jsonError(`Permit ${id} not found`, 404);
+    const result = await navigateAndExtract(page, id);
+    if (!result.success) {
+      return jsonError(result.error, result.status);
     }
-
-    // Click to open detail page
-    const clicked = await clickDustApplicationLinkById(page, id);
-    if (!clicked) {
-      return jsonError(`Could not open permit ${id}`, 500);
-    }
-
-    // Wait for detail page
-    const loaded = await waitForDustApplicationDetailPage(page, {
-      midwayFallbackAppNum: id,
-      timeout: 30_000,
-    });
-    if (!loaded) {
-      return jsonError("Detail page did not load", 500);
-    }
-
-    // Extract permit data
-    log("   Extracting permit data...");
-    const data = await extractPermitData(page);
-    log(`   ✓ Extracted: ${data.applicationId} - ${data.projectName}`);
 
     return jsonSuccess({
-      data,
+      data: result.data,
       permitId: id,
     });
   } catch (error) {

@@ -123,39 +123,47 @@ export async function clickApplicationByIndex(
   return { appId: result.appId, success: true };
 }
 
-/**
- * Select status filters in the search form and submit.
- *
- * Sets the status dropdown to the specified values, clicks submit,
- * and waits for results to load. Supports multi-select status filtering.
- *
- * @param page - Playwright Page instance (on search page)
- * @param statuses - Array of statuses to filter by
- * @returns True if search was submitted successfully
- *
- * @example
- * await selectFiltersAndSubmit(page, ["Active", "Submitted"]);
- */
-export async function selectFiltersAndSubmit(
-  page: Page,
-  statuses: ("Active" | "Closed" | "Rejected" | "Submitted" | "Superseded")[]
-): Promise<boolean> {
-  console.log(`\n[SELECT FILTERS: ${statuses.join(", ")}]`);
+/** Search status type — subset of PermitStatus values available in the portal search dropdown */
+type SearchStatus =
+  | "Active"
+  | "Closed"
+  | "Rejected"
+  | "Submitted"
+  | "Superseded";
 
-  // Status values map (matches the dropdown option values)
-  const statusMap: Record<string, string> = {
-    Active: "0",
-    Closed: "1",
-    Rejected: "2",
-    Submitted: "3",
-    Superseded: "4",
-  };
+/** All statuses — use when searching for a specific permit by ID */
+export const ALL_STATUSES: SearchStatus[] = [
+  "Active",
+  "Closed",
+  "Rejected",
+  "Submitted",
+  "Superseded",
+];
+
+// Status values map (matches the dropdown option values)
+const STATUS_MAP: Record<string, string> = {
+  Active: "0",
+  Closed: "1",
+  Rejected: "2",
+  Submitted: "3",
+  Superseded: "4",
+};
+
+/**
+ * Set status filters in the dropdown WITHOUT submitting the form.
+ * Use this before searchPermits() so a single submit includes both
+ * the filters and the search criteria.
+ */
+export async function setStatusFilters(
+  page: Page,
+  statuses: SearchStatus[]
+): Promise<boolean> {
+  console.log(`\n[SET FILTERS: ${statuses.join(", ")}]`);
 
   const valuesToSelect = statuses
-    .map((s) => statusMap[s])
+    .map((s) => STATUS_MAP[s])
     .filter((v): v is string => v !== undefined);
 
-  // Select the status options by value
   const selected = await page.evaluate(
     ({ values, statusSel }) => {
       const select = document.querySelector(
@@ -182,8 +190,24 @@ export async function selectFiltersAndSubmit(
   console.log(`  ✓ Selected: ${statuses.join(", ")}`);
 
   await sleep(SETTLE_MS);
+  return true;
+}
 
-  // Click submit - use the submit link selector from catalog
+/**
+ * Select status filters in the search form and submit.
+ * Used by goBackToSearch() and runScrapeFlow() which need to load
+ * a full results list (not searching by a specific permit ID).
+ */
+export async function selectFiltersAndSubmit(
+  page: Page,
+  statuses: SearchStatus[]
+): Promise<boolean> {
+  const filtersSet = await setStatusFilters(page, statuses);
+  if (!filtersSet) {
+    return false;
+  }
+
+  // Click submit
   await page.locator(portal.dustSearch.submitLink).first().click();
 
   // Wait for results table to appear first (more reliable than waiting for links)
@@ -221,13 +245,7 @@ export async function selectFiltersAndSubmit(
  */
 export async function goBackToSearch(
   page: Page,
-  statuses: (
-    | "Active"
-    | "Closed"
-    | "Rejected"
-    | "Submitted"
-    | "Superseded"
-  )[] = ["Active", "Submitted"]
+  statuses: SearchStatus[] = ["Active", "Submitted"]
 ): Promise<boolean> {
   console.log("\n[GO BACK]");
 

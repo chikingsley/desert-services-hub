@@ -1,19 +1,18 @@
 /**
  * Attachment Intake — Trigger.dev scheduled task
  *
- * Processes pending email attachment documents:
- *   1. Fetch pending stubs from documents table (source='email_attachment')
- *   2. Download content from Microsoft Graph API
- *   3. Deduplicate by internet_message_id + SHA256 content hash
- *   4. Extract text via processFilesIntake (pdf-analysis service)
- *   5. Link extracted documents back to email/project
- *   6. Update extraction status
+ * Processes pending document attachments from two sources:
+ *   - email_attachment: Download from Microsoft Graph API, extract, link to email/project
+ *   - monday_asset: Download from Monday.com API, extract with nativeExtract
  *
- * Stubs are created by the email-sync task when it detects hasAttachments.
+ * Both paths deduplicate by internet_message_id and SHA256 content hash.
  * This task runs on a 5-minute schedule to process the backlog.
+ *
+ * IMPORTANT: Runner containers have ephemeral filesystems isolated from the
+ * pdf-analysis service. All extraction sends file content as base64 via
+ * nativeExtractFromBuffer — never local file paths.
  */
 
-import { unlink } from "node:fs/promises";
 import { shouldSkipAttachment } from "@documents-intake/attachment-policy";
 import { processFilesIntake } from "@documents-intake/files-intake";
 import { updateAttachmentExtraction } from "@lib/db/repositories/attachment";
@@ -65,31 +64,103 @@ function computeHash(buffer: Buffer): string {
   return hasher.digest("hex");
 }
 
-function getExtension(filename: string): string {
-  if (!filename.includes(".")) {
-    return "bin";
+// ── Monday asset download ───────────────────────────────────────
+
+async function downloadMondayAsset(
+  mondayItemId: string,
+  mondayAssetId: string
+): Promise<Buffer | null> {
+  const { getItemAssets } = await import("@monday/client/assets");
+  const assets = await getItemAssets(mondayItemId);
+  const asset = assets.find((a) => a.id === mondayAssetId);
+
+  if (!asset?.public_url) {
+    return null;
   }
-  return filename.split(".").pop()?.toLowerCase() ?? "bin";
+
+  const response = await fetch(asset.public_url);
+  if (!response.ok) {
+    return null;
+  }
+
+  return Buffer.from(await response.arrayBuffer());
 }
 
 // ── Process one attachment ──────────────────────────────────────
 
 type Outcome = "extracted" | "skipped" | "deduped" | "failed";
 
-async function processOne(att: IntakeAttachmentRow): Promise<Outcome> {
-  // 1. Skip non-processable content types and likely inline images
-  if (
-    shouldSkipAttachment({
-      contentType: att.content_type,
-      fileName: att.name,
-      size: att.size,
-    })
-  ) {
-    await updateAttachmentExtraction(att.attachment_id_pk, "skipped");
-    return "skipped";
+async function processMondayAsset(att: IntakeAttachmentRow): Promise<Outcome> {
+  if (!(att.monday_item_id && att.monday_asset_id)) {
+    await updateAttachmentExtraction(
+      att.attachment_id_pk,
+      "failed",
+      null,
+      "Monday asset missing item_id or asset_id"
+    );
+    return "failed";
   }
 
-  // 2. Check internet_message_id dedup (same email forwarded to multiple mailboxes)
+  const buffer = await downloadMondayAsset(
+    att.monday_item_id,
+    att.monday_asset_id
+  );
+
+  if (!buffer) {
+    await updateAttachmentExtraction(
+      att.attachment_id_pk,
+      "failed",
+      null,
+      `Monday asset not available: item=${att.monday_item_id}, asset=${att.monday_asset_id}`
+    );
+    return "failed";
+  }
+
+  // Content hash dedup
+  const hash = computeHash(buffer);
+  await setAttachmentContentHash(att.attachment_id_pk, hash);
+
+  const hashDupe = await findContentHashAttachmentDuplicate(
+    hash,
+    att.attachment_id_pk
+  );
+  if (hashDupe) {
+    await markAttachmentDeduped(att.attachment_id_pk);
+    return "deduped";
+  }
+
+  // Extract via base64 — no temp files needed
+  const { processMondayAssetDocument } = await import(
+    "@documents-intake/processors/monday-asset"
+  );
+  const { COLUMN_HINTS } = await import("@monday/sync/pipeline-config");
+
+  const columnHint = att.monday_column_id
+    ? (COLUMN_HINTS[att.monday_column_id] ?? undefined)
+    : undefined;
+
+  const outcome = await processMondayAssetDocument({
+    filePath: att.name,
+    buffer,
+    columnHint,
+  });
+
+  const { markMondayAssetExtractionSuccess } = await import(
+    "@lib/db/repositories/intake-attachments"
+  );
+  await markMondayAssetExtractionSuccess(
+    att.attachment_id_pk,
+    outcome.documentType,
+    outcome.summary
+  );
+
+  return "extracted";
+}
+
+async function processEmailAttachment(
+  att: IntakeAttachmentRow
+): Promise<Outcome> {
+  // Check internet_message_id dedup (same email forwarded to multiple mailboxes)
   if (att.internet_message_id) {
     const dupe = await findInternetMessageAttachmentDuplicate(
       att.internet_message_id,
@@ -103,7 +174,7 @@ async function processOne(att: IntakeAttachmentRow): Promise<Outcome> {
     }
   }
 
-  // 3. Need Graph API coordinates to download
+  // Need Graph API coordinates to download
   if (!(att.message_id && att.graph_attachment_id && att.mailbox_email)) {
     await updateAttachmentExtraction(
       att.attachment_id_pk,
@@ -114,12 +185,12 @@ async function processOne(att: IntakeAttachmentRow): Promise<Outcome> {
     return "failed";
   }
 
-  // 4. Clean up any previously failed parsed docs for this attachment
+  // Clean up any previously failed parsed docs for this attachment
   if (att.email_id && att.graph_attachment_id) {
     await deleteFailedParsedDocs(att.email_id, att.graph_attachment_id);
   }
 
-  // 5. Download from Graph API with timeout
+  // Download from Graph API with timeout
   const buffer = await Promise.race([
     downloadAttachment(
       att.mailbox_email,
@@ -134,7 +205,7 @@ async function processOne(att: IntakeAttachmentRow): Promise<Outcome> {
     ),
   ]);
 
-  // 6. Content hash dedup
+  // Content hash dedup
   const hash = computeHash(buffer);
   await setAttachmentContentHash(att.attachment_id_pk, hash);
 
@@ -147,54 +218,62 @@ async function processOne(att: IntakeAttachmentRow): Promise<Outcome> {
     return "deduped";
   }
 
-  // 7. Write to temp file and extract
-  const ext = getExtension(att.name);
-  const tmpPath = `/tmp/att-intake-${att.attachment_id_pk}.${ext}`;
-  await Bun.write(tmpPath, buffer);
+  // Extract via base64 — pass buffer alongside path for cross-container transport
+  const results = await processFilesIntake({
+    attachmentPaths: [att.name],
+    attachmentBuffers: [buffer],
+    originalSubject: att.subject ?? "",
+    originalFrom: att.from_email ?? "",
+    bodyText: "",
+    forwarderEmail: att.mailbox_email ?? "",
+  });
 
-  try {
-    const results = await processFilesIntake({
-      attachmentPaths: [tmpPath],
-      originalSubject: att.subject ?? "",
-      originalFrom: att.from_email ?? "",
-      bodyText: "",
-      forwarderEmail: att.mailbox_email ?? "",
-    });
-
-    // 8. Link extracted documents back to email/project
-    let anySuccess = false;
-    for (const r of results) {
-      if (r.documentId) {
-        await updateDocumentBackfillLinks(
-          r.documentId,
-          att.email_id,
-          att.graph_attachment_id,
-          att.project_id
-        );
-        anySuccess = true;
-      }
-    }
-
-    if (anySuccess) {
-      await updateAttachmentExtraction(att.attachment_id_pk, "success");
-      return "extracted";
-    }
-
-    const errMsg = results[0]?.error ?? "No document created";
-    await updateAttachmentExtraction(
-      att.attachment_id_pk,
-      "failed",
-      null,
-      errMsg
-    );
-    return "failed";
-  } finally {
-    try {
-      await unlink(tmpPath);
-    } catch {
-      // Non-fatal cleanup failure.
+  // Link extracted documents back to email/project
+  let anySuccess = false;
+  for (const r of results) {
+    if (r.documentId) {
+      await updateDocumentBackfillLinks(
+        r.documentId,
+        att.email_id,
+        att.graph_attachment_id,
+        att.project_id
+      );
+      anySuccess = true;
     }
   }
+
+  if (anySuccess) {
+    await updateAttachmentExtraction(att.attachment_id_pk, "success");
+    return "extracted";
+  }
+
+  const errMsg = results[0]?.error ?? "No document created";
+  await updateAttachmentExtraction(
+    att.attachment_id_pk,
+    "failed",
+    null,
+    errMsg
+  );
+  return "failed";
+}
+
+async function processOne(att: IntakeAttachmentRow): Promise<Outcome> {
+  // Skip non-processable content types and likely inline images
+  if (
+    shouldSkipAttachment({
+      contentType: att.content_type,
+      fileName: att.name,
+      size: att.size,
+    })
+  ) {
+    await updateAttachmentExtraction(att.attachment_id_pk, "skipped");
+    return "skipped";
+  }
+
+  if (att.source === "monday_asset") {
+    return processMondayAsset(att);
+  }
+  return processEmailAttachment(att);
 }
 
 // ── Task ────────────────────────────────────────────────────────

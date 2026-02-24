@@ -23,16 +23,16 @@ const PDF_ANALYSIS_URL = (
 // ---------------------------------------------------------------------------
 
 export interface ExtractionResult {
-  filename: string;
   document_type: string;
-  summary: string;
   extracted: Record<string, unknown>;
-  text: string;
-  page_count: number;
   extraction_method: string;
-  model: string;
-  processing_time_ms: number;
+  filename: string;
   metadata: Record<string, unknown>;
+  model: string;
+  page_count: number;
+  processing_time_ms: number;
+  summary: string;
+  text: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -40,94 +40,94 @@ export interface ExtractionResult {
 // ---------------------------------------------------------------------------
 
 export interface EstimateHeader {
-  estimate_number: string;
   date: string;
-  gc_name: string;
-  gc_address: string | null;
-  job_name: string;
-  job_address: string | null;
+  estimate_number: string;
   estimator: string;
+  gc_address: string | null;
+  gc_name: string;
+  job_address: string | null;
+  job_name: string;
   revision: string | null;
 }
 
 export interface EstimateLineItem {
-  item: string;
   description: string;
+  item: string;
   qty: number;
+  section: string | null;
+  taxable: boolean;
+  total: number;
   unit: string;
   unit_price: number;
-  total: number;
-  taxable: boolean;
-  section: string | null;
 }
 
 export interface EstimateResult {
+  additional_services: Array<{ item: string; description: string }>;
+  flags: string[];
+  grand_total: number;
   header: EstimateHeader;
   line_items: EstimateLineItem[];
-  additional_services: Array<{ item: string; description: string }>;
-  section_subtotals: Array<{ section: string; subtotal: number }>;
-  tax: { rate: number; amount: number } | null;
-  grand_total: number;
   page_count: number;
-  source_file: string;
   parse_warnings: string[];
-  flags: string[];
   processing_time_ms: number;
+  section_subtotals: Array<{ section: string; subtotal: number }>;
+  source_file: string;
+  tax: { rate: number; amount: number } | null;
 }
 
 export interface NOIOutfall {
-  name: string;
   latitude: number;
   longitude: number;
+  name: string;
 }
 
 export interface NOIResult {
-  filename: string;
-  applicant_name: string;
+  acres_disturbed: number | null;
   applicant_address1: string | null;
   applicant_address2: string | null;
   applicant_city: string | null;
+  applicant_name: string;
   applicant_state: string | null;
   applicant_zip: string | null;
-  site_name: string;
-  site_address: string | null;
-  latitude: number | null;
-  longitude: number | null;
-  acres_disturbed: number | null;
-  outfalls: NOIOutfall[];
-  swppp_contact_first_name: string | null;
-  swppp_contact_last_name: string | null;
-  swppp_contact_email: string | null;
-  swppp_contact_phone: string | null;
-  permit_id: string | null;
-  ltf_number: string | null;
   extraction_meta: {
     source: string;
     confidence: string;
     missing_fields: string[];
     warnings: string[];
   };
+  filename: string;
   flags: string[];
+  latitude: number | null;
+  longitude: number | null;
+  ltf_number: string | null;
+  outfalls: NOIOutfall[];
+  permit_id: string | null;
   processing_time_ms: number;
+  site_address: string | null;
+  site_name: string;
+  swppp_contact_email: string | null;
+  swppp_contact_first_name: string | null;
+  swppp_contact_last_name: string | null;
+  swppp_contact_phone: string | null;
 }
 
 export interface ContractResult {
-  filename: string;
-  contractor: string | null;
-  subcontractor: string | null;
-  contract_value: number | null;
-  retainage_pct: number | null;
-  payment_terms: string | null;
-  scope: string | null;
-  project_name: string | null;
-  project_address: string | null;
-  effective_date: string | null;
-  start_date: string | null;
   completion_date: string | null;
-  requirements: string[];
+  contract_value: number | null;
+  contractor: string | null;
+  effective_date: string | null;
   estimate_reference: string | null;
+  filename: string;
   model: string;
+  payment_terms: string | null;
   processing_time_ms: number;
+  project_address: string | null;
+  project_name: string | null;
+  requirements: string[];
+  retainage_pct: number | null;
+  scope: string | null;
+  start_date: string | null;
+  subcontractor: string | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -165,6 +165,23 @@ export function nativeExtract(
 ): Promise<ExtractionResult> {
   return post<ExtractionResult>("/native-text-extraction", {
     path: filePath,
+    provider,
+  });
+}
+
+/**
+ * Like nativeExtract but sends file content as base64 instead of a local path.
+ * Use when the caller and the pdf-analysis service don't share a filesystem
+ * (e.g. Trigger.dev runner containers).
+ */
+export function nativeExtractFromBuffer(
+  buffer: Buffer,
+  filename: string,
+  provider = "auto"
+): Promise<ExtractionResult> {
+  return post<ExtractionResult>("/native-text-extraction", {
+    path: filename,
+    content_base64: buffer.toString("base64"),
     provider,
   });
 }
@@ -220,8 +237,8 @@ export function extractContract(
 
 export interface ChatResult {
   data: Record<string, unknown>;
-  model: string;
   metadata: Record<string, unknown>;
+  model: string;
 }
 
 /**

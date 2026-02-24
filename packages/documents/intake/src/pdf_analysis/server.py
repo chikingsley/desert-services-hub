@@ -20,6 +20,8 @@ Utility:
 from __future__ import annotations
 
 import asyncio
+import base64
+import tempfile
 import time
 from pathlib import Path
 from typing import Any
@@ -55,13 +57,30 @@ def _resolve_path(raw: str) -> Path:
     return p
 
 
+def _resolve_file_request(req: FileRequest) -> Path:
+    """Resolve a FileRequest to a local Path.
+
+    If content_base64 is provided, decode and write to a temp file (caller must
+    clean up). Otherwise, resolve the path field directly.
+    """
+    if req.content_base64:
+        data = base64.b64decode(req.content_base64)
+        suffix = Path(req.path).suffix if req.path else ".bin"
+        tmp = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
+        tmp.write(data)
+        tmp.close()
+        return Path(tmp.name)
+    return _resolve_path(req.path)
+
+
 # ---------------------------------------------------------------------------
 # Request models
 # ---------------------------------------------------------------------------
 
 
 class FileRequest(BaseModel):
-    path: str
+    path: str = ""
+    content_base64: str | None = None
     provider: str = "auto"
 
 
@@ -198,25 +217,29 @@ async def native_text_extraction(req: FileRequest) -> dict[str, Any]:
     Fast and deterministic. Falls back to OCR automatically if the file has no
     text layer. Best default for most documents.
     """
-    path = _resolve_path(req.path)
+    path = _resolve_file_request(req)
     provider = ProviderSelector(req.provider) if req.provider != "auto" else ProviderSelector.AUTO
 
-    started = time.perf_counter()
-    result = await ingest_pdf(path, provider=provider)
-    elapsed_ms = int((time.perf_counter() - started) * 1000)
+    try:
+        started = time.perf_counter()
+        result = await ingest_pdf(path, provider=provider)
+        elapsed_ms = int((time.perf_counter() - started) * 1000)
 
-    return {
-        "filename": result.filename,
-        "document_type": result.document_type,
-        "summary": result.summary,
-        "extracted": result.extracted,
-        "text": result.raw_text,
-        "page_count": result.page_count,
-        "extraction_method": result.text_method,
-        "model": result.model,
-        "processing_time_ms": elapsed_ms,
-        "metadata": result.metadata,
-    }
+        return {
+            "filename": result.filename,
+            "document_type": result.document_type,
+            "summary": result.summary,
+            "extracted": result.extracted,
+            "text": result.raw_text,
+            "page_count": result.page_count,
+            "extraction_method": result.text_method,
+            "model": result.model,
+            "processing_time_ms": elapsed_ms,
+            "metadata": result.metadata,
+        }
+    finally:
+        if req.content_base64:
+            path.unlink(missing_ok=True)
 
 
 # ---------------------------------------------------------------------------
@@ -232,33 +255,37 @@ async def ocr_extraction(req: FileRequest) -> dict[str, Any]:
     scanned, image-heavy, or when you explicitly want the vision pass regardless
     of whether a text layer exists.
     """
-    path = _resolve_path(req.path)
+    path = _resolve_file_request(req)
     provider = ProviderSelector(req.provider) if req.provider != "auto" else ProviderSelector.LOCAL
     manager = get_manager()
 
-    started = time.perf_counter()
-    ocr_result = await manager.ocr(path, provider=provider)
-    text = ocr_result.text
+    try:
+        started = time.perf_counter()
+        ocr_result = await manager.ocr(path, provider=provider)
+        text = ocr_result.text
 
-    data, model = await _llm_extract(text, provider, manager)
-    elapsed_ms = int((time.perf_counter() - started) * 1000)
+        data, model = await _llm_extract(text, provider, manager)
+        elapsed_ms = int((time.perf_counter() - started) * 1000)
 
-    return {
-        "filename": path.name,
-        "document_type": str(data.get("document_type", "unknown")),
-        "summary": str(data.get("summary", "")),
-        "extracted": data,
-        "text": text,
-        "page_count": len(ocr_result.pages),
-        "extraction_method": f"ocr:{ocr_result.provider.value}",
-        "model": model,
-        "processing_time_ms": elapsed_ms,
-        "metadata": {
-            "ocr_model": ocr_result.model,
-            "ocr_pages": ocr_result.pages,
-            **ocr_result.metadata,
-        },
-    }
+        return {
+            "filename": path.name,
+            "document_type": str(data.get("document_type", "unknown")),
+            "summary": str(data.get("summary", "")),
+            "extracted": data,
+            "text": text,
+            "page_count": len(ocr_result.pages),
+            "extraction_method": f"ocr:{ocr_result.provider.value}",
+            "model": model,
+            "processing_time_ms": elapsed_ms,
+            "metadata": {
+                "ocr_model": ocr_result.model,
+                "ocr_pages": ocr_result.pages,
+                **ocr_result.metadata,
+            },
+        }
+    finally:
+        if req.content_base64:
+            path.unlink(missing_ok=True)
 
 
 # ---------------------------------------------------------------------------
@@ -323,7 +350,7 @@ async def estimate_endpoint(req: FileRequest) -> dict[str, Any]:
     Returns line items, section subtotals, header fields, and grand total.
     Uses kreuzberg table extraction — no LLM.
     """
-    path = _resolve_path(req.path)
+    path = _resolve_file_request(req)
 
     from pdf_analysis.analysis.estimates import extract_estimate
 
@@ -336,6 +363,9 @@ async def estimate_endpoint(req: FileRequest) -> dict[str, Any]:
         return data
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
+    finally:
+        if req.content_base64:
+            path.unlink(missing_ok=True)
 
 
 # ---------------------------------------------------------------------------
@@ -351,7 +381,7 @@ async def noi_endpoint(req: FileRequest) -> dict[str, Any]:
     Uses kreuzberg text extraction + regex parsing — no LLM.
     Falls back to OCR if no text layer.
     """
-    path = _resolve_path(req.path)
+    path = _resolve_file_request(req)
 
     from pdf_analysis.analysis.noi import extract_noi
 
@@ -373,6 +403,9 @@ async def noi_endpoint(req: FileRequest) -> dict[str, Any]:
         return data
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
+    finally:
+        if req.content_base64:
+            path.unlink(missing_ok=True)
 
 
 # ---------------------------------------------------------------------------
@@ -412,7 +445,7 @@ async def contract_endpoint(req: FileRequest) -> dict[str, Any]:
     Returns parties, contract value, scope, dates, and key requirements.
     Uses kreuzberg text extraction + LLM. Falls back to OCR if no text layer.
     """
-    path = _resolve_path(req.path)
+    path = _resolve_file_request(req)
     provider = ProviderSelector(req.provider) if req.provider != "auto" else ProviderSelector.AUTO
     manager = get_manager()
 
@@ -432,3 +465,6 @@ async def contract_endpoint(req: FileRequest) -> dict[str, Any]:
         return data
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
+    finally:
+        if req.content_base64:
+            path.unlink(missing_ok=True)

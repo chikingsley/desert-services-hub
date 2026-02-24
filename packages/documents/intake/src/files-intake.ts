@@ -1,20 +1,25 @@
-import {
-  INTAKE_LOG_PREFIX,
-  insertIntakeDocumentFailure,
-  insertIntakeDocumentSuccess,
-} from "@lib/db/repositories/intake-document";
-import { nativeExtract } from "@lib/pdf-analysis";
 import type {
   ContractsEmailIntakePayload,
   EmailMeta,
   ParseIntakeResult,
 } from "@documents-intake/types";
+import {
+  INTAKE_LOG_PREFIX,
+  insertIntakeDocumentFailure,
+  insertIntakeDocumentSuccess,
+} from "@lib/db/repositories/intake-document";
+import { nativeExtract, nativeExtractFromBuffer } from "@lib/pdf-analysis";
 
 export async function processFilesIntake(
   payload: ContractsEmailIntakePayload
 ): Promise<ParseIntakeResult[]> {
-  const { attachmentPaths, originalSubject, originalFrom, forwarderEmail } =
-    payload;
+  const {
+    attachmentPaths,
+    attachmentBuffers,
+    originalSubject,
+    originalFrom,
+    forwarderEmail,
+  } = payload;
 
   const emailMeta: EmailMeta = {
     originalFrom: originalFrom ?? "",
@@ -28,12 +33,16 @@ export async function processFilesIntake(
 
   const results: ParseIntakeResult[] = [];
 
-  for (const filePath of attachmentPaths) {
+  for (let idx = 0; idx < attachmentPaths.length; idx++) {
+    const filePath = attachmentPaths[idx];
+    const buffer = attachmentBuffers?.[idx];
     const fileName = filePath.split("/").pop() ?? filePath;
     const started = performance.now();
 
     try {
-      const ingestResult = await nativeExtract(filePath);
+      const ingestResult = buffer
+        ? await nativeExtractFromBuffer(buffer, fileName)
+        : await nativeExtract(filePath);
 
       const elapsed = Math.round(performance.now() - started);
 
